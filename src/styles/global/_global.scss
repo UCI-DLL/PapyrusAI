@@ -1,0 +1,172 @@
+@use "./variables";
+
+html,
+body {
+  background-color: variables.$primary-1;
+  color: variables.$secondary-1;
+}
+
+button {
+  cursor: pointer;
+}
+
+// ------- Fonts ------- //
+//TODO
+
+// ------- Font Sizes ------- //
+$font-size-body: 1rem !default;
+
+$font-size-h1: 4rem !default;
+$font-size-h2: 3.2rem !default;
+$font-size-h3: 2.4rem !default;
+$font-size-h4: 2rem !default;
+$font-size-h5: 1.8rem !default;
+$font-size-h6: 1.6rem !default;
+
+// ------- Element Variables ------- //
+// Headers
+$default-header-font-family: "Roboto";
+$default-header-font-weight: 500;
+$default-header-margin: 0;
+$deafult-header-color: variables.$black;
+$heading-font-sizes: (
+  1: $font-size-h1,
+  2: $font-size-h2,
+  3: $font-size-h3,
+  4: $font-size-h4,
+  5: $font-size-h5,
+  6: $font-size-h6,
+);
+
+// ------- Headers ------- //
+h1,
+h2 {
+  font-family: $default-header-font-family;
+  font-weight: $default-header-font-weight;
+  margin: $default-header-margin;
+  color: $deafult-header-color;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Roboto";
+  font-weight: $default-header-font-weight;
+  margin: $default-header-margin;
+  color: $deafult-header-color;
+}
+
+@each $i, $size in $heading-font-sizes {
+  h#{$i} {
+    font-size: $size;
+  }
+}
+
+h6 {
+  font-weight: 600;
+}
+
+// ------- Base ------- //
+$base: 0.4rem !default;
+
+// ------- General Sizing ------- //
+$xs: $base * 2 !default;
+$sm: $base * 3 !default;
+$md: $base * 4 !default;
+$lg: $base * 6 !default;
+$xl: $base * 8 !default;
+
+// ------- Border Radius & Width ------- //
+$border-radius: 0.5rem;
+$border-width: 0.125rem;
+
+// ------- Breakpoints ------- //
+$sm-break: 425px;
+$md-break: 768px;
+$lg-break: 1024px;
+$xl-break: 1440px;
+
+// ------- Font Sizes ------- //
+$font-size-xs: 14px;
+$font-size-sm: 16px;
+$font-size-md: 18px;
+$font-size-lg: 20px;
+$font-size-xl: 24px;
+
+$default-font-weight: 500;
+
+//p
+p {
+  font-size: $font-size-sm;
+  margin: $base 0;
+}
+
+div {
+  font-size: $font-size-sm;
+  margin: 0;
+}
+
+span {
+  font-size: $font-size-sm;
+}
+
+label {
+  font-size: $font-size-sm;
+}
+
+// ------- button ------- //
+button {
+  background: none;
+  border: none;
+  padding: 0;
+
+  &:focus {
+    outline: auto;
+  }
+}
+
+// ------- a ------- //
+a {
+  color: variables.$primary;
+  text-decoration: underline;
+
+  &:hover {
+    color: lighten(variables.$primary, 20%);
+  }
+}
+
+.error {
+  color: variables.$error;
+}
+
+* {
+  user-select: text;
+}
+
+hr {
+  background-color: variables.$accent-1;
+  height: 1px;
+  opacity: 1;
+  border: 0;
+  border-top: 1px solid;
+  color: inherit;
+}
+
+.for-screen-readers-only {
+  border: 0 !important;
+  clip: rect(0 0 0 0) !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  width: 1px !important;
+}
+
+//for dynamic form
+.d-form {
+  #d-form__form > * {
+    margin: $base * 4 0;
+  }
+}

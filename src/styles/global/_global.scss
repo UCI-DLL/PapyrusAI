@@ -2,8 +2,8 @@
 
 html,
 body {
-  background-color: variables.$primary-1;
-  color: variables.$secondary-1;
+  background-color: variables.$background;
+  color: variables.$secondary;
 }
 
 button {
@@ -11,13 +11,14 @@ button {
 }
 
 // ------- Fonts ------- //
-//TODO
+$montserrat: "Montserrat";
+$opensans: "OpenSans";
 
 // ------- Font Sizes ------- //
 $font-size-body: 1rem !default;
 
-$font-size-h1: 4rem !default;
-$font-size-h2: 3.2rem !default;
+$font-size-h1: 3.5rem !default;
+$font-size-h2: 3rem !default;
 $font-size-h3: 2.4rem !default;
 $font-size-h4: 2rem !default;
 $font-size-h5: 1.8rem !default;
@@ -25,7 +26,7 @@ $font-size-h6: 1.6rem !default;
 
 // ------- Element Variables ------- //
 // Headers
-$default-header-font-family: "Roboto";
+$default-header-font-family: $montserrat;
 $default-header-font-weight: 500;
 $default-header-margin: 0;
 $deafult-header-color: variables.$black;
@@ -51,7 +52,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Roboto";
+  font-family: $montserrat;
   font-weight: $default-header-font-weight;
   margin: $default-header-margin;
   color: $deafult-header-color;
@@ -100,19 +101,23 @@ $default-font-weight: 500;
 p {
   font-size: $font-size-sm;
   margin: $base 0;
+  font-family: $opensans;
 }
 
 div {
   font-size: $font-size-sm;
   margin: 0;
+  font-family: $opensans;
 }
 
 span {
   font-size: $font-size-sm;
+  font-family: $opensans;
 }
 
 label {
   font-size: $font-size-sm;
+  font-family: $opensans;
 }
 
 // ------- button ------- //
@@ -120,6 +125,7 @@ button {
   background: none;
   border: none;
   padding: 0;
+  font-family: $opensans;
 
   &:focus {
     outline: auto;
@@ -130,6 +136,7 @@ button {
 a {
   color: variables.$primary;
   text-decoration: underline;
+  font-family: $opensans;
 
   &:hover {
     color: lighten(variables.$primary, 20%);
@@ -145,12 +152,13 @@ a {
 }
 
 hr {
-  background-color: variables.$accent-1;
+  background-color: variables.$accent-3;
   height: 1px;
   opacity: 1;
   border: 0;
   border-top: 1px solid;
-  color: inherit;
+  color: variables.$accent-3;
+  width: 100%;
 }
 
 .for-screen-readers-only {

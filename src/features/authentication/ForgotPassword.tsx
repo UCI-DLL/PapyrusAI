@@ -1,20 +1,20 @@
-import { Box, Button, FormLabel, TextField } from "@mui/material";
+import { Box, Button, FormLabel, Link, TextField } from "@mui/material";
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 
 
-interface LoginProps {
+interface ForgotPasswordProps {
   setUser: (user: any) => void;
 }
 
-export default function Login(props: LoginProps): JSX.Element {
-  let navigator = useNavigate();
+//TODO implement
+export default function ForgotPassword(props: ForgotPasswordProps): JSX.Element {
+  // let navigator = useNavigate();
   const [session, setSession] = useState({
     username: "",
     password: "",
   });
   const [usernameError, setUsernameError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
@@ -23,11 +23,6 @@ export default function Login(props: LoginProps): JSX.Element {
       setUsernameError("This field cannot be empty.");
     } else {
       setUsernameError("");
-    }
-    if (session.password === "" || session.password.length === 0) {
-      setPasswordError("This field cannot be empty.");
-    } else {
-      setPasswordError("");
     }
 
     if (session.username !== "" && session.password !== "") {
@@ -76,7 +71,7 @@ export default function Login(props: LoginProps): JSX.Element {
       </div>
       <Box className="login">
         <form onSubmit={handleSubmit}>
-          <FormLabel sx={{ margin: ".5rem 0" }}>Sign In</FormLabel>
+          <FormLabel sx={{ margin: ".5rem 0" }}>Forgot Password?</FormLabel>
           <TextField
             name="username"
             label="Email"
@@ -88,18 +83,6 @@ export default function Login(props: LoginProps): JSX.Element {
             helperText={usernameError}
             disabled={isLoading}
           />
-          <TextField
-            label="Password"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            type="password"
-            value={session.password}
-            onChange={handleChange}
-            name="password"
-            error={passwordError !== ""}
-            helperText={passwordError}
-            disabled={isLoading}
-          />
           <Button
             sx={{ width: "100%" }}
             variant="contained"
@@ -107,26 +90,13 @@ export default function Login(props: LoginProps): JSX.Element {
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            Login
+            Send Verification Code
           </Button>
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "1rem" }}>
-            <Button
-              disabled={isLoading}
-              onClick={() => navigator("/forgot-password")}
-            >
-              Forgot Password?
-            </Button>
-          </div>
           <hr />
-          <Button
-            sx={{ width: "100%", marginTop: "1rem" }}
-            variant="contained"
-            color="secondary"
-            onClick={() => navigator("/register")}
-            disabled={isLoading}
-          >
-            Create Account
-          </Button>
+          <div>
+            <span>Not a user yet?&nbsp;</span>
+            <Link href={"/register"}>Create Account</Link>
+          </div>
         </form>
       </Box>
 

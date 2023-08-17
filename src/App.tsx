@@ -13,6 +13,12 @@ import packageInfo from "../package.json";
 import { UserContext } from "./utility/context/UserContext";
 import Login from "./features/authentication/Login";
 import Dashboard from "./features/dashboard/Dashboard";
+import "./fonts/Montserrat/Montserrat-Regular.otf";
+import "./fonts/OpenSans/OpenSans-Regular.ttf";
+import Registration from "./features/authentication/Registration";
+import ForgotPassword from "./features/authentication/ForgotPassword";
+import Chat from "./features/chat/Chat";
+import Reports from "./features/reports/Reports";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -34,30 +40,25 @@ const { palette } = createTheme();
 const theme = createTheme({
   palette: {
     background: {
-      default: "#20242b",
+      default: "#EBEBEB",
     },
     text: {
-      primary: "#000",
+      primary: "#1a1a1a",
     },
-    primary: { main: "#ff8900" },
-    secondary: { main: "#fff" },
-    error: { main: "#f03434" },
+    primary: { main: "#1b3d6d" },
+    secondary: { main: "#6aa2b8" },
+    error: { main: "#da0222" },
     white: palette.augmentColor({
       color: {
         main: "#fff",
       },
     }),
-    // custom: {
-    //   light: '#ffa726'
-    //   main: '#f57c00',
-    //   dark: '#ef6c00',
-    //   contrastText: 'rgba(0, 0, 0, 0.87)',
-    // }
   },
   typography: {
     button: {
       textTransform: "none",
     },
+    "fontFamily": "OpenSans",
   },
 });
 
@@ -112,7 +113,7 @@ function App(): JSX.Element {
       isVerboseMode={false} //If true, the library writes verbose logs to console.
       loadingComponent={<div>Loading...</div>} //If not pass, nothing appears at the time of new version check.
     >
-      <div>
+      <div style={{display: "flex", flexDirection: "row", justifyContent: "center"}}>
         <UserContext.Provider value={value}>
           <Router>
             <ThemeProvider theme={theme}>
@@ -122,6 +123,8 @@ function App(): JSX.Element {
                   path="/login"
                   element={<Login setUser={(u) => setUser(u)} />}
                 />
+                <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />
+                <Route path="/forgot-password" element={<ForgotPassword setUser={(u) => setUser(u)} />} />
                 <Route path="*" element={<div>Page not found.</div>} />
 
                 {/* Need to have start path here. Private route will redirect to login if no user  */}
@@ -142,6 +145,14 @@ function App(): JSX.Element {
                   }
                 >
                   <Route path="/" element={<Dashboard />} />
+                </Route>
+
+                <Route path="/module" element={<PrivateRoute user={user} />}>
+                  <Route path="/module" element={<Chat />} />
+                </Route>
+
+                <Route path="/reports" element={<PrivateRoute user={user} />}>
+                  <Route path="/reports" element={<Reports />} />
                 </Route>
               </Routes>
             </ThemeProvider>

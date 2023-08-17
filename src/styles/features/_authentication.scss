@@ -1,0 +1,33 @@
+@use "../global" as global;
+
+
+.authentication {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 1rem;
+
+    img {
+      height: 20vh;
+    }
+    
+  }
+
+  .login {
+    width: 50%;
+    background-color: global.$white;
+    padding: 1rem;
+    border-radius: global.$border-radius;
+
+    @media (max-width: global.$md-break) {
+      width: 80%;
+    }
+  }
+}

@@ -12,9 +12,9 @@ export default function AssignmentList(): JSX.Element {
 
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start" }}>
+    <div className="assignments__list">
 
-      <List sx={style} component="nav" aria-label="mailbox folders">
+      <List sx={style} aria-label="assignment list">
         <button onClick={() => navigator("/module")}>
           <ListItem >
             <ListItemText primary="ENG 123 Module 1" secondary="Due: 1/1/24" />

@@ -28,7 +28,6 @@ export default function NavigationTwo(): JSX.Element {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    console.log("here")
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
@@ -38,9 +37,11 @@ export default function NavigationTwo(): JSX.Element {
   //For the side drawer main nav menu
   //TODO base this list off instuctor, researcher, student access
   const mainMenuList = ["Dashboard", "Courses", "Assignments", "Free Chat", "Reports"];
-  const mainMenuLinks = ["/", "/courses", "/assignments", "/module", "reports"]
+  const mainMenuLinks = ["/", "/courses", "/assignments", "/chat", "reports"]
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
+
   //create a use effect to get updated window size when user resizes window
   useEffect(() => {
     function handleResize() {
@@ -50,15 +51,47 @@ export default function NavigationTwo(): JSX.Element {
     return () => window.removeEventListener('resize', handleResize)
   }, []);
 
+  useEffect(() => {
+    //set breadcrumb text based on the url location
+    /**
+     * Dashboard > Overview
+     * Courses
+     * assignments
+     * Course # > Assignments
+     * course # > assignment #
+     * Free Chat
+     * Reports
+     */
+    const pathnameSplit = location.pathname.split("/");
+    if (location.pathname === "/") {
+      setBreadcrumbText(["Dashboard", "Overview"])
+    } else if (location.pathname === "/courses") {
+      setBreadcrumbText(["Courses", ""])
+    } else if (location.pathname === "/assignments") {
+      setBreadcrumbText(["Assignments", ""])
+    } else if (
+      pathnameSplit.length === 4 &&
+      pathnameSplit[1] === "courses" &&
+      pathnameSplit[3] === "assignments"
+    ) {
+      setBreadcrumbText([pathnameSplit[2], "Assignments"])
+    } else if (
+      pathnameSplit.length === 5 &&
+      pathnameSplit[1] === "courses" &&
+      pathnameSplit[3] === "assignments"
+    ) {
+      setBreadcrumbText([pathnameSplit[2], pathnameSplit[4]])
+    } else if (location.pathname === "/chat") {
+      setBreadcrumbText(["Chat", ""])
+    } else if (location.pathname === "/reports") {
+      setBreadcrumbText(["Reports", ""])
+    }
+  }, [location])
+
   function handleLogOut() {
     setUser(null);
     localStorage.clear();
     navigator("/login");
-  }
-
-  function handleBreadCrumbClick(event: React.MouseEvent<HTMLDivElement, MouseEvent>) {
-    event.preventDefault();
-    console.info('You clicked a breadcrumb. TODO');
   }
 
   const toggleDrawer =
@@ -81,8 +114,8 @@ export default function NavigationTwo(): JSX.Element {
     <Box
       sx={{ width: 'auto' }}
       role="presentation"
-      // onClick={toggleDrawer(false)}
-      // onKeyDown={toggleDrawer(false)}
+      onClick={toggleDrawer(false)}
+      onKeyDown={toggleDrawer(false)}
       className={"top-nav-title"}
     >
       <header className="top">
@@ -107,7 +140,10 @@ export default function NavigationTwo(): JSX.Element {
           <List>
             {mainMenuList.map((text, index) => (
               <ListItem key={text} disablePadding>
-                <ListItemButton href={mainMenuLinks[index]} selected={location.pathname === mainMenuLinks[index]}>
+                <ListItemButton
+                  href={mainMenuLinks[index]}
+                  selected={location.pathname === mainMenuLinks[index]}
+                >
                   <ListItemText primary={text} />
                 </ListItemButton>
               </ListItem>
@@ -118,7 +154,6 @@ export default function NavigationTwo(): JSX.Element {
     </Box>
   );
 
-  console.log(location.pathname)
 
   return (
     <div>
@@ -159,13 +194,20 @@ export default function NavigationTwo(): JSX.Element {
         </header>
 
         <hr style={{ width: "100%" }} />
-        <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', paddingTop: "3rem" }}>
-          <nav aria-label="temp todo">
+        <Box sx={{
+          width: '100%',
+          maxWidth: 360,
+          bgcolor: 'background.paper',
+          paddingTop: "3rem"
+        }}>
+          <nav aria-label="Main menu">
             <List sx={{ zIndex: "1000" }}>
               {mainMenuList.map((text, index) => (
                 <ListItem key={text} disablePadding>
-                  {/* TODO update links  */}
-                  <ListItemButton href={mainMenuLinks[index]} selected={location.pathname === mainMenuLinks[index]}>
+                  <ListItemButton
+                    href={mainMenuLinks[index]}
+                    selected={location.pathname === mainMenuLinks[index]}
+                  >
                     <ListItemText primary={text} />
                   </ListItemButton>
                 </ListItem>
@@ -178,7 +220,10 @@ export default function NavigationTwo(): JSX.Element {
       <div className="top-breadcrumb-bar">
         {windowWidth < 1024 ? (
           <React.Fragment>
-            <Button aria-controls="super-sidebar" onClick={toggleDrawer(true)}>
+            <Button
+              aria-controls="super-sidebar"
+              onClick={toggleDrawer(true)}
+            >
               <ViewSidebarOutlinedIcon />
             </Button>
             <SwipeableDrawer
@@ -194,13 +239,25 @@ export default function NavigationTwo(): JSX.Element {
 
         &nbsp;&nbsp;&nbsp;
 
-{/* TODO handle different breadcrumb links */}
-        <nav role="presentation" onClick={handleBreadCrumbClick}>
+        <nav role="presentation">
           <Breadcrumbs aria-label="breadcrumb">
-            <Link underline="hover" color="inherit" href="/">
-              Dashboard
-            </Link>
-            <Typography color="text.primary">Overview</Typography>
+            {breadcrumbText[0] !== "" && breadcrumbText[1] !== "" ? (
+              <Link
+                underline="hover"
+                color="inherit"
+                href={
+                  breadcrumbText[0] === "Dashboard" ? "/" :
+                    `/courses/${breadcrumbText[0]}/assignments`
+                }
+              >
+                {breadcrumbText[0]}
+              </Link>
+            ) : (
+              <Typography color="text.primary">{breadcrumbText[0]}</Typography>
+            )}
+            {breadcrumbText[1] !== "" && (
+              <Typography color="text.primary">{breadcrumbText[1]}</Typography>
+            )}
           </Breadcrumbs>
         </nav>
 
@@ -238,11 +295,3 @@ export default function NavigationTwo(): JSX.Element {
   )
 }
 
-/**
- * Dashboard > Overview
- * Courses
- * Course # > Assignments
- * course # > assignment #
- * Free Chat
- * Reports
- */

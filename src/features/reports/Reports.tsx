@@ -1,7 +1,13 @@
-import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow, 
+  Paper 
+} from "@mui/material";
 import React from "react";
-import DoneIcon from '@mui/icons-material/Done';
-import CloseIcon from '@mui/icons-material/Close';
 
 export default function Reports(): JSX.Element {
 
@@ -11,44 +17,36 @@ export default function Reports(): JSX.Element {
     classId: string,
     assignment: number,
     studentId: number,
-    completed: boolean,
+    completed: number,
   ) {
     return { name, classId, assignment, studentId, completed };
   }
   
   const rows = [
-    createData('Frozen yoghurt', "ENG 123", 6.0, 24, true),
-    createData('Ice cream sandwich', "ENG 123", 9.0, 37, false),
-    createData('Eclair', "ENG 123", 16.0, 24, false),
-    createData('Cupcake', "ENG 123", 3, 67, true),
-    createData('Gingerbread', "ENG 123", 16.0, 49, true),
+    createData('Student Name 1', "ENG 123", 6.0, 24, 234),
+    createData('Student Name 2', "ENG 123", 9.0, 37, 345),
+    createData('Student Name 3', "ENG 123", 16.0, 24, 346),
+    createData('Student Name 4', "ENG 123", 3, 67, 123),
+    createData('Student Name 5', "ENG 123", 16.0, 49, 234),
   ];
 
   return (
-    <div style={{
-      maxWidth: "1024px",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "flex-start",
-      flexDirection: "column",
-      margin: "0 auto",
-      padding: "0.4rem"
-    }}>
+    <div className="reports">
       <h3>Reports</h3>
       <hr />
 
-      <div style={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "space-around"}}>
+      <div className="reports__filters">
         
-        <Button variant="contained">
+        <div>
+          Sort By ▼
+        </div>
+        <div>
           Course ▼
-        </Button>
-        <Button variant="contained">
-          Assignment ▼
-        </Button>
+        </div>
 
-        <Button variant="contained">
+        <div>
           Advanced Filters ▼
-        </Button>
+        </div>
       </div>
 
       <hr />
@@ -60,8 +58,8 @@ export default function Reports(): JSX.Element {
             <TableCell>Student Name</TableCell>
             <TableCell align="right">Class</TableCell>
             <TableCell align="right">Assignment</TableCell>
-            <TableCell align="right">Student ID</TableCell>
-            <TableCell align="right">Completed?</TableCell>
+            <TableCell align="right">Total Duration</TableCell>
+            <TableCell align="right">Recent Time Accessed</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -76,7 +74,7 @@ export default function Reports(): JSX.Element {
               <TableCell align="right">{row.classId}</TableCell>
               <TableCell align="right">{row.assignment}</TableCell>
               <TableCell align="right">{row.studentId}</TableCell>
-              <TableCell align="right">{row.completed ? <DoneIcon color="primary" /> : <CloseIcon color="error"/>}</TableCell>
+              <TableCell align="right">{row.completed }</TableCell>
             </TableRow>
           ))}
         </TableBody>

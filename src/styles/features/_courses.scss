@@ -1,0 +1,41 @@
+@use "../global" as global;
+
+.courses {
+
+  max-width: global.$lg-break;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: global.$base;
+  width: 100%;
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  &__section-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+
+    div {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &__add {
+    width: 100%;
+    background-color: global.$white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+
+  }
+
+}

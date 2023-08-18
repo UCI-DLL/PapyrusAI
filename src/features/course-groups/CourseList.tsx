@@ -1,10 +1,7 @@
 import React from "react";
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { CardHeader, IconButton } from "@mui/material";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
@@ -12,21 +9,8 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 export default function CourseList(): JSX.Element {
 
 
-
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start" }}>
-      {/* <Card sx={{ width: 275, margin: "1rem" }}>
-        <CardContent>
-          <Typography variant="h5">Create a Class</Typography>
-        </CardContent>
-        <CardActions>
-          <button style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-            <AddCircleOutlineIcon fontSize="large" />
-          </button>
-
-        </CardActions>
-      </Card> */}
-
+    <div className="courses__list">
       <Card sx={{ width: 275, margin: "1rem" }}>
         <CardHeader
           action={

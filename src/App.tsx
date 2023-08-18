@@ -19,6 +19,10 @@ import Registration from "./features/authentication/Registration";
 import ForgotPassword from "./features/authentication/ForgotPassword";
 import Chat from "./features/chat/Chat";
 import Reports from "./features/reports/Reports";
+import Assignments from "./features/assignment-modules/Assignments";
+import Courses from "./features/course-groups/Courses";
+import AddCourse from "./features/course-groups/AddCourse";
+import AddAssignment from "./features/assignment-modules/AddAssignment";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -147,8 +151,32 @@ function App(): JSX.Element {
                   <Route path="/" element={<Dashboard />} />
                 </Route>
 
-                <Route path="/module" element={<PrivateRoute user={user} />}>
-                  <Route path="/module" element={<Chat />} />
+                <Route path="/courses" element={<PrivateRoute user={user} />}>
+                  <Route path="/courses" element={<Courses />} />
+                </Route>
+
+                <Route path="/createcourse" element={<PrivateRoute user={user} />}>
+                  <Route path="/createcourse" element={<AddCourse />} />
+                </Route>
+
+                <Route path="/assignments" element={<PrivateRoute user={user} />}>
+                  <Route path="/assignments" element={<Assignments />} />
+                </Route>
+
+                <Route path="/addassignment" element={<PrivateRoute user={user} />}>
+                  <Route path="/addassignment" element={<AddAssignment />} />
+                </Route>
+
+                <Route path="/courses/:id/assignments" element={<PrivateRoute user={user} />}>
+                  <Route path="/courses/:id/assignments" element={<Assignments />} />
+                </Route>
+
+                <Route path="/courses/:id/assignments/:id" element={<PrivateRoute user={user} />}>
+                  <Route path="/courses/:id/assignments/:id" element={<Chat />} />
+                </Route>
+
+                <Route path="/chat" element={<PrivateRoute user={user} />}>
+                  <Route path="/chat" element={<Chat />} />
                 </Route>
 
                 <Route path="/reports" element={<PrivateRoute user={user} />}>

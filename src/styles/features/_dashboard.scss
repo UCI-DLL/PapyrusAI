@@ -1,0 +1,19 @@
+@use "../global" as global;
+
+.dashboard {
+  max-width: global.$lg-break;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: global.$base;
+  width: 100%;
+
+  &__section-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+}

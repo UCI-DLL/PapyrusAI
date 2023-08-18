@@ -1,0 +1,21 @@
+@use "../global" as global;
+
+.reports {
+
+  max-width: global.$lg-break;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: global.$base;
+  width: 100%;
+
+
+  &__filters {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}

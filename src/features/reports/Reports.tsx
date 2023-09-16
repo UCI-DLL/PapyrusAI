@@ -59,7 +59,7 @@ export default function Reports(): JSX.Element {
             <TableCell align="right">Class</TableCell>
             <TableCell align="right">Assignment</TableCell>
             <TableCell align="right">Total Duration</TableCell>
-            <TableCell align="right">Recent Time Accessed</TableCell>
+            <TableCell align="right">Last Accessed</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

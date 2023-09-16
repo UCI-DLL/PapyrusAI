@@ -36,7 +36,7 @@ export default function NavigationTwo(): JSX.Element {
 
   //For the side drawer main nav menu
   //TODO base this list off instuctor, researcher, student access
-  const mainMenuList = ["Dashboard", "Courses", "Assignments", "Free Chat", "Reports"];
+  const mainMenuList = ["Dashboard", "Courses", "Modules", "Chat", "Reports"];
   const mainMenuLinks = ["/", "/courses", "/assignments", "/chat", "reports"]
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);

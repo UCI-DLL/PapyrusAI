@@ -9,10 +9,10 @@ interface MessageProps {
 
 
 export const MessageLeft = (props: MessageProps) => {
-  // const displayName = props.displayName ? props.displayName : "Displayname";
+  const displayName = props.displayName ? props.displayName : "Displayname";
   return (
     <div className={"message__row-left"}>
-      {/* <div className={"message__left-display-name"}>{displayName}</div> */}
+      <div className={"message__left-display-name"}>{displayName}</div>
       <div className={"message__left-message"}>
         <p className={""}>{props.message}</p>
       </div>
@@ -24,6 +24,7 @@ export const MessageLeft = (props: MessageProps) => {
 export const MessageRight = (props: MessageProps) => {
   return (
     <div className={"message__row-right"}>
+      <div className={"message__right-display-name"}>{"You"}</div>
       <div className={"message__right-message"}>
         <p className={""}>{props.message}</p>
       </div>

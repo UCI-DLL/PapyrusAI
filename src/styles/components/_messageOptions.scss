@@ -1,0 +1,30 @@
+@use "../global" as global;
+
+
+.messageOptions {
+  display: flex;
+  flex-direction: column;
+
+
+  &__mainMessage {
+    margin-bottom: global.$base;
+  }
+
+  &__options {
+    margin-bottom: global.$base * 2;
+    width: 100%;
+
+
+    &__title {
+      text-align: left;
+      width: 100%;
+      font-size: global.$sm;
+    }
+
+    &__message {
+      text-align: left;
+      width: 100%;
+    }
+  }
+
+}

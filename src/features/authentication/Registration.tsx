@@ -1,20 +1,22 @@
-import { Box, Button, FormLabel, TextField } from "@mui/material";
+import { Box, Button, FormLabel, Link, TextField } from "@mui/material";
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 
 
-interface LoginProps {
+interface RegistrationProps {
   setUser: (user: any) => void;
 }
 
-export default function Login(props: LoginProps): JSX.Element {
-  let navigator = useNavigate();
+export default function Registration(props: RegistrationProps): JSX.Element {
+  // let navigator = useNavigate();
   const [session, setSession] = useState({
     username: "",
     password: "",
+    classCode: "",
   });
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [classCodeError, setClassCodeError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
@@ -29,8 +31,13 @@ export default function Login(props: LoginProps): JSX.Element {
     } else {
       setPasswordError("");
     }
+    if (session.classCode === "" || session.classCode.length === 0) {
+      setClassCodeError("This field cannot be empty.");
+    } else {
+      setClassCodeError("");
+    }
 
-    if (session.username !== "" && session.password !== "") {
+    if (session.username !== "" && session.password !== "" && session.classCode !== "") {
       setIsLoading(true);
       const FormData = require("form-data");
       const formData = new FormData();
@@ -100,6 +107,17 @@ export default function Login(props: LoginProps): JSX.Element {
             helperText={passwordError}
             disabled={isLoading}
           />
+          <TextField
+            label="Class Code"
+            fullWidth
+            sx={{ margin: ".5rem 0" }}
+            value={session.classCode}
+            onChange={handleChange}
+            name="password"
+            error={classCodeError !== ""}
+            helperText={classCodeError}
+            disabled={isLoading}
+          />
           <Button
             sx={{ width: "100%" }}
             variant="contained"
@@ -107,26 +125,13 @@ export default function Login(props: LoginProps): JSX.Element {
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            Login
-          </Button>
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "1rem" }}>
-            <Button
-              disabled={isLoading}
-              onClick={() => navigator("/forgot-password")}
-            >
-              Forgot Password?
-            </Button>
-          </div>
-          <hr />
-          <Button
-            sx={{ width: "100%", marginTop: "1rem" }}
-            variant="contained"
-            color="secondary"
-            onClick={() => navigator("/register")}
-            disabled={isLoading}
-          >
             Create Account
           </Button>
+          <hr />
+          <div>
+            <span>Already a user?&nbsp;</span>
+            <Link href={"/login"}>Log In</Link>
+          </div>
         </form>
       </Box>
 

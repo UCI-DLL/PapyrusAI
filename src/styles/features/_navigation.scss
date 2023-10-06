@@ -1,0 +1,77 @@
+@use "../global" as global;
+
+
+.navigation {
+  width: 16rem;
+  position: fixed;
+  z-index: 10000;
+
+  @media (max-width: global.$lg-break) {
+    left: -17rem;
+  }
+  
+}
+
+.top-nav-title {
+  .top {
+    position: fixed;
+    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    z-index: 102;
+    background: white;
+    outline: solid 2px global.$primary;
+    padding: 0.4rem 0;
+    height: 100%; //Note: if this changes, change private route styling
+
+    &__spacing {
+      width: 100%;
+      max-width: global.$lg-break;
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    &__logo {
+      display: flex;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    &__logo-dimensions {
+      display: flex;
+      flex-direction: row;
+
+      img {
+        height: 3.4rem;
+      }
+    }
+
+    &__logo-title {
+      text-decoration: none;
+      color: global.$primary;
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+.top-breadcrumb-bar {
+  width: 100%;
+  margin-left: 16rem;
+  position: fixed;
+  height: 3rem;
+  background-color: global.$white;
+  border-bottom: 1px solid global.$primary;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+
+  @media (max-width: global.$lg-break) {
+    margin-left: 0;
+    padding: 0;
+    justify-content: space-between;
+  }
+}

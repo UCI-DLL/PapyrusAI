@@ -12,14 +12,10 @@ export default function Login(props: LoginProps): JSX.Element {
   let navigator = useNavigate();
 
   useEffect(() => {
-    console.log("location", location)
     if(location.hash) {
-      localStorage.setItem("papyrusai_access_token", JSON.stringify(location.hash.split("&")[1].split("=")[1]));
+      localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
       navigator("/");
-    } else {
-      // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-    }
-    
+    } 
   }, [location.hash, navigator]);
 
   return (

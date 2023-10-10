@@ -87,9 +87,9 @@ function App(): JSX.Element {
 
   useEffect(() => {
     // Check if we have an access token, if not, redirect to aws cognito login page
-    // if(!localStorage.getItem("papyrusai_access_token")) {
-    //   window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-    // }
+    if(!localStorage.getItem("papyrusai_access_token")) {
+      window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+    }
 
     // get user's most update-to-date info
     //If access denied, then update the access token

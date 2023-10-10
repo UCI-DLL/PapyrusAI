@@ -15,14 +15,20 @@ import Login from "./features/authentication/Login";
 import Dashboard from "./features/dashboard/Dashboard";
 import "./fonts/Montserrat/Montserrat-Regular.otf";
 import "./fonts/OpenSans/OpenSans-Regular.ttf";
-import Registration from "./features/authentication/Registration";
-import ForgotPassword from "./features/authentication/ForgotPassword";
+// import Registration from "./features/authentication/Registration";
+// import ForgotPassword from "./features/authentication/ForgotPassword";
 import Chat from "./features/chat/Chat";
 import Reports from "./features/reports/Reports";
 import Assignments from "./features/assignment-modules/Assignments";
 import Courses from "./features/course-groups/Courses";
 import AddCourse from "./features/course-groups/AddCourse";
 import AddAssignment from "./features/assignment-modules/AddAssignment";
+import Get from "./utility/Get";
+import { getUserData } from "./utility/endpoints/UserEndpoints";
+import { UserType } from "./utility/types/UserTypes";
+import { Modal } from "./components/Modal";
+import { Button } from "@mui/material";
+import MissingUserInfoForm from "./features/dashboard/MissingUserInfoForm";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -68,47 +74,46 @@ const theme = createTheme({
 
 function App(): JSX.Element {
   // user object obtained from backend or local
-  //TODO user Type
-  const [user, setUser] = useState<any | null>(
+  const [user, setUser] = useState<UserType | null>(
     localStorage.getItem("papyrusai_user")
       ? JSON.parse(localStorage.getItem("papyrusai_user") ?? "")
       : null
   ); //user info and not just sessionid
   const value = useMemo(() => ({ user, setUser }), [user, setUser]);
   const isProduction = process.env.NODE_ENV === "production";
+  // only show if missing data
+  const [showUpdateUserInfoModal, setShowUpdateUserInfoModal] = useState<boolean>(false);
 
 
   useEffect(() => {
-    // call backend for user info and save in state
-    let temp_user = { pk: 0 };
-    if (localStorage.getItem("papyrusai_user")) {
-      temp_user = JSON.parse(localStorage.getItem("papyrusai_user") ?? "");
-      setUser(temp_user);
+    // Check if we have an access token, if not, redirect to aws cognito login page
+    if(!localStorage.getItem("papyrusai_access_token")) {
+      window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
 
     // get user's most update-to-date info
-    //TODO
-    // Get(v3UserDetailPrivate(temp_user.pk)).then((res) => {
-    //   if (res.status && res.status < 300) {
-    //     if (res.data && res.data.data) {
-    //       //update our version of user
-    //       setUser(res.data.data);
-    //       localStorage.setItem("papyrusai_user", JSON.stringify(res.data.data));
-    //     }
-    //   } else {
-    //     //remove user data
-    //     localStorage.removeItem("sessionid");
-    //     localStorage.removeItem("papyrusai_user");
-    //     setUser(null);
-    //   }
-    // });
+    //If access denied, then update the access token
+    Get(getUserData()).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data) {
+          //update our version of user
+          setUser(res.data);
+          localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+        }
+      } else {
+        //remove user data
+        localStorage.removeItem("papyrusai_access_token");
+        localStorage.removeItem("papyrusai_user");
+        setUser(null);
+      }
+    });
   }, []);
 
   //handle log out
-  // function handleLogOut() {
-  //   localStorage.clear();
-  //   setUser(null);
-  // }
+  function handleLogOut() {
+    localStorage.clear();
+    setUser(null);
+  }
 
   return (
     <CacheBuster
@@ -122,14 +127,37 @@ function App(): JSX.Element {
           <Router>
             <ThemeProvider theme={theme}>
               <CssBaseline />
+              <Modal
+                isOpen={showUpdateUserInfoModal} 
+                title={"We are missing some details"}
+                onRequestClose={() => {}}
+                hideClose={true}
+                actions={
+                  <Button sx={{width: "100%"}} variant="contained" color="secondary" onClick={() => handleLogOut()}>
+                    Log Out
+                  </Button>
+                }
+              >
+                <MissingUserInfoForm 
+                user={user ? user : []} 
+                closeForm={(user:UserType) => {
+                  //Set user with new information
+                  setUser(user);
+                  localStorage.setItem("papyrusai_user", JSON.stringify(user));
+                  //then close modal
+                  setShowUpdateUserInfoModal(false)
+                }} 
+                />
+              </Modal>
               <Routes>
                 <Route
                   path="/login"
-                  element={<Login setUser={(u) => setUser(u)} />}
+                  element={<Login setUser={(u) => setUser(u)} />} 
                 />
+                {/* 
                 <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />
-                <Route path="/forgot-password" element={<ForgotPassword setUser={(u) => setUser(u)} />} />
-                <Route path="*" element={<div>Page not found.</div>} />
+                <Route path="/forgot-password" element={<ForgotPassword setUser={(u) => setUser(u)} />} /> */}
+                <Route path="*" element={<div>Page not found.</div>} /> 
 
                 {/* Need to have start path here. Private route will redirect to login if no user  */}
                 <Route

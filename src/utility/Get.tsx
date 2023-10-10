@@ -1,13 +1,13 @@
 import axios from "axios";
 
 export default async function Get(url: String, signal?: AbortSignal | undefined) {
-  const user = localStorage.getItem("sessionid")
+  const user = localStorage.getItem("papyrusai_access_token")
   const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + url;
 
   var data = await axios
     .get(API_URL, {
       headers: {
-        Authorization: "sessionid " + user,
+        Authorization: user,
       },
       signal
     })
@@ -21,7 +21,7 @@ export default async function Get(url: String, signal?: AbortSignal | undefined)
         // that falls out of the range of 2xx
         // showMsg(Object.values(error.response.data), "error");
         if (error.response.status === 401) {
-          localStorage.removeItem("sessionid");
+          localStorage.removeItem("papyrusai_access_token");
         }
         return error.response;
       } else if (error.request) {

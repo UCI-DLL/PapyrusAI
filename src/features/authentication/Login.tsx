@@ -1,4 +1,4 @@
-// import { Box, Button, FormLabel, TextField } from "@mui/material";
+// import { Button } from "@mui/material";
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 
@@ -12,27 +12,22 @@ export default function Login(props: LoginProps): JSX.Element {
   let navigator = useNavigate();
 
   useEffect(() => {
+    //Currently, this page just saves the token and then navigates to the home page
     if(location.hash) {
-      localStorage.setItem("papyrusai_access_token", JSON.stringify(location.hash.split("&")[1].split("=")[1]));
-      navigator("/");
-    } else {
-      window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-    }
-    
-  }, [location.hash, navigator]);
+      localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
+    } 
+    navigator("/");
+    // eslint-disable-next-line
+  }, [location.hash]);
 
   return (
     <div>
-      Please login 
-      <button onClick={() => {
-        window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-      }}> here</button>
     </div>
   )
   
   
   
-  // 
+  // NOTE: THIS IS THE NON AWS LOGIN PAGE
   // const [session, setSession] = useState({
   //   username: "",
   //   password: "",

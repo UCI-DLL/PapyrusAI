@@ -16,7 +16,8 @@ export default function Login(props: LoginProps): JSX.Element {
       localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
       navigator("/");
     } 
-  }, [location.hash, navigator]);
+    // eslint-disable-next-line
+  }, [location.hash]);
 
   return (
     <div>

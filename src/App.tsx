@@ -145,7 +145,7 @@ function App(): JSX.Element {
                   setUser(user);
                   localStorage.setItem("papyrusai_user", JSON.stringify(user));
                   //then close modal
-                  setShowUpdateUserInfoModal(false)
+                  setShowUpdateUserInfoModal(false);
                 }} 
                 />
               </Modal>

@@ -1,13 +1,13 @@
 import axios from "axios";
 
-export default async function Post(url: String, formData: FormData | any) {
-  const user = localStorage.getItem("sessionid")
+export default async function Post(url: String, formdata: any) {
+  const user = localStorage.getItem("papyrusai_access_token")
   const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + url;
 
   var data = await axios
-    .post(API_URL, formData, {
+    .post(API_URL, formdata, {
       headers: {
-        Authorization: "sessionid " + user,
+        Authorization: user,
       },
     })
     .then((response) => {
@@ -19,7 +19,7 @@ export default async function Post(url: String, formData: FormData | any) {
         // that falls out of the range of 2xx
         // showMsg(Object.values(error.response.data), "error");
         if (error.response.status === 401) {
-          localStorage.removeItem("sessionid");
+          localStorage.removeItem("papyrusai_access_token");
         }
         return error.response;
       } else if (error.request) {

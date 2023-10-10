@@ -105,8 +105,7 @@ function App(): JSX.Element {
             localStorage.removeItem("papyrusai_access_token");
             localStorage.removeItem("papyrusai_user");
             setUser(null);
-            console.log("here")
-            // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
           }
         });
       }

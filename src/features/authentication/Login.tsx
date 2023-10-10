@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+// import { Button } from "@mui/material";
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 
@@ -16,17 +16,17 @@ export default function Login(props: LoginProps): JSX.Element {
       localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
       setTimeout(() => {
         navigator("/");
-      }, 1000);
+      }, 300);
     } 
     // eslint-disable-next-line
   }, [location.hash]);
 
   return (
     <div>
-      Please login &nbsp;
+      {/* Please login &nbsp;
       <Button onClick={() => {
         window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-      }}>here</Button>
+      }}>here</Button> */}
     </div>
   )
   

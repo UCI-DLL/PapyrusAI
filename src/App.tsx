@@ -86,27 +86,30 @@ function App(): JSX.Element {
 
 
   useEffect(() => {
-    // Check if we have an access token, if not, redirect to aws cognito login page
-    if(!localStorage.getItem("papyrusai_access_token")) {
-      window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-    }
-
-    // get user's most update-to-date info
-    //If access denied, then update the access token
-    Get(getUserData()).then((res) => {
-      if (res.status && res.status < 300) {
-        if (res.data && res.data) {
-          //update our version of user
-          setUser(res.data);
-          localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-        }
+    setTimeout(() => {
+      // Check if we have an access token, if not, redirect to aws cognito login page
+      if(!localStorage.getItem("papyrusai_access_token")) {
+        window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
       } else {
-        //remove user data
-        localStorage.removeItem("papyrusai_access_token");
-        localStorage.removeItem("papyrusai_user");
-        setUser(null);
+        // get user's most update-to-date info
+        //If access denied, then update the access token
+        Get(getUserData()).then((res) => {
+          if (res.status && res.status < 300) {
+            if (res.data && res.data) {
+              //update our version of user
+              setUser(res.data);
+              localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+            }
+          } else {
+            //remove user data
+            localStorage.removeItem("papyrusai_access_token");
+            localStorage.removeItem("papyrusai_user");
+            setUser(null);
+            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+          }
+        });
       }
-    });
+    }, 300);
   }, []);
 
   //handle log out
@@ -145,7 +148,7 @@ function App(): JSX.Element {
                   setUser(user);
                   localStorage.setItem("papyrusai_user", JSON.stringify(user));
                   //then close modal
-                  setShowUpdateUserInfoModal(false)
+                  setShowUpdateUserInfoModal(false);
                 }} 
                 />
               </Modal>

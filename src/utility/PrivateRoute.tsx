@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import Navigation from "../features/navigation/Navigation";
+import { UserType } from "./types/UserTypes";
 
 /**
  * Show the appropriate screens if the user is logged in
@@ -8,7 +9,7 @@ import Navigation from "../features/navigation/Navigation";
  */
 
 interface props {
-  user: any | null; //TODO
+  user: UserType | null; 
 }
 
 
@@ -24,7 +25,7 @@ export function PrivateRoute({ user }: props): JSX.Element {
   }, []);
 
 
-  return true ? ( //user && user.pk //TODO
+  return localStorage.getItem("papyrusai_access_token") && user ? (
     <>
       <Navigation />
       <div style={windowWidth >= 1024 ?

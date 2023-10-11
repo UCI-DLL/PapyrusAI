@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 
 
-export default function AddAssignment(): JSX.Element {
+export default function AddModule(): JSX.Element {
   let navigator = useNavigate();
 
 
@@ -21,8 +21,8 @@ export default function AddAssignment(): JSX.Element {
 
 
   return (
-    <div className="assignments">
-      <div className="assignments__section-header">
+    <div className="modules">
+      <div className="modules__section-header">
         <h3>Create Module</h3>
         <div>
           <Button variant="contained" onClick={() => navigator("/")}>Save</Button>
@@ -31,7 +31,7 @@ export default function AddAssignment(): JSX.Element {
         </div>
       </div>
       <hr />
-      <Box className="assignments__add">
+      <Box className="modules__add">
         <form onSubmit={handleSubmit}>
           <TextField
             name="coursename"

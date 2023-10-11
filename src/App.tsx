@@ -19,16 +19,17 @@ import "./fonts/OpenSans/OpenSans-Regular.ttf";
 // import ForgotPassword from "./features/authentication/ForgotPassword";
 import Chat from "./features/chat/Chat";
 import Reports from "./features/reports/Reports";
-import Assignments from "./features/assignment-modules/Assignments";
 import Courses from "./features/course-groups/Courses";
 import AddCourse from "./features/course-groups/AddCourse";
-import AddAssignment from "./features/assignment-modules/AddAssignment";
 import Get from "./utility/Get";
 import { getUserData } from "./utility/endpoints/UserEndpoints";
 import { UserType } from "./utility/types/UserTypes";
 import { Modal } from "./components/Modal";
 import { Button } from "@mui/material";
 import MissingUserInfoForm from "./features/dashboard/MissingUserInfoForm";
+import Modules from "./features/modules/Modules";
+import AddModule from "./features/modules/AddModule";
+import ConversationList from "./features/conversations/ConversationList";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -95,7 +96,7 @@ function App(): JSX.Element {
         //If access denied, then update the access token
         Get(getUserData()).then((res) => {
           if (res.status && res.status < 300) {
-            if (res.data && res.data) {
+            if (res.data) {
               //update our version of user
               setUser(res.data);
               localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
@@ -190,20 +191,20 @@ function App(): JSX.Element {
                   <Route path="/createcourse" element={<AddCourse />} />
                 </Route>
 
-                <Route path="/assignments" element={<PrivateRoute user={user} />}>
-                  <Route path="/assignments" element={<Assignments />} />
+                <Route path="/modules" element={<PrivateRoute user={user} />}>
+                  <Route path="/modules" element={<Modules />} />
                 </Route>
 
-                <Route path="/addassignment" element={<PrivateRoute user={user} />}>
-                  <Route path="/addassignment" element={<AddAssignment />} />
+                <Route path="/addmodule" element={<PrivateRoute user={user} />}>
+                  <Route path="/addmodule" element={<AddModule />} />
                 </Route>
 
-                <Route path="/courses/:id/assignments" element={<PrivateRoute user={user} />}>
-                  <Route path="/courses/:id/assignments" element={<Assignments />} />
+                <Route path="/courses/:id/modules" element={<PrivateRoute user={user} />}>
+                  <Route path="/courses/:id/modules" element={<Modules />} />
                 </Route>
 
-                <Route path="/courses/:id/assignments/:id" element={<PrivateRoute user={user} />}>
-                  <Route path="/courses/:id/assignments/:id" element={<Chat />} />
+                <Route path="/courses/:id/modules/:id" element={<PrivateRoute user={user} />}>
+                  <Route path="/courses/:id/modules/:id" element={<ConversationList />} />
                 </Route>
 
                 <Route path="/chat" element={<PrivateRoute user={user} />}>

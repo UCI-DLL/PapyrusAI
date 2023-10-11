@@ -18,7 +18,7 @@ export default function Chat(): JSX.Element {
   return (
     <div className="chat">
       <div className="chat__section-header">
-        <h5>Assignment #123</h5>
+        <h5>Module #123</h5>
         <div>
           <div>Course 543</div>
           <div>Prof Name</div>

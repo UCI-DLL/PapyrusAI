@@ -1,9 +1,13 @@
 
 
-export type UserType = Array<{
-  Name: string,
-  Value: string
-}>
+export type UserType = {
+  email: string;
+  email_verified: string,
+  family_name: string,
+  groups: Array<string>,
+  name: string,
+  sub: string, //username
+}
 
 export type CustomUserType = {
   email: string,
@@ -11,3 +15,4 @@ export type CustomUserType = {
   name: string,
   username: string,
 }
+

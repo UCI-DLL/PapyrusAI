@@ -14,7 +14,7 @@ export default function ModuleList({ list }: ModuleListProps): JSX.Element {
     bgcolor: 'background.paper',
   };
 
-  return (
+  return list.length < 0 ? (
     <div className="modules__list">
       <List sx={style} aria-label="modules list">
         {list.map((module, index) => {
@@ -35,5 +35,7 @@ export default function ModuleList({ list }: ModuleListProps): JSX.Element {
       </List>
 
     </div>
+  ) : (
+    <div>No available modules</div>
   )
 }

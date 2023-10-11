@@ -20,7 +20,7 @@ import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 
 
 export default function NavigationTwo(): JSX.Element {
-  const { setUser } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   let navigator = useNavigate();
   const location = useLocation();
 
@@ -35,9 +35,13 @@ export default function NavigationTwo(): JSX.Element {
   };
 
   //For the side drawer main nav menu
-  //TODO base this list off instuctor, researcher, student access
-  const mainMenuList = ["Dashboard", "Courses", "Modules", "Chat", "Reports"];
-  const mainMenuLinks = ["/", "/courses", "/modules", "/chat", "reports"]
+  // base this list off instuctor, researcher, student access
+  var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+    ["Dashboard", "Courses", "Modules", "Reports"] :
+    ["Dashboard", "Courses", "Modules"];
+  var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+    ["/", "/courses", "/modules", "reports"] :
+    ["/", "/courses", "/modules"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
@@ -59,7 +63,7 @@ export default function NavigationTwo(): JSX.Element {
      * modules
      * Course # > modules
      * course # > module #
-     * Free Chat
+     * Chat
      * Reports
      */
     const pathnameSplit = location.pathname.split("/");

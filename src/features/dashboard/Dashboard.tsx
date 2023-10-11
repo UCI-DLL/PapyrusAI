@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import CourseList from "../course-groups/CourseList";
 import ModuleList from "../modules/ModuleList";
 import { Button } from "@mui/material";
@@ -7,10 +7,12 @@ import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import { CourseType } from "../../utility/types/CourseTypes";
 import LinearProgress from '@mui/material/LinearProgress';
+import { UserContext } from "../../utility/context/UserContext";
 
 
 export default function Dashboard(): JSX.Element {
   let navigator = useNavigate();
+  const { user } = useContext(UserContext);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -23,10 +25,11 @@ export default function Dashboard(): JSX.Element {
           //update our version of user
           setCourseList(res.data);
         }
-      } else if(res.status === 401) {
+      } else if (res.status === 401) {
         navigator("/login");
       } else {
-        //TODO handle error
+        // handle error
+        setCourseList([])
       }
       setIsLoading(false);
     });
@@ -37,7 +40,9 @@ export default function Dashboard(): JSX.Element {
     <div className="dashboard">
       <div className="dashboard__section-header">
         <h3>My Courses</h3>
-        <Button variant="contained" onClick={() => navigator("/createcourse")}>Create Course</Button>
+        {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
+          <Button variant="contained" onClick={() => navigator("/createcourse")}>Create Course</Button>
+        )}
       </div>
 
       <hr />
@@ -47,10 +52,12 @@ export default function Dashboard(): JSX.Element {
 
       <div className="dashboard__section-header">
         <h3>Available Modules</h3>
-        <Button variant="contained" onClick={() => navigator("/addmodule")}>Create Module</Button>
+        {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
+          <Button variant="contained" onClick={() => navigator("/createmodule")}>Create Module</Button>
+        )}
       </div>
       <hr />
-      <ModuleList list={courseList.flatMap(course => course.modules)}/>
+      <ModuleList list={courseList.flatMap(course => course.modules)} />
 
     </div>
   ) : (

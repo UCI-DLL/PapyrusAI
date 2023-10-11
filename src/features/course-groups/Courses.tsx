@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@mui/material";
 import CourseList from "./CourseList";
@@ -6,10 +6,12 @@ import { CourseType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
+import { UserContext } from "../../utility/context/UserContext";
 
 
 export default function Courses(): JSX.Element {
   let navigator = useNavigate();
+  const { user } = useContext(UserContext);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
@@ -43,7 +45,9 @@ export default function Courses(): JSX.Element {
         <>
           <div className="courses__section-header">
             <h3>My Courses</h3>
-            <Button variant="contained" onClick={() => navigator("/createcourse")}>Create Course</Button>
+            {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
+              <Button variant="contained" onClick={() => navigator("/createcourse")}>Create Course</Button>
+            )}
           </div>
           <hr />
           <CourseList list={courseList} />

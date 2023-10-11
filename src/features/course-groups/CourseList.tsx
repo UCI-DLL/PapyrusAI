@@ -4,72 +4,40 @@ import CardActions from '@mui/material/CardActions';
 import Button from '@mui/material/Button';
 import { CardHeader, IconButton } from "@mui/material";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { CourseType } from "../../utility/types/CourseTypes";
+import { useNavigate } from "react-router";
 
+interface CourseListProps {
+  list: Array<CourseType>
+}
 
-export default function CourseList(): JSX.Element {
-
-
+export default function CourseList({ list }: CourseListProps): JSX.Element {
+  let navigator = useNavigate();
   return (
     <div className="courses__list">
-      <Card sx={{ width: 275, margin: "1rem" }}>
-        <CardHeader
-          action={
-            <IconButton aria-label="settings">
-              <MoreVertIcon />
-            </IconButton>
-          }
-          title="ENG 123"
-          subheader="1 Module(s) Available"
-        />
-        <CardActions>
-          <Button size="small">Learn More</Button>
-        </CardActions>
-      </Card>
-
-      <Card sx={{ width: 275, margin: "1rem" }}>
-        <CardHeader
-          action={
-            <IconButton aria-label="settings">
-              <MoreVertIcon />
-            </IconButton>
-          }
-          title="ENG 124"
-          subheader="2 Module(s) Available"
-        />
-        <CardActions>
-          <Button size="small">Learn More</Button>
-        </CardActions>
-      </Card>
-
-      <Card sx={{ width: 275, margin: "1rem" }}>
-        <CardHeader
-          action={
-            <IconButton aria-label="settings">
-              <MoreVertIcon />
-            </IconButton>
-          }
-          title="ENG 125"
-          subheader="3 Module(s) Available"
-        />
-        <CardActions>
-          <Button size="small">Learn More</Button>
-        </CardActions>
-      </Card>
-
-      <Card sx={{ width: 275, margin: "1rem" }}>
-        <CardHeader
-          action={
-            <IconButton aria-label="settings">
-              <MoreVertIcon />
-            </IconButton>
-          }
-          title="ENG 127"
-          subheader="6 Module(s) Available"
-        />
-        <CardActions>
-          <Button size="small">Learn More</Button>
-        </CardActions>
-      </Card>
+      {list.map((course) => {
+        return (
+          <Card sx={{ width: 275, margin: "1rem" }}>
+            <CardHeader
+              action={
+                <IconButton aria-label="settings">
+                  <MoreVertIcon />
+                </IconButton>
+              }
+              title={course.name}
+              subheader={`Instructor: ${course.instructor.name} ${course.instructor.familyName}`}
+            />
+            <CardActions>
+              <Button
+                size="small"
+                onClick={() => navigator(`/courses/${course.id}/modules`)}
+              >
+                View Modules
+              </Button>
+            </CardActions>
+          </Card>
+        )
+      })}
     </div>
   )
 }

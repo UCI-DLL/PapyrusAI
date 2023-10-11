@@ -37,7 +37,7 @@ export default function NavigationTwo(): JSX.Element {
   //For the side drawer main nav menu
   //TODO base this list off instuctor, researcher, student access
   const mainMenuList = ["Dashboard", "Courses", "Modules", "Chat", "Reports"];
-  const mainMenuLinks = ["/", "/courses", "/assignments", "/chat", "reports"]
+  const mainMenuLinks = ["/", "/courses", "/modules", "/chat", "reports"]
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
@@ -56,9 +56,9 @@ export default function NavigationTwo(): JSX.Element {
     /**
      * Dashboard > Overview
      * Courses
-     * assignments
-     * Course # > Assignments
-     * course # > assignment #
+     * modules
+     * Course # > modules
+     * course # > module #
      * Free Chat
      * Reports
      */
@@ -67,18 +67,18 @@ export default function NavigationTwo(): JSX.Element {
       setBreadcrumbText(["Dashboard", "Overview"])
     } else if (location.pathname === "/courses") {
       setBreadcrumbText(["Courses", ""])
-    } else if (location.pathname === "/assignments") {
-      setBreadcrumbText(["Assignments", ""])
+    } else if (location.pathname === "/modules") {
+      setBreadcrumbText(["Modules", ""])
     } else if (
       pathnameSplit.length === 4 &&
       pathnameSplit[1] === "courses" &&
-      pathnameSplit[3] === "assignments"
+      pathnameSplit[3] === "modules"
     ) {
-      setBreadcrumbText([pathnameSplit[2], "Assignments"])
+      setBreadcrumbText(["Modules", ""])
     } else if (
       pathnameSplit.length === 5 &&
       pathnameSplit[1] === "courses" &&
-      pathnameSplit[3] === "assignments"
+      pathnameSplit[3] === "modules"
     ) {
       setBreadcrumbText([pathnameSplit[2], pathnameSplit[4]])
     } else if (location.pathname === "/chat") {
@@ -247,7 +247,7 @@ export default function NavigationTwo(): JSX.Element {
                 color="inherit"
                 href={
                   breadcrumbText[0] === "Dashboard" ? "/" :
-                    `/courses/${breadcrumbText[0]}/assignments`
+                    `/courses/${breadcrumbText[0]}/modules`
                 }
               >
                 {breadcrumbText[0]}

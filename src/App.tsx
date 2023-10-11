@@ -30,6 +30,7 @@ import MissingUserInfoForm from "./features/dashboard/MissingUserInfoForm";
 import Modules from "./features/modules/Modules";
 import AddModule from "./features/modules/AddModule";
 import ConversationList from "./features/conversations/ConversationList";
+import EditCourse from "./features/course-groups/EditCourse";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -189,6 +190,10 @@ function App(): JSX.Element {
 
                 <Route path="/createcourse" element={<PrivateRoute user={user} />}>
                   <Route path="/createcourse" element={<AddCourse />} />
+                </Route>
+
+                <Route path="/editcourse/:id" element={<PrivateRoute user={user} />}>
+                  <Route path="/editcourse/:id" element={<EditCourse />} />
                 </Route>
 
                 <Route path="/modules" element={<PrivateRoute user={user} />}>

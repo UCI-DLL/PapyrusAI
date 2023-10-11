@@ -19,7 +19,7 @@ export default function ModuleList({ list }: ModuleListProps): JSX.Element {
       <List sx={style} aria-label="modules list">
         {list.map((module, index) => {
           return (
-            <>
+            <div key={index}>
             {/* TODO update this button redirect  */}
               <button onClick={() => navigator("/module")}> 
                 <ListItem>
@@ -29,7 +29,7 @@ export default function ModuleList({ list }: ModuleListProps): JSX.Element {
               {index !== list.length -1 ? ( //only have dividers between modules
                 <Divider />
               ) : <></>}
-            </>
+            </div>
           )
         })}
       </List>

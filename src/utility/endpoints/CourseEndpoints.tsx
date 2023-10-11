@@ -12,7 +12,7 @@ export function getCourse(courseId: string) {
   return `/course/${courseId}`;
 }
 
-export function postUpdateCourse(courseId: string) {
+export function putUpdateCourse(courseId: string) {
   return `/course/${courseId}`;
 }
 

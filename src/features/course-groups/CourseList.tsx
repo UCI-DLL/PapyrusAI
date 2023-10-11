@@ -15,9 +15,9 @@ export default function CourseList({ list }: CourseListProps): JSX.Element {
   let navigator = useNavigate();
   return (
     <div className="courses__list">
-      {list.map((course) => {
+      {list.map((course, index) => {
         return (
-          <Card sx={{ width: 275, margin: "1rem" }}>
+          <Card sx={{ width: 275, margin: "1rem" }} key={index}>
             <CardHeader
               action={
                 <IconButton aria-label="settings">

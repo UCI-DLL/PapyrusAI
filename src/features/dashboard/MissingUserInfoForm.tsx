@@ -64,7 +64,7 @@ export default function MissingUserInfoForm({
       // set is loading
       setIsLoading(true);
       // post data back
-      Post(postUserData(), {}).then((res) => {
+      Post(postUserData(), session).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //close modal if user data was updated

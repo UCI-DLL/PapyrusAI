@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "@mui/material";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
@@ -6,11 +6,13 @@ import Get from "../../utility/Get";
 import { getCourse, getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
 import LinearProgress from '@mui/material/LinearProgress';
+import { UserContext } from "../../utility/context/UserContext";
 
 
 export default function Modules(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
+  const { user } = useContext(UserContext);
   const [moduleList, setModuleList] = useState<Array<ModuleType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
@@ -67,12 +69,9 @@ export default function Modules(): JSX.Element {
             {course?.name ? (
               <>
                 <h3>{course.name}'s Available Modules</h3>
-                <Button
-                  variant="contained"
-                  onClick={() => navigator("/addmodule")}
-                >
-                  Create Module
-                </Button>
+                {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
+                  <Button variant="contained" onClick={() => navigator("/createmodule")}>Create Module</Button>
+                )}
               </>
             ) : (
               <h3>All Available Modules</h3>

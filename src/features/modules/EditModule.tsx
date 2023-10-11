@@ -1,30 +1,32 @@
+
+
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button, Box, TextField, FormLabel } from "@mui/material";
 import Get from "../../utility/Get";
 import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoints";
 import Put from "../../utility/Put";
-import { CourseType } from "../../utility/types/CourseTypes";
+import { ModuleType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
 
-type EditCourseType = {
+type EditModuleType = {
   name: string,
   signUpCode: string,
   isDeleted: boolean,
   isActive: boolean,
 }
 
-export default function EditCourse(): JSX.Element {
+export default function EditModule(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
-  const [session, setSession] = useState<EditCourseType>({
+  const [session, setSession] = useState<EditModuleType>({
     name: "",
     signUpCode: "",
     isDeleted: false,
     isActive: false,
   });
-  const [prevSession, setPrevSession] = useState<CourseType | undefined>();
-  const [errors, setErrors] = useState<EditCourseType>({
+  const [prevSession, setPrevSession] = useState<ModuleType | undefined>();
+  const [errors, setErrors] = useState<EditModuleType>({
     name: "",
     signUpCode: "",
     isDeleted: false,
@@ -84,54 +86,27 @@ export default function EditCourse(): JSX.Element {
         // set is loading
         setIsLoading(true);
         //dont send signupcode if it didnt change
-        if (prevSession.signUpCode === session.signUpCode) {
-          const dataToSend = {
-            name: session.name,
-            isActive: session.isActive,
-            isDeleted: session.isDeleted
+        // post data back
+        Put(putUpdateCourse(prevSession.id), session).then((res) => {
+          if (res.status && res.status < 300) {
+            if (res.data && res.data) {
+              //redirect to course list
+              navigator("/courses");
+              //TODO some kind of pop up notifying user of creation
+            }
+          } else {
+            // set errors
+            setErrors({
+              name: res.data,
+              signUpCode: res.data,
+              isDeleted: res.data,
+              isActive: res.data
+            })
           }
-          // post data back
-          Put(putUpdateCourse(prevSession.id), dataToSend).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //redirect to course list
-                navigator("/courses");
-                //TODO some kind of pop up notifying user of creation
-              }
-            } else {
-              // set errors
-              setErrors({
-                name: res.data,
-                signUpCode: res.data,
-                isDeleted: res.data,
-                isActive: res.data
-              });
-            }
-            // set is loading back 
-            setIsLoading(false);
-          });
-        } else {
-          // post data back
-          Put(putUpdateCourse(prevSession.id), session).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //redirect to course list
-                navigator("/courses");
-                //TODO some kind of pop up notifying user of creation
-              }
-            } else {
-              // set errors
-              setErrors({
-                name: res.data,
-                signUpCode: res.data,
-                isDeleted: res.data,
-                isActive: res.data
-              })
-            }
-            // set is loading back 
-            setIsLoading(false);
-          });
-        }
+          // set is loading back 
+          setIsLoading(false);
+        });
+
 
       }
     }
@@ -192,7 +167,7 @@ export default function EditCourse(): JSX.Element {
               Active
             </span>
           </Checkbox>
-          <p>Setting course as active will allow other users to be able to access this course.</p>
+          <p>Setting course as active will allow other users to be able to access this module.</p>
           <Checkbox
             onClick={() => {
               setSession((prev) => ({
@@ -211,6 +186,6 @@ export default function EditCourse(): JSX.Element {
       </Box>
     </div>
   ) : (
-    <div>Course Not Found</div>
+    <div>Module Not Found</div>
   )
 }

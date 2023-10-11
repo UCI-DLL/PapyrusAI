@@ -1,9 +1,9 @@
 import { createContext } from "react";
-// import { v3UserType } from "../Types"
+import { UserType } from "../types/UserTypes";
 
 export const UserContext = createContext<{
-  user: any | null, //TODO type
-  setUser: (user: any | null) => void
+  user: UserType | null, 
+  setUser: (user: UserType | null) => void
 } >({
   user: null,
   setUser: () => {},

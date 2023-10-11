@@ -43,7 +43,7 @@ export default function Registration(props: RegistrationProps): JSX.Element {
       const formData = new FormData();
       formData.append("username", session.username);
       formData.append("password", session.password);
-      //TODO
+      //
       // Post(v3Login(organization.pk), formData).then((val) => {
       //   if (val.status && val.status < 300) {
       //     //save user to local

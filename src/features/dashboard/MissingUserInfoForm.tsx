@@ -10,7 +10,7 @@ import { postUserData } from "../../utility/endpoints/UserEndpoints";
  */
 
 interface MissingUserInfoFormProps {
-  user: UserType,
+  user: UserType | undefined,
   closeForm: (user:UserType) => void,
 }
 
@@ -37,18 +37,16 @@ export default function MissingUserInfoForm({
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close
-    if(user.some(e => e.Name === 'name') && user.some(e => e.Name === 'family_name')) {
+    if(user && user.name && user.name !== "" && user.family_name && user.family_name !== "") {
       //if the user has both name and family name, then close modal
       closeForm(user);
     } else {
       //set new user data based on old data
-      if (user.some(e => e.Name === 'name')) {
-        let prevName = user.find(e => e.Name === 'name');
-        setSession((prev) => ({...prev, name: prevName ? prevName.Value : ""}))
+      if (user && user.name && user.name !== "") {
+        setSession((prev) => ({...prev, name: user.name}))
       }
-      if (user.some(e => e.Name === 'family_name')) {
-        let prevFamilyName = user.find(e => e.Name === 'family_name');
-        setSession((prev) => ({...prev, family_name: prevFamilyName ? prevFamilyName.Value : ""}))
+      if (user && user.family_name && user.family_name !== "") {
+        setSession((prev) => ({...prev, family_name: user.family_name}))
       }
     }
   }, [user, closeForm]);

@@ -13,7 +13,7 @@ interface CourseListProps {
 
 export default function CourseList({ list }: CourseListProps): JSX.Element {
   let navigator = useNavigate();
-  return (
+  return list.length < 0 ? (
     <div className="courses__list">
       {list.map((course, index) => {
         return (
@@ -39,5 +39,7 @@ export default function CourseList({ list }: CourseListProps): JSX.Element {
         )
       })}
     </div>
+  ) : (
+    <div>No available courses</div>
   )
 }

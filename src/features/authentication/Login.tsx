@@ -15,7 +15,10 @@ export default function Login(props: LoginProps): JSX.Element {
     //Currently, this page just saves the token and then navigates to the home page
     if(location.hash) {
       localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
-    } 
+    } else {
+      console.log("here TODO");
+      window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+    }
     navigator("/");
     // eslint-disable-next-line
   }, [location.hash]);
@@ -55,7 +58,7 @@ export default function Login(props: LoginProps): JSX.Element {
   //     const formData = new FormData();
   //     formData.append("username", session.username);
   //     formData.append("password", session.password);
-  //     //TODO
+  //     //
   //     // Post(v3Login(organization.pk), formData).then((val) => {
   //     //   if (val.status && val.status < 300) {
   //     //     //save user to local

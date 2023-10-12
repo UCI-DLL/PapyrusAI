@@ -13,7 +13,8 @@ interface CourseListProps {
 
 export default function CourseList({ list }: CourseListProps): JSX.Element {
   let navigator = useNavigate();
-  return list.length < 0 ? (
+
+  return list.length > 0 ? (
     <div className="courses__list">
       {list.map((course, index) => {
         return (

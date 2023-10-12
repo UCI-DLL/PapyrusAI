@@ -32,6 +32,7 @@ import AddModule from "./features/modules/AddModule";
 import ConversationList from "./features/conversations/ConversationList";
 import EditCourse from "./features/course-groups/EditCourse";
 import EditModule from "./features/modules/EditModule";
+import Account from "./features/account/Account";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -205,6 +206,10 @@ function App(): JSX.Element {
                   <Route path="/chat" element={<Chat />} />
                 </Route>
 
+                <Route path="/account" element={<PrivateRoute user={user} />}>
+                  <Route path="/account" element={<Account />} />
+                </Route>
+
                 {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
                   <>
                     <Route path="/createcourse" element={<PrivateRoute user={user} />}>
@@ -215,8 +220,8 @@ function App(): JSX.Element {
                       <Route path="/editcourse/:id" element={<EditCourse />} />
                     </Route>
 
-                    <Route path="/createmodule" element={<PrivateRoute user={user} />}>
-                      <Route path="/createmodule" element={<AddModule />} />
+                    <Route path="/courses/:id/createmodule" element={<PrivateRoute user={user} />}>
+                      <Route path="/courses/:id/createmodule" element={<AddModule />} />
                     </Route>
 
                     <Route path="/editmodule/:id" element={<PrivateRoute user={user} />}>

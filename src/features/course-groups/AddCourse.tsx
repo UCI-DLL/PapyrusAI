@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button, Box, TextField, FormLabel } from "@mui/material";
-import { postCreateCourse,  } from "../../utility/endpoints/CourseEndpoints";
+import { postCreateCourse } from "../../utility/endpoints/CourseEndpoints";
 import Post from "../../utility/Post";
 import { Checkbox } from "../../components/Checkbox";
-type AddEditCourseType = {
+
+type AddCourseType = {
   name: string,
   signUpCode: string,
   isActive: boolean
@@ -12,12 +13,12 @@ type AddEditCourseType = {
 
 export default function AddCourse(): JSX.Element {
   let navigator = useNavigate();
-  const [session, setSession] = useState<AddEditCourseType>({
+  const [session, setSession] = useState<AddCourseType>({
     name: "",
     signUpCode: "",
     isActive: false
   });
-  const [errors, setErrors] = useState<AddEditCourseType>({
+  const [errors, setErrors] = useState<AddCourseType>({
     name: "",
     signUpCode: "",
     isActive: false

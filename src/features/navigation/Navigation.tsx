@@ -89,6 +89,8 @@ export default function NavigationTwo(): JSX.Element {
       setBreadcrumbText(["Chat", ""])
     } else if (location.pathname === "/reports") {
       setBreadcrumbText(["Reports", ""])
+    } else if (location.pathname === "/account") {
+      setBreadcrumbText(["Account", ""])
     }
   }, [location])
 
@@ -190,8 +192,7 @@ export default function NavigationTwo(): JSX.Element {
             }}
             sx={{ zIndex: "10001" }}
           >
-            {/* //TODO handle this  */}
-            <MenuItem onClick={handleClose}>My account</MenuItem>
+            <MenuItem onClick={() => navigator("/account")}>My account</MenuItem>
             <MenuItem onClick={handleLogOut}>Logout</MenuItem>
           </Menu>
 
@@ -288,8 +289,7 @@ export default function NavigationTwo(): JSX.Element {
               }}
               sx={{ zIndex: "100001" }}
             >
-              {/* //TODO handle this  */}
-              <MenuItem onClick={handleClose}>My account</MenuItem>
+              <MenuItem onClick={() => navigator("/account")}>My account</MenuItem>
               <MenuItem onClick={handleLogOut}>Logout</MenuItem>
             </Menu>
           </div>

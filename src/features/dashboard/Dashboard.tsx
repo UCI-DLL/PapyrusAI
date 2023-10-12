@@ -22,7 +22,7 @@ export default function Dashboard(): JSX.Element {
     Get(getCourseList(), controller.signal).then(res => {
       if (res.status && res.status < 300) {
         if (res.data) {
-          //update our version of user
+          //get the list of all courses for this user
           setCourseList(res.data);
         }
       } else if (res.status === 401) {

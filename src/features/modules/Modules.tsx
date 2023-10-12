@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router";
 import { Button } from "@mui/material";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import { getCourse, getCourseList } from "../../utility/endpoints/CourseEndpoints";
+import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
 import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
@@ -22,27 +22,12 @@ export default function Modules(): JSX.Element {
   useEffect(() => {
     const controller = new AbortController();
     setIsLoading(true);
-    if (location.pathname === "/modules") { //show all modules
-      Get(getCourseList(), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
-          if (res.data) {
-            //update our version of user
-            setModuleList(res.data.flatMap((course: { modules: ModuleType; }) => course.modules));
-          }
-        } else if (res.status === 401) {
-          navigator("/login");
-        } else {
-          // handle error
-          setError("No Modules Found");
-        }
-        setIsLoading(false);
-      });
-    } else if (location.pathname.split("/")[1] === "courses") {
+    if (location.pathname.split("/")[1] === "courses" && location.pathname.split("/")[2]) {
       const courseId = location.pathname.split("/")[2];
       Get(getCourse(courseId), controller.signal).then(res => {
         if (res.status && res.status < 300) {
           if (res.data) {
-            //update our version of user
+            //Get the course and save the modules
             setModuleList(res.data.modules);
             setCourse(res.data);
           }
@@ -55,9 +40,8 @@ export default function Modules(): JSX.Element {
         setIsLoading(false);
       });
     }
-
     // eslint-disable-next-line
-  }, []);
+  }, [location]);
 
   return !isLoading ? (
     <div className="modules">
@@ -74,13 +58,13 @@ export default function Modules(): JSX.Element {
                 )}
               </>
             ) : (
-              <h3>All Available Modules</h3>
+              <h3>Available Modules</h3>
             )}
 
           </div>
           <hr />
           {moduleList.length > 0 ? (
-            <ModuleList list={moduleList} />
+            <ModuleList list={moduleList} courseId={course?.id ? course.id : undefined}/>
           ) : (
             <div>Course does not have any modules</div>
           )}

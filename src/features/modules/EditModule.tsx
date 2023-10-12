@@ -2,18 +2,48 @@
 
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Button, Box, TextField, FormLabel } from "@mui/material";
+import {
+  Button,
+  Box,
+  TextField,
+  FormLabel,
+  InputAdornment,
+  Select,
+  MenuItem,
+  ListItemText,
+  SelectChangeEvent,
+} from "@mui/material";
 import Get from "../../utility/Get";
-import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoints";
+import { getModule, putUpdateModule } from "../../utility/endpoints/CourseEndpoints";
 import Put from "../../utility/Put";
-import { ModuleType } from "../../utility/types/CourseTypes";
+import { DocumentType, PromptType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
+import CloseIcon from '@mui/icons-material/Close';
+import { getPromptList } from "../../utility/endpoints/PromptEndpoints";
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+    },
+  },
+};
 
 type EditModuleType = {
-  name: string,
-  signUpCode: string,
+  continuedInteraction: boolean,
+  documents: Array<DocumentType>,
+  id: string,
   isDeleted: boolean,
-  isActive: boolean,
+  isPublished: boolean,
+  isRepeating: boolean,
+  isTemplate: boolean,
+  moduleDescription: string,
+  name: string,
+  prompts: Array<string>,
+  showInitialPrompt: boolean,
+  showWizard: boolean,
 }
 
 export default function EditModule(): JSX.Element {
@@ -21,19 +51,57 @@ export default function EditModule(): JSX.Element {
   let navigator = useNavigate();
   const [session, setSession] = useState<EditModuleType>({
     name: "",
-    signUpCode: "",
+    moduleDescription: "",
+    isRepeating: false,
+    continuedInteraction: false,
+    isPublished: false,
+    documents: [],
+    showInitialPrompt: false,
+    prompts: [],
+    showWizard: true,
     isDeleted: false,
-    isActive: false,
+    isTemplate: false,
+    id: ""
   });
-  const [prevSession, setPrevSession] = useState<ModuleType | undefined>();
-  const [errors, setErrors] = useState<EditModuleType>({
+  const [errors, setErrors] = useState<any>({
     name: "",
-    signUpCode: "",
-    isDeleted: false,
-    isActive: false,
+    moduleDescription: "",
+    documents: "",
+    prompts: ""
   });
+  const [moduleIds, setModuleIds] = useState<{
+    courseId: string,
+    moduleId: string
+  }>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
+  const [newDoc, setNewDoc] = useState<DocumentType>({
+    usageText: "Please enter your ",
+    documentType: ""
+  });
+  const [promptList, setPromptList] = useState<Array<PromptType>>([]);
+  const [showFullPrompts, setShowFullPrompts] = useState<boolean>(false);
+
+  useEffect(() => {
+    //get prompts
+    const controller = new AbortController();
+    setIsLoading(true);
+    Get(getPromptList(), controller.signal).then(res => {
+      if (res.status && res.status < 300) {
+        if (res.data) {
+          //get list of prompts
+          setPromptList(res.data);
+        }
+      } else if (res.status === 401) {
+        navigator("/login");
+      } else {
+        // handle error
+        setPromptList([])
+      }
+      setIsLoading(false);
+    });
+    // eslint-disable-next-line
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -42,23 +110,20 @@ export default function EditModule(): JSX.Element {
       location.pathname &&
       location.pathname.split("/") &&
       location.pathname.split("/")[1] &&
-      location.pathname.split("/")[1] === "editcourse" &&
-      location.pathname.split("/")[2]
+      location.pathname.split("/")[2] &&
+      location.pathname.split("/")[4]
     ) {
       //get prev course data
       const courseId = location.pathname.split("/")[2];
-      Get(getCourse(courseId), controller.signal).then(res => {
+      const moduleId = location.pathname.split("/")[4];
+      //save the ids
+      setModuleIds({ courseId: courseId, moduleId: moduleId });
+      Get(getModule(courseId, moduleId), controller.signal).then(res => {
         if (res.status && res.status < 300) {
-          if (res.data) {
-            //set prev course data
-            setPrevSession(res.data);
+          if (res.data && res.data.prompts) {
+            // assign prompts to be prompt ids
             //also set session
-            setSession({
-              name: res.data.name,
-              signUpCode: res.data.signUpCode,
-              isDeleted: res.data.isDeleted,
-              isActive: res.data.isActive
-            });
+            setSession({ ...res.data, prompts: res.data.prompts.map((p: PromptType) => p.id) });
           }
         } else if (res.status === 401) {
           navigator("/login");
@@ -76,22 +141,22 @@ export default function EditModule(): JSX.Element {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (session.name === "") {
-      setErrors((prev) => ({ ...prev, name: "Name missing" }))
+      setErrors((prev: any) => ({ ...prev, name: "Name missing" }))
     }
-    else if (session.signUpCode === "") {
-      setErrors((prev) => ({ ...prev, signUpCode: "Sign up code missing" }))
+    else if (session.moduleDescription === "") {
+      setErrors((prev: any) => ({ ...prev, moduleDescription: "Sign up code missing" }))
     } else {
       //Update course
-      if (prevSession) {
+      if (moduleIds) {
         // set is loading
         setIsLoading(true);
         //dont send signupcode if it didnt change
         // post data back
-        Put(putUpdateCourse(prevSession.id), session).then((res) => {
+        Put(putUpdateModule(moduleIds.courseId, moduleIds.moduleId), session).then((res) => {
           if (res.status && res.status < 300) {
             if (res.data && res.data) {
               //redirect to course list
-              navigator("/courses");
+              navigator(`/courses/${moduleIds.courseId}/modules`);
               //TODO some kind of pop up notifying user of creation
             }
           } else {
@@ -116,10 +181,24 @@ export default function EditModule(): JSX.Element {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  return !error && prevSession ? (
+  function handleDocChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setNewDoc((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  const handleSelectChange = (event: SelectChangeEvent<typeof session.prompts>) => {
+    const {
+      target: { value },
+    } = event;
+    setSession((prev) => ({
+      ...prev,
+      prompts: typeof value === 'string' ? value.split(',') : value
+    }))
+  };
+
+  return !error && moduleIds && session ? (
     <div className="courses">
       <div className="courses__section-header">
-        <h3>Edit {prevSession.name}</h3>
+        <h3>Edit {session.name}</h3>
         <div>
           <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
           &nbsp;&nbsp;&nbsp;
@@ -127,12 +206,12 @@ export default function EditModule(): JSX.Element {
         </div>
       </div>
       <hr />
-      <Box className="courses__add">
+      <Box className="modules__add">
         <form onSubmit={handleSubmit}>
-          <FormLabel>Enter Course Information</FormLabel>
+          <FormLabel>Enter Module Information</FormLabel>
           <TextField
             name="name"
-            label="Course Name"
+            label="Module Name"
             fullWidth
             sx={{ margin: ".5rem 0" }}
             value={session.name}
@@ -142,44 +221,190 @@ export default function EditModule(): JSX.Element {
             disabled={isLoading}
           />
           <TextField
-            name="signUpCode"
-            label="Course Sign Up Code"
+            name="moduleDescription"
+            label="Module Description"
             fullWidth
             sx={{ margin: ".5rem 0" }}
-            placeholder="FALLCSE100ISCOOL"
-            value={session.signUpCode}
+            value={session.moduleDescription}
             onChange={handleChange}
-            error={errors.signUpCode !== ""}
-            helperText={errors.signUpCode}
+            error={errors.moduleDescription !== ""}
+            helperText={errors.moduleDescription}
             disabled={isLoading}
           />
+
+          <hr />
+
+          <FormLabel>Module Documents</FormLabel>
+          {/* add section for user to add documents  */}
+          <p>Add the docments you wish for the student to upload.</p>
+          <div className="modules__adddocuments">
+            <TextField
+              name="documentType"
+              label="Document Type"
+              fullWidth
+              sx={{ margin: ".5rem 0" }}
+              value={newDoc.documentType}
+              onChange={handleDocChange}
+              disabled={isLoading}
+              placeholder="Essay"
+            />
+            &nbsp;&nbsp;&nbsp;
+            <TextField
+              name="usageText"
+              label="Usage Text"
+              fullWidth
+              sx={{ margin: ".5rem 0" }}
+              value={newDoc.usageText}
+              onChange={handleDocChange}
+              disabled={isLoading}
+              placeholder="Please enter your "
+              InputProps={{
+                endAdornment: <InputAdornment position="start">{newDoc.documentType}</InputAdornment>,
+              }}
+            />
+            &nbsp;&nbsp;&nbsp;
+            <Button
+              sx={{ padding: "0rem 2rem" }}
+              variant="contained"
+              onClick={() => {
+                setSession((prev) => ({
+                  ...prev,
+                  documents: [...session.documents, newDoc]
+                }));
+                setNewDoc({documentType: "", usageText: "Please enter your "});
+              }}
+            >
+              Add
+            </Button>
+          </div>
+
+          {session.documents.length > 0 && (
+            <p>Current Documents</p>
+          )}
+
+          {session.documents.map((document, index) => {
+            return (
+              <div className="modules__documentslist" key={index}>
+                <div>
+                  <div>{document.documentType}</div>
+                  <div>{document.usageText}</div>
+                </div>
+                <Button
+                  aria-label="delete"
+                  onClick={() => {
+                    setSession((prev) => ({
+                      ...prev,
+                      documents: prev.documents.filter((d) => d.documentType !== document.documentType || d.usageText !== document.usageText)
+                    }))
+                  }}
+                >
+                  <CloseIcon />
+                </Button>
+              </div>
+            )
+          })}
+
+
+          <hr />
+
+          <FormLabel>Module Prompts</FormLabel>
+          {/* add dropdown to handle prompts  */}
+          <Select
+            labelId="multiple-prompt-checkbox-select"
+            id="multiple-prompt-checkbox-select"
+            multiple
+            value={session.prompts}
+            onChange={handleSelectChange}
+            renderValue={(selected) => {//find the name for the prompt id
+              return selected.map((id) => promptList.find((p) => p.id === id)?.name).join(', ');
+            }}
+            MenuProps={MenuProps}
+            fullWidth
+          >
+            {promptList.map((prompt, index) => (
+              <MenuItem key={index} value={prompt.id}>
+                <Checkbox checked={session.prompts.indexOf(prompt.id) > -1} />
+                <ListItemText primary={prompt.name} />
+              </MenuItem>
+            ))}
+          </Select>
+          {/* button and list to show the actual full list of prompts and not just the names */}
+          <Button onClick={() => setShowFullPrompts(!showFullPrompts)}>{showFullPrompts ? "Hide Full Prompts" : "Show Full Prompts"}</Button>
+          {showFullPrompts ? (
+            <div>
+              {session.prompts.map((id, index) => {
+                promptList.find((p) => p.id === id)
+                return (
+                  <div key={index}>
+                    <div>{promptList.find((p) => p.id === id)?.name}</div>
+                    <div>{promptList.find((p) => p.id === id)?.prompt}</div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : <></>}
+
+          <hr />
+
+          <FormLabel>Module Settings</FormLabel>
           <Checkbox
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
-                isActive: !session.isActive
+                isRepeating: !session.isRepeating
               }))
             }}
-            checked={session.isActive}
+            checked={session.isRepeating}
             isDisabled={isLoading}
           >
             <span>
-              Active
+              Repeating Prompts
             </span>
           </Checkbox>
-          <p>Setting course as active will allow other users to be able to access this module.</p>
+
           <Checkbox
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
-                isDeleted: !session.isDeleted
+                continuedInteraction: !session.continuedInteraction
               }))
             }}
-            checked={session ? session.isDeleted : false}
+            checked={session.continuedInteraction}
             isDisabled={isLoading}
           >
             <span>
-              Delete
+              Continued Interaction
+            </span>
+          </Checkbox>
+          <p>Allow users to freely chat after initial prompts.</p>
+
+          <Checkbox
+            onClick={() => {
+              setSession((prev) => ({
+                ...prev,
+                showInitialPrompt: !session.showInitialPrompt
+              }))
+            }}
+            checked={session.showInitialPrompt}
+            isDisabled={isLoading}
+          >
+            <span>
+              Show Initial Prompt
+            </span>
+          </Checkbox>
+
+          <Checkbox
+            onClick={() => {
+              setSession((prev) => ({
+                ...prev,
+                isPublished: !session.isPublished
+              }))
+            }}
+            checked={session.isPublished}
+            isDisabled={isLoading}
+          >
+            <span>
+              Publish
             </span>
           </Checkbox>
         </form>

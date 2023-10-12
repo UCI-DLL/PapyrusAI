@@ -33,6 +33,7 @@ import ConversationList from "./features/conversations/ConversationList";
 import EditCourse from "./features/course-groups/EditCourse";
 import EditModule from "./features/modules/EditModule";
 import Account from "./features/account/Account";
+import AllModules from "./features/modules/AllModules";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -191,7 +192,7 @@ function App(): JSX.Element {
                 </Route>
 
                 <Route path="/modules" element={<PrivateRoute user={user} />}>
-                  <Route path="/modules" element={<Modules />} />
+                  <Route path="/modules" element={<AllModules />} />
                 </Route>
 
                 <Route path="/courses/:id/modules" element={<PrivateRoute user={user} />}>
@@ -224,8 +225,8 @@ function App(): JSX.Element {
                       <Route path="/courses/:id/createmodule" element={<AddModule />} />
                     </Route>
 
-                    <Route path="/editmodule/:id" element={<PrivateRoute user={user} />}>
-                      <Route path="/editmodule/:id" element={<EditModule />} />
+                    <Route path="/courses/:id/editmodule/:id" element={<PrivateRoute user={user} />}>
+                      <Route path="/courses/:id/editmodule/:id" element={<EditModule />} />
                     </Route>
 
                     <Route path="/reports" element={<PrivateRoute user={user} />}>

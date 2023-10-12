@@ -72,7 +72,7 @@ export default function NavigationTwo(): JSX.Element {
     } else if (location.pathname === "/courses") {
       setBreadcrumbText(["Courses", ""])
     } else if (location.pathname === "/modules") {
-      setBreadcrumbText(["Modules", ""])
+      setBreadcrumbText(["All Modules", ""])
     } else if (
       pathnameSplit.length === 4 &&
       pathnameSplit[1] === "courses" &&
@@ -82,15 +82,17 @@ export default function NavigationTwo(): JSX.Element {
     } else if (
       pathnameSplit.length === 5 &&
       pathnameSplit[1] === "courses" &&
-      pathnameSplit[3] === "modules"
+      pathnameSplit[3] === "editmodule"
     ) {
-      setBreadcrumbText([pathnameSplit[2], pathnameSplit[4]])
+      setBreadcrumbText(["Edit Module", ""])
     } else if (location.pathname === "/chat") {
       setBreadcrumbText(["Chat", ""])
     } else if (location.pathname === "/reports") {
       setBreadcrumbText(["Reports", ""])
     } else if (location.pathname === "/account") {
       setBreadcrumbText(["Account", ""])
+    } else if (pathnameSplit[1] === "editcourse") {
+      setBreadcrumbText(["Edit Course", ""])
     }
   }, [location])
 

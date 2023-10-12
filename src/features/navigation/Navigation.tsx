@@ -20,7 +20,7 @@ import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 
 
 export default function NavigationTwo(): JSX.Element {
-  const { setUser } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   let navigator = useNavigate();
   const location = useLocation();
 
@@ -35,9 +35,13 @@ export default function NavigationTwo(): JSX.Element {
   };
 
   //For the side drawer main nav menu
-  //TODO base this list off instuctor, researcher, student access
-  const mainMenuList = ["Dashboard", "Courses", "Modules", "Chat", "Reports"];
-  const mainMenuLinks = ["/", "/courses", "/assignments", "/chat", "reports"]
+  // base this list off instuctor, researcher, student access
+  var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+    ["Dashboard", "Courses", "Modules", "Reports"] :
+    ["Dashboard", "Courses", "Modules"];
+  var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+    ["/", "/courses", "/modules", "reports"] :
+    ["/", "/courses", "/modules"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
@@ -56,10 +60,10 @@ export default function NavigationTwo(): JSX.Element {
     /**
      * Dashboard > Overview
      * Courses
-     * assignments
-     * Course # > Assignments
-     * course # > assignment #
-     * Free Chat
+     * modules
+     * Course # > modules
+     * course # > module #
+     * Chat
      * Reports
      */
     const pathnameSplit = location.pathname.split("/");
@@ -67,24 +71,28 @@ export default function NavigationTwo(): JSX.Element {
       setBreadcrumbText(["Dashboard", "Overview"])
     } else if (location.pathname === "/courses") {
       setBreadcrumbText(["Courses", ""])
-    } else if (location.pathname === "/assignments") {
-      setBreadcrumbText(["Assignments", ""])
+    } else if (location.pathname === "/modules") {
+      setBreadcrumbText(["All Modules", ""])
     } else if (
       pathnameSplit.length === 4 &&
       pathnameSplit[1] === "courses" &&
-      pathnameSplit[3] === "assignments"
+      pathnameSplit[3] === "modules"
     ) {
-      setBreadcrumbText([pathnameSplit[2], "Assignments"])
+      setBreadcrumbText(["Modules", ""])
     } else if (
       pathnameSplit.length === 5 &&
       pathnameSplit[1] === "courses" &&
-      pathnameSplit[3] === "assignments"
+      pathnameSplit[3] === "editmodule"
     ) {
-      setBreadcrumbText([pathnameSplit[2], pathnameSplit[4]])
+      setBreadcrumbText(["Edit Module", ""])
     } else if (location.pathname === "/chat") {
       setBreadcrumbText(["Chat", ""])
     } else if (location.pathname === "/reports") {
       setBreadcrumbText(["Reports", ""])
+    } else if (location.pathname === "/account") {
+      setBreadcrumbText(["Account", ""])
+    } else if (pathnameSplit[1] === "editcourse") {
+      setBreadcrumbText(["Edit Course", ""])
     }
   }, [location])
 
@@ -186,8 +194,7 @@ export default function NavigationTwo(): JSX.Element {
             }}
             sx={{ zIndex: "10001" }}
           >
-            {/* //TODO handle this  */}
-            <MenuItem onClick={handleClose}>My account</MenuItem>
+            <MenuItem onClick={() => navigator("/account")}>My account</MenuItem>
             <MenuItem onClick={handleLogOut}>Logout</MenuItem>
           </Menu>
 
@@ -247,7 +254,7 @@ export default function NavigationTwo(): JSX.Element {
                 color="inherit"
                 href={
                   breadcrumbText[0] === "Dashboard" ? "/" :
-                    `/courses/${breadcrumbText[0]}/assignments`
+                    `/courses/${breadcrumbText[0]}/modules`
                 }
               >
                 {breadcrumbText[0]}
@@ -284,8 +291,7 @@ export default function NavigationTwo(): JSX.Element {
               }}
               sx={{ zIndex: "100001" }}
             >
-              {/* //TODO handle this  */}
-              <MenuItem onClick={handleClose}>My account</MenuItem>
+              <MenuItem onClick={() => navigator("/account")}>My account</MenuItem>
               <MenuItem onClick={handleLogOut}>Logout</MenuItem>
             </Menu>
           </div>

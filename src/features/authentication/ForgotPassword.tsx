@@ -7,7 +7,7 @@ interface ForgotPasswordProps {
   setUser: (user: any) => void;
 }
 
-//TODO implement
+// implement
 export default function ForgotPassword(props: ForgotPasswordProps): JSX.Element {
   // let navigator = useNavigate();
   const [session, setSession] = useState({
@@ -31,7 +31,7 @@ export default function ForgotPassword(props: ForgotPasswordProps): JSX.Element 
       const formData = new FormData();
       formData.append("username", session.username);
       formData.append("password", session.password);
-      //TODO
+      //
       // Post(v3Login(organization.pk), formData).then((val) => {
       //   if (val.status && val.status < 300) {
       //     //save user to local

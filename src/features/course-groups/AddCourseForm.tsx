@@ -1,0 +1,90 @@
+import React, { useState } from "react";
+import { Button, Box, TextField, FormLabel } from "@mui/material";
+import Post from "../../utility/Post";
+import { postAddUserToCourseGroup } from "../../utility/endpoints/CourseEndpoints";
+
+/**
+ * This form is to update user's missing data
+ * Note: This is hard coded with only name and family_name 
+ */
+
+interface MissingUserInfoFormProps {
+  closeForm: () => void,
+}
+
+export default function AddCourseForm({
+  closeForm
+}: MissingUserInfoFormProps): JSX.Element {
+  //New user information
+  const [session, setSession] = useState<{
+    signUpCode: string,
+  }>({
+    signUpCode: "",
+  });
+  const [errors, setErrors] = useState<{
+    signUpCode: string,
+  }>({
+    signUpCode: "",
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if(session.signUpCode === "") {
+      setErrors((prev) => ({...prev, signUpCode: "Sign up code missing"}))
+    }
+    else {
+      // set is loading
+      setIsLoading(true);
+      // post data back
+      Post(postAddUserToCourseGroup(), session).then((res) => {
+        if (res.status && res.status < 300) {
+          if (res.data && res.data) {
+            //close modal if user data was updated
+            closeForm();
+          }
+        } else {
+          // set errors
+          setErrors({ signUpCode: res.data })
+        }
+        // set is loading back 
+        setIsLoading(false);
+      })
+    }
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  return (
+    <div className="addcourseform">
+      <Box className="addcourseform__add">
+        <form onSubmit={handleSubmit} style={{display: "flex", flexDirection: "column"}}>
+          <FormLabel>Enter Course Sign Up Code Information</FormLabel>
+          &nbsp;&nbsp;&nbsp;
+          <TextField
+            name="signUpCode"
+            label="Sign Up Code"
+            fullWidth
+            sx={{ margin: ".5rem 0" }}
+            value={session.signUpCode}
+            onChange={handleChange}
+            error={errors.signUpCode !== ""}
+            helperText={errors.signUpCode}
+            disabled={isLoading}
+          />
+          &nbsp;&nbsp;&nbsp;
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            type="submit"
+          >
+            Add Course
+          </Button>
+        </form>
+      </Box>
+    </div>
+  )
+}

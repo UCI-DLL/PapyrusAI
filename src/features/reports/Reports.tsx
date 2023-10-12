@@ -15,11 +15,11 @@ export default function Reports(): JSX.Element {
   function createData(
     name: string,
     classId: string,
-    assignment: number,
+    module: number,
     studentId: number,
     completed: number,
   ) {
-    return { name, classId, assignment, studentId, completed };
+    return { name, classId, module, studentId, completed };
   }
   
   const rows = [
@@ -57,7 +57,7 @@ export default function Reports(): JSX.Element {
           <TableRow>
             <TableCell>Student Name</TableCell>
             <TableCell align="right">Class</TableCell>
-            <TableCell align="right">Assignment</TableCell>
+            <TableCell align="right">module</TableCell>
             <TableCell align="right">Total Duration</TableCell>
             <TableCell align="right">Last Accessed</TableCell>
           </TableRow>
@@ -72,7 +72,7 @@ export default function Reports(): JSX.Element {
                 {row.name}
               </TableCell>
               <TableCell align="right">{row.classId}</TableCell>
-              <TableCell align="right">{row.assignment}</TableCell>
+              <TableCell align="right">{row.module}</TableCell>
               <TableCell align="right">{row.studentId}</TableCell>
               <TableCell align="right">{row.completed }</TableCell>
             </TableRow>

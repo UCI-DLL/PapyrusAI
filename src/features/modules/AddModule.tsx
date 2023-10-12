@@ -66,10 +66,11 @@ export default function AddModule(): JSX.Element {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [newDoc, setNewDoc] = useState<DocumentType>({
-    usageText: "Please Enter your ",
+    usageText: "Please enter your ",
     documentType: ""
   });
   const [promptList, setPromptList] = useState<Array<PromptType>>([]);
+  const [showFullPrompts, setShowFullPrompts] = useState<boolean>(false);
 
   useEffect(() => {
     //get prompts
@@ -181,9 +182,8 @@ export default function AddModule(): JSX.Element {
 
           <FormLabel>Module Documents</FormLabel>
           {/* add section for user to add documents  */}
-          {/* //TODO make mobile friendly  */}
           <p>Add the docments you wish for the student to upload.</p>
-          <div style={{ display: "flex", flexDirection: "row" }}>
+          <div className="modules__adddocuments">
             <TextField
               name="documentType"
               label="Document Type"
@@ -217,6 +217,7 @@ export default function AddModule(): JSX.Element {
                   ...prev,
                   documents: [...session.documents, newDoc]
                 }))
+                setNewDoc({documentType: "", usageText: "Please enter your "});
               }}
             >
               Add
@@ -229,9 +230,11 @@ export default function AddModule(): JSX.Element {
 
           {session.documents.map((document, index) => {
             return (
-              <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }} key={index}>
-                <div>{document.documentType}</div>
-                <div>{document.usageText}</div>
+              <div className="modules__documentslist" key={index}>
+                <div>
+                  <div>{document.documentType}</div>
+                  <div>{document.usageText}</div>
+                </div>
                 <Button
                   aria-label="delete"
                   onClick={() => {
@@ -271,7 +274,21 @@ export default function AddModule(): JSX.Element {
               </MenuItem>
             ))}
           </Select>
-          {/* TODO add something here to show the actual prompts and not just the names */}
+          {/* button and list to show the actual full list of prompts and not just the names */}
+          <Button onClick={() => setShowFullPrompts(!showFullPrompts)}>{showFullPrompts ? "Hide Full Prompts" : "Show Full Prompts"}</Button>
+          {showFullPrompts ? (
+            <div>
+              {session.prompts.map((id, index) => {
+                promptList.find((p) => p.id === id)
+                return (
+                  <div key={index}>
+                    <div>{promptList.find((p) => p.id === id)?.name}</div>
+                    <div>{promptList.find((p) => p.id === id)?.prompt}</div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : <></>}
 
           <hr />
 

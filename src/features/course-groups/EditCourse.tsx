@@ -6,6 +6,7 @@ import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoi
 import Put from "../../utility/Put";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
+import LinearProgress from '@mui/material/LinearProgress';
 
 type EditCourseType = {
   name: string,
@@ -30,7 +31,7 @@ export default function EditCourse(): JSX.Element {
     isDeleted: false,
     isActive: false,
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
 
   useEffect(() => {
@@ -141,76 +142,83 @@ export default function EditCourse(): JSX.Element {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  return !error && prevSession ? (
+  return !isLoading ? (
     <div className="courses">
-      <div className="courses__section-header">
-        <h3>Edit {prevSession.name}</h3>
-        <div>
-          <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
-          &nbsp;&nbsp;&nbsp;
-          <Button variant="contained" onClick={() => navigator("/")} color="secondary">Cancel</Button>
-        </div>
-      </div>
-      <hr />
-      <Box className="courses__add">
-        <form onSubmit={handleSubmit}>
-          <FormLabel>Enter Course Information</FormLabel>
-          <TextField
-            name="name"
-            label="Course Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.name}
-            onChange={handleChange}
-            error={errors.name !== ""}
-            helperText={errors.name}
-            disabled={isLoading}
-          />
-          <TextField
-            name="signUpCode"
-            label="Course Sign Up Code"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            placeholder="FALLCSE100ISCOOL"
-            value={session.signUpCode}
-            onChange={handleChange}
-            error={errors.signUpCode !== ""}
-            helperText={errors.signUpCode}
-            disabled={isLoading}
-          />
-          <Checkbox
-            onClick={() => {
-              setSession((prev) => ({
-                ...prev,
-                isActive: !session.isActive
-              }))
-            }}
-            checked={session.isActive}
-            isDisabled={isLoading}
-          >
-            <span>
-              Active
-            </span>
-          </Checkbox>
-          <p>Setting course as active will allow other users to be able to access this course.</p>
-          <Checkbox
-            onClick={() => {
-              setSession((prev) => ({
-                ...prev,
-                isDeleted: !session.isDeleted
-              }))
-            }}
-            checked={session ? session.isDeleted : false}
-            isDisabled={isLoading}
-          >
-            <span>
-              Delete
-            </span>
-          </Checkbox>
-        </form>
-      </Box>
+      {!error && prevSession ? (
+        <>
+          <div className="courses__section-header">
+            <h3>Edit {prevSession.name}</h3>
+            <div>
+              <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
+              &nbsp;&nbsp;&nbsp;
+              <Button variant="contained" onClick={() => navigator("/")} color="secondary">Cancel</Button>
+            </div>
+          </div>
+          <hr />
+          <Box className="courses__add">
+            <form onSubmit={handleSubmit}>
+              <FormLabel>Enter Course Information</FormLabel>
+              <TextField
+                name="name"
+                label="Course Name"
+                fullWidth
+                sx={{ margin: ".5rem 0" }}
+                value={session.name}
+                onChange={handleChange}
+                error={errors.name !== ""}
+                helperText={errors.name}
+                disabled={isLoading}
+              />
+              <TextField
+                name="signUpCode"
+                label="Course Sign Up Code"
+                fullWidth
+                sx={{ margin: ".5rem 0" }}
+                placeholder="FALLCSE100ISCOOL"
+                value={session.signUpCode}
+                onChange={handleChange}
+                error={errors.signUpCode !== ""}
+                helperText={errors.signUpCode}
+                disabled={isLoading}
+              />
+              <Checkbox
+                onClick={() => {
+                  setSession((prev) => ({
+                    ...prev,
+                    isActive: !session.isActive
+                  }))
+                }}
+                checked={session.isActive}
+                isDisabled={isLoading}
+              >
+                <span>
+                  Active
+                </span>
+              </Checkbox>
+              <p>Setting course as active will allow other users to be able to access this course.</p>
+              <Checkbox
+                onClick={() => {
+                  setSession((prev) => ({
+                    ...prev,
+                    isDeleted: !session.isDeleted
+                  }))
+                }}
+                checked={session ? session.isDeleted : false}
+                isDisabled={isLoading}
+              >
+                <span>
+                  Delete
+                </span>
+              </Checkbox>
+            </form>
+          </Box>
+        </>
+      ) : (
+        <div>Course Not Found</div>
+      )}
+
     </div>
   ) : (
-    <div>Course Not Found</div>
+    <LinearProgress />
   )
 }

@@ -15,15 +15,15 @@ export type CourseType = {
 
 export type ModuleType = {
   continuedInteraction: boolean,
-  documents: Array<any>,
+  documents: Array<DocumentType>,
   id: string,
   isDeleted: boolean,
   isPublished: boolean,
   isRepeating: boolean,
   isTemplate: boolean,
-  moduleDescription: boolean,
+  moduleDescription: string,
   name: string,
-  prompts: Array<any>,
+  prompts: Array<PromptType>,
   showInitialPrompt: boolean,
   showWizard: boolean,
 }

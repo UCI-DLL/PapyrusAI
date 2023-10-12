@@ -52,9 +52,7 @@ export default function Dashboard(): JSX.Element {
 
       <div className="dashboard__section-header">
         <h3>Available Modules</h3>
-        {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
-          <Button variant="contained" onClick={() => navigator("/createmodule")}>Create Module</Button>
-        )}
+        <Button variant="contained" onClick={() => navigator("/modules")}>View All Modules</Button>
       </div>
       <hr />
       <ModuleList list={courseList.flatMap(course => course.modules)} />

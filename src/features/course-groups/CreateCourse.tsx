@@ -11,7 +11,7 @@ type AddCourseType = {
   isActive: boolean
 }
 
-export default function AddCourse(): JSX.Element {
+export default function CreateCourse(): JSX.Element {
   let navigator = useNavigate();
   const [session, setSession] = useState<AddCourseType>({
     name: "",

@@ -20,7 +20,7 @@ import "./fonts/OpenSans/OpenSans-Regular.ttf";
 import Chat from "./features/chat/Chat";
 import Reports from "./features/reports/Reports";
 import Courses from "./features/course-groups/Courses";
-import AddCourse from "./features/course-groups/AddCourse";
+import CreateCourse from "./features/course-groups/CreateCourse";
 import Get from "./utility/Get";
 import { getUserData } from "./utility/endpoints/UserEndpoints";
 import { UserType } from "./utility/types/UserTypes";
@@ -214,7 +214,7 @@ function App(): JSX.Element {
                 {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
                   <>
                     <Route path="/createcourse" element={<PrivateRoute user={user} />}>
-                      <Route path="/createcourse" element={<AddCourse />} />
+                      <Route path="/createcourse" element={<CreateCourse />} />
                     </Route>
 
                     <Route path="/editcourse/:id" element={<PrivateRoute user={user} />}>

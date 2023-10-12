@@ -1,6 +1,6 @@
 @use "../global" as global;
 
-.assignments {
+.modules {
 
   max-width: global.$lg-break;
   display: flex;
@@ -36,6 +36,25 @@
     padding: 1rem;
     border-radius: 0.5rem;
 
+  }
+
+  &__adddocuments {
+    display: flex;
+    flex-direction: row;
+
+    @media screen and (max-width: global.$md-break) {
+      flex-direction: column;
+    }
+  }
+
+  &__documentslist{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    @media screen and (max-width: global.$md-break) {
+      // flex-direction: column;
+    }
   }
 
 }

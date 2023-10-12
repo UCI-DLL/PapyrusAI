@@ -26,7 +26,13 @@
 
     div {
       display: flex;
+      flex-direction: row;
       align-items: center;
+      justify-content: center;
+
+      @media (max-width: global.$sm-break) {
+        flex-direction: column;
+      }
     }
   }
 

@@ -7,6 +7,8 @@ import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
+import { Modal } from "../../components/Modal";
+import AddCourseForm from "./AddCourseForm";
 
 
 export default function Courses(): JSX.Element {
@@ -15,26 +17,29 @@ export default function Courses(): JSX.Element {
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
+  const [showAddCourseModal, setShowAddCourseModal] = useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    setIsLoading(true);
-    Get(getCourseList(), controller.signal).then(res => {
-      if (res.status && res.status < 300) {
-        if (res.data) {
-          //Get the list of all courses for this user
-          setCourseList(res.data);
+    if (!showAddCourseModal) {
+      setIsLoading(true);
+      Get(getCourseList(), controller.signal).then(res => {
+        if (res.status && res.status < 300) {
+          if (res.data) {
+            //Get the list of all courses for this user
+            setCourseList(res.data);
+          }
+        } else if (res.status === 401) {
+          navigator("/login");
+        } else {
+          // handle error
+          setError("No Courses Found");
         }
-      } else if (res.status === 401) {
-        navigator("/login");
-      } else {
-        // handle error
-        setError("No Courses Found");
-      }
-      setIsLoading(false);
-    });
+        setIsLoading(false);
+      });
+    }
     // eslint-disable-next-line
-  }, []);
+  }, [showAddCourseModal]);
 
 
   return !isLoading ? (
@@ -44,10 +49,32 @@ export default function Courses(): JSX.Element {
       ) : (
         <>
           <div className="courses__section-header">
+            <Modal
+              isOpen={showAddCourseModal}
+              title={"Add course by sign up code"}
+              onRequestClose={() => setShowAddCourseModal(false)}
+              actions={
+                <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setShowAddCourseModal(false)}>
+                  Cancel
+                </Button>
+              }
+            >
+              <AddCourseForm
+                closeForm={() => {
+                  //then close modal
+                  setShowAddCourseModal(false);
+                }}
+              />
+            </Modal>
             <h3>My Courses</h3>
-            {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
-              <Button variant="contained" onClick={() => navigator("/createcourse")}>Create Course</Button>
-            )}
+            <div>
+              {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
+                <Button variant="outlined" onClick={() => navigator("/createcourse")}>Create Course</Button>
+              )}
+              &nbsp;&nbsp;&nbsp;
+              <Button variant="contained" onClick={() => setShowAddCourseModal(true)}>Add Course</Button>
+            </div>
+
           </div>
           <hr />
           <CourseList list={courseList} />

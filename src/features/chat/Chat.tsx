@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { MessageLeft, MessageRight } from "../../components/Message";
 import { Box } from "@mui/material";
-import MessageOptions from "../../components/MessageOptions";
 import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -26,9 +25,18 @@ export default function Chat(): JSX.Element {
     conversationIndex: string
   }>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [messages, setMessages] = useState<Array<MessageType>>();
+  const socket = useRef<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [messages, setMessages] = useState<Array<MessageType>>([]);
   const [courseInfo, setCourseInfo] = useState<CourseType>();
+  const [newMessage, setNewMessage] = useState<string>("");
 
+  useEffect(() => {
+    //Disconnect websocket if we leave page
+    return () => {
+      socket.current?.close();
+    };
+  }, []);
 
   useEffect(() => {
     if (location.state && location.state.courseId && location.state.moduleId && location.state.conversationIndex !== undefined) {
@@ -54,7 +62,10 @@ export default function Chat(): JSX.Element {
           if (res.data && res.data.messages) {
             console.log(res.data);
             //Get list of messages for the conversation
-            setMessages(res.data.messages);
+            //make sure the messages are in timestamp order
+            setMessages(res.data.messages.sort((a: MessageType, b: MessageType) => parseInt(a.timestamp) - parseInt(b.timestamp)));
+            //Then connect to the websocket
+            onConnect()
           }
         } else if (res.status === 401) {
           navigator("/login");
@@ -68,9 +79,86 @@ export default function Chat(): JSX.Element {
       //If we didnt get a state, then redirect to course list
       navigator("/courses");
     }
-  }, [location])
+    // eslint-disable-next-line
+  }, [location]);
 
-  return !isLoading && courseInfo && messages && conversationIds ? (
+  const onSocketOpen = useCallback(() => {
+    console.log("connected")
+    setIsConnected(true);
+  }, []);
+
+  const onSocketClose = useCallback(() => {
+    setIsConnected(false);
+  }, []);
+
+  const onSocketMessage = useCallback((dataStr: string) => {
+    //Only the message as a string comes back so make some temp stuff for the message
+    if(isConnected) {
+      console.log(dataStr);
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: dataStr,
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: messageTempId
+      }
+      if (messages) {
+        setMessages((prev) => [...prev, responseMessage]);
+      }
+    }
+    
+  }, [messages, isConnected]);
+
+  const onConnect = useCallback(() => {
+    if (socket.current?.readyState !== WebSocket.OPEN) {
+      var URL = process.env.REACT_APP_WEBSOCKET_URL ? process.env.REACT_APP_WEBSOCKET_URL : "wss://ymaqouopq4.execute-api.us-east-2.amazonaws.com/production";
+      URL = URL + `/?token=${localStorage.getItem("papyrusai_access_token")}`;
+      URL = URL + `&courseId=${conversationIds?.courseId}&moduleId=${conversationIds?.moduleId}&index=${conversationIds?.conversationIndex}`
+      socket.current = new WebSocket(URL);
+      socket.current.addEventListener('open', onSocketOpen);
+      socket.current.addEventListener('close', onSocketClose);
+      socket.current.addEventListener('message', (event) => {
+        onSocketMessage(event.data);
+      });
+    }
+  }, [conversationIds, onSocketClose, onSocketMessage, onSocketOpen]);
+
+  const onSendMessage = useCallback(() => {
+    console.log("Sending message", newMessage);
+    //save message in message array
+    if (messages) {
+      //temp convert message to message type
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: newMessage,
+        messageType: "text",
+        role: "user",
+        sender: "username",
+        timestamp: messageTempId
+      }
+      setMessages((prev) => [...prev, responseMessage]);
+      socket.current?.send(JSON.stringify({
+        "action": "sendMessage",
+        "messages": [{
+          "role": "user", "content": newMessage
+        }]
+      }));
+      //Then reset newMessage
+      setNewMessage("");
+    }
+  }, [messages, newMessage]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSendMessage();
+  }
+
+  return !isLoading && courseInfo && conversationIds ? (
     <div className="chat">
       <div className="chat__section-header">
         <h5>{courseInfo.modules.find(module => module.id === conversationIds?.moduleId)?.name}</h5>
@@ -102,6 +190,30 @@ export default function Chat(): JSX.Element {
             )
           }
         })}
+        <form onSubmit={handleSubmit}>
+          <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
+            <InputLabel htmlFor="outlined-adornment-message">Send a message</InputLabel>
+            <OutlinedInput
+              id="outlined-adornment-message"
+              label="Send a message"
+              sx={{ width: "100%", color: "black" }}
+              value={newMessage}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="sumbit new message"
+                    edge="end"
+                    type="submit"
+                  >
+                    {<SendIcon />}
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+        </form>
+
 
 
         &nbsp;&nbsp;&nbsp;
@@ -111,62 +223,3 @@ export default function Chat(): JSX.Element {
     <LinearProgress />
   )
 }
-
-
-
-//Old template chat
-// const something = `The question of the meaning of life is one of the oldest and most profound philosophical inquiries, and it does not have a single, universally accepted answer. The meaning of life is a deeply subjective and philosophical concept, and it can vary from person to person based on their beliefs, values, and experiences.
-
-//   Ultimately, the meaning of life is a deeply personal and subjective matter. It may also evolve over time as a person's beliefs and experiences change. Some people find meaning in a combination of these perspectives, while others may continue to search for their own understanding of life's purpose. It's a question that has intrigued humanity for centuries and is likely to continue to do so.`
-{/* <MessageLeft
-          message={"This is the module description. You will ask our AI for feedback on your most recent essay."}
-          displayName="Prof Name"
-        />
-        <MessageLeft
-          message={"Please select the type of feedback you would like to receive."}
-          displayName="Prof Name"
-        />
-        <MessageOptions 
-          message={"Select an option."}
-          options={[
-            {title: "Option 1", message: "This is the actual message that will be sent to the AI chatbot"}, 
-            {title: "Option 2", message: "This is the actual message that will be sent to the AI chatbot"},
-            {title: "Option 3", message: "This is the actual message that will be sent to the AI chatbot"}
-          ]}
-        />
-        <MessageRight
-          message={"This is the actual message that will be sent to the AI chatbot. This will be determined by the selected option above."}
-        />
-        <MessageLeft
-          message={"This is the message returned from the AI chatbot. Here is an example:  I think this is an accurate and appropriate claim, but what evidence best supports this claim? Next time, try integrating evidence from a source that best supports your claim."}
-          displayName="AI Chatbot"
-        />
-        <MessageLeft
-          message={"You can now ask AI any questions you like."}
-          displayName="Prof Name"
-        />
-        <MessageRight
-          message={"What is the meaning of life?"}
-        />
-        <MessageLeft
-          message={something}
-          displayName="AI Chatbot"
-        />
-        <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
-          <InputLabel htmlFor="outlined-adornment-password">Send a message</InputLabel>
-          <OutlinedInput
-            id="outlined-adornment-password"
-            label="Send a message"
-            sx={{width: "100%", color: "black"}}
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  edge="end"
-                >
-                  {<SendIcon />}
-                </IconButton>
-              </InputAdornment>
-            }
-          />
-        </FormControl> */}

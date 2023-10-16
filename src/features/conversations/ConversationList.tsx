@@ -88,7 +88,10 @@ export default function ConversationList(): JSX.Element {
           </div>
           <hr />
           <List sx={style} aria-label="conversation list">
-            {conversationList && conversationList.conversations.map((conversation, index) => {
+            {conversationList && 
+            conversationList.conversations && 
+            conversationList.conversations.length > 0 ?
+            conversationList.conversations.map((conversation, index) => {
               const time = new Date(parseInt(conversation.id.substring(0, 13), 10)).toLocaleString();
               return (
                 <div key={index}>
@@ -97,15 +100,17 @@ export default function ConversationList(): JSX.Element {
                     <Link to={"/chat"} state={{...moduleIds, conversationIndex: index }} style={{ textAlign: "left" }}>
                       <ListItemText primary={`Conversation ${index + 1}`} secondary={`Created: ${time}`} />
                     </Link>
-
-                    {/* <Button color="error" onClick={() => console.log("TODO delete")}>Delete</Button> */}
                   </ListItem>
                   {index !== conversationList.conversations.length - 1 ? ( //only have dividers between modules
                     <Divider />
                   ) : <></>}
                 </div>
               )
-            })}
+            }) : (
+              <div style={{display: "flex", width: "100%", alignContent: "center", justifyContent: "center"}}>
+                <Button variant="contained" onClick={handleNewConveration}>Start a Conversation</Button>
+              </div>
+            )}
           </List>
         </>
       )}

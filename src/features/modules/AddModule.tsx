@@ -51,7 +51,7 @@ export default function AddModule(): JSX.Element {
     continuedInteraction: false,
     isPublished: false,
     documents: [],
-    showInitialPrompt: false,
+    showInitialPrompt: true,
     prompts: []
   });
   const [errors, setErrors] = useState<any>({
@@ -324,7 +324,7 @@ export default function AddModule(): JSX.Element {
           </Checkbox>
           <p>Allow users to freely chat after initial prompts.</p>
 
-          <Checkbox
+          {/* <Checkbox
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
@@ -337,7 +337,7 @@ export default function AddModule(): JSX.Element {
             <span>
               Show Initial Prompt
             </span>
-          </Checkbox>
+          </Checkbox> */}
 
           <Checkbox
             onClick={() => {

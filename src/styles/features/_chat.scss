@@ -38,4 +38,11 @@
     // overflow-y: scroll;
     width: 100%;
   }
+
+  &__wizard {
+    background-color: global.$white;
+    width: 100%;
+    border-radius: global.$border-radius;
+    padding: 1rem;
+  }
 }

@@ -112,6 +112,15 @@ export default function Chat(): JSX.Element {
     } else {
       setPromptsCompleted(false);
     }
+    //if no documents are needed
+    if(moduleInfo && moduleInfo.documents && moduleInfo.documents.length < 1) {
+      setUserDocuments([])
+    }
+    //if no prompts => aka free chat
+    if(moduleInfo && moduleInfo.prompts && moduleInfo.prompts.length < 1) {
+      setUserDocuments([]);
+      setSelectedPrompt("");
+    }
   }, [moduleInfo, repeatingPrompts, selectedPrompt, messages]);
 
   const onSocketOpen = useCallback(() => {
@@ -217,7 +226,6 @@ export default function Chat(): JSX.Element {
       onSendMessage([actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : ""]);
     }
   }
-
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">

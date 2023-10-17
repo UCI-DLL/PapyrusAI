@@ -37,10 +37,14 @@ export default function NavigationTwo(): JSX.Element {
   //For the side drawer main nav menu
   // base this list off instuctor, researcher, student access
   var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
-    ["Dashboard", "Courses", "Modules", "Reports"] :
+    user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
+      ["Dashboard", "Courses", "Modules", "Reports", "Prompts"] :
+      ["Dashboard", "Courses", "Modules", "Reports"] :
     ["Dashboard", "Courses", "Modules"];
   var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
-    ["/", "/courses", "/modules", "reports"] :
+    user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
+      ["/", "/courses", "/modules", "reports", "/prompts"] :
+      ["/", "/courses", "/modules", "reports"] :
     ["/", "/courses", "/modules"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -65,6 +69,7 @@ export default function NavigationTwo(): JSX.Element {
      * course # > module #
      * Chat
      * Reports
+     * prompts
      */
     const pathnameSplit = location.pathname.split("/");
     if (location.pathname === "/") {
@@ -99,6 +104,8 @@ export default function NavigationTwo(): JSX.Element {
       setBreadcrumbText(["Account", ""])
     } else if (pathnameSplit[1] === "editcourse") {
       setBreadcrumbText(["Edit Course", ""])
+    } else if (pathnameSplit[1] === "prompts") {
+      setBreadcrumbText(["Prompt", ""])
     }
   }, [location.pathname])
 

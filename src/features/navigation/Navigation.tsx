@@ -100,12 +100,12 @@ export default function NavigationTwo(): JSX.Element {
     } else if (pathnameSplit[1] === "editcourse") {
       setBreadcrumbText(["Edit Course", ""])
     }
-  }, [location])
+  }, [location.pathname])
 
   function handleLogOut() {
     setUser(null);
     localStorage.clear();
-    window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+    navigator("/login");
   }
 
   const toggleDrawer =

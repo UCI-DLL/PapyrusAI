@@ -121,7 +121,6 @@ function App(): JSX.Element {
   function handleLogOut() {
     localStorage.clear();
     setUser(null);
-    window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
   }
 
   return (

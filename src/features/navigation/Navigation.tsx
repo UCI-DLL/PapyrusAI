@@ -103,6 +103,7 @@ export default function NavigationTwo(): JSX.Element {
   }, [location])
 
   function handleLogOut() {
+    console.log("here1")
     setUser(null);
     localStorage.clear();
     navigator('/login');

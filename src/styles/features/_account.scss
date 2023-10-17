@@ -1,0 +1,17 @@
+@use "../global" as global;
+
+.account {
+  max-width: global.$lg-break;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: global.$base;
+  width: 100%;
+
+}
+
+.missinguserinfo {
+  width: 100%;
+}

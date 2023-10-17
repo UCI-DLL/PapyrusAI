@@ -12,11 +12,13 @@ import { postUserData } from "../../utility/endpoints/UserEndpoints";
 interface MissingUserInfoFormProps {
   user: UserType | undefined,
   closeForm: (user:UserType) => void,
+  requireUpdate?: boolean,
 }
 
 export default function MissingUserInfoForm({
   user,
-  closeForm
+  closeForm,
+  requireUpdate = true
 }: MissingUserInfoFormProps): JSX.Element {
   //New user information
   const [session, setSession] = useState<{
@@ -37,7 +39,7 @@ export default function MissingUserInfoForm({
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close
-    if(user && user.name && user.name !== "" && user.family_name && user.family_name !== "") {
+    if(user && user.name && user.name !== "" && user.family_name && user.family_name !== "" && requireUpdate) {
       //if the user has both name and family name, then close modal
       closeForm(user);
     } else {
@@ -49,7 +51,7 @@ export default function MissingUserInfoForm({
         setSession((prev) => ({...prev, family_name: user.family_name}))
       }
     }
-  }, [user, closeForm]);
+  }, [user, closeForm, requireUpdate]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -15,12 +15,14 @@ export default function Login(props: LoginProps): JSX.Element {
     //Currently, this page just saves the token and then navigates to the home page
     if(location.hash) {
       localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
+      navigator("/");
     } 
-    // else {
-    //   console.log("here TODO");
-    //   window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-    // }
-    navigator("/");
+    else if(!localStorage.getItem("papyrusai_access_token")) {
+      window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+    }
+    else {
+      navigator("/");
+    }
     // eslint-disable-next-line
   }, [location.hash]);
 

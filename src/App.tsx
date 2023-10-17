@@ -34,6 +34,8 @@ import EditCourse from "./features/course-groups/EditCourse";
 import EditModule from "./features/modules/EditModule";
 import Account from "./features/account/Account";
 import AllModules from "./features/modules/AllModules";
+import Prompts from "./features/prompts/Prompts";
+import EditPrompt from "./features/prompts/EditPrompt";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -231,6 +233,18 @@ function App(): JSX.Element {
 
                     <Route path="/reports" element={<PrivateRoute user={user} />}>
                       <Route path="/reports" element={<Reports />} />
+                    </Route>
+                  </>
+                )}
+
+                {user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") && (
+                  <>
+                    <Route path="/prompts" element={<PrivateRoute user={user} />}>
+                      <Route path="/prompts" element={<Prompts />} />
+                    </Route>
+
+                    <Route path="/prompts/:id" element={<PrivateRoute user={user} />}>
+                      <Route path="/prompts/:id" element={<EditPrompt />} />
                     </Route>
                   </>
                 )}

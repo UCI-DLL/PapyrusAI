@@ -56,7 +56,7 @@ export default function EditModule(): JSX.Element {
     continuedInteraction: false,
     isPublished: false,
     documents: [],
-    showInitialPrompt: false,
+    showInitialPrompt: true,
     prompts: [],
     showWizard: true,
     isDeleted: false,
@@ -378,7 +378,7 @@ export default function EditModule(): JSX.Element {
           </Checkbox>
           <p>Allow users to freely chat after initial prompts.</p>
 
-          <Checkbox
+          {/* <Checkbox
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
@@ -391,7 +391,7 @@ export default function EditModule(): JSX.Element {
             <span>
               Show Initial Prompt
             </span>
-          </Checkbox>
+          </Checkbox> */}
 
           <Checkbox
             onClick={() => {

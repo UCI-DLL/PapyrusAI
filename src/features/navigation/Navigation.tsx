@@ -85,6 +85,12 @@ export default function NavigationTwo(): JSX.Element {
       pathnameSplit[3] === "editmodule"
     ) {
       setBreadcrumbText(["Edit Module", ""])
+    } else if (
+      pathnameSplit.length === 5 &&
+      pathnameSplit[1] === "courses" &&
+      pathnameSplit[3] === "modules"
+    ) {
+      setBreadcrumbText(["Conversations", ""])
     } else if (location.pathname === "/chat") {
       setBreadcrumbText(["Chat", ""])
     } else if (location.pathname === "/reports") {
@@ -99,7 +105,7 @@ export default function NavigationTwo(): JSX.Element {
   function handleLogOut() {
     setUser(null);
     localStorage.clear();
-    navigator("/login");
+    window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
   }
 
   const toggleDrawer =

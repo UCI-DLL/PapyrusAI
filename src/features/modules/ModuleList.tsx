@@ -23,9 +23,9 @@ export default function ModuleList({ list, courseId }: ModuleListProps): JSX.Ele
         {list.map((module, index) => {
           return (
             <div key={index}>
-              {/* TODO update this button redirect to the conversation */}
+              {/* button redirect to the conversation */}
               <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
-                <button onClick={() => navigator("/modules")} style={{ textAlign: "left" }}>
+                <button onClick={() => courseId ? navigator(`/courses/${courseId}/modules/${module.id}`) : {}} style={{ textAlign: "left" }}>
                   <ListItemText primary={module.name} secondary={module.moduleDescription} />
                 </button>
                 {courseId && user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&

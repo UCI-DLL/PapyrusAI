@@ -103,10 +103,10 @@ export default function NavigationTwo(): JSX.Element {
   }, [location])
 
   function handleLogOut() {
-    console.log("here1")
+    console.log("here1", process.env.REACT_APP_LOGIN_URL)
     setUser(null);
     localStorage.clear();
-    navigator('/login');
+    window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "")
   }
 
   const toggleDrawer =

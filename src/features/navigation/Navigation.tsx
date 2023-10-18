@@ -43,8 +43,8 @@ export default function NavigationTwo(): JSX.Element {
     ["Dashboard", "Courses", "Modules"];
   var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
-      ["/", "/courses", "/modules", "reports", "/prompts"] :
-      ["/", "/courses", "/modules", "reports"] :
+      ["/", "/courses", "/modules", "/reports", "/prompts"] :
+      ["/", "/courses", "/modules", "/reports"] :
     ["/", "/courses", "/modules"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -98,7 +98,7 @@ export default function NavigationTwo(): JSX.Element {
       setBreadcrumbText(["Conversations", ""])
     } else if (location.pathname === "/chat") {
       setBreadcrumbText(["Chat", ""])
-    } else if (location.pathname === "/reports") {
+    } else if (pathnameSplit[1] === "reports") {
       setBreadcrumbText(["Reports", ""])
     } else if (location.pathname === "/account") {
       setBreadcrumbText(["Account", ""])

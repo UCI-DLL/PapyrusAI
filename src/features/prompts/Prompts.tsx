@@ -85,7 +85,7 @@ export default function Prompts(): JSX.Element {
                       <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                         <button onClick={() => navigator(`/prompts/${prompt.id}`)} style={{ textAlign: "left" }}>
                           <ListItemText 
-                          primary={`${prompt.name} - Created by: ${prompt.creator.name} ${prompt.creator.familyName}`} 
+                          primary={`${prompt.name} - Created by: ${prompt.creator.name} ${prompt.creator.family_name}`} 
                           secondary={prompt.prompt.substring(0, 120) + (prompt.prompt.length > 120 ? '...' : "")} 
                           />
                         </button>
@@ -99,7 +99,7 @@ export default function Prompts(): JSX.Element {
               </List>
             </div>
           ) : (
-            <div>No available modules</div>
+            <div>No available prompts</div>
           )}
         </>
       )}

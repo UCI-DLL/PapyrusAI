@@ -43,18 +43,24 @@ export default function AllModules(): JSX.Element {
         <div>{error}</div>
       ) : (
         <>
-          <div className="modules__section-header">
-            <h3>All Available Modules</h3>
-          </div>
-          <hr />
-          {courseList.map((course, index) => {
-            return course.modules.length > 0 ? (
-              <div key={index} style={{width: "100%"}}>
-                <h4>{course.name}</h4>
-                <ModuleList list={course.modules} courseId={course.id} />
+          {courseList.length > 0 ? (
+            <>
+              <div className="modules__section-header">
+                <h3>All Available Modules</h3>
               </div>
-            ) : (<div key={index}></div>)
-          })}
+              <hr />
+              {courseList.map((course, index) => {
+                return course.modules.length > 0 ? (
+                  <div key={index} style={{ width: "100%" }}>
+                    <h4>{course.name}</h4>
+                    <ModuleList list={course.modules} courseId={course.id} />
+                  </div>
+                ) : (<div key={index}></div>)
+              })}
+            </>
+          ) : (
+            <div>No modules found</div>
+          )}
         </>
       )}
     </div>

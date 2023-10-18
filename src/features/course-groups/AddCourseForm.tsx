@@ -46,7 +46,8 @@ export default function AddCourseForm({
           }
         } else {
           // set errors
-          setErrors({ signUpCode: res.data })
+          setErrors({ signUpCode: "Course Not Found" });
+          setSession({signUpCode: ""})
         }
         // set is loading back 
         setIsLoading(false);

@@ -36,6 +36,7 @@ import Account from "./features/account/Account";
 import AllModules from "./features/modules/AllModules";
 import Prompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/prompts/EditPrompt";
+import UserReports from "./features/reports/UserReports";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -233,6 +234,10 @@ function App(): JSX.Element {
 
                     <Route path="/reports" element={<PrivateRoute user={user} />}>
                       <Route path="/reports" element={<Reports />} />
+                    </Route>
+
+                    <Route path="/reports/:id" element={<PrivateRoute user={user} />}>
+                      <Route path="/reports/:id" element={<UserReports />} />
                     </Route>
                   </>
                 )}

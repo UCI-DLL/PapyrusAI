@@ -31,3 +31,7 @@ export function putUpdateModule(courseId: string, moduleId: string) {
 export function postAddUserToCourseGroup() {
   return `/course/user`;
 }
+
+export function getUsersInCourse(courseId: string) {
+  return `/course/${courseId}/users`;
+}

@@ -96,7 +96,7 @@ export default function ConversationList(): JSX.Element {
               return (
                 <div key={index}>
                   <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
-                    {/* TODO redirect to chat with and pass params  */}
+                    {/* redirect to chat with and pass params  */}
                     <Link to={"/chat"} state={{...moduleIds, conversationIndex: index }} style={{ textAlign: "left" }}>
                       <ListItemText primary={`Conversation ${index + 1}`} secondary={`Created: ${time}`} />
                     </Link>

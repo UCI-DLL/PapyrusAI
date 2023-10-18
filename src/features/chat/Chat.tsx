@@ -124,7 +124,6 @@ export default function Chat(): JSX.Element {
   }, [moduleInfo, repeatingPrompts, selectedPrompt, messages]);
 
   const onSocketOpen = useCallback(() => {
-    // console.log("connected")
     setIsConnected(true);
   }, []);
 
@@ -233,7 +232,7 @@ export default function Chat(): JSX.Element {
         <h5>{moduleInfo.name}</h5>
         <div>
           <div>{courseInfo.name}</div>
-          <div>{courseInfo.instructor.name + " " + courseInfo.instructor.familyName}</div>
+          <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}</div>
         </div>
       </div>
       <hr />

@@ -23,7 +23,7 @@ export default function CourseList({ list }: CourseListProps): JSX.Element {
             <Card sx={{ width: 275, margin: "1rem" }}>
               <CardHeader
                 title={course.name}
-                subheader={`Instructor: ${course.instructor.name} ${course.instructor.familyName}`}
+                subheader={`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
               />
               <CardActions sx={{ justifyContent: "space-between" }}>
                 <Button

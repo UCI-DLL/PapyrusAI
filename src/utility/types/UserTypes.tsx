@@ -11,8 +11,8 @@ export type UserType = {
 
 export type CustomUserType = {
   email: string,
-  familyName: string,
+  family_name: string,
   name: string,
-  username: string,
+  sub: string,
 }
 

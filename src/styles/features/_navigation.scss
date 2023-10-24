@@ -2,7 +2,7 @@
 
 
 .navigation {
-  width: 16rem;
+  width: 13rem;
   position: fixed;
   z-index: 10000;
 
@@ -23,6 +23,7 @@
     outline: solid 2px global.$primary;
     padding: 0.4rem 0;
     height: 100%; //Note: if this changes, change private route styling
+    padding-right: 1rem;
 
     &__spacing {
       width: 100%;
@@ -58,7 +59,7 @@
 
 .top-breadcrumb-bar {
   width: 100%;
-  margin-left: 16rem;
+  margin-left: 13rem;
   position: fixed;
   height: 3rem;
   background-color: global.$white;
@@ -68,7 +69,7 @@
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  z-index: 100000;
+  z-index: 1000;
 
   @media (max-width: global.$lg-break) {
     margin-left: 0;

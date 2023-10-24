@@ -5,8 +5,8 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Menu,
-  MenuItem,
+  // Menu,
+  // MenuItem,
   List,
   Breadcrumbs,
   Link,
@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { UserContext } from "../../utility/context/UserContext";
 import { useLocation, useNavigate } from "react-router";
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+// import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 
 
@@ -25,27 +25,27 @@ export default function NavigationTwo(): JSX.Element {
   const location = useLocation();
 
   //little menu for logout and account
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  // const open = Boolean(anchorEl);
+  // const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  //   setAnchorEl(event.currentTarget);
+  // };
+  // const handleClose = () => {
+  //   setAnchorEl(null);
+  // };
 
   //For the side drawer main nav menu
   // base this list off instuctor, researcher, student access
   var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
-      ["Dashboard", "Courses", "Modules", "Reports", "Prompts"] :
-      ["Dashboard", "Courses", "Modules", "Reports"] :
-    ["Dashboard", "Courses", "Modules"];
+      ["Dashboard", "Courses", "Modules", "Reports", "Prompts", "Account"] :
+      ["Dashboard", "Courses", "Modules", "Reports", "Account"] :
+    ["Dashboard", "Courses", "Modules", "Account"];
   var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
-      ["/", "/courses", "/modules", "/reports", "/prompts"] :
-      ["/", "/courses", "/modules", "/reports"] :
-    ["/", "/courses", "/modules"];
+      ["/", "/courses", "/modules", "/reports", "/prompts", "/account"] :
+      ["/", "/courses", "/modules", "/reports", "/account"] :
+    ["/", "/courses", "/modules", "/account"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
@@ -70,6 +70,7 @@ export default function NavigationTwo(): JSX.Element {
      * Chat
      * Reports
      * prompts
+     * account
      */
     const pathnameSplit = location.pathname.split("/");
     if (location.pathname === "/") {
@@ -153,9 +154,9 @@ export default function NavigationTwo(): JSX.Element {
       &nbsp;&nbsp;&nbsp;
       <Box sx={{
         position: "fixed",
-        width: "100%",
+        width: "14rem",
         paddingTop: "3rem",
-        zIndex: "100000"
+        zIndex: "10000"
       }}>
         <nav>
           <List>
@@ -169,8 +170,19 @@ export default function NavigationTwo(): JSX.Element {
                 </ListItemButton>
               </ListItem>
             ))}
+            <hr />
+            <ListItem key={"logout"} disablePadding>
+              <ListItemButton onClick={handleLogOut}>
+                <ListItemText primary={"Log Out"} />
+              </ListItemButton>
+            </ListItem>
           </List>
         </nav>
+        <div style={{ position: "fixed", bottom: "0", padding: "0.4rem" }}>
+            <Button onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform", "_blank")}>
+                Report Issue
+            </Button>
+          </div>
       </Box>
     </Box>
   );
@@ -187,30 +199,6 @@ export default function NavigationTwo(): JSX.Element {
               <h6 className="top__logo-title">PapyrusAI</h6>
             </span>
           </a>
-
-          <Button
-            id="basic-button"
-            aria-controls={open ? 'basic-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? 'true' : undefined}
-            onClick={handleClick}
-          >
-            <AccountCircleIcon fontSize="large" />
-          </Button>
-          <Menu
-            id="basic-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleClose}
-            MenuListProps={{
-              'aria-labelledby': 'basic-button',
-            }}
-            sx={{ zIndex: "10001" }}
-          >
-            <MenuItem onClick={() => navigator("/account")}>My account</MenuItem>
-            <MenuItem onClick={handleLogOut}>Logout</MenuItem>
-          </Menu>
-
         </header>
 
         <hr style={{ width: "100%" }} />
@@ -232,8 +220,19 @@ export default function NavigationTwo(): JSX.Element {
                   </ListItemButton>
                 </ListItem>
               ))}
+              <hr />
+              <ListItem key={"logout"} disablePadding>
+                <ListItemButton onClick={handleLogOut}>
+                  <ListItemText primary={"Log Out"} />
+                </ListItemButton>
+              </ListItem>
             </List>
           </nav>
+          <div style={{ position: "fixed", bottom: "0", padding: "0.4rem" }}>
+            <Button onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform", "_blank")}>
+                Report Issue
+            </Button>
+          </div>
         </Box>
       </div>
 
@@ -285,7 +284,7 @@ export default function NavigationTwo(): JSX.Element {
 
         {windowWidth < 1024 ? (
           <div>
-            <Button
+            {/* <Button
               id="basic-button"
               aria-controls={open ? 'basic-menu' : undefined}
               aria-haspopup="true"
@@ -306,7 +305,7 @@ export default function NavigationTwo(): JSX.Element {
             >
               <MenuItem onClick={() => navigator("/account")}>My account</MenuItem>
               <MenuItem onClick={handleLogOut}>Logout</MenuItem>
-            </Menu>
+            </Menu> */}
           </div>
         ) : <></>}
       </div>

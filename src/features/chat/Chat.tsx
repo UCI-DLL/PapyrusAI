@@ -39,12 +39,17 @@ export default function Chat(): JSX.Element {
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const [promptsCompleted, setPromptsCompleted] = useState<boolean>(false);
   const { setAlert } = useContext(AlertContext);
+  const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   useEffect(() => {
+    //reset alert
+    setAlert({message: "", type: "info"});
     //Disconnect websocket if we leave page
     return () => {
       socket.current?.close();
     };
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -115,15 +120,23 @@ export default function Chat(): JSX.Element {
       setPromptsCompleted(false);
     }
     //if no documents are needed
-    if(moduleInfo && moduleInfo.documents && moduleInfo.documents.length < 1) {
+    if (moduleInfo && moduleInfo.documents && moduleInfo.documents.length < 1) {
       setUserDocuments([])
     }
     //if no prompts => aka free chat
-    if(moduleInfo && moduleInfo.prompts && moduleInfo.prompts.length < 1) {
+    if (moduleInfo && moduleInfo.prompts && moduleInfo.prompts.length < 1) {
       setUserDocuments([]);
       setSelectedPrompt("");
     }
   }, [moduleInfo, repeatingPrompts, selectedPrompt, messages]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
 
   const onSocketOpen = useCallback(() => {
     setIsConnected(true);
@@ -133,10 +146,12 @@ export default function Chat(): JSX.Element {
     setIsConnected(false);
     //redirect back to the list of conversation with an error message
     navigator(`/courses/${location.state.courseId}/modules/${location.state.moduleId}`);
-    setAlert({message: "Conversation could not connect. Please try again later.", type: "error"})
+    setAlert({ message: "Conversation disconnected", type: "error" })
   }, [location.state, navigator, setAlert]);
 
   const onSocketMessage = useCallback((dataStr: string) => {
+    //turn off typing indicator for chatgpt
+    setShowTypingIndicator(false);
     //Only the message as a string comes back so make some temp stuff for the message
     const tempTimestamp = Date.now();
     const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
@@ -157,7 +172,7 @@ export default function Chat(): JSX.Element {
     if (socket.current?.readyState !== WebSocket.OPEN) {
       var URL = process.env.REACT_APP_WEBSOCKET_URL ? process.env.REACT_APP_WEBSOCKET_URL : "wss://ymaqouopq4.execute-api.us-east-2.amazonaws.com/production";
       URL = URL + `/?token=${localStorage.getItem("papyrusai_access_token")}`;
-      URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}` 
+      URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}`
       socket.current = new WebSocket(URL);
       socket.current.addEventListener('open', onSocketOpen);
       socket.current.addEventListener('close', onSocketClose);
@@ -170,7 +185,7 @@ export default function Chat(): JSX.Element {
   const onSendMessage = useCallback((messageList: Array<string>) => {
     //save message in message array
     if (messages) {
-      var messagesToSend: Array<{role: string, content: string}> = []
+      var messagesToSend: Array<{ role: string, content: string }> = []
       messageList.map(message => {
         //temp convert message to message type
         const tempTimestamp = Date.now();
@@ -194,6 +209,8 @@ export default function Chat(): JSX.Element {
         "action": "sendMessage",
         "messages": messagesToSend
       }));
+      //Set the typing indicator for chatgpt while we wait for a response
+      setShowTypingIndicator(true);
     }
   }, [messages]);
 
@@ -234,6 +251,7 @@ export default function Chat(): JSX.Element {
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">
+      <div className="chat__fixed-top">
       <div className="chat__section-header">
         <h5>{moduleInfo.name}</h5>
         <div>
@@ -254,6 +272,7 @@ export default function Chat(): JSX.Element {
           returnDocsPrompt={handleWizardReturnDocsPrompts}
         />
       )}
+      </div>
 
       &nbsp;&nbsp;&nbsp;
 
@@ -280,6 +299,14 @@ export default function Chat(): JSX.Element {
           }
         })}
 
+        {showTypingIndicator && (
+          <MessageLeft
+            message={""}
+            displayName={"ChatGPT"}
+            typing
+          />
+        )}
+
         {/* handle repeating prompts  */}
         {isConnected &&
           userDocuments !== undefined &&
@@ -298,14 +325,17 @@ export default function Chat(): JSX.Element {
             </div>
           )}
 
+          {/* handles scrolling to the bottom */}
+          <div ref={messagesEndRef} />
+
         {/* continuedInteraction input (if there are no more repeating prompts) */}
         {isConnected &&
           userDocuments !== undefined &&
           selectedPrompt !== undefined &&
           moduleInfo.continuedInteraction &&
           promptsCompleted && (
-            <form onSubmit={handleSubmit}>
-              <FormControl sx={{ m: 1, width: '100%', margin: "0" }} variant="outlined">
+            <form className="chat__input-form" onSubmit={handleSubmit}>
+              <FormControl sx={{ m: 1, width: '100%', margin: "0", backgroundColor: "#FFF" }} variant="outlined">
                 <InputLabel htmlFor="outlined-adornment-message">Send a message</InputLabel>
                 <OutlinedInput
                   id="outlined-adornment-message"
@@ -331,6 +361,7 @@ export default function Chat(): JSX.Element {
 
         &nbsp;&nbsp;&nbsp;
       </Box>
+      
     </div >
   ) : (
     <LinearProgress />

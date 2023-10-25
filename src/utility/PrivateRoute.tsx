@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import Navigation from "../features/navigation/Navigation";
 import { UserType } from "./types/UserTypes";
+import { AlertContext } from "./context/AlertContext";
+import { Alert } from "@mui/material";
 
 /**
  * Show the appropriate screens if the user is logged in
@@ -14,24 +16,22 @@ interface props {
 
 
 export function PrivateRoute({ user }: props): JSX.Element {
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  //create a use effect to get updated window size when user resizes window
-  useEffect(() => {
-    function handleResize() {
-      setWindowWidth(window.innerWidth)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, []);
+  const { alert, setAlert } = useContext(AlertContext);
 
+  useEffect(() => {
+    //When the page changes, reset the alert
+    setAlert({message: "", type: "info"})
+  }, [setAlert])
 
   return localStorage.getItem("papyrusai_access_token") && user ? (
     <>
       <Navigation />
-      <div style={windowWidth >= 1024 ?
-        { marginLeft: "17rem", width: "-webkit-fill-available", marginTop: "3rem" } :
-        { marginLeft: 0, marginTop: "3rem" }
-      }>
+      <div className="privateRoute">
+        {alert.message !== "" ? (
+          <Alert severity={alert.type}>{alert.message}</Alert>
+        ): (
+          <></>
+        )}
         <Outlet />
       </div>
     </>

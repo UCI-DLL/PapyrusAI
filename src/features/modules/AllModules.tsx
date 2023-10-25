@@ -53,7 +53,7 @@ export default function AllModules(): JSX.Element {
                 return course.modules.length > 0 ? (
                   <div key={index} style={{ width: "100%" }}>
                     <h4>{course.name}</h4>
-                    <ModuleList list={course.modules} courseId={course.id} />
+                    <ModuleList course={course} />
                   </div>
                 ) : (<div key={index}></div>)
               })}

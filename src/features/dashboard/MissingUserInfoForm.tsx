@@ -39,8 +39,9 @@ export default function MissingUserInfoForm({
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close
-    if(user && user.name && user.name !== "" && user.family_name && user.family_name !== "" && requireUpdate) {
-      //if the user has both name and family name, then close modal
+    if(user && user.name && user.name !== "" && requireUpdate) {
+      //if the user has both name, then close modal
+      //NOTE: family name optional
       closeForm(user);
     } else {
       //set new user data based on old data
@@ -58,9 +59,10 @@ export default function MissingUserInfoForm({
     if(session.name === "") {
       setErrors((prev) => ({...prev, name: "Name missing"}))
     }
-    else if(session.family_name === "") {
-      setErrors((prev) => ({...prev, family_name: "Family name missing"}))
-    } else {
+    // else if(session.family_name === "") {
+    //   setErrors((prev) => ({...prev, family_name: "Family name missing"}))
+    // } 
+    else {
       // set is loading
       setIsLoading(true);
       // post data back

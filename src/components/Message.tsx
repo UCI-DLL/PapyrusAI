@@ -1,10 +1,13 @@
 //reference: https://codesandbox.io/s/material-ui-chat-drh4l?file=/src/Message.js:0-4329
 
 import React from "react";
+import Markdown from "react-markdown";
+import { CustomTypingIndicator } from "./CustomTypingIndictor";
 
 interface MessageProps {
   message: string;
   displayName?: string;
+  typing?: boolean;
 }
 
 
@@ -14,7 +17,11 @@ export const MessageLeft = (props: MessageProps) => {
     <div className={"message__row-left"}>
       <div className={"message__left-display-name"}>{displayName}</div>
       <div className={"message__left-message"}>
-        <p className={""}>{props.message}</p>
+        {props.typing ? (
+          <CustomTypingIndicator />
+        ) : (
+          <Markdown className={""}>{props.message}</Markdown>
+        )}
       </div>
     </div>
   );
@@ -26,7 +33,7 @@ export const MessageRight = (props: MessageProps) => {
     <div className={"message__row-right"}>
       <div className={"message__right-display-name"}>{"You"}</div>
       <div className={"message__right-message"}>
-        <p className={""}>{props.message}</p>
+        <Markdown className={""}>{props.message}</Markdown>
       </div>
     </div>
   );

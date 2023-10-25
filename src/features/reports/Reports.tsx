@@ -27,14 +27,14 @@ export default function Reports(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const [userList, setUserList] = useState<Array<{ users: Array<ReportsUserType>, course: CourseType }>>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
     // for each course that the cuurent user is in, get the list of users
     if (user) {
       setIsLoading(true);
-      user.groups.map((group) => {
+      user.groups.forEach((group) => {
         //skip instructor or student or researcher groups
         if (group === "PapyrusAIStudents" || group === "PapyrusAIInstructors" || group === "PapyrusAIResearchers") {
           return ""
@@ -46,7 +46,15 @@ export default function Reports(): JSX.Element {
                 if (res.status && res.status < 300) {
                   if (res.data) {
                     //Get the list of all users in the group
-                    setUserList((prev) => [...prev, { users: res.data, course: res1.data }]);
+                    setUserList((prev) => {
+                      if (prev.find(x => x.course.id === res1.data.id)) {
+                        //if the course has already been added, skip
+                        //this is a react strict mode work around so we dont get doubles
+                        return prev
+                      } else {
+                        return [...prev, { users: res.data, course: res1.data }];
+                      }
+                    });
                   }
                 } else if (res.status === 401) {
                   navigator("/login");
@@ -63,7 +71,6 @@ export default function Reports(): JSX.Element {
             //handle errors
           }
         })
-        return ""
       })
     }
 
@@ -71,7 +78,7 @@ export default function Reports(): JSX.Element {
       setUserList([]);
     })
     // eslint-disable-next-line
-  }, [user]);
+  }, []);
 
   return !isLoading ? (
     <div className="reports">

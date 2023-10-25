@@ -107,8 +107,9 @@ function App(): JSX.Element {
               //update our version of user
               setUser(res.data);
               localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-              //if user is missing name or family_name, then open the modal
-              if(!res.data.name || !res.data.family_name || res.data.name === "" || res.data.family_name === "") {
+              //if user is missing name, then open the modal
+              //NOTE: family_name optional (aka can be empty string)
+              if(!res.data.name || !res.data.family_name || res.data.name === "" ) {
                 setShowUpdateUserInfoModal(true);
               }
             }

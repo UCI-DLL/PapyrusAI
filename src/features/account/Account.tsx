@@ -29,10 +29,10 @@ export default function Account(): JSX.Element {
     <div className="account">
       <MissingUserInfoForm
         user={user ? user : undefined}
-        closeForm={(user: UserType) => {
+        closeForm={(newuser: UserType) => {
           //Set user with new information
-          setUser(user);
-          localStorage.setItem("papyrusai_user", JSON.stringify(user));
+          // setUser(() => user ? user : null);
+          // localStorage.setItem("papyrusai_user", JSON.stringify(user));
         }}
         requireUpdate={false}
       />

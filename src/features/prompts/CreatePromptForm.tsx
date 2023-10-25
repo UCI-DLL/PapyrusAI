@@ -47,6 +47,7 @@ export default function CreatePromptForm({
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //close modal if user data was updated
+            setSession({ name: "", prompt: "" });
             closeForm();
           }
         } else {

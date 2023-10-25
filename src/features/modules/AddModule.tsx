@@ -47,8 +47,8 @@ export default function AddModule(): JSX.Element {
   const [session, setSession] = useState<AddModuleType>({
     name: "",
     moduleDescription: "",
-    isRepeating: false,
-    continuedInteraction: false,
+    isRepeating: true,
+    continuedInteraction: true,
     isPublished: false,
     documents: [],
     showInitialPrompt: true,

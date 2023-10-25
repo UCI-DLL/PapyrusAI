@@ -116,7 +116,7 @@ export default function ChatWizard({
             sx={{ margin: ".5rem 0" }}
             multiline
             maxRows={6}
-            value={userDocuments[0] && userDocuments[0].document ? userDocuments[0].document : ""}
+            value={ documentModal && userDocuments[documentModal.index] && userDocuments[documentModal.index].document ? userDocuments[documentModal.index].document : ""}
             onChange={handleChange}
             InputLabelProps={{ shrink: true }}
           />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button, Box, TextField, FormLabel } from "@mui/material";
 import Get from "../../utility/Get";
@@ -7,6 +7,7 @@ import { PromptType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
 import LinearProgress from '@mui/material/LinearProgress';
 import { getPrompt, updatePrompt } from "../../utility/endpoints/PromptEndpoints";
+import { AlertContext } from "../../utility/context/AlertContext";
 
 type EditPromptType = {
   isDeleted: boolean,
@@ -29,7 +30,7 @@ export default function EditPrompt(): JSX.Element {
     isDeleted: false,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>();
+  const { setAlert } = useContext(AlertContext);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -59,7 +60,9 @@ export default function EditPrompt(): JSX.Element {
           navigator("/login");
         } else {
           //handle error
-          setError("Prompt Does Not Exist");
+          //redirect to prompt list
+          navigator("/prompts");
+          setAlert({message: "Prompt Does Not Exist", type: "error"})
         }
         setIsLoading(false);
       });
@@ -85,7 +88,8 @@ export default function EditPrompt(): JSX.Element {
             if (res.data && res.data) {
               //redirect to prompt list
               navigator("/prompts");
-              //TODO some kind of pop up notifying user of creation
+              //pop up notifying user of creation
+              setAlert({message: "Prompt updated", type: "success"})
             }
           } else {
             // set errors
@@ -93,12 +97,12 @@ export default function EditPrompt(): JSX.Element {
               name: res.data,
               prompt: res.data,
               isDeleted: res.data,
-            })
+            });
+            setAlert({message: res.data, type: "error"})
           }
           // set is loading back 
           setIsLoading(false);
         });
-
 
       }
     }
@@ -110,7 +114,7 @@ export default function EditPrompt(): JSX.Element {
 
   return !isLoading ? (
     <div className="prompts">
-      {!error && prevSession ? (
+      {prevSession ? (
         <>
           <div className="prompts__section-header">
             <h3>Edit {prevSession.name}</h3>

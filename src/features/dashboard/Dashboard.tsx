@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import CourseList from "../course-groups/CourseList";
 import ModuleList from "../modules/ModuleList";
-import { Button } from "@mui/material";
+import { Button, Divider } from "@mui/material";
 import { useNavigate } from "react-router";
 import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
@@ -22,7 +22,7 @@ export default function Dashboard(): JSX.Element {
 
   useEffect(() => {
     const controller = new AbortController();
-    if(!showAddCourseModal) {
+    if (!showAddCourseModal) {
       setIsLoading(true);
       Get(getCourseList(), controller.signal).then(res => {
         if (res.status && res.status < 300) {
@@ -39,7 +39,7 @@ export default function Dashboard(): JSX.Element {
         setIsLoading(false);
       });
     }
-    
+
     // eslint-disable-next-line
   }, [showAddCourseModal]);
 
@@ -62,7 +62,7 @@ export default function Dashboard(): JSX.Element {
           }}
         />
       </Modal>
-      
+
       <div className="dashboard__section-header">
         <h3>My Courses</h3>
         <div>
@@ -88,7 +88,14 @@ export default function Dashboard(): JSX.Element {
         </div>
       </div>
       <hr />
-      <ModuleList list={courseList.flatMap(course => course.modules).slice(0, 6)} />
+      {courseList.map((course, index) => {
+        return (
+          <div style={{ width: "100%" }} key={index}>
+            <ModuleList course={course} />
+            <Divider />
+          </div>
+        )
+      })}
 
     </div>
   ) : (

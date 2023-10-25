@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "@mui/material";
-import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
+import { CourseType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
@@ -13,10 +13,8 @@ export default function Modules(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
-  const [moduleList, setModuleList] = useState<Array<ModuleType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>();
-  //This is only for a specific course
   const [course, setCourse] = useState<CourseType>();
 
   useEffect(() => {
@@ -28,7 +26,6 @@ export default function Modules(): JSX.Element {
         if (res.status && res.status < 300) {
           if (res.data) {
             //Get the course and save the modules
-            setModuleList(res.data.modules);
             setCourse(res.data);
           }
         } else if (res.status === 401) {
@@ -63,11 +60,12 @@ export default function Modules(): JSX.Element {
 
           </div>
           <hr />
-          {moduleList.length > 0 ? (
-            <ModuleList list={moduleList} courseId={course?.id ? course.id : undefined}/>
+          {course ? (
+            <ModuleList course={course} />
           ) : (
             <div>Course does not have any modules</div>
           )}
+          
         </>
       )}
     </div>

@@ -178,3 +178,17 @@ hr {
     margin: $base * 4 0;
   }
 }
+
+.privateRoute {
+  width: stretch;
+  width: -webkit-fill-available;
+  width: -moz-available;
+  margin-left: 13rem;
+  margin-top: 3rem;
+  width: 100%;
+
+  @media (max-width: $lg-break) {
+    margin-top: 3rem;
+    margin-left: 0;
+  }
+}

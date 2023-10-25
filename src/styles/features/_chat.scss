@@ -1,7 +1,7 @@
 @use "../global" as global;
 
 .chat {
-
+  position: relative;
   max-width: global.$lg-break;
   display: flex;
   justify-content: center;
@@ -9,6 +9,22 @@
   flex-direction: column;
   margin: 0 auto;
   width: 100%;
+
+  &__fixed-top {
+    position: fixed;
+    top: 3rem; //based on top header
+    background-color: global.$background;
+    z-index: 10;
+    width: calc(global.$lg-break);
+
+    @media (max-width: global.$lg-break) {
+      width: calc(100vw - 14px);
+    }
+
+    @media (max-width: 1300px ) and (min-width: global.$lg-break) {
+      width: calc(100vw - 14rem);
+    }
+  }
   
   &__section-header {
     display: flex;
@@ -37,6 +53,8 @@
   &__chat-log {
     // overflow-y: scroll;
     width: 100%;
+    margin-top: 6rem; //based on top bar height + section header height
+    margin-bottom: 3rem; //based on input-form height
   }
 
   &__wizard {
@@ -44,5 +62,22 @@
     width: 100%;
     border-radius: global.$border-radius;
     padding: 1rem;
+  }
+
+  &__input-form {
+    position: fixed;
+    bottom: 0; 
+    background-color: global.$background;
+    z-index: 10;
+    width: calc(global.$lg-break);
+    padding: 0.4rem 0.2rem;
+
+    @media (max-width: global.$lg-break) {
+      width: calc(100vw - 14px);
+    }
+
+    @media (max-width: 1300px ) and (min-width: global.$lg-break) {
+      width: calc(100vw - 14rem);
+    }
   }
 }

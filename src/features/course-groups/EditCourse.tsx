@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button, Box, TextField, FormLabel } from "@mui/material";
 import Get from "../../utility/Get";
@@ -7,6 +7,7 @@ import Put from "../../utility/Put";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
 import LinearProgress from '@mui/material/LinearProgress';
+import { AlertContext } from "../../utility/context/AlertContext";
 
 type EditCourseType = {
   name: string,
@@ -33,6 +34,7 @@ export default function EditCourse(): JSX.Element {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
+  const { setAlert } = useContext(AlertContext);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,7 +99,8 @@ export default function EditCourse(): JSX.Element {
               if (res.data && res.data) {
                 //redirect to course list
                 navigator("/courses");
-                //TODO some kind of pop up notifying user of creation
+                //pop up notifying user of creation
+                setAlert({message: "Course Updated", type: "success"})
               }
             } else {
               // set errors
@@ -118,7 +121,8 @@ export default function EditCourse(): JSX.Element {
               if (res.data && res.data) {
                 //redirect to course list
                 navigator("/courses");
-                //TODO some kind of pop up notifying user of creation
+                //pop up notifying user of creation
+                setAlert({message: "Course Updated", type: "success"})
               }
             } else {
               // set errors

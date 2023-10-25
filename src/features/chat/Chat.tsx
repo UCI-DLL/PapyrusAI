@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useContext } from "react";
 import { MessageLeft, MessageRight } from "../../components/Message";
 import { Box } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
@@ -15,6 +15,7 @@ import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { MessageType } from "../../utility/types/ConversationTypes";
 import { CourseType, ModuleType, DocumentType } from "../../utility/types/CourseTypes";
 import ChatWizard from "./ChatWizard";
+import { AlertContext } from "../../utility/context/AlertContext";
 
 
 export default function Chat(): JSX.Element {
@@ -37,6 +38,7 @@ export default function Chat(): JSX.Element {
   //After a prompt has been selected, then add it to this list
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const [promptsCompleted, setPromptsCompleted] = useState<boolean>(false);
+  const { setAlert } = useContext(AlertContext);
 
   useEffect(() => {
     //Disconnect websocket if we leave page
@@ -129,7 +131,10 @@ export default function Chat(): JSX.Element {
 
   const onSocketClose = useCallback(() => {
     setIsConnected(false);
-  }, []);
+    //redirect back to the list of conversation with an error message
+    navigator(`/courses/${location.state.courseId}/modules/${location.state.moduleId}`);
+    setAlert({message: "Conversation could not connect. Please try again later.", type: "error"})
+  }, [location.state, navigator, setAlert]);
 
   const onSocketMessage = useCallback((dataStr: string) => {
     //Only the message as a string comes back so make some temp stuff for the message
@@ -152,7 +157,7 @@ export default function Chat(): JSX.Element {
     if (socket.current?.readyState !== WebSocket.OPEN) {
       var URL = process.env.REACT_APP_WEBSOCKET_URL ? process.env.REACT_APP_WEBSOCKET_URL : "wss://ymaqouopq4.execute-api.us-east-2.amazonaws.com/production";
       URL = URL + `/?token=${localStorage.getItem("papyrusai_access_token")}`;
-      URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}`
+      URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}` 
       socket.current = new WebSocket(URL);
       socket.current.addEventListener('open', onSocketOpen);
       socket.current.addEventListener('close', onSocketClose);
@@ -225,6 +230,7 @@ export default function Chat(): JSX.Element {
       onSendMessage([actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : ""]);
     }
   }
+
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">

@@ -88,9 +88,9 @@ export default function Dashboard(): JSX.Element {
         </div>
       </div>
       <hr />
-      {courseList.map(course => {
+      {courseList.map((course, index) => {
         return (
-          <div style={{ width: "100%" }}>
+          <div style={{ width: "100%" }} key={index}>
             <ModuleList course={course} />
             <Divider />
           </div>

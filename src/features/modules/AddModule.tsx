@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
   Button,
@@ -10,6 +10,8 @@ import {
   MenuItem,
   ListItemText,
   SelectChangeEvent,
+  Tooltip,
+  IconButton
 } from "@mui/material";
 import { DocumentType, PromptType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
@@ -18,6 +20,10 @@ import { putCreateModule } from "../../utility/endpoints/CourseEndpoints";
 import CloseIcon from '@mui/icons-material/Close';
 import Get from "../../utility/Get";
 import { getPromptList } from "../../utility/endpoints/PromptEndpoints";
+import { AlertContext } from "../../utility/context/AlertContext";
+import { Modal } from "../../components/Modal";
+import Markdown from "react-markdown";
+import InfoIcon from '@mui/icons-material/Info';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -71,6 +77,8 @@ export default function AddModule(): JSX.Element {
   });
   const [promptList, setPromptList] = useState<Array<PromptType>>([]);
   const [showFullPrompts, setShowFullPrompts] = useState<boolean>(false);
+  const { setAlert } = useContext(AlertContext);
+  const [showInfoModal, setShowInfoModal] = useState<boolean>(false);
 
   useEffect(() => {
     //get prompts
@@ -110,11 +118,12 @@ export default function AddModule(): JSX.Element {
           if (res.data && res.data) {
             //redirect to module list of that course
             navigator(`/courses/${courseId}/modules`);
-            //TODO some kind of pop up notifying user of creation
+            //pop up notifying user of creation
+            setAlert({ message: "Module Created", type: "success" });
           }
         } else {
           // set errors
-          setErrors({ name: res.data, moduleDescription: res.data})
+          setErrors({ name: res.data, moduleDescription: res.data })
         }
         // set is loading back 
         setIsLoading(false);
@@ -143,8 +152,37 @@ export default function AddModule(): JSX.Element {
 
   return (
     <div className="modules">
+      <Modal
+        isOpen={showInfoModal}
+        title={"Module Form Field Descriptions"}
+        onRequestClose={() => setShowInfoModal(false)}
+        actions={
+          <Button sx={{ width: "100%" }} variant="contained" onClick={() => setShowInfoModal(false)}>
+            Close
+          </Button>
+        }
+      >
+        <div className="">
+          <Markdown>
+            {`A **module** is a space for students to connect with AI using certain pre-approved sets of instructions. It can be used for an entire class term or you can have a module for a single assignment, unit, or other subset. \n
+The **module description** will show up on the top of the module when it is selected. It should provide a brief description of what the module covers. The description should uniquely identify each module, so that users can determine which module they want. \n
+**Module documents** are the texts that students will upload to the AI for the AI to read and use in determining the output. All documents that will be needed should be indicated in the panel labeled **Document Type**. **Usage Text** just shows you what the user will see. For example, if you label a document type as “Rubric,” Usage Text will read “Please enter your Rubric.” Other common document types are Assignment, Text, Essay, and Paragraph. But you can input anything! \n
+**Current Documents** shows you what you have already added in the Document Type section to track your progress. \n
+The **Module Prompts** drop down shows you the various prompts, or instructions to the AI, that you can incorporate into your module.  You need at least one activated for your module to have any content. If you want to see the actual wording of the prompt, click on **Show Full Prompts**. \n
+**Module Settings** let you control how the users can interact with the AI and the activated prompts within your module.  **Repeating Prompts** allows users to select another prompt after they interact with the prior prompt.  For example, if you activated Topics, Feedback, and Grammar, a user could first select “Grammar” and run through the AI interaction around that prompt. When finished, the student could then select one of the remaining options, such as “Feedback” for an interaction with the AI using the instructions embedded for “Feedback.” **Continued Interaction** allows students to converse back and forth with the AI even if the AI has not asked the user a question.  This allows the user to request additional information, explanations, expansions, etc. But it also allows the user to go off topic and interact freely with the AI. Select **Publish** when you are ready for users to have access to your module and interact with the AI as permitted by your selections here. Until you select “Publish,” only you see the module. `}
+          </Markdown>
+        </div>
+
+      </Modal>
       <div className="modules__section-header">
-        <h3>Create Module</h3>
+        <div>
+          <h3>Create Module</h3>
+          <Tooltip title="Info">
+            <IconButton onClick={() => setShowInfoModal(true)}>
+              <InfoIcon />
+            </IconButton>
+          </Tooltip>
+        </div>
         <div>
           <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
           &nbsp;&nbsp;&nbsp;
@@ -217,7 +255,7 @@ export default function AddModule(): JSX.Element {
                   ...prev,
                   documents: [...session.documents, newDoc]
                 }))
-                setNewDoc({documentType: "", usageText: "Please enter your "});
+                setNewDoc({ documentType: "", usageText: "Please enter your " });
               }}
             >
               Add
@@ -225,7 +263,7 @@ export default function AddModule(): JSX.Element {
           </div>
 
           {session.documents.length > 0 && (
-            <p>Current Documents</p>
+            <FormLabel>Current Documents</FormLabel>
           )}
 
           {session.documents.map((document, index) => {
@@ -235,21 +273,22 @@ export default function AddModule(): JSX.Element {
                   <div>{document.documentType}</div>
                   <div>{document.usageText}</div>
                 </div>
-                <Button
-                  aria-label="delete"
-                  onClick={() => {
-                    setSession((prev) => ({
-                      ...prev,
-                      documents: prev.documents.filter((d) => d.documentType !== document.documentType || d.usageText !== document.usageText)
-                    }))
-                  }}
-                >
-                  <CloseIcon />
-                </Button>
+                <Tooltip title="Remove">
+                  <IconButton
+                    aria-label="remove"
+                    onClick={() => {
+                      setSession((prev) => ({
+                        ...prev,
+                        documents: prev.documents.filter((d) => d.documentType !== document.documentType || d.usageText !== document.usageText)
+                      }))
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                </Tooltip>
               </div>
             )
           })}
-
 
           <hr />
 
@@ -319,10 +358,9 @@ export default function AddModule(): JSX.Element {
             isDisabled={isLoading}
           >
             <span>
-              Continued Interaction
+              Continued Interaction (Allow users to freely chat after initial prompts)
             </span>
           </Checkbox>
-          <p>Allow users to freely chat after initial prompts.</p>
 
           {/* <Checkbox
             onClick={() => {

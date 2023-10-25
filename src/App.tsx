@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./styles/index.scss";
 import {
+  AlertColor,
   createTheme,
   CssBaseline,
   PaletteColor,
@@ -37,6 +38,7 @@ import AllModules from "./features/modules/AllModules";
 import Prompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
+import { AlertContext } from "./utility/context/AlertContext";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -86,11 +88,17 @@ function App(): JSX.Element {
     localStorage.getItem("papyrusai_user")
       ? JSON.parse(localStorage.getItem("papyrusai_user") ?? "")
       : null
-  ); //user info and not just sessionid
+  ); //user info and not just token
   const value = useMemo(() => ({ user, setUser }), [user, setUser]);
   const isProduction = process.env.NODE_ENV === "production";
   // only show if missing data
   const [showUpdateUserInfoModal, setShowUpdateUserInfoModal] = useState<boolean>(false);
+  //alert pop up
+  const [alert, setAlert] = useState<{message: string, type: AlertColor}>({
+    message: "",
+    type: "info"
+  });
+  const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
 
 
   useEffect(() => {
@@ -140,6 +148,7 @@ function App(): JSX.Element {
     >
       <div style={{ display: "flex", flexDirection: "row", justifyContent: "center" }}>
         <UserContext.Provider value={value}>
+          <AlertContext.Provider value={alertValue}>
           <Router>
             <ThemeProvider theme={theme}>
               <CssBaseline />
@@ -260,6 +269,7 @@ function App(): JSX.Element {
               </Routes>
             </ThemeProvider>
           </Router>
+          </AlertContext.Provider>
         </UserContext.Provider>
       </div>
     </CacheBuster>

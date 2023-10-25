@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button, Box, TextField, FormLabel } from "@mui/material";
 import { postCreateCourse } from "../../utility/endpoints/CourseEndpoints";
 import Post from "../../utility/Post";
 import { Checkbox } from "../../components/Checkbox";
+import { AlertContext } from "../../utility/context/AlertContext";
 
 type AddCourseType = {
   name: string,
@@ -24,6 +25,7 @@ export default function CreateCourse(): JSX.Element {
     isActive: false
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { setAlert } = useContext(AlertContext);
 
 
   function handleSubmit(e: React.FormEvent) {
@@ -43,7 +45,8 @@ export default function CreateCourse(): JSX.Element {
           if (res.data && res.data) {
             //redirect to course list
             navigator("/");
-            //TODO some kind of pop up notifying user of creation
+            // pop up notifying user of creation
+            setAlert({message: "Course Created", type: "success"});
           }
         } else {
           // set errors

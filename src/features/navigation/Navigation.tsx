@@ -178,7 +178,7 @@ export default function NavigationTwo(): JSX.Element {
             </ListItem>
           </List>
         </nav>
-        <div style={{ position: "fixed", bottom: "0", padding: "0.4rem" }}>
+        <div style={{ position: "fixed", bottom: "0", padding: "0.4rem", zIndex:"120" }}>
             <Button onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform", "_blank")}>
                 Report Issue
             </Button>

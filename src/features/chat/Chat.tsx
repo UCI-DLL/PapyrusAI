@@ -16,6 +16,7 @@ import { MessageType } from "../../utility/types/ConversationTypes";
 import { CourseType, ModuleType, DocumentType } from "../../utility/types/CourseTypes";
 import ChatWizard from "./ChatWizard";
 import { AlertContext } from "../../utility/context/AlertContext";
+import RepeatingPromptWizard from "./RepeatingPromptWizard";
 
 
 export default function Chat(): JSX.Element {
@@ -37,14 +38,13 @@ export default function Chat(): JSX.Element {
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>();
   //After a prompt has been selected, then add it to this list
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
-  const [promptsCompleted, setPromptsCompleted] = useState<boolean>(false);
   const { setAlert } = useContext(AlertContext);
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   useEffect(() => {
     //reset alert
-    setAlert({message: "", type: "info"});
+    setAlert({ message: "", type: "info" });
     //Disconnect websocket if we leave page
     return () => {
       socket.current?.close();
@@ -102,25 +102,10 @@ export default function Chat(): JSX.Element {
   }, [location]);
 
   useEffect(() => {
-    //check to see if the repeating prompts are completed
-    if (
-      moduleInfo &&
-      moduleInfo.isRepeating &&
-      moduleInfo.prompts.length === repeatingPrompts.length
-      //TODO figure out if past messages has completed the all repeating prompts
-      // so we dont get the repeating prompt wizard on reload
-    ) {
-      setPromptsCompleted(true);
-    } else if ( //set as true if we are not repeating
-      moduleInfo &&
-      !moduleInfo.isRepeating
-    ) {
-      setPromptsCompleted(true);
-    } else {
-      setPromptsCompleted(false);
-    }
+
     //if no documents are needed
     if (moduleInfo && moduleInfo.documents && moduleInfo.documents.length < 1) {
+      console.log("here")
       setUserDocuments([])
     }
     //if no prompts => aka free chat
@@ -146,8 +131,7 @@ export default function Chat(): JSX.Element {
     setIsConnected(false);
     //redirect back to the list of conversation with an error message
     navigator(`/courses/${location.state.courseId}/modules/${location.state.moduleId}`);
-    setAlert({ message: "Conversation disconnected", type: "error" })
-  }, [location.state, navigator, setAlert]);
+  }, [location.state, navigator]);
 
   const onSocketMessage = useCallback((dataStr: string) => {
     //turn off typing indicator for chatgpt
@@ -252,26 +236,26 @@ export default function Chat(): JSX.Element {
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">
       <div className="chat__fixed-top">
-      <div className="chat__section-header">
-        <h5>{moduleInfo.name}</h5>
-        <div>
-          <div>{courseInfo.name}</div>
-          <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}</div>
+        <div className="chat__section-header">
+          <h5>{moduleInfo.name}</h5>
+          <div>
+            <div>{courseInfo.name}</div>
+            <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}</div>
+          </div>
         </div>
-      </div>
-      <hr />
-      <div className="chat__section-header">
-        <div>{moduleInfo.moduleDescription}</div>
-      </div>
-      <hr />
-      {/* Only show the chat wizard if we don't have user documents, selected prompt, and if there are no previous messages  */}
-      {(userDocuments === undefined && selectedPrompt === undefined && messages.length < 1) && (
-        <ChatWizard
-          documents={moduleInfo.documents}
-          prompts={moduleInfo.prompts}
-          returnDocsPrompt={handleWizardReturnDocsPrompts}
-        />
-      )}
+        <hr />
+        <div className="chat__section-header">
+          <div>{moduleInfo.moduleDescription}</div>
+        </div>
+        <hr />
+        {/* Only show the chat wizard if we don't have user documents, selected prompt, and if there are no previous messages  */}
+        {(messages.length < 0) && (
+          <ChatWizard
+            documents={moduleInfo.documents}
+            prompts={moduleInfo.prompts}
+            returnDocsPrompt={handleWizardReturnDocsPrompts}
+          />
+        )}
       </div>
 
       &nbsp;&nbsp;&nbsp;
@@ -307,61 +291,63 @@ export default function Chat(): JSX.Element {
           />
         )}
 
-        {/* handle repeating prompts  */}
-        {isConnected &&
-          userDocuments !== undefined &&
-          selectedPrompt !== undefined &&
-          messages.length > 0 &&
-          moduleInfo.isRepeating &&
-          moduleInfo.prompts.filter(x => !repeatingPrompts.includes(x.id)) && (
-            <div>
-              <ChatWizard
-                // filtering the repeating prompts from this list
-                documents={moduleInfo.documents}
-                prompts={moduleInfo.prompts.filter(x => !repeatingPrompts.includes(x.id))}
-                returnDocsPrompt={handleWizardReturnDocsPrompts}
-                onlyPrompts={handleRepeatPrompt}
-              />
-            </div>
-          )}
 
-          {/* handles scrolling to the bottom */}
-          <div ref={messagesEndRef} />
+
+        {/* handles scrolling to the bottom */}
+        <div ref={messagesEndRef} />
 
         {/* continuedInteraction input (if there are no more repeating prompts) */}
         {isConnected &&
           userDocuments !== undefined &&
           selectedPrompt !== undefined &&
           moduleInfo.continuedInteraction &&
-          promptsCompleted && (
-            <form className="chat__input-form" onSubmit={handleSubmit}>
-              <FormControl sx={{ m: 1, width: '100%', margin: "0", backgroundColor: "#FFF" }} variant="outlined">
-                <InputLabel htmlFor="outlined-adornment-message">Send a message</InputLabel>
-                <OutlinedInput
-                  id="outlined-adornment-message"
-                  label="Send a message"
-                  sx={{ width: "100%", color: "black" }}
-                  value={newMessage}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="sumbit new message"
-                        edge="end"
-                        type="submit"
-                      >
-                        {<SendIcon />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-            </form>
+          (
+            <div className="chat__input-form">
+              <form onSubmit={handleSubmit}>
+                <FormControl sx={{ m: 1, width: '100%', margin: "0", backgroundColor: "#FFF" }} variant="outlined">
+                  <InputLabel htmlFor="outlined-adornment-message">Send a message</InputLabel>
+                  <OutlinedInput
+                    id="outlined-adornment-message"
+                    label="Send a message"
+                    sx={{ width: "100%", color: "black" }}
+                    value={newMessage}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="sumbit new message"
+                          edge="end"
+                          type="submit"
+                        >
+                          {<SendIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                  />
+                </FormControl>
+              </form>
+              {/* handle repeating prompts  */}
+              {isConnected &&
+                userDocuments !== undefined &&
+                selectedPrompt !== undefined &&
+                messages.length > 0 &&
+                moduleInfo.isRepeating &&
+                moduleInfo.prompts.filter(x => !repeatingPrompts.includes(x.id)).length > 0 && (
+                  <div>
+                    <RepeatingPromptWizard
+                      // filtering the repeating prompts from this list
+                      prompts={moduleInfo.prompts.filter(x => !repeatingPrompts.includes(x.id))}
+                      onlyPrompts={handleRepeatPrompt}
+                    />
+                  </div>
+                )}
+            </div>
+
           )}
 
         &nbsp;&nbsp;&nbsp;
       </Box>
-      
+
     </div >
   ) : (
     <LinearProgress />

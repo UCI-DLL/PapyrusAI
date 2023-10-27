@@ -87,7 +87,8 @@ export default function ChatWizard({
     setSelectedPrompt(event.target.value as string);
   };
 
-  return documents && documents.length > 0 && prompts && prompts.length > 0 ? (
+
+  return documents && prompts ? (
     <div className="chat__wizard">
       <Modal
         isOpen={documentModal !== undefined}
@@ -123,7 +124,7 @@ export default function ChatWizard({
         </div>
 
       </Modal>
-      {!onlyPrompts && (
+      {( documents.length > 0) && (
         <>
           <h6>Enter text or upload a file for each document required.</h6>
           {documents.length > 0 && documents.map((doc, index) => {

@@ -283,17 +283,17 @@ export default function NavigationTwo(): JSX.Element {
         &nbsp;&nbsp;&nbsp;
 
         {windowWidth < 1024 ? (
-          <div>
+          <div style={{opacity: "0", minWidth: "64px", padding: "6px 8px"}} aria-hidden="true">
             {/* <Button
-              id="basic-button"
-              aria-controls={open ? 'basic-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? 'true' : undefined}
-              onClick={handleClick}
+              // id="basic-button"
+              // aria-controls={open ? 'basic-menu' : undefined}
+              // aria-haspopup="true"
+              // aria-expanded={open ? 'true' : undefined}
+              // onClick={handleClick}
             >
               <AccountCircleIcon />
-            </Button>
-            <Menu
+            </Button> */}
+            {/* <Menu
               id="basic-menu"
               anchorEl={anchorEl}
               open={open}

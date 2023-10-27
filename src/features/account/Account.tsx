@@ -27,6 +27,11 @@ export default function Account(): JSX.Element {
 
   return (
     <div className="account">
+      <div className="account__section-header">
+        <h3>Account</h3>
+        
+      </div>
+      <hr />
       <MissingUserInfoForm
         user={user ? user : undefined}
         closeForm={(newuser: UserType) => {

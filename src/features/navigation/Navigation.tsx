@@ -178,7 +178,7 @@ export default function NavigationTwo(): JSX.Element {
             </ListItem>
           </List>
         </nav>
-        <div style={{ position: "fixed", bottom: "0", padding: "0.4rem" }}>
+        <div style={{ position: "fixed", bottom: "0", padding: "0.4rem", zIndex:"120" }}>
             <Button onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform", "_blank")}>
                 Report Issue
             </Button>
@@ -283,17 +283,17 @@ export default function NavigationTwo(): JSX.Element {
         &nbsp;&nbsp;&nbsp;
 
         {windowWidth < 1024 ? (
-          <div>
+          <div style={{opacity: "0", minWidth: "64px", padding: "6px 8px"}} aria-hidden="true">
             {/* <Button
-              id="basic-button"
-              aria-controls={open ? 'basic-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? 'true' : undefined}
-              onClick={handleClick}
+              // id="basic-button"
+              // aria-controls={open ? 'basic-menu' : undefined}
+              // aria-haspopup="true"
+              // aria-expanded={open ? 'true' : undefined}
+              // onClick={handleClick}
             >
               <AccountCircleIcon />
-            </Button>
-            <Menu
+            </Button> */}
+            {/* <Menu
               id="basic-menu"
               anchorEl={anchorEl}
               open={open}

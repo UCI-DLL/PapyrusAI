@@ -220,7 +220,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
 
           <FormLabel>Module Documents</FormLabel>
           {/* add section for user to add documents  */}
-          <p>Add the docments you wish for the student to upload.</p>
+          <p>Add the documents you wish for the student to upload.</p>
           <div className="modules__adddocuments">
             <TextField
               name="documentType"

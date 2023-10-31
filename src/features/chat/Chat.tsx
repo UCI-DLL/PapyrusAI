@@ -105,7 +105,6 @@ export default function Chat(): JSX.Element {
 
     //if no documents are needed
     if (moduleInfo && moduleInfo.documents && moduleInfo.documents.length < 1) {
-      console.log("here")
       setUserDocuments([])
     }
     //if no prompts => aka free chat
@@ -249,7 +248,7 @@ export default function Chat(): JSX.Element {
         </div>
         <hr />
         {/* Only show the chat wizard if we don't have user documents, selected prompt, and if there are no previous messages  */}
-        {(messages.length < 0) && (
+        {(messages.length < 1) && (
           <ChatWizard
             documents={moduleInfo.documents}
             prompts={moduleInfo.prompts}

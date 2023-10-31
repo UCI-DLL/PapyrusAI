@@ -1,5 +1,5 @@
 import { DocumentType, PromptType } from "../../utility/types/CourseTypes"
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useContext } from "react";
 import {
   Button,
   TextField,
@@ -11,6 +11,12 @@ import {
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Modal } from "../../components/Modal";
+import PizZip from "pizzip";
+import Docxtemplater from "docxtemplater";
+import { AlertContext } from "../../utility/context/AlertContext";
+import * as PDFJS from 'pdfjs-dist';
+PDFJS.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -39,33 +45,86 @@ export default function ChatWizard({
   const [documentModal, setDocumentModal] = useState<DocumentType & { index: number } | undefined>(undefined);
   const [userDocuments, setUserDocuments] = useState<Array<DocumentType & { document: string }>>([]);
   const [selectedPrompt, setSelectedPrompt] = useState<string>("");
+  const { setAlert } = useContext(AlertContext);
 
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) {
       return;
     }
-    //TODO handle docx files
     const file = e.target.files[0];
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      if (!evt?.target?.result) {
-        return;
-      }
-      const { result } = evt.target;
+    //Get text based of the file type
+    if (file.type === "text/plain") {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        if (!evt?.target?.result) {
+          return;
+        }
+        const { result } = evt.target;
+        if (documentModal) {
+          setUserDocuments((prev) => {
+            let items = [...prev];
+            items[documentModal.index] = {
+              document: result as string,
+              usageText: documentModal.usageText,
+              documentType: documentModal.documentType
+            }
+            return items
+          })
+        }
+      };
+      reader.readAsBinaryString(file);
+    } else if (file.type === "application/pdf") {
+      const temp = URL.createObjectURL(file);
+      const doc = PDFJS.getDocument(temp);
+      const pdfDocument = await doc.promise;
+      const page = await pdfDocument.getPage(1);
+      const textContent = await page.getTextContent();
+      const text = textContent["items"].reduce((result: any, item: any) => {
+        return `${result} ${item["str"]}`
+      }, "")
       if (documentModal) {
         setUserDocuments((prev) => {
           let items = [...prev];
           items[documentModal.index] = {
-            document: result as string, 
-            usageText: documentModal.usageText, 
+            document: text as string,
+            usageText: documentModal.usageText,
             documentType: documentModal.documentType
           }
           return items
         })
       }
-    };
-    reader.readAsBinaryString(file);
+
+    } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      const reader = new FileReader();
+      reader.readAsBinaryString(file);
+      reader.onload = function (evt) {
+        if (!evt?.target?.result) {
+          return;
+        }
+        const content = evt.target.result;
+        const zip = new PizZip(content);
+        const doc = new Docxtemplater(zip, {
+          paragraphLoop: true,
+          linebreaks: true,
+        });
+
+        var text = doc.getFullText();
+        if (documentModal) {
+          setUserDocuments((prev) => {
+            let items = [...prev];
+            items[documentModal.index] = {
+              document: text as string,
+              usageText: documentModal.usageText,
+              documentType: documentModal.documentType
+            }
+            return items
+          })
+        }
+      };
+    } else {
+      setAlert({ message: "File is unsupported", type: "error" });
+      setDocumentModal(undefined);
+    }
   };
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -74,8 +133,8 @@ export default function ChatWizard({
       setUserDocuments((prev) => {
         let items = [...prev];
         items[documentModal.index] = {
-          document: e.target.value, 
-          usageText: documentModal.usageText, 
+          document: e.target.value,
+          usageText: documentModal.usageText,
           documentType: documentModal.documentType
         }
         return items
@@ -107,8 +166,8 @@ export default function ChatWizard({
             fullWidth
             startIcon={<UploadFileIcon />}
           >
-            Upload Text or Docx
-            <input type="file" accept=".docx, .txt" hidden onChange={handleFileUpload} />
+            Upload Txt, Docx, PDF
+            <input type="file" accept=".docx, .txt, .pdf" hidden onChange={handleFileUpload} />
           </Button>
           <TextField
             name="name"
@@ -117,14 +176,14 @@ export default function ChatWizard({
             sx={{ margin: ".5rem 0" }}
             multiline
             maxRows={6}
-            value={ documentModal && userDocuments[documentModal.index] && userDocuments[documentModal.index].document ? userDocuments[documentModal.index].document : ""}
+            value={documentModal && userDocuments[documentModal.index] && userDocuments[documentModal.index].document ? userDocuments[documentModal.index].document : ""}
             onChange={handleChange}
             InputLabelProps={{ shrink: true }}
           />
         </div>
 
       </Modal>
-      {( documents.length > 0) && (
+      {(documents.length > 0) && (
         <>
           <h6>Enter text or upload a file for each document required.</h6>
           {documents.length > 0 && documents.map((doc, index) => {
@@ -171,18 +230,18 @@ export default function ChatWizard({
       )}
 
       <div style={{ marginTop: "1rem", width: "100%", justifyContent: "flex-end", display: "flex" }}>
-        <Button 
-        variant="contained" 
-        onClick={() => {
-          if(onlyPrompts) {
-            onlyPrompts(selectedPrompt)
-          } else {
-            returnDocsPrompt(userDocuments, selectedPrompt)
-          }
-        }}
+        <Button
+          variant="contained"
+          onClick={() => {
+            if (onlyPrompts) {
+              onlyPrompts(selectedPrompt)
+            } else {
+              returnDocsPrompt(userDocuments, selectedPrompt)
+            }
+          }}
         >
           Ask PapyrusAI
-          </Button>
+        </Button>
       </div>
 
     </div>

@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import Button from '@mui/material/Button';
-import { CardHeader } from "@mui/material";
+import { CardContent, Typography } from "@mui/material";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { useNavigate } from "react-router";
 import { UserContext } from "../../utility/context/UserContext";
@@ -21,10 +21,20 @@ export default function CourseList({ list }: CourseListProps): JSX.Element {
         return (
           <div key={index}>
             <Card sx={{ width: 275, margin: "1rem" }}>
-              <CardHeader
-                title={course.name}
-                subheader={`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
-              />
+              <CardContent>
+                <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                  {course.section ?
+                    `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}` :
+                    `${course.term ? course.term : ""}${course.year ? course.year : ""}`}
+                </Typography>
+                <Typography variant="h5" component={"div"}>
+                  {course.name}
+                </Typography>
+                <Typography sx={{ fontSize: 14 }} color="text.secondary" >
+                  {`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
+                </Typography>
+              </CardContent>
+
               <CardActions sx={{ justifyContent: "space-between" }}>
                 <Button
                   size="small"
@@ -35,7 +45,8 @@ export default function CourseList({ list }: CourseListProps): JSX.Element {
                 </Button>
                 {/* If use is instructor and is in the course  */}
                 {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&
-                  user?.groups.includes(course.id) ? (
+                  user?.groups.includes(course.id) &&
+                  course.instructor.sub === user.sub ? (
                   <Button
                     size="small"
                     onClick={() => navigator(`/editcourse/${course.id}`)}

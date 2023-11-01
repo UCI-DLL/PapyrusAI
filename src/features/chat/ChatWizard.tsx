@@ -77,7 +77,7 @@ export default function ChatWizard({
       const temp = URL.createObjectURL(file);
       const doc = PDFJS.getDocument(temp);
       const pdfDocument = await doc.promise;
-      const page = await pdfDocument.getPage(1);
+      const page = await pdfDocument.getPage(1); //TODO only handles one page at this time
       const textContent = await page.getTextContent();
       const text = textContent["items"].reduce((result: any, item: any) => {
         return `${result} ${item["str"]}`

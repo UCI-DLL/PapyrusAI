@@ -1,6 +1,16 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router";
-import { Button, Box, TextField, FormLabel } from "@mui/material";
+import {
+  Button,
+  Box,
+  TextField,
+  FormLabel,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  FormControl
+} from "@mui/material";
 import { postCreateCourse } from "../../utility/endpoints/CourseEndpoints";
 import Post from "../../utility/Post";
 import { Checkbox } from "../../components/Checkbox";
@@ -9,7 +19,10 @@ import { AlertContext } from "../../utility/context/AlertContext";
 type AddCourseType = {
   name: string,
   signUpCode: string,
-  isActive: boolean
+  isActive: boolean,
+  year: string,
+  section: string,
+  term: string
 }
 
 export default function CreateCourse(): JSX.Element {
@@ -17,12 +30,18 @@ export default function CreateCourse(): JSX.Element {
   const [session, setSession] = useState<AddCourseType>({
     name: "",
     signUpCode: "",
-    isActive: false
+    isActive: false,
+    year: "",
+    section: "",
+    term: ""
   });
   const [errors, setErrors] = useState<AddCourseType>({
     name: "",
     signUpCode: "",
-    isActive: false
+    isActive: false,
+    year: "",
+    section: "",
+    term: ""
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { setAlert } = useContext(AlertContext);
@@ -30,11 +49,11 @@ export default function CreateCourse(): JSX.Element {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if(session.name === "") {
-      setErrors((prev) => ({...prev, name: "Name missing"}))
+    if (session.name === "") {
+      setErrors((prev) => ({ ...prev, name: "Name missing" }))
     }
-    else if(session.signUpCode === "") {
-      setErrors((prev) => ({...prev, signUpCode: "Sign up code missing"}))
+    else if (session.signUpCode === "") {
+      setErrors((prev) => ({ ...prev, signUpCode: "Sign up code missing" }))
     } else {
       //create course
       // set is loading
@@ -46,21 +65,25 @@ export default function CreateCourse(): JSX.Element {
             //redirect to course list
             navigator("/");
             // pop up notifying user of creation
-            setAlert({message: "Course Created", type: "success"});
+            setAlert({ message: "Course Created", type: "success" });
           }
         } else {
           // set errors
-          setErrors({name: res.data, signUpCode: res.data, isActive: res.data})
+          setAlert({ message: res.data, type: "error" })
         }
         // set is loading back 
         setIsLoading(false);
       });
-      
+
     }
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleTermChange(e: SelectChangeEvent) {
+    setSession((prev) => ({ ...prev, term: e.target.value as string }))
   }
 
   return (
@@ -88,6 +111,7 @@ export default function CreateCourse(): JSX.Element {
             error={errors.name !== ""}
             helperText={errors.name}
             disabled={isLoading}
+            required
           />
           <TextField
             name="signUpCode"
@@ -99,6 +123,50 @@ export default function CreateCourse(): JSX.Element {
             onChange={handleChange}
             error={errors.signUpCode !== ""}
             helperText={errors.signUpCode}
+            disabled={isLoading}
+            required
+          />
+          <TextField
+            name="year"
+            label="Year"
+            fullWidth
+            sx={{ margin: ".5rem 0" }}
+            value={session.year}
+            onChange={handleChange}
+            error={errors.year !== ""}
+            helperText={errors.year}
+            disabled={isLoading}
+            inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]' }}
+            type="number"
+          />
+          <FormControl fullWidth>
+            <InputLabel id="select-term">Term</InputLabel>
+            <Select
+              labelId="select-term"
+              id="course-select-term"
+              value={session.term}
+              fullWidth
+              name="term"
+              label="Term"
+              onChange={handleTermChange}
+              error={errors.term !== ""}
+              disabled={isLoading}
+            >
+              <MenuItem value={"spring"}>Spring</MenuItem>
+              <MenuItem value={"summer"}>Summer</MenuItem>
+              <MenuItem value={"fall"}>Fall</MenuItem>
+              <MenuItem value={"winter"}>Winter</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            name="section"
+            label="Section / Period"
+            fullWidth
+            sx={{ margin: ".5rem 0" }}
+            value={session.section}
+            onChange={handleChange}
+            error={errors.section !== ""}
+            helperText={errors.section}
             disabled={isLoading}
           />
           <Checkbox
@@ -119,5 +187,5 @@ export default function CreateCourse(): JSX.Element {
         </form>
       </Box>
     </div>
-  ) 
+  )
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Button, ListItem, ListItemText, Divider, List } from "@mui/material";
+import { Button, ListItem, ListItemText, Divider, List, Typography } from "@mui/material";
 import Get from "../../utility/Get";
 import LinearProgress from '@mui/material/LinearProgress';
 import { getConversationList, postCreateConversation } from "../../utility/endpoints/ConversationEndpoints";
@@ -69,7 +69,6 @@ export default function ConversationList(): JSX.Element {
           //handle error
           setError("Course Does Not Exist");
         }
-        setIsLoading(false);
       });
     }
     // eslint-disable-next-line
@@ -83,8 +82,8 @@ export default function ConversationList(): JSX.Element {
             //update conversation list with new conversation list
             setConversationList(res.data);
             //then go right into chat
-            if(res.data.conversations) {
-              navigator("/chat", {state: { ...moduleIds, conversationIndex: res.data.conversations.length - 1 }})
+            if (res.data.conversations) {
+              navigator("/chat", { state: { ...moduleIds, conversationIndex: res.data.conversations.length - 1 } })
             }
           }
         } else if (res.status === 401) {
@@ -107,7 +106,19 @@ export default function ConversationList(): JSX.Element {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "baseline" }}>
               <h3>My Conversations</h3>
               {course && (
-                <h5>{course.modules.find(x => x.id === moduleIds?.moduleId)?.name} - {course.name}</h5>
+                <>
+                  <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                    {course.section ?
+                      `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}` :
+                      `${course.term ? course.term : ""}${course.year ? course.year : ""}`}
+                  </Typography>
+                  <Typography variant="h5" component={"div"}>
+                    {course.modules.find(x => x.id === moduleIds?.moduleId)?.name} - {course.name}
+                  </Typography>
+                  <Typography sx={{ fontSize: 14 }} color="text.secondary" >
+                    {`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
+                  </Typography>
+                </>
               )}
             </div>
 

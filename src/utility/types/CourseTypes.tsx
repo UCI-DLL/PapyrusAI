@@ -10,7 +10,10 @@ export type CourseType = {
   modules: Array<ModuleType>,
   organization: string,
   signUpCode: string,
-  instructor: CustomUserType
+  instructor: CustomUserType,
+  year: string,
+  term: string,
+  section: string,
 }
 
 export type ModuleType = {

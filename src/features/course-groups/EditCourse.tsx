@@ -1,6 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Button, Box, TextField, FormLabel } from "@mui/material";
+import {
+  Button,
+  Box,
+  TextField,
+  FormLabel,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  FormControl
+} from "@mui/material";
 import Get from "../../utility/Get";
 import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoints";
 import Put from "../../utility/Put";
@@ -14,6 +24,9 @@ type EditCourseType = {
   signUpCode: string,
   isDeleted: boolean,
   isActive: boolean,
+  year: string,
+  section: string,
+  term: string
 }
 
 export default function EditCourse(): JSX.Element {
@@ -24,6 +37,9 @@ export default function EditCourse(): JSX.Element {
     signUpCode: "",
     isDeleted: false,
     isActive: false,
+    year: "",
+    section: "",
+    term: ""
   });
   const [prevSession, setPrevSession] = useState<CourseType | undefined>();
   const [errors, setErrors] = useState<EditCourseType>({
@@ -31,6 +47,9 @@ export default function EditCourse(): JSX.Element {
     signUpCode: "",
     isDeleted: false,
     isActive: false,
+    year: "",
+    section: "",
+    term: ""
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
@@ -58,7 +77,10 @@ export default function EditCourse(): JSX.Element {
               name: res.data.name,
               signUpCode: res.data.signUpCode,
               isDeleted: res.data.isDeleted,
-              isActive: res.data.isActive
+              isActive: res.data.isActive,
+              year: res.data.year ? res.data.year : "",
+              term: res.data.term ? res.data.term : "",
+              section: res.data.section ? res.data.section : ""
             });
           }
         } else if (res.status === 401) {
@@ -91,7 +113,10 @@ export default function EditCourse(): JSX.Element {
           const dataToSend = {
             name: session.name,
             isActive: session.isActive,
-            isDeleted: session.isDeleted
+            isDeleted: session.isDeleted,
+            year: session.year,
+            section: session.section,
+            term: session.term
           }
           // post data back
           Put(putUpdateCourse(prevSession.id), dataToSend).then((res) => {
@@ -100,16 +125,11 @@ export default function EditCourse(): JSX.Element {
                 //redirect to course list
                 navigator("/courses");
                 //pop up notifying user of creation
-                setAlert({message: "Course Updated", type: "success"})
+                setAlert({ message: "Course Updated", type: "success" })
               }
             } else {
               // set errors
-              setErrors({
-                name: res.data,
-                signUpCode: res.data,
-                isDeleted: res.data,
-                isActive: res.data
-              });
+              setAlert({ message: res.data, type: "error" })
             }
             // set is loading back 
             setIsLoading(false);
@@ -122,16 +142,11 @@ export default function EditCourse(): JSX.Element {
                 //redirect to course list
                 navigator("/courses");
                 //pop up notifying user of creation
-                setAlert({message: "Course Updated", type: "success"})
+                setAlert({ message: "Course Updated", type: "success" })
               }
             } else {
               // set errors
-              setErrors({
-                name: res.data,
-                signUpCode: res.data,
-                isDeleted: res.data,
-                isActive: res.data
-              })
+              setAlert({ message: res.data, type: "error" })
             }
             // set is loading back 
             setIsLoading(false);
@@ -144,6 +159,10 @@ export default function EditCourse(): JSX.Element {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleTermChange(e: SelectChangeEvent) {
+    setSession((prev) => ({ ...prev, term: e.target.value as string }))
   }
 
   return !isLoading ? (
@@ -172,6 +191,7 @@ export default function EditCourse(): JSX.Element {
                 error={errors.name !== ""}
                 helperText={errors.name}
                 disabled={isLoading}
+                required
               />
               <TextField
                 name="signUpCode"
@@ -183,6 +203,50 @@ export default function EditCourse(): JSX.Element {
                 onChange={handleChange}
                 error={errors.signUpCode !== ""}
                 helperText={errors.signUpCode}
+                disabled={isLoading}
+                required
+              />
+              <TextField
+                name="year"
+                label="Year"
+                fullWidth
+                sx={{ margin: ".5rem 0" }}
+                value={session.year}
+                onChange={handleChange}
+                error={errors.year !== ""}
+                helperText={errors.year}
+                disabled={isLoading}
+                inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]' }}
+                type="number"
+              />
+              <FormControl fullWidth>
+                <InputLabel id="select-term">Term</InputLabel>
+                <Select
+                  labelId="select-term"
+                  id="course-select-term"
+                  value={session.term}
+                  fullWidth
+                  name="term"
+                  label="Term"
+                  onChange={handleTermChange}
+                  error={errors.term !== ""}
+                  disabled={isLoading}
+                >
+                  <MenuItem value={"spring"}>Spring</MenuItem>
+                  <MenuItem value={"summer"}>Summer</MenuItem>
+                  <MenuItem value={"fall"}>Fall</MenuItem>
+                  <MenuItem value={"winter"}>Winter</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                name="section"
+                label="Section / Period"
+                fullWidth
+                sx={{ margin: ".5rem 0" }}
+                value={session.section}
+                onChange={handleChange}
+                error={errors.section !== ""}
+                helperText={errors.section}
                 disabled={isLoading}
               />
               <Checkbox

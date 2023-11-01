@@ -30,12 +30,13 @@ export default function ModuleList({ course }: ModuleListProps): JSX.Element {
                 </button>
                 <div>
                   {course.id && user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&
-                  user?.groups.includes(course.id) ? (
-                  <Button onClick={() => navigator(`/courses/${course.id}/editmodule/${module.id}`)}>Edit</Button>
-                ) : <></>}
-                <Button variant="contained" onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)}>Begin Module</Button>
+                    user?.groups.includes(course.id) &&
+                    course.instructor.sub === user.sub ? (
+                    <Button onClick={() => navigator(`/courses/${course.id}/editmodule/${module.id}`)}>Edit</Button>
+                  ) : <></>}
+                  <Button variant="contained" onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)}>Begin Module</Button>
                 </div>
-                
+
               </ListItem>
               {index !== course.modules.length - 1 ? ( //only have dividers between modules
                 <Divider />

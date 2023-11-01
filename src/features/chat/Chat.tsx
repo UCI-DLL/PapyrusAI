@@ -248,7 +248,7 @@ export default function Chat(): JSX.Element {
         </div>
         <hr />
         {/* Only show the chat wizard if we don't have user documents, selected prompt, and if there are no previous messages  */}
-        {(messages.length < 1) && (
+        {(messages.length < 1) && (moduleInfo.prompts.length !== 0 && moduleInfo.documents.length !== 0) && (
           <ChatWizard
             documents={moduleInfo.documents}
             prompts={moduleInfo.prompts}

@@ -176,7 +176,7 @@ export default function Chat(): JSX.Element {
         var responseMessage: MessageType = {
           id: tempTimestamp.toString(),
           content: message,
-          messageType: "text",
+          messageType: message.length < 2000 ? "text" : "file",
           role: "user",
           sender: "username",
           timestamp: messageTempId
@@ -248,7 +248,7 @@ export default function Chat(): JSX.Element {
         </div>
         <hr />
         {/* Only show the chat wizard if we don't have user documents, selected prompt, and if there are no previous messages  */}
-        {(messages.length < 1) && (
+        {(messages.length < 1) && (moduleInfo.prompts.length !== 0 && moduleInfo.documents.length !== 0) && (
           <ChatWizard
             documents={moduleInfo.documents}
             prompts={moduleInfo.prompts}
@@ -268,6 +268,7 @@ export default function Chat(): JSX.Element {
                 <MessageLeft
                   message={message.content}
                   displayName={message.sender}
+                  messageType={message.messageType}
                 />
               </div>
             )
@@ -276,6 +277,7 @@ export default function Chat(): JSX.Element {
               <div key={index}>
                 <MessageRight
                   message={message.content}
+                  messageType={message.messageType}
                 />
               </div>
             )

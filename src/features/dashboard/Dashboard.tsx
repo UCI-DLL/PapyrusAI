@@ -89,11 +89,13 @@ export default function Dashboard(): JSX.Element {
       </div>
       <hr />
       {courseList.map((course, index) => {
-        return (
+        return course.modules.length > 0 ? (
           <div style={{ width: "100%" }} key={index}>
             <ModuleList course={course} />
             <Divider />
           </div>
+        ) : (
+          <></>
         )
       })}
 

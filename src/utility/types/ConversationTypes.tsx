@@ -15,8 +15,10 @@ export type ConversationType = {
 export type MessageType = {
   id: string,
   content: string,
-  messageType: string,
+  messageType: MessageTypeType, 
   role: string,
   sender: string,
   timestamp: string
 }
+
+export type MessageTypeType = "text" | "file"

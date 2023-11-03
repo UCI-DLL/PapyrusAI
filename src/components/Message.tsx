@@ -1,13 +1,20 @@
 //reference: https://codesandbox.io/s/material-ui-chat-drh4l?file=/src/Message.js:0-4329
 
-import React from "react";
+import React, { useState } from "react";
 import Markdown from "react-markdown";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
+import { MessageTypeType } from "../utility/types/ConversationTypes";
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import { Tooltip } from "@mui/material";
+import { Modal } from "./Modal";
 
 interface MessageProps {
   message: string;
   displayName?: string;
   typing?: boolean;
+  messageType?: MessageTypeType,
 }
 
 
@@ -29,12 +36,53 @@ export const MessageLeft = (props: MessageProps) => {
 
 
 export const MessageRight = (props: MessageProps) => {
+  const [openFileModal, setOpenFileModal] = useState<boolean>(false);
+  const [expandFile, setExpandFile] = useState<boolean>(false);
   return (
     <div className={"message__row-right"}>
       <div className={"message__right-display-name"}>{"You"}</div>
-      <div className={"message__right-message"}>
-        <Markdown className={""}>{props.message}</Markdown>
-      </div>
+      {props.messageType && props.messageType === "file" ? (
+        <div className={"message__right-message"}>
+          <Modal
+            isOpen={openFileModal}
+            onRequestClose={() => setOpenFileModal(false)}
+          >
+            <div>{props.message}</div>
+          </Modal>
+          <div className="message__file">
+            <div>{expandFile ? props.message : props.message.substring(0, 200) + "..."}</div>
+            <hr />
+            <div style={{ display: "flex" }}>
+              <button
+                onClick={() => setExpandFile(!expandFile)}
+              >
+                {expandFile ? (
+                  <>
+                    <ExpandLessIcon />
+                    Collapse
+                  </>
+                ) : (
+                  <>
+                    <ExpandMoreIcon />
+                    Expand
+                  </>
+                )}
+              </button>
+              &nbsp;&nbsp;&nbsp;
+              <button onClick={() => setOpenFileModal(!openFileModal)}>
+                <Tooltip title={"Fullscreen"}>
+                  <OpenInFullIcon fontSize="small" />
+                </Tooltip>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className={"message__right-message"}>
+          <Markdown className={""}>{props.message}</Markdown>
+        </div>
+      )}
     </div>
   );
 };
+

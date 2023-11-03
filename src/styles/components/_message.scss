@@ -59,4 +59,19 @@
     padding-right: global.$base * 2;
     text-align: end;
   }
+
+  &__file {
+    background: rgba(0,0,0, 0.5);
+    padding: global.$base;
+    margin: global.$base;
+    border-radius: global.$border-radius;
+
+    button {
+      color: global.$white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(global.$base / 2);
+    }
+  }
 }

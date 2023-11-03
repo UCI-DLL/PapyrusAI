@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { CourseType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
@@ -59,13 +59,25 @@ export default function Modules(): JSX.Element {
             )}
 
           </div>
+          {course ? (
+            <>
+            <Typography sx={{ fontSize: 14 }} color="text.secondary">
+              {course.section ?
+                `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}` :
+                `${course.term ? course.term : ""}${course.year ? course.year : ""}`}
+            </Typography>
+            <Typography sx={{ fontSize: 14 }} color="text.secondary">
+              {`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
+            </Typography>
+            </>
+          ) : null}
           <hr />
           {course ? (
             <ModuleList course={course} />
           ) : (
             <div>Course does not have any modules</div>
           )}
-          
+
         </>
       )}
     </div>

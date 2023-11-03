@@ -257,6 +257,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             error={errors.name !== ""}
             helperText={errors.name}
             disabled={isLoading}
+            required
           />
           <TextField
             name="moduleDescription"
@@ -268,6 +269,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             error={errors.moduleDescription !== ""}
             helperText={errors.moduleDescription}
             disabled={isLoading}
+            required
           />
 
           <hr />

@@ -1,7 +1,11 @@
 
 
-export function getPromptList() {
-  return `/prompt`;
+export function getPromptList(limit?: number, startKey: string = "") {
+  if(limit) {
+    return `/prompt?limit=${limit}&startKey=${startKey}`
+  } else {
+    return `/prompt`;
+  }
 }
 
 export function postCreatePrompt() {

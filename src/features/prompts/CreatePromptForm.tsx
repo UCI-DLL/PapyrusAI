@@ -30,7 +30,7 @@ export default function CreatePromptForm({
     name: "",
     prompt: ""
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
 
   function handleSubmit(e: React.FormEvent) {
@@ -44,7 +44,7 @@ export default function CreatePromptForm({
       setIsLoading(true);
       // post data back
       Post(postCreatePrompt(), session).then((res) => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data && res.data) {
             //close modal if user data was updated
             setSession({ name: "", prompt: "" });

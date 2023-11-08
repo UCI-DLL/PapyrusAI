@@ -45,7 +45,7 @@ export default function EditPrompt(): JSX.Element {
       //get prev prompt data
       const promptId = location.pathname.split("/")[2];
       Get(getPrompt(promptId), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //set prev prompt data
             setPrevSession(res.data);
@@ -55,18 +55,26 @@ export default function EditPrompt(): JSX.Element {
               prompt: res.data.prompt,
               isDeleted: res.data.isDeleted,
             });
+            setIsLoading(false);
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
-          //handle error
-          //redirect to prompt list
-          navigator("/prompts");
-          setAlert({message: "Prompt Does Not Exist", type: "error"})
+          if (res === undefined) {
+          } else {
+            //handle error
+            //redirect to prompt list
+            navigator("/prompts");
+            setAlert({message: "Prompt Does Not Exist", type: "error"});
+            setIsLoading(false);
+          }
         }
-        setIsLoading(false);
       });
     }
+
+    return () => {
+      controller.abort();
+    };
     // eslint-disable-next-line
   }, [location.pathname]);
 
@@ -84,7 +92,7 @@ export default function EditPrompt(): JSX.Element {
         setIsLoading(true);
         // post data back
         Put(updatePrompt(prevSession.id), session).then((res) => {
-          if (res.status && res.status < 300) {
+          if (res && res.status && res.status < 300) {
             if (res.data && res.data) {
               //redirect to prompt list
               navigator("/prompts");

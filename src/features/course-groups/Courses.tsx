@@ -15,7 +15,7 @@ export default function Courses(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [showAddCourseModal, setShowAddCourseModal] = useState<boolean>(false);
 
@@ -24,20 +24,28 @@ export default function Courses(): JSX.Element {
     if (!showAddCourseModal) {
       setIsLoading(true);
       Get(getCourseList(), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get the list of all courses for this user
             setCourseList(res.data);
+            setIsLoading(false);
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
-          // handle error
-          setError("No Courses Found");
+          if (res === undefined) {
+          } else {
+            // handle error
+            setError("No Courses Found");
+            setIsLoading(false);
+          }
         }
-        setIsLoading(false);
       });
     }
+
+    return () => {
+      controller.abort();
+    };
     // eslint-disable-next-line
   }, [showAddCourseModal]);
 

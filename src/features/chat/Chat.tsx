@@ -53,18 +53,18 @@ export default function Chat(): JSX.Element {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     if (location.state && location.state.courseId && location.state.moduleId && location.state.conversationIndex !== undefined) {
       setConversationIds(location.state);
-      const controller = new AbortController();
       setIsLoading(true);
       Get(getCourse(location.state.courseId), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get conversation list for this course/module
             setCourseInfo(res.data);
             setModuleInfo(res.data.modules.find((module: ModuleType) => module.id === location.state.moduleId));
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // handle error
@@ -72,7 +72,7 @@ export default function Chat(): JSX.Element {
         }
       });
       Get(getConversation(location.state.courseId, location.state.moduleId, location.state.conversationIndex), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data && res.data.messages) {
             if (res.data.messages.length > 0) {
               //Init user docs and selected prompt
@@ -86,7 +86,7 @@ export default function Chat(): JSX.Element {
             //Then connect to the websocket
             onConnect(location.state.courseId, location.state.moduleId, location.state.conversationIndex)
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // handle error
@@ -98,6 +98,10 @@ export default function Chat(): JSX.Element {
       //If we didnt get a state, then redirect to course list
       navigator("/courses");
     }
+
+    return () => {
+      controller.abort();
+    };
     // eslint-disable-next-line
   }, [location]);
 

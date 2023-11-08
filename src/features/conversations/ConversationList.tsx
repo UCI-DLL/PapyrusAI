@@ -43,41 +43,50 @@ export default function ConversationList(): JSX.Element {
       setIsLoading(true);
       //get conversation list based on course and module
       Get(getConversationList(courseId, moduleId), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get conversation list for this course/module
             setConversationList(res.data);
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
-          // handle error
-          setError("No Conversations Found");
+          if (res === undefined) {
+          } else {
+            // handle error
+            setError("No Conversations Found");
+          }
         }
         setIsLoading(false);
       });
 
       Get(getCourse(courseId), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get the course and save the modules
             setCourse(res.data);
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
-          //handle error
-          setError("Course Does Not Exist");
+          if (res === undefined) {
+          } else {
+            //handle error
+            setError("Course Does Not Exist");
+          }
         }
       });
     }
+    return () => {
+      controller.abort();
+    };
     // eslint-disable-next-line
   }, []);
 
   function handleNewConveration() {
     if (moduleIds) {
       Post(postCreateConversation(moduleIds?.courseId, moduleIds?.moduleId), {}).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //update conversation list with new conversation list
             setConversationList(res.data);
@@ -86,7 +95,7 @@ export default function ConversationList(): JSX.Element {
               navigator("/chat", { state: { ...moduleIds, conversationIndex: res.data.conversations.length - 1 } })
             }
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // handle error

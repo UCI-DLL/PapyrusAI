@@ -18,7 +18,8 @@ export type MessageType = {
   messageType: MessageTypeType, 
   role: string,
   sender: string,
-  timestamp: string
+  timestamp: string,
+  inContext?: boolean,
 }
 
 export type MessageTypeType = "text" | "file"

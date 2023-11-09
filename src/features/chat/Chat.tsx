@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useContext } from "react";
 import { MessageLeft, MessageRight } from "../../components/Message";
-import { Box } from "@mui/material";
+import { Box, Alert } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -41,6 +41,7 @@ export default function Chat(): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const [chatError, setChatError] = useState<string | undefined>();
 
   useEffect(() => {
     //reset alert
@@ -82,7 +83,19 @@ export default function Chat(): JSX.Element {
             }
             //Get list of messages for the conversation
             //make sure the messages are in timestamp order
-            setMessages(res.data.messages.sort((a: MessageType, b: MessageType) => parseInt(a.timestamp) - parseInt(b.timestamp)));
+            // also label the messages that are in context window for chatgpt
+            var sortedMessages = res.data.messages.sort((a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp));
+            var contextCounter = 0;
+            var reverse = sortedMessages.map((message: MessageType) => {
+              contextCounter += num_tokens_from_messages([message]);
+              if (contextCounter < 16000) { //16k context window
+                message["inContext"] = false;
+              } else {
+                message["inContext"] = true;
+              }
+              return message;
+            });
+            setMessages(reverse.reverse());
             //Then connect to the websocket
             onConnect(location.state.courseId, location.state.moduleId, location.state.conversationIndex)
           }
@@ -171,25 +184,32 @@ export default function Chat(): JSX.Element {
 
   const onSendMessage = useCallback((messageList: Array<string>) => {
     //save message in message array
+    setChatError(undefined);
     if (messages) {
+      //check that message length is less that 10000
       var messagesToSend: Array<{ role: string, content: string }> = []
       messageList.map(message => {
-        //temp convert message to message type
-        const tempTimestamp = Date.now();
-        const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-        var responseMessage: MessageType = {
-          id: tempTimestamp.toString(),
-          content: message,
-          messageType: message.length < 2000 ? "text" : "file",
-          role: "user",
-          sender: "username",
-          timestamp: messageTempId
+        if (message.length > 10000) {
+          setChatError("Message Too Long");
+          return ""
+        } else {
+          //temp convert message to message type
+          const tempTimestamp = Date.now();
+          const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+          var responseMessage: MessageType = {
+            id: tempTimestamp.toString(),
+            content: message,
+            messageType: message.length < 2000 ? "text" : "file",
+            role: "user",
+            sender: "username",
+            timestamp: messageTempId
+          }
+          setMessages((prev) => [...prev, responseMessage]);
+          messagesToSend.push({
+            "role": "user", "content": message
+          })
+          return ""
         }
-        setMessages((prev) => [...prev, responseMessage]);
-        messagesToSend.push({
-          "role": "user", "content": message
-        })
-        return ""
       });
 
       socket.current?.send(JSON.stringify({
@@ -203,9 +223,17 @@ export default function Chat(): JSX.Element {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSendMessage([newMessage]);
-    //Then reset newMessage
-    setNewMessage("");
+    //check that message length is less that 10000
+    setChatError(undefined);
+    if (newMessage.length < 10000 && newMessage.length > 0) {
+      onSendMessage([newMessage]);
+      //Then reset newMessage
+      setNewMessage("");
+    } else if (newMessage.length < 1) {
+      setChatError("Message Too Short");
+    } else {
+      setChatError("Message Too Long");
+    }
   }
 
   function handleWizardReturnDocsPrompts(userDocs: Array<DocumentType & { document: string }>, selectedPrompt: string) {
@@ -235,6 +263,16 @@ export default function Chat(): JSX.Element {
     }
   }
 
+  //Note, you should use the offical token counter: https://platform.openai.com/docs/guides/text-generation/managing-tokens
+  //BUT even on their tokenizer: https://platform.openai.com/tokenizer?view=bpe it says that 1 token ~= 4 characters
+  function num_tokens_from_messages(messages: Array<any>) {
+    var num_tokens = 0;
+    messages.forEach(message => {
+      num_tokens = num_tokens + Math.ceil(message["content"].length / 4);
+    });
+
+    return num_tokens;
+  }
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">
@@ -268,22 +306,42 @@ export default function Chat(): JSX.Element {
         {messages.length > 0 && messages.map((message, index) => {
           if (message.role === "assistant") {
             return (
-              <div key={index}>
-                <MessageLeft
-                  message={message.content}
-                  displayName={message.sender}
-                  messageType={message.messageType}
-                />
-              </div>
+              <>
+                {index === messages.findIndex((message: MessageType) => !message.inContext) ? (
+                  <div className="chat__chat-log__in-context">
+                    <span>
+                      In Context
+                    </span>
+                  </div>
+                ) : null}
+                <div key={index} className={index.toString()}>
+                  <MessageLeft
+                    message={message.content}
+                    displayName={message.sender}
+                    messageType={message.messageType}
+                    outOfContext={message.inContext ? true : false}
+                  />
+                </div>
+              </>
             )
           } else {
             return (
-              <div key={index}>
-                <MessageRight
-                  message={message.content}
-                  messageType={message.messageType}
-                />
-              </div>
+              <>
+                {index === messages.findIndex((message: MessageType) => !message.inContext) ? (
+                  <div className="chat__chat-log__in-context">
+                    <span>
+                      In Context
+                    </span>
+                  </div>
+                ) : null}
+                <div key={index} className={index.toString()}>
+                  <MessageRight
+                    message={message.content}
+                    messageType={message.messageType}
+                    outOfContext={message.inContext ? true : false}
+                  />
+                </div>
+              </>
             )
           }
         })}
@@ -295,8 +353,6 @@ export default function Chat(): JSX.Element {
             typing
           />
         )}
-
-
 
         {/* handles scrolling to the bottom */}
         <div ref={messagesEndRef} />
@@ -316,7 +372,15 @@ export default function Chat(): JSX.Element {
                     label="Send a message"
                     sx={{ width: "100%", color: "black" }}
                     value={newMessage}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      //check that message length is less that 10000
+                      setChatError(undefined);
+                      if (e.target.value.length < 10000) {
+                        setNewMessage(e.target.value)
+                      } else {
+                        setChatError("Message Too Long");
+                      }
+                    }}
                     endAdornment={
                       <InputAdornment position="end">
                         <IconButton
@@ -346,6 +410,9 @@ export default function Chat(): JSX.Element {
                     />
                   </div>
                 )}
+              {chatError ? (
+                <Alert severity={"error"}>{chatError}</Alert>
+              ) : null}
             </div>
 
           )}

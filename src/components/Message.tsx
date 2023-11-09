@@ -15,6 +15,7 @@ interface MessageProps {
   displayName?: string;
   typing?: boolean;
   messageType?: MessageTypeType,
+  outOfContext?: boolean,
 }
 
 
@@ -23,7 +24,7 @@ export const MessageLeft = (props: MessageProps) => {
   return (
     <div className={"message__row-left"}>
       <div className={"message__left-display-name"}>{displayName}</div>
-      <div className={"message__left-message"}>
+      <div className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}>
         {props.typing ? (
           <CustomTypingIndicator />
         ) : (
@@ -42,7 +43,7 @@ export const MessageRight = (props: MessageProps) => {
     <div className={"message__row-right"}>
       <div className={"message__right-display-name"}>{"You"}</div>
       {props.messageType && props.messageType === "file" ? (
-        <div className={"message__right-message"}>
+        <div className={props.outOfContext ? "message__right-message message__out-context" : "message__right-message"}>
           <Modal
             isOpen={openFileModal}
             onRequestClose={() => setOpenFileModal(false)}
@@ -78,7 +79,7 @@ export const MessageRight = (props: MessageProps) => {
           </div>
         </div>
       ) : (
-        <div className={"message__right-message"}>
+        <div className={props.outOfContext ? "message__right-message message__out-context" : "message__right-message"}>
           <Markdown className={""}>{props.message}</Markdown>
         </div>
       )}

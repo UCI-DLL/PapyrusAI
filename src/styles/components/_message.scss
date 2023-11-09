@@ -74,4 +74,8 @@
       padding: calc(global.$base / 2);
     }
   }
+
+  &__out-context {
+    background-color: global.$gray-32;
+  }
 }

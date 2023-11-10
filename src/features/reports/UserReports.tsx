@@ -42,8 +42,9 @@ export default function UserReports(): JSX.Element {
       setUser(location.state);
 
       //get list of conversation
+      //TODO handle pagination of conversation lists later when reports is more defined
       Get(getUserConversationList(username), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get the list of all conversations
             //for each courseid, get the course data
@@ -68,7 +69,7 @@ export default function UserReports(): JSX.Element {
               return ""
             })
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // handle error
@@ -79,6 +80,7 @@ export default function UserReports(): JSX.Element {
 
     return (() => {
       setConversationList([]);
+      controller.abort();
     })
     // eslint-disable-next-line
   }, [location]);

@@ -9,7 +9,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 
 export default function AllModules(): JSX.Element {
   let navigator = useNavigate();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [courseList, setCourseList] = useState<Array<CourseType>>([])
 
@@ -18,21 +18,29 @@ export default function AllModules(): JSX.Element {
     setIsLoading(true);
     //show all modules
     Get(getCourseList(), controller.signal).then(res => {
-      if (res.status && res.status < 300) {
+      if (res && res.status && res.status < 300) {
         if (res.data) {
           // Use next line if you want the list of all modules but dont care about the course id or name
           // setModuleList(res.data.flatMap((course: { modules: ModuleType; }) => course.modules));
           //Get the list of all courses for this user
           setCourseList(res.data);
+          setIsLoading(false);
         }
-      } else if (res.status === 401) {
+      } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        // handle error
-        setError("No Modules Found");
+        if (res === undefined) {
+        } else {
+          // handle error
+          setError("No Modules Found");
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
     });
+
+    return () => {
+      controller.abort();
+    };
 
     // eslint-disable-next-line
   }, []);

@@ -13,7 +13,7 @@ export default function Modules(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [course, setCourse] = useState<CourseType>();
 
@@ -23,20 +23,28 @@ export default function Modules(): JSX.Element {
     if (location.pathname.split("/")[1] === "courses" && location.pathname.split("/")[2]) {
       const courseId = location.pathname.split("/")[2];
       Get(getCourse(courseId), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get the course and save the modules
             setCourse(res.data);
+            setIsLoading(false);
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
-          //handle error
-          setError("Course Does Not Exist");
+          if (res === undefined) {
+          } else {
+            //handle error
+            setError("Course Does Not Exist");
+            setIsLoading(false);
+          }
         }
-        setIsLoading(false);
       });
     }
+
+    return () => {
+      controller.abort();
+    };
     // eslint-disable-next-line
   }, [location]);
 

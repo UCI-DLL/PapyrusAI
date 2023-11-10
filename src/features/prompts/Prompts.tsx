@@ -12,7 +12,7 @@ import CreatePromptForm from "./CreatePromptForm";
 export default function Prompts(): JSX.Element {
   let navigator = useNavigate();
   const [promptList, setPromptList] = useState<Array<PromptType>>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [showAddPromptModal, setShowAddPromptModal] = useState<boolean>(false);
   const style = {
@@ -22,25 +22,45 @@ export default function Prompts(): JSX.Element {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (!showAddPromptModal) {
+    if (!showAddPromptModal && promptList.length === 0) {
       setIsLoading(true);
-      Get(getPromptList(), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
-          if (res.data) {
-            //Get the list of all prompts
-            setPromptList(res.data);
+      getPrompts("", controller.signal)
+    }
+
+    return () => {
+      controller.abort();
+    };
+    // eslint-disable-next-line
+  }, [showAddPromptModal]);
+
+  function getPrompts(startKey: string, signal: AbortSignal) {
+    var limit = 20;
+    Get(getPromptList(limit, startKey), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //Get the list of all prompts
+          setPromptList((prev) => [...prev, ...res.data]);
+
+          //if the data is 20 prompts, then call for the next page
+          //handle pages
+          if (res.data.length >= limit) {
+            getPrompts(res.data[res.data.length - 1].id, signal);
+          } else {
+            setIsLoading(false);
           }
-        } else if (res.status === 401) {
-          navigator("/login");
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
         } else {
           // handle error
           setError("No Prompts Found");
+          setIsLoading(false);
         }
-        setIsLoading(false);
-      });
-    }
-    // eslint-disable-next-line
-  }, [showAddPromptModal]);
+      }
+    });
+  }
 
 
   return !isLoading ? (
@@ -84,9 +104,9 @@ export default function Prompts(): JSX.Element {
                       {/* button redirect to the conversation */}
                       <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                         <button onClick={() => navigator(`/prompts/${prompt.id}`)} style={{ textAlign: "left" }}>
-                          <ListItemText 
-                          primary={`${prompt.name} - Created by: ${prompt.creator.name} ${prompt.creator.family_name}`} 
-                          secondary={prompt.prompt.substring(0, 120) + (prompt.prompt.length > 120 ? '...' : "")} 
+                          <ListItemText
+                            primary={`${prompt.name} - Created by: ${prompt.creator.name} ${prompt.creator.family_name}`}
+                            secondary={prompt.prompt.substring(0, 120) + (prompt.prompt.length > 120 ? '...' : "")}
                           />
                         </button>
                       </ListItem>

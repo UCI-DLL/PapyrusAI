@@ -43,7 +43,7 @@ export default function CreateCourse(): JSX.Element {
     section: "",
     term: ""
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
 
 
@@ -60,7 +60,7 @@ export default function CreateCourse(): JSX.Element {
       setIsLoading(true);
       // post data back
       Post(postCreateCourse(), session).then((res) => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data && res.data) {
             //redirect to course list
             navigator("/");

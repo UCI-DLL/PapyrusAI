@@ -35,7 +35,7 @@ export default function MissingUserInfoForm({
     name: "",
     family_name: ""
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close
@@ -51,6 +51,7 @@ export default function MissingUserInfoForm({
       if (user && user.family_name && user.family_name !== "") {
         setSession((prev) => ({...prev, family_name: user.family_name}))
       }
+      setIsLoading(false);
     }
   }, [user, closeForm, requireUpdate]);
 
@@ -67,7 +68,7 @@ export default function MissingUserInfoForm({
       setIsLoading(true);
       // post data back
       Post(postUserData(), session).then((res) => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data && res.data) {
             //close modal if user data was updated
             closeForm(res.data);

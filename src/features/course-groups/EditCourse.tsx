@@ -68,7 +68,7 @@ export default function EditCourse(): JSX.Element {
       //get prev course data
       const courseId = location.pathname.split("/")[2];
       Get(getCourse(courseId), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data) {
             //set prev course data
             setPrevSession(res.data);
@@ -82,16 +82,24 @@ export default function EditCourse(): JSX.Element {
               term: res.data.term ? res.data.term : "",
               section: res.data.section ? res.data.section : ""
             });
+            setIsLoading(false);
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
-          //handle error
-          setError("Course Does Not Exist");
+          if (res === undefined) {
+          } else {
+            //handle error
+            setError("Course Does Not Exist");
+            setIsLoading(false);
+          }
         }
-        setIsLoading(false);
       });
     }
+
+    return () => {
+      controller.abort();
+    };
     // eslint-disable-next-line
   }, [location.pathname]);
 
@@ -120,7 +128,7 @@ export default function EditCourse(): JSX.Element {
           }
           // post data back
           Put(putUpdateCourse(prevSession.id), dataToSend).then((res) => {
-            if (res.status && res.status < 300) {
+            if (res && res.status && res.status < 300) {
               if (res.data && res.data) {
                 //redirect to course list
                 navigator("/courses");
@@ -137,7 +145,7 @@ export default function EditCourse(): JSX.Element {
         } else {
           // post data back
           Put(putUpdateCourse(prevSession.id), session).then((res) => {
-            if (res.status && res.status < 300) {
+            if (res && res.status && res.status < 300) {
               if (res.data && res.data) {
                 //redirect to course list
                 navigator("/courses");

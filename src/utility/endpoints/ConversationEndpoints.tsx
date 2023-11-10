@@ -13,6 +13,12 @@ export function getConversation(courseId: string, moduleId: string, index: strin
 }
 
 //The list of all conversations for a user
-export function getUserConversationList(username: string) {
-  return `/conversation/user/${username}`;
+export function getUserConversationList(username: string, limit?: number, startKeyCourse: string = "", startKeyModule: string = "") {
+  //TODO handle pagination
+  if(limit && startKeyCourse && startKeyModule) {
+    return `/conversation/user/${username}?limit=${limit}&startKeyCourse=${startKeyCourse}&startKeyModule=${startKeyModule}`;
+  } else {
+    return `/conversation/user/${username}`;
+  }
+  
 }

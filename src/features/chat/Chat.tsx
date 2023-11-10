@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useContext } from "react";
 import { MessageLeft, MessageRight } from "../../components/Message";
-import { Box, Alert } from "@mui/material";
+import { Box, Alert, Menu, MenuItem } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -17,6 +17,8 @@ import { CourseType, ModuleType, DocumentType } from "../../utility/types/Course
 import ChatWizard from "./ChatWizard";
 import { AlertContext } from "../../utility/context/AlertContext";
 import RepeatingPromptWizard from "./RepeatingPromptWizard";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { UserContext } from "../../utility/context/UserContext";
 
 
 export default function Chat(): JSX.Element {
@@ -39,9 +41,19 @@ export default function Chat(): JSX.Element {
   //After a prompt has been selected, then add it to this list
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const { setAlert } = useContext(AlertContext);
+  const { user } = useContext(UserContext);
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
+  //download menu in chat
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   useEffect(() => {
     //reset alert
@@ -270,8 +282,28 @@ export default function Chat(): JSX.Element {
     messages.forEach(message => {
       num_tokens = num_tokens + Math.ceil(message["content"].length / 4);
     });
-
     return num_tokens;
+  }
+
+  function downloadChat() {
+    if (courseInfo && moduleInfo && messages && user && conversationIds) {
+      setIsLoading(true);
+      var fileData = courseInfo.name + "\n" +
+        moduleInfo.name + "\n" + courseInfo.instructor.name + " " +
+        courseInfo.instructor.family_name + "\n";
+      messages.forEach(message => {
+        var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
+        var sender = message.sender === "ChatGPT" ? "PapyrusAI" : user.name; //TODO handle not current user
+        fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
+      })
+      const blob = new Blob([fileData], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = `${courseInfo.name}_${moduleInfo.name}_conversation${conversationIds.conversationIndex}.txt`;
+      link.href = url;
+      link.click();
+      setIsLoading(false);
+    }
   }
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
@@ -279,9 +311,35 @@ export default function Chat(): JSX.Element {
       <div className="chat__fixed-top">
         <div className="chat__section-header">
           <h5>{moduleInfo.name}</h5>
-          <div>
-            <div>{courseInfo.name}</div>
-            <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}</div>
+          <div style={{ display: "flex", flexDirection: "row" }}>
+            <div>
+              <div>{courseInfo.name}</div>
+              <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}</div>
+            </div>
+            <div>
+              <IconButton
+                id="chat-button"
+                aria-controls={open ? 'chat-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                onClick={handleClick}
+                aria-label="settings"
+              >
+                <MoreVertIcon />
+              </IconButton>
+              <Menu
+                id="chat-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{
+                  'aria-labelledby': 'chat-menu-button',
+                }}
+              >
+                <MenuItem onClick={downloadChat}>Download</MenuItem>
+              </Menu>
+            </div>
+
           </div>
         </div>
         <hr />

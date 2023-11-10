@@ -27,7 +27,7 @@ export default function Reports(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const [userList, setUserList] = useState<Array<{ users: Array<ReportsUserType>, course: CourseType }>>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -40,10 +40,10 @@ export default function Reports(): JSX.Element {
           return ""
         }
         Get(getCourse(group), controller.signal).then(res1 => {
-          if (res1.status && res1.status < 300) {
+          if (res1 && res1.status && res1.status < 300) {
             if (res1.data) {
               Get(getUsersInCourse(group), controller.signal).then(res => {
-                if (res.status && res.status < 300) {
+                if (res && res.status && res.status < 300) {
                   if (res.data) {
                     //Get the list of all users in the group
                     setUserList((prev) => {
@@ -56,7 +56,7 @@ export default function Reports(): JSX.Element {
                       }
                     });
                   }
-                } else if (res.status === 401) {
+                } else if (res && res.status === 401) {
                   navigator("/login");
                 } else {
                   // handle error
@@ -65,7 +65,7 @@ export default function Reports(): JSX.Element {
                 setIsLoading(false);
               });
             }
-          } else if (res1.status === 401) {
+          } else if (res1 && res1.status === 401) {
             navigator("/login");
           } else {
             //handle errors
@@ -76,7 +76,9 @@ export default function Reports(): JSX.Element {
 
     return (() => {
       setUserList([]);
-    })
+      controller.abort();
+    });
+
     // eslint-disable-next-line
   }, []);
 

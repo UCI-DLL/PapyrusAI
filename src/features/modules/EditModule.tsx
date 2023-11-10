@@ -80,7 +80,7 @@ export default function EditModule(): JSX.Element {
     courseId: string,
     moduleId: string
   }>();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [newDoc, setNewDoc] = useState<DocumentType>({
     usageText: "Please enter your ",
     documentType: ""
@@ -94,22 +94,17 @@ export default function EditModule(): JSX.Element {
     //get prompts
     const controller = new AbortController();
     setIsLoading(true);
-    Get(getPromptList(), controller.signal).then(res => {
-      if (res.status && res.status < 300) {
-        if (res.data) {
-          //get list of prompts
-          setPromptList(res.data);
-        }
-      } else if (res.status === 401) {
-        navigator("/login");
-      } else {
-        // handle error
-        setPromptList([])
-      }
-      setIsLoading(false);
-    });
+    if (promptList.length === 0) {
+      getPrompts("", controller.signal)
+    }
+
+    return () => {
+      controller.abort();
+    };
     // eslint-disable-next-line
   }, []);
+
+  
 
   useEffect(() => {
     const controller = new AbortController();
@@ -127,25 +122,61 @@ export default function EditModule(): JSX.Element {
       //save the ids
       setModuleIds({ courseId: courseId, moduleId: moduleId });
       Get(getModule(courseId, moduleId), controller.signal).then(res => {
-        if (res.status && res.status < 300) {
+        if (res && res.status && res.status < 300) {
           if (res.data && res.data.prompts) {
             // assign prompts to be prompt ids
             //also set session
             setSession({ ...res.data, prompts: res.data.prompts.map((p: PromptType) => p.id) });
+            setIsLoading(false);
           }
-        } else if (res.status === 401) {
+        } else if (res && res.status === 401) {
           navigator("/login");
         } else {
-          //handle error
-          navigator("/courses")
-          setAlert({ message: "Module does not exist", type: "error" })
+          if (res === undefined) {
+          } else {
+            //handle error
+            navigator("/courses");
+            setAlert({ message: "Module does not exist", type: "error" });
+            setIsLoading(false);
+          }
         }
-        setIsLoading(false);
       });
     }
+
+    return () => {
+      controller.abort();
+    };
     // eslint-disable-next-line
   }, [location.pathname]);
 
+  function getPrompts(startKey: string, signal: AbortSignal) {
+    var limit = 20;
+    Get(getPromptList(limit, startKey), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //Get the list of all prompts
+          setPromptList((prev) => [...prev, ...res.data]);
+
+          //if the data is 20 prompts, then call for the next page
+          //handle pages
+          if (res.data.length >= limit) {
+            getPrompts(res.data[res.data.length - 1].id, signal);
+          } else {
+            setIsLoading(false);
+          }
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+          setPromptList([]);
+          setIsLoading(false);
+        }
+      }
+    });
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

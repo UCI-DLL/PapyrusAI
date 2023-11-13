@@ -29,7 +29,7 @@ export default function Login(props: LoginProps): JSX.Element {
     else {
       navigator("/");
     }
-  }, [location.hash, navigator]);
+  }, []);
 
   return (
     <div>

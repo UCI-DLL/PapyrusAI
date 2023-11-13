@@ -103,7 +103,6 @@ function App(): JSX.Element {
 
   useEffect(() => {
     setTimeout(() => {
-      console.log("?????", localStorage.getItem("papyrusai_access_token"))
       console.log("browser", navigator.userAgent)
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
@@ -142,7 +141,7 @@ function App(): JSX.Element {
         });
       }
     }, 500);
-  }, []);
+  }, [showUpdateUserInfoModal]);
 
   //handle log out
   function handleLogOut() {

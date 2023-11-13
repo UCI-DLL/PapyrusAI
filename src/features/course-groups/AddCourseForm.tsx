@@ -26,7 +26,7 @@ export default function AddCourseForm({
   }>({
     signUpCode: "",
   });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
 
   function handleSubmit(e: React.FormEvent) {

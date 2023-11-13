@@ -43,7 +43,7 @@ export default function CreateCourse(): JSX.Element {
     section: "",
     term: ""
   });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { setAlert } = useContext(AlertContext);
 
 

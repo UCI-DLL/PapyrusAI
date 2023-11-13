@@ -24,6 +24,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { Modal } from "../../components/Modal";
 import Markdown from "react-markdown";
 import InfoIcon from '@mui/icons-material/Info';
+import LinearProgress from '@mui/material/LinearProgress';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -86,6 +87,8 @@ export default function AddModule(): JSX.Element {
     setIsLoading(true);
     if (promptList.length === 0) {
       getPrompts("", controller.signal)
+    } else {
+      setIsLoading(false);
     }
 
     return () => {
@@ -172,7 +175,7 @@ export default function AddModule(): JSX.Element {
     }))
   };
 
-  return (
+  return !isLoading ? (
     <div className="modules">
       <Modal
         isOpen={showInfoModal}
@@ -418,5 +421,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
         </form>
       </Box>
     </div>
+  ) : (
+    <LinearProgress />
   )
 }

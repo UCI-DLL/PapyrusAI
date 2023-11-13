@@ -109,10 +109,11 @@ function App(): JSX.Element {
       if (!localStorage.getItem("papyrusai_access_token")) {
         console.log("here? = no local token")
         
-        if(navigator.userAgent.indexOf("Safari") > -1) {
+        if(navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
           //do nothing
           console.log("~~")
         } else {
+          console.log("just checking")
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       } else {

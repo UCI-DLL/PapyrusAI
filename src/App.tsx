@@ -104,10 +104,11 @@ function App(): JSX.Element {
   useEffect(() => {
     setTimeout(() => {
       console.log("?????", localStorage.getItem("papyrusai_access_token"))
+      console.log("browser", navigator.userAgent)
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
         console.log("here? = no local token")
-        console.log("browser", navigator.userAgent)
+        
         if(navigator.userAgent.indexOf("Safari") > -1) {
           //do nothing
           console.log("~~")

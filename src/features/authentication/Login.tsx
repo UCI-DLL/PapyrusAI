@@ -17,7 +17,10 @@ export default function Login(props: LoginProps): JSX.Element {
     console.log("local", localStorage.getItem("papyrusai_access_token"));
     if(location.hash) {
       localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
-      // navigator("/");
+      setTimeout(() => {
+        console.log("going to main")
+        navigator("/");
+      }, 500);
     } 
     else if(!localStorage.getItem("papyrusai_access_token")) {
       console.log("hereeeee")

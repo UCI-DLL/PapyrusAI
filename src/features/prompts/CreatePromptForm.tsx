@@ -30,7 +30,7 @@ export default function CreatePromptForm({
     name: "",
     prompt: ""
   });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
 
   function handleSubmit(e: React.FormEvent) {

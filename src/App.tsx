@@ -103,16 +103,11 @@ function App(): JSX.Element {
 
   useEffect(() => {
     setTimeout(() => {
-      console.log("browser", navigator.userAgent)
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
-        console.log("here? = no local token")
-        
         if(navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
-          //do nothing
-          console.log("~~")
+          //do nothing here if on safari (or it creates a weird loop)
         } else {
-          console.log("just checking")
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       } else {
@@ -121,7 +116,6 @@ function App(): JSX.Element {
         Get(getUserData()).then((res) => {
           if (res.status && res.status < 300) {
             if (res.data) {
-              console.log("get data")
               //update our version of user
               setUser(res.data);
               localStorage.setItem("papyrusai_user", JSON.stringify(res.data));

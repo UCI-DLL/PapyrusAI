@@ -67,7 +67,7 @@ export default function AddCourseForm({
           &nbsp;&nbsp;&nbsp;
           <TextField
             name="signUpCode"
-            label="Sign Up Code"
+            label="Enter sign up code"
             fullWidth
             sx={{ margin: ".5rem 0" }}
             value={session.signUpCode}

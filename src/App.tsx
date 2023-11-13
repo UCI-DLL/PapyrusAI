@@ -105,6 +105,7 @@ function App(): JSX.Element {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
+        console.log("here?")
         window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
       } else {
         // get user's most update-to-date info
@@ -112,6 +113,7 @@ function App(): JSX.Element {
         Get(getUserData()).then((res) => {
           if (res.status && res.status < 300) {
             if (res.data) {
+              console.log("get data")
               //update our version of user
               setUser(res.data);
               localStorage.setItem("papyrusai_user", JSON.stringify(res.data));

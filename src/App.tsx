@@ -105,7 +105,7 @@ function App(): JSX.Element {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
-        console.log("here?")
+        console.log("here? = no local token")
         // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
       } else {
         // get user's most update-to-date info
@@ -132,7 +132,7 @@ function App(): JSX.Element {
           }
         });
       }
-    }, 300);
+    }, 500);
   }, [showUpdateUserInfoModal]);
 
   //handle log out

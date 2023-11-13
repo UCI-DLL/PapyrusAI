@@ -26,7 +26,7 @@ export default function Login(props: LoginProps): JSX.Element {
       navigator("/");
     }
     // eslint-disable-next-line
-  }, [location.hash]);
+  }, []);
 
   return (
     <div>

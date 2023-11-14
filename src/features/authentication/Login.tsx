@@ -13,11 +13,11 @@ export default function Login(props: LoginProps): JSX.Element {
 
   useEffect(() => {
     //Currently, this page just saves the token and then navigates to the home page
-    console.log("location hash", location.hash);
-    console.log("local", localStorage.getItem("papyrusai_access_token"));
     if(location.hash) {
       localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
-      navigator("/");
+      setTimeout(() => {
+        navigator("/");
+      }, 500);
     } 
     else if(!localStorage.getItem("papyrusai_access_token")) {
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
@@ -25,8 +25,7 @@ export default function Login(props: LoginProps): JSX.Element {
     else {
       navigator("/");
     }
-    // eslint-disable-next-line
-  }, [location.hash]);
+  }, [location.hash, navigator]);
 
   return (
     <div>

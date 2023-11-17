@@ -11,7 +11,11 @@ import {
   ListItemText,
   SelectChangeEvent,
   Tooltip,
-  IconButton
+  IconButton,
+  FormControl,
+  InputLabel,
+  OutlinedInput,
+  Menu
 } from "@mui/material";
 import { DocumentType, PromptType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
@@ -25,6 +29,11 @@ import { Modal } from "../../components/Modal";
 import Markdown from "react-markdown";
 import InfoIcon from '@mui/icons-material/Info';
 import LinearProgress from '@mui/material/LinearProgress';
+import SearchIcon from '@mui/icons-material/Search';
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import { CustomUserType } from "../../utility/types/UserTypes";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -47,6 +56,13 @@ type AddModuleType = {
   prompts: Array<string>
 }
 //Note: ^ missing showWizard. Need to add later
+
+export enum SortOptions {
+  Ascending = "Ascending",
+  Descending = "Descending",
+  Newest = "Newest",
+  Oldest = "Oldest",
+}
 
 export default function AddModule(): JSX.Element {
   let location = useLocation();
@@ -80,6 +96,29 @@ export default function AddModule(): JSX.Element {
   const [showFullPrompts, setShowFullPrompts] = useState<boolean>(false);
   const { setAlert } = useContext(AlertContext);
   const [showInfoModal, setShowInfoModal] = useState<boolean>(false);
+  const [filter, setFilter] = useState<{
+    search: string,
+    sort: SortOptions,
+    creator: string,
+    startDate: Dayjs | null,
+    endDate: Dayjs | null
+  }>({
+    search: "", //title or prompt
+    sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+    creator: "",//by creator or date range are filters
+    startDate: null,
+    endDate: null
+  });
+  const [filteredPromptList, setFilteredPromptList] = useState<Array<PromptType>>([]);
+  const [creatorList, setCreatorList] = useState<Array<CustomUserType>>([])
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   useEffect(() => {
     //get prompts
@@ -104,6 +143,18 @@ export default function AddModule(): JSX.Element {
         if (res.data) {
           //Get the list of all prompts
           setPromptList((prev) => [...prev, ...res.data]);
+          setFilteredPromptList((prev) => [...prev, ...res.data]);
+
+          //Add creators to list
+          var currentCreators = creatorList;
+          res.data.forEach((prompt: PromptType) => {
+            if (currentCreators.some(p => p.sub === prompt.creator.sub)) {
+              //creator is already in the list so move on
+            } else {
+              currentCreators.push(prompt.creator);
+            }
+          });
+          setCreatorList(currentCreators); //update creator list
 
           //if the data is 20 prompts, then call for the next page
           //handle pages
@@ -124,6 +175,100 @@ export default function AddModule(): JSX.Element {
         }
       }
     });
+  }
+
+  useEffect(() => {
+    var filteredList = promptList;
+
+    //handle search
+    if (filter.search !== "") {
+      filteredList = filteredList.filter(
+        prompt => prompt.name.toLowerCase().includes(filter.search.toLowerCase()) ||
+          prompt.prompt.toLowerCase().includes(filter.search.toLowerCase())
+      );
+    }
+
+    //handle sort
+    if (filter.sort as string === SortOptions.Ascending) {
+      filteredList = filteredList.sort((a, b) => (b.name > a.name) ? 1 : ((a.name > b.name) ? -1 : 0))
+    } else if (filter.sort as string === SortOptions.Descending) {
+      filteredList = filteredList.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+    } else if (filter.sort as string === SortOptions.Oldest) {
+      filteredList = filteredList.sort((a, b) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)))
+    } else if (filter.sort as string === SortOptions.Newest) {
+      filteredList = filteredList.sort((a, b) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)))
+    } else { //default to ascending order
+      filteredList = filteredList.sort((a, b) => (b.name > a.name) ? 1 : ((a.name > b.name) ? -1 : 0))
+    }
+
+    //handle filters
+    //Note: have to do a lot of date converting
+    if (filter.startDate !== null) {
+      filteredList = filteredList.filter(prompt => {
+        if (filter.startDate !== null) {
+          var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
+          if (dayjs(date.toISOString()) > filter.startDate) {
+            return prompt
+          } else {
+            return false
+          }
+        } else {
+          return prompt
+        }
+      });
+    }
+    if (filter.endDate !== null) {
+      filteredList = filteredList.filter(prompt => {
+        if (filter.endDate !== null) {
+          var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
+          if (dayjs(date.toISOString()) < filter.endDate) {
+            return prompt
+          } else {
+            return false
+          }
+        } else {
+          return prompt
+        }
+      });
+    }
+    //handle creator filter
+    if (filter.creator !== "") {
+      filteredList = filteredList.filter(prompt => prompt.creator.sub === filter.creator);
+    }
+
+    //then set filtered list
+    setFilteredPromptList(filteredList);
+
+  }, [filter, promptList])
+
+  function handleSortPromptList(e: SelectChangeEvent) {
+    if (e.target.value as string === SortOptions.Ascending) {
+      setFilter((prev) => ({ ...prev, sort: SortOptions.Ascending }));
+    } else if (e.target.value as string === SortOptions.Descending) {
+      setFilter((prev) => ({ ...prev, sort: SortOptions.Descending }));
+    } else if (e.target.value as string === SortOptions.Oldest) {
+      setFilter((prev) => ({ ...prev, sort: SortOptions.Oldest }));
+    } else if (e.target.value as string === SortOptions.Newest) {
+      setFilter((prev) => ({ ...prev, sort: SortOptions.Newest }));
+    } else {
+      setFilter((prev) => ({ ...prev, sort: SortOptions.Ascending }));
+    }
+  }
+
+  function handleSearchPromptList(e: React.ChangeEvent<HTMLInputElement>) {
+    e.preventDefault()
+    setFilter((prev) => ({ ...prev, search: e.target.value }));
+  }
+
+  function clearFilters() {
+    setFilter({
+      search: "",
+      sort: SortOptions.Ascending,
+      creator: "",
+      startDate: null,
+      endDate: null
+    });
+    setFilteredPromptList(promptList);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -320,26 +465,141 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           <hr />
 
           <FormLabel>Module Prompts</FormLabel>
+          {/* add prompt filtering  */}
+          <div className="prompts__filter">
+            <FormControl sx={{ minWidth: "200px" }}>
+              <InputLabel shrink={true} id="sort-select-label">Sort</InputLabel>
+              <Select
+                value={filter.sort}
+                onChange={handleSortPromptList}
+                label="Sort"
+                labelId="sort-select-label"
+                id="sort-select"
+                notched={true}
+              >
+                {Object.keys(SortOptions).map(key => {
+                  return (
+                    <MenuItem value={key} key={key}>{key}</MenuItem>
+                  )
+                })}
+              </Select>
+            </FormControl>
+            &nbsp;&nbsp;&nbsp;
+            <FormControl fullWidth>
+              <OutlinedInput
+                id="outlined-adornment-message"
+                placeholder="Search"
+                sx={{ width: "100%", color: "black" }}
+                value={filter.search}
+                onChange={handleSearchPromptList}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="sumbit new message"
+                      edge="end"
+                      type="submit"
+                    >
+                      {<SearchIcon />}
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+            </FormControl>
+            &nbsp;&nbsp;&nbsp;
+
+            <Button
+              id="basic-button"
+              aria-controls={open ? 'basic-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? 'true' : undefined}
+              onClick={handleClick}
+              variant="outlined"
+            >
+              Filter
+            </Button>
+            <FormControl>
+              <Menu
+                id="basic-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{
+                  'aria-labelledby': 'basic-button',
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column" }} key={"menu"}>
+                  <InputLabel shrink={true} sx={{ marginTop: "1rem" }}>Creator</InputLabel>
+                  <Select
+                    value={filter.creator}
+                    onChange={(e: SelectChangeEvent) => {
+                      setFilter((prev) => ({ ...prev, creator: e.target.value }))
+                    }}
+                    labelId="creator-select-label"
+                    id="creator-select"
+                    sx={{ width: 320, maxWidth: '100%', margin: "1rem" }}
+                    renderValue={(selected) => {//find the creator name for the user id
+                      return creatorList.find(p => p.sub === selected)?.name + " " + creatorList.find(p => p.sub === selected)?.family_name
+                    }}
+                  >
+                    <MenuItem value={""} key={"NoCreator"}></MenuItem>
+                    {creatorList.map((creator, index) => {
+                      return (
+                        <MenuItem value={creator.sub} key={index}>{creator.name} {creator.family_name}</MenuItem>
+                      )
+                    })}
+                  </Select>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} >
+                    <DatePicker
+                      label="Start Date"
+                      value={filter.startDate}
+                      onChange={(value) => {
+                        setFilter(prev => ({ ...prev, startDate: value }))
+                      }}
+                      disabled={isLoading}
+                      sx={{ margin: "1rem" }}
+                    />
+                  </LocalizationProvider>
+                  <LocalizationProvider dateAdapter={AdapterDayjs} >
+                    <DatePicker
+                      label="End Date"
+                      value={filter.endDate}
+                      onChange={(value) => {
+                        setFilter(prev => ({ ...prev, endDate: value }))
+                      }}
+                      disabled={isLoading}
+                      sx={{ margin: "1rem" }}
+                    />
+                  </LocalizationProvider>
+                </div>
+              </Menu>
+            </FormControl>
+            &nbsp;&nbsp;&nbsp;
+            <Button onClick={clearFilters}>Clear</Button>
+          </div>
           {/* add dropdown to handle prompts  */}
-          <Select
-            labelId="multiple-prompt-checkbox-select"
-            id="multiple-prompt-checkbox-select"
-            multiple
-            value={session.prompts}
-            onChange={handleSelectChange}
-            renderValue={(selected) => {//find the name for the prompt id
-              return selected.map((id) => promptList.find((p) => p.id === id)?.name).join(', ');
-            }}
-            MenuProps={MenuProps}
-            fullWidth
-          >
-            {promptList.map((prompt, index) => (
-              <MenuItem key={index} value={prompt.id}>
-                <Checkbox checked={session.prompts.indexOf(prompt.id) > -1} />
-                <ListItemText primary={prompt.name} />
-              </MenuItem>
-            ))}
-          </Select>
+          <FormControl fullWidth>
+            <InputLabel id="multiple-prompt-checkbox-select">Select Prompt(s)</InputLabel>
+            <Select
+              labelId="multiple-prompt-checkbox-select"
+              id="multiple-prompt-checkbox-select"
+              multiple
+              value={session.prompts}
+              onChange={handleSelectChange}
+              renderValue={(selected) => {//find the name for the prompt id
+                return selected.map((id) => promptList.find((p) => p.id === id)?.name).join(', ');
+              }}
+              label="Select Prompt(s)"
+              MenuProps={MenuProps}
+              fullWidth
+            >
+              {filteredPromptList.map((prompt, index) => (
+                <MenuItem key={index} value={prompt.id}>
+                  <Checkbox checked={session.prompts.indexOf(prompt.id) > -1} />
+                  <ListItemText primary={prompt.name} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           {/* button and list to show the actual full list of prompts and not just the names */}
           <Button onClick={() => setShowFullPrompts(!showFullPrompts)}>{showFullPrompts ? "Hide Full Prompts" : "Show Full Prompts"}</Button>
           {showFullPrompts ? (

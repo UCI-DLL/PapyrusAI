@@ -135,16 +135,16 @@ export default function Prompts(): JSX.Element {
     }
 
     //handle sort
-    if (filter.sort === SortOptions.Ascending) {
-      filteredList = filteredList.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
-    } else if (filter.sort as string === SortOptions.Descending) {
+    if (filter.sort as string === SortOptions.Ascending) {
       filteredList = filteredList.sort((a, b) => (b.name > a.name) ? 1 : ((a.name > b.name) ? -1 : 0))
+    } else if (filter.sort as string === SortOptions.Descending) {
+      filteredList = filteredList.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
     } else if (filter.sort as string === SortOptions.Oldest) {
       filteredList = filteredList.sort((a, b) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)))
     } else if (filter.sort as string === SortOptions.Newest) {
       filteredList = filteredList.sort((a, b) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)))
     } else { //default to ascending order
-      filteredList = filteredList.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+      filteredList = filteredList.sort((a, b) => (b.name > a.name) ? 1 : ((a.name > b.name) ? -1 : 0))
     }
 
     //handle filters
@@ -251,7 +251,7 @@ export default function Prompts(): JSX.Element {
           <hr />
 
           {/* Filter, sort, search  */}
-          <div style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", display: "flex" }}>
+          <div className="prompts__filter">
             <FormControl sx={{ minWidth: "200px" }}>
               <InputLabel shrink={true} id="sort-select-label">Sort</InputLabel>
               <Select

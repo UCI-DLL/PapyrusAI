@@ -47,4 +47,16 @@
 
   }
 
+  &__filter {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    margin: 0.4rem 0;
+
+    @media (max-width: global.$md-break) {
+      flex-direction: column;
+    }
+  }
+
 }

@@ -19,7 +19,7 @@ import { useLocation, useNavigate } from "react-router";
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 
 
-export default function NavigationTwo(): JSX.Element {
+export default function Navigation(): JSX.Element {
   const { user, setUser } = useContext(UserContext);
   let navigator = useNavigate();
   const location = useLocation();

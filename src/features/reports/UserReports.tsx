@@ -5,9 +5,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  Button
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router";
 import Get from "../../utility/Get";
 import { getUserConversationList } from "../../utility/endpoints/ConversationEndpoints";
@@ -16,6 +17,7 @@ import { CourseType } from "../../utility/types/CourseTypes";
 import { UserType } from "../../utility/types/UserTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
+import { UserContext } from "../../utility/context/UserContext";
 
 
 export default function UserReports(): JSX.Element {
@@ -28,18 +30,20 @@ export default function UserReports(): JSX.Element {
     moduleId: string
   }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [user, setUser] = useState<UserType>();
+  const [viewUser, setViewUser] = useState<UserType>();
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     const controller = new AbortController();
     if (
       location.state &&
       location.pathname.split("/")[1] === "reports" &&
-      location.pathname.split("/")[2]
+      location.pathname.split("/")[2] &&
+      user
     ) {
-      //Get user information
+      //Get viewUser information
       const username = location.pathname.split("/")[2];
-      setUser(location.state);
+      setViewUser(location.state);
 
       //get list of conversation
       //TODO handle pagination of conversation lists later when reports is more defined
@@ -51,7 +55,7 @@ export default function UserReports(): JSX.Element {
             res.data.map((conversation: any) => {
               Get(getCourse(conversation.courseId), controller.signal).then(res1 => {
                 if (res1.status && res1.status < 300) {
-                  if (res1.data) {
+                  if (res1.data && res1.data.instructor.sub === user.sub) {
                     //set conversation data
                     setConversationList((prev) => [...prev, {
                       conversations: conversation.conversations,
@@ -87,7 +91,7 @@ export default function UserReports(): JSX.Element {
 
   return !isLoading ? (
     <div className="reports">
-      <h3>{`Reports ${user ? `for ${user.name} ${user.family_name}` : ""}`}</h3>
+      <h3>{`Reports ${viewUser ? `for ${viewUser.name} ${viewUser.family_name}` : ""}`}</h3>
       <hr />
 
       <TableContainer component={Paper}>
@@ -98,6 +102,7 @@ export default function UserReports(): JSX.Element {
               <TableCell align="right">Module</TableCell>
               <TableCell align="right"># of Conversations</TableCell>
               <TableCell align="right">Last Accessed</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -129,6 +134,11 @@ export default function UserReports(): JSX.Element {
                   <TableCell align="right">{row.course.modules.find(x => x.id === row.moduleId)?.name}</TableCell>
                   <TableCell align="right">{row.conversations.length}</TableCell>
                   <TableCell align="right">{tempTime}</TableCell>
+                  <TableCell align="right">
+                    <Button variant="contained" onClick={() => navigator(`/courses/${row.courseId}/modules/${row.moduleId}/username/${viewUser?.sub}`)}>
+                      List Conversations
+                    </Button>
+                  </TableCell>
                 </TableRow>
               )
             }

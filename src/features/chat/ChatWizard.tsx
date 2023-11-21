@@ -77,22 +77,29 @@ export default function ChatWizard({
       const temp = URL.createObjectURL(file);
       const doc = PDFJS.getDocument(temp);
       const pdfDocument = await doc.promise;
-      const page = await pdfDocument.getPage(1); //TODO only handles one page at this time
-      const textContent = await page.getTextContent();
-      const text = textContent["items"].reduce((result: any, item: any) => {
-        return `${result} ${item["str"]}`
-      }, "")
-      if (documentModal) {
-        setUserDocuments((prev) => {
-          let items = [...prev];
-          items[documentModal.index] = {
-            document: text as string,
-            usageText: documentModal.usageText,
-            documentType: documentModal.documentType
-          }
-          return items
-        })
+      //handle multiple pages
+      var numPages = pdfDocument.numPages;
+      var currentPage = 1;
+      while(currentPage !== numPages) {
+        const page = await pdfDocument.getPage(currentPage); 
+        const textContent = await page.getTextContent();
+        const text = textContent["items"].reduce((result: any, item: any) => {
+          return `${result} ${item["str"]}`
+        }, "")
+        if (documentModal) {
+          setUserDocuments((prev) => {
+            let items = [...prev];
+            items[documentModal.index] = {
+              document: items[documentModal.index] && items[documentModal.index].document ? items[documentModal.index].document + text as string : text as string,
+              usageText: documentModal.usageText,
+              documentType: documentModal.documentType
+            }
+            return items
+          });
+          currentPage++;
+        }
       }
+      
 
     } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
       const reader = new FileReader();

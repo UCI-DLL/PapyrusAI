@@ -1,15 +1,23 @@
 
 
-export function getConversationList(courseId: string, moduleId: string) {
-  return `/conversation/${courseId}/${moduleId}`;
+export function getConversationList(courseId: string, moduleId: string, username?: string) {
+  if(username) {
+    return `/conversation/${courseId}/${moduleId}?username=${username}`; 
+  } else {
+    return `/conversation/${courseId}/${moduleId}`;
+  }
 }
 
 export function postCreateConversation(courseId: string, moduleId: string) {
   return `/conversation/${courseId}/${moduleId}`;
 }
 
-export function getConversation(courseId: string, moduleId: string, index: string) {
-  return `/conversation/${courseId}/${moduleId}/${index}`;
+export function getConversation(courseId: string, moduleId: string, index: string, username?: string) {
+  if(username) {
+    return `/conversation/${courseId}/${moduleId}/${index}?username=${username}`; 
+  } else {
+    return `/conversation/${courseId}/${moduleId}/${index}`;
+  }
 }
 
 //The list of all conversations for a user

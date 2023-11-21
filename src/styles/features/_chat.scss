@@ -15,10 +15,10 @@
     top: 3rem; //based on top header
     background-color: global.$background;
     z-index: 10;
-    width: calc(global.$lg-break);
+    width: global.$lg-break;
 
     @media (max-width: global.$lg-break) {
-      width: calc(100vw - 14px);
+      width: 100vw;
     }
 
     @media (max-width: 1300px ) and (min-width: global.$lg-break) {
@@ -51,10 +51,13 @@
   }
 
   &__chat-log {
-    // overflow-y: scroll;
     width: 100%;
-    margin-top: 6rem; //based on top bar height + section header height
+    margin-top: 7rem; //based on top bar height + section header height
     margin-bottom: 6rem; //based on input-form height
+
+    @media (max-width: global.$lg-break) {
+      margin-top: 12rem;
+    }
 
     &__in-context { 
       width: 100%;
@@ -83,11 +86,11 @@
     bottom: 0; 
     background-color: global.$background;
     z-index: 10;
-    width: calc(global.$lg-break);
+    width: global.$lg-break;
     padding: 0.4rem 0.2rem;
 
     @media (max-width: global.$lg-break) {
-      width: calc(100vw - 14px);
+      width: 100vw;
     }
 
     @media (max-width: 1300px ) and (min-width: global.$lg-break) {

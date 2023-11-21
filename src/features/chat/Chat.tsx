@@ -293,7 +293,7 @@ export default function Chat(): JSX.Element {
         courseInfo.instructor.family_name + "\n";
       messages.forEach(message => {
         var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
-        var sender = message.sender === "ChatGPT" ? "PapyrusAI" : user.name; //TODO handle not current user
+        var sender = message.sender === "ChatGPT" ? "Paige" : user.name; 
         fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
       })
       const blob = new Blob([fileData], { type: "text/plain" });
@@ -364,7 +364,7 @@ export default function Chat(): JSX.Element {
         {messages.length > 0 && messages.map((message, index) => {
           if (message.role === "assistant") {
             return (
-              <>
+              <div key={index} >
                 {index === messages.findIndex((message: MessageType) => !message.inContext) ? (
                   <div className="chat__chat-log__in-context">
                     <span>
@@ -380,11 +380,11 @@ export default function Chat(): JSX.Element {
                     outOfContext={message.inContext ? true : false}
                   />
                 </div>
-              </>
+              </div>
             )
           } else {
             return (
-              <>
+              <div key={index} >
                 {index === messages.findIndex((message: MessageType) => !message.inContext) ? (
                   <div className="chat__chat-log__in-context">
                     <span>
@@ -399,7 +399,7 @@ export default function Chat(): JSX.Element {
                     outOfContext={message.inContext ? true : false}
                   />
                 </div>
-              </>
+              </div>
             )
           }
         })}
@@ -407,7 +407,7 @@ export default function Chat(): JSX.Element {
         {showTypingIndicator && (
           <MessageLeft
             message={""}
-            displayName={"ChatGPT"}
+            displayName={"Paige"}
             typing
           />
         )}

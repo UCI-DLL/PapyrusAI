@@ -41,7 +41,7 @@ export default function Reports(): JSX.Element {
         }
         Get(getCourse(group), controller.signal).then(res1 => {
           if (res1 && res1.status && res1.status < 300) {
-            if (res1.data) {
+            if (res1.data && res1.data.instructor.sub === user.sub) { //only get the rest of the information if current user is instructor
               Get(getUsersInCourse(group), controller.signal).then(res => {
                 if (res && res.status && res.status < 300) {
                   if (res.data) {

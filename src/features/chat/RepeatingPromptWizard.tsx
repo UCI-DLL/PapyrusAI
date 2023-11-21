@@ -59,7 +59,7 @@ export default function RepeatingPromptWizard({
               onlyPrompts(selectedPrompt)
             }}
           >
-            Ask PapyrusAI
+            Ask Paige
           </Button>
         </div>
       </div>

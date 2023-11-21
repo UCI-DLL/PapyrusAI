@@ -41,7 +41,7 @@ export const MessageRight = (props: MessageProps) => {
   const [expandFile, setExpandFile] = useState<boolean>(false);
   return (
     <div className={"message__row-right"}>
-      <div className={"message__right-display-name"}>{"You"}</div>
+      <div className={"message__right-display-name"}>{props.displayName ? props.displayName : "You"}</div> 
       {props.messageType && props.messageType === "file" ? (
         <div className={props.outOfContext ? "message__right-message message__out-context" : "message__right-message"}>
           <Modal

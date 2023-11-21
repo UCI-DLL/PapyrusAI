@@ -9,6 +9,8 @@ import { ConversationListType } from "../../utility/types/ConversationTypes";
 import { Link } from "react-router-dom";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
+import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { UserType } from "../../utility/types/UserTypes";
 
 export default function ConversationList(): JSX.Element {
   let location = useLocation();
@@ -25,6 +27,8 @@ export default function ConversationList(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [course, setCourse] = useState<CourseType>();
+  //This is for when instructors or researchers are looking up a different student
+  const [viewUser, setViewUser] = useState<UserType>();
 
 
   useEffect(() => {
@@ -39,10 +43,15 @@ export default function ConversationList(): JSX.Element {
       //get prev course data
       const courseId = location.pathname.split("/")[2];
       const moduleId = location.pathname.split("/")[4];
+      //instructors or researchers can view other user's conversation lists
+      var username;
+      if(location.pathname.split("/")[6]) {
+        username = location.pathname.split("/")[6];
+      }
       setModuleIds({ courseId: courseId, moduleId: moduleId });
       setIsLoading(true);
       //get conversation list based on course and module
-      Get(getConversationList(courseId, moduleId), controller.signal).then(res => {
+      Get(getConversationList(courseId, moduleId, username), controller.signal).then(res => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get conversation list for this course/module
@@ -76,6 +85,23 @@ export default function ConversationList(): JSX.Element {
           }
         }
       });
+
+      if(username) {
+        //get user details
+        Get(getUserData(username), controller.signal).then((res) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              setViewUser(res.data);
+            }
+          } else {
+            if (res === undefined) {
+            } else {
+              //handle error
+              setError("Could not find user")
+            }
+          }
+        });
+      }
     }
     return () => {
       controller.abort();
@@ -113,7 +139,11 @@ export default function ConversationList(): JSX.Element {
         <>
           <div className="courses__section-header">
             <div style={{ display: "flex", flexDirection: "column", alignItems: "baseline" }}>
-              <h3>My Conversations</h3>
+              {viewUser ? (
+                <h3>{viewUser.name} {viewUser.family_name} Conversations</h3>
+              ) : (
+                <h3>My Conversations</h3>
+              )}
               {course && (
                 <>
                   <Typography sx={{ fontSize: 14 }} color="text.secondary">
@@ -132,7 +162,9 @@ export default function ConversationList(): JSX.Element {
             </div>
 
             <div>
-              <Button variant="contained" onClick={handleNewConveration}>New Conversation</Button>
+              {viewUser ? <></> : (
+                <Button variant="contained" onClick={handleNewConveration}>New Conversation</Button>
+              )}
             </div>
           </div>
           <hr />
@@ -147,12 +179,16 @@ export default function ConversationList(): JSX.Element {
                     <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                       {/* redirect to chat with and pass params  */}
                       <Link
-                        to={"/chat"}
+                        to={viewUser ? `/chat/${viewUser.sub}` : "/chat"}
                         state={{ ...moduleIds, conversationIndex: index }}
                         style={{ textAlign: "left", display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}
                       >
                         <ListItemText primary={`Conversation ${index + 1}`} secondary={`Created: ${time}`} />
-                        <Button variant="contained">Chat</Button>
+                        {viewUser ? (
+                          <Button variant="contained">View</Button>
+                        ) : (
+                          <Button variant="contained">Chat</Button>
+                        )}
                       </Link>
                     </ListItem>
                     {index !== conversationList.conversations.length - 1 ? ( //only have dividers between modules
@@ -162,7 +198,11 @@ export default function ConversationList(): JSX.Element {
                 )
               }) : (
                 <div style={{ display: "flex", width: "100%", alignContent: "center", justifyContent: "center" }}>
-                  <Button variant="contained" onClick={handleNewConveration}>Start a Conversation</Button>
+                  {viewUser ? (
+                    <div>No conversations yet</div>
+                  ) : (
+                    <Button variant="contained" onClick={handleNewConveration}>Start a Conversation</Button>
+                  )}
                 </div>
               )}
           </List>

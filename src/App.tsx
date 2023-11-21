@@ -39,6 +39,7 @@ import Prompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
+import ChatReport from "./features/reports/ChatReport";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -114,7 +115,7 @@ function App(): JSX.Element {
         // get user's most update-to-date info
         //If access denied, then update the access token
         Get(getUserData()).then((res) => {
-          if (res.status && res.status < 300) {
+          if (res && res.status && res.status < 300) {
             if (res.data) {
               //update our version of user
               setUser(res.data);
@@ -254,6 +255,15 @@ function App(): JSX.Element {
 
                     <Route path="/reports/:id" element={<PrivateRoute user={user} />}>
                       <Route path="/reports/:id" element={<UserReports />} />
+                    </Route>
+
+                    {/* shows conversation list of other users  */}
+                    <Route path="/courses/:id/modules/:id/username/:id" element={<PrivateRoute user={user} />}>
+                      <Route path="/courses/:id/modules/:id/username/:id" element={<ConversationList />} />
+                    </Route>
+
+                    <Route path="/chat/:id" element={<PrivateRoute user={user} />}>
+                      <Route path="/chat/:id" element={<ChatReport />} />
                     </Route>
                   </>
                 )}

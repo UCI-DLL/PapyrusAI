@@ -56,7 +56,7 @@ export default function Dashboard(): JSX.Element {
     <div className="dashboard">
       <Modal
         isOpen={showAddCourseModal}
-        title={"Add course by sign up code"}
+        title={"Join course by sign up code"}
         onRequestClose={() => setShowAddCourseModal(false)}
         actions={
           <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setShowAddCourseModal(false)}>
@@ -75,13 +75,13 @@ export default function Dashboard(): JSX.Element {
       <div className="dashboard__section-header">
         <h3>My Courses</h3>
         <div>
-          <Button onClick={() => navigator("/createcourse")}>View All Courses</Button>
+          <Button onClick={() => navigator("/courses")}>View All Courses</Button>
           &nbsp;&nbsp;&nbsp;
           {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
             <Button variant="outlined" onClick={() => navigator("/createcourse")}>Create Course</Button>
           )}
           &nbsp;&nbsp;&nbsp;
-          <Button variant="contained" onClick={() => setShowAddCourseModal(true)}>Add Course</Button>
+          <Button variant="contained" onClick={() => setShowAddCourseModal(true)}>Join Course</Button>
         </div>
       </div>
 

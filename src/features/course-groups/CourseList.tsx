@@ -38,10 +38,12 @@ export default function CourseList({ list }: CourseListProps): JSX.Element {
               <CardActions sx={{ justifyContent: "space-between" }}>
                 <Button
                   size="small"
-                  variant="outlined"
+                  variant="contained"
                   onClick={() => navigator(`/courses/${course.id}/modules`)}
                 >
-                  View Modules
+                  {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&
+                  user?.groups.includes(course.id) &&
+                  course.instructor.sub === user.sub ? "View / Edit Modules" : "View Modules"}
                 </Button>
                 {/* If use is instructor and is in the course  */}
                 {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&

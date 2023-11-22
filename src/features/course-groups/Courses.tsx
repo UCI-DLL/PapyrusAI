@@ -59,7 +59,7 @@ export default function Courses(): JSX.Element {
           <div className="courses__section-header">
             <Modal
               isOpen={showAddCourseModal}
-              title={"Add course by sign up code"}
+              title={"Join course by sign up code"}
               onRequestClose={() => setShowAddCourseModal(false)}
               actions={
                 <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setShowAddCourseModal(false)}>
@@ -80,7 +80,7 @@ export default function Courses(): JSX.Element {
                 <Button variant="outlined" onClick={() => navigator("/createcourse")}>Create Course</Button>
               )}
               &nbsp;&nbsp;&nbsp;
-              <Button variant="contained" onClick={() => setShowAddCourseModal(true)}>Add Course</Button>
+              <Button variant="contained" onClick={() => setShowAddCourseModal(true)}>Join Course</Button>
             </div>
 
           </div>

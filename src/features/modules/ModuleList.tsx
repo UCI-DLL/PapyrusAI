@@ -28,7 +28,7 @@ export default function ModuleList({ course }: ModuleListProps): JSX.Element {
                   <ListItemText primary={module.name} secondary={course.name + " - " + course.instructor.name + " " + course.instructor.family_name} />
                   <div>{module.moduleDescription}</div>
                 </button>
-                <div>
+                <div style={{ display: "flex" }}>
                   {course.id && user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&
                     user?.groups.includes(course.id) &&
                     course.instructor.sub === user.sub ? (

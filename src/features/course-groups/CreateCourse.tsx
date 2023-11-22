@@ -98,12 +98,14 @@ export default function CreateCourse(): JSX.Element {
         </div>
       </div>
       <hr />
+      <span>* indicates a required field</span>
       <Box className="courses__add">
         <form onSubmit={handleSubmit}>
           <FormLabel>Enter Course Information</FormLabel>
           <TextField
             name="name"
             label="Course Name"
+            placeholder="Eng190W Communications in the Professional World"
             fullWidth
             sx={{ margin: ".5rem 0" }}
             value={session.name}
@@ -130,6 +132,7 @@ export default function CreateCourse(): JSX.Element {
             name="year"
             label="Year"
             fullWidth
+            placeholder="2023"
             sx={{ margin: ".5rem 0" }}
             value={session.year}
             onChange={handleChange}
@@ -162,6 +165,7 @@ export default function CreateCourse(): JSX.Element {
             name="section"
             label="Section / Period"
             fullWidth
+            placeholder="Section 02"
             sx={{ margin: ".5rem 0" }}
             value={session.section}
             onChange={handleChange}

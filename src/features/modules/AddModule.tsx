@@ -189,16 +189,16 @@ export default function AddModule(): JSX.Element {
     }
 
     //handle sort
-    if (filter.sort as string === SortOptions.Ascending) {
-      filteredList = filteredList.sort((a, b) => (b.name > a.name) ? 1 : ((a.name > b.name) ? -1 : 0))
-    } else if (filter.sort as string === SortOptions.Descending) {
-      filteredList = filteredList.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+    if (filter.sort as string === SortOptions.Descending) {
+      filteredList = filteredList.sort((a, b) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0))
+    } else if (filter.sort as string === SortOptions.Ascending) {
+      filteredList = filteredList.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0))
     } else if (filter.sort as string === SortOptions.Oldest) {
       filteredList = filteredList.sort((a, b) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)))
     } else if (filter.sort as string === SortOptions.Newest) {
       filteredList = filteredList.sort((a, b) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)))
     } else { //default to ascending order
-      filteredList = filteredList.sort((a, b) => (b.name > a.name) ? 1 : ((a.name > b.name) ? -1 : 0))
+      filteredList = filteredList.sort((a, b) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0))
     }
 
     //handle filters
@@ -244,12 +244,16 @@ export default function AddModule(): JSX.Element {
   function handleSortPromptList(e: SelectChangeEvent) {
     if (e.target.value as string === SortOptions.Ascending) {
       setFilter((prev) => ({ ...prev, sort: SortOptions.Ascending }));
+      setFilteredPromptList(prev => prev.sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0)));
     } else if (e.target.value as string === SortOptions.Descending) {
       setFilter((prev) => ({ ...prev, sort: SortOptions.Descending }));
+      setFilteredPromptList(prev => prev.sort((a, b) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0)));
     } else if (e.target.value as string === SortOptions.Oldest) {
       setFilter((prev) => ({ ...prev, sort: SortOptions.Oldest }));
+      setFilteredPromptList(prev => prev.sort((a, b) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6))));
     } else if (e.target.value as string === SortOptions.Newest) {
       setFilter((prev) => ({ ...prev, sort: SortOptions.Newest }));
+      setFilteredPromptList(prev => prev.sort((a, b) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6))));
     } else {
       setFilter((prev) => ({ ...prev, sort: SortOptions.Ascending }));
     }
@@ -360,6 +364,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
         </div>
       </div>
       <hr />
+      <span>* indicates a required field</span>
       <Box className="modules__add">
         <form onSubmit={handleSubmit}>
           <FormLabel>Enter Module Information</FormLabel>

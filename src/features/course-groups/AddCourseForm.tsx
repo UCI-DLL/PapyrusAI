@@ -69,6 +69,7 @@ export default function AddCourseForm({
             name="signUpCode"
             label="Enter sign up code"
             fullWidth
+            placeholder="ENG190WFall2023"
             sx={{ margin: ".5rem 0" }}
             value={session.signUpCode}
             onChange={handleChange}
@@ -82,7 +83,7 @@ export default function AddCourseForm({
             onClick={handleSubmit}
             type="submit"
           >
-            Add Course
+            Join Course
           </Button>
         </form>
       </Box>

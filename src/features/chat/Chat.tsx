@@ -313,8 +313,8 @@ export default function Chat(): JSX.Element {
           <h5>{moduleInfo.name}</h5>
           <div style={{ display: "flex", flexDirection: "row" }}>
             <div>
-              <div>{courseInfo.name}</div>
-              <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}</div>
+              <div>{courseInfo.name} &nbsp;</div>
+              <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}&nbsp;</div>
             </div>
             <div>
               <IconButton
@@ -339,14 +339,10 @@ export default function Chat(): JSX.Element {
                 <MenuItem onClick={downloadChat}>Download</MenuItem>
               </Menu>
             </div>
-
           </div>
         </div>
-        <hr />
-        <div className="chat__section-header">
-          <div>{moduleInfo.moduleDescription}</div>
-        </div>
-        <hr />
+        
+        <div style={{padding: "0.4rem"}}>{moduleInfo.moduleDescription}</div>
         {/* Only show the chat wizard if we don't have user documents, selected prompt, and if there are no previous messages  */}
         {(messages.length < 1) && (moduleInfo.prompts.length !== 0 || moduleInfo.documents.length !== 0) && (
           <ChatWizard

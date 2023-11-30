@@ -11,28 +11,42 @@
   width: 100%;
 
   &__fixed-top {
-    position: fixed;
-    top: 3rem; //based on top header
-    background-color: global.$background;
+    top: 4rem; //based on top header plus some
     z-index: 10;
     width: global.$lg-break;
+    position: relative;
 
     @media (max-width: global.$lg-break) {
       width: 100vw;
     }
 
     @media (max-width: 1300px ) and (min-width: global.$lg-break) {
-      width: calc(100vw - 14rem);
+      width: calc(100vw - 15rem);
+    }
+
+    @media (max-width: global.$sm-break) {
+      top: 6rem;
     }
   }
   
   &__section-header {
+    background-color: global.$background;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     width: 100%;
     padding: 0 global.$base;
     align-items: center;
+    position: fixed;
+    top: 3rem; //based on top header
+    z-index: 2;
+    max-width: global.$lg-break;
+    padding-bottom: global.$base;
+    border-bottom: solid global.$accent-3 2px;
+
+    @media (min-width: global.$lg-break) and (max-width: 1300px) {
+      max-width: calc(100vw - 15rem);
+    }
 
     @media (max-width: global.$sm-break) {
       flex-direction: column;

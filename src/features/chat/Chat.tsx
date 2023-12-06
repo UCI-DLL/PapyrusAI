@@ -293,7 +293,7 @@ export default function Chat(): JSX.Element {
         courseInfo.instructor.family_name + "\n";
       messages.forEach(message => {
         var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
-        var sender = message.sender === "ChatGPT" ? "Paige" : user.name; 
+        var sender = message.sender === "ChatGPT" ? "Papyrus" : user.name; 
         fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
       })
       const blob = new Blob([fileData], { type: "text/plain" });
@@ -403,7 +403,7 @@ export default function Chat(): JSX.Element {
         {showTypingIndicator && (
           <MessageLeft
             message={""}
-            displayName={"Paige"}
+            displayName={"Papyrus"}
             typing
           />
         )}

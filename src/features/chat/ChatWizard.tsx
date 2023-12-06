@@ -247,7 +247,7 @@ export default function ChatWizard({
             }
           }}
         >
-          Ask Paige
+          Ask Papyrus
         </Button>
       </div>
 

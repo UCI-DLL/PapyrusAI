@@ -20,8 +20,9 @@ export function PrivateRoute({ user }: props): JSX.Element {
 
   useEffect(() => {
     //When the page changes, reset the alert
-    setAlert({message: "", type: "info"})
-  }, [setAlert])
+    setAlert({message: "", type: "info"});
+    // eslint-disable-next-line
+  }, [])
 
   return localStorage.getItem("papyrusai_access_token") && user ? (
     <>

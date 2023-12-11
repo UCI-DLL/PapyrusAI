@@ -32,20 +32,19 @@ interface ChatWizardProps {
   documents: Array<DocumentType> | undefined;
   prompts: Array<PromptType> | undefined;
   returnDocsPrompt: (userDocs: Array<DocumentType & { document: string }>, selectedPrompt: string) => void;
-  onlyPrompts?: (selectedPrompt: string) => void; //ask the user for only prompts
 }
 
 export default function ChatWizard({
   documents,
   prompts,
   returnDocsPrompt,
-  onlyPrompts
 }: ChatWizardProps): JSX.Element {
   //Need to save the index of the document just in case some documents are the same name
   const [documentModal, setDocumentModal] = useState<DocumentType & { index: number } | undefined>(undefined);
   const [userDocuments, setUserDocuments] = useState<Array<DocumentType & { document: string }>>([]);
   const [selectedPrompt, setSelectedPrompt] = useState<string>("");
   const { setAlert } = useContext(AlertContext);
+  const [error, setError] = useState("");
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) {
@@ -66,7 +65,8 @@ export default function ChatWizard({
             items[documentModal.index] = {
               document: result as string,
               usageText: documentModal.usageText,
-              documentType: documentModal.documentType
+              documentType: documentModal.documentType,
+              optional: documentModal.optional
             }
             return items
           })
@@ -80,8 +80,8 @@ export default function ChatWizard({
       //handle multiple pages
       var numPages = pdfDocument.numPages;
       var currentPage = 1;
-      while(currentPage !== numPages) {
-        const page = await pdfDocument.getPage(currentPage); 
+      while (currentPage !== numPages) {
+        const page = await pdfDocument.getPage(currentPage);
         const textContent = await page.getTextContent();
         const text = textContent["items"].reduce((result: any, item: any) => {
           return `${result} ${item["str"]}`
@@ -92,14 +92,15 @@ export default function ChatWizard({
             items[documentModal.index] = {
               document: items[documentModal.index] && items[documentModal.index].document ? items[documentModal.index].document + text as string : text as string,
               usageText: documentModal.usageText,
-              documentType: documentModal.documentType
+              documentType: documentModal.documentType,
+              optional: documentModal.optional
             }
             return items
           });
           currentPage++;
         }
       }
-      
+
 
     } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
       const reader = new FileReader();
@@ -122,7 +123,8 @@ export default function ChatWizard({
             items[documentModal.index] = {
               document: text as string,
               usageText: documentModal.usageText,
-              documentType: documentModal.documentType
+              documentType: documentModal.documentType,
+              optional: documentModal.optional
             }
             return items
           })
@@ -142,7 +144,8 @@ export default function ChatWizard({
         items[documentModal.index] = {
           document: e.target.value,
           usageText: documentModal.usageText,
-          documentType: documentModal.documentType
+          documentType: documentModal.documentType,
+          optional: documentModal.optional
         }
         return items
       })
@@ -190,6 +193,7 @@ export default function ChatWizard({
         </div>
 
       </Modal>
+      <span>* indicates a required field</span>
       {(documents.length > 0) && (
         <>
           <h6>Enter text or upload a file for each document required.</h6>
@@ -205,6 +209,7 @@ export default function ChatWizard({
                     value={userDocuments[index] && userDocuments[index].document ? userDocuments[index].document : ""}
                     InputLabelProps={{ shrink: true, "aria-readonly": true }}
                     inputProps={{ readOnly: true }}
+                    required={doc && !doc?.optional}
                   />
                 </button>
               </div>
@@ -213,44 +218,63 @@ export default function ChatWizard({
         </>
       )}
 
-
-      <h6>Select prompt option.</h6>
       {prompts.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
-          <FormLabel>Module Prompts</FormLabel>
-          {/* add dropdown to handle prompts  */}
-          <Select
-            labelId="wizard-prompt-select"
-            id="wizard-prompt-select"
-            value={selectedPrompt}
-            onChange={handleSelectChange}
-            MenuProps={MenuProps}
-            fullWidth
-          >
-            {prompts.map((prompt, index) => (
-              <MenuItem key={index} value={prompt.id}>
-                <ListItemText primary={prompt.name} />
-              </MenuItem>
-            ))}
-          </Select>
-        </div>
+        <>
+          <h6>Select prompt option.</h6>
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
+            <FormLabel>Module Prompts</FormLabel>
+            {/* add dropdown to handle prompts  */}
+            <Select
+              labelId="wizard-prompt-select"
+              id="wizard-prompt-select"
+              value={selectedPrompt}
+              onChange={handleSelectChange}
+              MenuProps={MenuProps}
+              fullWidth
+              required
+            >
+              {prompts.map((prompt, index) => (
+                <MenuItem key={index} value={prompt.id}>
+                  <ListItemText primary={prompt.name} />
+                </MenuItem>
+              ))}
+            </Select>
+          </div>
+        </>
       )}
+      {error.length > 0 ? (
+        <div className="error">{error}</div>
+      ) : null}
 
       <div style={{ marginTop: "1rem", width: "100%", justifyContent: "flex-end", display: "flex" }}>
         <Button
           variant="contained"
           onClick={() => {
-            if (onlyPrompts) {
-              onlyPrompts(selectedPrompt)
-            } else {
+            setError("");
+            //check that all required fields are filled out
+            var submit = true;
+            if (prompts.length > 0 && !selectedPrompt) {
+              submit = false;
+            }
+            if (documents.length > 0) {
+              documents.forEach((doc, index) => {
+                if (!doc.optional) {
+                  if (!userDocuments[index] || !userDocuments[index].document) {
+                    submit = false;
+                  }
+                }
+              })
+            }
+            if (submit) {
               returnDocsPrompt(userDocuments, selectedPrompt)
+            } else {
+              setError("Missing Required Fields");
             }
           }}
         >
           Ask Papyrus
         </Button>
       </div>
-
     </div>
   ) : (
     //Return nothing when we don't have documents or prompts

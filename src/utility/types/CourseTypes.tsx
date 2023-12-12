@@ -33,7 +33,8 @@ export type ModuleType = {
 
 export type DocumentType = {
   documentType: string,
-  usageText: string
+  usageText: string,
+  optional: boolean,
 }
 
 export type PromptType = {

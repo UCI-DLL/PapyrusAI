@@ -99,7 +99,8 @@ export default function EditModule(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [newDoc, setNewDoc] = useState<DocumentType>({
     usageText: "Please enter your ",
-    documentType: ""
+    documentType: "",
+    optional: false
   });
   const [promptList, setPromptList] = useState<Array<PromptType>>([]);
   const [showFullPrompts, setShowFullPrompts] = useState<boolean>(false);
@@ -484,6 +485,20 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
               }}
             />
             &nbsp;&nbsp;&nbsp;
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Checkbox
+                onClick={() => {
+                  setNewDoc((prev) => ({ ...prev, optional: !newDoc.optional }));
+                }}
+                checked={newDoc.optional}
+                isDisabled={isLoading}
+              >
+                <span>
+                  Optional
+                </span>
+              </Checkbox>
+            </div>
+            &nbsp;&nbsp;&nbsp;
             <Button
               sx={{ padding: "0rem 2rem" }}
               variant="contained"
@@ -492,7 +507,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
                   ...prev,
                   documents: [...session.documents, newDoc]
                 }));
-                setNewDoc({ documentType: "", usageText: "Please enter your " });
+                setNewDoc({ documentType: "", usageText: "Please enter your ", optional: false });
               }}
             >
               Add
@@ -506,9 +521,10 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           {session.documents.map((document, index) => {
             return (
               <div className="modules__documentslist" key={index}>
-                <div>
-                  <div>{document.documentType}</div>
-                  <div>{document.usageText}</div>
+                <div style={{ paddingTop: "0.3rem" }}>
+                  <div>Document Type: {document.documentType}</div>
+                  <div>Usage Text: {document.usageText}</div>
+                  <div>{document.optional ? "Optional" : "Required"}</div>
                 </div>
                 <Tooltip title="Remove">
                   <IconButton

@@ -162,7 +162,7 @@ export default function ChatReport(): JSX.Element {
         courseInfo.instructor.family_name + "\n";
       messages.forEach(message => {
         var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
-        var sender = message.sender === "ChatGPT" ? "Paige" : viewUser.name + " " + viewUser.family_name;
+        var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
         fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
       })
       const blob = new Blob([fileData], { type: "text/plain" });

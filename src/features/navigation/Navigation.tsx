@@ -97,7 +97,7 @@ export default function Navigation(): JSX.Element {
       pathnameSplit[3] === "modules"
     ) {
       setBreadcrumbText(["Conversations", ""])
-    } else if (location.pathname === "/chat") {
+    } else if (pathnameSplit[1] === "chat") { 
       setBreadcrumbText(["Chat", ""])
     } else if (pathnameSplit[1] === "reports") {
       setBreadcrumbText(["Reports", ""])

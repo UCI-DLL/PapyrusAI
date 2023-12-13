@@ -39,7 +39,6 @@ import Prompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
-import ChatReport from "./features/reports/ChatReport";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -223,8 +222,9 @@ function App(): JSX.Element {
                   <Route path="/courses/:id/modules/:id" element={<ConversationList />} />
                 </Route>
 
-                <Route path="/chat" element={<PrivateRoute user={user} />}>
-                  <Route path="/chat" element={<Chat />} />
+                <Route path="/chat/:id/:id/:id/:id" element={<PrivateRoute user={user} />}>
+                  {/* username/courseid/moduleid/conversation index  */}
+                  <Route path="/chat/:id/:id/:id/:id" element={<Chat />} />
                 </Route>
 
                 <Route path="/account" element={<PrivateRoute user={user} />}>
@@ -260,10 +260,6 @@ function App(): JSX.Element {
                     {/* shows conversation list of other users  */}
                     <Route path="/courses/:id/modules/:id/username/:id" element={<PrivateRoute user={user} />}>
                       <Route path="/courses/:id/modules/:id/username/:id" element={<ConversationList />} />
-                    </Route>
-
-                    <Route path="/chat/:id" element={<PrivateRoute user={user} />}>
-                      <Route path="/chat/:id" element={<ChatReport />} />
                     </Route>
                   </>
                 )}

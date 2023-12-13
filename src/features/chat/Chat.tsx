@@ -19,6 +19,8 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import RepeatingPromptWizard from "./RepeatingPromptWizard";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { UserContext } from "../../utility/context/UserContext";
+import { UserType } from "../../utility/types/UserTypes";
+import { getUserData } from "../../utility/endpoints/UserEndpoints";
 
 
 export default function Chat(): JSX.Element {
@@ -42,6 +44,7 @@ export default function Chat(): JSX.Element {
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const { setAlert } = useContext(AlertContext);
   const { user } = useContext(UserContext);
+  const [viewUser, setViewUser] = useState<UserType>();
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
@@ -61,21 +64,53 @@ export default function Chat(): JSX.Element {
     //Disconnect websocket if we leave page
     return () => {
       socket.current?.close();
+      setShowTypingIndicator(false);
     };
     // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    if (location.state && location.state.courseId && location.state.moduleId && location.state.conversationIndex !== undefined) {
-      setConversationIds(location.state);
+    if (
+      location.pathname.split("/") &&
+      location.pathname.split("/")[2] &&
+      location.pathname.split("/")[3] &&
+      location.pathname.split("/")[4] &&
+      location.pathname.split("/")[5]
+    ) {
+      setConversationIds({
+        courseId: location.pathname.split("/")[3],
+        moduleId: location.pathname.split("/")[4],
+        conversationIndex: location.pathname.split("/")[5]
+      });
       setIsLoading(true);
-      Get(getCourse(location.state.courseId), controller.signal).then(res => {
+
+      //get user data
+      Get(getUserData(location.pathname.split("/")[2]), controller.signal).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            setViewUser(res.data);
+            //Then connect to the websocket if user is the same as the one currenly logged in
+            if (user && user.sub === res.data.sub) {
+              onConnect(location.pathname.split("/")[3], location.pathname.split("/")[4], location.pathname.split("/")[5]);
+            }
+          }
+        } else {
+          if (res === undefined) {
+          } else {
+            //handle error
+            setAlert({ message: "Could not find user", type: "error" });
+            navigator("/");
+          }
+        }
+      });
+
+      Get(getCourse(location.pathname.split("/")[3]), controller.signal).then(res => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get conversation list for this course/module
             setCourseInfo(res.data);
-            setModuleInfo(res.data.modules.find((module: ModuleType) => module.id === location.state.moduleId));
+            setModuleInfo(res.data.modules.find((module: ModuleType) => module.id === location.pathname.split("/")[4]));
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -84,41 +119,46 @@ export default function Chat(): JSX.Element {
           // setError("No Conversations Found");
         }
       });
-      Get(getConversation(location.state.courseId, location.state.moduleId, location.state.conversationIndex), controller.signal).then(res => {
-        if (res && res.status && res.status < 300) {
-          if (res.data && res.data.messages) {
-            if (res.data.messages.length > 0) {
-              //Init user docs and selected prompt
-              //Use temp stuff for now
-              setUserDocuments([]);
-              setSelectedPrompt("");
-            }
-            //Get list of messages for the conversation
-            //make sure the messages are in timestamp order
-            // also label the messages that are in context window for chatgpt
-            var sortedMessages = res.data.messages.sort((a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp));
-            var contextCounter = 0;
-            var reverse = sortedMessages.map((message: MessageType) => {
-              contextCounter += num_tokens_from_messages([message]);
-              if (contextCounter < 16000) { //16k context window
-                message["inContext"] = false;
-              } else {
-                message["inContext"] = true;
+      Get(
+        getConversation(
+          location.pathname.split("/")[3],
+          location.pathname.split("/")[4],
+          location.pathname.split("/")[5],
+          location.pathname.split("/")[2]
+        ),
+        controller.signal).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data && res.data.messages) {
+              if (res.data.messages.length > 0) {
+                //Init user docs and selected prompt
+                //Use temp stuff for now
+                setUserDocuments([]);
+                setSelectedPrompt("");
               }
-              return message;
-            });
-            setMessages(reverse.reverse());
-            //Then connect to the websocket
-            onConnect(location.state.courseId, location.state.moduleId, location.state.conversationIndex)
+              //Get list of messages for the conversation
+              //make sure the messages are in timestamp order
+              // also label the messages that are in context window for chatgpt
+              var sortedMessages = res.data.messages.sort((a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp));
+              var contextCounter = 0;
+              var reverse = sortedMessages.map((message: MessageType) => {
+                contextCounter += num_tokens_from_messages([message]);
+                if (contextCounter < 16000) { //16k context window
+                  message["inContext"] = false;
+                } else {
+                  message["inContext"] = true;
+                }
+                return message;
+              });
+              setMessages(reverse.reverse());
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            // handle error
+            // setError("No Conversations Found");
           }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          // handle error
-          // setError("No Conversations Found");
-        }
-        setIsLoading(false);
-      });
+          setIsLoading(false);
+        });
     } else {
       //If we didnt get a state, then redirect to course list
       navigator("/courses");
@@ -131,7 +171,6 @@ export default function Chat(): JSX.Element {
   }, [location]);
 
   useEffect(() => {
-
     //if no documents are needed
     if (moduleInfo && moduleInfo.documents && moduleInfo.documents.length < 1) {
       setUserDocuments([])
@@ -157,9 +196,13 @@ export default function Chat(): JSX.Element {
 
   const onSocketClose = useCallback(() => {
     setIsConnected(false);
-    //redirect back to the list of conversation with an error message
-    navigator(`/courses/${location.state.courseId}/modules/${location.state.moduleId}`);
-  }, [location.state, navigator]);
+    console.log("disconnected")
+    //Then re-connect to the websocket if user is the same as the one currenly logged in
+    if (user && viewUser && user.sub === viewUser.sub) {
+      onConnect(location.pathname.split("/")[3], location.pathname.split("/")[4], location.pathname.split("/")[5]);
+    }
+    // eslint-disable-next-line
+  }, [location.pathname, user, viewUser]);
 
   const onSocketMessage = useCallback((dataStr: string) => {
     //turn off typing indicator for chatgpt
@@ -182,6 +225,7 @@ export default function Chat(): JSX.Element {
 
   const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
     if (socket.current?.readyState !== WebSocket.OPEN) {
+      console.log("connected")
       var URL = process.env.REACT_APP_WEBSOCKET_URL ? process.env.REACT_APP_WEBSOCKET_URL : "wss://ymaqouopq4.execute-api.us-east-2.amazonaws.com/production";
       URL = URL + `/?token=${localStorage.getItem("papyrusai_access_token")}`;
       URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}`
@@ -194,10 +238,13 @@ export default function Chat(): JSX.Element {
     }
   }, [onSocketClose, onSocketMessage, onSocketOpen]);
 
+  
+
   const onSendMessage = useCallback((messageList: Array<string>) => {
+    console.log(messageList)
     //save message in message array
     setChatError(undefined);
-    if (messages) {
+    if (messages && isConnected) {
       //check that message length is less that 10000
       var messagesToSend: Array<{ role: string, content: string }> = []
       messageList.map(message => {
@@ -230,8 +277,10 @@ export default function Chat(): JSX.Element {
       }));
       //Set the typing indicator for chatgpt while we wait for a response
       setShowTypingIndicator(true);
+    } else {
+      setAlert({ message: "Something went wrong. Please try again", type: "error" });
     }
-  }, [messages]);
+  }, [messages, isConnected, setAlert]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -258,8 +307,10 @@ export default function Chat(): JSX.Element {
         return `Reference the following ${doc.documentType}: ${doc.document}`
       });
       //sent newly selected prompt to chatgpt
-      const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
-      messagesToSend.push(actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "")
+      if(moduleInfo.prompts.length !== 0) {
+        const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
+        messagesToSend.push(actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "")
+      }
       onSendMessage(messagesToSend);
     }
   }
@@ -286,14 +337,14 @@ export default function Chat(): JSX.Element {
   }
 
   function downloadChat() {
-    if (courseInfo && moduleInfo && messages && user && conversationIds) {
+    if (courseInfo && moduleInfo && messages && viewUser && conversationIds) {
       setIsLoading(true);
       var fileData = courseInfo.name + "\n" +
         moduleInfo.name + "\n" + courseInfo.instructor.name + " " +
         courseInfo.instructor.family_name + "\n";
       messages.forEach(message => {
         var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
-        var sender = message.sender === "ChatGPT" ? "Papyrus" : user.name; 
+        var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
         fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
       })
       const blob = new Blob([fileData], { type: "text/plain" });
@@ -310,7 +361,11 @@ export default function Chat(): JSX.Element {
     <div className="chat">
       <div className="chat__fixed-top">
         <div className="chat__section-header">
-          <h5>{moduleInfo.name}</h5>
+          <div className="chat__section-header__title">
+            <h5>{moduleInfo.name}</h5>
+            <div>{viewUser ? viewUser.name + " " + viewUser.family_name : ""}</div>
+          </div>
+
           <div style={{ display: "flex", flexDirection: "row" }}>
             <div>
               <div>{courseInfo.name} &nbsp;</div>
@@ -341,16 +396,19 @@ export default function Chat(): JSX.Element {
             </div>
           </div>
         </div>
-        
-        <div style={{padding: "0.4rem"}}>{moduleInfo.moduleDescription}</div>
+
+        <div style={{ padding: "0.4rem", paddingTop: "1.8rem" }}>{moduleInfo.moduleDescription}</div>
         {/* Only show the chat wizard if we don't have user documents, selected prompt, and if there are no previous messages  */}
-        {(messages.length < 1) && (moduleInfo.prompts.length !== 0 || moduleInfo.documents.length !== 0) && (
-          <ChatWizard
-            documents={moduleInfo.documents}
-            prompts={moduleInfo.prompts}
-            returnDocsPrompt={handleWizardReturnDocsPrompts}
-          />
-        )}
+        {user &&
+          viewUser &&
+          user.sub === viewUser.sub &&
+          (messages.length < 1) && (moduleInfo.prompts.length !== 0 || moduleInfo.documents.length !== 0) && (
+            <ChatWizard
+              documents={moduleInfo.documents}
+              prompts={moduleInfo.prompts}
+              returnDocsPrompt={handleWizardReturnDocsPrompts}
+            />
+          )}
       </div>
 
       &nbsp;&nbsp;&nbsp;
@@ -391,6 +449,7 @@ export default function Chat(): JSX.Element {
                 <div key={index} className={index.toString()}>
                   <MessageRight
                     message={message.content}
+                    displayName={viewUser?.name}
                     messageType={message.messageType}
                     outOfContext={message.inContext ? true : false}
                   />
@@ -413,6 +472,9 @@ export default function Chat(): JSX.Element {
 
         {/* continuedInteraction input (if there are no more repeating prompts) */}
         {isConnected &&
+          user &&
+          viewUser &&
+          user.sub === viewUser.sub &&
           userDocuments !== undefined &&
           selectedPrompt !== undefined &&
           moduleInfo.continuedInteraction &&
@@ -468,7 +530,6 @@ export default function Chat(): JSX.Element {
                 <Alert severity={"error"}>{chatError}</Alert>
               ) : null}
             </div>
-
           )}
 
         &nbsp;&nbsp;&nbsp;

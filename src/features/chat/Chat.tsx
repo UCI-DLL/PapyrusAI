@@ -371,7 +371,7 @@ export default function Chat(): JSX.Element {
                 <div key={index} className={index.toString()}>
                   <MessageLeft
                     message={message.content}
-                    displayName={message.sender}
+                    displayName={message.sender === "ChatGPT" ? "Papyrus" : message.sender}
                     messageType={message.messageType}
                     outOfContext={message.inContext ? true : false}
                   />

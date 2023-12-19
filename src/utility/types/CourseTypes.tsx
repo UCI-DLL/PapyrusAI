@@ -14,7 +14,7 @@ export type CourseType = {
   year: string,
   term: string,
   section: string,
-  taList?: Array<string>,
+  taList?: Array<CustomUserType>,
 }
 
 export type ModuleType = {

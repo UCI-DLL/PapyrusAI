@@ -196,7 +196,6 @@ export default function Chat(): JSX.Element {
 
   const onSocketClose = useCallback(() => {
     setIsConnected(false);
-    console.log("disconnected")
     //Then re-connect to the websocket if user is the same as the one currenly logged in
     if (user && viewUser && user.sub === viewUser.sub) {
       onConnect(location.pathname.split("/")[3], location.pathname.split("/")[4], location.pathname.split("/")[5]);
@@ -225,7 +224,6 @@ export default function Chat(): JSX.Element {
 
   const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
     if (socket.current?.readyState !== WebSocket.OPEN) {
-      console.log("connected")
       var URL = process.env.REACT_APP_WEBSOCKET_URL ? process.env.REACT_APP_WEBSOCKET_URL : "wss://ymaqouopq4.execute-api.us-east-2.amazonaws.com/production";
       URL = URL + `/?token=${localStorage.getItem("papyrusai_access_token")}`;
       URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}`
@@ -241,7 +239,6 @@ export default function Chat(): JSX.Element {
   
 
   const onSendMessage = useCallback((messageList: Array<string>) => {
-    console.log(messageList)
     //save message in message array
     setChatError(undefined);
     if (messages && isConnected) {
@@ -309,7 +306,7 @@ export default function Chat(): JSX.Element {
       //sent newly selected prompt to chatgpt
       if(moduleInfo.prompts.length !== 0) {
         const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
-        messagesToSend.push(actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "")
+        messagesToSend.unshift(actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "")
       }
       onSendMessage(messagesToSend);
     }

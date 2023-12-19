@@ -14,7 +14,7 @@ import Get from "../../utility/Get";
 import { getUserConversationList } from "../../utility/endpoints/ConversationEndpoints";
 import { ConversationType } from "../../utility/types/ConversationTypes";
 import { CourseType } from "../../utility/types/CourseTypes";
-import { UserType } from "../../utility/types/UserTypes";
+import { CustomUserType, UserType } from "../../utility/types/UserTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
@@ -55,7 +55,14 @@ export default function UserReports(): JSX.Element {
             res.data.map((conversation: any) => {
               Get(getCourse(conversation.courseId), controller.signal).then(res1 => {
                 if (res1.status && res1.status < 300) {
-                  if (res1.data && res1.data.instructor.sub === user.sub) {
+                  if (
+                    res1.data &&
+                    res1.data.instructor &&
+                    (res1.data.instructor.sub === user.sub || (
+                      res1.data.taList &&
+                      res1.data.taList.find((a: CustomUserType) => a.sub === user.sub) //handle tas too
+                    ))
+                  ) {
                     //set conversation data
                     setConversationList((prev) => [...prev, {
                       conversations: conversation.conversations,

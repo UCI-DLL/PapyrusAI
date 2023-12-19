@@ -9,7 +9,9 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
-  FormControl
+  FormControl,
+  Autocomplete,
+  Chip
 } from "@mui/material";
 import Get from "../../utility/Get";
 import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoints";
@@ -18,6 +20,9 @@ import { CourseType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
 import LinearProgress from '@mui/material/LinearProgress';
 import { AlertContext } from "../../utility/context/AlertContext";
+import { CustomUserType } from "../../utility/types/UserTypes";
+import { UserContext } from "../../utility/context/UserContext";
+import { getUserList } from "../../utility/endpoints/UserEndpoints";
 
 type EditCourseType = {
   name: string,
@@ -26,7 +31,8 @@ type EditCourseType = {
   isActive: boolean,
   year: string,
   section: string,
-  term: string
+  term: string,
+  taList: any,
 }
 
 export default function EditCourse(): JSX.Element {
@@ -39,7 +45,8 @@ export default function EditCourse(): JSX.Element {
     isActive: false,
     year: "",
     section: "",
-    term: ""
+    term: "",
+    taList: [],
   });
   const [prevSession, setPrevSession] = useState<CourseType | undefined>();
   const [errors, setErrors] = useState<EditCourseType>({
@@ -49,11 +56,50 @@ export default function EditCourse(): JSX.Element {
     isActive: false,
     year: "",
     section: "",
-    term: ""
+    term: "",
+    taList: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const { setAlert } = useContext(AlertContext);
+  const [userList, setUserList] = useState<Array<CustomUserType>>([]);
+  const { user } = useContext(UserContext);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    Get(getUserList(), controller.signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //filter out current user and email_verified 
+          var tempUserList = res.data.map((u: CustomUserType) => {
+            return {
+              name: u.name,
+              family_name: u.family_name,
+              email: u.email,
+              sub: u.sub
+            }
+          });
+          if (user) {
+            tempUserList = tempUserList.filter((x: CustomUserType) => x.sub !== user.sub);
+          }
+          setUserList(tempUserList);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+
+    return () => {
+      controller.abort();
+    };
+    // eslint-disable-next-line
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -80,7 +126,8 @@ export default function EditCourse(): JSX.Element {
               isActive: res.data.isActive,
               year: res.data.year ? res.data.year : "",
               term: res.data.term ? res.data.term : "",
-              section: res.data.section ? res.data.section : ""
+              section: res.data.section ? res.data.section : "",
+              taList: res.data.taList ? res.data.taList : [],
             });
             setIsLoading(false);
           }
@@ -124,7 +171,8 @@ export default function EditCourse(): JSX.Element {
             isDeleted: session.isDeleted,
             year: session.year,
             section: session.section,
-            term: session.term
+            term: session.term,
+            taList: session.taList,
           }
           // post data back
           Put(putUpdateCourse(prevSession.id), dataToSend).then((res) => {
@@ -261,6 +309,48 @@ export default function EditCourse(): JSX.Element {
                 helperText={errors.section}
                 disabled={isLoading}
               />
+
+              <Autocomplete
+                value={session.taList}
+                onChange={(event, newValue) => {
+                  if (newValue.length >= 10) {
+                    setErrors((prev) => ({ ...prev, taList: "Max 10 Teaching Assistants" }))
+                  } else {
+                    setSession(prev => {
+                      return { ...prev, taList: newValue }
+                    })
+                    setErrors((prev) => ({ ...prev, taList: "" }))
+                  }
+                }}
+                multiple
+                id="tags-filled"
+                options={userList ? userList : []}
+                getOptionLabel={(option) => option.name + " " + option.family_name + " - " + option.email}
+                freeSolo
+                renderTags={(value: CustomUserType[], getTagProps) =>
+                  value.map((option: CustomUserType, index: number) => {
+                    return (
+                      <Chip
+                        variant="outlined"
+                        label={option.name + " " + option.family_name + " - " + option.email}
+                        {...getTagProps({ index })}
+                      />
+                    )
+                  })
+                }
+                renderInput={(params) => {
+                  return (
+                    <TextField
+                      {...params}
+                      label="Teaching Assistant"
+                    />
+                  )
+                }}
+              />
+              {errors.taList !== "" && (
+                <span className="error">{errors.taList}</span>
+              )}
+
               <Checkbox
                 onClick={() => {
                   setSession((prev) => ({

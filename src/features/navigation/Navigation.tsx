@@ -36,7 +36,6 @@ export default function Navigation(): JSX.Element {
 
   //For the side drawer main nav menu
   // base this list off instuctor, researcher, student access, and TAs
-  console.log(user?.groups)
   var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
   user?.groups.find(a=> a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?

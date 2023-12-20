@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Button,
@@ -9,12 +9,19 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
-  FormControl
+  FormControl,
+  Autocomplete,
+  Chip
 } from "@mui/material";
 import { postCreateCourse } from "../../utility/endpoints/CourseEndpoints";
 import Post from "../../utility/Post";
 import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
+import LinearProgress from '@mui/material/LinearProgress';
+import Get from "../../utility/Get";
+import { getUserList } from "../../utility/endpoints/UserEndpoints";
+import { CustomUserType } from "../../utility/types/UserTypes";
+import { UserContext } from "../../utility/context/UserContext";
 
 type AddCourseType = {
   name: string,
@@ -22,7 +29,8 @@ type AddCourseType = {
   isActive: boolean,
   year: string,
   section: string,
-  term: string
+  term: string,
+  taList: any,
 }
 
 export default function CreateCourse(): JSX.Element {
@@ -33,7 +41,8 @@ export default function CreateCourse(): JSX.Element {
     isActive: false,
     year: "",
     section: "",
-    term: ""
+    term: "",
+    taList: [],
   });
   const [errors, setErrors] = useState<AddCourseType>({
     name: "",
@@ -41,10 +50,52 @@ export default function CreateCourse(): JSX.Element {
     isActive: false,
     year: "",
     section: "",
-    term: ""
+    term: "",
+    taList: "",
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
+  const [userList, setUserList] = useState<Array<CustomUserType>>([]);
+  const { user } = useContext(UserContext);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setIsLoading(true);
+
+    Get(getUserList(), controller.signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //filter out current user and email_verified 
+          var tempUserList = res.data.map((u: CustomUserType) => {
+            return {
+              name: u.name,
+              family_name: u.family_name,
+              email: u.email,
+              sub: u.sub
+            }
+          });
+          if(user) {
+            tempUserList = tempUserList.filter((x: CustomUserType) => x.sub !== user.sub);
+          }
+          setUserList(tempUserList);
+          setIsLoading(false);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+          setIsLoading(false);
+        }
+      }
+    });
+
+    return () => {
+      controller.abort();
+    };
+    // eslint-disable-next-line
+  }, []);
 
 
   function handleSubmit(e: React.FormEvent) {
@@ -86,11 +137,11 @@ export default function CreateCourse(): JSX.Element {
     setSession((prev) => ({ ...prev, term: e.target.value as string }))
   }
 
-  return (
+  return !isLoading ? (
     <div className="courses">
       <div className="courses__section-header">
         <h3>Create Course</h3>
-        
+
         <div>
           <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
           &nbsp;&nbsp;&nbsp;
@@ -173,6 +224,47 @@ export default function CreateCourse(): JSX.Element {
             helperText={errors.section}
             disabled={isLoading}
           />
+          
+          <Autocomplete
+            value={session.taList}
+            onChange={(event, newValue) => {
+              if (newValue.length >= 10) {
+                setErrors((prev) => ({ ...prev, taList: "Max 10 Teaching Assistants" }))
+              } else {
+                setSession(prev => {
+                  return { ...prev, taList: newValue }
+                })
+                setErrors((prev) => ({ ...prev, taList: "" }))
+              }
+            }}
+            multiple
+            id="tags-filled"
+            options={userList ? userList : []}
+            getOptionLabel={(option) => option.name + " " + option.family_name + " - " + option.email}
+            freeSolo
+            renderTags={(value: CustomUserType[], getTagProps) =>
+              value.map((option: CustomUserType, index: number) => {
+                return (
+                <Chip
+                  variant="outlined"
+                  label={option.name + " " + option.family_name + " - " + option.email}
+                  {...getTagProps({ index })}
+                />
+              )})
+            }
+            renderInput={(params) => {
+              return (
+                <TextField
+                  {...params}
+                  label="Teaching Assistant"
+                />
+              )
+            }}
+          />
+          {errors.taList !== "" && (
+            <span className="error">{errors.taList}</span>
+          )}
+
           <Checkbox
             onClick={() => {
               setSession((prev) => ({
@@ -191,5 +283,7 @@ export default function CreateCourse(): JSX.Element {
         </form>
       </Box>
     </div>
+  ) : (
+    <LinearProgress />
   )
 }

@@ -52,15 +52,10 @@
       flex-direction: column;
     }
 
-    div {
+    &__title {
       display: flex;
       align-items: center;
       flex-direction: column;
-
-      @media (max-width: global.$sm-break) {
-        flex-direction: row;
-        justify-content: space-around;
-      }
     }
   }
 

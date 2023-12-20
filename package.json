@@ -1,6 +1,6 @@
 {
   "name": "papyrus-ai",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.1",

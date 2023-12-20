@@ -6,6 +6,7 @@ import { CardContent, Typography } from "@mui/material";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { useNavigate } from "react-router";
 import { UserContext } from "../../utility/context/UserContext";
+import { CustomUserType } from "../../utility/types/UserTypes";
 
 interface CourseListProps {
   list: Array<CourseType>
@@ -41,9 +42,15 @@ export default function CourseList({ list }: CourseListProps): JSX.Element {
                   variant="contained"
                   onClick={() => navigator(`/courses/${course.id}/modules`)}
                 >
-                  {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&
-                  user?.groups.includes(course.id) &&
-                  course.instructor.sub === user.sub ? "View / Edit Modules" : "View Modules"}
+                  {(
+                    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
+                    user?.groups.includes(course.id + "-TA") //handle tas
+                  ) &&
+                    user?.groups.includes(course.id) &&
+                    (course.instructor.sub === user.sub || (
+                      course.taList &&
+                      course.taList.find((a: CustomUserType) => a.sub === user?.sub) //handle tas too
+                    )) ? "View / Edit Modules" : "View Modules"}
                 </Button>
                 {/* If use is instructor and is in the course  */}
                 {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&

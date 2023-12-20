@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Button, Divider, List, ListItem, ListItemText } from "@mui/material";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
+import { CustomUserType } from "../../utility/types/UserTypes";
 
 interface ModuleListProps {
   course: CourseType;
@@ -29,9 +30,15 @@ export default function ModuleList({ course }: ModuleListProps): JSX.Element {
                   <div>{module.moduleDescription}</div>
                 </button>
                 <div style={{ display: "flex" }}>
-                  {course.id && user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&
+                  {(
+                    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
+                    user?.groups.includes(course.id + "-TA") //handle tas
+                  ) &&
                     user?.groups.includes(course.id) &&
-                    course.instructor.sub === user.sub ? (
+                    (course.instructor.sub === user.sub || (
+                      course.taList &&
+                      course.taList.find((a: CustomUserType) => a.sub === user?.sub) //handle tas too
+                    )) ? (
                     <Button onClick={() => navigator(`/courses/${course.id}/editmodule/${module.id}`)}>Edit</Button>
                   ) : <></>}
                   <Button variant="contained" onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)}>Begin Module</Button>

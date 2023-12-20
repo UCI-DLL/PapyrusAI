@@ -15,6 +15,7 @@ import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpo
 import LinearProgress from '@mui/material/LinearProgress';
 import { CourseType } from "../../utility/types/CourseTypes";
 import { Link } from "react-router-dom";
+import { CustomUserType } from "../../utility/types/UserTypes";
 
 export type ReportsUserType = {
   email: string,
@@ -36,12 +37,25 @@ export default function Reports(): JSX.Element {
       setIsLoading(true);
       user.groups.forEach((group) => {
         //skip instructor or student or researcher groups
-        if (group === "PapyrusAIStudents" || group === "PapyrusAIInstructors" || group === "PapyrusAIResearchers") {
+        //remove TAs also
+        if (
+          group === "PapyrusAIStudents" || 
+          group === "PapyrusAIInstructors" || 
+          group === "PapyrusAIResearchers" ||
+          group.includes("-TA")
+          ) {
           return ""
         }
         Get(getCourse(group), controller.signal).then(res1 => {
           if (res1 && res1.status && res1.status < 300) {
-            if (res1.data && res1.data.instructor.sub === user.sub) { //only get the rest of the information if current user is instructor
+            if (
+              res1.data &&
+              res1.data.instructor &&
+              (res1.data.instructor.sub === user.sub || (
+                res1.data.taList &&
+                res1.data.taList.find((a: CustomUserType) => a.sub === user.sub) //handle tas too
+              ))
+              ) { //only get the rest of the information if current user is instructor
               Get(getUsersInCourse(group), controller.signal).then(res => {
                 if (res && res.status && res.status < 300) {
                   if (res.data) {

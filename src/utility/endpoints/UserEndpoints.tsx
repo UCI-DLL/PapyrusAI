@@ -13,3 +13,7 @@ export function getUserData(username?: string) {
 export function postUserData() {
   return `/user`;
 }
+
+export function getUserList() {
+  return `/user/list`;
+}

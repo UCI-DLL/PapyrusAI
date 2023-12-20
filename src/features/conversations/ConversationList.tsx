@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button, ListItem, ListItemText, Divider, List, Typography } from "@mui/material";
 import Get from "../../utility/Get";
@@ -11,6 +11,7 @@ import { CourseType } from "../../utility/types/CourseTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { UserType } from "../../utility/types/UserTypes";
+import { UserContext } from "../../utility/context/UserContext";
 
 export default function ConversationList(): JSX.Element {
   let location = useLocation();
@@ -23,6 +24,7 @@ export default function ConversationList(): JSX.Element {
     courseId: string,
     moduleId: string
   }>();
+  const { user } = useContext(UserContext);
   const [conversationList, setConversationList] = useState<ConversationListType>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
@@ -118,7 +120,7 @@ export default function ConversationList(): JSX.Element {
             setConversationList(res.data);
             //then go right into chat
             if (res.data.conversations) {
-              navigator("/chat", { state: { ...moduleIds, conversationIndex: res.data.conversations.length - 1 } })
+              navigator(`/chat/${user?.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${res.data.conversations.length - 1}`)
             }
           }
         } else if (res && res.status === 401) {
@@ -174,13 +176,15 @@ export default function ConversationList(): JSX.Element {
               conversationList.conversations.length > 0 ?
               conversationList.conversations.map((conversation, index) => {
                 const time = new Date(parseInt(conversation.id.substring(0, 13), 10)).toLocaleString();
-                return (
+                return moduleIds ? (
                   <div key={index}>
                     <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                       {/* redirect to chat with and pass params  */}
                       <Link
-                        to={viewUser ? `/chat/${viewUser.sub}` : "/chat"}
-                        state={{ ...moduleIds, conversationIndex: index }}
+                        to={viewUser ? 
+                          `/chat/${viewUser.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${index}`: 
+                          `/chat/${user?.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${index}`
+                        }
                         style={{ textAlign: "left", display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}
                       >
                         <ListItemText primary={`Conversation ${index + 1}`} secondary={`Created: ${time}`} />
@@ -195,7 +199,7 @@ export default function ConversationList(): JSX.Element {
                       <Divider />
                     ) : <></>}
                   </div>
-                )
+                ) : null
               }) : (
                 <div style={{ display: "flex", width: "100%", alignContent: "center", justifyContent: "center" }}>
                   {viewUser ? (

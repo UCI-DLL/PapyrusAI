@@ -39,7 +39,6 @@ import Prompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
-import ChatReport from "./features/reports/ChatReport";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -95,7 +94,7 @@ function App(): JSX.Element {
   // only show if missing data
   const [showUpdateUserInfoModal, setShowUpdateUserInfoModal] = useState<boolean>(false);
   //alert pop up
-  const [alert, setAlert] = useState<{message: string, type: AlertColor}>({
+  const [alert, setAlert] = useState<{ message: string, type: AlertColor }>({
     message: "",
     type: "info"
   });
@@ -122,7 +121,7 @@ function App(): JSX.Element {
               localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
               //if user is missing name, then open the modal
               //NOTE: family_name optional (aka can be empty string)
-              if(!res.data.name || !res.data.family_name || res.data.name === "" ) {
+              if (!res.data.name || !res.data.family_name || res.data.name === "") {
                 setShowUpdateUserInfoModal(true);
               }
             }
@@ -154,135 +153,138 @@ function App(): JSX.Element {
       <div style={{ display: "flex", flexDirection: "row", justifyContent: "center" }}>
         <UserContext.Provider value={value}>
           <AlertContext.Provider value={alertValue}>
-          <Router>
-            <ThemeProvider theme={theme}>
-              <CssBaseline />
-              <Modal
-                isOpen={showUpdateUserInfoModal}
-                title={"We are missing some details"}
-                onRequestClose={() => { }}
-                hideClose={true}
-                actions={
-                  <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => handleLogOut()}>
-                    Log Out
-                  </Button>
-                }
-              >
-                <MissingUserInfoForm
-                  user={user ? user : undefined}
-                  closeForm={() => {
-                    //Set user with new information
-                    //then close modal
-                    setShowUpdateUserInfoModal(false);
-                  }}
-                />
-              </Modal>
-              <Routes>
-                <Route
-                  path="/login"
-                  element={<Login setUser={(u) => setUser(u)} />}
-                />
-                {/* 
-                <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />
-                <Route path="/forgot-password" element={<ForgotPassword setUser={(u) => setUser(u)} />} /> */}
-                <Route path="*" element={<div>Page not found.</div>} />
-
-                {/* Need to have start path here. Private route will redirect to login if no user  */}
-                <Route
-                  path="/"
-                  element={
-                    <PrivateRoute
-                      user={
-                        user
-                          ? user
-                          : localStorage.getItem("papyrusai_user")
-                            ? JSON.parse(
-                              localStorage.getItem("papyrusai_user") ?? ""
-                            )
-                            : null
-                      }
-                    />
+            <Router>
+              <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <Modal
+                  isOpen={showUpdateUserInfoModal}
+                  title={"We are missing some details"}
+                  onRequestClose={() => { }}
+                  hideClose={true}
+                  actions={
+                    <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => handleLogOut()}>
+                      Log Out
+                    </Button>
                   }
                 >
-                  <Route path="/" element={<Dashboard />} />
-                </Route>
+                  <MissingUserInfoForm
+                    user={user ? user : undefined}
+                    closeForm={() => {
+                      //Set user with new information
+                      //then close modal
+                      setShowUpdateUserInfoModal(false);
+                    }}
+                  />
+                </Modal>
+                <Routes>
+                  <Route
+                    path="/login"
+                    element={<Login setUser={(u) => setUser(u)} />}
+                  />
+                  {/* 
+                <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />
+                <Route path="/forgot-password" element={<ForgotPassword setUser={(u) => setUser(u)} />} /> */}
+                  <Route path="*" element={<div>Page not found.</div>} />
 
-                <Route path="/courses" element={<PrivateRoute user={user} />}>
-                  <Route path="/courses" element={<Courses />} />
-                </Route>
+                  {/* Need to have start path here. Private route will redirect to login if no user  */}
+                  <Route
+                    path="/"
+                    element={
+                      <PrivateRoute
+                        user={
+                          user
+                            ? user
+                            : localStorage.getItem("papyrusai_user")
+                              ? JSON.parse(
+                                localStorage.getItem("papyrusai_user") ?? ""
+                              )
+                              : null
+                        }
+                      />
+                    }
+                  >
+                    <Route path="/" element={<Dashboard />} />
+                  </Route>
 
-                <Route path="/modules" element={<PrivateRoute user={user} />}>
-                  <Route path="/modules" element={<AllModules />} />
-                </Route>
+                  <Route path="/courses" element={<PrivateRoute user={user} />}>
+                    <Route path="/courses" element={<Courses />} />
+                  </Route>
 
-                <Route path="/courses/:id/modules" element={<PrivateRoute user={user} />}>
-                  <Route path="/courses/:id/modules" element={<Modules />} />
-                </Route>
+                  <Route path="/modules" element={<PrivateRoute user={user} />}>
+                    <Route path="/modules" element={<AllModules />} />
+                  </Route>
 
-                <Route path="/courses/:id/modules/:id" element={<PrivateRoute user={user} />}>
-                  <Route path="/courses/:id/modules/:id" element={<ConversationList />} />
-                </Route>
+                  <Route path="/courses/:id/modules" element={<PrivateRoute user={user} />}>
+                    <Route path="/courses/:id/modules" element={<Modules />} />
+                  </Route>
 
-                <Route path="/chat" element={<PrivateRoute user={user} />}>
-                  <Route path="/chat" element={<Chat />} />
-                </Route>
+                  <Route path="/courses/:id/modules/:id" element={<PrivateRoute user={user} />}>
+                    <Route path="/courses/:id/modules/:id" element={<ConversationList />} />
+                  </Route>
 
-                <Route path="/account" element={<PrivateRoute user={user} />}>
-                  <Route path="/account" element={<Account />} />
-                </Route>
+                  <Route path="/chat/:id/:id/:id/:id" element={<PrivateRoute user={user} />}>
+                    {/* username/courseid/moduleid/conversation index  */}
+                    <Route path="/chat/:id/:id/:id/:id" element={<Chat />} />
+                  </Route>
 
-                {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
-                  <>
-                    <Route path="/createcourse" element={<PrivateRoute user={user} />}>
-                      <Route path="/createcourse" element={<CreateCourse />} />
-                    </Route>
+                  <Route path="/account" element={<PrivateRoute user={user} />}>
+                    <Route path="/account" element={<Account />} />
+                  </Route>
 
-                    <Route path="/editcourse/:id" element={<PrivateRoute user={user} />}>
-                      <Route path="/editcourse/:id" element={<EditCourse />} />
-                    </Route>
+                  {/* if the user has a group with "-TA" in it, then allow access  */}
+                  {(user?.groups.find(a => a.includes("-TA")) ||
+                    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors")) && (
+                      <>
+                        <Route path="/courses/:id/createmodule" element={<PrivateRoute user={user} />}>
+                          <Route path="/courses/:id/createmodule" element={<AddModule />} />
+                        </Route>
 
-                    <Route path="/courses/:id/createmodule" element={<PrivateRoute user={user} />}>
-                      <Route path="/courses/:id/createmodule" element={<AddModule />} />
-                    </Route>
+                        <Route path="/courses/:id/editmodule/:id" element={<PrivateRoute user={user} />}>
+                          <Route path="/courses/:id/editmodule/:id" element={<EditModule />} />
+                        </Route>
 
-                    <Route path="/courses/:id/editmodule/:id" element={<PrivateRoute user={user} />}>
-                      <Route path="/courses/:id/editmodule/:id" element={<EditModule />} />
-                    </Route>
+                        <Route path="/reports" element={<PrivateRoute user={user} />}>
+                          <Route path="/reports" element={<Reports />} />
+                        </Route>
 
-                    <Route path="/reports" element={<PrivateRoute user={user} />}>
-                      <Route path="/reports" element={<Reports />} />
-                    </Route>
+                        <Route path="/reports/:id" element={<PrivateRoute user={user} />}>
+                          <Route path="/reports/:id" element={<UserReports />} />
+                        </Route>
 
-                    <Route path="/reports/:id" element={<PrivateRoute user={user} />}>
-                      <Route path="/reports/:id" element={<UserReports />} />
-                    </Route>
+                        {/* shows conversation list of other users  */}
+                        <Route path="/courses/:id/modules/:id/username/:id" element={<PrivateRoute user={user} />}>
+                          <Route path="/courses/:id/modules/:id/username/:id" element={<ConversationList />} />
+                        </Route>
+                      </>
+                    )}
 
-                    {/* shows conversation list of other users  */}
-                    <Route path="/courses/:id/modules/:id/username/:id" element={<PrivateRoute user={user} />}>
-                      <Route path="/courses/:id/modules/:id/username/:id" element={<ConversationList />} />
-                    </Route>
+                  {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
+                    <>
+                      <Route path="/createcourse" element={<PrivateRoute user={user} />}>
+                        <Route path="/createcourse" element={<CreateCourse />} />
+                      </Route>
 
-                    <Route path="/chat/:id" element={<PrivateRoute user={user} />}>
-                      <Route path="/chat/:id" element={<ChatReport />} />
-                    </Route>
-                  </>
-                )}
+                      <Route path="/editcourse/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/editcourse/:id" element={<EditCourse />} />
+                      </Route>
+                    </>
+                  )}
 
-                {user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") && (
-                  <>
-                    <Route path="/prompts" element={<PrivateRoute user={user} />}>
-                      <Route path="/prompts" element={<Prompts />} />
-                    </Route>
+                  {user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") && (
+                    <>
+                      <Route path="/prompts" element={<PrivateRoute user={user} />}>
+                        <Route path="/prompts" element={<Prompts />} />
+                      </Route>
 
-                    <Route path="/prompts/:id" element={<PrivateRoute user={user} />}>
-                      <Route path="/prompts/:id" element={<EditPrompt />} />
-                    </Route>
-                  </>
-                )}
+                      <Route path="/prompts/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/prompts/:id" element={<EditPrompt />} />
+                      </Route>
+                    </>
+                  )}
 
-              </Routes>
-            </ThemeProvider>
-          </Router>
+                </Routes>
+              </ThemeProvider>
+            </Router>
           </AlertContext.Provider>
         </UserContext.Provider>
       </div>

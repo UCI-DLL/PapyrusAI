@@ -35,13 +35,15 @@ export default function Navigation(): JSX.Element {
   // };
 
   //For the side drawer main nav menu
-  // base this list off instuctor, researcher, student access
-  var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+  // base this list off instuctor, researcher, student access, and TAs
+  var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
+  user?.groups.find(a=> a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
       ["Dashboard", "Courses", "Modules", "Reports", "Prompts", "Account"] :
       ["Dashboard", "Courses", "Modules", "Reports", "Account"] :
     ["Dashboard", "Courses", "Modules", "Account"];
-  var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+  var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
+  user?.groups.find(a=> a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
       ["/", "/courses", "/modules", "/reports", "/prompts", "/account"] :
       ["/", "/courses", "/modules", "/reports", "/account"] :
@@ -97,7 +99,7 @@ export default function Navigation(): JSX.Element {
       pathnameSplit[3] === "modules"
     ) {
       setBreadcrumbText(["Conversations", ""])
-    } else if (location.pathname === "/chat") {
+    } else if (pathnameSplit[1] === "chat") { 
       setBreadcrumbText(["Chat", ""])
     } else if (pathnameSplit[1] === "reports") {
       setBreadcrumbText(["Reports", ""])

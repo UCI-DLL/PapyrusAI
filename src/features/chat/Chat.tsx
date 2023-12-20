@@ -142,7 +142,7 @@ export default function Chat(): JSX.Element {
               var contextCounter = 0;
               var reverse = sortedMessages.map((message: MessageType) => {
                 contextCounter += num_tokens_from_messages([message]);
-                if (contextCounter < 16000) { //16k context window
+                if (contextCounter < 64000) { //64k context window
                   message["inContext"] = false;
                 } else {
                   message["inContext"] = true;

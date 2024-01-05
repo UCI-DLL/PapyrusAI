@@ -195,8 +195,8 @@ export default function EditModule(): JSX.Element {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //Get the list of all prompts
-          setPromptList((prev) => [...prev, ...res.data]);
-          setFilteredPromptList((prev) => [...prev, ...res.data]);
+          setPromptList((prev) => [...prev, ...res.data.filter((prompt: PromptType) => prompt.isDeleted === false)]);
+          setFilteredPromptList((prev) => [...prev, ...res.data.filter((prompt: PromptType) => prompt.isDeleted === false)]);
 
           //Add creators to list
           var currentCreators = creatorList;

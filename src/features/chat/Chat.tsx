@@ -190,6 +190,23 @@ export default function Chat(): JSX.Element {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  //ping every min or so to keep the websocket alive
+  function ping() {
+    if (isConnected) {
+      setTimeout(() => {
+        socket.current?.send(JSON.stringify({ "action": "pong" }));
+        ping()
+      }, 120000);
+    }
+  }
+  useEffect(() => {
+    if (isConnected) {
+      ping()
+    }
+    // eslint-disable-next-line
+  }, [isConnected])
+
+
   const onSocketOpen = useCallback(() => {
     setIsConnected(true);
   }, []);
@@ -304,7 +321,7 @@ export default function Chat(): JSX.Element {
         return `Reference the following ${doc.documentType}: ${doc.document}`
       });
       //sent newly selected prompt to chatgpt
-      if(moduleInfo.prompts.length !== 0) {
+      if (moduleInfo.prompts.length !== 0) {
         const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
         messagesToSend.unshift(actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "")
       }

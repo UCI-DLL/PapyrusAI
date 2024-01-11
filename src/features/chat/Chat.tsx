@@ -272,7 +272,7 @@ export default function Chat(): JSX.Element {
           var responseMessage: MessageType = {
             id: tempTimestamp.toString(),
             content: message,
-            messageType: message.length < 2000 ? "text" : "file",
+            messageType: message.length < 1000 ? "text" : "file",
             role: "user",
             sender: "username",
             timestamp: messageTempId

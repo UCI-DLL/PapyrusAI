@@ -39,15 +39,15 @@ export default function Navigation(): JSX.Element {
   var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
   user?.groups.find(a=> a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
-      ["Dashboard", "Courses", "Modules", "Reports", "Prompts", "Account"] :
-      ["Dashboard", "Courses", "Modules", "Reports", "Account"] :
-    ["Dashboard", "Courses", "Modules", "Account"];
+      ["Dashboard", "Courses", "Modules", "Reports", "Prompts", "Account", "About"] :
+      ["Dashboard", "Courses", "Modules", "Reports", "Account", "About"] :
+    ["Dashboard", "Courses", "Modules", "Account", "About"];
   var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
   user?.groups.find(a=> a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
-      ["/", "/courses", "/modules", "/reports", "/prompts", "/account"] :
-      ["/", "/courses", "/modules", "/reports", "/account"] :
-    ["/", "/courses", "/modules", "/account"];
+      ["/", "/courses", "/modules", "/reports", "/prompts", "/account", "/about"] :
+      ["/", "/courses", "/modules", "/reports", "/account", "/about"] :
+    ["/", "/courses", "/modules", "/account", "/about"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
@@ -73,6 +73,7 @@ export default function Navigation(): JSX.Element {
      * Reports
      * prompts
      * account
+     * about
      */
     const pathnameSplit = location.pathname.split("/");
     if (location.pathname === "/") {
@@ -105,6 +106,8 @@ export default function Navigation(): JSX.Element {
       setBreadcrumbText(["Reports", ""])
     } else if (location.pathname === "/account") {
       setBreadcrumbText(["Account", ""])
+    } else if (location.pathname === "/about") {
+      setBreadcrumbText(["About", ""])
     } else if (pathnameSplit[1] === "editcourse") {
       setBreadcrumbText(["Edit Course", ""])
     } else if (pathnameSplit[1] === "prompts") {

@@ -39,6 +39,7 @@ import Prompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
+import About from "./features/about/About";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -229,6 +230,10 @@ function App(): JSX.Element {
 
                   <Route path="/account" element={<PrivateRoute user={user} />}>
                     <Route path="/account" element={<Account />} />
+                  </Route>
+
+                  <Route path="/about" element={<PrivateRoute user={user} />}>
+                    <Route path="/about" element={<About />} />
                   </Route>
 
                   {/* if the user has a group with "-TA" in it, then allow access  */}

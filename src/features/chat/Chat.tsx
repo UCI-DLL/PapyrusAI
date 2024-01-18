@@ -232,7 +232,8 @@ export default function Chat(): JSX.Element {
       messageType: "text",
       role: "assistant",
       sender: "ChatGPT",
-      timestamp: messageTempId
+      timestamp: messageTempId,
+      promptId: null,
     }
     if (messages) {
       setMessages((prev) => [...prev, responseMessage]);
@@ -253,16 +254,16 @@ export default function Chat(): JSX.Element {
     }
   }, [onSocketClose, onSocketMessage, onSocketOpen]);
 
-  
 
-  const onSendMessage = useCallback((messageList: Array<string>) => {
+
+  const onSendMessage = useCallback((messageList: Array<MessageType>) => {
     //save message in message array
     setChatError(undefined);
     if (messages && isConnected) {
       //check that message length is less that 10000
       var messagesToSend: Array<{ role: string, content: string }> = []
       messageList.map(message => {
-        if (message.length > 10000) {
+        if (message.content.length > 10000) {
           setChatError("Message Too Long");
           return ""
         } else {
@@ -271,15 +272,16 @@ export default function Chat(): JSX.Element {
           const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
           var responseMessage: MessageType = {
             id: tempTimestamp.toString(),
-            content: message,
-            messageType: message.length < 1000 ? "text" : "file",
+            content: message.content,
+            messageType: message.content.length < 1000 ? "text" : "file",
             role: "user",
             sender: "username",
-            timestamp: messageTempId
+            timestamp: messageTempId,
+            promptId: message.promptId,
           }
           setMessages((prev) => [...prev, responseMessage]);
           messagesToSend.push({
-            "role": "user", "content": message
+            "role": "user", "content": message.content
           })
           return ""
         }
@@ -301,7 +303,18 @@ export default function Chat(): JSX.Element {
     //check that message length is less that 10000
     setChatError(undefined);
     if (newMessage.length < 10000 && newMessage.length > 0) {
-      onSendMessage([newMessage]);
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: newMessage,
+        messageType: newMessage.length < 1000 ? "text" : "file",
+        role: "user",
+        sender: "username",
+        timestamp: messageTempId,
+        promptId: null
+      }
+      onSendMessage([responseMessage]);
       //Then reset newMessage
       setNewMessage("");
     } else if (newMessage.length < 1) {
@@ -318,25 +331,59 @@ export default function Chat(): JSX.Element {
     if (courseInfo && moduleInfo) {
       //send prompts and docs to chatgtp
       var messagesToSend = userDocs.map(doc => {
-        return `Reference the following ${doc.documentType}: ${doc.document}`
+        const tempTimestamp = Date.now();
+        const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        var responseMessage: MessageType = {
+          id: tempTimestamp.toString(),
+          content: `Reference the following ${doc.documentType}: ${doc.document}`,
+          messageType: `Reference the following ${doc.documentType}: ${doc.document}`.length < 1000 ? "text" : "file",
+          role: "user",
+          sender: "username",
+          timestamp: messageTempId,
+          promptId: null
+        }
+        return responseMessage
       });
       //sent newly selected prompt to chatgpt
       if (moduleInfo.prompts.length !== 0) {
         const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
-        messagesToSend.unshift(actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "")
+        const tempTimestamp = Date.now();
+        const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        var responseMessage: MessageType = {
+          id: tempTimestamp.toString(),
+          content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
+          messageType: (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
+          role: "user",
+          sender: "username",
+          timestamp: messageTempId,
+          promptId: actualPrompt[0].id
+        }
+        messagesToSend.unshift(responseMessage);
       }
+      //Send full message objects
       onSendMessage(messagesToSend);
     }
   }
 
   function handleRepeatPrompt(selectedPrompt: string) {
-    if (courseInfo && moduleInfo) {
+    if (courseInfo && moduleInfo && selectedPrompt !== "") {
       setSelectedPrompt(selectedPrompt);
       //Add newly selected prompt to the list of repeating prompts
       setRepeatingPrompts((prev) => [...prev, selectedPrompt]);
       //sent newly selected prompt to chatgpt
       const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
-      onSendMessage([actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : ""]);
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
+        messageType: (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
+        role: "user",
+        sender: "username",
+        timestamp: messageTempId,
+        promptId: actualPrompt[0].id
+      }
+      onSendMessage([responseMessage]);
     }
   }
 
@@ -460,14 +507,20 @@ export default function Chat(): JSX.Element {
                     </span>
                   </div>
                 ) : null}
-                <div key={index} className={index.toString()}>
-                  <MessageRight
-                    message={message.content}
-                    displayName={viewUser?.name}
-                    messageType={message.messageType}
-                    outOfContext={message.inContext ? true : false}
-                  />
-                </div>
+                {(!moduleInfo.showInitialPrompt && message.promptId) ? (
+                  //dont show message if module doesn't want prompts shown
+                  <></>
+                ) : (
+                  <div key={index} className={index.toString()}>
+                    <MessageRight
+                      message={message.content}
+                      displayName={viewUser?.name}
+                      messageType={message.messageType}
+                      outOfContext={message.inContext ? true : false}
+                    />
+                  </div>
+                )}
+
               </div>
             )
           }

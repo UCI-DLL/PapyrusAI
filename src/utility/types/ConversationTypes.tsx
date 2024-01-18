@@ -20,6 +20,7 @@ export type MessageType = {
   sender: string,
   timestamp: string,
   inContext?: boolean,
+  promptId?: null | string,
 }
 
 export type MessageTypeType = "text" | "file"

@@ -670,7 +670,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             </span>
           </Checkbox>
 
-          {/* <Checkbox
+          <Checkbox
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
@@ -681,9 +681,9 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             isDisabled={isLoading}
           >
             <span>
-              Show Initial Prompt
+              Show Embedded Prompt
             </span>
-          </Checkbox> */}
+          </Checkbox>
 
           <Checkbox
             onClick={() => {

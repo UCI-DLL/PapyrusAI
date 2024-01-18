@@ -734,7 +734,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           </Checkbox>
           <p>Allow users to freely chat after initial prompts.</p>
 
-          {/* <Checkbox
+          <Checkbox
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
@@ -745,9 +745,9 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             isDisabled={isLoading}
           >
             <span>
-              Show Initial Prompt
+              Show Embedded Prompt
             </span>
-          </Checkbox> */}
+          </Checkbox>
 
           <Checkbox
             onClick={() => {

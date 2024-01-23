@@ -68,32 +68,9 @@ export default function EditCourse(): JSX.Element {
   useEffect(() => {
     const controller = new AbortController();
 
-    Get(getUserList(), controller.signal).then(res => {
-      if (res && res.status && res.status < 300) {
-        if (res.data) {
-          //filter out current user and email_verified 
-          var tempUserList = res.data.map((u: CustomUserType) => {
-            return {
-              name: u.name,
-              family_name: u.family_name,
-              email: u.email,
-              sub: u.sub
-            }
-          });
-          if (user) {
-            tempUserList = tempUserList.filter((x: CustomUserType) => x.sub !== user.sub);
-          }
-          setUserList(tempUserList);
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        if (res === undefined) {
-        } else {
-          // handle error
-        }
-      }
-    });
+    if (userList.length === 0) {
+      getUsers("", controller.signal);
+    }
 
     return () => {
       controller.abort();
@@ -149,6 +126,43 @@ export default function EditCourse(): JSX.Element {
     };
     // eslint-disable-next-line
   }, [location.pathname]);
+
+  function getUsers(PaginationToken: string, signal: AbortSignal) {
+    var limit = 50;
+
+    Get(getUserList(limit, PaginationToken), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data["Users"] && res.data["PaginationToken"]) {
+          //filter out current user and email_verified 
+          var tempUserList = res.data["Users"].map((u: CustomUserType) => {
+            return {
+              name: u.name,
+              family_name: u.family_name,
+              email: u.email,
+              sub: u.sub
+            }
+          });
+          if (user) {
+            tempUserList = tempUserList.filter((x: CustomUserType) => x.sub !== user.sub);
+          }
+          setUserList((prev) => [...prev, ...tempUserList]);
+
+          //handle pages
+          //note: PaginationToken will also come back as "undefined" if there are no more pages
+          if (res.data["Users"].length >= limit) {
+            getUsers(res.data["PaginationToken"], signal);
+          }
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+  }
 
 
   function handleSubmit(e: React.FormEvent) {

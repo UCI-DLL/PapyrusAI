@@ -14,6 +14,10 @@ export function postUserData() {
   return `/user`;
 }
 
-export function getUserList() {
-  return `/user/list`;
+export function getUserList(limit?: number, PaginationToken: string = "") {
+  if(limit) {
+    return `/user/list?limit=${limit}&paginationToken=${PaginationToken}`;
+  } else {
+    return `/user/list`;
+  }
 }

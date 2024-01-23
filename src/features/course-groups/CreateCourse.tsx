@@ -62,11 +62,26 @@ export default function CreateCourse(): JSX.Element {
     const controller = new AbortController();
     setIsLoading(true);
 
-    Get(getUserList(), controller.signal).then(res => {
+    if (userList.length === 0) {
+      getUsers("", controller.signal);
+    } else {
+      setIsLoading(false);
+    }
+
+    return () => {
+      controller.abort();
+    };
+    // eslint-disable-next-line
+  }, []);
+
+  function getUsers(PaginationToken: string, signal: AbortSignal) {
+    var limit = 50;
+
+    Get(getUserList(limit, PaginationToken), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data) {
+        if (res.data && res.data["Users"] && res.data["PaginationToken"]) {
           //filter out current user and email_verified 
-          var tempUserList = res.data.map((u: CustomUserType) => {
+          var tempUserList = res.data["Users"].map((u: CustomUserType) => {
             return {
               name: u.name,
               family_name: u.family_name,
@@ -74,11 +89,18 @@ export default function CreateCourse(): JSX.Element {
               sub: u.sub
             }
           });
-          if(user) {
+          if (user) {
             tempUserList = tempUserList.filter((x: CustomUserType) => x.sub !== user.sub);
           }
-          setUserList(tempUserList);
-          setIsLoading(false);
+          setUserList((prev) => [...prev, ...tempUserList]);
+
+          //handle pages
+          //note: PaginationToken will also come back as "undefined" if there are no more pages
+          if (res.data["Users"].length >= limit) {
+            getUsers(res.data["PaginationToken"], signal);
+          } else {
+            setIsLoading(false);
+          }
         }
       } else if (res && res.status === 401) {
         navigator("/login");
@@ -86,16 +108,10 @@ export default function CreateCourse(): JSX.Element {
         if (res === undefined) {
         } else {
           // handle error
-          setIsLoading(false);
         }
       }
     });
-
-    return () => {
-      controller.abort();
-    };
-    // eslint-disable-next-line
-  }, []);
+  }
 
 
   function handleSubmit(e: React.FormEvent) {
@@ -224,7 +240,7 @@ export default function CreateCourse(): JSX.Element {
             helperText={errors.section}
             disabled={isLoading}
           />
-          
+
           <Autocomplete
             value={session.taList}
             onChange={(event, newValue) => {
@@ -245,12 +261,13 @@ export default function CreateCourse(): JSX.Element {
             renderTags={(value: CustomUserType[], getTagProps) =>
               value.map((option: CustomUserType, index: number) => {
                 return (
-                <Chip
-                  variant="outlined"
-                  label={option.name + " " + option.family_name + " - " + option.email}
-                  {...getTagProps({ index })}
-                />
-              )})
+                  <Chip
+                    variant="outlined"
+                    label={option.name + " " + option.family_name + " - " + option.email}
+                    {...getTagProps({ index })}
+                  />
+                )
+              })
             }
             renderInput={(params) => {
               return (

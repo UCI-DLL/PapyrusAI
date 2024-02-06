@@ -260,10 +260,10 @@ export default function Chat(): JSX.Element {
     //save message in message array
     setChatError(undefined);
     if (messages && isConnected) {
-      //check that message length is less that 10000
+      //check that message length is less that 50000
       var messagesToSend: Array<{ role: string, content: string }> = []
       messageList.map(message => {
-        if (message.content.length > 10000) {
+        if (message.content.length > 50000) {
           setChatError("Message Too Long");
           return ""
         } else {
@@ -300,9 +300,9 @@ export default function Chat(): JSX.Element {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    //check that message length is less that 10000
+    //check that message length is less that 50000
     setChatError(undefined);
-    if (newMessage.length < 10000 && newMessage.length > 0) {
+    if (newMessage.length < 50000 && newMessage.length > 0) {
       const tempTimestamp = Date.now();
       const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
@@ -556,9 +556,9 @@ export default function Chat(): JSX.Element {
                     sx={{ width: "100%", color: "black" }}
                     value={newMessage}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      //check that message length is less that 10000
+                      //check that message length is less that 50000
                       setChatError(undefined);
-                      if (e.target.value.length < 10000) {
+                      if (e.target.value.length < 50000) {
                         setNewMessage(e.target.value)
                       } else {
                         setChatError("Message Too Long");

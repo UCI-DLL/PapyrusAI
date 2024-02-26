@@ -39,7 +39,7 @@ export default function MissingUserInfoForm({
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close
-    if(user && user.name && user.name !== "" && requireUpdate) {
+    if(user && user.name && user.name !== "" && requireUpdate && user.family_name) {
       //if the user has both name, then close modal
       //NOTE: family name optional
       closeForm(user);

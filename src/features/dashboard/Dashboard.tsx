@@ -86,7 +86,10 @@ export default function Dashboard(): JSX.Element {
       </div>
 
       <hr />
-      <CourseList list={courseList.slice(0, 6)} />
+      {courseList.length > 0 ? (
+        <CourseList list={courseList.slice(0, 6)} />
+      ) : <></>}
+      
 
       &nbsp;&nbsp;&nbsp;
 
@@ -97,7 +100,7 @@ export default function Dashboard(): JSX.Element {
         </div>
       </div>
       <hr />
-      {courseList.map((course, index) => {
+      {courseList.length > 0 && courseList.map((course, index) => {
         return course.modules.length > 0 ? (
           <div style={{ width: "100%" }} key={index}>
             <ModuleList course={course} />

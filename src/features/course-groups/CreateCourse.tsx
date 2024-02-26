@@ -110,6 +110,7 @@ export default function CreateCourse(): JSX.Element {
           // handle error
         }
       }
+      setIsLoading(false);
     });
   }
 

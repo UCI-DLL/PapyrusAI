@@ -131,7 +131,7 @@ export default function CreateCourse(): JSX.Element {
         if (res && res.status && res.status < 300) {
           if (res.data && res.data) {
             //redirect to course list
-            navigator("/");
+            navigator("/dashboard");
             // pop up notifying user of creation
             setAlert({ message: "Course Created", type: "success" });
           }
@@ -162,7 +162,7 @@ export default function CreateCourse(): JSX.Element {
         <div>
           <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
           &nbsp;&nbsp;&nbsp;
-          <Button variant="contained" onClick={() => navigator("/")} color="secondary">Cancel</Button>
+          <Button variant="contained" onClick={() => navigator("/dashboard")} color="secondary">Cancel</Button>
         </div>
       </div>
       <hr />

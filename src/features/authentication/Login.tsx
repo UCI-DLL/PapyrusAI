@@ -16,14 +16,14 @@ export default function Login(props: LoginProps): JSX.Element {
     if(location.hash) {
       localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
       setTimeout(() => {
-        navigator("/");
+        navigator("/dashboard");
       }, 500);
     } 
     else if(!localStorage.getItem("papyrusai_access_token")) {
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
     else {
-      navigator("/");
+      navigator("/dashboard");
     }
     // eslint-disable-next-line
   }, [location.hash]);
@@ -75,7 +75,7 @@ export default function Login(props: LoginProps): JSX.Element {
   //     //     //update App with user info
   //     //     props.setUser(val.data.data);
   //     //     //redirect to home page
-  //     //     navigator("/");
+  //     //     navigator("/dashboard");
   //     //   } else {
   //     //     setIsLoading(false);
   //     //     if (val.data && val.data.form && val.data.form.errors) {

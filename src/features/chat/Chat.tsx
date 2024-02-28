@@ -100,7 +100,7 @@ export default function Chat(): JSX.Element {
           } else {
             //handle error
             setAlert({ message: "Could not find user", type: "error" });
-            navigator("/");
+            navigator("/dashboard");
           }
         }
       });

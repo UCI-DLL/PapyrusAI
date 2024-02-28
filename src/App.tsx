@@ -107,11 +107,11 @@ function App(): JSX.Element {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
-        if(navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
-          //do nothing here if on safari (or it creates a weird loop)
-        } else {
-          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-        }
+        // if(navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
+        //   //do nothing here if on safari (or it creates a weird loop)
+        // } else {
+        //   window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+        // }
       } else {
         // get user's most update-to-date info
         //If access denied, then update the access token

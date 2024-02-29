@@ -76,7 +76,7 @@ export default function Reports(): JSX.Element {
                   // handle error
                   // setError("No Prompts Found");
                 }
-                setIsLoading(false);
+                
               });
             }
           } else if (res1 && res1.status === 401) {
@@ -86,6 +86,7 @@ export default function Reports(): JSX.Element {
           }
         })
       })
+      setIsLoading(false);
     }
 
     return (() => {

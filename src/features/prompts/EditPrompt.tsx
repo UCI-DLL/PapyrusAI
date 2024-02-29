@@ -129,7 +129,7 @@ export default function EditPrompt(): JSX.Element {
             <div>
               <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
               &nbsp;&nbsp;&nbsp;
-              <Button variant="contained" onClick={() => navigator("/")} color="secondary">Cancel</Button>
+              <Button variant="contained" onClick={() => navigator("/dashboard")} color="secondary">Cancel</Button>
             </div>
           </div>
           <hr />

@@ -1,0 +1,66 @@
+@use "../global" as global;
+
+.landing {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: global.$base;
+  width: 100%;
+
+  &__section-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    padding: global.$base;
+
+    &__logo {
+      display: flex;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    &__logo-dimensions {
+      display: flex;
+      flex-direction: row;
+
+      img {
+        height: 6rem;
+      }
+    }
+
+    &__logo-title {
+      text-decoration: none;
+      color: global.$primary;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &__content {
+    max-width: global.$xl-break;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    padding: global.$base;
+    flex-direction: column;
+
+
+    @media (max-width: global.$md-break) {
+      flex-direction: column;
+    }
+  }
+
+  &__column {
+    padding: global.$base;
+    margin: global.$base * 2;
+    width: 50%;
+
+    @media (max-width: global.$md-break) {
+      width: 90%;
+    }
+  }
+}

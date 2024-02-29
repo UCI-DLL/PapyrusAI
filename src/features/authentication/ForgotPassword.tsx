@@ -43,7 +43,7 @@ export default function ForgotPassword(props: ForgotPasswordProps): JSX.Element 
       //     //update App with user info
       //     props.setUser(val.data.data);
       //     //redirect to home page
-      //     navigator("/");
+      //     navigator("/dashboard");
       //   } else {
       //     setIsLoading(false);
       //     if (val.data && val.data.form && val.data.form.errors) {

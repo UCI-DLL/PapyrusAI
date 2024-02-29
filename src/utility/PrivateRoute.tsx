@@ -37,6 +37,6 @@ export function PrivateRoute({ user }: props): JSX.Element {
       </div>
     </>
   ) : (
-    <Navigate to={"/login"} />
+    <Navigate to={"/"} />
   );
 }

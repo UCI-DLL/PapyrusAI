@@ -45,9 +45,9 @@ export default function Navigation(): JSX.Element {
   var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
   user?.groups.find(a=> a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
-      ["/", "/courses", "/modules", "/reports", "/prompts", "/account", "/about"] :
-      ["/", "/courses", "/modules", "/reports", "/account", "/about"] :
-    ["/", "/courses", "/modules", "/account", "/about"];
+      ["/dashboard", "/courses", "/modules", "/reports", "/prompts", "/account", "/about"] :
+      ["/dashboard", "/courses", "/modules", "/reports", "/account", "/about"] :
+    ["/dashboard", "/courses", "/modules", "/account", "/about"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
@@ -75,8 +75,8 @@ export default function Navigation(): JSX.Element {
      * account
      * about
      */
-    const pathnameSplit = location.pathname.split("/");
-    if (location.pathname === "/") {
+    const pathnameSplit = location.pathname.split("/dashboard");
+    if (location.pathname === "/dashboard") {
       setBreadcrumbText(["Dashboard", "Overview"])
     } else if (location.pathname === "/courses") {
       setBreadcrumbText(["Courses", ""])
@@ -270,7 +270,7 @@ export default function Navigation(): JSX.Element {
                 underline="hover"
                 color="inherit"
                 href={
-                  breadcrumbText[0] === "Dashboard" ? "/" :
+                  breadcrumbText[0] === "Dashboard" ? "/dashboard" :
                     `/courses/${breadcrumbText[0]}/modules`
                 }
               >

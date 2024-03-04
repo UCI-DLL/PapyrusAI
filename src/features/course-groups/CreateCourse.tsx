@@ -79,7 +79,7 @@ export default function CreateCourse(): JSX.Element {
 
     Get(getUserList(limit, PaginationToken), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data["Users"] && res.data["PaginationToken"]) {
+        if (res.data && res.data["Users"] ) {
           //filter out current user and email_verified 
           var tempUserList = res.data["Users"].map((u: CustomUserType) => {
             return {
@@ -96,7 +96,7 @@ export default function CreateCourse(): JSX.Element {
 
           //handle pages
           //note: PaginationToken will also come back as "undefined" if there are no more pages
-          if (res.data["Users"].length >= limit) {
+          if (res.data["Users"].length >= limit && res.data["PaginationToken"]) {
             getUsers(res.data["PaginationToken"], signal);
           } else {
             setIsLoading(false);

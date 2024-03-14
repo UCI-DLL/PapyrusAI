@@ -575,6 +575,8 @@ export default function Chat(): JSX.Element {
                         </IconButton>
                       </InputAdornment>
                     }
+                    multiline
+                    maxRows={6}
                   />
                 </FormControl>
               </form>

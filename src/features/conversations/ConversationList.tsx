@@ -29,7 +29,7 @@ export default function ConversationList(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [course, setCourse] = useState<CourseType>();
-  //This is for when instructors or researchers are looking up a different student
+  //This is for when instructors or admins are looking up a different student
   const [viewUser, setViewUser] = useState<UserType>();
 
 
@@ -45,7 +45,7 @@ export default function ConversationList(): JSX.Element {
       //get prev course data
       const courseId = location.pathname.split("/")[2];
       const moduleId = location.pathname.split("/")[4];
-      //instructors or researchers can view other user's conversation lists
+      //instructors or admins can view other user's conversation lists
       var username;
       if(location.pathname.split("/")[6]) {
         username = location.pathname.split("/")[6];

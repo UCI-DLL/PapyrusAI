@@ -277,7 +277,7 @@ function App(): JSX.Element {
                     </>
                   )}
 
-                  {user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") && (
+                  {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
                     <>
                       <Route path="/prompts" element={<PrivateRoute user={user} />}>
                         <Route path="/prompts" element={<Prompts />} />

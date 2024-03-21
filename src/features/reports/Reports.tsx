@@ -36,12 +36,12 @@ export default function Reports(): JSX.Element {
     if (user) {
       setIsLoading(true);
       user.groups.forEach((group) => {
-        //skip instructor or student or researcher groups
+        //skip instructor or student or admin groups
         //remove TAs also
         if (
           group === "PapyrusAIStudents" || 
           group === "PapyrusAIInstructors" || 
-          group === "PapyrusAIResearchers" ||
+          group === "PapyrusAIAdmin" ||
           group.includes("-TA")
           ) {
           return ""

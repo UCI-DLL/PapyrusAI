@@ -35,16 +35,16 @@ export default function Navigation(): JSX.Element {
   // };
 
   //For the side drawer main nav menu
-  // base this list off instuctor, researcher, student access, and TAs
+  // base this list off instuctor, admin, student access, and TAs
   var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
   user?.groups.find(a=> a.includes("-TA")) ?
-    user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
+    user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
       ["Dashboard", "Courses", "Modules", "Reports", "Prompts", "Account", "About"] :
       ["Dashboard", "Courses", "Modules", "Reports", "Account", "About"] :
     ["Dashboard", "Courses", "Modules", "Account", "About"];
   var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
   user?.groups.find(a=> a.includes("-TA")) ?
-    user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
+    user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
       ["/dashboard", "/courses", "/modules", "/reports", "/prompts", "/account", "/about"] :
       ["/dashboard", "/courses", "/modules", "/reports", "/account", "/about"] :
     ["/dashboard", "/courses", "/modules", "/account", "/about"];

@@ -20,7 +20,6 @@ export default function RepeatingPromptWizard({
   prompts,
   onlyPrompts
 }: ChatWizardProps): JSX.Element {
-  //Need to save the index of the document just in case some documents are the same name
   const [selectedPrompt, setSelectedPrompt] = useState<string>("");
 
   const handleSelectChange = (event: SelectChangeEvent) => {
@@ -66,7 +65,7 @@ export default function RepeatingPromptWizard({
 
     </div>
   ) : (
-    //Return nothing when we don't have documents or prompts
+    //Return nothing when we don't have prompts
     <div></div>
   )
 }

@@ -4,20 +4,20 @@
 export function getUserData(username?: string) {
   // get other user data
   if (username) {
-    return `/user?username=${username}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+    return `user?username=${username}&organization=${process.env.REACT_APP_ORGANIZATION}`;
   } else {
-    return `/user?organization=${process.env.REACT_APP_ORGANIZATION}`;
+    return `user?organization=${process.env.REACT_APP_ORGANIZATION}`;
   }
 }
 
 export function postUserData() {
-  return `/user?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  return `user?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
 export function getUserList(limit?: number, PaginationToken: string = "") {
   if (limit) {
-    return `/user/list?limit=${limit}&paginationToken=${PaginationToken}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+    return `user/list?limit=${limit}&paginationToken=${PaginationToken}&organization=${process.env.REACT_APP_ORGANIZATION}`;
   } else {
-    return `/user/list?organization=${process.env.REACT_APP_ORGANIZATION}`;
+    return `user/list?organization=${process.env.REACT_APP_ORGANIZATION}`;
   }
 }

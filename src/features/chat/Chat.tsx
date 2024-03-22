@@ -113,7 +113,7 @@ export default function Chat(): JSX.Element {
           } else {
             //handle error
             setAlert({ message: "Could not find user", type: "error" });
-            navigator("/dashboard");
+            navigator("/");
           }
         }
       });
@@ -248,9 +248,9 @@ export default function Chat(): JSX.Element {
   }, [messages]);
 
   const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
-    if (socket.current?.readyState !== WebSocket.OPEN) {
-      var URL = process.env.REACT_APP_WEBSOCKET_URL ? process.env.REACT_APP_WEBSOCKET_URL : "wss://ymaqouopq4.execute-api.us-east-2.amazonaws.com/production";
-      URL = URL + `/?token=${localStorage.getItem("papyrusai_access_token")}`;
+    if (socket.current?.readyState !== WebSocket.OPEN && process.env.REACT_APP_WEBSOCKET_URL) {
+      var URL = process.env.REACT_APP_WEBSOCKET_URL;
+      URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
       URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}&organization=${process.env.REACT_APP_ORGANIZATION}`
       socket.current = new WebSocket(URL);
       socket.current.addEventListener('open', onSocketOpen);

@@ -347,7 +347,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
         <div>
           <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
           &nbsp;&nbsp;&nbsp;
-          <Button variant="contained" onClick={() => navigator("/dashboard")} color="secondary">Cancel</Button>
+          <Button variant="contained" onClick={() => navigator("/")} color="secondary">Cancel</Button>
         </div>
       </div>
       <hr />

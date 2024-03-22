@@ -20,8 +20,7 @@ export function PrivateRoute({ user }: props): JSX.Element {
 
   useEffect(() => {
     //When the page changes, reset the alert
-    // setAlert({message: "", type: "info"});
-    setAlert({ message: "Notice: PapyrusAI will be down from March 21st through March 28th to transition the system to a new server. Due to this, conversations and courses will be lost (so make sure to download important conversations!). Your accounts will still be active, although you will need to reset your password after the transition.", type: "warning" });
+    setAlert({message: "", type: "info"});
 
     // eslint-disable-next-line
   }, [])

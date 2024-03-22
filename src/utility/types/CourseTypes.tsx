@@ -19,7 +19,6 @@ export type CourseType = {
 
 export type ModuleType = {
   continuedInteraction: boolean,
-  documents: Array<DocumentType>,
   id: string,
   isDeleted: boolean,
   isPublished: boolean,
@@ -30,12 +29,6 @@ export type ModuleType = {
   prompts: Array<PromptType>,
   showInitialPrompt: boolean,
   showWizard: boolean,
-}
-
-export type DocumentType = {
-  documentType: string,
-  usageText: string,
-  optional: boolean,
 }
 
 export type PromptType = {

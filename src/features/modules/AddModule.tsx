@@ -17,11 +17,10 @@ import {
   OutlinedInput,
   Menu
 } from "@mui/material";
-import { DocumentType, PromptType } from "../../utility/types/CourseTypes";
+import { PromptType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
 import Put from "../../utility/Put";
 import { putCreateModule } from "../../utility/endpoints/CourseEndpoints";
-import CloseIcon from '@mui/icons-material/Close';
 import Get from "../../utility/Get";
 import { getPromptList } from "../../utility/endpoints/PromptEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -51,7 +50,6 @@ type AddModuleType = {
   isRepeating: boolean,
   continuedInteraction: boolean,
   isPublished: boolean,
-  documents: Array<DocumentType>
   showInitialPrompt: boolean,
   prompts: Array<string>
 }
@@ -73,7 +71,6 @@ export default function AddModule(): JSX.Element {
     isRepeating: true,
     continuedInteraction: true,
     isPublished: false,
-    documents: [],
     showInitialPrompt: true,
     prompts: []
   });
@@ -83,16 +80,10 @@ export default function AddModule(): JSX.Element {
     isRepeating: "",
     continuedInteraction: "",
     isPublished: "",
-    documents: "",
     showInitialPrompt: "",
     prompts: ""
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [newDoc, setNewDoc] = useState<DocumentType>({
-    usageText: "Please enter your ",
-    documentType: "",
-    optional: false,
-  });
   const [promptList, setPromptList] = useState<Array<PromptType>>([]);
   const [showFullPrompts, setShowFullPrompts] = useState<boolean>(false);
   const { setAlert } = useContext(AlertContext);
@@ -311,10 +302,6 @@ export default function AddModule(): JSX.Element {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleDocChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setNewDoc((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
-
   const handleSelectChange = (event: SelectChangeEvent<typeof session.prompts>) => {
     const {
       target: { value },
@@ -341,8 +328,6 @@ export default function AddModule(): JSX.Element {
           <Markdown>
             {`A **module** is a space for students to connect with AI using certain pre-approved sets of instructions. It can be used for an entire class term or you can have a module for a single assignment, unit, or other subset. \n
 The **module description** will show up on the top of the module when it is selected. It should provide a brief description of what the module covers. The description should uniquely identify each module, so that users can determine which module they want. \n
-**Module documents** are the texts that students will upload to the AI for the AI to read and use in determining the output. All documents that will be needed should be indicated in the panel labeled **Document Type**. **Usage Text** just shows you what the user will see. For example, if you label a document type as “Rubric,” Usage Text will read “Please enter your Rubric.” Other common document types are Assignment, Text, Essay, and Paragraph. But you can input anything! \n
-**Current Documents** shows you what you have already added in the Document Type section to track your progress. \n
 The **Module Prompts** drop down shows you the various prompts, or instructions to the AI, that you can incorporate into your module.  You need at least one activated for your module to have any content. If you want to see the actual wording of the prompt, click on **Show Full Prompts**. \n
 **Module Settings** let you control how the users can interact with the AI and the activated prompts within your module.  **Repeating Prompts** allows users to select another prompt after they interact with the prior prompt.  For example, if you activated Topics, Feedback, and Grammar, a user could first select “Grammar” and run through the AI interaction around that prompt. When finished, the student could then select one of the remaining options, such as “Feedback” for an interaction with the AI using the instructions embedded for “Feedback.” **Continued Interaction** allows students to converse back and forth with the AI even if the AI has not asked the user a question.  This allows the user to request additional information, explanations, expansions, etc. But it also allows the user to go off topic and interact freely with the AI. **Show Embedded Prompts** when checked will show the embedded prompt created by the admins. In most cases this will just be the first prompt in a conversation, but if Multiple Prompts is checked then it will affect future uses of embedded prompts. \n
  Select **Publish** when you are ready for users to have access to your module and interact with the AI as permitted by your selections here. Until you select “Publish,” only you see the module. `}
@@ -394,95 +379,6 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             disabled={isLoading}
             required
           />
-
-          <hr />
-
-          <FormLabel>Module Documents</FormLabel>
-          {/* add section for user to add documents  */}
-          <p>Add the documents you wish for the student to upload.</p>
-          <div className="modules__adddocuments">
-            <TextField
-              name="documentType"
-              label="Document Type"
-              fullWidth
-              sx={{ margin: ".5rem 0" }}
-              value={newDoc.documentType}
-              onChange={handleDocChange}
-              disabled={isLoading}
-              placeholder="Essay"
-            />
-            &nbsp;&nbsp;&nbsp;
-            <TextField
-              name="usageText"
-              label="Usage Text"
-              fullWidth
-              sx={{ margin: ".5rem 0" }}
-              value={newDoc.usageText}
-              onChange={handleDocChange}
-              disabled={isLoading}
-              placeholder="Please enter your "
-              InputProps={{
-                endAdornment: <InputAdornment position="start">{newDoc.documentType}</InputAdornment>,
-              }}
-            />
-            &nbsp;&nbsp;&nbsp;
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Checkbox
-                onClick={() => {
-                  setNewDoc((prev) => ({ ...prev, optional: !newDoc.optional }));
-                }}
-                checked={newDoc.optional}
-                isDisabled={isLoading}
-              >
-                <span>
-                  Optional
-                </span>
-              </Checkbox>
-            </div>
-            &nbsp;&nbsp;&nbsp;
-            <Button
-              sx={{ padding: "0rem 2rem" }}
-              variant="contained"
-              onClick={() => {
-                setSession((prev) => ({
-                  ...prev,
-                  documents: [...session.documents, newDoc]
-                }))
-                setNewDoc({ documentType: "", usageText: "Please enter your ", optional: false });
-              }}
-            >
-              Add
-            </Button>
-          </div>
-
-          {session.documents.length > 0 && (
-            <FormLabel>Current Documents</FormLabel>
-          )}
-
-          {session.documents.map((document, index) => {
-            return (
-              <div className="modules__documentslist" key={index}>
-                <div style={{ paddingTop: "0.3rem" }}>
-                  <div>Document Type: {document.documentType}</div>
-                  <div>Usage Text: {document.usageText}</div>
-                  <div>{document.optional ? "Optional" : "Required"}</div>
-                </div>
-                <Tooltip title="Remove">
-                  <IconButton
-                    aria-label="remove"
-                    onClick={() => {
-                      setSession((prev) => ({
-                        ...prev,
-                        documents: prev.documents.filter((d) => d.documentType !== document.documentType || d.usageText !== document.usageText)
-                      }))
-                    }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                </Tooltip>
-              </div>
-            )
-          })}
 
           <hr />
 

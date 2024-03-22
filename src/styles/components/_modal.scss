@@ -6,7 +6,7 @@ $_border-radius: global.$border-radius * 2;
 $modal_padding: global.$md global.$md;
 
 $title-font-family: global.$montserrat;
-$title-font-size: global.$xl;
+$title-font-size: global.$lg;
 $body-font-family: global.$opensans;
 $body-font-size: global.$md;
 $title-color: global.$black;
@@ -43,6 +43,7 @@ $body-color: global.$black;
   &__title {
     font-family: $title-font-family;
     font-size: $title-font-size;
+    text-align: center;
     align-items: center;
     display: flex;
     color: $title-color;

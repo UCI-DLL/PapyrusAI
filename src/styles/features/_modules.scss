@@ -42,23 +42,4 @@
 
   }
 
-  &__adddocuments {
-    display: flex;
-    flex-direction: row;
-
-    @media screen and (max-width: global.$md-break) {
-      flex-direction: column;
-    }
-  }
-
-  &__documentslist{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-
-    @media screen and (max-width: global.$md-break) {
-      // flex-direction: column;
-    }
-  }
-
 }

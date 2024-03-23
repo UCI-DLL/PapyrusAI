@@ -7,6 +7,7 @@ export type UserType = {
   groups: Array<string>,
   name: string,
   sub: string, //username
+  "custom:theme": string,
 }
 
 export type CustomUserType = {

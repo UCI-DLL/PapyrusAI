@@ -33,5 +33,5 @@ export function postAddUserToCourseGroup() {
 }
 
 export function getUsersInCourse(courseId: string) {
-  return `/course/${courseId}/users`;
+  return `/course/${courseId}/users?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }

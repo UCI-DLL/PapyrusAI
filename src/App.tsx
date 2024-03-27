@@ -103,7 +103,6 @@ function App(): JSX.Element {
 
 
   useEffect(() => {
-    console.log("here1", localStorage.getItem("papyrusai_access_token"))
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {

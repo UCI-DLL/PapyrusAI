@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { UserType } from "../../utility/types/UserTypes";
-import { Button, Box, TextField, FormLabel } from "@mui/material";
+import { Button, Box, TextField, FormLabel, FormControl, RadioGroup, FormControlLabel, Radio, FormHelperText } from "@mui/material";
 import Post from "../../utility/Post";
 import { postUserData } from "../../utility/endpoints/UserEndpoints";
 
@@ -11,7 +11,7 @@ import { postUserData } from "../../utility/endpoints/UserEndpoints";
 
 interface MissingUserInfoFormProps {
   user: UserType | undefined,
-  closeForm: (user:UserType) => void,
+  closeForm: (user: UserType) => void,
   requireUpdate?: boolean,
 }
 
@@ -24,32 +24,36 @@ export default function MissingUserInfoForm({
   const [session, setSession] = useState<{
     name: string,
     family_name: string,
+    theme: "light" | "dark" | "colorful-light" | "colorful-dark",
   }>({
     name: "",
-    family_name: ""
+    family_name: "",
+    theme: "light",
   });
   const [errors, setErrors] = useState<{
     name: string,
     family_name: string,
+    theme: string,
   }>({
     name: "",
-    family_name: ""
+    family_name: "",
+    theme: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close
-    if(user && user.name && user.name !== "" && requireUpdate && user.family_name) {
+    if (user && user.name && user.name !== "" && requireUpdate && user.family_name) {
       //if the user has both name, then close modal
       //NOTE: family name optional
       closeForm(user);
     } else {
       //set new user data based on old data
       if (user && user.name && user.name !== "") {
-        setSession((prev) => ({...prev, name: user.name}))
+        setSession((prev) => ({ ...prev, name: user.name }))
       }
       if (user && user.family_name && user.family_name !== "") {
-        setSession((prev) => ({...prev, family_name: user.family_name}))
+        setSession((prev) => ({ ...prev, family_name: user.family_name }))
       }
       setIsLoading(false);
     }
@@ -57,8 +61,8 @@ export default function MissingUserInfoForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if(session.name === "") {
-      setErrors((prev) => ({...prev, name: "Name missing"}))
+    if (session.name === "") {
+      setErrors((prev) => ({ ...prev, name: "Name missing" }))
     }
     // else if(session.family_name === "") {
     //   setErrors((prev) => ({...prev, family_name: "Family name missing"}))
@@ -75,7 +79,7 @@ export default function MissingUserInfoForm({
           }
         } else {
           // set errors
-          setErrors({name: res.data, family_name: res.data})
+          setErrors({ name: res.data, family_name: res.data, theme: res.data })
         }
         // set is loading back 
         setIsLoading(false);
@@ -90,7 +94,7 @@ export default function MissingUserInfoForm({
   return (
     <div className="missinguserinfo">
       <Box className="missinguserinfo__add">
-        <form onSubmit={handleSubmit} style={{display: "flex", flexDirection: "column"}}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
           <FormLabel>Enter User Information</FormLabel>
           <TextField
             name="name"
@@ -114,6 +118,21 @@ export default function MissingUserInfoForm({
             helperText={errors.family_name}
             disabled={isLoading}
           />
+          <FormControl error={errors.theme !== ""}>
+            <FormLabel id="theme-radio">Theme</FormLabel>
+            <RadioGroup
+              aria-labelledby="theme-radio"
+              name="theme"
+              value={session.theme}
+              onChange={handleChange}
+            >
+              <FormControlLabel value="light" control={<Radio />} label="Light" />
+              <FormControlLabel value="dark" control={<Radio />} label="Dark" />
+              <FormControlLabel value="colorful-light" control={<Radio />} label="Colorful Light" />
+              <FormControlLabel value="colorful-dark" control={<Radio />} label="Colorful Dark" />
+            </RadioGroup>
+            <FormHelperText>{errors.theme}</FormHelperText>
+          </FormControl>
           <Button
             variant="contained"
             onClick={handleSubmit}

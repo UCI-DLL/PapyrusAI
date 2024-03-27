@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef, useContext } from "react";
 import { MessageLeft, MessageRight } from "../../components/Message";
-import { Box, Alert, Menu, MenuItem } from "@mui/material";
+import { Box, Alert, Menu, MenuItem, Button } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import SendIcon from '@mui/icons-material/Send';
+import AddIcon from '@mui/icons-material/Add';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import { useLocation, useNavigate } from "react-router";
@@ -13,7 +14,7 @@ import { getConversation } from "../../utility/endpoints/ConversationEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { MessageType } from "../../utility/types/ConversationTypes";
-import { CourseType, ModuleType, DocumentType } from "../../utility/types/CourseTypes";
+import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import ChatWizard from "./ChatWizard";
 import { AlertContext } from "../../utility/context/AlertContext";
 import RepeatingPromptWizard from "./RepeatingPromptWizard";
@@ -21,6 +22,8 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { UserContext } from "../../utility/context/UserContext";
 import { UserType } from "../../utility/types/UserTypes";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { Modal } from "../../components/Modal";
+import DocumentModal from "./DocumentModal";
 
 
 export default function Chat(): JSX.Element {
@@ -38,7 +41,6 @@ export default function Chat(): JSX.Element {
   const [courseInfo, setCourseInfo] = useState<CourseType>();
   const [moduleInfo, setModuleInfo] = useState<ModuleType>();
   const [newMessage, setNewMessage] = useState<string>("");
-  const [userDocuments, setUserDocuments] = useState<Array<DocumentType & { document: string }> | undefined>();
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>();
   //After a prompt has been selected, then add it to this list
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
@@ -48,14 +50,25 @@ export default function Chat(): JSX.Element {
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
+  const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
   //download menu in chat
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  //add file menu
+  const [addAnchorEl, setAddAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const addOpen = Boolean(addAnchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAddAnchorEl(event.currentTarget);
+  };
+  const handleAddClose = () => {
+    setAddAnchorEl(null);
   };
 
   useEffect(() => {
@@ -100,7 +113,7 @@ export default function Chat(): JSX.Element {
           } else {
             //handle error
             setAlert({ message: "Could not find user", type: "error" });
-            navigator("/dashboard");
+            navigator("/");
           }
         }
       });
@@ -130,9 +143,8 @@ export default function Chat(): JSX.Element {
           if (res && res.status && res.status < 300) {
             if (res.data && res.data.messages) {
               if (res.data.messages.length > 0) {
-                //Init user docs and selected prompt
+                //Init selected prompt
                 //Use temp stuff for now
-                setUserDocuments([]);
                 setSelectedPrompt("");
               }
               //Get list of messages for the conversation
@@ -171,13 +183,8 @@ export default function Chat(): JSX.Element {
   }, [location]);
 
   useEffect(() => {
-    //if no documents are needed
-    if (moduleInfo && moduleInfo.documents && moduleInfo.documents.length < 1) {
-      setUserDocuments([])
-    }
     //if no prompts => aka free chat
     if (moduleInfo && moduleInfo.prompts && moduleInfo.prompts.length < 1) {
-      setUserDocuments([]);
       setSelectedPrompt("");
     }
   }, [moduleInfo, repeatingPrompts, selectedPrompt, messages]);
@@ -241,10 +248,10 @@ export default function Chat(): JSX.Element {
   }, [messages]);
 
   const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
-    if (socket.current?.readyState !== WebSocket.OPEN) {
-      var URL = process.env.REACT_APP_WEBSOCKET_URL ? process.env.REACT_APP_WEBSOCKET_URL : "wss://ymaqouopq4.execute-api.us-east-2.amazonaws.com/production";
-      URL = URL + `/?token=${localStorage.getItem("papyrusai_access_token")}`;
-      URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}`
+    if (socket.current?.readyState !== WebSocket.OPEN && process.env.REACT_APP_WEBSOCKET_URL) {
+      var URL = process.env.REACT_APP_WEBSOCKET_URL;
+      URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
+      URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}&organization=${process.env.REACT_APP_ORGANIZATION}`
       socket.current = new WebSocket(URL);
       socket.current.addEventListener('open', onSocketOpen);
       socket.current.addEventListener('close', onSocketClose);
@@ -324,26 +331,12 @@ export default function Chat(): JSX.Element {
     }
   }
 
-  function handleWizardReturnDocsPrompts(userDocs: Array<DocumentType & { document: string }>, selectedPrompt: string) {
+  function handleWizardReturnPrompts(selectedPrompt: string) {
     setSelectedPrompt(selectedPrompt);
-    setUserDocuments(userDocs);
     setRepeatingPrompts([selectedPrompt]);
     if (courseInfo && moduleInfo) {
-      //send prompts and docs to chatgtp
-      var messagesToSend = userDocs.map(doc => {
-        const tempTimestamp = Date.now();
-        const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-        var responseMessage: MessageType = {
-          id: tempTimestamp.toString(),
-          content: `Reference the following ${doc.documentType}: ${doc.document}`,
-          messageType: `Reference the following ${doc.documentType}: ${doc.document}`.length < 1000 ? "text" : "file",
-          role: "user",
-          sender: "username",
-          timestamp: messageTempId,
-          promptId: null
-        }
-        return responseMessage
-      });
+      //send prompts to chatgtp
+      var messagesToSend = [];
       //sent newly selected prompt to chatgpt
       if (moduleInfo.prompts.length !== 0) {
         const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
@@ -418,8 +411,42 @@ export default function Chat(): JSX.Element {
     }
   }
 
+  function returnDocText(docText: string) {
+    setOpenDocumentModal(false);
+    if (docText.length < 50000 && docText.length > 0) {
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: docText,
+        messageType: docText.length < 1000 ? "text" : "file",
+        role: "user",
+        sender: "username",
+        timestamp: messageTempId,
+        promptId: null
+      }
+      onSendMessage([responseMessage]);
+    } else if (docText.length < 1) {
+      setChatError("Document Too Short");
+    } else {
+      setChatError("Document Too Long");
+    }
+  }
+
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">
+      <Modal
+        isOpen={openDocumentModal}
+        title={"Document Upload"}
+        onRequestClose={() => setOpenDocumentModal(false)}
+        actions={
+          <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setOpenDocumentModal(false)}>
+            Cancel
+          </Button>
+        }
+      >
+        <DocumentModal returnDocText={returnDocText} />
+      </Modal>
       <div className="chat__fixed-top">
         <div className="chat__section-header">
           <div className="chat__section-header__title">
@@ -459,15 +486,14 @@ export default function Chat(): JSX.Element {
         </div>
 
         <div style={{ padding: "0.4rem", paddingTop: "1.8rem" }}>{moduleInfo.moduleDescription}</div>
-        {/* Only show the chat wizard if we don't have user documents, selected prompt, and if there are no previous messages  */}
+        {/* Only show the chat wizard if we don't have selected prompt and if there are no previous messages  */}
         {user &&
           viewUser &&
           user.sub === viewUser.sub &&
-          (messages.length < 1) && (moduleInfo.prompts.length !== 0 || moduleInfo.documents.length !== 0) && (
+          (messages.length < 1) && (moduleInfo.prompts.length !== 0) && (
             <ChatWizard
-              documents={moduleInfo.documents}
               prompts={moduleInfo.prompts}
-              returnDocsPrompt={handleWizardReturnDocsPrompts}
+              returnPrompt={handleWizardReturnPrompts}
             />
           )}
       </div>
@@ -542,7 +568,6 @@ export default function Chat(): JSX.Element {
           user &&
           viewUser &&
           user.sub === viewUser.sub &&
-          userDocuments !== undefined &&
           selectedPrompt !== undefined &&
           moduleInfo.continuedInteraction &&
           (
@@ -575,14 +600,59 @@ export default function Chat(): JSX.Element {
                         </IconButton>
                       </InputAdornment>
                     }
+                    startAdornment={
+                      <>
+                        <InputAdornment position="start">
+                          <IconButton
+                            aria-label="add file"
+                            edge="start"
+                            type="button"
+                            id="add-button"
+                            aria-controls={addOpen ? 'add-menu' : undefined}
+                            aria-haspopup="true"
+                            aria-expanded={addOpen ? 'true' : undefined}
+                            onClick={handleAddClick}
+                          >
+                            {<AddIcon />}
+                          </IconButton>
+                        </InputAdornment>
+                        <Menu
+                          id="add-menu"
+                          anchorEl={addAnchorEl}
+                          open={addOpen}
+                          onClose={handleAddClose}
+                          MenuListProps={{
+                            'aria-labelledby': 'add-menu-button',
+                          }}
+                          anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'left',
+                          }}
+                          transformOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                          }}
+                        >
+                          <MenuItem onClick={()=> setOpenDocumentModal(true)}>Attach File</MenuItem>
+                        </Menu>
+                      </>
+                    }
                     multiline
                     maxRows={6}
+                    onKeyDown={(e:any) => {
+                      if(e.keyCode === 13 && e.shiftKey) {
+                        e.preventDefault();
+                        setNewMessage(prev => prev + "\n");
+                      } else if (e.keyCode === 13 && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit(e);
+                      }
+                    }}
                   />
                 </FormControl>
               </form>
               {/* handle repeating prompts  */}
               {isConnected &&
-                userDocuments !== undefined &&
                 selectedPrompt !== undefined &&
                 messages.length > 0 &&
                 moduleInfo.isRepeating &&
@@ -600,10 +670,8 @@ export default function Chat(): JSX.Element {
               ) : null}
             </div>
           )}
-
         &nbsp;&nbsp;&nbsp;
       </Box>
-
     </div >
   ) : (
     <LinearProgress />

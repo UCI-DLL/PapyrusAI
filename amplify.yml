@@ -1,0 +1,22 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - echo "REACT_APP_LOGIN_URL=$LOGIN_URL" >> .env
+        - echo "REACT_APP_ORGANIZATION=$ORGANIZATION" >> .env
+        - echo "REACT_APP_ADMIN=$ADMIN" >> .env
+        - echo "REACT_APP_API_URL=$API_URL" >> .env
+        - echo "REACT_APP_INSTRUCTOR=$INSTRUCTOR" >> .env
+        - echo "REACT_APP_WEBSOCKET_URL=$WEBSOCKET_URL" >> .env
+        - npm run build
+  artifacts:
+    baseDirectory: build
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*

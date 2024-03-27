@@ -35,19 +35,19 @@ export default function Navigation(): JSX.Element {
   // };
 
   //For the side drawer main nav menu
-  // base this list off instuctor, researcher, student access, and TAs
+  // base this list off instuctor, admin, student access, and TAs
   var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
   user?.groups.find(a=> a.includes("-TA")) ?
-    user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
+    user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
       ["Dashboard", "Courses", "Modules", "Reports", "Prompts", "Account", "About"] :
       ["Dashboard", "Courses", "Modules", "Reports", "Account", "About"] :
     ["Dashboard", "Courses", "Modules", "Account", "About"];
   var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
   user?.groups.find(a=> a.includes("-TA")) ?
-    user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") ?
-      ["/dashboard", "/courses", "/modules", "/reports", "/prompts", "/account", "/about"] :
-      ["/dashboard", "/courses", "/modules", "/reports", "/account", "/about"] :
-    ["/dashboard", "/courses", "/modules", "/account", "/about"];
+    user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
+      ["/", "/courses", "/modules", "/reports", "/prompts", "/account", "/about"] :
+      ["/", "/courses", "/modules", "/reports", "/account", "/about"] :
+    ["/", "/courses", "/modules", "/account", "/about"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
@@ -75,8 +75,8 @@ export default function Navigation(): JSX.Element {
      * account
      * about
      */
-    const pathnameSplit = location.pathname.split("/dashboard");
-    if (location.pathname === "/dashboard") {
+    const pathnameSplit = location.pathname.split("/");
+    if (location.pathname === "/") {
       setBreadcrumbText(["Dashboard", "Overview"])
     } else if (location.pathname === "/courses") {
       setBreadcrumbText(["Courses", ""])
@@ -111,7 +111,7 @@ export default function Navigation(): JSX.Element {
     } else if (pathnameSplit[1] === "editcourse") {
       setBreadcrumbText(["Edit Course", ""])
     } else if (pathnameSplit[1] === "prompts") {
-      setBreadcrumbText(["Prompt", ""])
+      setBreadcrumbText(["Prompts", ""])
     }
   }, [location.pathname])
 
@@ -270,7 +270,7 @@ export default function Navigation(): JSX.Element {
                 underline="hover"
                 color="inherit"
                 href={
-                  breadcrumbText[0] === "Dashboard" ? "/dashboard" :
+                  breadcrumbText[0] === "Dashboard" ? "/" :
                     `/courses/${breadcrumbText[0]}/modules`
                 }
               >

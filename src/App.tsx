@@ -40,7 +40,6 @@ import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
-import Landing from "./features/landing-page/Landing";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -107,11 +106,11 @@ function App(): JSX.Element {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
-        // if(navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
-        //   //do nothing here if on safari (or it creates a weird loop)
-        // } else {
-        //   window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-        // }
+        if(navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
+          //do nothing here if on safari (or it creates a weird loop)
+        } else {
+          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+        }
       } else {
         // get user's most update-to-date info
         //If access denied, then update the access token
@@ -132,7 +131,7 @@ function App(): JSX.Element {
             localStorage.removeItem("papyrusai_access_token");
             localStorage.removeItem("papyrusai_user");
             setUser(null);
-            // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
           }
         });
       }
@@ -186,12 +185,11 @@ function App(): JSX.Element {
                   {/* 
                 <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />
                 <Route path="/forgot-password" element={<ForgotPassword setUser={(u) => setUser(u)} />} /> */}
-                <Route path="/" element={<Landing />} />
                   <Route path="*" element={<div>Page not found.</div>} />
 
                   {/* Need to have start path here. Private route will redirect to login if no user  */}
                   <Route
-                    path="/dashboard"
+                    path="/"
                     element={
                       <PrivateRoute
                         user={
@@ -206,7 +204,7 @@ function App(): JSX.Element {
                       />
                     }
                   >
-                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/" element={<Dashboard />} />
                   </Route>
 
                   <Route path="/courses" element={<PrivateRoute user={user} />}>
@@ -277,7 +275,7 @@ function App(): JSX.Element {
                     </>
                   )}
 
-                  {user?.groups.includes(process.env.REACT_APP_RESEARCHER ? process.env.REACT_APP_RESEARCHER : "PapyrusAIResearchers") && (
+                  {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
                     <>
                       <Route path="/prompts" element={<PrivateRoute user={user} />}>
                         <Route path="/prompts" element={<Prompts />} />

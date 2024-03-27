@@ -3,21 +3,21 @@
 //Get current user's data
 export function getUserData(username?: string) {
   // get other user data
-  if(username) {
-    return `/user?username=${username}`;
+  if (username) {
+    return `user?username=${username}&organization=${process.env.REACT_APP_ORGANIZATION}`;
   } else {
-    return `/user`;
+    return `user?organization=${process.env.REACT_APP_ORGANIZATION}`;
   }
 }
 
 export function postUserData() {
-  return `/user`;
+  return `user?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
 export function getUserList(limit?: number, PaginationToken: string = "") {
-  if(limit) {
-    return `/user/list?limit=${limit}&paginationToken=${PaginationToken}`;
+  if (limit) {
+    return `user/list?limit=${limit}&paginationToken=${PaginationToken}&organization=${process.env.REACT_APP_ORGANIZATION}`;
   } else {
-    return `/user/list`;
+    return `user/list?organization=${process.env.REACT_APP_ORGANIZATION}`;
   }
 }

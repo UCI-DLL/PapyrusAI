@@ -55,7 +55,7 @@ export default function Registration(props: RegistrationProps): JSX.Element {
       //     //update App with user info
       //     props.setUser(val.data.data);
       //     //redirect to home page
-      //     navigator("/dashboard");
+      //     navigator("/");
       //   } else {
       //     setIsLoading(false);
       //     if (val.data && val.data.form && val.data.form.errors) {

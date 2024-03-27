@@ -29,7 +29,7 @@ export default function ConversationList(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [course, setCourse] = useState<CourseType>();
-  //This is for when instructors or researchers are looking up a different student
+  //This is for when instructors or admins are looking up a different student
   const [viewUser, setViewUser] = useState<UserType>();
 
 
@@ -45,9 +45,9 @@ export default function ConversationList(): JSX.Element {
       //get prev course data
       const courseId = location.pathname.split("/")[2];
       const moduleId = location.pathname.split("/")[4];
-      //instructors or researchers can view other user's conversation lists
+      //instructors or admins can view other user's conversation lists
       var username;
-      if(location.pathname.split("/")[6]) {
+      if (location.pathname.split("/")[6]) {
         username = location.pathname.split("/")[6];
       }
       setModuleIds({ courseId: courseId, moduleId: moduleId });
@@ -88,7 +88,7 @@ export default function ConversationList(): JSX.Element {
         }
       });
 
-      if(username) {
+      if (username) {
         //get user details
         Get(getUserData(username), controller.signal).then((res) => {
           if (res && res.status && res.status < 300) {
@@ -174,20 +174,20 @@ export default function ConversationList(): JSX.Element {
             {conversationList &&
               conversationList.conversations &&
               conversationList.conversations.length > 0 ?
-              conversationList.conversations.map((conversation, index) => {
+              conversationList.conversations.sort((a: any, b: any) => (b.id > a.id) ? 1 : ((a.id > b.id) ? -1 : 0)).map((conversation, index) => {
                 const time = new Date(parseInt(conversation.id.substring(0, 13), 10)).toLocaleString();
                 return moduleIds ? (
                   <div key={index}>
                     <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                       {/* redirect to chat with and pass params  */}
                       <Link
-                        to={viewUser ? 
-                          `/chat/${viewUser.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${index}`: 
-                          `/chat/${user?.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${index}`
+                        to={viewUser ?
+                          `/chat/${viewUser.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}` :
+                          `/chat/${user?.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}`
                         }
                         style={{ textAlign: "left", display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}
                       >
-                        <ListItemText primary={`Conversation ${index + 1}`} secondary={`Created: ${time}`} />
+                        <ListItemText primary={`Conversation ${conversationList.conversations.length - index}`} secondary={`Created: ${time}`} />
                         {viewUser ? (
                           <Button variant="contained">View</Button>
                         ) : (

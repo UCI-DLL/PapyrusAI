@@ -1,11 +1,9 @@
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper
+  List,
+  ListItem,
+  ListItemText,
+  Box,
+  Divider
 } from "@mui/material";
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
@@ -29,6 +27,10 @@ export default function Reports(): JSX.Element {
   const { user } = useContext(UserContext);
   const [userList, setUserList] = useState<Array<{ users: Array<ReportsUserType>, course: CourseType }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const style = {
+    width: '100%',
+    bgcolor: 'background.paper',
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -36,14 +38,14 @@ export default function Reports(): JSX.Element {
     if (user) {
       setIsLoading(true);
       user.groups.forEach((group) => {
-        //skip instructor or student or researcher groups
+        //skip instructor or student or admin groups
         //remove TAs also
         if (
-          group === "PapyrusAIStudents" || 
-          group === "PapyrusAIInstructors" || 
-          group === "PapyrusAIResearchers" ||
+          group === "PapyrusAIStudents" ||
+          group === "PapyrusAIInstructors" ||
+          group === "PapyrusAIAdmin" ||
           group.includes("-TA")
-          ) {
+        ) {
           return ""
         }
         Get(getCourse(group), controller.signal).then(res1 => {
@@ -55,7 +57,7 @@ export default function Reports(): JSX.Element {
                 res1.data.taList &&
                 res1.data.taList.find((a: CustomUserType) => a.sub === user.sub) //handle tas too
               ))
-              ) { //only get the rest of the information if current user is instructor
+            ) { //only get the rest of the information if current user is instructor
               Get(getUsersInCourse(group), controller.signal).then(res => {
                 if (res && res.status && res.status < 300) {
                   if (res.data) {
@@ -76,7 +78,7 @@ export default function Reports(): JSX.Element {
                   // handle error
                   // setError("No Prompts Found");
                 }
-                
+
               });
             }
           } else if (res1 && res1.status === 401) {
@@ -101,43 +103,41 @@ export default function Reports(): JSX.Element {
     <div className="reports">
       <h3>Reports</h3>
       <hr />
-
-      {userList.map((x, index) => {
-        return (
-          <div style={{ width: "100%" }} key={index}>
-            <h4>{x.course.name ? x.course.name : ""}</h4>
-            <TableContainer component={Paper}>
-              <Table sx={{ minWidth: 650, width: "100%" }} aria-label="user table" >
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Student Name</TableCell>
-                    <TableCell align="right">Family Name</TableCell>
-                    <TableCell align="right">Email</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {x.users.map((row, i) => (
-                    <TableRow
-                      key={i}
-                      sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                    >
-                      <TableCell component="th" scope="row">
-                        <Link to={`/reports/${row.sub}`} state={row} >
-                          {row.name}
-                        </Link>
-                      </TableCell>
-                      <TableCell align="right">{row.family_name}</TableCell>
-                      <TableCell align="right">{row.email}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
-        )
-      })}
-
-    </div>
+      <List style={style}>
+        {userList.map((x, index) => {
+          return (
+            <div style={{ width: "100%" }} key={index}>
+              <h4>{x.course.name ? x.course.name : ""}</h4>
+              <Box sx={{ width: '100%', bgcolor: 'background.paper', padding: "0.2rem", borderRadius: "0.2rem" }}>
+                <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
+                  <ListItemText primary={`Student Name`} />
+                  <ListItemText primary={`Email`} sx={{ textAlign: "end" }} />
+                </ListItem>
+                <hr />
+                {x.users.map((row, i) => (
+                  <div>
+                    <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
+                      {/* redirect to chat with and pass params  */}
+                      <Link
+                        to={`/reports/${row.sub}`}
+                        state={row}
+                        style={{ textAlign: "left", display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}
+                      >
+                        <ListItemText primary={row.name + " " + row.family_name} />
+                        <ListItemText primary={row.email} sx={{ textAlign: "end" }} />
+                      </Link>
+                    </ListItem>
+                    {i !== x.users.length - 1 ? ( //only have dividers between modules
+                      <Divider />
+                    ) : <></>}
+                  </div>
+                ))}
+              </Box>
+            </div>
+          )
+        })}
+      </List>
+    </div >
   ) : (
     <LinearProgress />
   )

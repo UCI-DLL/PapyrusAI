@@ -237,7 +237,7 @@ function App(): JSX.Element {
                   </Route>
 
                   {/* if the user has a group with "-TA" in it, then allow access  */}
-                  {(user?.groups.find(a => a.includes("-TA")) ||
+                  {((user && user.groups && user.groups.find(a => a.includes("-TA"))) ||
                     user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors")) && (
                       <>
                         <Route path="/courses/:id/createmodule" element={<PrivateRoute user={user} />}>
@@ -263,7 +263,7 @@ function App(): JSX.Element {
                       </>
                     )}
 
-                  {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
+                  {user && user.groups && user.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
                     <>
                       <Route path="/createcourse" element={<PrivateRoute user={user} />}>
                         <Route path="/createcourse" element={<CreateCourse />} />
@@ -275,7 +275,7 @@ function App(): JSX.Element {
                     </>
                   )}
 
-                  {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
+                  {user && user.groups && user.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
                     <>
                       <Route path="/prompts" element={<PrivateRoute user={user} />}>
                         <Route path="/prompts" element={<Prompts />} />

@@ -22,8 +22,6 @@ export default function DocumentModal({
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  console.log("doctext", docText)
-
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) {
       setError("Something went wrong");

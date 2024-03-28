@@ -6,6 +6,7 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import SendIcon from '@mui/icons-material/Send';
 import AddIcon from '@mui/icons-material/Add';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import { useLocation, useNavigate } from "react-router";
@@ -25,6 +26,7 @@ import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { Modal } from "../../components/Modal";
 import DocumentModal from "./DocumentModal";
 import Post from "../../utility/Post";
+import { Tooltip } from "@mui/material";
 
 
 export default function Chat(): JSX.Element {
@@ -551,8 +553,18 @@ export default function Chat(): JSX.Element {
       <div className="chat__fixed-top">
         <div className="chat__section-header">
           <div className="chat__section-header__title">
-            <h5>{openRenameModal.name}</h5>
-            <div>{viewUser ? viewUser.name + " " + viewUser.family_name : ""}</div>
+          <Tooltip title={"Back to Conversations"}>
+            <IconButton
+              onClick={() => navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)}
+              aria-label="Back to conversations"
+            >
+              <ArrowBackIosIcon />
+            </IconButton>
+            </Tooltip>
+            <div>
+              <h5>{openRenameModal.name}</h5>
+              <div>{viewUser ? viewUser.name + " " + viewUser.family_name : ""}</div>
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "row" }}>

@@ -274,62 +274,66 @@ export default function ConversationList(): JSX.Element {
           </div>
           <hr />
           <List sx={style} aria-label="conversation list">
-            {conversationList &&
-              moduleIds &&
-              user &&
-              conversationList.conversations &&
-              conversationList.conversations.length > 0 ?
-              conversationList.conversations.sort((a: any, b: any) => (b.id > a.id) ? 1 : ((a.id > b.id) ? -1 : 0)).map((conversation, index) => {
-                const time = new Date(parseInt(conversation.id.substring(0, 13), 10)).toLocaleString();
-                const link = viewUser ?
-                  `/chat/${viewUser.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}` :
-                  `/chat/${user.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}`
-                return (
-                  <div key={index}>
-                    <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
-                      {/* redirect to chat with and pass params  */}
-                      <Link
-                        to={link}
-                        style={{ textAlign: "left", display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}
-                      >
-                        <ListItemText primary={`${conversation.name}`} secondary={`Created: ${time}`} />
-
-                      </Link>
-                      {viewUser ? (
-                        <Button variant="contained" onClick={() => navigator(link)}>View</Button>
-                      ) : (
-                        <>
-                          <Button onClick={() => {
-                            setOpenRenameModal({
-                              open: true,
-                              courseId: moduleIds.courseId,
-                              moduleId: moduleIds.moduleId,
-                              index: conversationList.conversations.length - index - 1,
-                              name: conversation.name,
-                              error: ""
-                            })
-                          }}
+            {conversationList ? (
+              <>
+                {moduleIds &&
+                  user &&
+                  conversationList.conversations &&
+                  conversationList.conversations.length > 0 ?
+                  conversationList.conversations.sort((a: any, b: any) => (b.id > a.id) ? 1 : ((a.id > b.id) ? -1 : 0)).map((conversation, index) => {
+                    const time = new Date(parseInt(conversation.id.substring(0, 13), 10)).toLocaleString();
+                    const link = viewUser ?
+                      `/chat/${viewUser.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}` :
+                      `/chat/${user.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}`
+                    return (
+                      <div key={index}>
+                        <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
+                          {/* redirect to chat with and pass params  */}
+                          <Link
+                            to={link}
+                            style={{ textAlign: "left", display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}
                           >
-                            Edit
-                          </Button>
-                          <Button variant="contained" onClick={() => navigator(link)}>Chat</Button>
-                        </>
+                            <ListItemText primary={`${conversation.name}`} secondary={`Created: ${time}`} />
+
+                          </Link>
+                          {viewUser ? (
+                            <Button variant="contained" onClick={() => navigator(link)}>View</Button>
+                          ) : (
+                            <>
+                              <Button onClick={() => {
+                                setOpenRenameModal({
+                                  open: true,
+                                  courseId: moduleIds.courseId,
+                                  moduleId: moduleIds.moduleId,
+                                  index: conversationList.conversations.length - index - 1,
+                                  name: conversation.name,
+                                  error: ""
+                                })
+                              }}
+                              >
+                                Edit
+                              </Button>
+                              <Button variant="contained" onClick={() => navigator(link)}>Chat</Button>
+                            </>
+                          )}
+                        </ListItem>
+                        {index !== conversationList.conversations.length - 1 ? ( //only have dividers between modules
+                          <Divider />
+                        ) : <></>}
+                      </div>
+                    )
+                  }) : (
+                    <div style={{ display: "flex", width: "100%", alignContent: "center", justifyContent: "center" }}>
+                      {viewUser ? (
+                        <div>No conversations yet</div>
+                      ) : (
+                        <Button variant="contained" onClick={handleNewConversation}>Start a Conversation</Button>
                       )}
-                    </ListItem>
-                    {index !== conversationList.conversations.length - 1 ? ( //only have dividers between modules
-                      <Divider />
-                    ) : <></>}
-                  </div>
-                )
-              }) : (
-                <div style={{ display: "flex", width: "100%", alignContent: "center", justifyContent: "center" }}>
-                  {viewUser ? (
-                    <div>No conversations yet</div>
-                  ) : (
-                    <Button variant="contained" onClick={handleNewConversation}>Start a Conversation</Button>
+                    </div>
                   )}
-                </div>
-              )}
+              </>
+            ) : <></>}
+
           </List>
         </>
       )}

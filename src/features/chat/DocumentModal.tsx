@@ -102,6 +102,7 @@ export default function DocumentModal({
         <TextField
           name="doctext"
           label={"Document"}
+          autoFocus
           fullWidth
           sx={{ margin: ".5rem 0" }}
           multiline

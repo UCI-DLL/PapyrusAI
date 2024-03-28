@@ -12,6 +12,10 @@ export function postCreateConversation(courseId: string, moduleId: string) {
   return `conversation/${courseId}/${moduleId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
+export function postUpdateConversation(courseId: string, moduleId: string, index: string) {
+  return `conversation/${courseId}/${moduleId}/${index}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+}
+
 export function getConversation(courseId: string, moduleId: string, index: string, username?: string) {
   if (username) {
     return `conversation/${courseId}/${moduleId}/${index}?username=${username}&organization=${process.env.REACT_APP_ORGANIZATION}`;

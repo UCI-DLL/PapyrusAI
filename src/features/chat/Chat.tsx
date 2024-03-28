@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useContext } from "react";
 import { MessageLeft, MessageRight } from "../../components/Message";
-import { Box, Alert, Menu, MenuItem, Button } from "@mui/material";
+import { Box, Alert, Menu, MenuItem, Button, TextField } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -10,7 +10,7 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import { useLocation, useNavigate } from "react-router";
 import Get from "../../utility/Get";
-import { getConversation } from "../../utility/endpoints/ConversationEndpoints";
+import { getConversation, postUpdateConversation } from "../../utility/endpoints/ConversationEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { MessageType } from "../../utility/types/ConversationTypes";
@@ -24,6 +24,7 @@ import { UserType } from "../../utility/types/UserTypes";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { Modal } from "../../components/Modal";
 import DocumentModal from "./DocumentModal";
+import Post from "../../utility/Post";
 
 
 export default function Chat(): JSX.Element {
@@ -50,6 +51,21 @@ export default function Chat(): JSX.Element {
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
+  const [openRenameModal, setOpenRenameModal] = useState<{
+    open: boolean,
+    courseId: string,
+    moduleId: string,
+    index: string,
+    name: string,
+    error: string
+  }>({
+    open: false,
+    courseId: "",
+    moduleId: "",
+    index: "",
+    name: "",
+    error: ""
+  });
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
   //download menu in chat
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -139,7 +155,7 @@ export default function Chat(): JSX.Element {
           location.pathname.split("/")[5],
           location.pathname.split("/")[2]
         ),
-        controller.signal).then(res => {
+        controller.signal).then((res: any) => {
           if (res && res.status && res.status < 300) {
             if (res.data && res.data.messages) {
               if (res.data.messages.length > 0) {
@@ -162,6 +178,16 @@ export default function Chat(): JSX.Element {
                 return message;
               });
               setMessages(reverse.reverse());
+            }
+            if (res.data && res.data.name) {
+              setOpenRenameModal({
+                open: false,
+                courseId: location.pathname.split("/")[3],
+                moduleId: location.pathname.split("/")[4],
+                index: location.pathname.split("/")[5],
+                name: res.data.name,
+                error: ""
+              })
             }
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -433,6 +459,50 @@ export default function Chat(): JSX.Element {
     }
   }
 
+  function handleConverstionNameUpdate(
+    renameObject: {
+      open: boolean,
+      courseId: string,
+      moduleId: string,
+      index: string,
+      name: string,
+      error: string
+    }
+  ) {
+    if (renameObject.name.length > 260) {
+      setOpenRenameModal(prev => ({ ...prev, error: "Name is too long" }))
+    } else if (renameObject.name.length === 0) {
+      setOpenRenameModal(prev => ({ ...prev, error: "Name cannot be empty" }))
+    } else {
+      setIsLoading(true);
+      Post(postUpdateConversation(
+        renameObject.courseId,
+        renameObject.moduleId,
+        renameObject.index.toString()
+      ), { name: renameObject.name }).then(res => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            //update conversation list with new conversation list
+            setOpenRenameModal({
+              open: false,
+              courseId: location.pathname.split("/")[3],
+              moduleId: location.pathname.split("/")[4],
+              index: location.pathname.split("/")[5],
+              name: res.data.conversations[location.pathname.split("/")[5]].name,
+              error: ""
+            });
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          // handle error
+          setAlert({ message: "Something went wrong. Try again later", type: "error" });
+        }
+        setIsLoading(false);
+      });
+    }
+  }
+
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">
       <Modal
@@ -447,16 +517,47 @@ export default function Chat(): JSX.Element {
       >
         <DocumentModal returnDocText={returnDocText} />
       </Modal>
+      <Modal
+        isOpen={openRenameModal.open}
+        onRequestClose={() => setOpenRenameModal(prev => ({ ...prev, open: false }))}
+        title="Rename Conversation"
+        actions={
+          <Button
+            sx={{ width: "100%" }}
+            variant="contained"
+            onClick={() => handleConverstionNameUpdate(openRenameModal)}
+          >
+            Submit
+          </Button>
+        }
+      >
+        <div>
+          <TextField
+            name="name"
+            label="Conversation Name"
+            autoFocus
+            fullWidth
+            sx={{ margin: ".5rem 0" }}
+            value={openRenameModal.name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+              setOpenRenameModal(prev => ({ ...prev, name: e.target.value }))
+            }}
+            error={openRenameModal.error !== ""}
+            helperText={openRenameModal.error}
+            disabled={isLoading}
+          />
+        </div>
+      </Modal>
       <div className="chat__fixed-top">
         <div className="chat__section-header">
           <div className="chat__section-header__title">
-            <h5>{moduleInfo.name}</h5>
+            <h5>{openRenameModal.name}</h5>
             <div>{viewUser ? viewUser.name + " " + viewUser.family_name : ""}</div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "row" }}>
             <div>
-              <div>{courseInfo.name} &nbsp;</div>
+              <div>{courseInfo.name} &nbsp; {moduleInfo.name}</div>
               <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}&nbsp;</div>
             </div>
             <div>
@@ -479,6 +580,12 @@ export default function Chat(): JSX.Element {
                   'aria-labelledby': 'chat-menu-button',
                 }}
               >
+                <MenuItem onClick={() => {
+                  handleClose()
+                  setOpenRenameModal(prev => ({ ...prev, open: true }))
+                }}>
+                  Rename
+                </MenuItem>
                 <MenuItem onClick={downloadChat}>Download</MenuItem>
               </Menu>
             </div>
@@ -633,14 +740,19 @@ export default function Chat(): JSX.Element {
                             horizontal: 'left',
                           }}
                         >
-                          <MenuItem onClick={()=> setOpenDocumentModal(true)}>Attach File</MenuItem>
+                          <MenuItem onClick={() => {
+                            handleAddClose()
+                            setOpenDocumentModal(true)
+                          }}>
+                            Attach File
+                          </MenuItem>
                         </Menu>
                       </>
                     }
                     multiline
                     maxRows={6}
-                    onKeyDown={(e:any) => {
-                      if(e.keyCode === 13 && e.shiftKey) {
+                    onKeyDown={(e: any) => {
+                      if (e.keyCode === 13 && e.shiftKey) {
                         e.preventDefault();
                         setNewMessage(prev => prev + "\n");
                       } else if (e.keyCode === 13 && !e.shiftKey) {

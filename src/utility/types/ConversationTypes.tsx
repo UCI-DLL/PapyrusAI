@@ -9,7 +9,8 @@ export type ConversationListType = {
 export type ConversationType = {
   id: string,
   isDeleted: boolean,
-  messages: Array<string>
+  messages: Array<string>,
+  name: string
 }
 
 export type MessageType = {

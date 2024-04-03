@@ -30,7 +30,8 @@
 
     div {
       display: flex;
-      align-items: center;
+      flex-direction: row;
+      justify-content: center;
     }
   }
 
@@ -40,6 +41,20 @@
     padding: 1rem;
     border-radius: 0.5rem;
 
+  }
+
+  &__discard_background {
+    &:hover {
+      color: white !important;
+      background-color: global.$error !important;
+    }
+    color: global.$error !important;
+  }
+
+  &__delete_background {
+    &:hover {
+      color: global.$error !important;
+    }
   }
 
 }

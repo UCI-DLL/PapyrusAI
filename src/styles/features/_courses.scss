@@ -31,12 +31,7 @@
     div {
       display: flex;
       flex-direction: row;
-      align-items: center;
       justify-content: center;
-
-      @media (max-width: global.$sm-break) {
-        flex-direction: column;
-      }
     }
   }
 
@@ -45,7 +40,20 @@
     background-color: global.$white;
     padding: 1rem;
     border-radius: 0.5rem;
+  }
 
+  &__discard_background {
+    &:hover {
+      color: white !important;
+      background-color: global.$error !important;
+    }
+    color: global.$error !important;
+  }
+
+  &__delete_background {
+    &:hover {
+      color: global.$error !important;
+    }
   }
 
 }

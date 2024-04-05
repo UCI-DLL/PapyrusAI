@@ -140,12 +140,12 @@ a {
   font-family: $opensans;
 
   &:hover {
-    color: lighten(variables.$primary, 20%);
+    color: var(--accent-3);
   }
 }
 
 .error {
-  color: variables.$error;
+  color: var(--error);
 }
 
 * {

@@ -46,14 +46,14 @@
   &__discard_background {
     &:hover {
       color: var(--white) !important;
-      background-color: global.$error !important;
+      background-color: var(--error) !important;
     }
-    color: global.$error !important;
+    color: var(--error) !important;
   }
 
   &__delete_background {
     &:hover {
-      color: global.$error !important;
+      color: var(--error) !important;
     }
   }
 

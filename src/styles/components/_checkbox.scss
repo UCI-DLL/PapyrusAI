@@ -15,9 +15,9 @@ $checkbox_spacing-item: global.$base * 2;
 
 $checkbox_min_height: 35px;
 
-$checkbox-primary-color: global.$primary;
+$checkbox-primary-color: var(--primary);
 $checkbox-secondary-color: global.$secondary;
-$checkbox-black-color: global.$black;
+$checkbox-black-color: var(--black);
 $checkbox-has-error-outline: solid 2px global.$error;
 $checkbox-disabled-fill: global.$gray-58;
 

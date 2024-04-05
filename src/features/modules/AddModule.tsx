@@ -537,7 +537,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
               <OutlinedInput
                 id="outlined-adornment-message"
                 placeholder="Search"
-                sx={{ width: "100%", color: "black" }}
+                sx={{ width: "100%" }}
                 value={filter.search}
                 onChange={handleSearchPromptList}
                 endAdornment={

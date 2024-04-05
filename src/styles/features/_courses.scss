@@ -37,14 +37,14 @@
 
   &__add {
     width: 100%;
-    background-color: global.$white;
+    background-color: var(--white);
     padding: 1rem;
     border-radius: 0.5rem;
   }
 
   &__discard_background {
     &:hover {
-      color: white !important;
+      color: var(--white) !important;
       background-color: global.$error !important;
     }
     color: global.$error !important;

@@ -1,7 +1,7 @@
 @use "../global/index" as global;
 
 $overlay_background: rgba(0, 0, 0, 0.5);
-$modal_background: global.$white;
+$modal_background: var(--white);
 $_border-radius: global.$border-radius * 2;
 $modal_padding: global.$md global.$md;
 
@@ -9,8 +9,8 @@ $title-font-family: global.$montserrat;
 $title-font-size: global.$lg;
 $body-font-family: global.$opensans;
 $body-font-size: global.$md;
-$title-color: global.$black;
-$body-color: global.$black;
+$title-color: var(--black);
+$body-color: var(--black);
 
 .c-modal {
   position: absolute;
@@ -21,6 +21,7 @@ $body-color: global.$black;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border: 1px var(--black) solid;
 
   @media screen and (max-width: global.$md-break) {
     width: 80%;

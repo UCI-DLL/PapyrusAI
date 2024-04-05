@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./styles/index.scss";
 import {
   AlertColor,
-  createTheme,
   CssBaseline,
   PaletteColor,
   ThemeProvider,
@@ -40,6 +39,13 @@ import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
+import {
+  changeTheme,
+  getColorfulDarkTheme,
+  getColorfulLightTheme,
+  getDarkTheme,
+  getLightTheme
+} from "./utility/Themes";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -55,61 +61,6 @@ declare module "@mui/material/Button" {
     white: true;
   }
 }
-
-/* Material UI theme settings */
-const { palette } = createTheme();
-//light theme is default
-const lightTheme = createTheme({
-  palette: {
-    background: {
-      default: "#EBEBEB",
-    },
-    text: {
-      primary: "#1a1a1a",
-    },
-    primary: { main: "#1b3d6d" },
-    secondary: { main: "#6aa2b8" },
-    error: { main: "#da0222" },
-    white: palette.augmentColor({
-      color: {
-        main: "#fff",
-      },
-    }),
-  },
-  typography: {
-    button: {
-      textTransform: "none",
-    },
-    "fontFamily": "OpenSans",
-  },
-});
-
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-    background: {
-      default: "#141414",
-    },
-    text: {
-      primary: "#EBEBEB",
-    },
-    primary: { main: "#A8D5E9" },
-    secondary: { main: "#ededed" },
-    error: { main: "#da0222" },
-    white: palette.augmentColor({
-      color: {
-        main: "#FFF",
-      },
-    }),
-  },
-  typography: {
-    button: {
-      textTransform: "none",
-    },
-    "fontFamily": "OpenSans",
-  },
-});
-
 
 function App(): JSX.Element {
   // user object obtained from backend or local
@@ -128,6 +79,13 @@ function App(): JSX.Element {
     type: "info"
   });
   const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (user) {
+      changeTheme(root, user["custom:theme"]);
+    }
+  }, [user])
 
   useEffect(() => {
     setTimeout(() => {
@@ -151,24 +109,6 @@ function App(): JSX.Element {
               //NOTE: family_name optional (aka can be empty string)
               if (!res.data.name || !res.data.family_name || res.data.name === "") {
                 setShowUpdateUserInfoModal(true);
-              }
-
-              //handle themes by setting variables here
-              const root = document.documentElement;
-              if (res.data["custom:theme"] === "dark") {
-                root?.style.setProperty("--primary", "#A6E4FF");
-                root?.style.setProperty("--accent-1", "#47B9FF");
-                root?.style.setProperty("--accent-3", "#A8D5E9");
-                root?.style.setProperty("--background", "#141414");
-                root?.style.setProperty("--white", "#0A0A0A");
-                root?.style.setProperty("--black", "#EBEBEB");
-              } else {
-                root?.style.setProperty("--primary", "#0064a4");
-                root?.style.setProperty("--accent-1", "#6aa2b8");
-                root?.style.setProperty("--accent-3", "#1b3d6d");
-                root?.style.setProperty("--background", "#EBEBEB");
-                root?.style.setProperty("--white", "#fff");
-                root?.style.setProperty("--black", "#1a1a1a");
               }
             }
           } else {
@@ -200,7 +140,18 @@ function App(): JSX.Element {
         <UserContext.Provider value={value}>
           <AlertContext.Provider value={alertValue}>
             <Router>
-              <ThemeProvider theme={value.user?.["custom:theme"] === "light" ? lightTheme : darkTheme}>
+              <ThemeProvider
+                theme={
+                  (user &&
+                    user["custom:theme"] === "light") ?
+                    getLightTheme() :
+                    (user && user["custom:theme"] === "dark") ?
+                      getDarkTheme() :
+                      (user && user["custom:theme"] === "colorful-light") ?
+                        getColorfulLightTheme() :
+                        getColorfulDarkTheme()
+                }
+              >
                 <CssBaseline />
                 <Modal
                   isOpen={showUpdateUserInfoModal}

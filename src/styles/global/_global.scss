@@ -2,8 +2,8 @@
 
 html,
 body {
-  background-color: variables.$background;
-  color: variables.$secondary;
+  background-color: var(--background);
+  color: var(--primary);
 }
 
 button {
@@ -29,7 +29,7 @@ $font-size-h6: 1.6rem !default;
 $default-header-font-family: $montserrat;
 $default-header-font-weight: 700;
 $default-header-margin: 0;
-$deafult-header-color: variables.$black;
+$default-header-color: var(--black);
 $heading-font-sizes: (
   1: $font-size-h1,
   2: $font-size-h2,
@@ -45,7 +45,7 @@ h2 {
   font-family: $default-header-font-family;
   font-weight: $default-header-font-weight;
   margin: $default-header-margin;
-  color: $deafult-header-color;
+  color: $default-header-color;
 }
 
 h3,
@@ -55,7 +55,7 @@ h6 {
   font-family: $montserrat;
   font-weight: $default-header-font-weight;
   margin: $default-header-margin;
-  color: $deafult-header-color;
+  color: $default-header-color;
 }
 
 @each $i, $size in $heading-font-sizes {
@@ -126,6 +126,7 @@ button {
   border: none;
   padding: 0;
   font-family: $opensans;
+  color: var(--black);
 
   &:focus {
     outline: auto;
@@ -134,7 +135,7 @@ button {
 
 // ------- a ------- //
 a {
-  color: variables.$primary;
+  color: var(--primary);
   text-decoration: underline;
   font-family: $opensans;
 
@@ -152,12 +153,12 @@ a {
 }
 
 hr {
-  background-color: variables.$accent-3;
+  background-color: var(--accent-3);
   height: 1px;
   opacity: 1;
   border: 0;
   border-top: 1px solid;
-  color: variables.$accent-3;
+  color: var(--accent-3);
   width: 100%;
 }
 

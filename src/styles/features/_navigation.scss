@@ -19,8 +19,8 @@
     display: flex;
     justify-content: space-between;
     z-index: 102;
-    background: white;
-    outline: solid 2px global.$primary;
+    background: var(--white);
+    outline: solid 2px var(--primary);
     padding: 0.4rem 0;
     height: 100%; //Note: if this changes, change private route styling
     padding-right: 1rem;
@@ -51,7 +51,7 @@
 
     &__logo-title {
       text-decoration: none;
-      color: global.$primary;
+      color: var(--primary);
       display: flex;
       align-items: center;
     }
@@ -63,8 +63,8 @@
   margin-left: 13rem;
   position: fixed;
   height: 3rem;
-  background-color: global.$white;
-  border-bottom: 1px solid global.$primary;
+  background-color: var(--white);
+  border-bottom: 1px solid var(--primary);
   padding: 0 1rem;
   display: flex;
   flex-direction: row;

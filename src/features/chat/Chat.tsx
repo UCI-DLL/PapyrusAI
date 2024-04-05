@@ -692,12 +692,12 @@ export default function Chat(): JSX.Element {
           (
             <div className="chat__input-form">
               <form onSubmit={handleSubmit}>
-                <FormControl sx={{ m: 1, width: '100%', margin: "0", backgroundColor: "#FFF" }} variant="outlined">
+                <FormControl sx={{ m: 1, width: '100%', margin: "0" }} variant="outlined">
                   <InputLabel htmlFor="outlined-adornment-message">Send a message</InputLabel>
                   <OutlinedInput
                     id="outlined-adornment-message"
                     label="Send a message"
-                    sx={{ width: "100%", color: "black" }}
+                    sx={{ width: "100%" }}
                     value={newMessage}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       //check that message length is less that 50000

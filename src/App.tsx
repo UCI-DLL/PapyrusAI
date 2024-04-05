@@ -58,7 +58,8 @@ declare module "@mui/material/Button" {
 
 /* Material UI theme settings */
 const { palette } = createTheme();
-const theme = createTheme({
+//light theme is default
+const lightTheme = createTheme({
   palette: {
     background: {
       default: "#EBEBEB",
@@ -83,6 +84,33 @@ const theme = createTheme({
   },
 });
 
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+    background: {
+      default: "#141414",
+    },
+    text: {
+      primary: "#EBEBEB",
+    },
+    primary: { main: "#A8D5E9" },
+    secondary: { main: "#ededed" },
+    error: { main: "#da0222" },
+    white: palette.augmentColor({
+      color: {
+        main: "#FFF",
+      },
+    }),
+  },
+  typography: {
+    button: {
+      textTransform: "none",
+    },
+    "fontFamily": "OpenSans",
+  },
+});
+
+
 function App(): JSX.Element {
   // user object obtained from backend or local
   const [user, setUser] = useState<UserType | null>(
@@ -101,12 +129,11 @@ function App(): JSX.Element {
   });
   const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
 
-
   useEffect(() => {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
-        if(navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
+        if (navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
           //do nothing here if on safari (or it creates a weird loop)
         } else {
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
@@ -124,6 +151,24 @@ function App(): JSX.Element {
               //NOTE: family_name optional (aka can be empty string)
               if (!res.data.name || !res.data.family_name || res.data.name === "") {
                 setShowUpdateUserInfoModal(true);
+              }
+
+              //handle themes by setting variables here
+              const root = document.documentElement;
+              if (res.data["custom:theme"] === "dark") {
+                root?.style.setProperty("--primary", "#A6E4FF");
+                root?.style.setProperty("--accent-1", "#47B9FF");
+                root?.style.setProperty("--accent-3", "#A8D5E9");
+                root?.style.setProperty("--background", "#141414");
+                root?.style.setProperty("--white", "#0A0A0A");
+                root?.style.setProperty("--black", "#EBEBEB");
+              } else {
+                root?.style.setProperty("--primary", "#0064a4");
+                root?.style.setProperty("--accent-1", "#6aa2b8");
+                root?.style.setProperty("--accent-3", "#1b3d6d");
+                root?.style.setProperty("--background", "#EBEBEB");
+                root?.style.setProperty("--white", "#fff");
+                root?.style.setProperty("--black", "#1a1a1a");
               }
             }
           } else {
@@ -155,7 +200,7 @@ function App(): JSX.Element {
         <UserContext.Provider value={value}>
           <AlertContext.Provider value={alertValue}>
             <Router>
-              <ThemeProvider theme={theme}>
+              <ThemeProvider theme={value.user?.["custom:theme"] === "light" ? lightTheme : darkTheme}>
                 <CssBaseline />
                 <Modal
                   isOpen={showUpdateUserInfoModal}

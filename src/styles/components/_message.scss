@@ -26,7 +26,7 @@
     text-align: left;
     border: 1px solid global.$gray-55;
     border-radius: global.$base * 2 global.$base * 2 global.$base * 2 0;
-    color: global.$white;
+    color: white;
   }
 
   &__right-message {
@@ -34,13 +34,13 @@
     margin-right: global.$base * 2;
     margin-bottom: global.$base * 2;
     padding: global.$base;
-    background-color: global.$accent-3;
+    background-color: var(--accent-3);
     max-width: 96%;
     align-self: flex-end;
     text-align: left;
     border: 1px solid global.$gray-55;
     border-radius: global.$base * 2 global.$base * 2 0 global.$base * 2;
-    color: global.$white;
+    color: var(--white); 
   }
 
   &__timestamp {
@@ -67,7 +67,7 @@
     border-radius: global.$border-radius;
 
     button {
-      color: global.$white;
+      color: var(--white);
       display: flex;
       align-items: center;
       justify-content: center;

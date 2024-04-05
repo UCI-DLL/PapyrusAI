@@ -278,7 +278,7 @@ export default function Prompts(): JSX.Element {
               <OutlinedInput
                 id="outlined-adornment-message"
                 placeholder="Search"
-                sx={{ width: "100%", color: "black" }}
+                sx={{ width: "100%" }}
                 value={filter.search}
                 onChange={handleSearchPromptList}
                 endAdornment={

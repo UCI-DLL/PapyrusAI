@@ -5,7 +5,7 @@ $checkbox_font-size: 1.2rem;
 $checkbox_font-size-lg: 1.4rem;
 $checkbox_font-family: global.$montserrat;
 $checkbox_font-weight: global.$default-font-weight;
-$checkbox_error-message-color: global.$error;
+$checkbox_error-message-color: var(--error);
 
 $checkbox_border-radius: global.$border-radius;
 
@@ -15,10 +15,10 @@ $checkbox_spacing-item: global.$base * 2;
 
 $checkbox_min_height: 35px;
 
-$checkbox-primary-color: global.$primary;
+$checkbox-primary-color: var(--primary);
 $checkbox-secondary-color: global.$secondary;
-$checkbox-black-color: global.$black;
-$checkbox-has-error-outline: solid 2px global.$error;
+$checkbox-black-color: var(--black);
+$checkbox-has-error-outline: solid 2px var(--error);
 $checkbox-disabled-fill: global.$gray-58;
 
 .c-checkbox {

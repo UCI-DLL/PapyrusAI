@@ -210,7 +210,6 @@ export default function Navigation(): JSX.Element {
         <Box sx={{
           width: '100%',
           maxWidth: 360,
-          bgcolor: 'background.paper',
           paddingTop: "3rem"
         }}>
           <nav aria-label="Main menu">

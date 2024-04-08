@@ -33,7 +33,7 @@
 
     &__logo-title {
       text-decoration: none;
-      color: global.$primary;
+      color: var(--primary);
       display: flex;
       align-items: center;
     }

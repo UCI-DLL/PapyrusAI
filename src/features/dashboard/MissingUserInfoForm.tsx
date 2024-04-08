@@ -101,7 +101,8 @@ export default function MissingUserInfoForm({
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     const root = document.documentElement;
     if (user) {
-      setUser({ ...user, "custom:theme": e.target.value })
+      setUser({ ...user, "custom:theme": e.target.value });
+      localStorage.setItem("papyrusai_user", JSON.stringify({ ...user, "custom:theme": e.target.value }));
     }
     if (e.target.value === "dark") {
       changeTheme(root, "dark");

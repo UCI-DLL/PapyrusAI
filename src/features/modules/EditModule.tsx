@@ -200,15 +200,15 @@ export default function EditModule(): JSX.Element {
     var limit = 20;
     Get(getPromptList(limit, startKey), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data) {
+        if (res.data && res.data.prompts && res.data.ScannedCount) {
           //Get the list of all prompts
-          setPromptList((prev) => [...prev, ...res.data.filter((prompt: PromptType) => prompt.isDeleted === false)]);
-          setFilteredPromptList((prev) => [...prev, ...res.data.filter((prompt: PromptType) => prompt.isDeleted === false)]);
+          setPromptList((prev) => [...prev, ...res.data.prompts]);
+          setFilteredPromptList((prev) => [...prev, ...res.data.prompts]);
 
           //Add creators to list
           var currentCreators = creatorList;
-          res.data.forEach((prompt: PromptType) => {
-            if (currentCreators.some(p => p.sub === prompt.creator.sub)) {
+          res.data.prompts.forEach((prompt: PromptType) => {
+            if(currentCreators.some(p => p.sub === prompt.creator.sub)) {
               //creator is already in the list so move on
             } else {
               currentCreators.push(prompt.creator);
@@ -218,8 +218,8 @@ export default function EditModule(): JSX.Element {
 
           //if the data is 20 prompts, then call for the next page
           //handle pages
-          if (res.data.length >= limit) {
-            getPrompts(res.data[res.data.length - 1].id, signal);
+          if (res.data.ScannedCount >= limit && res.data.LastEvaluatedKey) {
+            getPrompts(res.data.LastEvaluatedKey.id, signal);
           } else {
             setIsLoading(false);
           }

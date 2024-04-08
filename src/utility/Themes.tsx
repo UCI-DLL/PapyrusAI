@@ -27,7 +27,7 @@ export function changeTheme(root: HTMLElement, theme: string) {
     root?.style.setProperty("--error", "#B30505");
   } else if (theme === "colorful-dark") {
     root?.style.setProperty("--primary", "#7DAF9C");
-    root?.style.setProperty("--accent-1", "#47B9FF");
+    root?.style.setProperty("--accent-1", "#ededed");
     root?.style.setProperty("--accent-3", "#7DAF9C");
     root?.style.setProperty("--background", "#280119");
     root?.style.setProperty("--white", "#121212");

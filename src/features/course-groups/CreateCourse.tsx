@@ -224,7 +224,7 @@ export default function CreateCourse(): JSX.Element {
         onRequestClose={() => setOpenDiscardModal(false)}
         actions={
           <>
-            <Button variant="contained" color="primary" onClick={() => navigator("/")}>
+            <Button variant="contained" color="primary" onClick={() => navigator(-1)}>
               Discard
             </Button>
             <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>

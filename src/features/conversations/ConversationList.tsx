@@ -178,7 +178,6 @@ export default function ConversationList(): JSX.Element {
       ), { isDeleted: convoUpdateObject.isDeleted }).then(res => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
-            console.log("res.data", res.data)
             //update conversation list with new conversation list
             setConversationList(res.data);
           }

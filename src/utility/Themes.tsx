@@ -41,6 +41,7 @@ export function changeTheme(root: HTMLElement, theme: string) {
     root?.style.setProperty("--background", "#EBEBEB");
     root?.style.setProperty("--white", "#fff");
     root?.style.setProperty("--black", "#1a1a1a");
+    root?.style.setProperty("--error", "#E91B1B");
   }
 }
 

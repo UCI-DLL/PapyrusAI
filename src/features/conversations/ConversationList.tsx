@@ -1,8 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Button, ListItem, ListItemText, Divider, List, Typography, TextField } from "@mui/material";
+import { Button, ListItem, ListItemText, Divider, List, Typography, TextField, IconButton, Tooltip, Chip } from "@mui/material";
 import Get from "../../utility/Get";
 import LinearProgress from '@mui/material/LinearProgress';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { getConversationList, postCreateConversation, postUpdateConversation } from "../../utility/endpoints/ConversationEndpoints";
 import Post from "../../utility/Post";
 import { ConversationListType } from "../../utility/types/ConversationTypes";
@@ -34,19 +36,23 @@ export default function ConversationList(): JSX.Element {
   //This is for when instructors or admins are looking up a different student
   const [viewUser, setViewUser] = useState<UserType>();
   const { setAlert } = useContext(AlertContext);
-  const [openRenameModal, setOpenRenameModal] = useState<{
+  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
     open: boolean,
+    deleteOpen: boolean,
     courseId: string,
     moduleId: string,
     index: number,
     name: string,
+    isDeleted: boolean,
     error: string
   }>({
     open: false,
+    deleteOpen: false,
     courseId: "",
     moduleId: "",
     index: 0,
     name: "",
+    isDeleted: false,
     error: ""
   });
 
@@ -152,27 +158,24 @@ export default function ConversationList(): JSX.Element {
     }
   }
 
-  function handleConverstionNameUpdate(
-    renameObject: {
+  function handleConverstionNameDeleteUpdate(
+    convoUpdateObject: {
       open: boolean,
       courseId: string,
       moduleId: string,
       index: number,
       name: string,
+      isDeleted: boolean,
       error: string
     }
   ) {
-    if (renameObject.name.length > 260) {
-      setOpenRenameModal(prev => ({ ...prev, error: "Name is too long" }))
-    } else if (renameObject.name.length === 0) {
-      setOpenRenameModal(prev => ({ ...prev, error: "Name cannot be empty" }))
-    } else {
+    if (convoUpdateObject.isDeleted) {
       setIsLoading(true);
       Post(postUpdateConversation(
-        renameObject.courseId,
-        renameObject.moduleId,
-        renameObject.index.toString()
-      ), { name: renameObject.name }).then(res => {
+        convoUpdateObject.courseId,
+        convoUpdateObject.moduleId,
+        convoUpdateObject.index.toString()
+      ), { isDeleted: convoUpdateObject.isDeleted }).then(res => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //update conversation list with new conversation list
@@ -182,19 +185,58 @@ export default function ConversationList(): JSX.Element {
           navigator("/login");
         } else {
           // handle error
-          setAlert({ message: "Something went wrong. Try again later", type: "error" });
+          setAlert({ message: "Something went wrong. Try again later~~~", type: "error" });
         }
         //then close modal
-        setOpenRenameModal({
+        setOpenUpdateConvoModal({
           open: false,
+          deleteOpen: false,
           courseId: "",
           moduleId: "",
           index: 0,
           name: "",
+          isDeleted: false,
           error: ""
         });
         setIsLoading(false);
       });
+    } else {
+      if (convoUpdateObject.name.length > 260) {
+        setOpenUpdateConvoModal(prev => ({ ...prev, error: "Name is too long" }))
+      } else if (convoUpdateObject.name.length === 0) {
+        setOpenUpdateConvoModal(prev => ({ ...prev, error: "Name cannot be empty" }))
+      } else {
+        setIsLoading(true);
+        Post(postUpdateConversation(
+          convoUpdateObject.courseId,
+          convoUpdateObject.moduleId,
+          convoUpdateObject.index.toString()
+        ), { name: convoUpdateObject.name }).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //update conversation list with new conversation list
+              setConversationList(res.data);
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            // handle error
+            setAlert({ message: "Something went wrong. Try again later", type: "error" });
+          }
+          //then close modal
+          setOpenUpdateConvoModal({
+            open: false,
+            deleteOpen: false,
+            courseId: "",
+            moduleId: "",
+            index: 0,
+            name: "",
+            isDeleted: false,
+            error: ""
+          });
+          setIsLoading(false);
+        });
+      }
     }
   }
 
@@ -205,13 +247,53 @@ export default function ConversationList(): JSX.Element {
       ) : (
         <>
           <Modal
-            isOpen={openRenameModal.open}
-            onRequestClose={() => setOpenRenameModal({
+            isOpen={openUpdateConvoModal.deleteOpen}
+            title={"Delete Conversation?"}
+            onRequestClose={() => setOpenUpdateConvoModal({
               open: false,
+              deleteOpen: false,
               courseId: "",
               moduleId: "",
               index: 0,
               name: "",
+              isDeleted: false,
+              error: ""
+            })}
+            actions={
+              <>
+                <Button variant="contained" color="primary" onClick={(e) => handleConverstionNameDeleteUpdate({ ...openUpdateConvoModal, isDeleted: true })}>
+                  Submit
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => setOpenUpdateConvoModal({
+                    open: false,
+                    deleteOpen: false,
+                    courseId: "",
+                    moduleId: "",
+                    index: 0,
+                    name: "",
+                    isDeleted: false,
+                    error: ""
+                  })}>
+                  Cancel
+                </Button>
+              </>
+            }
+          >
+            <div>Are you sure you would like to permanently delete this conversation?</div>
+          </Modal>
+          <Modal
+            isOpen={openUpdateConvoModal.open}
+            onRequestClose={() => setOpenUpdateConvoModal({
+              open: false,
+              deleteOpen: false,
+              courseId: "",
+              moduleId: "",
+              index: 0,
+              name: "",
+              isDeleted: false,
               error: ""
             })}
             title="Rename Conversation"
@@ -219,7 +301,7 @@ export default function ConversationList(): JSX.Element {
               <Button
                 sx={{ width: "100%" }}
                 variant="contained"
-                onClick={() => handleConverstionNameUpdate(openRenameModal)}
+                onClick={() => handleConverstionNameDeleteUpdate(openUpdateConvoModal)}
               >
                 Submit
               </Button>
@@ -231,12 +313,12 @@ export default function ConversationList(): JSX.Element {
                 label="Conversation Name"
                 fullWidth
                 sx={{ margin: ".5rem 0" }}
-                value={openRenameModal.name}
+                value={openUpdateConvoModal.name}
                 onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-                  setOpenRenameModal(prev => ({ ...prev, name: e.target.value }))
+                  setOpenUpdateConvoModal(prev => ({ ...prev, name: e.target.value }))
                 }}
-                error={openRenameModal.error !== ""}
-                helperText={openRenameModal.error}
+                error={openUpdateConvoModal.error !== ""}
+                helperText={openUpdateConvoModal.error}
                 disabled={isLoading}
                 required
               />
@@ -285,7 +367,7 @@ export default function ConversationList(): JSX.Element {
                     const link = viewUser ?
                       `/chat/${viewUser.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}` :
                       `/chat/${user.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}`
-                    return (
+                    return (conversation.isDeleted && !viewUser) ? (<></>) : (
                       <div key={index}>
                         <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                           {/* redirect to chat with and pass params  */}
@@ -297,16 +379,59 @@ export default function ConversationList(): JSX.Element {
 
                           </Link>
                           {viewUser ? (
-                            <Button variant="contained" onClick={() => navigator(link)}>View</Button>
+                            <>
+                              {conversation.isDeleted && (
+                                <Chip label="This is a deleted conversation" color="error" icon={<DeleteForeverIcon/>}/>
+                              )}
+                              &nbsp;
+                              <Button variant="contained" onClick={() => navigator(link)}>View</Button>
+                            </>
+
                           ) : (
                             <>
+                              <Tooltip
+                                title={"Delete"}
+                                arrow
+                                componentsProps={{
+                                  tooltip: {
+                                    sx: {
+                                      bgcolor: '#da0222', //error color
+                                      '& .MuiTooltip-arrow': {
+                                        color: '#da0222',
+                                      },
+                                    },
+                                  },
+                                }}
+                                placement="left"
+                              >
+                                <IconButton
+                                  onClick={() => {
+                                    setOpenUpdateConvoModal({
+                                      open: false,
+                                      deleteOpen: true,
+                                      courseId: moduleIds.courseId,
+                                      moduleId: moduleIds.moduleId,
+                                      index: conversationList.conversations.length - index - 1,
+                                      name: conversation.name,
+                                      isDeleted: conversation.isDeleted,
+                                      error: ""
+                                    })
+                                  }}
+                                  aria-label="Delete Conversation"
+                                  className="courses__delete_background"
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Tooltip>
                               <Button onClick={() => {
-                                setOpenRenameModal({
+                                setOpenUpdateConvoModal({
                                   open: true,
+                                  deleteOpen: false,
                                   courseId: moduleIds.courseId,
                                   moduleId: moduleIds.moduleId,
                                   index: conversationList.conversations.length - index - 1,
                                   name: conversation.name,
+                                  isDeleted: conversation.isDeleted,
                                   error: ""
                                 })
                               }}

@@ -53,19 +53,23 @@ export default function Chat(): JSX.Element {
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
-  const [openRenameModal, setOpenRenameModal] = useState<{
+  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
     open: boolean,
+    deleteOpen: boolean,
     courseId: string,
     moduleId: string,
     index: string,
     name: string,
+    isDeleted: boolean,
     error: string
   }>({
     open: false,
+    deleteOpen: false,
     courseId: "",
     moduleId: "",
     index: "",
     name: "",
+    isDeleted: false,
     error: ""
   });
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
@@ -182,12 +186,14 @@ export default function Chat(): JSX.Element {
               setMessages(reverse.reverse());
             }
             if (res.data && res.data.name) {
-              setOpenRenameModal({
+              setOpenUpdateConvoModal({
                 open: false,
+                deleteOpen: false,
                 courseId: location.pathname.split("/")[3],
                 moduleId: location.pathname.split("/")[4],
                 index: location.pathname.split("/")[5],
                 name: res.data.name,
+                isDeleted: res.data.isDeleted,
                 error: ""
               })
             }
@@ -195,7 +201,8 @@ export default function Chat(): JSX.Element {
             navigator("/login");
           } else {
             // handle error
-            // setError("No Conversations Found");
+            //If convo doesn't exist, then return to convo list
+            navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
           }
           setIsLoading(false);
         });
@@ -461,38 +468,38 @@ export default function Chat(): JSX.Element {
     }
   }
 
-  function handleConverstionNameUpdate(
-    renameObject: {
+  function handleConverstionNameDeleteUpdate(
+    convoUpdateObject: {
       open: boolean,
       courseId: string,
       moduleId: string,
       index: string,
       name: string,
+      isDeleted: boolean,
       error: string
     }
   ) {
-    if (renameObject.name.length > 260) {
-      setOpenRenameModal(prev => ({ ...prev, error: "Name is too long" }))
-    } else if (renameObject.name.length === 0) {
-      setOpenRenameModal(prev => ({ ...prev, error: "Name cannot be empty" }))
-    } else {
+    if (convoUpdateObject.isDeleted) {
       setIsLoading(true);
       Post(postUpdateConversation(
-        renameObject.courseId,
-        renameObject.moduleId,
-        renameObject.index.toString()
-      ), { name: renameObject.name }).then(res => {
+        convoUpdateObject.courseId,
+        convoUpdateObject.moduleId,
+        convoUpdateObject.index.toString()
+      ), { isDeleted: convoUpdateObject.isDeleted }).then(res => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //update conversation list with new conversation list
-            setOpenRenameModal({
+            setOpenUpdateConvoModal({
               open: false,
+              deleteOpen: false,
               courseId: location.pathname.split("/")[3],
               moduleId: location.pathname.split("/")[4],
               index: location.pathname.split("/")[5],
               name: res.data.conversations[location.pathname.split("/")[5]].name,
+              isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
               error: ""
             });
+            navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`)
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -502,6 +509,41 @@ export default function Chat(): JSX.Element {
         }
         setIsLoading(false);
       });
+    } else {
+      if (convoUpdateObject.name.length > 260) {
+        setOpenUpdateConvoModal(prev => ({ ...prev, error: "Name is too long" }))
+      } else if (convoUpdateObject.name.length === 0) {
+        setOpenUpdateConvoModal(prev => ({ ...prev, error: "Name cannot be empty" }))
+      } else {
+        setIsLoading(true);
+        Post(postUpdateConversation(
+          convoUpdateObject.courseId,
+          convoUpdateObject.moduleId,
+          convoUpdateObject.index.toString()
+        ), { name: convoUpdateObject.name }).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //update conversation list with new conversation list
+              setOpenUpdateConvoModal({
+                open: false,
+                deleteOpen: false,
+                courseId: location.pathname.split("/")[3],
+                moduleId: location.pathname.split("/")[4],
+                index: location.pathname.split("/")[5],
+                name: res.data.conversations[location.pathname.split("/")[5]].name,
+                isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
+                error: ""
+              });
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            // handle error
+            setAlert({ message: "Something went wrong. Try again later", type: "error" });
+          }
+          setIsLoading(false);
+        });
+      }
     }
   }
 
@@ -520,14 +562,34 @@ export default function Chat(): JSX.Element {
         <DocumentModal returnDocText={returnDocText} />
       </Modal>
       <Modal
-        isOpen={openRenameModal.open}
-        onRequestClose={() => setOpenRenameModal(prev => ({ ...prev, open: false }))}
+        isOpen={openUpdateConvoModal.deleteOpen}
+        title={"Delete Conversation?"}
+        onRequestClose={() => setOpenUpdateConvoModal(prev => ({ ...prev, deleteOpen: false }))}
+        actions={
+          <>
+            <Button variant="contained" color="primary" onClick={(e) => handleConverstionNameDeleteUpdate({ ...openUpdateConvoModal, isDeleted: true })}>
+              Submit
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => setOpenUpdateConvoModal(prev => ({ ...prev, deleteOpen: false }))}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <div>Are you sure you would like to permanently delete this conversation?</div>
+      </Modal>
+      <Modal
+        isOpen={openUpdateConvoModal.open}
+        onRequestClose={() => setOpenUpdateConvoModal(prev => ({ ...prev, open: false }))}
         title="Rename Conversation"
         actions={
           <Button
             sx={{ width: "100%" }}
             variant="contained"
-            onClick={() => handleConverstionNameUpdate(openRenameModal)}
+            onClick={() => handleConverstionNameDeleteUpdate(openUpdateConvoModal)}
           >
             Submit
           </Button>
@@ -540,12 +602,12 @@ export default function Chat(): JSX.Element {
             autoFocus
             fullWidth
             sx={{ margin: ".5rem 0" }}
-            value={openRenameModal.name}
+            value={openUpdateConvoModal.name}
             onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-              setOpenRenameModal(prev => ({ ...prev, name: e.target.value }))
+              setOpenUpdateConvoModal(prev => ({ ...prev, name: e.target.value }))
             }}
-            error={openRenameModal.error !== ""}
-            helperText={openRenameModal.error}
+            error={openUpdateConvoModal.error !== ""}
+            helperText={openUpdateConvoModal.error}
             disabled={isLoading}
           />
         </div>
@@ -553,20 +615,19 @@ export default function Chat(): JSX.Element {
       <div className="chat__fixed-top">
         <div className="chat__section-header">
           <div className="chat__section-header__title">
-          <Tooltip title={"Back to Conversations"}>
-            <IconButton
-              onClick={() => navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)}
-              aria-label="Back to conversations"
-            >
-              <ArrowBackIosIcon />
-            </IconButton>
+            <Tooltip title={"Back to Conversations"}>
+              <IconButton
+                onClick={() => viewUser ? navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}/username/${viewUser.sub}`) : navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)}
+                aria-label="Back to conversations"
+              >
+                <ArrowBackIosIcon />
+              </IconButton>
             </Tooltip>
             <div>
-              <h5>{openRenameModal.name}</h5>
+              <h5>{openUpdateConvoModal.name}</h5>
               <div>{viewUser ? viewUser.name + " " + viewUser.family_name : ""}</div>
             </div>
           </div>
-
           <div style={{ display: "flex", flexDirection: "row" }}>
             <div>
               <div>{courseInfo.name} &nbsp; {moduleInfo.name}</div>
@@ -594,16 +655,25 @@ export default function Chat(): JSX.Element {
               >
                 <MenuItem onClick={() => {
                   handleClose()
-                  setOpenRenameModal(prev => ({ ...prev, open: true }))
+                  setOpenUpdateConvoModal(prev => ({ ...prev, open: true }))
                 }}>
                   Rename
                 </MenuItem>
                 <MenuItem onClick={downloadChat}>Download</MenuItem>
+                {user &&
+                  viewUser &&
+                  user.sub === viewUser.sub && (
+                    <MenuItem onClick={() => {
+                      handleClose()
+                      setOpenUpdateConvoModal(prev => ({ ...prev, deleteOpen: true }))
+                    }}>
+                      Delete Conversation
+                    </MenuItem>
+                  )}
               </Menu>
             </div>
           </div>
         </div>
-
         <div style={{ padding: "0.4rem", paddingTop: "1.8rem" }}>{moduleInfo.moduleDescription}</div>
         {/* Only show the chat wizard if we don't have selected prompt and if there are no previous messages  */}
         {user &&
@@ -665,7 +735,6 @@ export default function Chat(): JSX.Element {
                     />
                   </div>
                 )}
-
               </div>
             )
           }
@@ -692,12 +761,12 @@ export default function Chat(): JSX.Element {
           (
             <div className="chat__input-form">
               <form onSubmit={handleSubmit}>
-                <FormControl sx={{ m: 1, width: '100%', margin: "0", backgroundColor: "#FFF" }} variant="outlined">
+                <FormControl sx={{ m: 1, width: '100%', margin: "0" }} variant="outlined">
                   <InputLabel htmlFor="outlined-adornment-message">Send a message</InputLabel>
                   <OutlinedInput
                     id="outlined-adornment-message"
                     label="Send a message"
-                    sx={{ width: "100%", color: "black" }}
+                    sx={{ width: "100%" }}
                     value={newMessage}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       //check that message length is less that 50000

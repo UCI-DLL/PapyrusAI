@@ -30,16 +30,31 @@
 
     div {
       display: flex;
-      align-items: center;
+      flex-direction: row;
+      justify-content: center;
     }
   }
 
   &__add {
     width: 100%;
-    background-color: global.$white;
+    background-color: var(--white);
     padding: 1rem;
     border-radius: 0.5rem;
 
+  }
+
+  &__discard_background {
+    &:hover {
+      color: var(--white) !important;
+      background-color: var(--error) !important;
+    }
+    color: var(--error) !important;
+  }
+
+  &__delete_background {
+    &:hover {
+      color: var(--error) !important;
+    }
   }
 
 }

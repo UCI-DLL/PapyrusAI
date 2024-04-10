@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./styles/index.scss";
 import {
   AlertColor,
-  createTheme,
   CssBaseline,
   PaletteColor,
   ThemeProvider,
@@ -40,6 +39,13 @@ import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
+import {
+  changeTheme,
+  getColorfulDarkTheme,
+  getColorfulLightTheme,
+  getDarkTheme,
+  getLightTheme
+} from "./utility/Themes";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -55,33 +61,6 @@ declare module "@mui/material/Button" {
     white: true;
   }
 }
-
-/* Material UI theme settings */
-const { palette } = createTheme();
-const theme = createTheme({
-  palette: {
-    background: {
-      default: "#EBEBEB",
-    },
-    text: {
-      primary: "#1a1a1a",
-    },
-    primary: { main: "#1b3d6d" },
-    secondary: { main: "#6aa2b8" },
-    error: { main: "#da0222" },
-    white: palette.augmentColor({
-      color: {
-        main: "#fff",
-      },
-    }),
-  },
-  typography: {
-    button: {
-      textTransform: "none",
-    },
-    "fontFamily": "OpenSans",
-  },
-});
 
 function App(): JSX.Element {
   // user object obtained from backend or local
@@ -101,12 +80,18 @@ function App(): JSX.Element {
   });
   const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (user) {
+      changeTheme(root, user["custom:theme"]);
+    }
+  }, [user])
 
   useEffect(() => {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token")) {
-        if(navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
+        if (navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
           //do nothing here if on safari (or it creates a weird loop)
         } else {
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
@@ -155,7 +140,18 @@ function App(): JSX.Element {
         <UserContext.Provider value={value}>
           <AlertContext.Provider value={alertValue}>
             <Router>
-              <ThemeProvider theme={theme}>
+              <ThemeProvider
+                theme={
+                  (user &&
+                    user["custom:theme"] === "light") ?
+                    getLightTheme() :
+                    (user && user["custom:theme"] === "dark") ?
+                      getDarkTheme() :
+                      (user && user["custom:theme"] === "colorful-light") ?
+                        getColorfulLightTheme() :
+                        getColorfulDarkTheme()
+                }
+              >
                 <CssBaseline />
                 <Modal
                   isOpen={showUpdateUserInfoModal}

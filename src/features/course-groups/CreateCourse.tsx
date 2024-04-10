@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Button,
@@ -11,17 +11,24 @@ import {
   SelectChangeEvent,
   FormControl,
   Autocomplete,
-  Chip
+  Chip,
+  ButtonGroup,
+  Popper,
+  Grow,
+  Paper,
+  ClickAwayListener,
+  MenuList
 } from "@mui/material";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { postCreateCourse } from "../../utility/endpoints/CourseEndpoints";
 import Post from "../../utility/Post";
-import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
 import LinearProgress from '@mui/material/LinearProgress';
 import Get from "../../utility/Get";
 import { getUserList } from "../../utility/endpoints/UserEndpoints";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { UserContext } from "../../utility/context/UserContext";
+import { Modal } from "../../components/Modal";
 
 type AddCourseType = {
   name: string,
@@ -32,6 +39,8 @@ type AddCourseType = {
   term: string,
   taList: any,
 }
+
+const options = ['Save & Publish', 'Save without Publishing', 'Discard Changes'];
 
 export default function CreateCourse(): JSX.Element {
   let navigator = useNavigate();
@@ -57,6 +66,10 @@ export default function CreateCourse(): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<CustomUserType>>([]);
   const { user } = useContext(UserContext);
+  const [openSave, setOpenSave] = useState(false);
+  const anchorRefSave = useRef<HTMLDivElement>(null);
+  const [selectedIndexSave, setSelectedIndexSave] = useState(0);
+  const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -74,12 +87,52 @@ export default function CreateCourse(): JSX.Element {
     // eslint-disable-next-line
   }, []);
 
+  function handleClick(e: any) {
+    if (selectedIndexSave === 0) { //Save and activate
+      handleSubmit(e, true);
+    } else if (selectedIndexSave === 1) { //save and not activate
+      handleSubmit(e, false);
+    } else if (selectedIndexSave === 2) { //discard changes
+      setOpenDiscardModal(true);
+    }
+  };
+
+  const handleMenuItemClick = (
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
+    index: number,
+  ) => {
+    if (index === 0) { //Save and activate
+      handleSubmit(e, true);
+    } else if (index === 1) { //save and not activate
+      handleSubmit(e, false);
+    } else if (index === 2) { //discard changes
+      setOpenDiscardModal(true);
+    }
+    setSelectedIndexSave(index);
+    setOpenSave(false);
+  };
+
+  const handleToggle = () => {
+    setOpenSave((prevOpen) => !prevOpen);
+  };
+
+  const handleClose = (event: Event) => {
+    if (
+      anchorRefSave.current &&
+      anchorRefSave.current.contains(event.target as HTMLElement)
+    ) {
+      return;
+    }
+
+    setOpenSave(false);
+  };
+
   function getUsers(PaginationToken: string, signal: AbortSignal) {
     var limit = 50;
 
     Get(getUserList(limit, PaginationToken), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data["Users"] ) {
+        if (res.data && res.data["Users"]) {
           //filter out current user and email_verified 
           var tempUserList = res.data["Users"].map((u: CustomUserType) => {
             return {
@@ -115,7 +168,7 @@ export default function CreateCourse(): JSX.Element {
   }
 
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: any, isActive = false) {
     e.preventDefault();
     if (session.name === "") {
       setErrors((prev) => ({ ...prev, name: "Name missing" }))
@@ -126,8 +179,17 @@ export default function CreateCourse(): JSX.Element {
       //create course
       // set is loading
       setIsLoading(true);
+      const dataToSend = {
+        name: session.name,
+        signUpCode: session.signUpCode,
+        isActive: isActive,
+        year: session.year,
+        section: session.section,
+        term: session.term,
+        taList: session.taList,
+      }
       // post data back
-      Post(postCreateCourse(), session).then((res) => {
+      Post(postCreateCourse(), dataToSend).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data && res.data) {
             //redirect to course list
@@ -156,19 +218,86 @@ export default function CreateCourse(): JSX.Element {
 
   return !isLoading ? (
     <div className="courses">
+      <Modal
+        isOpen={openDiscardModal}
+        title={"Discard Changes?"}
+        onRequestClose={() => setOpenDiscardModal(false)}
+        actions={
+          <>
+            <Button variant="contained" color="primary" onClick={() => navigator("/")}>
+              Discard
+            </Button>
+            <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <div>Are you sure you would like to discard the changes to this course?</div>
+      </Modal>
       <div className="courses__section-header">
         <h3>Create Course</h3>
-
         <div>
-          <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
-          &nbsp;&nbsp;&nbsp;
-          <Button variant="contained" onClick={() => navigator("/")} color="secondary">Cancel</Button>
+          <ButtonGroup
+            variant="contained"
+            ref={anchorRefSave}
+            aria-label="Button group with a nested menu"
+          >
+            <Button onClick={handleClick}>{options[selectedIndexSave]}</Button>
+            <Button
+              size="small"
+              aria-controls={openSave ? 'split-button-menu' : undefined}
+              aria-expanded={openSave ? 'true' : undefined}
+              aria-label="select save and ativation strategy"
+              aria-haspopup="menu"
+              onClick={handleToggle}
+            >
+              <ArrowDropDownIcon />
+            </Button>
+          </ButtonGroup>
+          <Popper
+            sx={{
+              zIndex: 1,
+            }}
+            open={openSave}
+            anchorEl={anchorRefSave.current}
+            role={undefined}
+            transition
+            disablePortal
+          >
+            {({ TransitionProps, placement }) => (
+              <Grow
+                {...TransitionProps}
+                style={{
+                  transformOrigin:
+                    placement === 'bottom' ? 'center top' : 'center bottom',
+                }}
+              >
+                <Paper>
+                  <ClickAwayListener onClickAway={handleClose}>
+                    <MenuList id="split-button-menu" autoFocusItem>
+                      {options.map((option, index) => (
+                        <MenuItem
+                          key={option}
+                          selected={index === selectedIndexSave}
+                          onClick={(event) => handleMenuItemClick(event, index)}
+                          className={index === 2 ? "courses__discard_background" : ""}
+                        >
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </MenuList>
+                  </ClickAwayListener>
+                </Paper>
+              </Grow>
+            )}
+          </Popper>
         </div>
       </div>
       <hr />
       <span>* indicates a required field</span>
       <Box className="courses__add">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => handleSubmit(e, true)}>
           <FormLabel>Enter Course Information</FormLabel>
           <TextField
             name="name"
@@ -282,22 +411,6 @@ export default function CreateCourse(): JSX.Element {
           {errors.taList !== "" && (
             <span className="error">{errors.taList}</span>
           )}
-
-          <Checkbox
-            onClick={() => {
-              setSession((prev) => ({
-                ...prev,
-                isActive: !session.isActive
-              }))
-            }}
-            checked={session.isActive}
-            isDisabled={isLoading}
-          >
-            <span>
-              Active
-            </span>
-          </Checkbox>
-          <p>Setting course as active will allow other users to be able to access this course.</p>
         </form>
       </Box>
     </div>

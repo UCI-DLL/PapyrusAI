@@ -1,6 +1,6 @@
 
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
   Button,
@@ -18,8 +18,18 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
-  Menu
+  Menu,
+  ButtonGroup,
+  Popper,
+  Grow,
+  Paper,
+  ClickAwayListener,
+  MenuList
 } from "@mui/material";
+import DeleteIcon from '@mui/icons-material/Delete';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import Get from "../../utility/Get";
 import { getModule, putUpdateModule } from "../../utility/endpoints/CourseEndpoints";
 import Put from "../../utility/Put";
@@ -67,6 +77,8 @@ export enum SortOptions {
   Oldest = "Oldest",
 }
 
+const options = ['Save & Publish', 'Save without Publishing', 'Discard Changes'];
+
 export default function EditModule(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
@@ -79,7 +91,7 @@ export default function EditModule(): JSX.Element {
     showInitialPrompt: true,
     prompts: [],
     showWizard: true,
-    isDeleted: false,
+    isDeleted: false, //prev
     isTemplate: false,
     id: ""
   });
@@ -111,7 +123,13 @@ export default function EditModule(): JSX.Element {
     endDate: null
   });
   const [filteredPromptList, setFilteredPromptList] = useState<Array<PromptType>>([]);
-  const [creatorList, setCreatorList] = useState<Array<CustomUserType>>([])
+  const [creatorList, setCreatorList] = useState<Array<CustomUserType>>([]);
+  const [openSave, setOpenSave] = useState(false);
+  const anchorRefSave = useRef<HTMLDivElement>(null);
+  const [selectedIndexSave, setSelectedIndexSave] = useState(0);
+  const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
+  const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
+  const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -134,8 +152,6 @@ export default function EditModule(): JSX.Element {
     };
     // eslint-disable-next-line
   }, []);
-
-
 
   useEffect(() => {
     const controller = new AbortController();
@@ -184,15 +200,15 @@ export default function EditModule(): JSX.Element {
     var limit = 20;
     Get(getPromptList(limit, startKey), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data) {
+        if (res.data && res.data.prompts && res.data.ScannedCount) {
           //Get the list of all prompts
-          setPromptList((prev) => [...prev, ...res.data.filter((prompt: PromptType) => prompt.isDeleted === false)]);
-          setFilteredPromptList((prev) => [...prev, ...res.data.filter((prompt: PromptType) => prompt.isDeleted === false)]);
+          setPromptList((prev) => [...prev, ...res.data.prompts]);
+          setFilteredPromptList((prev) => [...prev, ...res.data.prompts]);
 
           //Add creators to list
           var currentCreators = creatorList;
-          res.data.forEach((prompt: PromptType) => {
-            if (currentCreators.some(p => p.sub === prompt.creator.sub)) {
+          res.data.prompts.forEach((prompt: PromptType) => {
+            if(currentCreators.some(p => p.sub === prompt.creator.sub)) {
               //creator is already in the list so move on
             } else {
               currentCreators.push(prompt.creator);
@@ -202,8 +218,8 @@ export default function EditModule(): JSX.Element {
 
           //if the data is 20 prompts, then call for the next page
           //handle pages
-          if (res.data.length >= limit) {
-            getPrompts(res.data[res.data.length - 1].id, signal);
+          if (res.data.ScannedCount >= limit && res.data.LastEvaluatedKey) {
+            getPrompts(res.data.LastEvaluatedKey.id, signal);
           } else {
             setIsLoading(false);
           }
@@ -285,6 +301,54 @@ export default function EditModule(): JSX.Element {
 
   }, [filter, promptList])
 
+  function handleSaveClick(e: any) {
+    if (selectedIndexSave === 0) { //Save and activate
+      handleSubmit(e, true, false);
+    } else if (selectedIndexSave === 1) { //save and not activate
+      if (session.isPublished) { //handle case that module is already active and they are switching it
+        setOpenActiveModal(true);
+      } else {
+        handleSubmit(e, false, false);
+      }
+    } else if (selectedIndexSave === 2) { //discard changes
+      setOpenDiscardModal(true);
+    }
+  };
+
+  const handleMenuItemClick = (
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
+    index: number,
+  ) => {
+    if (index === 0) { //Save and activate
+      handleSubmit(e, true, false);
+    } else if (index === 1) { //save and not activate
+      if (session.isPublished) { //handle case that module is already active and they are switching it
+        setOpenActiveModal(true);
+      } else {
+        handleSubmit(e, false, false);
+      }
+    } else if (index === 2) { //discard changes
+      setOpenDiscardModal(true);
+    }
+    setSelectedIndexSave(index);
+    setOpenSave(false);
+  };
+
+  const handleToggle = () => {
+    setOpenSave((prevOpen) => !prevOpen);
+  };
+
+  const handleSaveClose = (event: Event) => {
+    if (
+      anchorRefSave.current &&
+      anchorRefSave.current.contains(event.target as HTMLElement)
+    ) {
+      return;
+    }
+
+    setOpenSave(false);
+  };
+
   function handleSortPromptList(e: SelectChangeEvent) {
     if (e.target.value as string === SortOptions.Ascending) {
       setFilter((prev) => ({ ...prev, sort: SortOptions.Ascending }));
@@ -319,7 +383,7 @@ export default function EditModule(): JSX.Element {
     setFilteredPromptList(promptList);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: any, isPublished = false, isDeleted = false) {
     e.preventDefault();
     if (session.name === "") {
       setErrors((prev: any) => ({ ...prev, name: "Name missing" }))
@@ -331,9 +395,21 @@ export default function EditModule(): JSX.Element {
       if (moduleIds) {
         // set is loading
         setIsLoading(true);
-        //dont send signupcode if it didnt change
+        const dataToSend = {
+          name: session.name,
+          moduleDescription: session.moduleDescription,
+          isRepeating: session.isRepeating,
+          continuedInteraction: session.continuedInteraction,
+          isPublished: isPublished,
+          showInitialPrompt: session.showInitialPrompt,
+          prompts: session.prompts,
+          showWizard: session.showWizard,
+          isDeleted: isDeleted, 
+          isTemplate: session.isTemplate,
+          id: session.id
+        }
         // post data back
-        Put(putUpdateModule(moduleIds.courseId, moduleIds.moduleId), session).then((res) => {
+        Put(putUpdateModule(moduleIds.courseId, moduleIds.moduleId), dataToSend).then((res) => {
           if (res.status && res.status < 300) {
             if (res.data && res.data) {
               //redirect to course list
@@ -347,7 +423,7 @@ export default function EditModule(): JSX.Element {
               name: res.data,
               signUpCode: res.data,
               isDeleted: res.data,
-              isActive: res.data
+              isPublished: res.data
             })
           }
           // set is loading back 
@@ -393,7 +469,57 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
  Select **Publish** when you are ready for users to have access to your module and interact with the AI as permitted by your selections here. Until you select “Publish,” only you see the module. `}
           </Markdown>
         </div>
-
+      </Modal>
+      <Modal
+        isOpen={openDeleteModal}
+        title={"Delete Module?"}
+        onRequestClose={() => setOpenDeleteModal(false)}
+        actions={
+          <>
+            <Button variant="contained" color="primary" onClick={(e) => handleSubmit(e, false, true)}>
+              Submit
+            </Button>
+            <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(false)}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <div>Are you sure you would like to permanently delete this module?</div>
+      </Modal>
+      <Modal
+        isOpen={openDiscardModal}
+        title={"Discard Changes?"}
+        onRequestClose={() => setOpenDiscardModal(false)}
+        actions={
+          <>
+            <Button variant="contained" color="primary" onClick={() => navigator("/")}>
+              Discard
+            </Button>
+            <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <div>Are you sure you would like to discard the changes to this module?</div>
+      </Modal>
+      <Modal
+        isOpen={openActiveModal}
+        title={"Unpublish Module?"}
+        onRequestClose={() => setOpenActiveModal(false)}
+        actions={
+          <>
+            <Button variant="contained" color="primary" onClick={(e) => handleSubmit(e, false, false)}>
+              Continue
+            </Button>
+            <Button variant="contained" color="secondary" onClick={() => setOpenActiveModal(false)}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <div>This modukle is current published and available to the public. Continuing will make the module unavailable to students.</div>
       </Modal>
       <div className="modules__section-header">
         <div>
@@ -405,15 +531,105 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           </Tooltip>
         </div>
         <div>
-          <Button variant="contained" onClick={handleSubmit} type="submit">Save</Button>
+          <Tooltip
+            title={"Delete"}
+            arrow
+            componentsProps={{
+              tooltip: {
+                sx: {
+                  bgcolor: '#da0222', //error color
+                  '& .MuiTooltip-arrow': {
+                    color: '#da0222',
+                  },
+                },
+              },
+            }}
+          >
+            <IconButton
+              onClick={() => setOpenDeleteModal(true)}
+              aria-label="Delete Module"
+              className="modules__delete_background"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
           &nbsp;&nbsp;&nbsp;
-          <Button variant="contained" onClick={() => navigator("/")} color="secondary">Cancel</Button>
+          <ButtonGroup
+            variant="contained"
+            ref={anchorRefSave}
+            aria-label="Button group with a nested menu"
+          >
+            <Button onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
+            <Button
+              size="small"
+              aria-controls={openSave ? 'split-button-menu' : undefined}
+              aria-expanded={openSave ? 'true' : undefined}
+              aria-label="select save and ativation strategy"
+              aria-haspopup="menu"
+              onClick={handleToggle}
+            >
+              <ArrowDropDownIcon />
+            </Button>
+          </ButtonGroup>
+          <Popper
+            sx={{
+              zIndex: 1,
+            }}
+            open={openSave}
+            anchorEl={anchorRefSave.current}
+            role={undefined}
+            transition
+            disablePortal
+          >
+            {({ TransitionProps, placement }) => (
+              <Grow
+                {...TransitionProps}
+                style={{
+                  transformOrigin:
+                    placement === 'bottom' ? 'center top' : 'center bottom',
+                }}
+              >
+                <Paper>
+                  <ClickAwayListener onClickAway={handleSaveClose}>
+                    <MenuList id="split-button-menu" autoFocusItem>
+                      {options.map((option, index) => (
+                        <MenuItem
+                          key={option}
+                          selected={index === selectedIndexSave}
+                          onClick={(event) => handleMenuItemClick(event, index)}
+                          className={index === 2 ? "modules__discard_background" : ""}
+                        >
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </MenuList>
+                  </ClickAwayListener>
+                </Paper>
+              </Grow>
+            )}
+          </Popper>
         </div>
       </div>
       <hr />
-      <span>* indicates a required field</span>
+      <div className="modules__section-header">
+        <span>* indicates a required field</span>
+        <div>
+          {session.isPublished ? (
+            <>
+              <TaskAltIcon color="success" />
+              &nbsp;Published
+            </>
+          ) : (
+            <>
+              <DoNotDisturbIcon />
+              &nbsp;Unpublished
+            </>
+          )}
+
+        </div>
+      </div>
       <Box className="modules__add">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => handleSubmit(e, true, false)}>
           <FormLabel>Enter Module Information</FormLabel>
           <TextField
             name="name"
@@ -467,7 +683,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
               <OutlinedInput
                 id="outlined-adornment-message"
                 placeholder="Search"
-                sx={{ width: "100%", color: "black" }}
+                sx={{ width: "100%" }}
                 value={filter.search}
                 onChange={handleSearchPromptList}
                 endAdornment={
@@ -642,21 +858,6 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           >
             <span>
               Show Embedded Prompt
-            </span>
-          </Checkbox>
-
-          <Checkbox
-            onClick={() => {
-              setSession((prev) => ({
-                ...prev,
-                isPublished: !session.isPublished
-              }))
-            }}
-            checked={session.isPublished}
-            isDisabled={isLoading}
-          >
-            <span>
-              Publish
             </span>
           </Checkbox>
         </form>

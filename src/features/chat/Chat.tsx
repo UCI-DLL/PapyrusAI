@@ -201,7 +201,8 @@ export default function Chat(): JSX.Element {
             navigator("/login");
           } else {
             // handle error
-            // setError("No Conversations Found");
+            //If convo doesn't exist, then return to convo list
+            navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
           }
           setIsLoading(false);
         });
@@ -504,7 +505,7 @@ export default function Chat(): JSX.Element {
           navigator("/login");
         } else {
           // handle error
-          setAlert({ message: "Something went wrong. Try again later~~~", type: "error" });
+          setAlert({ message: "Something went wrong. Try again later", type: "error" });
         }
         setIsLoading(false);
       });
@@ -627,7 +628,6 @@ export default function Chat(): JSX.Element {
               <div>{viewUser ? viewUser.name + " " + viewUser.family_name : ""}</div>
             </div>
           </div>
-
           <div style={{ display: "flex", flexDirection: "row" }}>
             <div>
               <div>{courseInfo.name} &nbsp; {moduleInfo.name}</div>
@@ -674,7 +674,6 @@ export default function Chat(): JSX.Element {
             </div>
           </div>
         </div>
-
         <div style={{ padding: "0.4rem", paddingTop: "1.8rem" }}>{moduleInfo.moduleDescription}</div>
         {/* Only show the chat wizard if we don't have selected prompt and if there are no previous messages  */}
         {user &&
@@ -736,7 +735,6 @@ export default function Chat(): JSX.Element {
                     />
                   </div>
                 )}
-
               </div>
             )
           }

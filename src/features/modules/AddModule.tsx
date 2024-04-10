@@ -403,7 +403,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
         onRequestClose={() => setOpenDiscardModal(false)}
         actions={
           <>
-            <Button variant="contained" color="primary" onClick={() => navigator("/")}>
+            <Button variant="contained" color="primary" onClick={() => navigator(-1)}>
               Discard
             </Button>
             <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>

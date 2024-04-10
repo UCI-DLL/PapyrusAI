@@ -115,7 +115,7 @@ export default function Reports(): JSX.Element {
                 </ListItem>
                 <hr />
                 {x.users.map((row, i) => (
-                  <div>
+                  <div key={i}>
                     <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                       {/* redirect to chat with and pass params  */}
                       <Link

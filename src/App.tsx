@@ -83,7 +83,7 @@ function App(): JSX.Element {
   useEffect(() => {
     const root = document.documentElement;
     if (user) {
-      changeTheme(root, user["custom:theme"]);
+      changeTheme(root, user["custom:theme"] ? user["custom:theme"] : "light");
     }
   }, [user])
 
@@ -143,13 +143,13 @@ function App(): JSX.Element {
               <ThemeProvider
                 theme={
                   (user &&
-                    user["custom:theme"] === "light") ?
-                    getLightTheme() :
+                    user["custom:theme"] === "colorful-dark") ?
+                    getColorfulDarkTheme() :
                     (user && user["custom:theme"] === "dark") ?
                       getDarkTheme() :
                       (user && user["custom:theme"] === "colorful-light") ?
                         getColorfulLightTheme() :
-                        getColorfulDarkTheme()
+                        getLightTheme()
                 }
               >
                 <CssBaseline />

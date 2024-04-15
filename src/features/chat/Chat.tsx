@@ -201,8 +201,10 @@ export default function Chat(): JSX.Element {
             navigator("/login");
           } else {
             // handle error
-            //If convo doesn't exist, then return to convo list
-            navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
+            if(res && res.status === 400) {
+              //If convo doesn't exist, then return to convo list
+              navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
+            }
           }
           setIsLoading(false);
         });
@@ -617,7 +619,10 @@ export default function Chat(): JSX.Element {
           <div className="chat__section-header__title">
             <Tooltip title={"Back to Conversations"}>
               <IconButton
-                onClick={() => viewUser ? navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}/username/${viewUser.sub}`) : navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)}
+                onClick={() => (user && viewUser && user.sub !== viewUser.sub) ?
+                  navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}/username/${viewUser.sub}`) :
+                  navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)
+                }
                 aria-label="Back to conversations"
               >
                 <ArrowBackIosIcon />

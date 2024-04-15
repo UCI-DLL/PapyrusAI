@@ -367,7 +367,7 @@ export default function ConversationList(): JSX.Element {
                     const link = viewUser ?
                       `/chat/${viewUser.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}` :
                       `/chat/${user.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}`
-                    return (conversation.isDeleted && !viewUser) ? (<></>) : (
+                    return (conversation.isDeleted && !viewUser) ? (<div key={index}></div>) : (
                       <div key={index}>
                         <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                           {/* redirect to chat with and pass params  */}

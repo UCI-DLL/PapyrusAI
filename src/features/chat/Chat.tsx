@@ -634,7 +634,7 @@ export default function Chat(): JSX.Element {
           </>
         }
       >
-        <div>Are you sure you would like to permanently delete this conversation?</div>
+        <div>Are you sure you would like to delete this conversation? Instructors can still view deleted conversations.</div>
       </Modal>
       <Modal
         isOpen={openUpdateConvoModal.open}

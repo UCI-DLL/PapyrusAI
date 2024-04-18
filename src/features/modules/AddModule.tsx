@@ -678,7 +678,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             isDisabled={isLoading}
           >
             <span>
-              Repeating Prompts
+              Allow starter prompts to be re-selected during the conversation
             </span>
           </Checkbox>
 

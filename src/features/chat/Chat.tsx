@@ -48,8 +48,8 @@ export default function Chat(): JSX.Element {
   //After a prompt has been selected, then add it to this list
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const { setAlert } = useContext(AlertContext);
-  const { user } = useContext(UserContext);
-  const [viewUser, setViewUser] = useState<UserType>();
+  const { user } = useContext(UserContext); //current user signed in
+  const [viewUser, setViewUser] = useState<UserType>(); //The user viewing the conversation
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
@@ -61,6 +61,7 @@ export default function Chat(): JSX.Element {
     index: string,
     name: string,
     isDeleted: boolean,
+    completed: boolean,
     error: string
   }>({
     open: false,
@@ -70,9 +71,18 @@ export default function Chat(): JSX.Element {
     index: "",
     name: "",
     isDeleted: false,
+    completed: false,
     error: ""
   });
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
+  //Error modal
+  const [openErrorModal, setOpenErrorModal] = useState<{
+    open: boolean,
+    message: string
+  }>({
+    open: false,
+    message: ""
+  });
   //download menu in chat
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   //add file menu
@@ -151,7 +161,10 @@ export default function Chat(): JSX.Element {
           navigator("/login");
         } else {
           // handle error
-          // setError("No Conversations Found");
+          if (res) {
+            setAlert({ message: "Course not found", type: "error" });
+            navigator("/");
+          }
         }
       });
       Get(
@@ -194,6 +207,7 @@ export default function Chat(): JSX.Element {
                 index: location.pathname.split("/")[5],
                 name: res.data.name,
                 isDeleted: res.data.isDeleted,
+                completed: res.data.completed ? res.data.completed : false,
                 error: ""
               })
             }
@@ -201,8 +215,9 @@ export default function Chat(): JSX.Element {
             navigator("/login");
           } else {
             // handle error
-            if(res && res.status === 400) {
+            if (res && res.status === 400) {
               //If convo doesn't exist, then return to convo list
+              setAlert({ message: "Conversation not found", type: "error" });
               navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
             }
           }
@@ -265,23 +280,33 @@ export default function Chat(): JSX.Element {
   }, [location.pathname, user, viewUser]);
 
   const onSocketMessage = useCallback((dataStr: string) => {
+    const returnData = JSON.parse(dataStr);
     //turn off typing indicator for chatgpt
     setShowTypingIndicator(false);
-    //Only the message as a string comes back so make some temp stuff for the message
-    const tempTimestamp = Date.now();
-    const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-    var responseMessage: MessageType = {
-      id: tempTimestamp.toString(),
-      content: dataStr,
-      messageType: "text",
-      role: "assistant",
-      sender: "ChatGPT",
-      timestamp: messageTempId,
-      promptId: null,
+    if (returnData.status < 300) {
+      //Only the message as a string comes back so make some temp stuff for the message
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: returnData.data,
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: messageTempId,
+        promptId: null,
+      }
+      if (messages) {
+        setMessages((prev) => [...prev, responseMessage]);
+      }
+    } else {
+      //update conversation data and handle errors
+      setOpenErrorModal({ open: true, message: returnData.data });
+      if(returnData.status === 400) {
+        setOpenUpdateConvoModal(prev => ({...prev, completed: true}))
+      }
     }
-    if (messages) {
-      setMessages((prev) => [...prev, responseMessage]);
-    }
+
   }, [messages]);
 
   const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
@@ -297,8 +322,6 @@ export default function Chat(): JSX.Element {
       });
     }
   }, [onSocketClose, onSocketMessage, onSocketOpen]);
-
-
 
   const onSendMessage = useCallback((messageList: Array<MessageType>) => {
     //save message in message array
@@ -333,14 +356,15 @@ export default function Chat(): JSX.Element {
 
       socket.current?.send(JSON.stringify({
         "action": "sendMessage",
-        "messages": messagesToSend
+        "messages": messagesToSend,
+        "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
       }));
       //Set the typing indicator for chatgpt while we wait for a response
       setShowTypingIndicator(true);
     } else {
-      setAlert({ message: "Something went wrong. Please try again", type: "error" });
+      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
     }
-  }, [messages, isConnected, setAlert]);
+  }, [messages, isConnected]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -499,6 +523,7 @@ export default function Chat(): JSX.Element {
               index: location.pathname.split("/")[5],
               name: res.data.conversations[location.pathname.split("/")[5]].name,
               isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
+              completed: res.data.conversations[location.pathname.split("/")[5]].completed ? res.data.conversations[location.pathname.split("/")[5]].completed : false,
               error: ""
             });
             navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`)
@@ -507,7 +532,7 @@ export default function Chat(): JSX.Element {
           navigator("/login");
         } else {
           // handle error
-          setAlert({ message: "Something went wrong. Try again later", type: "error" });
+          setOpenErrorModal({ open: true, message: "Something went wrong. Try again later" });
         }
         setIsLoading(false);
       });
@@ -534,6 +559,7 @@ export default function Chat(): JSX.Element {
                 index: location.pathname.split("/")[5],
                 name: res.data.conversations[location.pathname.split("/")[5]].name,
                 isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
+                completed: res.data.conversations[location.pathname.split("/")[5]].completed ? res.data.conversations[location.pathname.split("/")[5]].completed : false,
                 error: ""
               });
             }
@@ -541,7 +567,7 @@ export default function Chat(): JSX.Element {
             navigator("/login");
           } else {
             // handle error
-            setAlert({ message: "Something went wrong. Try again later", type: "error" });
+            setOpenErrorModal({ open: true, message: "Something went wrong. Try again later" });
           }
           setIsLoading(false);
         });
@@ -551,6 +577,33 @@ export default function Chat(): JSX.Element {
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">
+      <Modal
+        isOpen={openErrorModal.open}
+        title={"We ran into an error!"}
+        onRequestClose={() => setOpenErrorModal({ open: false, message: "" })}
+        actions={
+          <>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={(e) => {
+                setOpenErrorModal({ open: false, message: "" })
+                navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)
+              }}
+            >
+              Back to Conversation List
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => setOpenErrorModal({ open: false, message: "" })}>
+              CLose
+            </Button>
+          </>
+        }
+      >
+        <div>{openErrorModal.message}</div>
+      </Modal>
       <Modal
         isOpen={openDocumentModal}
         title={"Document Upload"}
@@ -756,6 +809,19 @@ export default function Chat(): JSX.Element {
         {/* handles scrolling to the bottom */}
         <div ref={messagesEndRef} />
 
+        {openUpdateConvoModal.completed && (
+          <div style={{ textAlign: "center" }}>
+            <hr />
+            <div style={{paddingBottom: "0.8rem"}}>This conversation has been flagged as inappropriate for this setting. Please start a new conversation.</div>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)
+              }}
+            >Back to Conversation List</Button>
+          </div>
+        )}
         {/* continuedInteraction input (if there are no more repeating prompts) */}
         {isConnected &&
           user &&
@@ -763,6 +829,7 @@ export default function Chat(): JSX.Element {
           user.sub === viewUser.sub &&
           selectedPrompt !== undefined &&
           moduleInfo.continuedInteraction &&
+          !openUpdateConvoModal.completed &&
           (
             <div className="chat__input-form">
               <form onSubmit={handleSubmit}>

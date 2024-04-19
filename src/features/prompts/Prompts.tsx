@@ -104,7 +104,7 @@ export default function Prompts(): JSX.Element {
 
           //if the data is 20 prompts, then call for the next page
           //handle pages
-          if (res.data.ScannedCount >= limit && res.data.LastEvaluatedKey) {
+          if (res.data.ScannedCount > 0 && res.data.ScannedCount >= limit && res.data.LastEvaluatedKey) {
             getPrompts(res.data.LastEvaluatedKey.id, signal);
           } else {
             setIsLoading(false);

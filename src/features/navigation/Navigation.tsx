@@ -159,7 +159,7 @@ export default function Navigation(): JSX.Element {
       &nbsp;&nbsp;&nbsp;
       <Box sx={{
         position: "fixed",
-        width: "14rem",
+        width: "13rem", //same in navigation.scss
         paddingTop: "3rem",
         zIndex: "10000"
       }}>

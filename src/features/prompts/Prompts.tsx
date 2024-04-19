@@ -86,7 +86,7 @@ export default function Prompts(): JSX.Element {
     var limit = 20;
     Get(getPromptList(limit, startKey), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.prompts && res.data.ScannedCount) {
+        if (res.data && res.data.prompts && res.data.ScannedCount !== undefined) {
           //Get the list of all prompts
           setPromptList((prev) => [...prev, ...res.data.prompts]);
           setFilteredPromptList((prev) => [...prev, ...res.data.prompts]);
@@ -104,7 +104,7 @@ export default function Prompts(): JSX.Element {
 
           //if the data is 20 prompts, then call for the next page
           //handle pages
-          if (res.data.ScannedCount >= limit && res.data.LastEvaluatedKey) {
+          if (res.data.ScannedCount > 0 && res.data.ScannedCount >= limit && res.data.LastEvaluatedKey && res.data.LastEvaluatedKey.id) {
             getPrompts(res.data.LastEvaluatedKey.id, signal);
           } else {
             setIsLoading(false);

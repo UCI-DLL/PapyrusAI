@@ -94,7 +94,7 @@ export default function Prompts(): JSX.Element {
           //Add creators to list
           var currentCreators = creatorList;
           res.data.prompts.forEach((prompt: PromptType) => {
-            if(currentCreators.some(p => p.sub === prompt.creator.sub)) {
+            if (currentCreators.some(p => p.sub === prompt.creator.sub)) {
               //creator is already in the list so move on
             } else {
               currentCreators.push(prompt.creator);
@@ -104,7 +104,12 @@ export default function Prompts(): JSX.Element {
 
           //if the data is 20 prompts, then call for the next page
           //handle pages
-          if (res.data.ScannedCount > 0 && res.data.ScannedCount >= limit && res.data.LastEvaluatedKey && res.data.LastEvaluatedKey.id) {
+          if (
+            res.data.ScannedCount > 0 &&
+            res.data.ScannedCount >= limit &&
+            res.data.LastEvaluatedKey &&
+            res.data.LastEvaluatedKey.id
+          ) {
             getPrompts(res.data.LastEvaluatedKey.id, signal);
           } else {
             setIsLoading(false);
@@ -149,11 +154,11 @@ export default function Prompts(): JSX.Element {
 
     //handle filters
     //Note: have to do a lot of date converting
-    if(filter.startDate !== null) {
+    if (filter.startDate !== null) {
       filteredList = filteredList.filter(prompt => {
-        if(filter.startDate !== null) {
+        if (filter.startDate !== null) {
           var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
-          if(dayjs(date.toISOString()) > filter.startDate) {
+          if (dayjs(date.toISOString()) > filter.startDate) {
             return prompt
           } else {
             return false
@@ -163,11 +168,11 @@ export default function Prompts(): JSX.Element {
         }
       });
     }
-    if(filter.endDate !== null) {
+    if (filter.endDate !== null) {
       filteredList = filteredList.filter(prompt => {
-        if(filter.endDate !== null) {
+        if (filter.endDate !== null) {
           var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
-          if(dayjs(date.toISOString()) < filter.endDate) {
+          if (dayjs(date.toISOString()) < filter.endDate) {
             return prompt
           } else {
             return false
@@ -178,9 +183,9 @@ export default function Prompts(): JSX.Element {
       });
     }
     //handle creator filter
-    if(filter.creator !== "") {
+    if (filter.creator !== "") {
       filteredList = filteredList.filter(prompt => prompt.creator.sub === filter.creator);
-    } 
+    }
 
     //then set filtered list
     setFilteredPromptList(filteredList);
@@ -321,7 +326,7 @@ export default function Prompts(): JSX.Element {
                   <Select
                     value={filter.creator}
                     onChange={(e: SelectChangeEvent) => {
-                      setFilter((prev) => ({...prev, creator: e.target.value}))
+                      setFilter((prev) => ({ ...prev, creator: e.target.value }))
                     }}
                     labelId="creator-select-label"
                     id="creator-select"
@@ -338,25 +343,25 @@ export default function Prompts(): JSX.Element {
                     })}
                   </Select>
                   <LocalizationProvider dateAdapter={AdapterDayjs} >
-                    <DatePicker 
-                    label="Start Date"
-                    value={filter.startDate}
-                    onChange={(value) => {
-                      setFilter(prev => ({...prev, startDate: value}))
-                    }}
-                    disabled={isLoading}
-                    sx={{ margin: "1rem" }}
+                    <DatePicker
+                      label="Start Date"
+                      value={filter.startDate}
+                      onChange={(value) => {
+                        setFilter(prev => ({ ...prev, startDate: value }))
+                      }}
+                      disabled={isLoading}
+                      sx={{ margin: "1rem" }}
                     />
                   </LocalizationProvider>
                   <LocalizationProvider dateAdapter={AdapterDayjs} >
-                    <DatePicker 
-                    label="End Date"
-                    value={filter.endDate}
-                    onChange={(value) => {
-                      setFilter(prev => ({...prev, endDate: value}))
-                    }}
-                    disabled={isLoading}
-                    sx={{ margin: "1rem" }}
+                    <DatePicker
+                      label="End Date"
+                      value={filter.endDate}
+                      onChange={(value) => {
+                        setFilter(prev => ({ ...prev, endDate: value }))
+                      }}
+                      disabled={isLoading}
+                      sx={{ margin: "1rem" }}
                     />
                   </LocalizationProvider>
                 </div>
@@ -373,7 +378,7 @@ export default function Prompts(): JSX.Element {
             <div className="modules__list">
               <List sx={style} aria-label="modules list">
                 {filteredPromptList.map((prompt, index) => {
-                  var date= new Date(parseInt(prompt.id.substring(0, 13), 10)).toLocaleString();
+                  var date = new Date(parseInt(prompt.id.substring(0, 13), 10)).toLocaleString();
                   return (
                     <div key={index}>
                       {/* button redirect to the conversation */}

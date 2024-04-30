@@ -57,7 +57,6 @@ const MenuProps = {
 };
 
 type EditModuleType = {
-  continuedInteraction: boolean,
   id: string,
   isDeleted: boolean,
   isPublished: boolean,
@@ -86,7 +85,6 @@ export default function EditModule(): JSX.Element {
     name: "",
     moduleDescription: "",
     isRepeating: false,
-    continuedInteraction: false,
     isPublished: false,
     showInitialPrompt: true,
     prompts: [],
@@ -404,7 +402,6 @@ export default function EditModule(): JSX.Element {
           name: session.name,
           moduleDescription: session.moduleDescription,
           isRepeating: session.isRepeating,
-          continuedInteraction: session.continuedInteraction,
           isPublished: isPublished,
           showInitialPrompt: session.showInitialPrompt,
           prompts: session.prompts,
@@ -834,22 +831,6 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
               Allow starter prompts to be re-selected during the conversation
             </span>
           </Checkbox>
-
-          <Checkbox
-            onClick={() => {
-              setSession((prev) => ({
-                ...prev,
-                continuedInteraction: !session.continuedInteraction
-              }))
-            }}
-            checked={session.continuedInteraction}
-            isDisabled={isLoading}
-          >
-            <span>
-              Continued Interaction
-            </span>
-          </Checkbox>
-          <p>Allow users to freely chat after initial prompts.</p>
 
           <Checkbox
             onClick={() => {

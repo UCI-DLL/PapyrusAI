@@ -828,7 +828,7 @@ export default function Chat(): JSX.Element {
           viewUser &&
           user.sub === viewUser.sub &&
           selectedPrompt !== undefined &&
-          moduleInfo.continuedInteraction &&
+          moduleInfo.continuedInteraction && //continuedInteraction deprecated
           !openUpdateConvoModal.completed &&
           (
             <div className="chat__input-form">

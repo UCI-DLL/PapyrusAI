@@ -4,6 +4,14 @@ export function getCourseList() {
   return `course?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
+export function getAllCourseList(limit?: number, startKey: string = "") {
+  if (limit) {
+    return `course/all?limit=${limit}&startKey=${startKey}&organization=${process.env.REACT_APP_ORGANIZATION}`
+  } else {
+    return `course/all?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  }
+}
+
 export function postCreateCourse() {
   return `course?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }

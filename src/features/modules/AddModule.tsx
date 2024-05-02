@@ -55,7 +55,6 @@ type AddModuleType = {
   name: string,
   moduleDescription: string,
   isRepeating: boolean,
-  continuedInteraction: boolean,
   isPublished: boolean,
   showInitialPrompt: boolean,
   prompts: Array<string>
@@ -78,7 +77,6 @@ export default function AddModule(): JSX.Element {
     name: "",
     moduleDescription: "",
     isRepeating: true,
-    continuedInteraction: true,
     isPublished: false,
     showInitialPrompt: true,
     prompts: []
@@ -87,7 +85,6 @@ export default function AddModule(): JSX.Element {
     name: "",
     moduleDescription: "",
     isRepeating: "",
-    continuedInteraction: "",
     isPublished: "",
     showInitialPrompt: "",
     prompts: ""
@@ -145,7 +142,7 @@ export default function AddModule(): JSX.Element {
     var limit = 20;
     Get(getPromptList(limit, startKey), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.prompts && res.data.ScannedCount) {
+        if (res.data && res.data.prompts && res.data.ScannedCount !== undefined) {
           //Get the list of all prompts
           setPromptList((prev) => [...prev, ...res.data.prompts]);
           setFilteredPromptList((prev) => [...prev, ...res.data.prompts]);
@@ -163,7 +160,12 @@ export default function AddModule(): JSX.Element {
 
           //if the data is 20 prompts, then call for the next page
           //handle pages
-          if (res.data.ScannedCount >= limit && res.data.LastEvaluatedKey) {
+          if (
+            res.data.ScannedCount > 0 &&
+            res.data.ScannedCount >= limit &&
+            res.data.LastEvaluatedKey &&
+            res.data.LastEvaluatedKey.id
+          ) {
             getPrompts(res.data.LastEvaluatedKey.id, signal);
           } else {
             setIsLoading(false);
@@ -335,7 +337,6 @@ export default function AddModule(): JSX.Element {
         name: session.name,
         moduleDescription: session.moduleDescription,
         isRepeating: session.isRepeating,
-        continuedInteraction: session.continuedInteraction,
         isPublished: isPublished,
         showInitialPrompt: session.showInitialPrompt,
         prompts: session.prompts,
@@ -679,21 +680,6 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           >
             <span>
               Allow starter prompts to be re-selected during the conversation
-            </span>
-          </Checkbox>
-
-          <Checkbox
-            onClick={() => {
-              setSession((prev) => ({
-                ...prev,
-                continuedInteraction: !session.continuedInteraction
-              }))
-            }}
-            checked={session.continuedInteraction}
-            isDisabled={isLoading}
-          >
-            <span>
-              Continued Interaction (Allow users to freely chat after initial prompts)
             </span>
           </Checkbox>
 

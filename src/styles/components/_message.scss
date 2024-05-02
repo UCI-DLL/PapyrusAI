@@ -21,7 +21,7 @@
     margin-bottom: global.$base * 2;
     padding: global.$base;
     background-color: global.$gray-20;
-    max-width: 96%;
+    max-width: 90%;
     align-self: flex-start;
     text-align: left;
     border: 1px solid global.$gray-55;
@@ -35,7 +35,7 @@
     margin-bottom: global.$base * 2;
     padding: global.$base;
     background-color: var(--accent-3);
-    max-width: 96%;
+    max-width: 90%;
     align-self: flex-end;
     text-align: left;
     border: 1px solid global.$gray-55;
@@ -53,11 +53,13 @@
 
   &__left-display-name {
     padding-left: global.$base * 2;
+    font-size: global.$xs;
   }
 
   &__right-display-name {
     padding-right: global.$base * 2;
     text-align: end;
+    font-size: global.$xs;
   }
 
   &__file {

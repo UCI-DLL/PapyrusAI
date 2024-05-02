@@ -71,6 +71,20 @@ export function getLightTheme() {
       },
       "fontFamily": "OpenSans",
     },
+    components: {
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            input: {
+              "&:-webkit-autofill": {
+                WebkitBoxShadow: "0 0 0 100px #EBEBEB inset",
+                WebkitTextFillColor: "default",
+              },
+            },
+          },
+        },
+      },
+    },
   });
   return lightTheme;
 }
@@ -100,6 +114,20 @@ export function getDarkTheme() {
         textTransform: "none",
       },
       "fontFamily": "OpenSans",
+    },
+    components: {
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            input: {
+              "&:-webkit-autofill": {
+                WebkitBoxShadow: "0 0 0 100px #141414 inset",
+                WebkitTextFillColor: "default",
+              },
+            },
+          },
+        },
+      },
     },
   });
   return darkTheme;
@@ -131,6 +159,20 @@ export function getColorfulLightTheme() {
       },
       "fontFamily": "OpenSans",
     },
+    components: {
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            input: {
+              "&:-webkit-autofill": {
+                WebkitBoxShadow: "0 0 0 100px #ABA7DB inset",
+                WebkitTextFillColor: "default",
+              },
+            },
+          },
+        },
+      },
+    },
   });
   return colorfulLightTheme;
 }
@@ -160,6 +202,20 @@ export function getColorfulDarkTheme() {
         textTransform: "none",
       },
       "fontFamily": "OpenSans",
+    },
+    components: {
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            input: {
+              "&:-webkit-autofill": {
+                WebkitBoxShadow: "0 0 0 100px #280119 inset",
+                WebkitTextFillColor: "default",
+              },
+            },
+          },
+        },
+      },
     },
   });
   return colorfulDarkTheme;

@@ -25,8 +25,8 @@ export default function CourseList({ list }: CourseListProps): JSX.Element {
               <CardContent>
                 <Typography sx={{ fontSize: 14 }} color="text.secondary">
                   {course.section ?
-                    `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}` :
-                    `${course.term ? course.term : ""}${course.year ? course.year : ""}`}
+                    `${course.term ? course.term : ""} ${course.year ? course.year : ""} - ${course.section}` :
+                    `${course.term ? course.term : ""} ${course.year ? course.year : ""}`}
                 </Typography>
                 <Typography variant="h5" component={"div"}>
                   {course.name}

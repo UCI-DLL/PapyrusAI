@@ -597,7 +597,7 @@ export default function Chat(): JSX.Element {
               variant="contained"
               color="secondary"
               onClick={() => setOpenErrorModal({ open: false, message: "" })}>
-              CLose
+              Close
             </Button>
           </>
         }

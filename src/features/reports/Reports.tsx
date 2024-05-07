@@ -65,27 +65,7 @@ export default function Reports(): JSX.Element {
                   res1.data.taList.find((a: CustomUserType) => a.sub === user.sub) //handle tas too
                 ))
               ) { //only get the rest of the information if current user is instructor
-                Get(getUsersInCourse(group), controller.signal).then(res => {
-                  if (res && res.status && res.status < 300) {
-                    if (res.data) {
-                      //Get the list of all users in the group
-                      setUserList((prev) => {
-                        if (prev.find(x => x.course.id === res1.data.id)) {
-                          //if the course has already been added, skip
-                          //this is a react strict mode work around so we dont get doubles
-                          return prev
-                        } else {
-                          return [...prev, { users: res.data, course: res1.data }];
-                        }
-                      });
-                    }
-                  } else if (res && res.status === 401) {
-                    navigator("/login");
-                  } else {
-                    // handle error
-                    // setError("No courses Found");
-                  }
-                });
+                getUsersInCourseList(res1.data, controller.signal);
               }
             } else if (res1 && res1.status === 401) {
               navigator("/login");
@@ -114,27 +94,7 @@ export default function Reports(): JSX.Element {
         if (res.data && res.data.courses && res.data.ScannedCount !== undefined) {
           //Get users for each course in the list of all courses
           res.data.courses.forEach((course: CourseType) => {
-            Get(getUsersInCourse(course.id), signal).then(res => {
-              if (res && res.status && res.status < 300) {
-                if (res.data) {
-                  //Get the list of all users in the group
-                  setUserList((prev) => {
-                    if (prev.find(x => x.course.id === course.id)) {
-                      //if the course has already been added, skip
-                      //this is a react strict mode work around so we dont get doubles
-                      return prev
-                    } else {
-                      return [...prev, { users: res.data, course: course }];
-                    }
-                  });
-                }
-              } else if (res && res.status === 401) {
-                navigator("/login");
-              } else {
-                // handle error
-                // setError("No courses Found");
-              }
-            });
+            getUsersInCourseList(course, signal)
           })
 
           //if the data is 20 courses, then call for the next page
@@ -162,6 +122,40 @@ export default function Reports(): JSX.Element {
     });
   }
 
+  function getUsersInCourseList(course: CourseType, signal: AbortSignal, nextToken?: string) {
+    var limit = 25;
+    Get(getUsersInCourse(course.id, limit, nextToken), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //Get the list of all users in the group
+          setUserList((prev) => {
+            if (prev.find(x => x.course.id === course.id)) {
+              //if the course has already been added, add the new list of users
+              var temp = prev;
+              var index = prev.findIndex(x => x.course.id === course.id);
+              var prevUserList = prev[index].users ? prev[index].users : [];
+              temp[index] = {users: prevUserList.concat(res.data.users), course: course }
+              return temp
+            } else {
+              return [...prev, { users: res.data.users, course: course }]; 
+            }
+          });
+
+          //if the we get a nexttoken, then call for the next page
+          //handle pages
+          if (res.data.nextToken) {
+            getUsersInCourseList(course, signal, res.data.nextToken);
+          } 
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // handle error
+        // setError("No courses Found");
+      }
+    });
+  }
+
   return !isLoading ? (
     <div className="reports">
       <h3>Reports</h3>
@@ -183,6 +177,7 @@ export default function Reports(): JSX.Element {
 
                   <div>Instructor: {x.course.instructor.name + " " + x.course.instructor.family_name}</div>
                   <div>Sign up code: {x.course.signUpCode}</div>
+                  <div>Number of Students: {x.users.length}</div>
                   <hr />
                   <Box sx={{ width: '100%', bgcolor: 'background.paper', padding: "0.2rem", borderRadius: "0.2rem" }}>
                     <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>

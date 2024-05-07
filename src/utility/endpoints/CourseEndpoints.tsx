@@ -40,6 +40,11 @@ export function postAddUserToCourseGroup() {
   return `course/user?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function getUsersInCourse(courseId: string) {
-  return `/course/${courseId}/users?organization=${process.env.REACT_APP_ORGANIZATION}`;
+export function getUsersInCourse(courseId: string, limit?: number, nextToken: string = "") {
+  if (limit) {
+    return `course/${courseId}/users?limit=${limit}&nextToken=${nextToken}&organization=${process.env.REACT_APP_ORGANIZATION}`
+  } else {
+    return `course/${courseId}/users?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  }
+  
 }

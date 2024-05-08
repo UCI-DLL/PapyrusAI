@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Button, Box, TextField, FormLabel } from "@mui/material";
 import Post from "../../utility/Post";
 import { postAddUserToCourseGroup } from "../../utility/endpoints/CourseEndpoints";
+import { AlertContext } from "../../utility/context/AlertContext";
 
 /**
  * This form is to update user's missing data
@@ -27,12 +28,13 @@ export default function AddCourseForm({
     signUpCode: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { setAlert } = useContext(AlertContext);
 
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if(session.signUpCode === "") {
-      setErrors((prev) => ({...prev, signUpCode: "Sign up code missing"}))
+    if (session.signUpCode === "") {
+      setErrors((prev) => ({ ...prev, signUpCode: "Sign up code missing" }))
     }
     else {
       // set is loading
@@ -43,11 +45,12 @@ export default function AddCourseForm({
           if (res.data && res.data) {
             //close modal if user data was updated
             closeForm();
+            setAlert({ message: "You have been added to the course.", type: "info" });
           }
         } else {
           // set errors
           setErrors({ signUpCode: "Course Not Found" });
-          setSession({signUpCode: ""})
+          setSession({ signUpCode: "" });
         }
         // set is loading back 
         setIsLoading(false);
@@ -62,7 +65,7 @@ export default function AddCourseForm({
   return (
     <div className="addcourseform">
       <Box className="addcourseform__add">
-        <form onSubmit={handleSubmit} style={{display: "flex", flexDirection: "column"}}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
           <FormLabel>Enter Course Sign Up Code Information</FormLabel>
           &nbsp;&nbsp;&nbsp;
           <TextField

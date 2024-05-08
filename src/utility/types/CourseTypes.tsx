@@ -18,7 +18,7 @@ export type CourseType = {
 }
 
 export type ModuleType = {
-  continuedInteraction: boolean,
+  continuedInteraction: boolean, //deprecated
   id: string,
   isDeleted: boolean,
   isPublished: boolean,

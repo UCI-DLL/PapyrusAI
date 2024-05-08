@@ -57,7 +57,6 @@ const MenuProps = {
 };
 
 type EditModuleType = {
-  continuedInteraction: boolean,
   id: string,
   isDeleted: boolean,
   isPublished: boolean,
@@ -86,7 +85,6 @@ export default function EditModule(): JSX.Element {
     name: "",
     moduleDescription: "",
     isRepeating: false,
-    continuedInteraction: false,
     isPublished: false,
     showInitialPrompt: true,
     prompts: [],
@@ -200,7 +198,7 @@ export default function EditModule(): JSX.Element {
     var limit = 20;
     Get(getPromptList(limit, startKey), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.prompts && res.data.ScannedCount) {
+        if (res.data && res.data.prompts && res.data.ScannedCount !== undefined) {
           //Get the list of all prompts
           setPromptList((prev) => [...prev, ...res.data.prompts]);
           setFilteredPromptList((prev) => [...prev, ...res.data.prompts]);
@@ -218,7 +216,12 @@ export default function EditModule(): JSX.Element {
 
           //if the data is 20 prompts, then call for the next page
           //handle pages
-          if (res.data.ScannedCount >= limit && res.data.LastEvaluatedKey) {
+          if (
+            res.data.ScannedCount > 0 &&
+            res.data.ScannedCount >= limit &&
+            res.data.LastEvaluatedKey &&
+            res.data.LastEvaluatedKey.id
+          ) {
             getPrompts(res.data.LastEvaluatedKey.id, signal);
           } else {
             setIsLoading(false);
@@ -399,7 +402,6 @@ export default function EditModule(): JSX.Element {
           name: session.name,
           moduleDescription: session.moduleDescription,
           isRepeating: session.isRepeating,
-          continuedInteraction: session.continuedInteraction,
           isPublished: isPublished,
           showInitialPrompt: session.showInitialPrompt,
           prompts: session.prompts,
@@ -826,25 +828,9 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             isDisabled={isLoading}
           >
             <span>
-              Repeating Prompts
+              Allow starter prompts to be re-selected during the conversation
             </span>
           </Checkbox>
-
-          <Checkbox
-            onClick={() => {
-              setSession((prev) => ({
-                ...prev,
-                continuedInteraction: !session.continuedInteraction
-              }))
-            }}
-            checked={session.continuedInteraction}
-            isDisabled={isLoading}
-          >
-            <span>
-              Continued Interaction
-            </span>
-          </Checkbox>
-          <p>Allow users to freely chat after initial prompts.</p>
 
           <Checkbox
             onClick={() => {

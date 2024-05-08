@@ -61,7 +61,7 @@ export default function UserReports(): JSX.Element {
                     (res1.data.instructor.sub === user.sub || (
                       res1.data.taList &&
                       res1.data.taList.find((a: CustomUserType) => a.sub === user.sub) //handle tas too
-                    ))
+                    ) || user.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin")) //or if an admin
                   ) {
                     //set conversation data
                     setConversationList((prev) => [...prev, {

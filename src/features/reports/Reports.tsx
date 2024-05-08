@@ -76,7 +76,7 @@ export default function Reports(): JSX.Element {
         })
       }
 
-      // setIsLoading(false);
+      setIsLoading(false);
     }
 
     return (() => {
@@ -107,7 +107,7 @@ export default function Reports(): JSX.Element {
           ) {
             getAllCourses(res.data.LastEvaluatedKey.id, signal);
           } else {
-            // setIsLoading(false);
+            setIsLoading(false);
           }
         }
       } else if (res && res.status === 401) {
@@ -131,7 +131,7 @@ export default function Reports(): JSX.Element {
           setUserList((prev) => {
             if (prev.find(x => x.course.id === course.id)) {
               //if the course has already been added, add the new list of users
-              var temp = prev;
+              var temp = [...prev];
               var index = prev.findIndex(x => x.course.id === course.id);
               var prevUserList = prev[index].users ? prev[index].users : [];
               temp[index] = {users: prevUserList.concat(res.data.users), course: course }

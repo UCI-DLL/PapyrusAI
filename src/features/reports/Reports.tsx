@@ -151,8 +151,8 @@ export default function Reports(): JSX.Element {
         navigator("/login");
       } else {
         // handle error
-        // setError("No courses Found");
       }
+      setIsLoading(false);
     });
   }
 

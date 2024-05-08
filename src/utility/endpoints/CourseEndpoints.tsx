@@ -4,6 +4,14 @@ export function getCourseList() {
   return `course?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
+export function getAllCourseList(limit?: number, startKey: string = "") {
+  if (limit) {
+    return `course/all?limit=${limit}&startKey=${startKey}&organization=${process.env.REACT_APP_ORGANIZATION}`
+  } else {
+    return `course/all?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  }
+}
+
 export function postCreateCourse() {
   return `course?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
@@ -32,6 +40,11 @@ export function postAddUserToCourseGroup() {
   return `course/user?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function getUsersInCourse(courseId: string) {
-  return `/course/${courseId}/users?organization=${process.env.REACT_APP_ORGANIZATION}`;
+export function getUsersInCourse(courseId: string, limit?: number, nextToken: string = "") {
+  if (limit) {
+    return `course/${courseId}/users?limit=${limit}&nextToken=${nextToken}&organization=${process.env.REACT_APP_ORGANIZATION}`
+  } else {
+    return `course/${courseId}/users?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  }
+  
 }

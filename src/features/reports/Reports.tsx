@@ -76,7 +76,7 @@ export default function Reports(): JSX.Element {
         })
       }
 
-      setIsLoading(false);
+      // setIsLoading(false);
     }
 
     return (() => {
@@ -107,7 +107,7 @@ export default function Reports(): JSX.Element {
           ) {
             getAllCourses(res.data.LastEvaluatedKey.id, signal);
           } else {
-            setIsLoading(false);
+            // setIsLoading(false);
           }
         }
       } else if (res && res.status === 401) {

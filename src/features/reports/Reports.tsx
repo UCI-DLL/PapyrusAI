@@ -134,10 +134,10 @@ export default function Reports(): JSX.Element {
               var temp = [...prev];
               var index = prev.findIndex(x => x.course.id === course.id);
               var prevUserList = prev[index].users ? prev[index].users : [];
-              temp[index] = {users: prevUserList.concat(res.data.users), course: course }
+              temp[index] = { users: prevUserList.concat(res.data.users), course: course }
               return temp
             } else {
-              return [...prev, { users: res.data.users, course: course }]; 
+              return [...prev, { users: res.data.users, course: course }];
             }
           });
 
@@ -145,7 +145,7 @@ export default function Reports(): JSX.Element {
           //handle pages
           if (res.data.nextToken) {
             getUsersInCourseList(course, signal, res.data.nextToken);
-          } 
+          }
         }
       } else if (res && res.status === 401) {
         navigator("/login");
@@ -156,26 +156,43 @@ export default function Reports(): JSX.Element {
     });
   }
 
+  function sortCourseList(list: Array<{ users: Array<ReportsUserType>, course: CourseType }>) {
+    return list.sort((a, b) => {
+      const isCreatedByCurrentUserA = a.course.instructor.sub === user?.sub;
+      const isCreatedByCurrentUserB = b.course.instructor.sub === user?.sub;
+
+      if (isCreatedByCurrentUserA && !isCreatedByCurrentUserB) {
+        return -1; // a comes before b
+      } else if (!isCreatedByCurrentUserA && isCreatedByCurrentUserB) {
+        return 1; // b comes before a
+      } else {
+        // Both are either created by the current user or not, so sort by creation date
+        const dateA = parseInt(a.course.createdTimestamp);
+        const dateB = parseInt(b.course.createdTimestamp);
+        return dateB - dateA; // Newest first
+      }
+    })
+  }
+
   return !isLoading ? (
     <div className="reports">
       <h3>Reports</h3>
       <hr />
       <List style={style}>
-        {userList.map((x, index) => {
+        {sortCourseList(userList).map((x, index) => {
           return (
             <div style={{ width: "100%", marginBottom: "0.4rem" }} key={index}>
               <Accordion sx={{ border: "1px solid rgba(0,0,0,0.2)" }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <div>
                     <h6>{x.course.name ? x.course.name : ""}</h6>
+                    <div>Instructor: {x.course.instructor.name + " " + x.course.instructor.family_name}</div>
                     <div>{x.course.section ?
                       `${x.course.term ? x.course.term : ""} ${x.course.year ? x.course.year : ""} - ${x.course.section}` :
                       `${x.course.term ? x.course.term : ""} ${x.course.year ? x.course.year : ""}`}</div>
                   </div>
                 </AccordionSummary>
                 <AccordionDetails sx={{ backgroundColor: "rgba(0,0,0,0.2)" }}>
-
-                  <div>Instructor: {x.course.instructor.name + " " + x.course.instructor.family_name}</div>
                   <div>Sign up code: {x.course.signUpCode}</div>
                   <div>Number of Students: {x.users.length}</div>
                   <hr />

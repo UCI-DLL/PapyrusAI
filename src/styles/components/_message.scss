@@ -27,6 +27,22 @@
     border: 1px solid global.$gray-55;
     border-radius: global.$base * 2 global.$base * 2 global.$base * 2 0;
     color: white;
+
+    table {
+      border-collapse: collapse;
+      margin-top: global.$base;
+      margin-bottom: global.$base;
+      border-radius: global.$base * 2;
+    }
+
+    th, td {
+      border: 1px solid global.$gray-55;
+      padding: global.$base;
+    }
+
+    th {
+      background-color: #494949;
+    }
   }
 
   &__right-message {

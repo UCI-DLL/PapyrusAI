@@ -1,4 +1,4 @@
-
+//Note: no long in use
 
 export function getPromptList(limit?: number, startKey: string = "") {
   if (limit) {

@@ -46,6 +46,7 @@ import {
   getDarkTheme,
   getLightTheme
 } from "./utility/Themes";
+import Library from "./features/library/Library";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -268,9 +269,17 @@ function App(): JSX.Element {
                       <Route path="/editcourse/:id" element={<PrivateRoute user={user} />}>
                         <Route path="/editcourse/:id" element={<EditCourse />} />
                       </Route>
+
+                      <Route path="/library" element={<PrivateRoute user={user} />}>
+                        <Route path="/library" element={<Library />} />
+                      </Route>
+
+                      {/* <Route path="/prompts/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/prompts/:id" element={<EditPrompt />} />
+                      </Route> */}
                     </>
                   )}
-
+                  {/* hidden on nagivation  */}
                   {user && user.groups && user.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
                     <>
                       <Route path="/prompts" element={<PrivateRoute user={user} />}>

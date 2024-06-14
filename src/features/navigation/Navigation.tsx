@@ -36,17 +36,17 @@ export default function Navigation(): JSX.Element {
 
   //For the side drawer main nav menu
   // base this list off instuctor, admin, student access, and TAs
-  var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
-  user?.groups.find(a=> a.includes("-TA")) ?
+  var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
+    user?.groups.find(a => a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
-      ["Dashboard", "Courses", "Modules", "Reports", "Prompts", "Account", "About"] :
-      ["Dashboard", "Courses", "Modules", "Reports", "Account", "About"] :
+      ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About"] :
+      ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About"] :
     ["Dashboard", "Courses", "Modules", "Account", "About"];
-  var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
-  user?.groups.find(a=> a.includes("-TA")) ?
+  var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
+    user?.groups.find(a => a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
-      ["/", "/courses", "/modules", "/reports", "/prompts", "/account", "/about"] :
-      ["/", "/courses", "/modules", "/reports", "/account", "/about"] :
+      ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about"] :
+      ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about"] :
     ["/", "/courses", "/modules", "/account", "/about"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -71,7 +71,7 @@ export default function Navigation(): JSX.Element {
      * course # > module #
      * Chat
      * Reports
-     * prompts
+     * library
      * account
      * about
      */
@@ -100,7 +100,7 @@ export default function Navigation(): JSX.Element {
       pathnameSplit[3] === "modules"
     ) {
       setBreadcrumbText(["Conversations", ""])
-    } else if (pathnameSplit[1] === "chat") { 
+    } else if (pathnameSplit[1] === "chat") {
       setBreadcrumbText(["Chat", ""])
     } else if (pathnameSplit[1] === "reports") {
       setBreadcrumbText(["Reports", ""])
@@ -110,8 +110,10 @@ export default function Navigation(): JSX.Element {
       setBreadcrumbText(["About", ""])
     } else if (pathnameSplit[1] === "editcourse") {
       setBreadcrumbText(["Edit Course", ""])
-    } else if (pathnameSplit[1] === "prompts") {
+    } else if (pathnameSplit[1] === "prompts") { //hidden
       setBreadcrumbText(["Prompts", ""])
+    } else if (pathnameSplit[1] === "library") {
+      setBreadcrumbText(["Library", ""])
     }
   }, [location.pathname])
 

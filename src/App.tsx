@@ -47,6 +47,7 @@ import {
   getLightTheme
 } from "./utility/Themes";
 import Library from "./features/library/Library";
+import ViewFolder from "./features/library/ViewFolder";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -272,6 +273,14 @@ function App(): JSX.Element {
 
                       <Route path="/library" element={<PrivateRoute user={user} />}>
                         <Route path="/library" element={<Library />} />
+                      </Route>
+
+                      <Route path="/library/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id" element={<ViewFolder />} />
+                      </Route>
+
+                      <Route path="/library/org/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id" element={<ViewFolder />} />
                       </Route>
 
                       {/* <Route path="/prompts/:id" element={<PrivateRoute user={user} />}>

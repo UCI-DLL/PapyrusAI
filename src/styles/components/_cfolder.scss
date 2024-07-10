@@ -1,0 +1,10 @@
+@use "../global" as global;
+
+
+.c-folder {
+
+  color: white;
+  width: 25%;
+  margin: global.$base;
+  min-width: 12rem;
+}

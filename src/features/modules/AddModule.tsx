@@ -127,6 +127,7 @@ export default function AddModule(): JSX.Element {
     const controller = new AbortController();
     setIsLoading(true);
     if (promptList.length === 0) {
+      //TODO update getting prompts
       getPrompts("", controller.signal)
     } else {
       setIsLoading(false);
@@ -138,6 +139,7 @@ export default function AddModule(): JSX.Element {
     // eslint-disable-next-line
   }, []);
 
+  //TODO update getting prompts
   function getPrompts(startKey: string, signal: AbortSignal) {
     var limit = 20;
     Get(getPromptList(limit, startKey), signal).then(res => {
@@ -150,7 +152,7 @@ export default function AddModule(): JSX.Element {
           //Add creators to list
           var currentCreators = creatorList;
           res.data.prompts.forEach((prompt: PromptType) => {
-            if(currentCreators.some(p => p.sub === prompt.creator.sub)) {
+            if (currentCreators.some(p => p.sub === prompt.creator.sub)) {
               //creator is already in the list so move on
             } else {
               currentCreators.push(prompt.creator);
@@ -340,7 +342,7 @@ export default function AddModule(): JSX.Element {
         isPublished: isPublished,
         showInitialPrompt: session.showInitialPrompt,
         prompts: session.prompts,
-        isDeleted: false, 
+        isDeleted: false,
       }
       // post data back
       Put(putCreateModule(courseId), dataToSend).then((res) => {

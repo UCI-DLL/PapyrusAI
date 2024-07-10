@@ -142,6 +142,7 @@ export default function EditModule(): JSX.Element {
     const controller = new AbortController();
     setIsLoading(true);
     if (promptList.length === 0) {
+      //TODO update getting prompts
       getPrompts("", controller.signal)
     }
 
@@ -194,6 +195,7 @@ export default function EditModule(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname]);
 
+  //TODO update getting prompts
   function getPrompts(startKey: string, signal: AbortSignal) {
     var limit = 20;
     Get(getPromptList(limit, startKey), signal).then(res => {
@@ -206,7 +208,7 @@ export default function EditModule(): JSX.Element {
           //Add creators to list
           var currentCreators = creatorList;
           res.data.prompts.forEach((prompt: PromptType) => {
-            if(currentCreators.some(p => p.sub === prompt.creator.sub)) {
+            if (currentCreators.some(p => p.sub === prompt.creator.sub)) {
               //creator is already in the list so move on
             } else {
               currentCreators.push(prompt.creator);
@@ -406,7 +408,7 @@ export default function EditModule(): JSX.Element {
           showInitialPrompt: session.showInitialPrompt,
           prompts: session.prompts,
           showWizard: session.showWizard,
-          isDeleted: isDeleted, 
+          isDeleted: isDeleted,
           isTemplate: session.isTemplate,
           id: session.id
         }

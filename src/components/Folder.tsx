@@ -1,21 +1,25 @@
 
-import React from "react";
+import React, { useContext } from "react";
 import { Button, IconButton, Menu, MenuItem } from "@mui/material";
 import FolderIcon from '@mui/icons-material/Folder';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { FolderType } from "../utility/types/CourseTypes";
+import { useNavigate } from "react-router";
+import { UserContext } from "../utility/context/UserContext";
 
 interface FolderProps {
   displayName: string;
   isOrganizationFolder?: boolean;
   onClick: any;
-  menuList: Array<string>;
-  menuFunctions: Array<(e: any) => void>;
+  folder: FolderType;
   key: number;
-  truncateNumber?: number;
+  refreshList: () => void;
 }
 
 export const Folder = (props: FolderProps) => {
+  let navigator = useNavigate();
+  const { user } = useContext(UserContext);
   const displayName = props.displayName ? props.displayName : "Displayname";
   const [addAnchorEl, setAddAnchorEl] = React.useState<null | HTMLElement>(null);
   const addOpen = Boolean(addAnchorEl);
@@ -25,15 +29,45 @@ export const Folder = (props: FolderProps) => {
   const handleAddClose = () => {
     setAddAnchorEl(null);
   };
-  function truncateString(str: string, maxLength: number) {
-    if (str.length > maxLength) {
-      return str.substring(0, maxLength - 3) + '...';
+
+
+  function view() {
+    if (props.isOrganizationFolder) {
+      navigator(`/library/org/${props.folder.id}`)
+    } else {
+      navigator(`/library/${props.folder.id}`)
     }
-    return str;
   }
 
+  function rename() {
+    console.log("TODO rename")
+  }
+  function duplicate() {
+    console.log("TODO duplicate")
+  }
+
+  function deleteFolder() {
+    console.log("TODO delete")
+  }
+
+  function promote() {
+
+  }
+  function demote() {
+
+  }
+
+  const instructorUserMenu = ["View", "Rename", "Duplicate", "Delete"]
+  const instructorUserMenuFunctions = [view, rename, duplicate, deleteFolder]
+  const adminUserMenu = ["View", "Rename", "Duplicate", "Promote", "Delete"]
+  const adminUserMenuFunctions = [view, rename, duplicate, promote, deleteFolder]
+  const instructorOrgMenu = ["View", "Duplicate"]
+  const instructorOrgMenuFunctions = [view, duplicate]
+  const adminOrgMenu = ["View", "Rename", "Duplicate", "Demote", "Delete"]
+  const adminOrgMenuFunctions = [view, rename, duplicate, demote, deleteFolder]
+
   return (
-    <div key={props.key}>
+    <div key={props.key} className="c-folder">
       <Button
         variant="contained"
         color='white'
@@ -47,7 +81,10 @@ export const Folder = (props: FolderProps) => {
             <PushPinIcon />
           ) : <></>}
           <FolderIcon />
-          {truncateString(displayName, props.truncateNumber ? props.truncateNumber : 25)}
+          &nbsp;
+          <div className="truncated" style={{ textAlign: "left" }}>
+            {displayName}
+          </div>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <IconButton
@@ -76,18 +113,71 @@ export const Folder = (props: FolderProps) => {
           'aria-labelledby': 'folder-menu-button',
         }}
       >
-        {props.menuList.map((item, index) => {
-          return (
-            <MenuItem key={index} onClick={(e: any) => {
-              props.menuFunctions[index](e)
-            }}>
-              {item}
-            </MenuItem>
-          )
-        })}
+        {props.isOrganizationFolder ? (
+          //if org folder
+          <>
+            {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? (
+              //if admin
+              <>
+                {adminOrgMenu.map((item: string, index: number) => {
+                  return (
+                    <MenuItem key={index} onClick={(e: any) => {
+                      adminOrgMenuFunctions[index]()
+                    }}>
+                      {item}
+                    </MenuItem>
+                  )
+                })}
+              </>
+            ) : (
+              //else if instructor
+              <>
+                {instructorOrgMenu.map((item: string, index: number) => {
+                  return (
+                    <MenuItem key={index} onClick={(e: any) => {
+                      instructorOrgMenuFunctions[index]()
+                    }}>
+                      {item}
+                    </MenuItem>
+                  )
+                })}
+              </>
+            )}
+          </>
+        ) : (
+          //if user folder
+          <>
+            {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? (
+              //if admin
+              <>
+                {adminUserMenu.map((item: string, index: number) => {
+                  return (
+                    <MenuItem key={index} onClick={(e: any) => {
+                      adminUserMenuFunctions[index]()
+                    }}>
+                      {item}
+                    </MenuItem>
+                  )
+                })}
+              </>
+            ) : (
+              //else if instructor
+              <>
+                {instructorUserMenu.map((item: string, index: number) => {
+                  return (
+                    <MenuItem key={index} onClick={(e: any) => {
+                      instructorUserMenuFunctions[index]()
+                    }}>
+                      {item}
+                    </MenuItem>
+                  )
+                })}
+              </>
+            )}
+          </>
+        )}
       </Menu>
     </div>
-
   );
 };
 

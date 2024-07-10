@@ -37,4 +37,15 @@ export type PromptType = {
   isDeleted: boolean,
   name: string,
   prompt: string,
+  tags?: Array<string>,
+}
+
+export type FolderType = {
+  id: string,
+  creater: CustomUserType,
+  organization: string,
+  timestamp: string,
+  isDeleted: boolean,
+  name: string,
+  prompts: Array<PromptType>,
 }

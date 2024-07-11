@@ -480,8 +480,8 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
         onRequestClose={() => setOpenDeleteModal(false)}
         actions={
           <>
-            <Button variant="contained" color="primary" onClick={(e) => handleSubmit(e, false, true)}>
-              Submit
+            <Button variant="contained" color="error" onClick={(e) => handleSubmit(e, false, true)}>
+              Delete
             </Button>
             <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(false)}>
               Cancel

@@ -15,6 +15,7 @@ import {
   OutlinedInput,
   Select,
   SelectChangeEvent,
+  TextField,
 } from "@mui/material";
 import { FolderType, PromptType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
@@ -157,11 +158,16 @@ export default function Library(): JSX.Element {
 
   function refreshList() {
     setIsLoading(true);
+    setOrgFolderList([]);
+    setUserFolderList([]);
     const controller = new AbortController();
-    getOrgFolders("", controller.signal)
-    getUserFolders("", controller.signal)
+    getOrgFolders("", controller.signal);
+    getUserFolders("", controller.signal);
   }
 
+  function loading() {
+    setIsLoading(true);
+  }
 
   return !isLoading ? (
     <div className="library">
@@ -189,6 +195,7 @@ export default function Library(): JSX.Element {
                   folder={folder}
                   key={i}
                   refreshList={refreshList}
+                  loading={loading}
                 />
               )
             })}
@@ -200,6 +207,7 @@ export default function Library(): JSX.Element {
                   folder={folder}
                   key={i}
                   refreshList={refreshList}
+                  loading={loading}
                 />
               )
             })}

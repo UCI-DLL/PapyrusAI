@@ -49,3 +49,10 @@ export type FolderType = {
   name: string,
   prompts: Array<PromptType>,
 }
+
+export type TagType = {
+  id: string,
+  isDeleted: boolean,
+  organization: string,
+  name?: string, //this is a placeholder for updating the tag to a new name
+}

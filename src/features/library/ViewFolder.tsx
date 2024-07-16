@@ -47,10 +47,6 @@ export default function ViewFolder(): JSX.Element {
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
 
-  const menuList = ["hello", "world"]
-  function something() {
-    console.log(1)
-  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -63,7 +59,7 @@ export default function ViewFolder(): JSX.Element {
       location.pathname.split("/")[2] &&
       location.pathname.split("/")[2] !== "org"
     ) {
-      //get folder data
+      //get user folder data
       const fodlerId = location.pathname.split("/")[2];
       Get(getUserFolder(fodlerId), controller.signal).then(res => {
         if (res && res.status && res.status < 300) {
@@ -94,6 +90,7 @@ export default function ViewFolder(): JSX.Element {
       location.pathname.split("/")[2] === "org" &&
       location.pathname.split("/")[3]
     ) {
+      //get org folder
       const fodlerId = location.pathname.split("/")[3];
       Get(getOrgFolder(fodlerId), controller.signal).then(res => {
         if (res && res.status && res.status < 300) {

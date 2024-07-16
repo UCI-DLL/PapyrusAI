@@ -16,6 +16,6 @@ export function getTag(id: string) {
   return `tag/${id}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function updateTag(id: string) {
+export function updateTag(id: string) { //id is old tag name. pass in {id, name} id is old tag, name is new tag
   return `tag/${id}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }

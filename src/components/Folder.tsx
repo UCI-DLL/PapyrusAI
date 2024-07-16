@@ -1,6 +1,6 @@
 
 import React, { useContext, useState } from "react";
-import { Button, IconButton, Menu, MenuItem, TextField } from "@mui/material";
+import { Button, Menu, MenuItem, TextField, Tooltip } from "@mui/material";
 import FolderIcon from '@mui/icons-material/Folder';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -25,7 +25,7 @@ interface FolderProps {
   isOrganizationFolder?: boolean;
   onClick: any;
   folder: FolderType;
-  key: number;
+  keyy: string;
   refreshList: () => void;
   loading: () => void;
 }
@@ -237,7 +237,7 @@ export const Folder = (props: FolderProps) => {
   const adminOrgMenuFunctions = [view, openRename, duplicate, openDemote, openDelete]
 
   return (
-    <div key={props.key} className="c-folder">
+    <div key={props.keyy ? props.keyy : "key"} className="c-folder">
       <Modal
         isOpen={openPromoteModal}
         title={"Promote Folder?"}
@@ -340,12 +340,11 @@ export const Folder = (props: FolderProps) => {
       <Button
         variant="contained"
         color='white'
-        className="folder"
         size='large'
         sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}
         onClick={props.onClick}
       >
-        <div style={{ display: "flex", justifyContent: "flex-start" }}>
+        <div className="c-folder__button__org-spacing">
           {props.isOrganizationFolder ? (
             <PushPinIcon />
           ) : <></>}
@@ -355,13 +354,14 @@ export const Folder = (props: FolderProps) => {
             {displayName}
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <IconButton
+        <Tooltip
+          title="More Actions"
+        >
+          <div
+            className="c-folder__button__menu-btn"
             aria-label="folder menu"
-            edge="start"
-            type="button"
-            id={`${props.key}-button`}
-            aria-controls={addOpen ? `${props.key}-menu` : undefined}
+            id={`${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-button`}
+            aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-menu` : ""}
             aria-haspopup="true"
             aria-expanded={addOpen ? 'true' : undefined}
             onClick={(e: any) => {
@@ -369,12 +369,12 @@ export const Folder = (props: FolderProps) => {
               handleAddClick(e)
             }}
           >
-            {<MoreVertIcon />}
-          </IconButton>
-        </div>
+            <MoreVertIcon />
+          </div>
+        </Tooltip>
       </Button>
       <Menu
-        id={`${props.key}-menu`}
+        id={`${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-menu`}
         anchorEl={addAnchorEl}
         open={addOpen}
         onClose={handleAddClose}
@@ -384,7 +384,7 @@ export const Folder = (props: FolderProps) => {
       >
         {props.isOrganizationFolder ? (
           //if org folder
-          <>
+          <div>
             {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? (
               //if admin
               <>
@@ -412,10 +412,10 @@ export const Folder = (props: FolderProps) => {
                 })}
               </>
             )}
-          </>
+          </div>
         ) : (
           //if user folder
-          <>
+          <div>
             {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? (
               //if admin
               <>
@@ -443,7 +443,7 @@ export const Folder = (props: FolderProps) => {
                 })}
               </>
             )}
-          </>
+          </div>
         )}
       </Menu>
     </div>

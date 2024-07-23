@@ -523,7 +523,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           </>
         }
       >
-        <div>This modukle is current published and available to the public. Continuing will make the module unavailable to students.</div>
+        <div>This module is current published and available to the public. Continuing will make the module unavailable to students.</div>
       </Modal>
       <div className="modules__section-header">
         <div>
@@ -568,7 +568,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
               size="small"
               aria-controls={openSave ? 'split-button-menu' : undefined}
               aria-expanded={openSave ? 'true' : undefined}
-              aria-label="select save and ativation strategy"
+              aria-label="select save and activation strategy"
               aria-haspopup="menu"
               onClick={handleToggle}
             >

@@ -42,7 +42,7 @@ export type PromptType = {
 
 export type FolderType = {
   id: string,
-  creater: CustomUserType,
+  creator: CustomUserType,
   organization: string,
   timestamp: string,
   isDeleted: boolean,

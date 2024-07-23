@@ -1,0 +1,26 @@
+@use "../global" as global;
+
+
+.c-prompt {
+  margin: global.$base;
+  flex: 1 1 auto;
+  overflow: hidden;
+  max-width: 100%;
+  min-width: 15rem;
+  -webkit-box-flex: 1;
+  vertical-align: top;
+
+  &__button {
+    &__org-spacing {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    &__menu-btn {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+  }
+}

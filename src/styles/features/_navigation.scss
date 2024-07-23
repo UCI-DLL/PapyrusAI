@@ -4,12 +4,12 @@
 .navigation {
   width: 13rem; //same as Navigation.tsx
   position: fixed;
-  z-index: 10000;
+  z-index: 1000;
 
   @media (max-width: global.$lg-break) {
     left: -17rem;
   }
-  
+
 }
 
 .top-nav-title {
@@ -70,7 +70,7 @@
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  z-index: 1000;
+  z-index: 999;
 
   @media (max-width: global.$lg-break) {
     margin-left: 0;

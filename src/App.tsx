@@ -34,8 +34,6 @@ import EditCourse from "./features/course-groups/EditCourse";
 import EditModule from "./features/modules/EditModule";
 import Account from "./features/account/Account";
 import AllModules from "./features/modules/AllModules";
-import Prompts from "./features/prompts/Prompts";
-import EditPrompt from "./features/prompts/EditPrompt";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
@@ -48,6 +46,10 @@ import {
 } from "./utility/Themes";
 import Library from "./features/library/Library";
 import ViewFolder from "./features/library/ViewFolder";
+import OldEditPrompt from "./features/prompts/EditPrompt";
+import OldPrompts from "./features/prompts/Prompts";
+import EditPrompt from "./features/library/EditPrompt";
+import CreatePrompt from "./features/library/CreatePrompt";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -283,20 +285,32 @@ function App(): JSX.Element {
                         <Route path="/library/org/:id" element={<ViewFolder />} />
                       </Route>
 
-                      {/* <Route path="/prompts/:id" element={<PrivateRoute user={user} />}>
-                        <Route path="/prompts/:id" element={<EditPrompt />} />
-                      </Route> */}
+                      <Route path="/library/org/:id/createprompt" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id/createprompt" element={<CreatePrompt />} />
+                      </Route>
+
+                      <Route path="/library/org/:id/prompts/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id/prompts/:id" element={<EditPrompt />} />
+                      </Route>
+
+                      <Route path="/library/:id/createprompt" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id/createprompt" element={<CreatePrompt />} />
+                      </Route>
+
+                      <Route path="/library/:id/prompts/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id/prompts/:id" element={<EditPrompt />} />
+                      </Route>
                     </>
                   )}
                   {/* hidden on nagivation  */}
                   {user && user.groups && user.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
                     <>
                       <Route path="/prompts" element={<PrivateRoute user={user} />}>
-                        <Route path="/prompts" element={<Prompts />} />
+                        <Route path="/prompts" element={<OldPrompts />} />
                       </Route>
 
                       <Route path="/prompts/:id" element={<PrivateRoute user={user} />}>
-                        <Route path="/prompts/:id" element={<EditPrompt />} />
+                        <Route path="/prompts/:id" element={<OldEditPrompt />} />
                       </Route>
                     </>
                   )}

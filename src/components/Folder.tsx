@@ -1,6 +1,6 @@
 
 import React, { useContext, useState } from "react";
-import { Button, Menu, MenuItem, TextField, Tooltip } from "@mui/material";
+import { Button, IconButton, Menu, MenuItem, TextField, Tooltip } from "@mui/material";
 import FolderIcon from '@mui/icons-material/Folder';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -28,6 +28,7 @@ interface FolderProps {
   keyy: string;
   refreshList: () => void;
   loading: () => void;
+  noShowMenu?: boolean;
 }
 
 export const Folder = (props: FolderProps) => {
@@ -341,7 +342,7 @@ export const Folder = (props: FolderProps) => {
         variant="contained"
         color='white'
         size='large'
-        sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}
+        sx={{ display: "flex", justifyContent: "space-between", width: "100%", border: "solid, gray, 1px" }}
         onClick={props.onClick}
       >
         <div className="c-folder__button__org-spacing">
@@ -354,24 +355,28 @@ export const Folder = (props: FolderProps) => {
             {displayName}
           </div>
         </div>
-        <Tooltip
-          title="More Actions"
-        >
-          <div
-            className="c-folder__button__menu-btn"
-            aria-label="folder menu"
-            id={`${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-button`}
-            aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-menu` : ""}
-            aria-haspopup="true"
-            aria-expanded={addOpen ? 'true' : undefined}
-            onClick={(e: any) => {
-              e.stopPropagation()
-              handleAddClick(e)
-            }}
+        {props.noShowMenu ? (
+          <></>
+        ) : (
+          <Tooltip
+            title="More Actions"
           >
-            <MoreVertIcon />
-          </div>
-        </Tooltip>
+            <IconButton
+              className="c-folder__button__menu-btn"
+              aria-label="folder menu"
+              id={`${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-button`}
+              aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-menu` : ""}
+              aria-haspopup="true"
+              aria-expanded={addOpen ? 'true' : undefined}
+              onClick={(e: any) => {
+                e.stopPropagation()
+                handleAddClick(e)
+              }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </Tooltip>
+        )}
       </Button>
       <Menu
         id={`${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-menu`}

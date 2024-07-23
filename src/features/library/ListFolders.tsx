@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import {
   Button,
   FormControl,
@@ -14,20 +14,20 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { FolderType, PromptType, TagType } from "../../utility/types/CourseTypes";
+import { FolderType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import LinearProgress from '@mui/material/LinearProgress';
+import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import TuneIcon from '@mui/icons-material/Tune';
-import SearchIcon from '@mui/icons-material/Search';
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
-import { UserContext } from "../../utility/context/UserContext";
-import { getOrgFolder, getUserFolder } from "../../utility/endpoints/FolderEndpoints";
-import { AlertContext } from "../../utility/context/AlertContext";
-import { getTagList } from "../../utility/endpoints/TagsEndpoints";
-import { Prompt } from "../../components/Prompt";
+import { Folder } from "../../components/Folder";
+import {
+  getOrgFolderList,
+  getUserFolderList
+} from "../../utility/endpoints/FolderEndpoints";
 
 
 export enum SortOptions {
@@ -37,28 +37,39 @@ export enum SortOptions {
   Oldest = "Oldest",
 }
 
-export default function ViewFolder(): JSX.Element {
-  let location = useLocation();
+export enum OwnerTypeOptions {
+  Any = "Any",
+  "Me" = "Me",
+  "Organization" = "Organization"
+}
+
+interface ListFoldersProps {
+  noShowMenu?: boolean;
+  onClick?: (folderId: string, isOrgFolder: boolean) => void;
+}
+
+export default function ListFolders(props: ListFoldersProps): JSX.Element {
   let navigator = useNavigate();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [folder, setFolder] = useState<FolderType>();
-  const [filteredFolder, setFilteredFolder] = useState<FolderType>();
-  const { user } = useContext(UserContext);
-  const { setAlert } = useContext(AlertContext);
+  const [orgFolderList, setOrgFolderList] = useState<Array<FolderType>>([]);
+  const [userFolderList, setUserFolderList] = useState<Array<FolderType>>([]);
+  const [orgFilteredFolderList, setOrgFilteredFolderList] = useState<Array<FolderType>>([]);
+  const [userFilteredFolderList, setUserFilteredFolderList] = useState<Array<FolderType>>([]);
   const [filters, setFilters] = useState<{
     search: string,
     sort: SortOptions,
+    owner: OwnerTypeOptions,
     startDate: Dayjs | null,
     endDate: Dayjs | null,
-    tags: string,
+    tags: Array<string> //TODO
   }>({
     search: "", //title of folder or title or contents of prompts
     sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+    owner: OwnerTypeOptions.Any,
     startDate: null,
     endDate: null,
-    tags: "",
+    tags: []
   });
-  const [tagList, setTagList] = useState<Array<TagType>>([]);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -70,96 +81,28 @@ export default function ViewFolder(): JSX.Element {
 
   useEffect(() => {
     const controller = new AbortController();
-    //get pathname to figure out if we are editing 
-    if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[1] === "library" &&
-      location.pathname.split("/")[2] &&
-      location.pathname.split("/")[2] !== "org"
-    ) {
-      //get user folder data
-      getFolder(false, location.pathname.split("/")[2], controller.signal)
-    } else if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[1] === "library" &&
-      location.pathname.split("/")[2] &&
-      location.pathname.split("/")[2] === "org" &&
-      location.pathname.split("/")[3]
-    ) {
-      //get org folder
-      getFolder(true, location.pathname.split("/")[3], controller.signal)
+    setIsLoading(true);
+    if (orgFolderList.length === 0) {
+      getOrgFolders("", controller.signal)
     }
-
-    if (tagList.length === 0) {
-      getTags("", controller.signal)
+    if (userFolderList.length === 0) {
+      getUserFolders("", controller.signal)
     }
-
 
     return () => {
       controller.abort();
     };
     // eslint-disable-next-line
-  }, [location.pathname]);
+  }, []);
 
-  function getFolder(isOrg: boolean, folderId: string, signal: AbortSignal) {
-    if (!isOrg) {
-      Get(getUserFolder(folderId), signal).then(res => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //also set session
-            setFolder(res.data);
-            setFilteredFolder(res.data);
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            //handle error
-            //redirect to prompt list
-            navigator("/library");
-            setAlert({ message: "Folder Does Not Exist", type: "error" });
-            setIsLoading(false);
-          }
-        }
-      });
-    } else {
-      Get(getOrgFolder(folderId), signal).then(res => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //also set session
-            setFolder(res.data);
-            setFilteredFolder(res.data);
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            //handle error
-            //redirect to prompt list
-            // navigator("/library");
-            setAlert({ message: "Folder Does Not Exist", type: "error" });
-            setIsLoading(false);
-          }
-        }
-      });
-    }
-  }
-
-  function getTags(startKey: string, signal: AbortSignal) {
+  function getOrgFolders(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getTagList(limit, startKey), signal).then(res => {
+    Get(getOrgFolderList(limit, startKey), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
+        if (res.data && res.data.folders && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
-          setTagList((prev) => [...prev, ...res.data.tags]);
+          setOrgFolderList((prev) => [...prev, ...res.data.folders]);
+          setOrgFilteredFolderList((prev) => [...prev, ...res.data.folders]);
           //if the data is 20 prompts, then call for the next page
           //handle pages
           if (
@@ -168,7 +111,7 @@ export default function ViewFolder(): JSX.Element {
             res.data.LastEvaluatedKey &&
             res.data.LastEvaluatedKey.id
           ) {
-            getTags(res.data.LastEvaluatedKey.id, signal);
+            getOrgFolders(res.data.LastEvaluatedKey.id, signal);
           } else {
             setIsLoading(false);
           }
@@ -185,32 +128,97 @@ export default function ViewFolder(): JSX.Element {
     });
   }
 
+  function getUserFolders(startKey: string, signal: AbortSignal) {
+    var limit = 20;
+    Get(getUserFolderList(limit, startKey), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data.folders && res.data.ScannedCount !== undefined) {
+          //Get the list of all folders
+          setUserFolderList((prev) => [...prev, ...res.data.folders]);
+          setUserFilteredFolderList((prev) => [...prev, ...res.data.folders]);
+          //if the data is 20 prompts, then call for the next page
+          //handle pages
+          if (
+            res.data.ScannedCount > 0 &&
+            res.data.ScannedCount >= limit &&
+            res.data.LastEvaluatedKey &&
+            res.data.LastEvaluatedKey.id
+          ) {
+            getUserFolders(res.data.LastEvaluatedKey.id, signal);
+          } else {
+            setIsLoading(false);
+          }
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+          setIsLoading(false);
+        }
+      }
+    });
+  }
+
+  function refreshList() {
+    setIsLoading(true);
+    setOrgFolderList([]);
+    setUserFolderList([]);
+    setUserFilteredFolderList([]);
+    setOrgFilteredFolderList([]);
+    const controller = new AbortController();
+    getOrgFolders("", controller.signal);
+    getUserFolders("", controller.signal);
+  }
+
+  function loading() {
+    setIsLoading(true);
+  }
 
   function handleFilter(e: React.FormEvent) {
-    e.preventDefault()
-    if (!folder) return //return if no folder
-    if (!filteredFolder) return
-
-    var filteredPrompts = folder.prompts
+    e.preventDefault();
+    //create deep copies
+    var orgFilteredFolderList = JSON.parse(JSON.stringify(orgFolderList));
+    var userFilteredFolderList = JSON.parse(JSON.stringify(userFolderList));
 
     //handle searching
     if (filters.search !== "") {
-      filteredPrompts = filteredPrompts.filter(
-        (prompt: PromptType) => prompt.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          prompt.prompt.toLowerCase().includes(filters.search.toLowerCase())
+      orgFilteredFolderList = orgFilteredFolderList.filter(
+        (folder: FolderType) => folder.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          folder.prompts.some((prompt) => prompt.prompt.toLowerCase().includes(filters.search.toLowerCase()))
+      );
+      userFilteredFolderList = userFilteredFolderList.filter(
+        (folder: FolderType) => folder.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          folder.prompts.some((prompt) => prompt.prompt.toLowerCase().includes(filters.search.toLowerCase()))
       );
     }
-    //handle tag
-    if (filters.tags) {
-      filteredPrompts = filteredPrompts.filter(
-        (prompt: PromptType) => prompt.tags ? prompt.tags.includes(filters.tags) : prompt
-      )
+
+    //handle owner
+    if (filters.owner === OwnerTypeOptions.Me) {
+      //then remove org folders
+      orgFilteredFolderList = [];
+    } else if (filters.owner === OwnerTypeOptions.Organization) {
+      //then remove user folders
+      userFilteredFolderList = [];
     }
 
-    //handle date
+    // handle date filtering
     //Note: have to do a lot of date converting
     if (filters.startDate !== null) {
-      filteredPrompts = filteredPrompts.filter((folder: PromptType) => {
+      orgFilteredFolderList = orgFilteredFolderList.filter((folder: FolderType) => {
+        if (filters.startDate !== null) {
+          var date = new Date(parseInt(folder.id.substring(0, 13), 10));
+          if (dayjs(date.toISOString()) > filters.startDate) {
+            return folder
+          } else {
+            return false
+          }
+        } else {
+          return folder
+        }
+      });
+      userFilteredFolderList = userFilteredFolderList.filter((folder: FolderType) => {
         if (filters.startDate !== null) {
           var date = new Date(parseInt(folder.id.substring(0, 13), 10));
           if (dayjs(date.toISOString()) > filters.startDate) {
@@ -224,7 +232,19 @@ export default function ViewFolder(): JSX.Element {
       });
     }
     if (filters.endDate !== null) {
-      filteredPrompts = filteredPrompts.filter((folder: PromptType) => {
+      orgFilteredFolderList = orgFilteredFolderList.filter((folder: FolderType) => {
+        if (filters.endDate !== null) {
+          var date = new Date(parseInt(folder.id.substring(0, 13), 10));
+          if (dayjs(date.toISOString()) < filters.endDate) {
+            return folder
+          } else {
+            return false
+          }
+        } else {
+          return folder
+        }
+      });
+      userFilteredFolderList = userFilteredFolderList.filter((folder: FolderType) => {
         if (filters.endDate !== null) {
           var date = new Date(parseInt(folder.id.substring(0, 13), 10));
           if (dayjs(date.toISOString()) < filters.endDate) {
@@ -240,62 +260,42 @@ export default function ViewFolder(): JSX.Element {
 
     // handle sorting
     if (filters.sort as string === SortOptions.Ascending) {
-      filteredPrompts.sort((a: PromptType, b: PromptType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
+      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
+      userFilteredFolderList.sort((a: FolderType, b: FolderType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
     } else if (filters.sort as string === SortOptions.Descending) {
-      filteredPrompts.sort((a: PromptType, b: PromptType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
+      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
+      userFilteredFolderList.sort((a: FolderType, b: FolderType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
     } else if (filters.sort as string === SortOptions.Oldest) {
-      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
+      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
+      userFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
     } else if (filters.sort as string === SortOptions.Newest) {
-      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      userFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
     } else { //newest
-      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      userFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
     }
 
-    //finally set the filtered lists
-    setFilteredFolder(prev => prev ? ({ ...prev, prompts: filteredPrompts }) : prev)
+    //Finally set the filtered lists
+    setOrgFilteredFolderList(orgFilteredFolderList);
+    setUserFilteredFolderList(userFilteredFolderList);
   }
 
   function handleResetFilters() {
     setFilters({
       search: "", //title of folder or title or contents of prompts
       sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+      owner: OwnerTypeOptions.Any,
       startDate: null,
       endDate: null,
-      tags: ""
+      tags: []
     });
-    setFilteredFolder(folder);
+    setOrgFilteredFolderList(orgFolderList);
+    setUserFilteredFolderList(userFolderList);
   }
 
-  function refreshList() {
-    setIsLoading(true);
-    setTagList([]);
-    const controller = new AbortController();
-    if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[1] === "library" &&
-      location.pathname.split("/")[2] &&
-      location.pathname.split("/")[2] !== "org"
-    ) {
-      //get user folder data
-      getFolder(false, location.pathname.split("/")[2], controller.signal)
-    } else if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[1] === "library" &&
-      location.pathname.split("/")[2] &&
-      location.pathname.split("/")[2] === "org" &&
-      location.pathname.split("/")[3]
-    ) {
-      //get org folder
-      getFolder(true, location.pathname.split("/")[3], controller.signal)
-    }
-    getTags("", controller.signal);
-  }
 
-  return !isLoading && folder ? (
+  return !isLoading ? (
     <div className="library">
       <Menu
         id="basic-menu"
@@ -351,22 +351,21 @@ export default function ViewFolder(): JSX.Element {
               })}
             </Select>
           </FormControl>
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="tag-select-label">Tag</InputLabel>
+          <FormControl sx={{ width: "100%" }}>
+            <InputLabel shrink={true} id="creator-select-label">Owner</InputLabel>
             <Select
-              value={filters.tags}
+              value={filters.owner}
               onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, tags: e.target.value }));
+                setFilters((prev) => ({ ...prev, owner: OwnerTypeOptions[e.target.value as keyof typeof OwnerTypeOptions] }));
               }}
-              label="Tags"
-              labelId="tag-select-label"
-              id="tag-select"
+              label="Owner"
+              labelId="creator-select-label"
+              id="creator-select"
               sx={{ width: 320, maxWidth: '100%' }}
-              notched={true}
             >
-              {Object.values(tagList).map((tag, i) => {
+              {Object.keys(OwnerTypeOptions).map((key) => {
                 return (
-                  <MenuItem value={tag.id} key={i}>{tag.id}</MenuItem>
+                  <MenuItem value={key} key={key}>{key}</MenuItem>
                 )
               })}
             </Select>
@@ -413,21 +412,6 @@ export default function ViewFolder(): JSX.Element {
           </Button>
         </div>
       </Menu>
-      <div className="library__section-header">
-        <h3>{folder?.name}</h3>
-        <div>
-          {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
-            <Button variant="contained" onClick={() => {
-              console.log("org?", location.pathname.split("/")[2] !== "org")
-              navigator(location.pathname.split("/")[2] !== "org" ?
-                `/library/${folder.id}/createprompt` : //user prompt
-                `/library/org/${folder.id}/createprompt`) //is org prompt
-            }}>
-              Create Prompt
-            </Button>
-          )}
-        </div>
-      </div>
       {/* search bar */}
       <form className="library__searchbar" onSubmit={handleFilter}>
         <FormControl fullWidth>
@@ -475,16 +459,31 @@ export default function ViewFolder(): JSX.Element {
         </FormControl>
       </form>
       <hr />
-      <div className="library__prompt-list">
-        {filteredFolder && filteredFolder.prompts && filteredFolder.prompts.map((prompt: PromptType, i) => {
+      <div className="library__folder-list">
+        {orgFilteredFolderList.map((folder: FolderType, i) => {
           return (
-            <Prompt
-              prompt={prompt}
+            <Folder
+              isOrganizationFolder
+              displayName={folder.name}
+              onClick={() => props.onClick ? props.onClick(folder.id, true) : navigator(`/library/org/${folder.id}`)}
               folder={folder}
-              isOrganizationFolder={location.pathname.split("/")[2] !== "org" ? false : true}
+              keyy={`${i}org`}
+              refreshList={refreshList}
+              loading={loading}
+              noShowMenu={props.noShowMenu}
+            />
+          )
+        })}
+        {userFilteredFolderList.map((folder: FolderType, i) => {
+          return (
+            <Folder
+              displayName={folder.name}
+              onClick={() => props.onClick ? props.onClick(folder.id, false) : navigator(`/library/${folder.id}`)}
+              folder={folder}
               keyy={`${i}`}
-              refreshList={() => refreshList()}
-              loading={() => setIsLoading(true)}
+              refreshList={refreshList}
+              loading={loading}
+              noShowMenu={props.noShowMenu}
             />
           )
         })}

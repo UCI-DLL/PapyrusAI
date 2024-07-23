@@ -15,7 +15,7 @@ type EditPromptType = {
   prompt: string,
 }
 
-export default function EditPrompt(): JSX.Element {
+export default function OldEditPrompt(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
   const [session, setSession] = useState<EditPromptType>({
@@ -65,7 +65,7 @@ export default function EditPrompt(): JSX.Element {
             //handle error
             //redirect to prompt list
             navigator("/prompts");
-            setAlert({message: "Prompt Does Not Exist", type: "error"});
+            setAlert({ message: "Prompt Does Not Exist", type: "error" });
             setIsLoading(false);
           }
         }
@@ -97,7 +97,7 @@ export default function EditPrompt(): JSX.Element {
               //redirect to prompt list
               navigator("/prompts");
               //pop up notifying user of creation
-              setAlert({message: "Prompt updated", type: "success"})
+              setAlert({ message: "Prompt updated", type: "success" })
             }
           } else {
             // set errors
@@ -106,7 +106,7 @@ export default function EditPrompt(): JSX.Element {
               prompt: res.data,
               isDeleted: res.data,
             });
-            setAlert({message: res.data, type: "error"})
+            setAlert({ message: res.data, type: "error" })
           }
           // set is loading back 
           setIsLoading(false);

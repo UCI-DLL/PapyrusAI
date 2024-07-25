@@ -30,14 +30,18 @@ export type ModuleType = {
   showInitialPrompt: boolean,
   showWizard: boolean,
 }
-
+//Note: the difference between this folder/prompt and the old prompt type is 
+//old one has organization
+//new one has isOrganizationPrompt and folderId
 export type PromptType = {
   id: string,
   creator: CustomUserType,
   isDeleted: boolean,
   name: string,
   prompt: string,
-  tags?: Array<string>,
+  tags: Array<string>,
+  isOrganizationPrompt: boolean,
+  folderId?: string,
 }
 
 export type FolderType = {

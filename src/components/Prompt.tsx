@@ -11,10 +11,13 @@ import {
   IconButtonProps,
   Menu,
   MenuItem,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { FolderType, PromptType } from "../utility/types/CourseTypes";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
@@ -55,12 +58,14 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
 }));
 
 interface PromptProps {
-  isOrganizationFolder?: boolean;
   prompt: PromptType;
   folder: FolderType;
   keyy: string;
   refreshList: () => void;
   loading: () => void;
+  noShowMenu?: boolean;
+  onClick?: (folderId: string, promptId: string, isOrgFolder: boolean) => void;
+  showRemove?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -89,12 +94,15 @@ export const Prompt = (props: PromptProps) => {
   }
 
   function edit() {
-    props.loading()
-    if (props.isOrganizationFolder) {
-      navigator(`/library/org/${props.folder.id}/prompts/${props.prompt.id}`)
-    } else {
-      navigator(`/library/${props.folder.id}/prompts/${props.prompt.id}`)
+    if (props.folder) {
+      props.loading();
+      if (props.prompt.isOrganizationPrompt) {
+        navigator(`/library/org/${props.folder.id}/prompts/${props.prompt.id}`)
+      } else {
+        navigator(`/library/${props.folder.id}/prompts/${props.prompt.id}`)
+      }
     }
+
   }
 
   function openCopyTo() {
@@ -104,108 +112,112 @@ export const Prompt = (props: PromptProps) => {
 
   function copyTo(folderId: string, isOrgFolder: boolean) {
     handleAddClose();
-    props.loading();
-    if (props.isOrganizationFolder) {
-      if (isOrgFolder) { //copy from org folder to org foler
-        Post(postCopyOrgPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of Duplicated
-              setAlert({ message: "Folder Copied", type: "success" })
+    if (props.folder) {
+      props.loading();
+      if (props.prompt.isOrganizationPrompt) {
+        if (isOrgFolder) { //copy from org folder to org foler
+          Post(postCopyOrgPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of Duplicated
+                setAlert({ message: "Folder Copied", type: "success" })
+              }
+            } else {
+              // set errors
+              setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
             }
-          } else {
-            // set errors
-            setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
-          }
-          props.refreshList();
-        });
-      } else { //copy from org folder to user folder
-        Post(postCopyOrgPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of Duplicated
-              setAlert({ message: "Folder Copied", type: "success" })
+            props.refreshList();
+          });
+        } else { //copy from org folder to user folder
+          Post(postCopyOrgPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of Duplicated
+                setAlert({ message: "Folder Copied", type: "success" })
+              }
+            } else {
+              // set errors
+              setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
             }
-          } else {
-            // set errors
-            setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
-          }
-          props.refreshList();
-        });
-      }
-    } else {
-      if (isOrgFolder) { //copy from user folder to org foler
-        Post(postCopyUserPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of Duplicated
-              setAlert({ message: "Folder Copied", type: "success" })
+            props.refreshList();
+          });
+        }
+      } else {
+        if (isOrgFolder) { //copy from user folder to org foler
+          Post(postCopyUserPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of Duplicated
+                setAlert({ message: "Folder Copied", type: "success" })
+              }
+            } else {
+              // set errors
+              setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
             }
-          } else {
-            // set errors
-            setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
-          }
-          props.refreshList();
-        });
-      } else { //copy from user folder to user folder
-        Post(postCopyUserPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of Duplicated
-              setAlert({ message: "Folder Copied", type: "success" })
+            props.refreshList();
+          });
+        } else { //copy from user folder to user folder
+          Post(postCopyUserPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of Duplicated
+                setAlert({ message: "Folder Copied", type: "success" })
+              }
+            } else {
+              // set errors
+              setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
             }
-          } else {
-            // set errors
-            setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
-          }
-          props.refreshList();
-        });
+            props.refreshList();
+          });
+        }
       }
     }
   }
 
   function deletePrompt() {
-    props.loading()
-    if (props.isOrganizationFolder) {
-      const dataToSend = {
-        name: props.prompt.name,
-        isDeleted: true,
-        tags: props.prompt.tags,
-        prompt: props.prompt.prompt
-      }
-      // post data back
-      Put(postUpdateOrgPrompt(props.folder.id, props.prompt.id), dataToSend).then((res) => {
-        if (res.status && res.status < 300) {
-          if (res.data && res.data) {
-            //pop up notifying user of delete
-            setAlert({ message: "Prompt Deleted", type: "success" })
-          }
-        } else {
-          // set errors
-          setAlert({ message: "Prompt could not be deleted. Try again later.", type: "error" })
+    if (props.folder) {
+      props.loading()
+      if (props.prompt.isOrganizationPrompt) {
+        const dataToSend = {
+          name: props.prompt.name,
+          isDeleted: true,
+          tags: props.prompt.tags,
+          prompt: props.prompt.prompt
         }
-        props.refreshList();
-      });
-    } else {
-      const dataToSend = {
-        name: props.prompt.name,
-        isDeleted: true,
-        tags: props.prompt.tags,
-        prompt: props.prompt.prompt
-      }
-      // post data back
-      Put(postUpdateUserPrompt(props.folder.id, props.prompt.id), dataToSend).then((res) => {
-        if (res.status && res.status < 300) {
-          if (res.data && res.data) {
-            //pop up notifying user of delete
-            setAlert({ message: "Prompt Deleted", type: "success" })
+        // post data back
+        Put(postUpdateOrgPrompt(props.folder.id, props.prompt.id), dataToSend).then((res) => {
+          if (res.status && res.status < 300) {
+            if (res.data && res.data) {
+              //pop up notifying user of delete
+              setAlert({ message: "Prompt Deleted", type: "success" })
+            }
+          } else {
+            // set errors
+            setAlert({ message: "Prompt could not be deleted. Try again later.", type: "error" })
           }
-        } else {
-          // set errors
-          setAlert({ message: "Prompt could not be deleted. Try again later.", type: "error" })
+          props.refreshList();
+        });
+      } else {
+        const dataToSend = {
+          name: props.prompt.name,
+          isDeleted: true,
+          tags: props.prompt.tags,
+          prompt: props.prompt.prompt
         }
-        props.refreshList();
-      });
+        // post data back
+        Put(postUpdateUserPrompt(props.folder.id, props.prompt.id), dataToSend).then((res) => {
+          if (res.status && res.status < 300) {
+            if (res.data && res.data) {
+              //pop up notifying user of delete
+              setAlert({ message: "Prompt Deleted", type: "success" })
+            }
+          } else {
+            // set errors
+            setAlert({ message: "Prompt could not be deleted. Try again later.", type: "error" })
+          }
+          props.refreshList();
+        });
+      }
     }
   }
 
@@ -216,62 +228,64 @@ export const Prompt = (props: PromptProps) => {
 
   function moveTo(folderId: string, isOrgFolder: boolean) {
     handleAddClose();
-    props.loading();
-    if (props.isOrganizationFolder) {
-      if (isOrgFolder) { //move from org folder to org foler
-        Post(postMoveOrgPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of Moved
-              setAlert({ message: "Folder Moved", type: "success" })
+    if (props.folder) {
+      props.loading();
+      if (props.prompt.isOrganizationPrompt) {
+        if (isOrgFolder) { //move from org folder to org foler
+          Post(postMoveOrgPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of Moved
+                setAlert({ message: "Folder Moved", type: "success" })
+              }
+            } else {
+              // set errors
+              setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
             }
-          } else {
-            // set errors
-            setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
-          }
-          props.refreshList();
-        });
-      } else { //move from org folder to user folder
-        Post(postMoveOrgPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of Moved
-              setAlert({ message: "Folder Moved", type: "success" })
+            props.refreshList();
+          });
+        } else { //move from org folder to user folder
+          Post(postMoveOrgPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of Moved
+                setAlert({ message: "Folder Moved", type: "success" })
+              }
+            } else {
+              // set errors
+              setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
             }
-          } else {
-            // set errors
-            setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
-          }
-          props.refreshList();
-        });
-      }
-    } else {
-      if (isOrgFolder) { //move from user folder to org foler
-        Post(postMoveUserPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of Moved
-              setAlert({ message: "Folder Moved", type: "success" })
+            props.refreshList();
+          });
+        }
+      } else {
+        if (isOrgFolder) { //move from user folder to org foler
+          Post(postMoveUserPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of Moved
+                setAlert({ message: "Folder Moved", type: "success" })
+              }
+            } else {
+              // set errors
+              setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
             }
-          } else {
-            // set errors
-            setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
-          }
-          props.refreshList();
-        });
-      } else { //move from user folder to user folder
-        Post(postMoveUserPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of Moved
-              setAlert({ message: "Folder Moved", type: "success" })
+            props.refreshList();
+          });
+        } else { //move from user folder to user folder
+          Post(postMoveUserPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of Moved
+                setAlert({ message: "Folder Moved", type: "success" })
+              }
+            } else {
+              // set errors
+              setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
             }
-          } else {
-            // set errors
-            setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
-          }
-          props.refreshList();
-        });
+            props.refreshList();
+          });
+        }
       }
     }
   }
@@ -339,20 +353,58 @@ export const Prompt = (props: PromptProps) => {
       <Card>
         <CardHeader
           action={
-            <IconButton
-              className="c-prompt__button__menu-btn"
-              aria-label="prompt menu"
-              id={`${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-button`}
-              aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-menu` : ""}
-              aria-haspopup="true"
-              aria-expanded={addOpen ? 'true' : undefined}
-              onClick={(e: any) => {
-                e.stopPropagation()
-                handleAddClick(e)
-              }}
-            >
-              <MoreVertIcon />
-            </IconButton>
+            props.noShowMenu ? props.showRemove ? (
+              <Tooltip title={"Remove Prompt"}>
+                <IconButton
+                  className="c-prompt__button__menu-btn"
+                  aria-label="prompt menu"
+                  id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
+                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
+                  aria-haspopup="true"
+                  aria-expanded={addOpen ? 'true' : undefined}
+                  onClick={(e: any) => {
+                    e.stopPropagation()
+                    if (props.onClick) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt)
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Tooltip title={"Add Prompt"}>
+                <IconButton
+                  className="c-prompt__button__menu-btn"
+                  aria-label="prompt menu"
+                  id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
+                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
+                  aria-haspopup="true"
+                  aria-expanded={addOpen ? 'true' : undefined}
+                  onClick={(e: any) => {
+                    e.stopPropagation()
+                    if (props.onClick && props.folder) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt ?? false)
+                  }}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Tooltip title={"Prompt Options"}>
+                <IconButton
+                  className="c-prompt__button__menu-btn"
+                  aria-label="prompt menu"
+                  id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
+                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
+                  aria-haspopup="true"
+                  aria-expanded={addOpen ? 'true' : undefined}
+                  onClick={(e: any) => {
+                    e.stopPropagation()
+                    handleAddClick(e)
+                  }}
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              </Tooltip>
+            )
           }
           title={props.prompt.name}
           subheader={
@@ -392,7 +444,7 @@ export const Prompt = (props: PromptProps) => {
         </CardActions>
       </Card>
       <Menu
-        id={`${props.keyy ? props.keyy : "key"}${props.isOrganizationFolder ? "org" : ""}-menu`}
+        id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu`}
         anchorEl={addAnchorEl}
         open={addOpen}
         onClose={handleAddClose}
@@ -400,7 +452,7 @@ export const Prompt = (props: PromptProps) => {
           'aria-labelledby': 'prompt-menu-button',
         }}
       >
-        {props.isOrganizationFolder ? (
+        {props.prompt.isOrganizationPrompt ? (
           //if org folder
           <div>
             {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? (

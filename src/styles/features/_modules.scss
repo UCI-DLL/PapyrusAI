@@ -11,11 +11,18 @@
   padding: global.$base;
   width: 100%;
 
+  &__prompt-list {
+    width: 100%;
+    display: grid;
+    grid-gap: global.$base;
+    grid-template-columns: repeat(auto-fill, minmax(49%, 1fr));
+  }
+
   &__list {
+    width: 100%;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    width: 100%;
   }
 
   &__section-header {
@@ -48,6 +55,7 @@
       color: var(--white) !important;
       background-color: var(--error) !important;
     }
+
     color: var(--error) !important;
   }
 

@@ -46,5 +46,13 @@ export function getUsersInCourse(courseId: string, limit?: number, nextToken: st
   } else {
     return `course/${courseId}/users?organization=${process.env.REACT_APP_ORGANIZATION}`;
   }
-  
+
+}
+
+export function postCopyCourse(courseId: string) {
+  return `course/${courseId}/copy?organization=${process.env.REACT_APP_ORGANIZATION}`;
+}
+
+export function putCopyModule(courseId: string, moduleId: string, copyToCourseId: string) {
+  return `course/${courseId}/module/${moduleId}/copy/${copyToCourseId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }

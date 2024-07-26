@@ -47,6 +47,7 @@ export type PromptType = {
 export type FolderType = {
   id: string,
   creator: CustomUserType,
+  userId?: string, //if folder is user type
   organization: string,
   timestamp: string,
   isDeleted: boolean,

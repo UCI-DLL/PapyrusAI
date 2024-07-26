@@ -38,7 +38,7 @@ $body-color: var(--black);
     right: 0;
     top: 0;
     overflow-y: auto;
-    z-index: 10000000;
+    z-index: 1300; //10000000;
   }
 
   &__title {

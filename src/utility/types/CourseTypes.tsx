@@ -30,11 +30,34 @@ export type ModuleType = {
   showInitialPrompt: boolean,
   showWizard: boolean,
 }
-
+//Note: the difference between this folder/prompt and the old prompt type is 
+//old one has organization
+//new one has isOrganizationPrompt and folderId
 export type PromptType = {
   id: string,
   creator: CustomUserType,
   isDeleted: boolean,
   name: string,
   prompt: string,
+  tags: Array<string>,
+  isOrganizationPrompt: boolean,
+  folderId?: string,
+}
+
+export type FolderType = {
+  id: string,
+  creator: CustomUserType,
+  userId?: string, //if folder is user type
+  organization: string,
+  timestamp: string,
+  isDeleted: boolean,
+  name: string,
+  prompts: Array<PromptType>,
+}
+
+export type TagType = {
+  id: string,
+  isDeleted: boolean,
+  organization: string,
+  name?: string, //this is a placeholder for updating the tag to a new name
 }

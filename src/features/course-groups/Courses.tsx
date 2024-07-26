@@ -22,25 +22,7 @@ export default function Courses(): JSX.Element {
   useEffect(() => {
     const controller = new AbortController();
     if (!showAddCourseModal) {
-      setIsLoading(true);
-      Get(getCourseList(), controller.signal).then(res => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //Get the list of all courses for this user
-            setCourseList(res.data);
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            // handle error
-            setError("No Courses Found");
-            setIsLoading(false);
-          }
-        }
-      });
+      getCourses(controller.signal)
     }
 
     return () => {
@@ -49,6 +31,32 @@ export default function Courses(): JSX.Element {
     // eslint-disable-next-line
   }, [showAddCourseModal]);
 
+  function getCourses(signal: AbortSignal) {
+    setIsLoading(true);
+    Get(getCourseList(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all courses for this user
+          setCourseList(res.data);
+          setIsLoading(false);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+          setError("No Courses Found");
+          setIsLoading(false);
+        }
+      }
+    });
+  }
+
+  function refreshList() {
+    const controller = new AbortController();
+    getCourses(controller.signal)
+  }
 
   return !isLoading ? (
     <div className="courses">
@@ -85,7 +93,7 @@ export default function Courses(): JSX.Element {
 
           </div>
           <hr />
-          <CourseList list={courseList} />
+          <CourseList list={courseList} refreshList={refreshList} />
         </>
       )}
     </div>

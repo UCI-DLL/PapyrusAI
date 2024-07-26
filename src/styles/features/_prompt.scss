@@ -1,6 +1,7 @@
+//New prompt
 @use "../global" as global;
 
-.courses {
+.prompt {
 
   max-width: global.$lg-break;
   display: flex;
@@ -12,10 +13,10 @@
   width: 100%;
 
   &__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
     width: 100%;
-    display: grid;
-    grid-gap: global.$base;
-    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
   }
 
   &__section-header {
@@ -40,6 +41,7 @@
     background-color: var(--white);
     padding: 1rem;
     border-radius: 0.5rem;
+
   }
 
   &__discard_background {
@@ -54,7 +56,6 @@
   &__delete_background {
     &:hover {
       color: var(--error) !important;
-
     }
   }
 

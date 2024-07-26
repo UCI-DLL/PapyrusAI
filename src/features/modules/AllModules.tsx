@@ -17,7 +17,18 @@ export default function AllModules(): JSX.Element {
     const controller = new AbortController();
     setIsLoading(true);
     //show all modules
-    Get(getCourseList(), controller.signal).then(res => {
+    getCourses(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+
+    // eslint-disable-next-line
+  }, []);
+
+  function getCourses(signal: AbortSignal) {
+    setIsLoading(true);
+    Get(getCourseList(), signal).then(res => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           // Use next line if you want the list of all modules but dont care about the course id or name
@@ -37,13 +48,12 @@ export default function AllModules(): JSX.Element {
         }
       }
     });
+  }
 
-    return () => {
-      controller.abort();
-    };
-
-    // eslint-disable-next-line
-  }, []);
+  function refreshList() {
+    const controller = new AbortController();
+    getCourses(controller.signal)
+  }
 
   return !isLoading ? (
     <div className="modules">
@@ -61,7 +71,7 @@ export default function AllModules(): JSX.Element {
                 return course.modules.length > 0 ? (
                   <div key={index} style={{ width: "100%" }}>
                     <h4>{course.name}</h4>
-                    <ModuleList course={course} />
+                    <ModuleList course={course} refreshList={refreshList} />
                   </div>
                 ) : (<div key={index}></div>)
               })}

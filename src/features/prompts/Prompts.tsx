@@ -35,7 +35,7 @@ export enum SortOptions {
   Oldest = "Oldest",
 }
 
-export default function Prompts(): JSX.Element {
+export default function OldPrompts(): JSX.Element {
   let navigator = useNavigate();
   const [promptList, setPromptList] = useState<Array<PromptType>>([]); //og prompt list
   const [isLoading, setIsLoading] = useState<boolean>(true);

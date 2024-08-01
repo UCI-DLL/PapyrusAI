@@ -2,6 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
   Button,
+  IconButton,
+  TextField,
 } from "@mui/material";
 import { FolderType, TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
@@ -11,6 +13,7 @@ import { getOrgFolder, getUserFolder } from "../../utility/endpoints/FolderEndpo
 import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import ListPrompts from "./ListPrompts";
+import FileUploadOutlined from "@mui/icons-material/FileUploadOutlined";
 
 
 export enum SortOptions {
@@ -20,6 +23,18 @@ export enum SortOptions {
   Oldest = "Oldest",
 }
 
+const AcceptedFileType = {
+  Text: '.txt',
+  Gif: '.gif',
+  Jpeg: '.jpg',
+  Png: '.png',
+  Doc: '.doc',
+  Pdf: '.pdf',
+  AllImages: 'image/*',
+  AllVideos: 'video/*',
+  AllAudios: 'audio/*',
+};
+
 export default function ViewFolder(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
@@ -28,6 +43,39 @@ export default function ViewFolder(): JSX.Element {
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
+  const fileRef = React.useRef<any>();
+  const acceptedFormats = (fileType: any) =>
+    typeof fileType === 'string'
+      ? fileType
+      : Array.isArray(fileType)
+        ? fileType?.join(',')
+        : AcceptedFileType.Text;
+
+  const [selectedFiles, setSelectedFiles] = React.useState<any>();
+
+  const handleFileSelect = (event: any) => {
+    setSelectedFiles(event?.target?.files?.[0]);
+  };
+
+  const onUpload = () => {
+    console.log(selectedFiles);
+  };
+
+  const onClear = () => {
+    setSelectedFiles(undefined);
+  };
+
+  const onUpdate = (event: any) => {
+    if (event.target.textContent.trim().toLowerCase() === 'change' && fileRef.current) {
+      onClear();
+      fileRef.current.click();
+      return;
+    }
+    if (event.target.textContent.trim().toLowerCase() === 'clear') {
+      onClear();
+      return;
+    }
+  };
 
 
   useEffect(() => {
@@ -145,6 +193,11 @@ export default function ViewFolder(): JSX.Element {
     });
   }
 
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    e.preventDefault()
+    console.log(e.target.value)
+  }
+
 
   return !isLoading && folder ? (
     <div className="library">
@@ -152,16 +205,76 @@ export default function ViewFolder(): JSX.Element {
         <h3>{folder?.name}</h3>
         <div>
           {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
-            <Button variant="contained" onClick={() => {
-              navigator(location.pathname.split("/")[2] !== "org" ?
-                `/library/${folder.id}/createprompt` : //user prompt
-                `/library/org/${folder.id}/createprompt`) //is org prompt
-            }}>
-              Create Prompt
-            </Button>
+            <>
+              <Button variant="contained" onClick={() => {
+                navigator(location.pathname.split("/")[2] !== "org" ?
+                  `/library/${folder.id}/createprompt` : //user prompt
+                  `/library/org/${folder.id}/createprompt`) //is org prompt
+              }}>
+                Create Prompt
+              </Button>
+            </>
+
           )}
         </div>
       </div>
+      {/* <TextField
+        variant="standard"
+        type="text"
+        InputProps={{
+          endAdornment: (
+            <IconButton component="label">
+              <FileUploadOutlined />
+              <input
+                type="file"
+                hidden
+                onChange={handleUpload}
+                name="[licenseFile]"
+              />
+            </IconButton>
+          ),
+        }}
+      /> */}
+
+      <>
+        <input
+          ref={fileRef}
+          hidden
+          type="file"
+          // accept={acceptedFormats}
+          onChange={handleFileSelect}
+        />
+        {!selectedFiles?.name && (
+          <Button
+            variant="contained"
+            component="label"
+            style={{ textTransform: 'none' }}
+            onClick={() => fileRef.current?.click()}
+          >
+            Choose file to upload
+          </Button>
+        )}
+        {selectedFiles?.name && (
+          <Button
+            variant="contained"
+            component="label"
+            style={{ textTransform: 'none' }}
+            onClick={onUpdate}
+          >
+            <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
+            <span style={{ padding: '10px' }}> Change</span>
+            <span>Clear</span>
+          </Button>
+        )}
+        <Button
+          color="primary"
+          disabled={!selectedFiles}
+          style={{ textTransform: 'none' }}
+          onClick={onUpload}
+        >
+          Upload
+        </Button>
+      </>
 
       <ListPrompts folderId={folder.id} isOrgFolder={location.pathname.split("/")[2] === "org"} />
     </div>

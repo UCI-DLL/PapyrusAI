@@ -117,3 +117,19 @@ export function postMoveUserPromptToOrgFolder(folderid: string, promptid: string
 export function postMoveUserPromptToUserFolder(folderid: string, promptid: string, userfolderid: string) {
   return `folder/${folderid}/prompt/${promptid}/move/user/${userfolderid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
+
+
+
+
+
+/**
+ * RAG stuff
+ */
+
+export function getSignedS3BucketUploadOrgFolder(folderId: string) {
+  return `rag/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+}
+
+export function getSignedS3BucketUploadUserFolder(folderId: string) {
+  return `rag/upload/${folderId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+}

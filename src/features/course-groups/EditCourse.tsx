@@ -207,11 +207,12 @@ export default function EditCourse(): JSX.Element {
               name: u.name,
               family_name: u.family_name,
               email: u.email,
-              sub: u.sub
+              sub: u.sub,
+              username: u.username
             }
           });
           if (user) {
-            tempUserList = tempUserList.filter((x: CustomUserType) => x.sub !== user.sub);
+            tempUserList = tempUserList.filter((x: CustomUserType) => x.username !== user.username);
           }
           setUserList((prev) => [...prev, ...tempUserList]);
 

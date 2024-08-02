@@ -174,7 +174,7 @@ export default function CourseCard({ course, refreshList, keyy, onClick }: Cours
             user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
             user?.groups.includes(course.id + "-TA") //handle tas
           ) && (
-            course.instructor.sub === user.sub ? (
+            course.instructor.username === user.username ? (
               ownerMenu.map((item: string, index: number) => {
                 return (
                   <MenuItem key={index} onClick={(e: any) => {

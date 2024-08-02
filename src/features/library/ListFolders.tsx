@@ -47,6 +47,7 @@ export enum OwnerTypeOptions {
 interface ListFoldersProps {
   noShowMenu?: boolean;
   onClick?: (folderId: string, isOrgFolder: boolean) => void;
+  disableFolderId?: string;
 }
 
 export default function ListFolders(props: ListFoldersProps): JSX.Element {
@@ -528,6 +529,9 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
       <hr />
       <div className="library__folder-list">
         {orgFilteredFolderList.map((folder: FolderType, i) => {
+          if (props.disableFolderId && props.disableFolderId === folder.id) {
+            return <></>
+          }
           return (
             <Folder
               isOrganizationFolder
@@ -542,6 +546,9 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
           )
         })}
         {userFilteredFolderList.map((folder: FolderType, i) => {
+          if (props.disableFolderId && props.disableFolderId === folder.id) {
+            return <></>
+          }
           return (
             <Folder
               displayName={folder.name}

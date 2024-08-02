@@ -56,7 +56,8 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
     return () => {
       controller.abort();
     };
-  }, [user])
+    // eslint-disable-next-line
+  }, [user, course])
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);

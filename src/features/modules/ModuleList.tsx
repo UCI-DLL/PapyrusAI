@@ -241,9 +241,9 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
                     user?.groups.includes(course.id + "-TA") //handle tas
                   ) &&
                     user?.groups.includes(course.id) &&
-                    (course.instructor.sub === user.sub || (
+                    (course.instructor.username === user.username || (
                       course.taList &&
-                      course.taList.find((a: CustomUserType) => a.sub === user?.sub) //handle tas too
+                      course.taList.find((a: CustomUserType) => a.username === user?.username) //handle tas too
                     )) ? (
                     <Button onClick={() => navigator(`/courses/${course.id}/editmodule/${module.id}`)}>Edit</Button>
                   ) : <></>}

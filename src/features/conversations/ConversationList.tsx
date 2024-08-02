@@ -144,7 +144,7 @@ export default function ConversationList(): JSX.Element {
             setConversationList(res.data);
             //then go right into chat
             if (res.data.conversations) {
-              navigator(`/chat/${user?.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${res.data.conversations.length - 1}`)
+              navigator(`/chat/${user?.username}/${moduleIds.courseId}/${moduleIds.moduleId}/${res.data.conversations.length - 1}`)
             }
           }
         } else if (res && res.status === 401) {
@@ -365,8 +365,8 @@ export default function ConversationList(): JSX.Element {
                   conversationList.conversations.sort((a: any, b: any) => (b.id > a.id) ? 1 : ((a.id > b.id) ? -1 : 0)).map((conversation, index) => {
                     const time = new Date(parseInt(conversation.id.substring(0, 13), 10)).toLocaleString();
                     const link = viewUser ?
-                      `/chat/${viewUser.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}` :
-                      `/chat/${user.sub}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}`
+                      `/chat/${viewUser.username}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}` :
+                      `/chat/${user.username}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}`
                     return (conversation.isDeleted && !viewUser) ? (<div key={index}></div>) : (
                       <div key={index}>
                         <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
@@ -381,7 +381,7 @@ export default function ConversationList(): JSX.Element {
                           {viewUser ? (
                             <>
                               {conversation.isDeleted && (
-                                <Chip label="This is a deleted conversation" color="error" icon={<DeleteForeverIcon/>}/>
+                                <Chip label="This is a deleted conversation" color="error" icon={<DeleteForeverIcon />} />
                               )}
                               &nbsp;
                               <Button variant="contained" onClick={() => navigator(link)}>View</Button>

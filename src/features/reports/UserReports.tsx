@@ -18,6 +18,8 @@ import { CustomUserType, UserType } from "../../utility/types/UserTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
+import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { AlertContext } from "../../utility/context/AlertContext";
 
 
 export default function UserReports(): JSX.Element {
@@ -32,18 +34,18 @@ export default function UserReports(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [viewUser, setViewUser] = useState<UserType>();
   const { user } = useContext(UserContext);
+  const { setAlert } = useContext(AlertContext);
 
   useEffect(() => {
     const controller = new AbortController();
     if (
-      location.state &&
       location.pathname.split("/")[1] === "reports" &&
       location.pathname.split("/")[2] &&
       user
     ) {
       //Get viewUser information
       const username = location.pathname.split("/")[2];
-      setViewUser(location.state);
+      getSpecificUser(username, controller.signal);
 
       //get list of conversation
       //TODO handle pagination of conversation lists later when reports is more defined
@@ -54,13 +56,13 @@ export default function UserReports(): JSX.Element {
             //for each courseid, get the course data
             res.data.map((conversation: any) => {
               Get(getCourse(conversation.courseId), controller.signal).then(res1 => {
-                if (res1.status && res1.status < 300) {
+                if (res1 && res1.status && res1.status < 300) {
                   if (
                     res1.data &&
                     res1.data.instructor &&
-                    (res1.data.instructor.sub === user.sub || (
+                    (res1.data.instructor.username === user.username || (
                       res1.data.taList &&
-                      res1.data.taList.find((a: CustomUserType) => a.sub === user.sub) //handle tas too
+                      res1.data.taList.find((a: CustomUserType) => a.username === user.username) //handle tas too
                     ) || user.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin")) //or if an admin
                   ) {
                     //set conversation data
@@ -71,7 +73,7 @@ export default function UserReports(): JSX.Element {
                       moduleId: conversation.moduleId
                     }]);
                   }
-                } else if (res1.status === 401) {
+                } else if (res1 && res1.status === 401) {
                   navigator("/login");
                 } else {
                   //handle errors
@@ -95,6 +97,23 @@ export default function UserReports(): JSX.Element {
     })
     // eslint-disable-next-line
   }, [location]);
+
+  function getSpecificUser(username: string, signal: AbortSignal) {
+    //get user details
+    Get(getUserData(username), signal).then((res) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          setViewUser(res.data);
+        }
+      } else {
+        if (res === undefined) {
+        } else {
+          //handle error
+          setAlert({ message: "Could not find user", type: "error" })
+        }
+      }
+    });
+  }
 
   return !isLoading ? (
     <div className="reports">
@@ -142,7 +161,7 @@ export default function UserReports(): JSX.Element {
                   <TableCell align="right">{row.conversations.length}</TableCell>
                   <TableCell align="right">{tempTime}</TableCell>
                   <TableCell align="right">
-                    <Button variant="contained" onClick={() => navigator(`/courses/${row.courseId}/modules/${row.moduleId}/username/${viewUser?.sub}`)}>
+                    <Button variant="contained" onClick={() => navigator(`/courses/${row.courseId}/modules/${row.moduleId}/username/${viewUser?.username}`)}>
                       List Conversations
                     </Button>
                   </TableCell>

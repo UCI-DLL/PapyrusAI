@@ -49,6 +49,8 @@ export default function Library(): JSX.Element {
 
 
   useEffect(() => {
+    setAlert({ message: "", type: "info" });
+
     const controller = new AbortController();
     setIsLoading(true);
 
@@ -239,7 +241,9 @@ export default function Library(): JSX.Element {
                 size={"small"}
                 value={newTag}
                 onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-                  setNewTag(e.target.value)
+                  if (onlyLettersAndNumbers(e.target.value)) {
+                    setNewTag(e.target.value)
+                  }
                 }}
               />
               &nbsp;

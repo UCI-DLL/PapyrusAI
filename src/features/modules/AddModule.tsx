@@ -82,6 +82,7 @@ export default function AddModule(): JSX.Element {
   const anchorRefSave = useRef<HTMLDivElement>(null);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
+  const [openConfirmationModal, setOpenConfirmationModal] = useState<string>("");
 
 
   function handleSaveClick(e: any) {
@@ -227,13 +228,18 @@ export default function AddModule(): JSX.Element {
 
   function refreshList() { } //empty
 
-  function removePrompt(folderId: string, promptId: string, isOrgFolder: boolean) {
+  function removePrompt(promptId: string) {
     // remove prompt from list
     setSession(prev => {
       var promptList = prev.prompts;
       promptList = promptList.filter(p => p.id !== promptId);
       return { ...prev, prompts: promptList };
     })
+    setOpenConfirmationModal("");
+  }
+
+  function setConfirmationModal(folderId: string, promptId: string, isOrgFolder: boolean) {
+    setOpenConfirmationModal(promptId);
   }
 
   return !isLoading ? (
@@ -316,6 +322,23 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
         <div>
           <ListPrompts folderId={openSelectPromptModal.folderId} isOrgFolder={openSelectPromptModal.isOrgFolder} noShowMenu onClick={selectPrompt} />
         </div>
+      </Modal>
+      <Modal
+        isOpen={openConfirmationModal !== ""}
+        title={"Remove Prompt?"}
+        onRequestClose={() => setOpenConfirmationModal("")}
+        actions={
+          <>
+            <Button variant="contained" color="primary" onClick={() => removePrompt(openConfirmationModal)}>
+              Remove
+            </Button>
+            <Button variant="contained" color="secondary" onClick={() => setOpenConfirmationModal("")}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <div>Are you sure you would like to remove this prompt from the module?</div>
       </Modal>
       <div className="modules__section-header">
         <div>
@@ -444,7 +467,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
                   loading={() => setIsLoading(true)}
                   noShowMenu={true}
                   showRemove
-                  onClick={removePrompt}
+                  onClick={setConfirmationModal}
                 />
               )
             })}

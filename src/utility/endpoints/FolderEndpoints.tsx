@@ -127,9 +127,9 @@ export function postMoveUserPromptToUserFolder(folderid: string, promptid: strin
  */
 
 export function getSignedS3BucketUploadOrgFolder(folderId: string) {
-  return `rag/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  return `ragfile/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
 export function getSignedS3BucketUploadUserFolder(folderId: string) {
-  return `rag/upload/${folderId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  return `ragfile/upload/${folderId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }

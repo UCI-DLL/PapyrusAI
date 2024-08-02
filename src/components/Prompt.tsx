@@ -120,11 +120,11 @@ export const Prompt = (props: PromptProps) => {
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of Duplicated
-                setAlert({ message: "Folder Copied", type: "success" })
+                setAlert({ message: "Prompt Copied", type: "success" })
               }
             } else {
               // set errors
-              setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
+              setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
             }
             props.refreshList();
           });
@@ -133,11 +133,11 @@ export const Prompt = (props: PromptProps) => {
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of Duplicated
-                setAlert({ message: "Folder Copied", type: "success" })
+                setAlert({ message: "Prompt Copied", type: "success" })
               }
             } else {
               // set errors
-              setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
+              setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
             }
             props.refreshList();
           });
@@ -148,11 +148,11 @@ export const Prompt = (props: PromptProps) => {
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of Duplicated
-                setAlert({ message: "Folder Copied", type: "success" })
+                setAlert({ message: "Prompt Copied", type: "success" })
               }
             } else {
               // set errors
-              setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
+              setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
             }
             props.refreshList();
           });
@@ -161,11 +161,11 @@ export const Prompt = (props: PromptProps) => {
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of Duplicated
-                setAlert({ message: "Folder Copied", type: "success" })
+                setAlert({ message: "Prompt Copied", type: "success" })
               }
             } else {
               // set errors
-              setAlert({ message: "Folder could not be Copied. Try again later.", type: "error" })
+              setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
             }
             props.refreshList();
           });
@@ -236,11 +236,11 @@ export const Prompt = (props: PromptProps) => {
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of Moved
-                setAlert({ message: "Folder Moved", type: "success" })
+                setAlert({ message: "Prompt Moved", type: "success" })
               }
             } else {
               // set errors
-              setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
+              setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
             }
             props.refreshList();
           });
@@ -249,11 +249,11 @@ export const Prompt = (props: PromptProps) => {
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of Moved
-                setAlert({ message: "Folder Moved", type: "success" })
+                setAlert({ message: "Prompt Moved", type: "success" })
               }
             } else {
               // set errors
-              setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
+              setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
             }
             props.refreshList();
           });
@@ -264,11 +264,11 @@ export const Prompt = (props: PromptProps) => {
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of Moved
-                setAlert({ message: "Folder Moved", type: "success" })
+                setAlert({ message: "Prompt Moved", type: "success" })
               }
             } else {
               // set errors
-              setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
+              setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
             }
             props.refreshList();
           });
@@ -277,11 +277,11 @@ export const Prompt = (props: PromptProps) => {
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of Moved
-                setAlert({ message: "Folder Moved", type: "success" })
+                setAlert({ message: "Prompt Moved", type: "success" })
               }
             } else {
               // set errors
-              setAlert({ message: "Folder could not be moved. Try again later.", type: "error" })
+              setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
             }
             props.refreshList();
           });
@@ -347,7 +347,7 @@ export const Prompt = (props: PromptProps) => {
         }
       >
         <div>
-          <ListFolders noShowMenu onClick={moveTo} />
+          <ListFolders noShowMenu onClick={moveTo} disableFolderId={props.folder.id} />
         </div>
       </Modal>
       <Card>

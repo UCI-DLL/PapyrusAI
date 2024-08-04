@@ -94,7 +94,7 @@ export default function OldPrompts(): JSX.Element {
           //Add creators to list
           var currentCreators = creatorList;
           res.data.prompts.forEach((prompt: PromptType) => {
-            if (currentCreators.some(p => p.sub === prompt.creator.sub)) {
+            if (currentCreators.some(p => p.username === prompt.creator.username)) {
               //creator is already in the list so move on
             } else {
               currentCreators.push(prompt.creator);
@@ -184,7 +184,7 @@ export default function OldPrompts(): JSX.Element {
     }
     //handle creator filter
     if (filter.creator !== "") {
-      filteredList = filteredList.filter(prompt => prompt.creator.sub === filter.creator);
+      filteredList = filteredList.filter(prompt => prompt.creator.username === filter.creator);
     }
 
     //then set filtered list
@@ -332,13 +332,13 @@ export default function OldPrompts(): JSX.Element {
                     id="creator-select"
                     sx={{ width: 320, maxWidth: '100%', margin: "1rem" }}
                     renderValue={(selected) => {//find the creator name for the user id
-                      return creatorList.find(p => p.sub === selected)?.name + " " + creatorList.find(p => p.sub === selected)?.family_name
+                      return creatorList.find(p => p.username === selected)?.name + " " + creatorList.find(p => p.username === selected)?.family_name
                     }}
                   >
                     <MenuItem value={""} key={"NoCreator"}></MenuItem>
                     {creatorList.map((creator, index) => {
                       return (
-                        <MenuItem value={creator.sub} key={index}>{creator.name} {creator.family_name}</MenuItem>
+                        <MenuItem value={creator.username} key={index}>{creator.name} {creator.family_name}</MenuItem>
                       )
                     })}
                   </Select>

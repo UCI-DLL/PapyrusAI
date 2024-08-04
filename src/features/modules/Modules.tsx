@@ -67,7 +67,8 @@ export default function Modules(): JSX.Element {
             {course?.name ? (
               <>
                 <h3>{course.name}'s Available Modules</h3>
-                {(user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
+                {((user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&
+                  course.instructor.username === user.username) ||
                   user?.groups.includes(course.id + "-TA") //handle tas
                 ) && (
                     <Button variant="contained" onClick={() => navigator(`/courses/${course.id}/createmodule`)}>Create Module</Button>

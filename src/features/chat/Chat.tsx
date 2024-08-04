@@ -136,7 +136,7 @@ export default function Chat(): JSX.Element {
           if (res.data) {
             setViewUser(res.data);
             //Then connect to the websocket if user is the same as the one currenly logged in
-            if (user && user.sub === res.data.sub) {
+            if (user && user.username === res.data.username) {
               onConnect(location.pathname.split("/")[3], location.pathname.split("/")[4], location.pathname.split("/")[5]);
             }
           }
@@ -273,7 +273,7 @@ export default function Chat(): JSX.Element {
   const onSocketClose = useCallback(() => {
     setIsConnected(false);
     //Then re-connect to the websocket if user is the same as the one currenly logged in
-    if (user && viewUser && user.sub === viewUser.sub) {
+    if (user && viewUser && user.username === viewUser.username) {
       onConnect(location.pathname.split("/")[3], location.pathname.split("/")[4], location.pathname.split("/")[5]);
     }
     // eslint-disable-next-line
@@ -302,8 +302,8 @@ export default function Chat(): JSX.Element {
     } else {
       //update conversation data and handle errors
       setOpenErrorModal({ open: true, message: returnData.data });
-      if(returnData.status === 400) {
-        setOpenUpdateConvoModal(prev => ({...prev, completed: true}))
+      if (returnData.status === 400) {
+        setOpenUpdateConvoModal(prev => ({ ...prev, completed: true }))
       }
     }
 
@@ -672,8 +672,8 @@ export default function Chat(): JSX.Element {
           <div className="chat__section-header__title">
             <Tooltip title={"Back to Conversations"}>
               <IconButton
-                onClick={() => (user && viewUser && user.sub !== viewUser.sub) ?
-                  navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}/username/${viewUser.sub}`) :
+                onClick={() => (user && viewUser && user.username !== viewUser.username) ?
+                  navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}/username/${viewUser.username}`) :
                   navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)
                 }
                 aria-label="Back to conversations"
@@ -720,7 +720,7 @@ export default function Chat(): JSX.Element {
                 <MenuItem onClick={downloadChat}>Download</MenuItem>
                 {user &&
                   viewUser &&
-                  user.sub === viewUser.sub && (
+                  user.username === viewUser.username && (
                     <MenuItem onClick={() => {
                       handleClose()
                       setOpenUpdateConvoModal(prev => ({ ...prev, deleteOpen: true }))
@@ -736,7 +736,7 @@ export default function Chat(): JSX.Element {
         {/* Only show the chat wizard if we don't have selected prompt and if there are no previous messages  */}
         {user &&
           viewUser &&
-          user.sub === viewUser.sub &&
+          user.username === viewUser.username &&
           (messages.length < 1) && (moduleInfo.prompts.length !== 0) && (
             <ChatWizard
               prompts={moduleInfo.prompts}
@@ -812,7 +812,7 @@ export default function Chat(): JSX.Element {
         {openUpdateConvoModal.completed && (
           <div style={{ textAlign: "center" }}>
             <hr />
-            <div style={{paddingBottom: "0.8rem"}}>This conversation has been flagged as inappropriate for this setting. Please start a new conversation.</div>
+            <div style={{ paddingBottom: "0.8rem" }}>This conversation has been flagged as inappropriate for this setting. Please start a new conversation.</div>
             <Button
               variant="contained"
               color="primary"
@@ -826,7 +826,7 @@ export default function Chat(): JSX.Element {
         {isConnected &&
           user &&
           viewUser &&
-          user.sub === viewUser.sub &&
+          user.username === viewUser.username &&
           selectedPrompt !== undefined &&
           moduleInfo.continuedInteraction && //continuedInteraction deprecated
           !openUpdateConvoModal.completed &&

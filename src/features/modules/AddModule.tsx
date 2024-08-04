@@ -454,7 +454,8 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
                       email: "",
                       sub: "",
                       name: "",
-                      family_name: ""
+                      family_name: "",
+                      username: ""
                     },
                     isDeleted: false,
                     name: "",

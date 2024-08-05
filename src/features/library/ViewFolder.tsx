@@ -11,6 +11,7 @@ import { getOrgFolder, getSignedS3BucketUploadOrgFolder, getSignedS3BucketUpload
 import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import ListPrompts from "./ListPrompts";
+import axios from "axios";
 
 
 export enum SortOptions {
@@ -180,6 +181,8 @@ export default function ViewFolder(): JSX.Element {
           if (res && res.status && res.status < 300) {
             console.log(res)
             //TODO handle upload to s3 -> handleUploadToS3
+            handleUploadToS3(res.data.url, res.data.metadataUrl);
+
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
@@ -195,6 +198,8 @@ export default function ViewFolder(): JSX.Element {
           if (res && res.status && res.status < 300) {
             console.log(res)
             //TODO handle upload to s3 -> handleUploadToS3
+            handleUploadToS3(res.url, res.metadataUrl);
+            
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
@@ -210,8 +215,39 @@ export default function ViewFolder(): JSX.Element {
     }
   }
 
-  function handleUploadToS3(url: string) {
+  async function handleUploadToS3(url: string, metadataUrl: string) {
     //TODO
+    try {
+      // Upload original file directly to s3
+      const uploadResponse = await axios.put(url, selectedFiles, {
+        headers: {
+          'Content-Type': selectedFiles.type
+        }
+      });
+      console.log('Upload response:', uploadResponse);
+    
+      // Create corresponding metadata
+      const metadata = {
+        metadataAttributes: {
+          filename: selectedFiles.name
+        }
+      };
+    
+      const metadataBlob = new Blob([JSON.stringify(metadata)]);
+    
+      // Upload the metadata
+      const metadataResponse = await axios.put(metadataUrl, metadataBlob, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Metadata upload response:', metadataResponse);
+    
+    } catch (error) {
+      console.error((error as Error).message);
+      
+    }
+     
   }
 
 

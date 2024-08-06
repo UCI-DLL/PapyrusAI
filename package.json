@@ -1,6 +1,6 @@
 {
   "name": "papyrus-ai",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -29,6 +29,7 @@
     "react-router": "^6.14.2",
     "react-router-dom": "^6.14.2",
     "react-scripts": "5.0.1",
+    "remark-gfm": "^4.0.0",
     "sass": "^1.64.2",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"

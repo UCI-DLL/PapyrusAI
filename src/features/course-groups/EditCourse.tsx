@@ -207,11 +207,12 @@ export default function EditCourse(): JSX.Element {
               name: u.name,
               family_name: u.family_name,
               email: u.email,
-              sub: u.sub
+              sub: u.sub,
+              username: u.username
             }
           });
           if (user) {
-            tempUserList = tempUserList.filter((x: CustomUserType) => x.sub !== user.sub);
+            tempUserList = tempUserList.filter((x: CustomUserType) => x.username !== user.username);
           }
           setUserList((prev) => [...prev, ...tempUserList]);
 
@@ -311,8 +312,8 @@ export default function EditCourse(): JSX.Element {
         onRequestClose={() => setOpenDeleteModal(false)}
         actions={
           <>
-            <Button variant="contained" color="primary" onClick={(e) => handleSubmit(e, false, true)}>
-              Submit
+            <Button variant="contained" color="error" onClick={(e) => handleSubmit(e, false, true)}>
+              Delete
             </Button>
             <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(false)}>
               Cancel

@@ -19,17 +19,11 @@ import { Link } from "react-router-dom";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-export type ReportsUserType = {
-  email: string,
-  family_name: string,
-  name: string,
-  sub: string,
-}
 
 export default function Reports(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
-  const [userList, setUserList] = useState<Array<{ users: Array<ReportsUserType>, course: CourseType }>>([]);
+  const [userList, setUserList] = useState<Array<{ users: Array<CustomUserType>, course: CourseType }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const style = {
     width: '100%',
@@ -60,9 +54,9 @@ export default function Reports(): JSX.Element {
               if (
                 res1.data &&
                 res1.data.instructor &&
-                (res1.data.instructor.sub === user.sub || (
+                (res1.data.instructor.username === user.username || (
                   res1.data.taList &&
-                  res1.data.taList.find((a: CustomUserType) => a.sub === user.sub) //handle tas too
+                  res1.data.taList.find((a: CustomUserType) => a.username === user.username) //handle tas too
                 ))
               ) { //only get the rest of the information if current user is instructor
                 getUsersInCourseList(res1.data, controller.signal);
@@ -156,10 +150,10 @@ export default function Reports(): JSX.Element {
     });
   }
 
-  function sortCourseList(list: Array<{ users: Array<ReportsUserType>, course: CourseType }>) {
+  function sortCourseList(list: Array<{ users: Array<CustomUserType>, course: CourseType }>) {
     return list.sort((a, b) => {
-      const isCreatedByCurrentUserA = a.course.instructor.sub === user?.sub;
-      const isCreatedByCurrentUserB = b.course.instructor.sub === user?.sub;
+      const isCreatedByCurrentUserA = a.course.instructor.username === user?.username;
+      const isCreatedByCurrentUserB = b.course.instructor.username === user?.username;
 
       if (isCreatedByCurrentUserA && !isCreatedByCurrentUserB) {
         return -1; // a comes before b
@@ -207,7 +201,7 @@ export default function Reports(): JSX.Element {
                         <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
                           {/* redirect to chat with and pass params  */}
                           <Link
-                            to={`/reports/${row.sub}`}
+                            to={`/reports/${row.username}`}
                             state={row}
                             style={{ textAlign: "left", display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}
                           >

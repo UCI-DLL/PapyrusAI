@@ -23,26 +23,7 @@ export default function Dashboard(): JSX.Element {
   useEffect(() => {
     const controller = new AbortController();
     if (!showAddCourseModal) {
-      setIsLoading(true);
-      Get(getCourseList(), controller.signal).then(res => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //get the list of all courses for this user
-            setCourseList(res.data);
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            // handle error
-            setCourseList([]);
-            setIsLoading(false);
-          }
-        }
-
-      });
+      getCourses(controller.signal)
     }
 
     return () => {
@@ -51,6 +32,33 @@ export default function Dashboard(): JSX.Element {
 
     // eslint-disable-next-line
   }, [showAddCourseModal]);
+
+  function getCourses(signal: AbortSignal) {
+    setIsLoading(true);
+    Get(getCourseList(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all courses for this user
+          setCourseList(res.data);
+          setIsLoading(false);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+          setCourseList([]);
+          setIsLoading(false);
+        }
+      }
+    });
+  }
+
+  function refreshList() {
+    const controller = new AbortController();
+    getCourses(controller.signal)
+  }
 
   return !isLoading ? (
     <div className="dashboard">
@@ -87,9 +95,8 @@ export default function Dashboard(): JSX.Element {
 
       <hr />
       {courseList.length > 0 ? (
-        <CourseList list={courseList.slice(0, 6)} />
+        <CourseList list={courseList.slice(0, 6)} refreshList={refreshList} />
       ) : <></>}
-      
 
       &nbsp;&nbsp;&nbsp;
 
@@ -103,12 +110,11 @@ export default function Dashboard(): JSX.Element {
       {courseList.length > 0 && courseList.map((course, index) => {
         return course.modules.length > 0 ? (
           <div style={{ width: "100%" }} key={index}>
-            <ModuleList course={course} />
+            <ModuleList course={course} refreshList={refreshList} />
             <Divider />
           </div>
         ) : null
       })}
-
     </div>
   ) : (
     <LinearProgress />

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
 import { MessageTypeType } from "../utility/types/ConversationTypes";
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -28,7 +29,7 @@ export const MessageLeft = (props: MessageProps) => {
         {props.typing ? (
           <CustomTypingIndicator />
         ) : (
-          <Markdown className={""}>{props.message}</Markdown>
+            <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
         )}
       </div>
     </div>

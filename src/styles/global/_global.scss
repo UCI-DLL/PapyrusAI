@@ -175,7 +175,7 @@ hr {
 
 //for dynamic form
 .d-form {
-  #d-form__form > * {
+  #d-form__form>* {
     margin: $base * 4 0;
   }
 }
@@ -192,4 +192,11 @@ hr {
     margin-top: 3rem;
     margin-left: 0;
   }
+}
+
+.truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 1; // amount of line you want
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

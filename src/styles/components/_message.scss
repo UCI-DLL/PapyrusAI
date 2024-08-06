@@ -27,6 +27,57 @@
     border: 1px solid global.$gray-55;
     border-radius: global.$base * 2 global.$base * 2 global.$base * 2 0;
     color: white;
+
+    table {
+      border-collapse: collapse;
+      margin-top: global.$base;
+      margin-bottom: global.$base;
+      border-radius: global.$base * 2;
+    }
+
+    th,
+    td {
+      border: 1px solid global.$gray-55;
+      padding: global.$base;
+    }
+
+    th {
+      background-color: #494949;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    hr {
+      color: white;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+    }
+
+    h3 {
+      font-size: 1.4rem;
+    }
+
+    h4 {
+      font-size: 1.2rem;
+    }
+
+    h5 {
+      font-size: 1rem;
+    }
+
+    h6 {
+      font-size: 1rem;
+    }
   }
 
   &__right-message {
@@ -40,7 +91,7 @@
     text-align: left;
     border: 1px solid global.$gray-55;
     border-radius: global.$base * 2 global.$base * 2 0 global.$base * 2;
-    color: var(--white); 
+    color: var(--white);
   }
 
   &__timestamp {
@@ -63,7 +114,7 @@
   }
 
   &__file {
-    background: rgba(0,0,0, 0.3);
+    background: rgba(0, 0, 0, 0.3);
     padding: global.$base;
     margin: global.$base;
     border-radius: global.$border-radius;

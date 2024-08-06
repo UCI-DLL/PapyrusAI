@@ -22,24 +22,7 @@ export default function Modules(): JSX.Element {
     setIsLoading(true);
     if (location.pathname.split("/")[1] === "courses" && location.pathname.split("/")[2]) {
       const courseId = location.pathname.split("/")[2];
-      Get(getCourse(courseId), controller.signal).then(res => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //Get the course and save the modules
-            setCourse(res.data);
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            //handle error
-            setError("Course Does Not Exist");
-            setIsLoading(false);
-          }
-        }
-      });
+      getThisCourse(courseId, controller.signal);
     }
 
     return () => {
@@ -47,6 +30,32 @@ export default function Modules(): JSX.Element {
     };
     // eslint-disable-next-line
   }, [location]);
+
+  function getThisCourse(courseId: string, signal: AbortSignal) {
+    Get(getCourse(courseId), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //Get the course and save the modules
+          setCourse(res.data);
+          setIsLoading(false);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          //handle error
+          setError("Course Does Not Exist");
+          setIsLoading(false);
+        }
+      }
+    });
+  }
+
+  function refreshList() {
+    const controller = new AbortController();
+    getThisCourse(location.pathname.split("/")[2], controller.signal)
+  }
 
   return !isLoading ? (
     <div className="modules">
@@ -58,11 +67,12 @@ export default function Modules(): JSX.Element {
             {course?.name ? (
               <>
                 <h3>{course.name}'s Available Modules</h3>
-                {(user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") || 
-                user?.groups.includes(course.id + "-TA") //handle tas
+                {((user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") &&
+                  course.instructor.username === user.username) ||
+                  user?.groups.includes(course.id + "-TA") //handle tas
                 ) && (
-                  <Button variant="contained" onClick={() => navigator(`/courses/${course.id}/createmodule`)}>Create Module</Button>
-                )}
+                    <Button variant="contained" onClick={() => navigator(`/courses/${course.id}/createmodule`)}>Create Module</Button>
+                  )}
               </>
             ) : (
               <h3>Available Modules</h3>
@@ -71,23 +81,22 @@ export default function Modules(): JSX.Element {
           </div>
           {course ? (
             <>
-            <Typography sx={{ fontSize: 14 }} color="text.secondary">
-              {course.section ?
-                `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}` :
-                `${course.term ? course.term : ""}${course.year ? course.year : ""}`}
-            </Typography>
-            <Typography sx={{ fontSize: 14 }} color="text.secondary">
-              {`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
-            </Typography>
+              <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                {course.section ?
+                  `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}` :
+                  `${course.term ? course.term : ""}${course.year ? course.year : ""}`}
+              </Typography>
+              <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                {`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
+              </Typography>
             </>
           ) : null}
           <hr />
           {course ? (
-            <ModuleList course={course} />
+            <ModuleList course={course} refreshList={refreshList} />
           ) : (
             <div>Course does not have any modules</div>
           )}
-
         </>
       )}
     </div>

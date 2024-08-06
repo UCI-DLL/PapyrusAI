@@ -1,6 +1,6 @@
 @use "../global" as global;
 
-.courses {
+.library {
 
   max-width: global.$lg-break;
   display: flex;
@@ -11,11 +11,18 @@
   padding: global.$base;
   width: 100%;
 
-  &__list {
+  &__folder-list {
     width: 100%;
     display: grid;
     grid-gap: global.$base;
-    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  }
+
+  &__prompt-list {
+    width: 100%;
+    display: grid;
+    grid-gap: global.$base;
+    grid-template-columns: repeat(auto-fill, minmax(49%, 1fr));
   }
 
   &__section-header {
@@ -35,27 +42,22 @@
     }
   }
 
-  &__add {
+  &__filter {
+    display: flex;
+    flex-direction: column;
+    padding: global.$base;
+
+    &__title {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+
+  &__searchbar {
     width: 100%;
-    background-color: var(--white);
-    padding: 1rem;
-    border-radius: 0.5rem;
-  }
-
-  &__discard_background {
-    &:hover {
-      color: var(--white) !important;
-      background-color: var(--error) !important;
-    }
-
-    color: var(--error) !important;
-  }
-
-  &__delete_background {
-    &:hover {
-      color: var(--error) !important;
-
-    }
+    margin: global.$base;
   }
 
 }

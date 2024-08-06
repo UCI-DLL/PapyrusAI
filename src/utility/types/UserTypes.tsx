@@ -8,9 +8,11 @@ export type UserType = {
   name: string,
   sub: string, //username
   "custom:theme": string,
+  username: string,
 }
 
 export type CustomUserType = {
+  username: string;
   email: string,
   family_name: string,
   name: string,

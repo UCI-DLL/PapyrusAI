@@ -458,6 +458,8 @@ export default function EditPrompt(): JSX.Element {
                 error={errors.prompt !== ""}
                 helperText={errors.prompt}
                 disabled={isLoading}
+                multiline
+                maxRows={5}
                 required
               />
 

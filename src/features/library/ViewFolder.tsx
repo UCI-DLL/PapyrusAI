@@ -7,11 +7,11 @@ import { FolderType, TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
-import { getOrgFolder, getSignedS3BucketUploadOrgFolder, getSignedS3BucketUploadUserFolder, getUserFolder } from "../../utility/endpoints/FolderEndpoints";
+import { getOrgFolder, getUserFolder } from "../../utility/endpoints/FolderEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import ListPrompts from "./ListPrompts";
-import axios from "axios";
+import ListFiles from "./ListFiles";
 
 
 export enum SortOptions {
@@ -30,31 +30,6 @@ export default function ViewFolder(): JSX.Element {
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
-  const fileRef = React.useRef<any>();
-
-  const [selectedFiles, setSelectedFiles] = React.useState<any>();
-
-  const handleFileSelect = (event: any) => {
-    setSelectedFiles(event?.target?.files?.[0]);
-  };
-
-
-  const onClear = () => {
-    setSelectedFiles(undefined);
-  };
-
-  const onUpdate = (event: any) => {
-    if (event.target.textContent.trim().toLowerCase() === 'change' && fileRef.current) {
-      onClear();
-      fileRef.current.click();
-      return;
-    }
-    if (event.target.textContent.trim().toLowerCase() === 'clear') {
-      onClear();
-      return;
-    }
-  };
-
 
   useEffect(() => {
     const controller = new AbortController();
@@ -171,86 +146,6 @@ export default function ViewFolder(): JSX.Element {
     });
   }
 
-  function handleUpload() {
-    console.log(selectedFiles);
-    // Handle here
-    if (folder) {
-      //if we have userid, then the folder is a user folder
-      if (folder.userId) {
-        Get(getSignedS3BucketUploadUserFolder(folder.id)).then(res => {
-          if (res && res.status && res.status < 300) {
-            console.log(res)
-            //TODO handle upload to s3 -> handleUploadToS3
-            handleUploadToS3(res.data.url, res.data.metadataUrl);
-
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              // handle error
-              setIsLoading(false);
-            }
-          }
-        });
-      } else {//else an org folder
-        Get(getSignedS3BucketUploadOrgFolder(folder.id)).then(res => {
-          if (res && res.status && res.status < 300) {
-            console.log(res)
-            //TODO handle upload to s3 -> handleUploadToS3
-            handleUploadToS3(res.url, res.metadataUrl);
-            
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              // handle error
-              setIsLoading(false);
-            }
-          }
-        });
-      }
-
-    }
-  }
-
-  async function handleUploadToS3(url: string, metadataUrl: string) {
-    //TODO
-    try {
-      // Upload original file directly to s3
-      const uploadResponse = await axios.put(url, selectedFiles, {
-        headers: {
-          'Content-Type': selectedFiles.type
-        }
-      });
-      console.log('Upload response:', uploadResponse);
-    
-      // Create corresponding metadata
-      const metadata = {
-        metadataAttributes: {
-          filename: selectedFiles.name
-        }
-      };
-    
-      const metadataBlob = new Blob([JSON.stringify(metadata)]);
-    
-      // Upload the metadata
-      const metadataResponse = await axios.put(metadataUrl, metadataBlob, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      console.log('Metadata upload response:', metadataResponse);
-    
-    } catch (error) {
-      console.error((error as Error).message);
-      
-    }
-     
-  }
-
-
   return !isLoading && folder ? (
     <div className="library">
       <div className="library__section-header">
@@ -265,52 +160,21 @@ export default function ViewFolder(): JSX.Element {
               }}>
                 Create Prompt
               </Button>
+              <Button variant="contained" onClick={() => {
+                navigator(location.pathname.split("/")[2] !== "org" ?
+                  `/library/${folder.id}/createfile` : //user file
+                  `/library/org/${folder.id}/createfile`) //is org file
+              }}>
+                Create File
+              </Button>
             </>
 
           )}
         </div>
       </div>
 
-      <>
-        <input
-          ref={fileRef}
-          hidden
-          type="file"
-          onChange={handleFileSelect}
-        />
-        {!selectedFiles?.name && (
-          <Button
-            variant="contained"
-            component="label"
-            style={{ textTransform: 'none' }}
-            onClick={() => fileRef.current?.click()}
-          >
-            Choose file to upload
-          </Button>
-        )}
-        {selectedFiles?.name && (
-          <Button
-            variant="contained"
-            component="label"
-            style={{ textTransform: 'none' }}
-            onClick={onUpdate}
-          >
-            <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
-            <span style={{ padding: '10px' }}> Change</span>
-            <span>Clear</span>
-          </Button>
-        )}
-        <Button
-          color="primary"
-          disabled={!selectedFiles}
-          style={{ textTransform: 'none' }}
-          onClick={handleUpload}
-        >
-          Upload
-        </Button>
-      </>
-
       <ListPrompts folderId={folder.id} isOrgFolder={location.pathname.split("/")[2] === "org"} />
+      <ListFiles folderId={folder.id} isOrgFolder={location.pathname.split("/")[2] === "org"} />
     </div>
   ) : (
     <LinearProgress />

@@ -44,6 +44,19 @@ export type PromptType = {
   folderId?: string,
 }
 
+export type FileType = {
+  id: string,
+  creator: CustomUserType,
+  isDeleted: boolean,
+  name: string,
+  file: string, // url of file
+  tags: Array<string>,
+  isOrganizationFile: boolean,
+  fileId?: string, //file id as input to backend vs id is output from backend
+  timestamp: string, //TODO in backend
+  folderId?: string,
+}
+
 export type FolderType = {
   id: string,
   creator: CustomUserType,
@@ -53,6 +66,7 @@ export type FolderType = {
   isDeleted: boolean,
   name: string,
   prompts: Array<PromptType>,
+  files: Array<FileType>,
 }
 
 export type TagType = {

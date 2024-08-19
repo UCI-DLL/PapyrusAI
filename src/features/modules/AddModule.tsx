@@ -29,7 +29,8 @@ import ListFolders from "../library/ListFolders";
 import Get from "../../utility/Get";
 import { getOrgPrompt, getUserPrompt } from "../../utility/endpoints/FolderEndpoints";
 import { Prompt } from "../../components/Prompt";
-import { PromptType } from "../../utility/types/CourseTypes";
+import { FileType, PromptType } from "../../utility/types/CourseTypes";
+import { File } from "../../components/File";
 
 
 type AddModuleType = {
@@ -38,7 +39,8 @@ type AddModuleType = {
   isRepeating: boolean,
   isPublished: boolean,
   showInitialPrompt: boolean,
-  prompts: Array<PromptType>
+  prompts: Array<PromptType>,
+  files: Array<FileType>
 }
 //Note: ^ missing showWizard. Need to add later
 
@@ -60,7 +62,8 @@ export default function AddModule(): JSX.Element {
     isRepeating: true,
     isPublished: false,
     showInitialPrompt: true,
-    prompts: []
+    prompts: [],
+    files: []
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -68,7 +71,8 @@ export default function AddModule(): JSX.Element {
     isRepeating: "",
     isPublished: "",
     showInitialPrompt: "",
-    prompts: ""
+    prompts: "",
+    files: ""
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { setAlert } = useContext(AlertContext);
@@ -461,7 +465,48 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
                     name: "",
                     prompts: [],
                     organization: "",
-                    timestamp: ""
+                    timestamp: "",
+                    files: [],
+                  }}
+                  keyy={`${i}`}
+                  refreshList={() => refreshList()}
+                  loading={() => setIsLoading(true)}
+                  noShowMenu={true}
+                  showRemove
+                  onClick={setConfirmationModal}
+                />
+              )
+            })}
+          </div>
+
+          <hr />
+
+          {/* TODO figure out files here  */}
+          <div style={{ width: "100%", display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+            <FormLabel sx={{ alignContent: "center" }}>Module Files</FormLabel>
+            <Button variant="outlined" onClick={() => setOpenSelectFolderModal(true)}>Add File</Button>
+          </div>
+
+          <div className="modules__prompt-list">
+            {session.files.map((file: FileType, i) => {
+              return (
+                <File
+                  file={file}
+                  folder={{ //pass in temp folder
+                    id: file.folderId ? file.folderId : "",
+                    creator: {
+                      email: "",
+                      sub: "",
+                      name: "",
+                      family_name: "",
+                      username: ""
+                    },
+                    isDeleted: false,
+                    name: "",
+                    prompts: [],
+                    organization: "",
+                    timestamp: "",
+                    files: [],
                   }}
                   keyy={`${i}`}
                   refreshList={() => refreshList()}

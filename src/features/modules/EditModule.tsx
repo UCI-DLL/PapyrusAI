@@ -32,9 +32,10 @@ import Markdown from "react-markdown";
 import InfoIcon from '@mui/icons-material/Info';
 import ListFolders from "../library/ListFolders";
 import ListPrompts from "../library/ListPrompts";
-import { PromptType } from "../../utility/types/CourseTypes";
+import { FileType, PromptType } from "../../utility/types/CourseTypes";
 import { Prompt } from "../../components/Prompt";
 import { getOrgPrompt, getUserPrompt } from "../../utility/endpoints/FolderEndpoints";
+import { File } from "../../components/File";
 
 type EditModuleType = {
   id: string,
@@ -45,6 +46,7 @@ type EditModuleType = {
   moduleDescription: string,
   name: string,
   prompts: Array<PromptType>,
+  files: Array<FileType>,
   showInitialPrompt: boolean,
   showWizard: boolean,
 }
@@ -68,6 +70,7 @@ export default function EditModule(): JSX.Element {
     isPublished: false,
     showInitialPrompt: true,
     prompts: [],
+    files: [],
     showWizard: true,
     isDeleted: false, //prev
     isTemplate: false,
@@ -76,7 +79,8 @@ export default function EditModule(): JSX.Element {
   const [errors, setErrors] = useState<any>({
     name: "",
     moduleDescription: "",
-    prompts: ""
+    prompts: "",
+    files: ""
   });
   const [moduleIds, setModuleIds] = useState<{
     courseId: string,
@@ -609,13 +613,54 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
                       sub: "",
                       name: "",
                       family_name: "",
+                      username: "",
+                    },
+                    isDeleted: false,
+                    name: "",
+                    prompts: [],
+                    organization: "",
+                    timestamp: "",
+                    files: [],
+                  }}
+                  keyy={`${i}`}
+                  refreshList={() => refreshList()}
+                  loading={() => setIsLoading(true)}
+                  noShowMenu={true}
+                  showRemove
+                  onClick={setConfirmationModal}
+                />
+              )
+            })}
+          </div>
+
+          <hr />
+
+          {/* TODO figure out files here  */}
+          <div style={{ width: "100%", display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+            <FormLabel sx={{ alignContent: "center" }}>Module Files</FormLabel>
+            <Button variant="outlined" onClick={() => setOpenSelectFolderModal(true)}>Add File</Button>
+          </div>
+
+          <div className="modules__prompt-list">
+            {session.files.map((file: FileType, i) => {
+              return (
+                <File
+                  file={file}
+                  folder={{ //pass in temp folder
+                    id: file.folderId ? file.folderId : "",
+                    creator: {
+                      email: "",
+                      sub: "",
+                      name: "",
+                      family_name: "",
                       username: ""
                     },
                     isDeleted: false,
                     name: "",
                     prompts: [],
                     organization: "",
-                    timestamp: ""
+                    timestamp: "",
+                    files: [],
                   }}
                   keyy={`${i}`}
                   refreshList={() => refreshList()}

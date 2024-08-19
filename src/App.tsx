@@ -50,6 +50,8 @@ import OldEditPrompt from "./features/prompts/EditPrompt";
 import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
+import CreateFile from "./features/library/CreateFile";
+import EditFile from "./features/library/EditFile";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -299,6 +301,22 @@ function App(): JSX.Element {
 
                       <Route path="/library/:id/prompts/:id" element={<PrivateRoute user={user} />}>
                         <Route path="/library/:id/prompts/:id" element={<EditPrompt />} />
+                      </Route>
+
+                      <Route path="/library/org/:id/createfile" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id/createfile" element={<CreateFile />} />
+                      </Route>
+
+                      <Route path="/library/org/:id/files/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id/files/:id" element={<EditFile />} />
+                      </Route>
+
+                      <Route path="/library/:id/createfile" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id/createfile" element={<CreateFile />} />
+                      </Route>
+
+                      <Route path="/library/:id/files/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id/files/:id" element={<EditFile />} />
                       </Route>
                     </>
                   )}

@@ -6,13 +6,13 @@
   &__row-left {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   &__row-right {
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   &__left-message {
@@ -130,5 +130,15 @@
 
   &__out-context {
     background-color: global.$gray-32;
+  }
+
+  &__left-controls {
+    position: absolute;
+    right: 0;
+  }
+
+  &__right-controls {
+    position: absolute;
+    left: 0;
   }
 }

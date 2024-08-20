@@ -27,6 +27,7 @@ import { Modal } from "../../components/Modal";
 import DocumentModal from "./DocumentModal";
 import Post from "../../utility/Post";
 import { Tooltip } from "@mui/material";
+import SpeechToTextModal from "./SpeechToTextModal";
 
 
 export default function Chat(): JSX.Element {
@@ -75,6 +76,7 @@ export default function Chat(): JSX.Element {
     error: ""
   });
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
+  const [openSpeechToTextModal, setOpenSpeechToTextModal] = useState<boolean>(false);
   //Error modal
   const [openErrorModal, setOpenErrorModal] = useState<{
     open: boolean,
@@ -494,6 +496,28 @@ export default function Chat(): JSX.Element {
     }
   }
 
+  function returnSpeakingText(text: string) {
+    setOpenSpeechToTextModal(false);
+    if (text.length < 50000 && text.length > 0) {
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: text,
+        messageType: text.length < 1000 ? "text" : "file",
+        role: "user",
+        sender: "username",
+        timestamp: messageTempId,
+        promptId: null
+      }
+      onSendMessage([responseMessage]);
+    } else if (text.length < 1) {
+      setChatError("Message Too Short");
+    } else {
+      setChatError("Message Too Long");
+    }
+  }
+
   function handleConverstionNameDeleteUpdate(
     convoUpdateObject: {
       open: boolean,
@@ -615,6 +639,18 @@ export default function Chat(): JSX.Element {
         }
       >
         <DocumentModal returnDocText={returnDocText} />
+      </Modal>
+      <Modal
+        isOpen={openSpeechToTextModal}
+        title={"Document Upload"}
+        onRequestClose={() => setOpenSpeechToTextModal(false)}
+        actions={
+          <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setOpenSpeechToTextModal(false)}>
+            Cancel
+          </Button>
+        }
+      >
+        <SpeechToTextModal returnSpeechText={returnSpeakingText} />
       </Modal>
       <Modal
         isOpen={openUpdateConvoModal.deleteOpen}
@@ -898,6 +934,12 @@ export default function Chat(): JSX.Element {
                             setOpenDocumentModal(true)
                           }}>
                             Attach File
+                          </MenuItem>
+                          <MenuItem onClick={() => {
+                            handleAddClose()
+                            setOpenSpeechToTextModal(true)
+                          }}>
+                            Speech To Text
                           </MenuItem>
                         </Menu>
                       </>

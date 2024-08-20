@@ -1,3 +1,5 @@
+//reference: https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition
+//https://www.youtube.com/watch?v=W0-hJ-9YG3I
 import { useEffect, useState } from 'react';
 
 let recognition: any = null;

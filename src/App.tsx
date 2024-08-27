@@ -50,6 +50,7 @@ import OldEditPrompt from "./features/prompts/EditPrompt";
 import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
+import LoginError from "./features/authentication/LoginError";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -181,6 +182,10 @@ function App(): JSX.Element {
                   <Route
                     path="/login"
                     element={<Login setUser={(u) => setUser(u)} />}
+                  />
+                  <Route
+                    path="/login-error"
+                    element={<LoginError />}
                   />
                   {/* 
                 <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />

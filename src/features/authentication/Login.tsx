@@ -27,7 +27,8 @@ export default function Login(props: LoginProps): JSX.Element {
       }
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {
-      window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+      console.log("here")
+      // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
     else {
       navigator("/");
@@ -39,9 +40,9 @@ export default function Login(props: LoginProps): JSX.Element {
     <div>
     </div>
   )
-  
-  
-  
+
+
+
   // NOTE: THIS IS THE NON AWS LOGIN PAGE
   // const [session, setSession] = useState({
   //   username: "",

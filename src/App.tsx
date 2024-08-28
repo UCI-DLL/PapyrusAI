@@ -126,6 +126,7 @@ function App(): JSX.Element {
         });
       }
     }, 500);
+    // eslint-disable-next-line
   }, [showUpdateUserInfoModal]);
 
   //handle log out

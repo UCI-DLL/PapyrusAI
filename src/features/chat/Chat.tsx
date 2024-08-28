@@ -5,7 +5,9 @@ import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import SendIcon from '@mui/icons-material/Send';
-import AddIcon from '@mui/icons-material/Add';
+// import AddIcon from '@mui/icons-material/Add';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import MicIcon from '@mui/icons-material/Mic';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
@@ -18,7 +20,7 @@ import { MessageType } from "../../utility/types/ConversationTypes";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import ChatWizard from "./ChatWizard";
 import { AlertContext } from "../../utility/context/AlertContext";
-import RepeatingPromptWizard from "./RepeatingPromptWizard";
+// import RepeatingPromptWizard from "./RepeatingPromptWizard";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { UserContext } from "../../utility/context/UserContext";
 import { UserType } from "../../utility/types/UserTypes";
@@ -33,6 +35,7 @@ import SpeechToTextModal from "./SpeechToTextModal";
 export default function Chat(): JSX.Element {
   const location = useLocation();
   let navigator = useNavigate();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [conversationIds, setConversationIds] = useState<{
     courseId: string,
     moduleId: string,
@@ -98,12 +101,21 @@ export default function Chat(): JSX.Element {
     setAnchorEl(null);
   };
 
-  const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAddAnchorEl(event.currentTarget);
-  };
+  // const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  //   setAddAnchorEl(event.currentTarget);
+  // };
   const handleAddClose = () => {
     setAddAnchorEl(null);
   };
+
+  //create a use effect to get updated window size when user resizes window
+  useEffect(() => {
+    function handleResize() {
+      setWindowWidth(window.innerWidth)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, []);
 
   useEffect(() => {
     //reset alert
@@ -421,27 +433,27 @@ export default function Chat(): JSX.Element {
     }
   }
 
-  function handleRepeatPrompt(selectedPrompt: string) {
-    if (courseInfo && moduleInfo && selectedPrompt !== "") {
-      setSelectedPrompt(selectedPrompt);
-      //Add newly selected prompt to the list of repeating prompts
-      setRepeatingPrompts((prev) => [...prev, selectedPrompt]);
-      //sent newly selected prompt to chatgpt
-      const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
-      const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-      var responseMessage: MessageType = {
-        id: tempTimestamp.toString(),
-        content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
-        messageType: (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
-        role: "user",
-        sender: "username",
-        timestamp: messageTempId,
-        promptId: actualPrompt[0].id
-      }
-      onSendMessage([responseMessage]);
-    }
-  }
+  // function handleRepeatPrompt(selectedPrompt: string) {
+  //   if (courseInfo && moduleInfo && selectedPrompt !== "") {
+  //     setSelectedPrompt(selectedPrompt);
+  //     //Add newly selected prompt to the list of repeating prompts
+  //     setRepeatingPrompts((prev) => [...prev, selectedPrompt]);
+  //     //sent newly selected prompt to chatgpt
+  //     const actualPrompt = moduleInfo.prompts.filter(x => x.id === selectedPrompt);
+  //     const tempTimestamp = Date.now();
+  //     const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+  //     var responseMessage: MessageType = {
+  //       id: tempTimestamp.toString(),
+  //       content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
+  //       messageType: (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
+  //       role: "user",
+  //       sender: "username",
+  //       timestamp: messageTempId,
+  //       promptId: actualPrompt[0].id
+  //     }
+  //     onSendMessage([responseMessage]);
+  //   }
+  // }
 
   //Note, you should use the offical token counter: https://platform.openai.com/docs/guides/text-generation/managing-tokens
   //BUT even on their tokenizer: https://platform.openai.com/tokenizer?view=bpe it says that 1 token ~= 4 characters
@@ -642,7 +654,7 @@ export default function Chat(): JSX.Element {
       </Modal>
       <Modal
         isOpen={openSpeechToTextModal}
-        title={"Document Upload"}
+        title={"Speech to Text"}
         onRequestClose={() => setOpenSpeechToTextModal(false)}
         actions={
           <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setOpenSpeechToTextModal(false)}>
@@ -717,56 +729,72 @@ export default function Chat(): JSX.Element {
                 <ArrowBackIosIcon />
               </IconButton>
             </Tooltip>
-            <div>
+            <div style={windowWidth < 1024 ? { textAlign: "center" } : { textAlign: "left" }}>
               <h5>{openUpdateConvoModal.name}</h5>
               <div>{viewUser ? viewUser.name + " " + viewUser.family_name : ""}</div>
             </div>
+            {windowWidth < 1024 && (
+              <div>
+                <IconButton
+                  id="chat-button"
+                  aria-controls={open ? 'chat-menu' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open ? 'true' : undefined}
+                  onClick={handleClick}
+                  aria-label="settings"
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              </div>
+            )}
           </div>
-          <div style={{ display: "flex", flexDirection: "row" }}>
-            <div>
-              <div>{courseInfo.name} &nbsp; {moduleInfo.name}</div>
-              <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}&nbsp;</div>
-            </div>
-            <div>
-              <IconButton
-                id="chat-button"
-                aria-controls={open ? 'chat-menu' : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? 'true' : undefined}
-                onClick={handleClick}
-                aria-label="settings"
-              >
-                <MoreVertIcon />
-              </IconButton>
-              <Menu
-                id="chat-menu"
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-                MenuListProps={{
-                  'aria-labelledby': 'chat-menu-button',
-                }}
-              >
+          <Menu
+            id="chat-menu"
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            MenuListProps={{
+              'aria-labelledby': 'chat-menu-button',
+            }}
+          >
+            <MenuItem onClick={() => {
+              handleClose()
+              setOpenUpdateConvoModal(prev => ({ ...prev, open: true }))
+            }}>
+              Rename
+            </MenuItem>
+            <MenuItem onClick={downloadChat}>Download</MenuItem>
+            {user &&
+              viewUser &&
+              user.username === viewUser.username && (
                 <MenuItem onClick={() => {
                   handleClose()
-                  setOpenUpdateConvoModal(prev => ({ ...prev, open: true }))
+                  setOpenUpdateConvoModal(prev => ({ ...prev, deleteOpen: true }))
                 }}>
-                  Rename
+                  Delete Conversation
                 </MenuItem>
-                <MenuItem onClick={downloadChat}>Download</MenuItem>
-                {user &&
-                  viewUser &&
-                  user.username === viewUser.username && (
-                    <MenuItem onClick={() => {
-                      handleClose()
-                      setOpenUpdateConvoModal(prev => ({ ...prev, deleteOpen: true }))
-                    }}>
-                      Delete Conversation
-                    </MenuItem>
-                  )}
-              </Menu>
+              )}
+          </Menu>
+          {windowWidth > 1024 && (
+            <div style={{ display: "flex", flexDirection: "row" }}>
+              <div>
+                <div>{courseInfo.name} &nbsp; {moduleInfo.name}</div>
+                <div>{courseInfo.instructor.name + " " + courseInfo.instructor.family_name}&nbsp;</div>
+              </div>
+              <div>
+                <IconButton
+                  id="chat-button"
+                  aria-controls={open ? 'chat-menu' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open ? 'true' : undefined}
+                  onClick={handleClick}
+                  aria-label="settings"
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         <div style={{ padding: "0.4rem", paddingTop: "1.8rem" }}>{moduleInfo.moduleDescription}</div>
         {/* Only show the chat wizard if we don't have selected prompt and if there are no previous messages  */}
@@ -888,6 +916,17 @@ export default function Chat(): JSX.Element {
                     endAdornment={
                       <InputAdornment position="end">
                         <IconButton
+                          aria-label="Speech to text"
+                          edge="end"
+                          onClick={() => {
+                            handleAddClose()
+                            setOpenSpeechToTextModal(true)
+                          }}
+                        >
+                          {<MicIcon />}
+                        </IconButton>
+                        &nbsp;&nbsp;&nbsp;
+                        <IconButton
                           aria-label="sumbit new message"
                           edge="end"
                           type="submit"
@@ -907,12 +946,16 @@ export default function Chat(): JSX.Element {
                             aria-controls={addOpen ? 'add-menu' : undefined}
                             aria-haspopup="true"
                             aria-expanded={addOpen ? 'true' : undefined}
-                            onClick={handleAddClick}
+                            // onClick={handleAddClick}
+                            onClick={() => {
+                              handleAddClose()
+                              setOpenDocumentModal(true)
+                            }}
                           >
-                            {<AddIcon />}
+                            {<AttachFileIcon />}
                           </IconButton>
                         </InputAdornment>
-                        <Menu
+                        {/* <Menu
                           id="add-menu"
                           anchorEl={addAnchorEl}
                           open={addOpen}
@@ -941,7 +984,7 @@ export default function Chat(): JSX.Element {
                           }}>
                             Speech To Text
                           </MenuItem>
-                        </Menu>
+                        </Menu> */}
                       </>
                     }
                     multiline
@@ -958,8 +1001,8 @@ export default function Chat(): JSX.Element {
                   />
                 </FormControl>
               </form>
-              {/* handle repeating prompts  */}
-              {isConnected &&
+              {/* handle repeating prompts (Note: take out for now)  */}
+              {/* {isConnected &&
                 selectedPrompt !== undefined &&
                 messages.length > 0 &&
                 moduleInfo.isRepeating &&
@@ -971,7 +1014,7 @@ export default function Chat(): JSX.Element {
                       onlyPrompts={handleRepeatPrompt}
                     />
                   </div>
-                )}
+                )} */}
               {chatError ? (
                 <Alert severity={"error"}>{chatError}</Alert>
               ) : null}

@@ -105,12 +105,18 @@
   &__left-display-name {
     padding-left: global.$base * 2;
     font-size: global.$xs;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
   }
 
   &__right-display-name {
     padding-right: global.$base * 2;
     text-align: end;
     font-size: global.$xs;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
   }
 
   &__file {
@@ -133,12 +139,12 @@
   }
 
   &__left-controls {
-    position: absolute;
+    // position: absolute;
     right: 0;
   }
 
   &__right-controls {
-    position: absolute;
+    // position: absolute;
     left: 0;
   }
 }

@@ -121,6 +121,7 @@ export default function Navigation(): JSX.Element {
     setUser(null);
     localStorage.clear();
     navigator("/login");
+    window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
   }
 
   const toggleDrawer =

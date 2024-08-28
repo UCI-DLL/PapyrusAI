@@ -57,7 +57,7 @@ export default function AddModule(): JSX.Element {
   const [session, setSession] = useState<AddModuleType>({
     name: "",
     moduleDescription: "",
-    isRepeating: true,
+    isRepeating: false,
     isPublished: false,
     showInitialPrompt: true,
     prompts: []
@@ -477,7 +477,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           <hr />
 
           <FormLabel>Module Settings</FormLabel>
-          <Checkbox
+          {/* <Checkbox
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
@@ -490,7 +490,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             <span>
               Allow starter prompts to be re-selected during the conversation
             </span>
-          </Checkbox>
+          </Checkbox> */}
 
           <Checkbox
             onClick={() => {

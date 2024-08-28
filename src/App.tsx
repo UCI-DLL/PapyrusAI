@@ -50,6 +50,7 @@ import OldEditPrompt from "./features/prompts/EditPrompt";
 import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
+import LoginError from "./features/authentication/LoginError";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -94,11 +95,11 @@ function App(): JSX.Element {
   useEffect(() => {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
-      if (!localStorage.getItem("papyrusai_access_token")) {
+      if (!localStorage.getItem("papyrusai_access_token") && !user) {
         if (navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
           //do nothing here if on safari (or it creates a weird loop)
         } else {
-          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+          // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       } else {
         // get user's most update-to-date info
@@ -125,12 +126,14 @@ function App(): JSX.Element {
         });
       }
     }, 500);
+    // eslint-disable-next-line
   }, [showUpdateUserInfoModal]);
 
   //handle log out
   function handleLogOut() {
     localStorage.clear();
     setUser(null);
+    window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
   }
 
   return (
@@ -181,6 +184,10 @@ function App(): JSX.Element {
                   <Route
                     path="/login"
                     element={<Login setUser={(u) => setUser(u)} />}
+                  />
+                  <Route
+                    path="/login-error"
+                    element={<LoginError />}
                   />
                   {/* 
                 <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />

@@ -42,7 +42,6 @@ export default function SpeechToTextModal({
               {isListening ? (
                 <Button
                   onClick={() => {
-                    console.log(transcript)
                     setText(transcript)
                     stopListening()
                   }}

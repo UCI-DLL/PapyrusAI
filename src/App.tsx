@@ -99,7 +99,6 @@ function App(): JSX.Element {
         if (navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
           //do nothing here if on safari (or it creates a weird loop)
         } else {
-          console.log("here2", window.location)
           // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       } else {
@@ -131,9 +130,8 @@ function App(): JSX.Element {
 
   //handle log out
   function handleLogOut() {
-    console.log("loging out")
     localStorage.clear();
-    // setUser(null);
+    setUser(null);
     window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
   }
 

@@ -28,7 +28,6 @@ export const MessageLeft = (props: MessageProps) => {
   const displayName = props.displayName ? props.displayName : "Displayname";
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState<any>(null);
-  const [style, setStyle] = useState({ display: 'none' });
   const [open, setOpen] = React.useState(false); //open snackbar
 
   useEffect(() => {
@@ -82,44 +81,41 @@ export const MessageLeft = (props: MessageProps) => {
   return (
     <div
       className={"message__row-left"}
-      onMouseEnter={e => {
-        setStyle({ display: 'block' });
-      }}
-      onMouseLeave={e => {
-        setStyle({ display: 'none' })
-      }}
     >
-      <div className="message__left-controls" style={style}>
-        {isPlaying ? (
+      <div className={"message__left-display-name"}>
+        {displayName}
+        &nbsp;
+        <div className="message__left-controls" style={{ display: 'block' }}>
+          {isPlaying ? (
+            <Tooltip
+              title="Stop"
+            >
+              <button onClick={handleStop}>
+                <StopIcon />
+              </button>
+            </Tooltip>
+          ) : (
+            <Tooltip
+              title="Play"
+            >
+              <button onClick={handlePlay}>
+                <RecordVoiceOverIcon />
+              </button>
+            </Tooltip>
+          )}
+          &nbsp;&nbsp;
           <Tooltip
-            title="Stop"
+            title="Copy"
           >
-            <button onClick={handleStop}>
-              <StopIcon />
+            <button onClick={() => {
+              handleClick()
+              navigator.clipboard.writeText(props.message)
+            }}>
+              <ContentCopyIcon />
             </button>
           </Tooltip>
-        ) : (
-          <Tooltip
-            title="Play"
-          >
-            <button onClick={handlePlay}>
-              <RecordVoiceOverIcon />
-            </button>
-          </Tooltip>
-        )}
-        &nbsp;&nbsp;
-        <Tooltip
-          title="Copy"
-        >
-          <button onClick={() => {
-            handleClick()
-            navigator.clipboard.writeText(props.message)
-          }}>
-            <ContentCopyIcon />
-          </button>
-        </Tooltip>
+        </div>
       </div>
-      <div className={"message__left-display-name"}>{displayName}</div>
       <div className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}>
         {props.typing ? (
           <CustomTypingIndicator />
@@ -144,7 +140,6 @@ export const MessageRight = (props: MessageProps) => {
   const [expandFile, setExpandFile] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState<any>(null);
-  const [style, setStyle] = useState({ display: 'none' });
   const [open, setOpen] = React.useState(false); //snackbar
 
   useEffect(() => {
@@ -198,44 +193,41 @@ export const MessageRight = (props: MessageProps) => {
   return (
     <div
       className={"message__row-right"}
-      onMouseEnter={e => {
-        setStyle({ display: 'block' });
-      }}
-      onMouseLeave={e => {
-        setStyle({ display: 'none' })
-      }}
     >
-      <div className="message__right-controls" style={style}>
-        {isPlaying ? (
+      <div className={"message__right-display-name"}>
+        {props.displayName ? props.displayName : "You"}
+        &nbsp;
+        <div className="message__right-controls" style={{ display: 'block' }}>
+          {isPlaying ? (
+            <Tooltip
+              title="Stop"
+            >
+              <button onClick={handleStop}>
+                <StopIcon />
+              </button>
+            </Tooltip>
+          ) : (
+            <Tooltip
+              title="Play"
+            >
+              <button onClick={handlePlay}>
+                <RecordVoiceOverIcon />
+              </button>
+            </Tooltip>
+          )}
+          &nbsp;&nbsp;
           <Tooltip
-            title="Stop"
+            title="Copy"
           >
-            <button onClick={handleStop}>
-              <StopIcon />
+            <button onClick={() => {
+              handleClick()
+              navigator.clipboard.writeText(props.message)
+            }}>
+              <ContentCopyIcon />
             </button>
           </Tooltip>
-        ) : (
-          <Tooltip
-            title="Play"
-          >
-            <button onClick={handlePlay}>
-              <RecordVoiceOverIcon />
-            </button>
-          </Tooltip>
-        )}
-        &nbsp;&nbsp;
-        <Tooltip
-          title="Copy"
-        >
-          <button onClick={() => {
-            handleClick()
-            navigator.clipboard.writeText(props.message)
-          }}>
-            <ContentCopyIcon />
-          </button>
-        </Tooltip>
+        </div>
       </div>
-      <div className={"message__right-display-name"}>{props.displayName ? props.displayName : "You"}</div>
       {props.messageType && props.messageType === "file" ? (
         <div className={props.outOfContext ? "message__right-message message__out-context" : "message__right-message"}>
           <Modal

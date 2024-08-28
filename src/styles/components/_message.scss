@@ -6,13 +6,13 @@
   &__row-left {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   &__row-right {
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   &__left-message {
@@ -105,12 +105,18 @@
   &__left-display-name {
     padding-left: global.$base * 2;
     font-size: global.$xs;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
   }
 
   &__right-display-name {
     padding-right: global.$base * 2;
     text-align: end;
     font-size: global.$xs;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
   }
 
   &__file {
@@ -130,5 +136,15 @@
 
   &__out-context {
     background-color: global.$gray-32;
+  }
+
+  &__left-controls {
+    // position: absolute;
+    right: 0;
+  }
+
+  &__right-controls {
+    // position: absolute;
+    left: 0;
   }
 }

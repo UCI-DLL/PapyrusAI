@@ -1,6 +1,7 @@
 //reference: https://codesandbox.io/s/material-ui-chat-drh4l?file=/src/Message.js:0-4329
+//reference: https://edvins.io/react-text-to-speech
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
@@ -8,7 +9,11 @@ import { MessageTypeType } from "../utility/types/ConversationTypes";
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-import { Tooltip } from "@mui/material";
+import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
+import StopIcon from '@mui/icons-material/Stop';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CloseIcon from '@mui/icons-material/Close';
+import { Tooltip, SnackbarCloseReason, Snackbar, IconButton } from "@mui/material";
 import { Modal } from "./Modal";
 
 interface MessageProps {
@@ -19,19 +24,112 @@ interface MessageProps {
   outOfContext?: boolean,
 }
 
-
 export const MessageLeft = (props: MessageProps) => {
   const displayName = props.displayName ? props.displayName : "Displayname";
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [utterance, setUtterance] = useState<any>(null);
+  const [open, setOpen] = React.useState(false); //open snackbar
+
+  useEffect(() => {
+    const synth = window.speechSynthesis;
+    const u = new SpeechSynthesisUtterance(props.message);
+    setUtterance(u);
+    return () => {
+      synth.cancel();
+    };
+  }, [props.message]);
+
+  const handlePlay = () => {
+    const synth = window.speechSynthesis;
+    synth.speak(utterance);
+    setIsPlaying(true)
+  };
+
+  const handleStop = () => {
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    setIsPlaying(false);
+  };
+
+  const handleClick = () => { //snackbar
+    setOpen(true);
+  };
+
+  const handleClose = ( //snackbar
+    event: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
+  const action = (
+    <React.Fragment>
+      <IconButton
+        size="small"
+        aria-label="close"
+        color="inherit"
+        onClick={handleClose}
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    </React.Fragment>
+  );
+
   return (
-    <div className={"message__row-left"}>
-      <div className={"message__left-display-name"}>{displayName}</div>
+    <div
+      className={"message__row-left"}
+    >
+      <div className={"message__left-display-name"}>
+        {displayName}
+        &nbsp;
+        <div className="message__left-controls" style={{ display: 'block' }}>
+          {isPlaying ? (
+            <Tooltip
+              title="Stop"
+            >
+              <button onClick={handleStop}>
+                <StopIcon />
+              </button>
+            </Tooltip>
+          ) : (
+            <Tooltip
+              title="Play"
+            >
+              <button onClick={handlePlay}>
+                <RecordVoiceOverIcon />
+              </button>
+            </Tooltip>
+          )}
+          &nbsp;&nbsp;
+          <Tooltip
+            title="Copy"
+          >
+            <button onClick={() => {
+              handleClick()
+              navigator.clipboard.writeText(props.message)
+            }}>
+              <ContentCopyIcon />
+            </button>
+          </Tooltip>
+        </div>
+      </div>
       <div className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}>
         {props.typing ? (
           <CustomTypingIndicator />
         ) : (
-            <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
+          <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
         )}
       </div>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        message="Message copied to clipboard"
+        action={action}
+      />
     </div>
   );
 };
@@ -40,9 +138,96 @@ export const MessageLeft = (props: MessageProps) => {
 export const MessageRight = (props: MessageProps) => {
   const [openFileModal, setOpenFileModal] = useState<boolean>(false);
   const [expandFile, setExpandFile] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [utterance, setUtterance] = useState<any>(null);
+  const [open, setOpen] = React.useState(false); //snackbar
+
+  useEffect(() => {
+    const synth = window.speechSynthesis;
+    const u = new SpeechSynthesisUtterance(props.message);
+    setUtterance(u);
+    return () => {
+      synth.cancel();
+    };
+  }, [props.message]);
+
+  const handlePlay = () => {
+    const synth = window.speechSynthesis;
+    synth.speak(utterance);
+    setIsPlaying(true)
+  };
+
+  const handleStop = () => {
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    setIsPlaying(false);
+  };
+
+  const handleClick = () => { //snackbar
+    setOpen(true);
+  };
+
+  const handleClose = ( //snackbar
+    event: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
+
+  const action = (
+    <React.Fragment>
+      <IconButton
+        size="small"
+        aria-label="close"
+        color="inherit"
+        onClick={handleClose}
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    </React.Fragment>
+  );
+
   return (
-    <div className={"message__row-right"}>
-      <div className={"message__right-display-name"}>{props.displayName ? props.displayName : "You"}</div> 
+    <div
+      className={"message__row-right"}
+    >
+      <div className={"message__right-display-name"}>
+        {props.displayName ? props.displayName : "You"}
+        &nbsp;
+        <div className="message__right-controls" style={{ display: 'block' }}>
+          {isPlaying ? (
+            <Tooltip
+              title="Stop"
+            >
+              <button onClick={handleStop}>
+                <StopIcon />
+              </button>
+            </Tooltip>
+          ) : (
+            <Tooltip
+              title="Play"
+            >
+              <button onClick={handlePlay}>
+                <RecordVoiceOverIcon />
+              </button>
+            </Tooltip>
+          )}
+          &nbsp;&nbsp;
+          <Tooltip
+            title="Copy"
+          >
+            <button onClick={() => {
+              handleClick()
+              navigator.clipboard.writeText(props.message)
+            }}>
+              <ContentCopyIcon />
+            </button>
+          </Tooltip>
+        </div>
+      </div>
       {props.messageType && props.messageType === "file" ? (
         <div className={props.outOfContext ? "message__right-message message__out-context" : "message__right-message"}>
           <Modal
@@ -84,6 +269,13 @@ export const MessageRight = (props: MessageProps) => {
           <Markdown className={""}>{props.message}</Markdown>
         </div>
       )}
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        message="Message copied to clipboard"
+        action={action}
+      />
     </div>
   );
 };

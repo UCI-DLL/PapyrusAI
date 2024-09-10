@@ -355,6 +355,8 @@ export default function CreatePrompt(): JSX.Element {
             value={newPrompt.prompt}
             onChange={handleChange}
             error={errors.prompt !== ""}
+            multiline
+            maxRows={5}
             helperText={errors.prompt}
             disabled={isLoading}
             required

@@ -384,7 +384,7 @@ export const Prompt = (props: PromptProps) => {
                     if (props.onClick && props.folder) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt ?? false)
                   }}
                 >
-                  <AddIcon />
+                  <AddIcon fontSize={"large"} />
                 </IconButton>
               </Tooltip>
             ) : (

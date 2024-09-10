@@ -117,6 +117,7 @@ export default function Library(): JSX.Element {
         setAlert({ message: "Folder could not be created. Try again later.", type: "error" })
       }
       setOpenCreateFolderModal(false);
+      setNewFolderName("");
       refreshList();
     });
   }

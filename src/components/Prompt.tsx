@@ -65,7 +65,9 @@ interface PromptProps {
   loading: () => void;
   noShowMenu?: boolean;
   onClick?: (folderId: string, promptId: string, isOrgFolder: boolean) => void;
+  onCardClick?: (folderId: string, promptId: string, isOrgFolder: boolean) => void;
   showRemove?: boolean;
+  selected?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -350,10 +352,13 @@ export const Prompt = (props: PromptProps) => {
           <ListFolders noShowMenu onClick={moveTo} disableFolderId={props.folder.id} />
         </div>
       </Modal>
-      <Card>
+      <Card
+        onClick={() => props.onCardClick ? props.onCardClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt) : {}}
+        className={props.selected ? "prompt__selected" : "prompt__not-selected"}
+      >
         <CardHeader
           action={
-            props.noShowMenu ? props.showRemove ? (
+            props.onCardClick === undefined ? props.noShowMenu ? props.showRemove ? (
               <Tooltip title={"Remove Prompt"}>
                 <IconButton
                   className="c-prompt__button__menu-btn"
@@ -404,6 +409,8 @@ export const Prompt = (props: PromptProps) => {
                   <MoreVertIcon />
                 </IconButton>
               </Tooltip>
+            ) : (
+              <></>
             )
           }
           title={props.prompt.name}

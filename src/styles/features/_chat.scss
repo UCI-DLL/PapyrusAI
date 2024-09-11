@@ -96,6 +96,15 @@
     padding: 1rem;
   }
 
+  &__prompt-list {
+    width: 100%;
+    display: grid;
+    grid-gap: global.$base;
+    grid-template-columns: repeat(auto-fill, minmax(49%, 1fr));
+    overflow-y: auto;
+    max-height: 33rem;
+  }
+
   &__input-form {
     position: fixed;
     bottom: 0;

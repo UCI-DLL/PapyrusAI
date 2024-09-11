@@ -59,4 +59,12 @@
     }
   }
 
+  &__selected {
+    border: 1px solid var(--black) !important;
+  }
+
+  &__not-selected {
+    border: none;
+  }
+
 }

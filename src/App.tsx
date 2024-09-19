@@ -51,6 +51,8 @@ import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
+import CreateFile from "./features/library/CreateFile";
+import EditFile from "./features/library/EditFile";
 
 declare module "@mui/material/styles" {
   interface Palette {

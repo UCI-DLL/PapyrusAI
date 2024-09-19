@@ -49,11 +49,8 @@ export type FileType = {
   creator: CustomUserType,
   isDeleted: boolean,
   name: string,
-  file: string, // url of file
   tags: Array<string>,
   isOrganizationFile: boolean,
-  fileId?: string, //file id as input to backend vs id is output from backend
-  timestamp: string, //TODO in backend
   folderId?: string,
 }
 

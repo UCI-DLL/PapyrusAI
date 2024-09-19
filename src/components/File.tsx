@@ -33,6 +33,7 @@ import { Modal } from "./Modal";
 import { useNavigate } from "react-router";
 import ListFolders from "../features/library/ListFolders";
 import Post from "../utility/Post";
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 
 interface FileProps {
@@ -378,7 +379,12 @@ export const File = (props: FileProps) => {
               </Tooltip>
             )
           }
-          title={props.file.name}
+          title={
+            <button className="c-file__title" onClick={() => console.log("TODO open file so user can view")}>
+              <InsertDriveFileIcon />
+              <div>{props.file.name}</div>
+            </button>
+          }
           subheader={
             <>
               {
@@ -391,8 +397,6 @@ export const File = (props: FileProps) => {
             </>
           }
         />
-
-        {/* Nothing in the card? TODO on click of card, popup view file */}
       </Card>
       <Menu
         id={`${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-menu`}

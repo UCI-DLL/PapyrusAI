@@ -533,16 +533,18 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
             return <></>
           }
           return (
-            <Folder
-              isOrganizationFolder
-              displayName={folder.name}
-              onClick={() => props.onClick ? props.onClick(folder.id, true) : navigator(`/library/org/${folder.id}`)}
-              folder={folder}
-              keyy={`${i}org`}
-              refreshList={refreshList}
-              loading={loading}
-              noShowMenu={props.noShowMenu}
-            />
+            <div key={i}>
+              <Folder
+                isOrganizationFolder
+                displayName={folder.name}
+                onClick={() => props.onClick ? props.onClick(folder.id, true) : navigator(`/library/org/${folder.id}`)}
+                folder={folder}
+                keyy={`${i}org`}
+                refreshList={refreshList}
+                loading={loading}
+                noShowMenu={props.noShowMenu}
+              />
+            </div>
           )
         })}
         {userFilteredFolderList.map((folder: FolderType, i) => {
@@ -550,15 +552,17 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
             return <></>
           }
           return (
-            <Folder
-              displayName={folder.name}
-              onClick={() => props.onClick ? props.onClick(folder.id, false) : navigator(`/library/${folder.id}`)}
-              folder={folder}
-              keyy={`${i}`}
-              refreshList={refreshList}
-              loading={loading}
-              noShowMenu={props.noShowMenu}
-            />
+            <div key={i}>
+              <Folder
+                displayName={folder.name}
+                onClick={() => props.onClick ? props.onClick(folder.id, false) : navigator(`/library/${folder.id}`)}
+                folder={folder}
+                keyy={`${i}`}
+                refreshList={refreshList}
+                loading={loading}
+                noShowMenu={props.noShowMenu}
+              />
+            </div>
           )
         })}
       </div>

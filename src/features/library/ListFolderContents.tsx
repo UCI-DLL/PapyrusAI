@@ -37,6 +37,12 @@ export enum SortOptions {
   Oldest = "Oldest",
 }
 
+export enum TypeOptions {
+  All = "All",
+  Prompt = "Prompt",
+  File = "File"
+}
+
 interface ListPromptsProps {
   folderId: string;
   isOrgFolder: boolean;
@@ -50,18 +56,20 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
   const [folder, setFolder] = useState<FolderType>();
   const [filteredFolder, setFilteredFolder] = useState<FolderType>();
   const { setAlert } = useContext(AlertContext);
-  const [filters, setFilters] = useState<{ //TODO add type to filter (prompt vs file)
+  const [filters, setFilters] = useState<{
     search: string,
     sort: SortOptions,
     startDate: Dayjs | null,
     endDate: Dayjs | null,
     tags: string,
+    type: TypeOptions,
   }>({
     search: "", //title of folder or title or contents of prompts
     sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
     startDate: null,
     endDate: null,
     tags: "",
+    type: TypeOptions.All,
   });
   const [tagList, setTagList] = useState<Array<TagType>>([]);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -176,6 +184,14 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     var filteredPrompts = folder.prompts
     var filteredFiles = folder.files
 
+    //handle asset type
+    if (filters.type === TypeOptions.Prompt) {
+      filteredFiles = []
+    }
+    if (filters.type === TypeOptions.File) {
+      filteredPrompts = []
+    }
+
     //handle searching
     if (filters.search !== "") {
       filteredPrompts = filteredPrompts.filter(
@@ -280,7 +296,8 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
       sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
       startDate: null,
       endDate: null,
-      tags: ""
+      tags: "",
+      type: TypeOptions.All
     });
     setFilteredFolder(folder);
   }
@@ -330,6 +347,26 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
               setFilters((prev) => ({ ...prev, search: e.target.value }))
             }}
           />
+          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
+            <InputLabel shrink={true} id="type-select-label">Type</InputLabel>
+            <Select
+              value={filters.type}
+              onChange={(e: SelectChangeEvent) => {
+                setFilters((prev) => ({ ...prev, type: TypeOptions[e.target.value as keyof typeof TypeOptions] }));
+              }}
+              label="Type"
+              labelId="type-select-label"
+              id="type-select"
+              sx={{ width: 320, maxWidth: '100%' }}
+              notched={true}
+            >
+              {Object.keys(TypeOptions).map(key => {
+                return (
+                  <MenuItem value={key} key={key}>{key}</MenuItem>
+                )
+              })}
+            </Select>
+          </FormControl>
           <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
             <InputLabel shrink={true} id="sort-select-label">Sort</InputLabel>
             <Select
@@ -462,30 +499,34 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
       <div className="library__prompt-list">
         {filteredFolder && filteredFolder.prompts && filteredFolder.prompts.map((prompt: PromptType, i) => {
           return (
-            <Prompt
-              prompt={prompt}
-              folder={filteredFolder}
-              keyy={`${i}`}
-              refreshList={() => refreshList()}
-              loading={() => setIsLoading(true)}
-              noShowMenu={props.noShowMenu}
-              onClick={props.onClick}
-            />
+            <div key={i}>
+              <Prompt
+                prompt={prompt}
+                folder={filteredFolder}
+                keyy={`${i}`}
+                refreshList={() => refreshList()}
+                loading={() => setIsLoading(true)}
+                noShowMenu={props.noShowMenu}
+                onClick={props.onClick}
+              />
+            </div>
           )
         })}
       </div>
-      <div className="library__prompt-list">
+      <div className="library__file-list">
         {filteredFolder && filteredFolder.files && filteredFolder.files.map((file: FileType, i) => {
           return (
-            <File
-              file={file}
-              folder={filteredFolder}
-              keyy={`${i}`}
-              refreshList={() => refreshList()}
-              loading={() => setIsLoading(true)}
-              noShowMenu={props.noShowMenu}
-              onClick={props.onClick}
-            />
+            <div key={i}>
+              <File
+                file={file}
+                folder={filteredFolder}
+                keyy={`${i}`}
+                refreshList={() => refreshList()}
+                loading={() => setIsLoading(true)}
+                noShowMenu={props.noShowMenu}
+                onClick={props.onClick}
+              />
+            </div>
           )
         })}
       </div>

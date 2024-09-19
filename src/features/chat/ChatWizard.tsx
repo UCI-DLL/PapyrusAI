@@ -40,6 +40,7 @@ export default function ChatWizard({
                 isDeleted: false,
                 name: "",
                 prompts: [],
+                files: [],
                 organization: "",
                 timestamp: ""
               }}

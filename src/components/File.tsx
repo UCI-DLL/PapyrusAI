@@ -42,7 +42,7 @@ interface FileProps {
   refreshList: () => void;
   loading: () => void;
   noShowMenu?: boolean;
-  onClick?: (folderId: string, fileId: string, isOrgFolder: boolean) => void;
+  onClick?: (folderId: string, fileId: string, isOrgFolder: boolean, type: string) => void; //type is "prompt" or "file"
   showRemove?: boolean;
 }
 
@@ -156,7 +156,6 @@ export const File = (props: FileProps) => {
           name: props.file.name,
           isDeleted: true,
           tags: props.file.tags,
-          file: props.file.file
         }
         // post data back
         Put(postUpdateOrgFile(props.folder.id, props.file.id), dataToSend).then((res) => {
@@ -176,7 +175,6 @@ export const File = (props: FileProps) => {
           name: props.file.name,
           isDeleted: true,
           tags: props.file.tags,
-          file: props.file.file
         }
         // post data back
         Put(postUpdateUserFile(props.folder.id, props.file.id), dataToSend).then((res) => {
@@ -338,7 +336,7 @@ export const File = (props: FileProps) => {
                   aria-expanded={addOpen ? 'true' : undefined}
                   onClick={(e: any) => {
                     e.stopPropagation()
-                    if (props.onClick) props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile)
+                    if (props.onClick) props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile, "file")
                   }}
                 >
                   <DeleteIcon />
@@ -355,7 +353,7 @@ export const File = (props: FileProps) => {
                   aria-expanded={addOpen ? 'true' : undefined}
                   onClick={(e: any) => {
                     e.stopPropagation()
-                    if (props.onClick && props.folder) props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile ?? false)
+                    if (props.onClick && props.folder) props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile ?? false, "file")
                   }}
                 >
                   <AddIcon />

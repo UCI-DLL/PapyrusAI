@@ -64,7 +64,7 @@ interface PromptProps {
   refreshList: () => void;
   loading: () => void;
   noShowMenu?: boolean;
-  onClick?: (folderId: string, promptId: string, isOrgFolder: boolean) => void;
+  onClick?: (folderId: string, promptId: string, isOrgFolder: boolean, type: string) => void; //type is "prompt" or "file"
   showRemove?: boolean;
 }
 
@@ -364,7 +364,7 @@ export const Prompt = (props: PromptProps) => {
                   aria-expanded={addOpen ? 'true' : undefined}
                   onClick={(e: any) => {
                     e.stopPropagation()
-                    if (props.onClick) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt)
+                    if (props.onClick) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt, "prompt")
                   }}
                 >
                   <DeleteIcon />
@@ -381,7 +381,7 @@ export const Prompt = (props: PromptProps) => {
                   aria-expanded={addOpen ? 'true' : undefined}
                   onClick={(e: any) => {
                     e.stopPropagation()
-                    if (props.onClick && props.folder) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt ?? false)
+                    if (props.onClick && props.folder) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt ?? false, "prompt")
                   }}
                 >
                   <AddIcon fontSize={"large"} />

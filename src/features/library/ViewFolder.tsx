@@ -10,8 +10,7 @@ import { UserContext } from "../../utility/context/UserContext";
 import { getOrgFolder, getUserFolder } from "../../utility/endpoints/FolderEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
-import ListPrompts from "./ListPrompts";
-import ListFiles from "./ListFiles";
+import ListFolderContents from "./ListFolderContents";
 
 
 export enum SortOptions {
@@ -151,6 +150,7 @@ export default function ViewFolder(): JSX.Element {
       <div className="library__section-header">
         <h3>{folder?.name}</h3>
         <div>
+          {/* TODO fix these buttons  */}
           {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
             <>
               <Button variant="contained" onClick={() => {
@@ -173,8 +173,7 @@ export default function ViewFolder(): JSX.Element {
         </div>
       </div>
 
-      <ListPrompts folderId={folder.id} isOrgFolder={location.pathname.split("/")[2] === "org"} />
-      <ListFiles folderId={folder.id} isOrgFolder={location.pathname.split("/")[2] === "org"} />
+      <ListFolderContents folderId={folder.id} isOrgFolder={location.pathname.split("/")[2] === "org"} />
     </div>
   ) : (
     <LinearProgress />

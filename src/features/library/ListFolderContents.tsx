@@ -14,7 +14,7 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { FileType, FolderType, TagType } from "../../utility/types/CourseTypes";
+import { FileType, FolderType, PromptType, TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import LinearProgress from '@mui/material/LinearProgress';
 import CloseIcon from '@mui/icons-material/Close';
@@ -26,6 +26,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { getOrgFolder, getUserFolder } from "../../utility/endpoints/FolderEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
+import { Prompt } from "../../components/Prompt";
 import { File } from "../../components/File";
 
 
@@ -36,27 +37,27 @@ export enum SortOptions {
   Oldest = "Oldest",
 }
 
-interface ListFilesProps {
+interface ListPromptsProps {
   folderId: string;
   isOrgFolder: boolean;
   noShowMenu?: boolean;
-  onClick?: (folderId: string, fileId: string, isOrgFolder: boolean) => void;
+  onClick?: (folderId: string, id: string, isOrgFolder: boolean, type: string) => void; //type is "prompt" or "file"
 }
 
-export default function ListFiles(props: ListFilesProps): JSX.Element {
+export default function ListFolderContents(props: ListPromptsProps): JSX.Element {
   let navigator = useNavigate();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [folder, setFolder] = useState<FolderType>();
   const [filteredFolder, setFilteredFolder] = useState<FolderType>();
   const { setAlert } = useContext(AlertContext);
-  const [filters, setFilters] = useState<{
+  const [filters, setFilters] = useState<{ //TODO add type to filter (prompt vs file)
     search: string,
     sort: SortOptions,
     startDate: Dayjs | null,
     endDate: Dayjs | null,
     tags: string,
   }>({
-    search: "", //title of folder or title or contents of files
+    search: "", //title of folder or title or contents of prompts
     sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
     startDate: null,
     endDate: null,
@@ -103,7 +104,7 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
           if (res === undefined) {
           } else {
             //handle error
-            //redirect to file list
+            //redirect to prompt list
             navigator("/library");
             setAlert({ message: "Folder Does Not Exist", type: "error" });
             setIsLoading(false);
@@ -125,7 +126,7 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
           if (res === undefined) {
           } else {
             //handle error
-            //redirect to file list
+            //redirect to prompt list
             // navigator("/library");
             setAlert({ message: "Folder Does Not Exist", type: "error" });
             setIsLoading(false);
@@ -142,7 +143,7 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
         if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
           setTagList((prev) => [...prev, ...res.data.tags]);
-          //if the data is > 20 , then call for the next page
+          //if the data is 20 prompts, then call for the next page
           //handle pages
           if (
             res.data.ScannedCount > 0 &&
@@ -172,10 +173,15 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
     if (!folder) return //return if no folder
     if (!filteredFolder) return
 
+    var filteredPrompts = folder.prompts
     var filteredFiles = folder.files
 
     //handle searching
     if (filters.search !== "") {
+      filteredPrompts = filteredPrompts.filter(
+        (prompt: PromptType) => prompt.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          prompt.prompt.toLowerCase().includes(filters.search.toLowerCase())
+      );
       filteredFiles = filteredFiles.filter(
         (file: FileType) => file.name.toLowerCase().includes(filters.search.toLowerCase()) ||
           file.name.toLowerCase().includes(filters.search.toLowerCase())
@@ -183,6 +189,9 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
     }
     //handle tag
     if (filters.tags) {
+      filteredPrompts = filteredPrompts.filter(
+        (prompt: PromptType) => prompt.tags ? prompt.tags.includes(filters.tags) : prompt
+      )
       filteredFiles = filteredFiles.filter(
         (file: FileType) => file.tags ? file.tags.includes(filters.tags) : file
       )
@@ -191,9 +200,21 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
     //handle date
     //Note: have to do a lot of date converting
     if (filters.startDate !== null) {
+      filteredPrompts = filteredPrompts.filter((prompt: PromptType) => {
+        if (filters.startDate !== null) {
+          var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
+          if (dayjs(date.toISOString()) > filters.startDate) {
+            return prompt
+          } else {
+            return false
+          }
+        } else {
+          return prompt
+        }
+      });
       filteredFiles = filteredFiles.filter((file: FileType) => {
         if (filters.startDate !== null) {
-          var date = new Date(parseInt(file.timestamp.substring(0, 13), 10));
+          var date = new Date(parseInt(file.id.substring(0, 13), 10));
           if (dayjs(date.toISOString()) > filters.startDate) {
             return file
           } else {
@@ -205,9 +226,21 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
       });
     }
     if (filters.endDate !== null) {
+      filteredPrompts = filteredPrompts.filter((prompt: PromptType) => {
+        if (filters.endDate !== null) {
+          var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
+          if (dayjs(date.toISOString()) < filters.endDate) {
+            return prompt
+          } else {
+            return false
+          }
+        } else {
+          return prompt
+        }
+      });
       filteredFiles = filteredFiles.filter((file: FileType) => {
         if (filters.endDate !== null) {
-          var date = new Date(parseInt(file.timestamp.substring(0, 13), 10));
+          var date = new Date(parseInt(file.id.substring(0, 13), 10));
           if (dayjs(date.toISOString()) < filters.endDate) {
             return file
           } else {
@@ -221,24 +254,29 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
 
     // handle sorting
     if (filters.sort as string === SortOptions.Ascending) {
+      filteredPrompts.sort((a: PromptType, b: PromptType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
       filteredFiles.sort((a: FileType, b: FileType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
     } else if (filters.sort as string === SortOptions.Descending) {
+      filteredPrompts.sort((a: PromptType, b: PromptType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
       filteredFiles.sort((a: FileType, b: FileType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
     } else if (filters.sort as string === SortOptions.Oldest) {
-      filteredFiles.sort((a: FileType, b: FileType) => parseInt(a.timestamp.substring(0, a.timestamp.length - 6)) - parseInt(b.timestamp.substring(0, b.timestamp.length - 6)));
+      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
+      filteredFiles.sort((a: FileType, b: FileType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
     } else if (filters.sort as string === SortOptions.Newest) {
-      filteredFiles.sort((a: FileType, b: FileType) => parseInt(b.timestamp.substring(0, b.timestamp.length - 6)) - parseInt(a.timestamp.substring(0, a.timestamp.length - 6)));
+      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      filteredFiles.sort((a: FileType, b: FileType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
     } else { //newest
-      filteredFiles.sort((a: FileType, b: FileType) => parseInt(b.timestamp.substring(0, b.timestamp.length - 6)) - parseInt(a.timestamp.substring(0, a.timestamp.length - 6)));
+      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      filteredFiles.sort((a: FileType, b: FileType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
     }
 
     //finally set the filtered lists
-    setFilteredFolder(prev => prev ? ({ ...prev, files: filteredFiles }) : prev)
+    setFilteredFolder(prev => prev ? ({ ...prev, prompts: filteredPrompts, files: filteredFiles }) : prev)
   }
 
   function handleResetFilters() {
     setFilters({
-      search: "", //title of folder or title or contents of files
+      search: "", //title of folder or title or contents of prompts
       sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
       startDate: null,
       endDate: null,
@@ -421,6 +459,21 @@ export default function ListFiles(props: ListFilesProps): JSX.Element {
         </FormControl>
       </form>
       <hr />
+      <div className="library__prompt-list">
+        {filteredFolder && filteredFolder.prompts && filteredFolder.prompts.map((prompt: PromptType, i) => {
+          return (
+            <Prompt
+              prompt={prompt}
+              folder={filteredFolder}
+              keyy={`${i}`}
+              refreshList={() => refreshList()}
+              loading={() => setIsLoading(true)}
+              noShowMenu={props.noShowMenu}
+              onClick={props.onClick}
+            />
+          )
+        })}
+      </div>
       <div className="library__prompt-list">
         {filteredFolder && filteredFolder.files && filteredFolder.files.map((file: FileType, i) => {
           return (

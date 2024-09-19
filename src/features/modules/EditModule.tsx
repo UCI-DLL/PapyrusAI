@@ -31,10 +31,10 @@ import { Modal } from "../../components/Modal";
 import Markdown from "react-markdown";
 import InfoIcon from '@mui/icons-material/Info';
 import ListFolders from "../library/ListFolders";
-import ListPrompts from "../library/ListPrompts";
+import ListFolderContents from "../library/ListFolderContents";
 import { FileType, PromptType } from "../../utility/types/CourseTypes";
 import { Prompt } from "../../components/Prompt";
-import { getOrgPrompt, getUserPrompt } from "../../utility/endpoints/FolderEndpoints";
+import { getOrgFile, getOrgPrompt, getUserFile, getUserPrompt } from "../../utility/endpoints/FolderEndpoints";
 import { File } from "../../components/File";
 
 type EditModuleType = {
@@ -109,6 +109,8 @@ export default function EditModule(): JSX.Element {
     // eslint-disable-next-line
   }, [])
 
+  console.log("session", session)
+
   useEffect(() => {
     setIsLoading(true);
     const controller = new AbortController();
@@ -130,7 +132,11 @@ export default function EditModule(): JSX.Element {
           if (res.data && res.data.prompts) {
             // assign prompts to be prompt ids
             //also set session
-            setSession({ ...res.data }); //, prompts: res.data.prompts.map((p: PromptType) => p.id) 
+            var tempSession = res.data;
+            if (!tempSession.files) {
+              tempSession.files = []
+            }
+            setSession(tempSession); //, prompts: res.data.prompts.map((p: PromptType) => p.id) 
             setIsLoading(false);
           }
         } else if (res && res.status === 401) {
@@ -220,6 +226,7 @@ export default function EditModule(): JSX.Element {
           isPublished: isPublished,
           showInitialPrompt: session.showInitialPrompt,
           prompts: session.prompts, //Send prompts with all information + folderId 
+          files: session.files, //send files with all information + folderid
           showWizard: session.showWizard,
           isDeleted: isDeleted,
           isTemplate: session.isTemplate,
@@ -263,52 +270,97 @@ export default function EditModule(): JSX.Element {
     setOpenSelectFolderModal(false);
   }
 
-  function selectPrompt(folderId: string, promptId: string, isOrgFolder: boolean) {
+  function selectAsset(folderId: string, id: string, isOrgFolder: boolean, type: string) { //type is "prompt" or "file"
     setOpenSelectPromptModal({
       folderId: "",
       isOrgFolder: false
     });
     setIsLoading(true);
     const controller = new AbortController();
-    // get prompt and add it to list of prompts
-    if (isOrgFolder) {
-      Get(getOrgPrompt(folderId, promptId), controller.signal).then(res => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //also set session
-            setSession(prev => ({ ...prev, prompts: [...prev.prompts, { ...res.data, isOrgFolder: true, folderId: folderId }] }))
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
+
+    //check if asset is prompt or file
+    if (type === "prompt") {
+      // get prompt and add it to list of prompts
+      if (isOrgFolder) {
+        Get(getOrgPrompt(folderId, id), controller.signal).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //also set session
+              setSession(prev => ({ ...prev, prompts: [...prev.prompts, { ...res.data, isOrgFolder: true, folderId: folderId }] }))
+              setIsLoading(false);
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
-            //handle error
-            setAlert({ message: "Prompt Does Not Exist", type: "error" });
-            setIsLoading(false);
+            if (res === undefined) {
+            } else {
+              //handle error
+              setAlert({ message: "Prompt Does Not Exist", type: "error" });
+              setIsLoading(false);
+            }
           }
-        }
-      })
-    } else {
-      Get(getUserPrompt(folderId, promptId), controller.signal).then(res => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //also set session
-            setSession(prev => ({ ...prev, prompts: [...prev.prompts, { ...res.data, isOrgFolder: false, folderId: folderId }] }))
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
+        })
+      } else {
+        Get(getUserPrompt(folderId, id), controller.signal).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //also set session
+              setSession(prev => ({ ...prev, prompts: [...prev.prompts, { ...res.data, isOrgFolder: false, folderId: folderId }] }))
+              setIsLoading(false);
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
-            //handle error
-            setAlert({ message: "Prompt Does Not Exist", type: "error" });
-            setIsLoading(false);
+            if (res === undefined) {
+            } else {
+              //handle error
+              setAlert({ message: "Prompt Does Not Exist", type: "error" });
+              setIsLoading(false);
+            }
           }
-        }
-      })
+        })
+      }
+    } else if (type === "file") {
+      // get prompt and add it to list of files
+      if (isOrgFolder) {
+        Get(getOrgFile(folderId, id), controller.signal).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //also set session
+              setSession(prev => ({ ...prev, files: [...prev.files, { ...res.data, isOrgFolder: true, folderId: folderId }] }))
+              setIsLoading(false);
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res === undefined) {
+            } else {
+              //handle error
+              setAlert({ message: "File Does Not Exist", type: "error" });
+              setIsLoading(false);
+            }
+          }
+        })
+      } else {
+        Get(getUserFile(folderId, id), controller.signal).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //also set session
+              setSession(prev => ({ ...prev, files: [...prev.files, { ...res.data, isOrgFolder: false, folderId: folderId }] }))
+              setIsLoading(false);
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res === undefined) {
+            } else {
+              //handle error
+              setAlert({ message: "File Does Not Exist", type: "error" });
+              setIsLoading(false);
+            }
+          }
+        })
+      }
     }
   }
 
@@ -325,6 +377,7 @@ export default function EditModule(): JSX.Element {
   }
 
   function setConfirmationModal(folderId: string, promptId: string, isOrgFolder: boolean) {
+    console.log("confi") //todo
     setOpenConfirmationModal(promptId);
   }
 
@@ -440,7 +493,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
         }
       >
         <div>
-          <ListPrompts folderId={openSelectPromptModal.folderId} isOrgFolder={openSelectPromptModal.isOrgFolder} noShowMenu onClick={selectPrompt} />
+          <ListFolderContents folderId={openSelectPromptModal.folderId} isOrgFolder={openSelectPromptModal.isOrgFolder} noShowMenu onClick={selectAsset} />
         </div>
       </Modal>
       <Modal
@@ -598,8 +651,8 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           <hr />
 
           <div style={{ width: "100%", display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-            <FormLabel sx={{ alignContent: "center" }}>Module Prompts</FormLabel>
-            <Button variant="outlined" onClick={() => setOpenSelectFolderModal(true)}>Add Prompt</Button>
+            <FormLabel sx={{ alignContent: "center" }}>Module Assets</FormLabel>
+            <Button variant="outlined" onClick={() => setOpenSelectFolderModal(true)}>Add Asset</Button>
           </div>
           <div className="modules__prompt-list">
             {session.prompts.map((prompt: PromptType, i) => {
@@ -633,16 +686,8 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             })}
           </div>
 
-          <hr />
-
-          {/* TODO figure out files here  */}
-          <div style={{ width: "100%", display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-            <FormLabel sx={{ alignContent: "center" }}>Module Files</FormLabel>
-            <Button variant="outlined" onClick={() => setOpenSelectFolderModal(true)}>Add File</Button>
-          </div>
-
           <div className="modules__prompt-list">
-            {session.files.map((file: FileType, i) => {
+            {session.files && session.files.map((file: FileType, i) => {
               return (
                 <File
                   file={file}

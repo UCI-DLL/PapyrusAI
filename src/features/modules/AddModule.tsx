@@ -24,7 +24,7 @@ import { Modal } from "../../components/Modal";
 import Markdown from "react-markdown";
 import InfoIcon from '@mui/icons-material/Info';
 import LinearProgress from '@mui/material/LinearProgress';
-import ListPrompts from "../library/ListPrompts";
+import ListPrompts from "../library/ListFolderContents";
 import ListFolders from "../library/ListFolders";
 import Get from "../../utility/Get";
 import { getOrgPrompt, getUserPrompt } from "../../utility/endpoints/FolderEndpoints";
@@ -488,7 +488,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           </div>
 
           <div className="modules__prompt-list">
-            {session.files.map((file: FileType, i) => {
+            {session.files && session.files.map((file: FileType, i) => {
               return (
                 <File
                   file={file}

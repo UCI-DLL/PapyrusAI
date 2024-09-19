@@ -97,7 +97,6 @@ export default function CreateFile(): JSX.Element {
     }
   };
 
-
   useEffect(() => {
     const controller = new AbortController();
     //get pathname to figure out if we are editing 
@@ -170,8 +169,8 @@ export default function CreateFile(): JSX.Element {
   }
 
   function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and activate
-      handleSubmit(e);
+    if (selectedIndexSave === 0) { //Save and upload
+      handleUpload(e);
     } else if (selectedIndexSave === 1) { //discard changes
       setOpenDiscardModal(true);
     }
@@ -181,8 +180,8 @@ export default function CreateFile(): JSX.Element {
     e: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number,
   ) => {
-    if (index === 0) { //Save and activate
-      handleSubmit(e,);
+    if (index === 0) { //Save and upload
+      handleUpload(e);
     } else if (index === 1) { //discard changes
       setOpenDiscardModal(true);
     }
@@ -205,21 +204,13 @@ export default function CreateFile(): JSX.Element {
     setOpenSave(false);
   };
 
-  function handleSubmit(e: any) {
-    e.preventDefault();
-    if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
-    }
-    else if (newFile.file === "") {
-      setErrors((prev: any) => ({ ...prev, file: "File is too short" }))
-    }
-    else if (fileInfo?.isOrgFolder) {
+  function handleSubmit(id: string) {
+    if (fileInfo && fileInfo.isOrgFolder) {
       const dataToSend = {
         name: newFile.name,
-        file: newFile.file,
         isDeleted: false,
         tags: newFile.tags,
-        fileId: newFile.file //TODO figure out fileid
+        id: id
       }
       // post data back
       Post(postCreateOrgFile(fileInfo.folderId), dataToSend).then((res) => {
@@ -241,9 +232,9 @@ export default function CreateFile(): JSX.Element {
     } else if (fileInfo) {
       const dataToSend = {
         name: newFile.name,
-        file: newFile.file,
         isDeleted: false,
-        tags: newFile.tags
+        tags: newFile.tags,
+        id: id
       }
       // post data back
       Post(postCreateUserFile(fileInfo.folderId), dataToSend).then((res) => {
@@ -277,18 +268,28 @@ export default function CreateFile(): JSX.Element {
     }))
   };
 
-  function handleUpload() {
-    console.log(selectedFiles);
+  function handleUpload(e: any) {
+    e.preventDefault();
+    if (!selectedFiles) {
+      setAlert({ message: "Missing File information", type: "error" });
+      return
+    }
+    if (newFile.name === "") {
+      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
+    }
     // Handle here
     if (fileInfo) {
       //if is org folder, then upload to org folder
       if (fileInfo?.isOrgFolder) {
         Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId)).then(res => {
           if (res && res.status && res.status < 300) {
-            console.log(res)
-            //TODO handle upload to s3 -> handleUploadToS3
-            handleUploadToS3(res.url, res.metadataUrl);
-
+            //handle upload to s3 -> handleUploadToS3
+            if (res.data) {
+              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+            } else {
+              //handle error
+              setAlert({ message: "Error creating file. Please try again later", type: "error" })
+            }
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
@@ -303,9 +304,13 @@ export default function CreateFile(): JSX.Element {
       } else {//else an user folder
         Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId)).then(res => {
           if (res && res.status && res.status < 300) {
-            console.log(res)
-            //TODO handle upload to s3 -> handleUploadToS3
-            handleUploadToS3(res.data.url, res.data.metadataUrl);
+            //handle upload to s3 -> handleUploadToS3
+            if (res.data) {
+              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+            } else {
+              //handle error
+              setAlert({ message: "Error creating file. Please try again later", type: "error" })
+            }
 
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -322,14 +327,15 @@ export default function CreateFile(): JSX.Element {
     }
   }
 
-  async function handleUploadToS3(url: string, metadataUrl: string) {
-    //TODO
+  async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
     try {
       // Upload original file directly to s3
       const uploadResponse = await axios.put(url, selectedFiles, {
         headers: {
           'Content-Type': selectedFiles.type
         }
+      }).then(val => {
+        handleSubmit(id);
       });
       console.log('Upload response:', uploadResponse);
 
@@ -348,12 +354,8 @@ export default function CreateFile(): JSX.Element {
           'Content-Type': 'application/json'
         }
       }).then(res => {
-        console.log("res", res)
         if (res && res.status && res.status < 300) {
-          console.log(res)
-          //TODO handle creating file in folder
-          setNewFile((prev) => ({ ...prev, file: res.data }))
-
+          // metadata complete
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
@@ -456,7 +458,7 @@ export default function CreateFile(): JSX.Element {
         <span>* indicates a required field</span>
       </div>
       <Box className="prompt__add">
-        <form onSubmit={(e) => handleSubmit(e)}>
+        <form onSubmit={(e) => handleUpload(e)}>
           <FormLabel>Enter File Information</FormLabel>
           <TextField
             name="name"

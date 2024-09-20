@@ -100,7 +100,10 @@ export default function EditModule(): JSX.Element {
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
-  const [openConfirmationModal, setOpenConfirmationModal] = useState<string>("");
+  const [openConfirmationModal, setOpenConfirmationModal] = useState<{ id: string, type: string }>({
+    id: "",
+    type: "",
+  });
 
   useEffect(() => {
     //When the page changes, reset the alert
@@ -108,8 +111,6 @@ export default function EditModule(): JSX.Element {
 
     // eslint-disable-next-line
   }, [])
-
-  console.log("session", session)
 
   useEffect(() => {
     setIsLoading(true);
@@ -213,7 +214,7 @@ export default function EditModule(): JSX.Element {
       setErrors((prev: any) => ({ ...prev, name: "Name missing" }))
     }
     else if (session.moduleDescription === "") {
-      setErrors((prev: any) => ({ ...prev, moduleDescription: "Sign up code missing" }))
+      setErrors((prev: any) => ({ ...prev, moduleDescription: "Module description missing" }))
     } else {
       //Update course
       if (moduleIds) {
@@ -321,7 +322,7 @@ export default function EditModule(): JSX.Element {
         })
       }
     } else if (type === "file") {
-      // get prompt and add it to list of files
+      // get file and add it to list of files
       if (isOrgFolder) {
         Get(getOrgFile(folderId, id), controller.signal).then(res => {
           if (res && res.status && res.status < 300) {
@@ -366,19 +367,31 @@ export default function EditModule(): JSX.Element {
 
   function refreshList() { } //empty
 
-  function removePrompt(promptId: string) {
-    // remove prompt from list
-    setSession(prev => {
-      var promptList = prev.prompts;
-      promptList = promptList.filter(p => p.id !== promptId);
-      return { ...prev, prompts: promptList };
-    })
-    setOpenConfirmationModal("");
+  function removeAsset(id: string, type: string) {
+    if (type === "file") {
+      // remove file from list
+      setSession(prev => {
+        var fileList = prev.files;
+        fileList = fileList.filter(p => p.id !== id);
+        return { ...prev, files: fileList };
+      })
+      setOpenConfirmationModal({ id: "", type: "" });
+    } else if (type === "prompt") {
+      // remove prompt from list
+      setSession(prev => {
+        var promptList = prev.prompts;
+        promptList = promptList.filter(p => p.id !== id);
+        return { ...prev, prompts: promptList };
+      })
+      setOpenConfirmationModal({ id: "", type: "" });
+    } else {
+      setAlert({ message: "Something went wrong. Try again later", type: "error" })
+    }
+
   }
 
-  function setConfirmationModal(folderId: string, promptId: string, isOrgFolder: boolean) {
-    console.log("confi") //todo
-    setOpenConfirmationModal(promptId);
+  function setConfirmationModal(folderId: string, id: string, isOrgFolder: boolean, type: string) {
+    setOpenConfirmationModal({ id: id, type: type });
   }
 
   return moduleIds && session.name !== "" ? (
@@ -472,7 +485,7 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
       </Modal>
       <Modal
         isOpen={openSelectPromptModal.folderId !== ""}
-        title={"Select Prompt"}
+        title={"Select Asset"}
         onRequestClose={() => setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })}
         actions={
           <>
@@ -497,21 +510,21 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
         </div>
       </Modal>
       <Modal
-        isOpen={openConfirmationModal !== ""}
-        title={"Remove Prompt?"}
-        onRequestClose={() => setOpenConfirmationModal("")}
+        isOpen={openConfirmationModal.id !== ""}
+        title={"Remove Asset?"}
+        onRequestClose={() => setOpenConfirmationModal({ id: "", type: "" })}
         actions={
           <>
-            <Button variant="contained" color="primary" onClick={() => removePrompt(openConfirmationModal)}>
+            <Button variant="contained" color="primary" onClick={() => removeAsset(openConfirmationModal.id, openConfirmationModal.type)}>
               Remove
             </Button>
-            <Button variant="contained" color="secondary" onClick={() => setOpenConfirmationModal("")}>
+            <Button variant="contained" color="secondary" onClick={() => setOpenConfirmationModal({ id: "", type: "" })}>
               Cancel
             </Button>
           </>
         }
       >
-        <div>Are you sure you would like to remove this prompt from the module?</div>
+        <div>Are you sure you would like to remove this asset from the module?</div>
       </Modal>
       <div className="modules__section-header">
         <div>
@@ -657,31 +670,33 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           <div className="modules__prompt-list">
             {session.prompts.map((prompt: PromptType, i) => {
               return (
-                <Prompt
-                  prompt={prompt}
-                  folder={{ //pass in temp folder
-                    id: prompt.folderId ? prompt.folderId : "",
-                    creator: {
-                      email: "",
-                      sub: "",
+                <div key={i}>
+                  <Prompt
+                    prompt={prompt}
+                    folder={{ //pass in temp folder
+                      id: prompt.folderId ? prompt.folderId : "",
+                      creator: {
+                        email: "",
+                        sub: "",
+                        name: "",
+                        family_name: "",
+                        username: "",
+                      },
+                      isDeleted: false,
                       name: "",
-                      family_name: "",
-                      username: "",
-                    },
-                    isDeleted: false,
-                    name: "",
-                    prompts: [],
-                    organization: "",
-                    timestamp: "",
-                    files: [],
-                  }}
-                  keyy={`${i}`}
-                  refreshList={() => refreshList()}
-                  loading={() => setIsLoading(true)}
-                  noShowMenu={true}
-                  showRemove
-                  onClick={setConfirmationModal}
-                />
+                      prompts: [],
+                      organization: "",
+                      timestamp: "",
+                      files: [],
+                    }}
+                    keyy={`${i}`}
+                    refreshList={() => refreshList()}
+                    loading={() => setIsLoading(true)}
+                    noShowMenu={true}
+                    showRemove
+                    onClick={setConfirmationModal}
+                  />
+                </div>
               )
             })}
           </div>
@@ -689,31 +704,33 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           <div className="modules__prompt-list">
             {session.files && session.files.map((file: FileType, i) => {
               return (
-                <File
-                  file={file}
-                  folder={{ //pass in temp folder
-                    id: file.folderId ? file.folderId : "",
-                    creator: {
-                      email: "",
-                      sub: "",
+                <div key={i}>
+                  <File
+                    file={file}
+                    folder={{ //pass in temp folder
+                      id: file.folderId ? file.folderId : "",
+                      creator: {
+                        email: "",
+                        sub: "",
+                        name: "",
+                        family_name: "",
+                        username: ""
+                      },
+                      isDeleted: false,
                       name: "",
-                      family_name: "",
-                      username: ""
-                    },
-                    isDeleted: false,
-                    name: "",
-                    prompts: [],
-                    organization: "",
-                    timestamp: "",
-                    files: [],
-                  }}
-                  keyy={`${i}`}
-                  refreshList={() => refreshList()}
-                  loading={() => setIsLoading(true)}
-                  noShowMenu={true}
-                  showRemove
-                  onClick={setConfirmationModal}
-                />
+                      prompts: [],
+                      organization: "",
+                      timestamp: "",
+                      files: [],
+                    }}
+                    keyy={`${i}`}
+                    refreshList={() => refreshList()}
+                    loading={() => setIsLoading(true)}
+                    noShowMenu={true}
+                    showRemove
+                    onClick={setConfirmationModal}
+                  />
+                </div>
               )
             })}
           </div>

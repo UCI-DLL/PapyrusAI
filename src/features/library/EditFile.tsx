@@ -60,9 +60,9 @@ export default function EditFile(): JSX.Element {
   let navigator = useNavigate();
   const [file, setFile] = useState<FileType>();
   const [newFile, setNewFile] = useState<{
-    name: string, file: string, tags: Array<string>, fileId: string
+    name: string, id: string, tags: Array<string>
   }>({
-    name: "", file: "", tags: [], fileId: ""
+    name: "", id: "", tags: []
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -244,7 +244,7 @@ export default function EditFile(): JSX.Element {
     index: number,
   ) => {
     if (index === 0) { //Save and activate
-      handleSubmit(e, false);
+      handleUpload(e, false);
     } else if (index === 1) { //discard changes
       setOpenDiscardModal(true);
     }
@@ -267,23 +267,15 @@ export default function EditFile(): JSX.Element {
     setOpenSave(false);
   };
 
-  function handleSubmit(e: any, isDeleted = false) {
-    e.preventDefault();
+  function handleSubmit(id: string, isDeleted = false) {
     setIsLoading(true);
     const dataToSend = {
       name: newFile.name,
-      file: newFile.file,
       isDeleted: isDeleted,
       tags: newFile.tags,
-      fileId: newFile.file //TODO figure out fileid
+      id: id
     }
-    if (!isDeleted && newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
-    }
-    else if (!isDeleted && newFile.file === "") {
-      setErrors((prev: any) => ({ ...prev, file: "File is too short" }))
-    }
-    else if (fileInfo && fileInfo.isOrgFolder) {
+    if (fileInfo && fileInfo.isOrgFolder) {
       // post data back
       Put(postUpdateOrgFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
@@ -338,18 +330,24 @@ export default function EditFile(): JSX.Element {
     }))
   };
 
-  function handleUpload() {
+  function handleUpload(e: any, isDeleted = false) {
+    e.preventDefault();
     console.log(selectedFiles);
+    if (newFile.name === "") {
+      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
+    }
     // Handle here
     if (fileInfo) {
       //if is org folder, then upload to org folder
       if (fileInfo?.isOrgFolder) {
         Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId)).then(res => {
           if (res && res.status && res.status < 300) {
-            console.log(res)
-            //TODO handle upload to s3 -> handleUploadToS3
-            handleUploadToS3(res.url, res.metadataUrl);
-
+            if (res.data) {
+              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+            } else {
+              //handle error
+              setAlert({ message: "Error creating file. Please try again later", type: "error" })
+            }
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
@@ -364,10 +362,12 @@ export default function EditFile(): JSX.Element {
       } else {//else an user folder
         Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId)).then(res => {
           if (res && res.status && res.status < 300) {
-            console.log(res)
-            //TODO handle upload to s3 -> handleUploadToS3
-            handleUploadToS3(res.data.url, res.data.metadataUrl);
-
+            if (res.data) {
+              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+            } else {
+              //handle error
+              setAlert({ message: "Error creating file. Please try again later", type: "error" })
+            }
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
@@ -383,14 +383,15 @@ export default function EditFile(): JSX.Element {
     }
   }
 
-  async function handleUploadToS3(url: string, metadataUrl: string) {
-    //TODO
+  async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
     try {
       // Upload original file directly to s3
       const uploadResponse = await axios.put(url, selectedFiles, {
         headers: {
           'Content-Type': selectedFiles.type
         }
+      }).then(val => {
+        handleSubmit(id);
       });
       console.log('Upload response:', uploadResponse);
 
@@ -409,12 +410,8 @@ export default function EditFile(): JSX.Element {
           'Content-Type': 'application/json'
         }
       }).then(res => {
-        console.log("res", res)
         if (res && res.status && res.status < 300) {
-          console.log(res)
-          //TODO handle creating file in folder
-          setNewFile((prev) => ({ ...prev, file: res.data }))
-
+          //metadata complete
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
@@ -442,7 +439,7 @@ export default function EditFile(): JSX.Element {
             onRequestClose={() => setOpenDeleteModal(false)}
             actions={
               <>
-                <Button variant="contained" color="error" onClick={(e) => handleSubmit(e, true)}>
+                <Button variant="contained" color="error" onClick={(e) => handleUpload(e, true)}>
                   Delete
                 </Button>
                 <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(false)}>
@@ -559,7 +556,7 @@ export default function EditFile(): JSX.Element {
             <span>* indicates a required field</span>
           </div>
           <Box className="prompt__add">
-            <form onSubmit={(e) => handleSubmit(e, false)}>
+            <form onSubmit={(e) => handleUpload(e, false)}>
               <FormLabel>Enter File Information</FormLabel>
               <TextField
                 name="name"
@@ -601,14 +598,14 @@ export default function EditFile(): JSX.Element {
                   <span>Clear</span>
                 </Button>
               )}
-              <Button
+              {/* <Button
                 color="primary"
                 disabled={!selectedFiles}
                 style={{ textTransform: 'none' }}
                 onClick={handleUpload}
               >
                 Upload
-              </Button>
+              </Button> */}
 
               {/* add dropdown to handle tags  */}
               <FormControl fullWidth sx={{ margin: ".5rem 0" }}>

@@ -53,9 +53,9 @@ export default function CreateFile(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
   const [newFile, setNewFile] = useState<{
-    name: string, file: string, tags: Array<string>, fileId: string
+    name: string, id: string, tags: Array<string>
   }>({
-    name: "", file: "", tags: [], fileId: ""
+    name: "", id: "", tags: []
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -500,14 +500,14 @@ export default function CreateFile(): JSX.Element {
               <span>Clear</span>
             </Button>
           )}
-          <Button
+          {/* <Button
             color="primary"
             disabled={!selectedFiles}
             style={{ textTransform: 'none' }}
             onClick={handleUpload}
           >
             Upload
-          </Button>
+          </Button> */}
           {/* add dropdown to handle tags  */}
           <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
             <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>

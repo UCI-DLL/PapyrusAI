@@ -1,0 +1,18 @@
+@use "../global" as global;
+
+
+.c-file {
+  margin: global.$base;
+  flex: 1 1 auto;
+  overflow: hidden;
+  max-width: 100%;
+  min-width: 15rem;
+  -webkit-box-flex: 1;
+  vertical-align: top;
+
+  &__title {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}

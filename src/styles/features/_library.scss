@@ -25,6 +25,13 @@
     grid-template-columns: repeat(auto-fill, minmax(49%, 1fr));
   }
 
+  &__file-list {
+    width: 100%;
+    display: grid;
+    grid-gap: global.$base;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  }
+
   &__section-header {
     display: flex;
     flex-direction: row;

@@ -342,7 +342,8 @@ export default function CreateFile(): JSX.Element {
       // Create corresponding metadata
       const metadata = {
         metadataAttributes: {
-          filename: newFile.name
+          filename: newFile.name,
+          id: id,
         }
       };
 

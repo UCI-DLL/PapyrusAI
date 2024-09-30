@@ -103,6 +103,11 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
         // set errors
         setAlert({ message: res.data, type: "error" })
       }
+      setOpenDuplicateModal({
+        courseId: "",
+        moduleId: "",
+        copyCourseId: ""
+      });
       refreshList();
     });
   }

@@ -51,6 +51,7 @@ import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
+import OrgSettings from "./features/org-settings/OrgSettings";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -318,6 +319,10 @@ function App(): JSX.Element {
 
                       <Route path="/prompts/:id" element={<PrivateRoute user={user} />}>
                         <Route path="/prompts/:id" element={<OldEditPrompt />} />
+                      </Route>
+
+                      <Route path="/org-settings" element={<PrivateRoute user={user} />}>
+                        <Route path="/org-settings" element={<OrgSettings />} />
                       </Route>
                     </>
                   )}

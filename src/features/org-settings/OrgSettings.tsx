@@ -188,6 +188,10 @@ export default function OrgSettings(): JSX.Element {
     e.preventDefault();
     //if permissions is none, then open delete modal
     if (showUpdateOrgPermissionModal.permission === PermissionsOptions.None) {
+      setShowUpdateOrgPermissionModal({
+        id: "",
+        permission: ""
+      })
       setOpenDeleteModal({ id: showUpdateOrgPermissionModal.id, isAdmin: false, isInstructor: false, organization: process.env.REACT_APP_ORGANIZATION ?? "" })
     } else {
       // set is loading

@@ -33,7 +33,7 @@ import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
 
 export enum PermissionsOptions {
-  Admin = "Admin",
+  // Admin = "Admin",
   Instructor = "Instructor",
   None = "None",
 }
@@ -124,6 +124,8 @@ export default function OrgSettings(): JSX.Element {
       filteredList = filteredList.filter(
         permission => permission.id.toLowerCase().includes(filter.search.toLowerCase()));
     }
+    //handle sort
+    filteredList = filteredList.sort((a, b) => (b.isAdmin) ? 1 : ((a.isInstructor) ? -1 : 0))
     //then set filtered list
     setFilteredOrgPermissionList(filteredList);
 
@@ -143,6 +145,14 @@ export default function OrgSettings(): JSX.Element {
 
   function addPermission(e: React.FormEvent) {
     e.preventDefault();
+    if (showAddOrgPermissionModal.permission === PermissionsOptions.None) {
+      setAlert({ message: "No Permissions Given", type: "info" });
+      setShowAddOrgPermissionModal({
+        open: false,
+        email: "",
+        permission: "None"
+      })
+    }
     //add permissions
     if (showAddOrgPermissionModal.email === "") {
       setAlert({ message: "Missing Email", type: "error" });
@@ -156,8 +166,8 @@ export default function OrgSettings(): JSX.Element {
       // set is loading
       setIsLoading(true);
       const dataToSend = { //if admin, then admin and instructor permissions
-        isAdmin: showAddOrgPermissionModal.permission === PermissionsOptions.Admin,
-        isInstructor: showAddOrgPermissionModal.permission === PermissionsOptions.Instructor || showAddOrgPermissionModal.permission === PermissionsOptions.Admin,
+        isAdmin: false,
+        isInstructor: showAddOrgPermissionModal.permission === PermissionsOptions.Instructor,
         id: showAddOrgPermissionModal.email
       }
       // post data back
@@ -197,8 +207,8 @@ export default function OrgSettings(): JSX.Element {
       // set is loading
       setIsLoading(true);
       const dataToSend = { //if admin, then admin and instructor permissions
-        isAdmin: showUpdateOrgPermissionModal.permission === PermissionsOptions.Admin,
-        isInstructor: showUpdateOrgPermissionModal.permission === PermissionsOptions.Instructor || showUpdateOrgPermissionModal.permission === PermissionsOptions.Admin,
+        isAdmin: false,
+        isInstructor: showUpdateOrgPermissionModal.permission === PermissionsOptions.Instructor,
         id: showUpdateOrgPermissionModal.id,
         isDeleted: false,
       }
@@ -462,37 +472,45 @@ export default function OrgSettings(): JSX.Element {
                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                       >
                         <TableCell component="th" scope="row">
-                          <button onClick={() => setShowUpdateOrgPermissionModal({ id: permission.id, permission: permission.isAdmin ? "Admin" : permission.isInstructor ? "Instructor" : "None" })}>
-                            {permission.id}
-                          </button>
+                          {permission.isAdmin ? <>{permission.id}</> : (
+                            <button onClick={() => setShowUpdateOrgPermissionModal({ id: permission.id, permission: permission.isAdmin ? "Admin" : permission.isInstructor ? "Instructor" : "None" })}>
+                              {permission.id}
+                            </button>
+                          )}
                         </TableCell>
-                        <TableCell align="right">
-                          <button onClick={() => setShowUpdateOrgPermissionModal({ id: permission.id, permission: permission.isAdmin ? "Admin" : permission.isInstructor ? "Instructor" : "None" })}>
-                            {permission.isAdmin ? <span>Admin</span> : permission.isInstructor ? <span>Instructor</span> : <BlockIcon color="error" />}
-                          </button>
+                        <TableCell align="right">{
+                          permission.isAdmin ? <span>Admin</span> : (
+                            <button onClick={() => setShowUpdateOrgPermissionModal({ id: permission.id, permission: permission.isAdmin ? "Admin" : permission.isInstructor ? "Instructor" : "None" })}>
+                              {permission.isInstructor ? <span>Instructor</span> : <BlockIcon color="error" />}
+                            </button>
+                          )
+                        }
                           &nbsp;
-                          <Tooltip
-                            title={"Delete"}
-                            arrow
-                            componentsProps={{
-                              tooltip: {
-                                sx: {
-                                  bgcolor: '#da0222', //error color
-                                  '& .MuiTooltip-arrow': {
-                                    color: '#da0222',
+                          {!permission.isAdmin && (
+                            <Tooltip
+                              title={"Delete"}
+                              arrow
+                              componentsProps={{
+                                tooltip: {
+                                  sx: {
+                                    bgcolor: '#da0222', //error color
+                                    '& .MuiTooltip-arrow': {
+                                      color: '#da0222',
+                                    },
                                   },
                                 },
-                              },
-                            }}
-                          >
-                            <IconButton
-                              onClick={() => setOpenDeleteModal(permission)}
-                              aria-label="Delete Module"
-                              className="modules__delete_background"
+                              }}
                             >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
+                              <IconButton
+                                onClick={() => setOpenDeleteModal(permission)}
+                                aria-label="Delete Module"
+                                className="modules__delete_background"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+
                         </TableCell>
                       </TableRow>
                     ))}

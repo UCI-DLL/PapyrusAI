@@ -1,0 +1,56 @@
+@use "../global" as global;
+
+.org-settings {
+  max-width: global.$lg-break;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: global.$base;
+  width: 100%;
+
+  &__section-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+
+    @media (max-width: global.$sm-break) {
+      flex-direction: column;
+    }
+
+    div {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+
+      @media (max-width: global.$sm-break) {
+        flex-direction: column;
+      }
+    }
+  }
+
+  &__filter {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    margin: 0.4rem 0;
+  }
+
+  &__list {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  th {
+    max-width: 100px;
+    min-width: 15px;
+    text-overflow: ellipsis;
+  }
+
+}

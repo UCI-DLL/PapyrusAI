@@ -373,7 +373,7 @@ export const Folder = (props: FolderProps) => {
                 handleAddClick(e)
               }}
             >
-              <MoreVertIcon />
+              <MoreVertIcon color="primary" />
             </IconButton>
           </Tooltip>
         )}

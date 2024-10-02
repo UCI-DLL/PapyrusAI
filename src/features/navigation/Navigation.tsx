@@ -39,13 +39,13 @@ export default function Navigation(): JSX.Element {
   var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
     user?.groups.find(a => a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
-      ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About"] :
+      ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About", "Settings"] :
       ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About"] :
     ["Dashboard", "Courses", "Modules", "Account", "About"];
   var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
     user?.groups.find(a => a.includes("-TA")) ?
     user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
-      ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about"] :
+      ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about", "/org-settings"] :
       ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about"] :
     ["/", "/courses", "/modules", "/account", "/about"];
   const [sideDrawer, setSideDrawer] = useState(false);
@@ -114,6 +114,8 @@ export default function Navigation(): JSX.Element {
       setBreadcrumbText(["Prompts", ""])
     } else if (pathnameSplit[1] === "library") {
       setBreadcrumbText(["Library", ""])
+    } else if (pathnameSplit[1] === "org-settings") {
+      setBreadcrumbText(["Organization Settings", ""])
     }
   }, [location.pathname])
 

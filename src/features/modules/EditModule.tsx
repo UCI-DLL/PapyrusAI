@@ -287,7 +287,9 @@ export default function EditModule(): JSX.Element {
           if (res && res.status && res.status < 300) {
             if (res.data) {
               //also set session
-              setSession(prev => ({ ...prev, prompts: [...prev.prompts, { ...res.data, isOrgFolder: true, folderId: folderId }] }))
+              if (session.prompts.filter(x => x.id === res.data.id).length === 0) {
+                setSession(prev => ({ ...prev, prompts: [...prev.prompts, { ...res.data, isOrgFolder: true, folderId: folderId }] }))
+              }
               setIsLoading(false);
             }
           } else if (res && res.status === 401) {
@@ -306,7 +308,9 @@ export default function EditModule(): JSX.Element {
           if (res && res.status && res.status < 300) {
             if (res.data) {
               //also set session
-              setSession(prev => ({ ...prev, prompts: [...prev.prompts, { ...res.data, isOrgFolder: false, folderId: folderId }] }))
+              if (session.prompts.filter(x => x.id === res.data.id).length === 0) {
+                setSession(prev => ({ ...prev, prompts: [...prev.prompts, { ...res.data, isOrgFolder: false, folderId: folderId }] }))
+              }
               setIsLoading(false);
             }
           } else if (res && res.status === 401) {

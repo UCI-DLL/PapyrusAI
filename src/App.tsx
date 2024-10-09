@@ -52,6 +52,7 @@ import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
 import OrgSettings from "./features/org-settings/OrgSettings";
+import CourseReports from "./features/reports/ModuleReports";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -262,6 +263,10 @@ function App(): JSX.Element {
 
                         <Route path="/reports/:id" element={<PrivateRoute user={user} />}>
                           <Route path="/reports/:id" element={<UserReports />} />
+                        </Route>
+
+                        <Route path="/dashboard/:id/:id" element={<PrivateRoute user={user} />}>
+                          <Route path="/dashboard/:id/:id" element={<CourseReports />} />
                         </Route>
 
                         {/* shows conversation list of other users  */}

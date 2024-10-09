@@ -30,6 +30,7 @@ import DocumentModal from "./DocumentModal";
 import Post from "../../utility/Post";
 import { Tooltip } from "@mui/material";
 import SpeechToTextModal from "./SpeechToTextModal";
+import RaterEssay from "../../components/RaterEssay";
 
 
 export default function Chat(): JSX.Element {
@@ -48,6 +49,7 @@ export default function Chat(): JSX.Element {
   const [courseInfo, setCourseInfo] = useState<CourseType>();
   const [moduleInfo, setModuleInfo] = useState<ModuleType>();
   const [newMessage, setNewMessage] = useState<string>("");
+  const [showEssay, setShowEssay] = useState<boolean>(false);
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>();
   //After a prompt has been selected, then add it to this list
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
@@ -614,6 +616,23 @@ export default function Chat(): JSX.Element {
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">
       <Modal
+        isOpen={showEssay}
+        title={"Essay Feedback"}
+        onRequestClose={() => setShowEssay(false)}
+        actions={
+          <>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => setShowEssay(false)}>
+              Back to Conversation
+            </Button>
+          </>
+        }
+      >
+        <RaterEssay />
+      </Modal>
+      <Modal
         isOpen={openErrorModal.open}
         title={"We ran into an error!"}
         onRequestClose={() => setOpenErrorModal({ open: false, message: "" })}
@@ -861,6 +880,16 @@ export default function Chat(): JSX.Element {
             )
           }
         })}
+
+        {/* this is a temp TODO: delete  */}
+        <button key={6786} onClick={() => setShowEssay(true)}>
+          <MessageLeft
+            message={"View your essay feedback by clicking on this message."}
+            displayName={"Papyrus"}
+            messageType={"text"}
+            outOfContext={true}
+          />
+        </button>
 
         {showTypingIndicator && (
           <MessageLeft

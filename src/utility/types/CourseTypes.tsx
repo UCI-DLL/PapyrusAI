@@ -52,6 +52,7 @@ export type FileType = {
   tags: Array<string>,
   isOrganizationFile: boolean,
   folderId?: string,
+  url?: string,
 }
 
 export type FolderType = {

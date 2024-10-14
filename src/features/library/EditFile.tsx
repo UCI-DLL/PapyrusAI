@@ -25,6 +25,8 @@ import {
 } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Get from "../../utility/Get";
 import Put from "../../utility/Put";
 import { FileType, TagType } from "../../utility/types/CourseTypes";
@@ -34,13 +36,16 @@ import { Modal } from "../../components/Modal";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import {
   getOrgFile,
-  getSignedS3BucketUploadOrgFolder,
-  getSignedS3BucketUploadUserFolder,
+  getSignedS3BucketDownloadFile,
+  getSignedS3BucketUpdateUploadOrgFolder,
+  getSignedS3BucketUpdateUploadUserFolder,
   getUserFile,
   postUpdateOrgFile,
   postUpdateUserFile
 } from "../../utility/endpoints/FolderEndpoints";
 import axios from "axios";
+import { Document, Page, pdfjs } from 'react-pdf';
+
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -52,17 +57,17 @@ const MenuProps = {
   },
 };
 
-
 const options = ['Save & Publish', 'Discard Changes'];
 
 export default function EditFile(): JSX.Element {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
   let location = useLocation();
   let navigator = useNavigate();
   const [file, setFile] = useState<FileType>();
   const [newFile, setNewFile] = useState<{
-    name: string, id: string, tags: Array<string>
+    name: string, id: string, tags: Array<string>, url: string
   }>({
-    name: "", id: "", tags: []
+    name: "", id: "", tags: [], url: ""
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -82,6 +87,33 @@ export default function EditFile(): JSX.Element {
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
+
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+
+  /*To Prevent right click on screen*/
+  document.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
+
+  /*When document gets loaded successfully*/
+  function onDocumentLoadSuccess({ numPages }: any) {
+    setNumPages(numPages);
+    setPageNumber(1);
+  }
+
+  function changePage(offset: number) {
+    setPageNumber(prevPageNumber => prevPageNumber + offset);
+  }
+
+  function previousPage() {
+    changePage(-1);
+  }
+
+  function nextPage() {
+    changePage(1);
+  }
+
   const fileRef = React.useRef<any>();
 
   const [selectedFiles, setSelectedFiles] = React.useState<any>();
@@ -157,8 +189,25 @@ export default function EditFile(): JSX.Element {
           if (res.data) {
             //also set session
             setFile(res.data);
-            setNewFile(res.data);
-            setIsLoading(false);
+            Get(getSignedS3BucketDownloadFile(fileId), signal).then(res1 => {
+              if (res1 && res1.status && res1.status < 300) {
+                if (res1.data) {
+                  //also set session
+                  setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: res1.data.url })
+                }
+              } else if (res1 && res1.status === 401) {
+                navigator("/login");
+              } else {
+                if (res1 === undefined) {
+                } else {
+                  //handle error
+                  //redirect to file list
+                  navigator("/library");
+                  setAlert({ message: "File Does Not Exist", type: "error" });
+                }
+              }
+              setIsLoading(false);
+            });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -179,8 +228,25 @@ export default function EditFile(): JSX.Element {
           if (res.data) {
             //also set session
             setFile(res.data);
-            setNewFile(res.data);
-            setIsLoading(false);
+            Get(getSignedS3BucketDownloadFile(fileId), signal).then(res1 => {
+              if (res1 && res1.status && res1.status < 300) {
+                if (res1.data) {
+                  //also set session
+                  setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: res1.data.url })
+                }
+              } else if (res1 && res1.status === 401) {
+                navigator("/login");
+              } else {
+                if (res1 === undefined) {
+                } else {
+                  //handle error
+                  //redirect to file list
+                  navigator("/library");
+                  setAlert({ message: "File Does Not Exist", type: "error" });
+                }
+              }
+              setIsLoading(false);
+            });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -198,7 +264,6 @@ export default function EditFile(): JSX.Element {
     }
   }
 
-
   function getTags(startKey: string, signal: AbortSignal) {
     var limit = 20;
     Get(getTagList(limit, startKey), signal).then(res => {
@@ -215,8 +280,6 @@ export default function EditFile(): JSX.Element {
             res.data.LastEvaluatedKey.id
           ) {
             getTags(res.data.LastEvaluatedKey.id, signal);
-          } else {
-            setIsLoading(false);
           }
         }
       } else if (res && res.status === 401) {
@@ -232,8 +295,9 @@ export default function EditFile(): JSX.Element {
   }
 
   function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and activate
-      handleSubmit(e, false);
+    setIsLoading(true)
+    if (selectedIndexSave === 0 && file) { //Save and activate
+      handleUpload(e, false);
     } else if (selectedIndexSave === 1) { //discard changes
       setOpenDiscardModal(true);
     }
@@ -275,6 +339,7 @@ export default function EditFile(): JSX.Element {
       tags: newFile.tags,
       id: id
     }
+    console.log("data to send", dataToSend)
     if (fileInfo && fileInfo.isOrgFolder) {
       // post data back
       Put(postUpdateOrgFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
@@ -330,60 +395,66 @@ export default function EditFile(): JSX.Element {
     }))
   };
 
-  function handleUpload(e: any, isDeleted = false) {
+  function handleUpload(e: React.FormEvent, isDeleted = false) {
     e.preventDefault();
     console.log(selectedFiles);
     if (newFile.name === "") {
       setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
     }
-    // Handle here
-    if (fileInfo) {
-      //if is org folder, then upload to org folder
-      if (fileInfo?.isOrgFolder) {
-        Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+    //if new file selected, then get the signed upload url
+    //else just update the file information
+    if (selectedFiles) {
+      // Handle here
+      if (fileInfo) {
+        //if is org folder, then upload to org folder
+        if (fileInfo?.isOrgFolder) {
+          Get(getSignedS3BucketUpdateUploadOrgFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
+            if (res && res.status && res.status < 300) {
+              if (res.data) {
+                handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+              } else {
+                //handle error
+                setAlert({ message: "Error updating file. Please try again later", type: "error" })
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
-              //handle error
-              setAlert({ message: "Error creating file. Please try again later", type: "error" })
+              if (res === undefined) {
+              } else {
+                // handle error
+                setIsLoading(false);
+              }
             }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              // handle error
-              setIsLoading(false);
-            }
-          }
-        });
+          });
 
-      } else {//else an user folder
-        Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+        } else {//else an user folder
+          Get(getSignedS3BucketUpdateUploadUserFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
+            if (res && res.status && res.status < 300) {
+              if (res.data) {
+                handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+              } else {
+                //handle error
+                setAlert({ message: "Error updating file. Please try again later", type: "error" })
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
-              //handle error
-              setAlert({ message: "Error creating file. Please try again later", type: "error" })
+              if (res === undefined) {
+              } else {
+                // handle error
+                setIsLoading(false);
+              }
             }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              // handle error
-              setIsLoading(false);
-            }
-          }
-        });
+          });
+        }
       }
-
+    } else if (file && file.id) {
+      handleSubmit(file.id, isDeleted);
     }
   }
 
   async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
+    console.log("new file", id)
     try {
       // Upload original file directly to s3
       const uploadResponse = await axios.put(url, selectedFiles, {
@@ -583,7 +654,7 @@ export default function EditFile(): JSX.Element {
                   style={{ textTransform: 'none' }}
                   onClick={() => fileRef.current?.click()}
                 >
-                  Choose file to upload
+                  Choose new file to upload
                 </Button>
               )}
               {selectedFiles?.name && (
@@ -598,14 +669,6 @@ export default function EditFile(): JSX.Element {
                   <span>Clear</span>
                 </Button>
               )}
-              {/* <Button
-                color="primary"
-                disabled={!selectedFiles}
-                style={{ textTransform: 'none' }}
-                onClick={handleUpload}
-              >
-                Upload
-              </Button> */}
 
               {/* add dropdown to handle tags  */}
               <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
@@ -632,6 +695,38 @@ export default function EditFile(): JSX.Element {
                 </Select>
               </FormControl>
             </form>
+            <hr />
+            {/* https://www.geeksforgeeks.org/how-to-display-a-pdf-as-an-image-in-react-app-using-url/ */}
+            {newFile && newFile.url && (
+              <div>
+                <div>Current File</div>
+                <div style={{ display: "flex", flexDirection: "row" }}>
+                  <IconButton
+                    type="button"
+                    disabled={pageNumber <= 1}
+                    onClick={previousPage}
+                    className="Pre"
+                  >
+                    <ChevronLeftIcon />
+                  </IconButton>
+                  <div style={{ alignSelf: "center" }}>
+                    Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
+                  </div>
+                  <IconButton
+                    type="button"
+                    disabled={pageNumber >= numPages}
+                    onClick={nextPage}
+                  >
+                    <ChevronRightIcon />
+                  </IconButton>
+                </div>
+                <Document
+                  file={newFile.url}
+                  onLoadSuccess={onDocumentLoadSuccess}>
+                  <Page pageNumber={pageNumber} renderTextLayer={false} renderAnnotationLayer={false} />
+                </Document>
+              </div>
+            )}
           </Box>
         </>
       ) : (

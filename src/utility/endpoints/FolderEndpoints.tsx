@@ -126,12 +126,12 @@ export function postMoveUserPromptToUserFolder(folderid: string, promptid: strin
  * RAG stuff
  */
 
-export function getSignedS3BucketUploadOrgFolder(folderId: string) {
-  return `ragfile/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+export function getSignedS3BucketUploadOrgFolder(folderId: string, fileId: string) {
+  return `ragfile/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function getSignedS3BucketUploadUserFolder(folderId: string) {
-  return `ragfile/upload/${folderId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+export function getSignedS3BucketUploadUserFolder(folderId: string, fileId: string) {
+  return `ragfile/upload/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 /**
  * files in folders

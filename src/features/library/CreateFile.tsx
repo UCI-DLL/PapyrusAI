@@ -279,9 +279,11 @@ export default function CreateFile(): JSX.Element {
     }
     // Handle here
     if (fileInfo) {
+      const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : ""; 
+      const fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
       //if is org folder, then upload to org folder
       if (fileInfo?.isOrgFolder) {
-        Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId)).then(res => {
+        Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileId)).then(res => {
           if (res && res.status && res.status < 300) {
             //handle upload to s3 -> handleUploadToS3
             if (res.data) {
@@ -302,11 +304,11 @@ export default function CreateFile(): JSX.Element {
         });
 
       } else {//else an user folder
-        Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId)).then(res => {
+        Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileId)).then(res => {
           if (res && res.status && res.status < 300) {
             //handle upload to s3 -> handleUploadToS3
             if (res.data) {
-              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+              handleUploadToS3(res.data.url, res.data.metadataUrl, fileId);
             } else {
               //handle error
               setAlert({ message: "Error creating file. Please try again later", type: "error" })
@@ -337,7 +339,6 @@ export default function CreateFile(): JSX.Element {
       }).then(val => {
         handleSubmit(id);
       });
-      console.log('Upload response:', uploadResponse);
 
       // Create corresponding metadata
       const metadata = {
@@ -367,7 +368,6 @@ export default function CreateFile(): JSX.Element {
           }
         }
       });
-      console.log('Metadata upload response:', metadataResponse);
 
     } catch (error) {
       console.error((error as Error).message);

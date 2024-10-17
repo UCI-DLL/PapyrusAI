@@ -380,7 +380,7 @@ export const File = (props: FileProps) => {
             )
           }
           title={
-            <button className="c-file__title" onClick={() => console.log("TODO open file so user can view")}>
+            <button className="c-file__title" onClick={edit}>
               <InsertDriveFileIcon />
               <div>{props.file.name}</div>
             </button>

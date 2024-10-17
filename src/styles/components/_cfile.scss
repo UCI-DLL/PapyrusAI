@@ -9,6 +9,8 @@
   min-width: 15rem;
   -webkit-box-flex: 1;
   vertical-align: top;
+  border: 1px solid global.$primary;
+  border-radius: global.$border-radius;
 
   &__title {
     display: flex;

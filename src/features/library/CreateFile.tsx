@@ -279,7 +279,7 @@ export default function CreateFile(): JSX.Element {
     }
     // Handle here
     if (fileInfo) {
-      const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : ""; 
+      const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : "";
       const fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
       //if is org folder, then upload to org folder
       if (fileInfo?.isOrgFolder) {

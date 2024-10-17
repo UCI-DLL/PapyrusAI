@@ -339,7 +339,6 @@ export default function EditFile(): JSX.Element {
       tags: newFile.tags,
       id: id
     }
-    console.log("data to send", dataToSend)
     if (fileInfo && fileInfo.isOrgFolder) {
       // post data back
       Post(postUpdateOrgFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
@@ -397,7 +396,6 @@ export default function EditFile(): JSX.Element {
 
   function handleUpload(e: React.FormEvent, isDeleted = false) {
     e.preventDefault();
-    console.log(selectedFiles);
     if (newFile.name === "") {
       setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
     }
@@ -406,9 +404,9 @@ export default function EditFile(): JSX.Element {
     if (selectedFiles) {
       // Handle here
       if (fileInfo) {
-        const newExt = selectedFiles.name.includes(".") ? selectedFiles.name.split('.').pop() : ""; 
+        const newExt = selectedFiles.name.includes(".") ? selectedFiles.name.split('.').pop() : "";
         const oldExt = fileInfo.fileId.includes(".") ? fileInfo.fileId.split('.').pop() : "";
-        if(newExt != oldExt){
+        if (newExt !== oldExt) {
           setErrors((prev: any) => ({ ...prev, name: "Must upload file of same type." }));
           setIsLoading(false);
           return;
@@ -461,7 +459,6 @@ export default function EditFile(): JSX.Element {
   }
 
   async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
-    console.log("new file", id)
     try {
       // Upload original file directly to s3
       await axios.put(url, selectedFiles, {

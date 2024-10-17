@@ -406,6 +406,13 @@ export default function EditFile(): JSX.Element {
     if (selectedFiles) {
       // Handle here
       if (fileInfo) {
+        const newExt = selectedFiles.name.includes(".") ? selectedFiles.name.split('.').pop() : ""; 
+        const oldExt = fileInfo.fileId.includes(".") ? fileInfo.fileId.split('.').pop() : "";
+        if(newExt != oldExt){
+          setErrors((prev: any) => ({ ...prev, name: "Must upload file of same type." }));
+          setIsLoading(false);
+          return;
+        }
         //if is org folder, then upload to org folder
         if (fileInfo?.isOrgFolder) {
           Get(getSignedS3BucketUpdateUploadOrgFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {

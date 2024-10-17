@@ -332,7 +332,7 @@ export default function CreateFile(): JSX.Element {
   async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
     try {
       // Upload original file directly to s3
-      const uploadResponse = await axios.put(url, selectedFiles, {
+      await axios.put(url, selectedFiles, {
         headers: {
           'Content-Type': selectedFiles.type
         }
@@ -351,7 +351,7 @@ export default function CreateFile(): JSX.Element {
       const metadataBlob = new Blob([JSON.stringify(metadata)]);
 
       // Upload the metadata
-      const metadataResponse = await axios.put(metadataUrl, metadataBlob, {
+      await axios.put(metadataUrl, metadataBlob, {
         headers: {
           'Content-Type': 'application/json'
         }

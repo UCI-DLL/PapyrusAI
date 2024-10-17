@@ -26,7 +26,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Get from "../../utility/Get";
-import Put from "../../utility/Put";
+import Post from "../../utility/Post";
 import { FileType, TagType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -233,7 +233,7 @@ export default function EditFile(): JSX.Element {
 
   function handleSaveClick(e: any) {
     if (selectedIndexSave === 0) { //Save and activate
-      handleSubmit(e, false);
+      handleUpload(e, false);
     } else if (selectedIndexSave === 1) { //discard changes
       setOpenDiscardModal(true);
     }
@@ -277,7 +277,7 @@ export default function EditFile(): JSX.Element {
     }
     if (fileInfo && fileInfo.isOrgFolder) {
       // post data back
-      Put(postUpdateOrgFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
+      Post(postUpdateOrgFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of update
@@ -296,7 +296,7 @@ export default function EditFile(): JSX.Element {
       });
     } else if (fileInfo) {
       // post data back
-      Put(postUpdateUserFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
+      Post(postUpdateUserFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of updated
@@ -338,6 +338,13 @@ export default function EditFile(): JSX.Element {
     }
     // Handle here
     if (fileInfo) {
+      const newExt = selectedFiles.name.includes(".") ? selectedFiles.name.split('.').pop() : ""; 
+      const oldExt = fileInfo.fileId.includes(".") ? fileInfo.fileId.split('.').pop() : "";
+      if(newExt != oldExt){
+        setErrors((prev: any) => ({ ...prev, name: "Must upload file of same type." }));
+        setIsLoading(false);
+        return;
+      }
       //if is org folder, then upload to org folder
       if (fileInfo?.isOrgFolder) {
         Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
@@ -386,14 +393,13 @@ export default function EditFile(): JSX.Element {
   async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
     try {
       // Upload original file directly to s3
-      const uploadResponse = await axios.put(url, selectedFiles, {
+      await axios.put(url, selectedFiles, {
         headers: {
           'Content-Type': selectedFiles.type
         }
       }).then(val => {
         handleSubmit(id);
       });
-      console.log('Upload response:', uploadResponse);
 
       // Create corresponding metadata
       const metadata = {
@@ -405,7 +411,7 @@ export default function EditFile(): JSX.Element {
       const metadataBlob = new Blob([JSON.stringify(metadata)]);
 
       // Upload the metadata
-      const metadataResponse = await axios.put(metadataUrl, metadataBlob, {
+      await axios.put(metadataUrl, metadataBlob, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -422,7 +428,6 @@ export default function EditFile(): JSX.Element {
           }
         }
       });
-      console.log('Metadata upload response:', metadataResponse);
 
     } catch (error) {
       console.error((error as Error).message);

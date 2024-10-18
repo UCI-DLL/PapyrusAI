@@ -131,14 +131,6 @@ export function getSignedS3BucketUploadUserFolder(folderId: string, fileId: stri
   return `ragfile/upload/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function getSignedS3BucketUpdateUploadOrgFolder(folderId: string, fileId: string) {
-  return `ragfile/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
-}
-
-export function getSignedS3BucketUpdateUploadUserFolder(folderId: string, fileId: string) {
-  return `ragfile/upload/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
-}
-
 export function getSignedS3BucketDownloadFile(fileId: string) {
   return `ragfile/download/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }

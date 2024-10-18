@@ -37,8 +37,8 @@ import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import {
   getOrgFile,
   getSignedS3BucketDownloadFile,
-  getSignedS3BucketUpdateUploadOrgFolder,
-  getSignedS3BucketUpdateUploadUserFolder,
+  getSignedS3BucketUploadOrgFolder,
+  getSignedS3BucketUploadUserFolder,
   getUserFile,
   postUpdateOrgFile,
   postUpdateUserFile
@@ -413,7 +413,7 @@ export default function EditFile(): JSX.Element {
         }
         //if is org folder, then upload to org folder
         if (fileInfo?.isOrgFolder) {
-          Get(getSignedS3BucketUpdateUploadOrgFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
+          Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
             if (res && res.status && res.status < 300) {
               if (res.data) {
                 handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
@@ -433,7 +433,7 @@ export default function EditFile(): JSX.Element {
           });
 
         } else {//else an user folder
-          Get(getSignedS3BucketUpdateUploadUserFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
+          Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
             if (res && res.status && res.status < 300) {
               if (res.data) {
                 handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);

@@ -103,7 +103,7 @@ function App(): JSX.Element {
       } else {
         // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
       }
-    } else {
+    } else if (localStorage.getItem("papyrusai_access_token") && !user) {
       console.log("user?", user)
       // get user's most update-to-date info
       //If access denied, then update the access token
@@ -129,6 +129,9 @@ function App(): JSX.Element {
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       });
+    } else {
+      console.log("got user", user);
+      console.log("got local", localStorage.getItem("papyrusai_access_token"))
     }
     // }, 500);
     // eslint-disable-next-line

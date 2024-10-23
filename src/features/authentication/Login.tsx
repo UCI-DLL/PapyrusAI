@@ -63,9 +63,9 @@ export default function Login(props: LoginProps): JSX.Element {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           // showMsg(Object.values(error.response.data), "error");
-          // if (error.response.status === 401) {
-          //   localStorage.removeItem("papyrusai_access_token");
-          // }
+          if (error.response.status === 401) {
+            window.location.reload()
+          }
           return error.response;
         } else if (error.request) {
           // The request was made but no response was received

@@ -2,7 +2,6 @@ import { PromptType } from "../../utility/types/CourseTypes"
 import { useState } from "react";
 import {
   Button,
-  FormLabel,
 } from "@mui/material";
 import { Prompt } from "../../components/Prompt";
 

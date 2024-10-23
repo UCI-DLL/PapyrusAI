@@ -1,6 +1,8 @@
 // import { Button } from "@mui/material";
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
+import axios from "axios";
+import { getUserData } from "../../utility/endpoints/UserEndpoints";
 
 
 interface LoginProps {
@@ -21,10 +23,44 @@ export default function Login(props: LoginProps): JSX.Element {
         }, 500);
       } else {
         console.log("login set local")
-        localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
-        setTimeout(() => {
-          navigator("/");
-        }, 500);
+        const token = location.hash.split("&")[1].split("=")[1];
+        localStorage.setItem("papyrusai_access_token", token);
+        // setTimeout(() => {
+        //   navigator("/");
+        // }, 500);
+        const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
+        axios
+          .get(API_URL, {
+            headers: {
+              Authorization: token,
+            },
+          })
+          .then((response) => {
+            console.log("login get user")
+            props.setUser(response.data);
+            navigator("/")
+            // return response;
+          })
+          .catch(function (error) {
+            console.log("error", error)
+            if (error.code === "ERR_CANCELED") return;
+            if (error.response) {
+              // The request was made and the server responded with a status code
+              // that falls out of the range of 2xx
+              // showMsg(Object.values(error.response.data), "error");
+              if (error.response.status === 401) {
+                localStorage.removeItem("papyrusai_access_token");
+              }
+              return error.response;
+            } else if (error.request) {
+              // The request was made but no response was received
+              // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+              // http.ClientRequest in node.js
+            } else {
+              // Something happened in setting up the request that triggered an Error
+            }
+            return error;
+          });
       }
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {

@@ -25,7 +25,7 @@ export function PrivateRoute({ user }: props): JSX.Element {
     // eslint-disable-next-line
   }, [])
 
-  return localStorage.getItem("papyrusai_access_token") ? (
+  return user ? (
     <>
       <Navigation />
       <div className="privateRoute">

@@ -97,6 +97,7 @@ function App(): JSX.Element {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token") && !user) {
+        console.log("no user found")
         if (navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
           //do nothing here if on safari (or it creates a weird loop)
         } else {
@@ -109,6 +110,7 @@ function App(): JSX.Element {
           if (res && res.status && res.status < 300) {
             if (res.data) {
               //update our version of user
+              console.log("set user", res.data)
               setUser(res.data);
               localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
               //if user is missing name, then open the modal
@@ -118,6 +120,7 @@ function App(): JSX.Element {
               }
             }
           } else {
+            console.log("get data failed")
             //remove user data
             localStorage.removeItem("papyrusai_access_token");
             localStorage.removeItem("papyrusai_user");

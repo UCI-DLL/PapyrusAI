@@ -21,8 +21,7 @@ export default function ChatWizard({
 
   return prompts && prompts.length > 0 ? (
     <div className="chat__wizard">
-      <h6>Select prompt option.</h6>
-      <FormLabel>Module Prompts</FormLabel>
+      <h6>Select prompt option</h6>
       <div className="chat__prompt-list">
         {prompts.map((prompt: PromptType, i) => {
           return (
@@ -47,6 +46,7 @@ export default function ChatWizard({
               refreshList={() => { }}
               loading={() => { }}
               noShowMenu={true}
+              noShowDesc={true}
               onCardClick={(folderId: string, promptId: string, isOrgFolder: boolean) => setSelectedPrompt(promptId)}
               selected={prompt.id === selectedPrompt}
             />
@@ -70,6 +70,7 @@ export default function ChatWizard({
               returnPrompt(selectedPrompt);
             }
           }}
+          disabled={!selectedPrompt}
         >
           Ask Papyrus
         </Button>

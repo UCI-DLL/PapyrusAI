@@ -25,6 +25,7 @@ export default function Login(props: LoginProps): JSX.Element {
         console.log("login set local")
         const token = location.hash.split("&")[1].split("=")[1];
         localStorage.setItem("papyrusai_access_token", token);
+        window.location.reload();
         setTimeout(() => {
           getUserInfo(token)
         }, 500);

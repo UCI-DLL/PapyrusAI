@@ -15,7 +15,6 @@ export default function Login(props: LoginProps): JSX.Element {
 
   useEffect(() => {
     //Currently, this page just saves the token and then navigates to the home page
-    console.log("hash", location.hash)
     if (location.hash) {
       if (location.hash.split("#")[1].split("=")[0] === "error_description") {
         setTimeout(() => {
@@ -23,7 +22,6 @@ export default function Login(props: LoginProps): JSX.Element {
         }, 500);
       } else {
         const token = location.hash.split("&")[1].split("=")[1];
-        console.log("login set local", token)
         localStorage.setItem("papyrusai_access_token", token);
         setTimeout(() => {
           getUserInfo(token)
@@ -32,11 +30,9 @@ export default function Login(props: LoginProps): JSX.Element {
       }
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {
-      console.log("redirect")
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
     else {
-      console.log("home")
       navigator("/");
     }
     // eslint-disable-next-line
@@ -51,13 +47,11 @@ export default function Login(props: LoginProps): JSX.Element {
         },
       })
       .then((response) => {
-        console.log("login get user")
         props.setUser(response.data);
         navigator("/")
         // return response;
       })
       .catch(function (error) {
-        console.log("error", error)
         if (error.code === "ERR_CANCELED") return;
         if (error.response) {
           // The request was made and the server responded with a status code

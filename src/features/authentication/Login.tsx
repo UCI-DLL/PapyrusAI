@@ -13,12 +13,14 @@ export default function Login(props: LoginProps): JSX.Element {
 
   useEffect(() => {
     //Currently, this page just saves the token and then navigates to the home page
+    console.log("hash", location.hash)
     if (location.hash) {
       if (location.hash.split("#")[1].split("=")[0] === "error_description") {
         setTimeout(() => {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
         }, 500);
       } else {
+        console.log("login set local")
         localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
         setTimeout(() => {
           navigator("/");
@@ -26,9 +28,11 @@ export default function Login(props: LoginProps): JSX.Element {
       }
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {
+      console.log("redirect")
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
     else {
+      console.log("home")
       navigator("/");
     }
     // eslint-disable-next-line

@@ -94,7 +94,6 @@ function App(): JSX.Element {
   }, [user])
 
   useEffect(() => {
-    // setTimeout(() => {
     // Check if we have an access token, if not, redirect to aws cognito login page
     if (!localStorage.getItem("papyrusai_access_token") && !user) {
       console.log("no user found")
@@ -133,7 +132,6 @@ function App(): JSX.Element {
       console.log("got user", user);
       console.log("got local", localStorage.getItem("papyrusai_access_token"))
     }
-    // }, 500);
     // eslint-disable-next-line
   }, [user]);
 

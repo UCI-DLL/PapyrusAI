@@ -185,6 +185,7 @@ export default function CreatePrompt(): JSX.Element {
       setErrors((prev: any) => ({ ...prev, prompt: "Prompt is too short" }))
     }
     else if (promptInfo?.isOrgFolder) {
+      setIsLoading(true)
       const dataToSend = {
         name: newPrompt.name,
         prompt: newPrompt.prompt,
@@ -209,6 +210,7 @@ export default function CreatePrompt(): JSX.Element {
         navigator(`/library/org/${promptInfo.folderId}`);
       });
     } else if (promptInfo) {
+      setIsLoading(true)
       const dataToSend = {
         name: newPrompt.name,
         prompt: newPrompt.prompt,
@@ -376,6 +378,7 @@ export default function CreatePrompt(): JSX.Element {
               label="Tags"
               MenuProps={MenuProps}
               fullWidth
+              disabled={isLoading}
             >
               {tagList.map((tag, index) => (
                 <MenuItem key={index} value={tag.id}>

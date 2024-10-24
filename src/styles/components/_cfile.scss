@@ -1,7 +1,7 @@
 @use "../global" as global;
 
 
-.c-prompt {
+.c-file {
   margin: global.$base;
   flex: 1 1 auto;
   overflow: hidden;
@@ -12,17 +12,9 @@
   border: 1px solid global.$primary;
   border-radius: global.$border-radius;
 
-  &__button {
-    &__org-spacing {
-      display: flex;
-      justify-content: flex-start;
-    }
-
-    &__menu-btn {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-    }
-
+  &__title {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
   }
 }

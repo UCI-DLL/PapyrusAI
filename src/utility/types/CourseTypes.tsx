@@ -44,6 +44,17 @@ export type PromptType = {
   folderId?: string,
 }
 
+export type FileType = {
+  id: string,
+  creator: CustomUserType,
+  isDeleted: boolean,
+  name: string,
+  tags: Array<string>,
+  isOrganizationFile: boolean,
+  folderId?: string,
+  url?: string,
+}
+
 export type FolderType = {
   id: string,
   creator: CustomUserType,
@@ -53,6 +64,7 @@ export type FolderType = {
   isDeleted: boolean,
   name: string,
   prompts: Array<PromptType>,
+  files: Array<FileType>,
 }
 
 export type TagType = {

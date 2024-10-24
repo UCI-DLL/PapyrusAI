@@ -48,6 +48,7 @@ export default function Login(props: LoginProps): JSX.Element {
       })
       .then((response) => {
         props.setUser(response.data);
+        localStorage.setItem("papyrusai_user", JSON.stringify(response.data));
         navigator("/")
         // return response;
       })

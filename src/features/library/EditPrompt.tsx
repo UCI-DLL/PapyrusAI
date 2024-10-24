@@ -248,9 +248,11 @@ export default function EditPrompt(): JSX.Element {
     }
     if (!isDeleted && newPrompt.name === "") {
       setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
+      setIsLoading(false);
     }
     else if (!isDeleted && newPrompt.prompt === "") {
       setErrors((prev: any) => ({ ...prev, prompt: "Prompt is too short" }))
+      setIsLoading(false);
     }
     else if (promptInfo && promptInfo.isOrgFolder) {
       // post data back
@@ -478,6 +480,7 @@ export default function EditPrompt(): JSX.Element {
                   label="Tags"
                   MenuProps={MenuProps}
                   fullWidth
+                  disabled={isLoading}
                 >
                   {tagList.map((tag, index) => (
                     <MenuItem key={index} value={tag.id}>

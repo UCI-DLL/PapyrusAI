@@ -68,6 +68,7 @@ interface PromptProps {
   onCardClick?: (folderId: string, promptId: string, isOrgFolder: boolean) => void;
   showRemove?: boolean;
   selected?: boolean;
+  noShowDesc?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -432,6 +433,8 @@ export const Prompt = (props: PromptProps) => {
               {props.prompt.prompt}
             </Typography>
           </CardContent>
+        ) : props.noShowDesc ? (
+          <></>
         ) : (
           <CardContent>
             <Typography variant="body2" color="text.secondary">

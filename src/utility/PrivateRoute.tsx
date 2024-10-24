@@ -11,7 +11,7 @@ import { Alert } from "@mui/material";
  */
 
 interface props {
-  user: UserType | null; 
+  user: UserType | null;
 }
 
 
@@ -20,18 +20,18 @@ export function PrivateRoute({ user }: props): JSX.Element {
 
   useEffect(() => {
     //When the page changes, reset the alert
-    setAlert({message: "", type: "info"});
+    setAlert({ message: "", type: "info" });
 
     // eslint-disable-next-line
   }, [])
 
-  return localStorage.getItem("papyrusai_access_token") && user ? (
+  return user ? (
     <>
       <Navigation />
       <div className="privateRoute">
         {alert.message !== "" ? (
           <Alert severity={alert.type}>{alert.message}</Alert>
-        ): (
+        ) : (
           <></>
         )}
         <Outlet />

@@ -1,6 +1,8 @@
 // import { Button } from "@mui/material";
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
+import axios from "axios";
+import { getUserData } from "../../utility/endpoints/UserEndpoints";
 
 
 interface LoginProps {
@@ -19,10 +21,12 @@ export default function Login(props: LoginProps): JSX.Element {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
         }, 500);
       } else {
-        localStorage.setItem("papyrusai_access_token", location.hash.split("&")[1].split("=")[1]);
+        const token = location.hash.split("&")[1].split("=")[1];
+        localStorage.setItem("papyrusai_access_token", token);
         setTimeout(() => {
-          navigator("/");
+          getUserInfo(token)
         }, 500);
+
       }
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {
@@ -32,7 +36,41 @@ export default function Login(props: LoginProps): JSX.Element {
       navigator("/");
     }
     // eslint-disable-next-line
-  }, [location.hash]);
+  }, []);
+
+  function getUserInfo(token: string) {
+    const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
+    axios
+      .get(API_URL, {
+        headers: {
+          Authorization: token,
+        },
+      })
+      .then((response) => {
+        props.setUser(response.data);
+        navigator("/")
+        // return response;
+      })
+      .catch(function (error) {
+        if (error.code === "ERR_CANCELED") return;
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          // showMsg(Object.values(error.response.data), "error");
+          if (error.response.status === 401) {
+            window.location.reload()
+          }
+          return error.response;
+        } else if (error.request) {
+          // The request was made but no response was received
+          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+          // http.ClientRequest in node.js
+        } else {
+          // Something happened in setting up the request that triggered an Error
+        }
+        return error;
+      });
+  }
 
   return (
     <div>

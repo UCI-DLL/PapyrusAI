@@ -494,60 +494,64 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             </IconButton>
           </Tooltip>
           &nbsp;&nbsp;&nbsp;
-          <ButtonGroup
-            variant="contained"
-            ref={anchorRefSave}
-            aria-label="Button group with a nested menu"
-          >
-            <Button onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
-            <Button
-              size="small"
-              aria-controls={openSave ? 'split-button-menu' : undefined}
-              aria-expanded={openSave ? 'true' : undefined}
-              aria-label="select save and activation strategy"
-              aria-haspopup="menu"
-              onClick={handleToggle}
+          <div>
+            <ButtonGroup
+              variant="contained"
+              ref={anchorRefSave}
+              aria-label="Button group with a nested menu"
             >
-              <ArrowDropDownIcon />
-            </Button>
-          </ButtonGroup>
-          <Popper
-            sx={{
-              zIndex: 1,
-            }}
-            open={openSave}
-            anchorEl={anchorRefSave.current}
-            role={undefined}
-            transition
-            disablePortal
-          >
-            {({ TransitionProps, placement }) => (
-              <Grow
-                {...TransitionProps}
-                style={{
-                  transformOrigin:
-                    placement === 'bottom' ? 'center top' : 'center bottom',
-                }}
+              <Button onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
+              <Button
+                size="small"
+                aria-controls={openSave ? 'split-button-menu' : undefined}
+                aria-expanded={openSave ? 'true' : undefined}
+                aria-label="select save and activation strategy"
+                aria-haspopup="menu"
+                onClick={handleToggle}
               >
-                <Paper>
-                  <ClickAwayListener onClickAway={handleSaveClose}>
-                    <MenuList id="split-button-menu" autoFocusItem>
-                      {options.map((option, index) => (
-                        <MenuItem
-                          key={option}
-                          selected={index === selectedIndexSave}
-                          onClick={(event) => handleMenuItemClick(event, index)}
-                          className={index === 2 ? "modules__discard_background" : ""}
-                        >
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </MenuList>
-                  </ClickAwayListener>
-                </Paper>
-              </Grow>
-            )}
-          </Popper>
+                <ArrowDropDownIcon />
+              </Button>
+            </ButtonGroup>
+            <Popper
+              sx={{
+                zIndex: 1,
+              }}
+              open={openSave}
+              anchorEl={anchorRefSave.current}
+              role={undefined}
+              transition
+              disablePortal
+            >
+              {({ TransitionProps, placement }) => (
+                <Grow
+                  {...TransitionProps}
+                  style={{
+                    transformOrigin:
+                      placement === 'bottom' ? 'center top' : 'center bottom',
+                  }}
+                >
+                  <Paper>
+                    <ClickAwayListener onClickAway={handleSaveClose}>
+                      <MenuList id="split-button-menu" autoFocusItem>
+                        {options.map((option, index) => (
+                          <MenuItem
+                            key={option}
+                            selected={index === selectedIndexSave}
+                            onClick={(event) => handleMenuItemClick(event, index)}
+                            className={index === 2 ? "modules__discard_background" : ""}
+                          >
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </MenuList>
+                    </ClickAwayListener>
+                  </Paper>
+                </Grow>
+              )}
+            </Popper>
+
+          </div>
+
         </div>
       </div>
       <hr />

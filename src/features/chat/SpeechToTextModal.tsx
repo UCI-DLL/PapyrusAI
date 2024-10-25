@@ -26,7 +26,7 @@ export default function SpeechToTextModal({
 
   useEffect(() => {
     //add to the new transcript to the end of the current text
-    setText(prev => (prev + transcript + " "))
+    setText(prev => (prev + transcript))
   }, [transcript]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -42,7 +42,6 @@ export default function SpeechToTextModal({
               {isListening ? (
                 <Button
                   onClick={() => {
-                    setText(transcript)
                     stopListening()
                   }}
                   variant="outlined"

@@ -17,10 +17,18 @@ const useSpeechRecognition = () => {
     if (!recognition) return;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      setTranscript(event.results[0][0].transcript)
-      recognition.stop();
-      setIsListening(false);
+      var finalTranscript = "";
+      for (var i = event.resultIndex; i < event.results.length; ++i) {
+        finalTranscript = finalTranscript + " " + event.results[i][0].transcript;
+      }
+      setTranscript(finalTranscript);//event.results[0][0].transcript)
     }
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognition.stop();
+    }
+
   }, []);
 
   const startListening = () => {

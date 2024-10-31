@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button, Box, TextField, FormLabel } from "@mui/material";
 import Post from "../../utility/Post";
 import { postCreatePrompt } from "../../utility/endpoints/PromptEndpoints";
+import { useNavigate } from "react-router";
 
 /**
  * This form is to update user's missing data
@@ -31,6 +32,7 @@ export default function CreatePromptForm({
     prompt: ""
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const navigator = useNavigate();
 
 
   function handleSubmit(e: React.FormEvent) {
@@ -50,6 +52,8 @@ export default function CreatePromptForm({
             setSession({ name: "", prompt: "" });
             closeForm();
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setErrors({ name: res.data, prompt: res.data })

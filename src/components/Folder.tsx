@@ -94,6 +94,8 @@ export const Folder = (props: FolderProps) => {
             //pop up notifying user of update
             setAlert({ message: "Folder Name Updated", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: "Folder name could not be updated. Try again later.", type: "error" })
@@ -112,6 +114,8 @@ export const Folder = (props: FolderProps) => {
             //pop up notifying user of update
             setAlert({ message: "Folder Name Updated", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: "Folder name could not be updated. Try again later.", type: "error" })
@@ -131,6 +135,8 @@ export const Folder = (props: FolderProps) => {
             //pop up notifying user of Duplicated
             setAlert({ message: "Folder Duplicated", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: "Folder could not be duplicated. Try again later.", type: "error" })
@@ -145,6 +151,8 @@ export const Folder = (props: FolderProps) => {
             //pop up notifying user of Duplicated
             setAlert({ message: "Folder Duplicated", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: "Folder could not be duplicated. Try again later.", type: "error" })
@@ -168,6 +176,8 @@ export const Folder = (props: FolderProps) => {
             //pop up notifying user of delete
             setAlert({ message: "Folder Deleted", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: "Folder could not be updated. Try again later.", type: "error" })
@@ -186,6 +196,8 @@ export const Folder = (props: FolderProps) => {
             //pop up notifying user of delete
             setAlert({ message: "Folder Deleted", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: "Folder could not be updated. Try again later.", type: "error" })
@@ -204,6 +216,8 @@ export const Folder = (props: FolderProps) => {
           //pop up notifying user of promoted
           setAlert({ message: "Folder Promoted", type: "success" })
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         // set errors
         setAlert({ message: "Folder could not be updated. Try again later.", type: "error" })
@@ -220,6 +234,8 @@ export const Folder = (props: FolderProps) => {
           //pop up notifying user of demoted
           setAlert({ message: "Folder Demoted", type: "success" })
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         // set errors
         setAlert({ message: "Folder could not be updated. Try again later.", type: "error" })

@@ -99,6 +99,8 @@ export default function OldEditPrompt(): JSX.Element {
               //pop up notifying user of creation
               setAlert({ message: "Prompt updated", type: "success" })
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
             // set errors
             setErrors({

@@ -97,6 +97,8 @@ export const File = (props: FileProps) => {
                 //pop up notifying user of Duplicated
                 setAlert({ message: "File Copied", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "File could not be Copied. Try again later.", type: "error" })
@@ -110,6 +112,8 @@ export const File = (props: FileProps) => {
                 //pop up notifying user of Duplicated
                 setAlert({ message: "File Copied", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "File could not be Copied. Try again later.", type: "error" })
@@ -125,6 +129,8 @@ export const File = (props: FileProps) => {
                 //pop up notifying user of Duplicated
                 setAlert({ message: "File Copied", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "File could not be Copied. Try again later.", type: "error" })
@@ -138,6 +144,8 @@ export const File = (props: FileProps) => {
                 //pop up notifying user of Duplicated
                 setAlert({ message: "File Copied", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "File could not be Copied. Try again later.", type: "error" })
@@ -165,6 +173,8 @@ export const File = (props: FileProps) => {
               //pop up notifying user of delete
               setAlert({ message: "file Deleted", type: "success" })
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
             // set errors
             setAlert({ message: "file could not be deleted. Try again later.", type: "error" })
@@ -184,6 +194,8 @@ export const File = (props: FileProps) => {
               //pop up notifying user of delete
               setAlert({ message: "file Deleted", type: "success" })
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
             // set errors
             setAlert({ message: "file could not be deleted. Try again later.", type: "error" })
@@ -211,6 +223,8 @@ export const File = (props: FileProps) => {
                 //pop up notifying user of Moved
                 setAlert({ message: "File Moved", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "File could not be moved. Try again later.", type: "error" })
@@ -224,6 +238,8 @@ export const File = (props: FileProps) => {
                 //pop up notifying user of Moved
                 setAlert({ message: "file Moved", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "file could not be moved. Try again later.", type: "error" })
@@ -239,6 +255,8 @@ export const File = (props: FileProps) => {
                 //pop up notifying user of Moved
                 setAlert({ message: "file Moved", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "file could not be moved. Try again later.", type: "error" })
@@ -252,6 +270,8 @@ export const File = (props: FileProps) => {
                 //pop up notifying user of Moved
                 setAlert({ message: "file Moved", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "file could not be moved. Try again later.", type: "error" })

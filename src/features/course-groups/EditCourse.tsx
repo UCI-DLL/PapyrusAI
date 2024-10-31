@@ -266,6 +266,8 @@ export default function EditCourse(): JSX.Element {
                 //pop up notifying user of creation
                 setAlert({ message: "Course Updated", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: res.data, type: "error" })
@@ -283,6 +285,8 @@ export default function EditCourse(): JSX.Element {
                 //pop up notifying user of creation
                 setAlert({ message: "Course Updated", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: res.data, type: "error" })

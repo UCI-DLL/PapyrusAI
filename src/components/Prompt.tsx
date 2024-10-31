@@ -125,6 +125,8 @@ export const Prompt = (props: PromptProps) => {
                 //pop up notifying user of Duplicated
                 setAlert({ message: "Prompt Copied", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
@@ -138,6 +140,8 @@ export const Prompt = (props: PromptProps) => {
                 //pop up notifying user of Duplicated
                 setAlert({ message: "Prompt Copied", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
@@ -153,6 +157,8 @@ export const Prompt = (props: PromptProps) => {
                 //pop up notifying user of Duplicated
                 setAlert({ message: "Prompt Copied", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
@@ -166,6 +172,8 @@ export const Prompt = (props: PromptProps) => {
                 //pop up notifying user of Duplicated
                 setAlert({ message: "Prompt Copied", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
@@ -194,6 +202,8 @@ export const Prompt = (props: PromptProps) => {
               //pop up notifying user of delete
               setAlert({ message: "Prompt Deleted", type: "success" })
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
             // set errors
             setAlert({ message: "Prompt could not be deleted. Try again later.", type: "error" })
@@ -214,6 +224,8 @@ export const Prompt = (props: PromptProps) => {
               //pop up notifying user of delete
               setAlert({ message: "Prompt Deleted", type: "success" })
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
             // set errors
             setAlert({ message: "Prompt could not be deleted. Try again later.", type: "error" })
@@ -241,6 +253,8 @@ export const Prompt = (props: PromptProps) => {
                 //pop up notifying user of Moved
                 setAlert({ message: "Prompt Moved", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
@@ -254,6 +268,8 @@ export const Prompt = (props: PromptProps) => {
                 //pop up notifying user of Moved
                 setAlert({ message: "Prompt Moved", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
@@ -269,6 +285,8 @@ export const Prompt = (props: PromptProps) => {
                 //pop up notifying user of Moved
                 setAlert({ message: "Prompt Moved", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
@@ -282,6 +300,8 @@ export const Prompt = (props: PromptProps) => {
                 //pop up notifying user of Moved
                 setAlert({ message: "Prompt Moved", type: "success" })
               }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
               // set errors
               setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })

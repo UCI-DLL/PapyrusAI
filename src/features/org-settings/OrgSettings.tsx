@@ -179,6 +179,8 @@ export default function OrgSettings(): JSX.Element {
             //pop up notifying user of creation
             setAlert({ message: "Permission added", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: res.data, type: "error" })
@@ -226,6 +228,8 @@ export default function OrgSettings(): JSX.Element {
             //pop up notifying user of creation
             setAlert({ message: "Permission updated", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: res.data, type: "error" })
@@ -264,6 +268,8 @@ export default function OrgSettings(): JSX.Element {
             //pop up notifying user of creation
             setAlert({ message: "Permission removed", type: "success" })
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: res.data, type: "error" })

@@ -112,6 +112,8 @@ export default function Library(): JSX.Element {
           //pop up notifying user of folder
           setAlert({ message: "Folder Created", type: "success" })
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         // set errors
         setAlert({ message: "Folder could not be created. Try again later.", type: "error" })
@@ -130,6 +132,8 @@ export default function Library(): JSX.Element {
           //pop up notifying user of tag
           setAlert({ message: "Tag Created", type: "success" })
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         // set errors
         setAlert({ message: "Tag could not be created. Try again later.", type: "error" })
@@ -152,6 +156,8 @@ export default function Library(): JSX.Element {
           //pop up notifying user of tag update
           setAlert({ message: isDeleted ? "Tag Deleted" : "Tag Updated", type: "success" })
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         // set errors
         setAlert({ message: "Tag could not be updated. Try again later.", type: "error" })

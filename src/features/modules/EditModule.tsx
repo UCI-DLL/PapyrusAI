@@ -242,6 +242,8 @@ export default function EditModule(): JSX.Element {
               //pop up notifying user of creation
               setAlert({ message: "Module updated", type: "success" })
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
             // set errors
             setErrors({

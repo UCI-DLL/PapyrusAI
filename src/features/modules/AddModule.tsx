@@ -162,6 +162,8 @@ export default function AddModule(): JSX.Element {
             //pop up notifying user of creation
             setAlert({ message: "Module Created", type: "success" });
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setErrors({ name: res.data, moduleDescription: res.data })

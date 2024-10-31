@@ -154,6 +154,8 @@ export default function Chat(): JSX.Element {
               onConnect(location.pathname.split("/")[3], location.pathname.split("/")[4], location.pathname.split("/")[5]);
             }
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           if (res === undefined) {
           } else {

@@ -99,6 +99,8 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
             isPublished: false
           })
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         // set errors
         setAlert({ message: res.data, type: "error" })

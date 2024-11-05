@@ -30,7 +30,6 @@ export default function Login(props: LoginProps): JSX.Element {
       }
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {
-      console.log("logout")
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
     else {

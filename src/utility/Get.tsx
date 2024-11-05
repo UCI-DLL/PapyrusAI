@@ -15,7 +15,6 @@ export default async function Get(url: String, signal?: AbortSignal | undefined)
       return response;
     })
     .catch(function (error) {
-      console.log("error", error)
       if (error.code === "ERR_CANCELED") return;
       if (error.code === "ERR_NETWORK") localStorage.removeItem("papyrusai_access_token");
       if (error.response) {

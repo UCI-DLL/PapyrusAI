@@ -38,7 +38,6 @@ export default function Dashboard(): JSX.Element {
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
     Get(getCourseList(), signal).then(res => {
-      console.log("hurr", res)
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //get the list of all courses for this user

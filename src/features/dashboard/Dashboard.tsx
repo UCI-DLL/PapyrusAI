@@ -43,6 +43,7 @@ export default function Dashboard(): JSX.Element {
           setIsLoading(false);
         }
       } else if (res && res.status === 401) {
+        console.log("hurr")
         navigator("/login");
       } else {
         if (res === undefined) {

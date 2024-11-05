@@ -36,6 +36,7 @@ export default function Dashboard(): JSX.Element {
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
     Get(getCourseList(), signal).then(res => {
+      console.log("hurr", res)
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //get the list of all courses for this user
@@ -43,7 +44,6 @@ export default function Dashboard(): JSX.Element {
           setIsLoading(false);
         }
       } else if (res && res.status === 401) {
-        console.log("hurr")
         navigator("/login");
       } else {
         if (res === undefined) {

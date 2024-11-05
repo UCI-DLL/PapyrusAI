@@ -2,9 +2,22 @@ import { PromptType } from "../../utility/types/CourseTypes"
 import { useState } from "react";
 import {
   Button,
+  Select,
+  MenuItem,
+  ListItemText,
+  SelectChangeEvent
 } from "@mui/material";
-import { Prompt } from "../../components/Prompt";
 
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+    },
+  },
+};
 
 interface ChatWizardProps {
   prompts: Array<PromptType> | undefined;
@@ -18,40 +31,30 @@ export default function ChatWizard({
   const [selectedPrompt, setSelectedPrompt] = useState<string>("");
   const [error, setError] = useState("");
 
+  const handleSelectChange = (event: SelectChangeEvent) => {
+    setSelectedPrompt(event.target.value as string);
+  };
+
   return prompts && prompts.length > 0 ? (
     <div className="chat__wizard">
       <h6>Select prompt option</h6>
-      <div className="chat__prompt-list">
-        {prompts.map((prompt: PromptType, i) => {
-          return (
-            <Prompt
-              prompt={prompt}
-              folder={{ //pass in temp folder
-                id: prompt.folderId ? prompt.folderId : "",
-                creator: {
-                  email: "",
-                  sub: "",
-                  name: "",
-                  family_name: "",
-                  username: ""
-                },
-                isDeleted: false,
-                name: "",
-                prompts: [],
-                files: [],
-                organization: "",
-                timestamp: ""
-              }}
-              keyy={`${i}`}
-              refreshList={() => { }}
-              loading={() => { }}
-              noShowMenu={true}
-              noShowDesc={true}
-              onCardClick={(folderId: string, promptId: string, isOrgFolder: boolean) => setSelectedPrompt(promptId)}
-              selected={prompt.id === selectedPrompt}
-            />
-          )
-        })}
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
+        {/* add dropdown to handle prompts  */}
+        <Select
+          labelId="wizard-prompt-select"
+          id="wizard-prompt-select"
+          value={selectedPrompt}
+          onChange={handleSelectChange}
+          MenuProps={MenuProps}
+          fullWidth
+          required
+        >
+          {prompts.map((prompt, index) => (
+            <MenuItem key={index} value={prompt.id}>
+              <ListItemText primary={prompt.name} />
+            </MenuItem>
+          ))}
+        </Select>
       </div>
       {error.length > 0 ? (
         <div className="error">{error}</div>

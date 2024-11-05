@@ -15,6 +15,7 @@ export default async function Get(url: String, signal?: AbortSignal | undefined)
       return response;
     })
     .catch(function (error) {
+      console.log("error", error)
       if (error.code === "ERR_CANCELED") return;
       if (error.response) {
         // The request was made and the server responded with a status code

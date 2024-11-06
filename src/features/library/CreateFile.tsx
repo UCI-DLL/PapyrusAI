@@ -29,7 +29,13 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { Modal } from "../../components/Modal";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import Post from "../../utility/Post";
-import { postCreateOrgPrompt, postCreateUserPrompt } from "../../utility/endpoints/FolderEndpoints";
+import {
+  getSignedS3BucketUploadOrgFolder,
+  getSignedS3BucketUploadUserFolder,
+  postCreateOrgFile,
+  postCreateUserFile
+} from "../../utility/endpoints/FolderEndpoints";
+import axios from "axios";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -41,22 +47,22 @@ const MenuProps = {
   },
 };
 
-const options = ['Save & Publish', 'Discard Changes'];
+const options = ['Save & Upload', 'Discard Changes'];
 
-export default function CreatePrompt(): JSX.Element {
+export default function CreateFile(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
-  const [newPrompt, setNewPrompt] = useState<{
-    name: string, prompt: string, tags: Array<string>
+  const [newFile, setNewFile] = useState<{
+    name: string, id: string, tags: Array<string>
   }>({
-    name: "", prompt: "", tags: []
+    name: "", id: "", tags: []
   });
   const [errors, setErrors] = useState<any>({
     name: "",
-    prompt: "",
+    file: "",
     tags: ""
   });
-  const [promptInfo, setPromptInfo] = useState<{
+  const [fileInfo, setFileInfo] = useState<{
     isOrgFolder: boolean,
     folderId: string
   }>();
@@ -67,7 +73,29 @@ export default function CreatePrompt(): JSX.Element {
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
+  const fileRef = React.useRef<any>();
 
+  const [selectedFiles, setSelectedFiles] = React.useState<any>();
+
+  const handleFileSelect = (event: any) => {
+    setSelectedFiles(event?.target?.files?.[0]);
+  };
+
+  const onClear = () => {
+    setSelectedFiles(undefined);
+  };
+
+  const onUpdate = (event: any) => {
+    if (event.target.textContent.trim().toLowerCase() === 'change' && fileRef.current) {
+      onClear();
+      fileRef.current.click();
+      return;
+    }
+    if (event.target.textContent.trim().toLowerCase() === 'clear') {
+      onClear();
+      return;
+    }
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -78,23 +106,23 @@ export default function CreatePrompt(): JSX.Element {
       location.pathname.split("/")[1] &&
       location.pathname.split("/")[2] === "org" &&
       location.pathname.split("/")[3] &&
-      location.pathname.split("/")[4] === "createprompt"
+      location.pathname.split("/")[4] === "createfile"
     ) {
-      //get prev prompt data
+      //get prev file data
       const folderId = location.pathname.split("/")[3];
       //save the ids
-      setPromptInfo({ isOrgFolder: true, folderId: folderId });
+      setFileInfo({ isOrgFolder: true, folderId: folderId });
     } else if (
       location.pathname &&
       location.pathname.split("/") &&
       location.pathname.split("/")[1] &&
       location.pathname.split("/")[2] !== "org" &&
-      location.pathname.split("/")[3] === "createprompt"
+      location.pathname.split("/")[3] === "createfile"
     ) {
-      //get prev prompt data
+      //get prev file data
       const folderId = location.pathname.split("/")[2];
       //save the ids
-      setPromptInfo({ isOrgFolder: false, folderId: folderId });
+      setFileInfo({ isOrgFolder: false, folderId: folderId });
     }
 
     if (tagList.length === 0) {
@@ -115,7 +143,7 @@ export default function CreatePrompt(): JSX.Element {
         if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
           setTagList((prev) => [...prev, ...res.data.tags]);
-          //if the data is 20 prompts, then call for the next page
+          //if the data is 20 files, then call for the next page
           //handle pages
           if (
             res.data.ScannedCount > 0 &&
@@ -141,8 +169,8 @@ export default function CreatePrompt(): JSX.Element {
   }
 
   function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and activate
-      handleSubmit(e);
+    if (selectedIndexSave === 0) { //Save and upload
+      handleUpload(e);
     } else if (selectedIndexSave === 1) { //discard changes
       setOpenDiscardModal(true);
     }
@@ -152,8 +180,8 @@ export default function CreatePrompt(): JSX.Element {
     e: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number,
   ) => {
-    if (index === 0) { //Save and activate
-      handleSubmit(e,);
+    if (index === 0) { //Save and upload
+      handleUpload(e);
     } else if (index === 1) { //discard changes
       setOpenDiscardModal(true);
     }
@@ -176,81 +204,177 @@ export default function CreatePrompt(): JSX.Element {
     setOpenSave(false);
   };
 
-  function handleSubmit(e: any) {
-    e.preventDefault();
-    if (newPrompt.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
-    }
-    else if (newPrompt.prompt === "") {
-      setErrors((prev: any) => ({ ...prev, prompt: "Prompt is too short" }))
-    }
-    else if (promptInfo?.isOrgFolder) {
-      setIsLoading(true)
+  function handleSubmit(id: string) {
+    if (fileInfo && fileInfo.isOrgFolder) {
       const dataToSend = {
-        name: newPrompt.name,
-        prompt: newPrompt.prompt,
+        name: newFile.name,
         isDeleted: false,
-        tags: newPrompt.tags
+        tags: newFile.tags,
+        id: id
       }
       // post data back
-      Post(postCreateOrgPrompt(promptInfo.folderId), dataToSend).then((res) => {
+      Post(postCreateOrgFile(fileInfo.folderId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of created
-            setAlert({ message: "Prompt Created", type: "success" })
+            setAlert({ message: "File Created", type: "success" })
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // handle error
           if (res) {
-            setAlert({ message: "Prompt could not be created. Try again later.", type: "error" });
+            setAlert({ message: "File could not be created. Try again later.", type: "error" });
           }
         }
-        navigator(`/library/org/${promptInfo.folderId}`);
+        navigator(`/library/org/${fileInfo.folderId}`);
       });
-    } else if (promptInfo) {
-      setIsLoading(true)
+    } else if (fileInfo) {
       const dataToSend = {
-        name: newPrompt.name,
-        prompt: newPrompt.prompt,
+        name: newFile.name,
         isDeleted: false,
-        tags: newPrompt.tags
+        tags: newFile.tags,
+        id: id
       }
       // post data back
-      Post(postCreateUserPrompt(promptInfo.folderId), dataToSend).then((res) => {
+      Post(postCreateUserFile(fileInfo.folderId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of Created
-            setAlert({ message: "Prompt Created", type: "success" })
+            setAlert({ message: "File Created", type: "success" })
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // set errors
-          setAlert({ message: "Prompt could not be created. Try again later.", type: "error" })
+          setAlert({ message: "File could not be created. Try again later.", type: "error" })
         }
-        navigator(`/library/${promptInfo.folderId}`);
+        navigator(`/library/${fileInfo.folderId}`);
       });
     }
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setNewPrompt((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setNewFile((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  const handleSelectChange = (event: SelectChangeEvent<typeof newPrompt.tags>) => {
+  const handleSelectChange = (event: SelectChangeEvent<typeof newFile.tags>) => {
     const {
       target: { value },
     } = event;
-    setNewPrompt((prev) => ({
+    setNewFile((prev) => ({
       ...prev,
       tags: typeof value === 'string' ? value.split(',') : value
     }))
   };
 
+  function handleUpload(e: any) {
+    e.preventDefault();
+    if (!selectedFiles) {
+      setAlert({ message: "Missing File information", type: "error" });
+      return
+    }
+    if (newFile.name === "") {
+      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
+    }
+    // Handle here
+    if (fileInfo) {
+      const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : "";
+      const fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
+      //if is org folder, then upload to org folder
+      if (fileInfo?.isOrgFolder) {
+        Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileId)).then(res => {
+          if (res && res.status && res.status < 300) {
+            //handle upload to s3 -> handleUploadToS3
+            if (res.data) {
+              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+            } else {
+              //handle error
+              setAlert({ message: "Error creating file. Please try again later", type: "error" })
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res === undefined) {
+            } else {
+              // handle error
+              setIsLoading(false);
+            }
+          }
+        });
 
-  return promptInfo && !isLoading ? (
+      } else {//else an user folder
+        Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileId)).then(res => {
+          if (res && res.status && res.status < 300) {
+            //handle upload to s3 -> handleUploadToS3
+            if (res.data) {
+              handleUploadToS3(res.data.url, res.data.metadataUrl, fileId);
+            } else {
+              //handle error
+              setAlert({ message: "Error creating file. Please try again later", type: "error" })
+            }
+
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res === undefined) {
+            } else {
+              // handle error
+              setIsLoading(false);
+            }
+          }
+        });
+      }
+
+    }
+  }
+
+  async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
+    try {
+      // Upload original file directly to s3
+      await axios.put(url, selectedFiles, {
+        headers: {
+          'Content-Type': selectedFiles.type
+        }
+      }).then(val => {
+        handleSubmit(id);
+      });
+
+      // Create corresponding metadata
+      const metadata = {
+        metadataAttributes: {
+          filename: newFile.name,
+          fileId: id,
+        }
+      };
+
+      const metadataBlob = new Blob([JSON.stringify(metadata)]);
+
+      // Upload the metadata
+      await axios.put(metadataUrl, metadataBlob, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        if (res && res.status && res.status < 300) {
+          // metadata complete
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          if (res === undefined) {
+          } else {
+            // handle error
+            setIsLoading(false);
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error((error as Error).message);
+    }
+  }
+
+  return fileInfo && !isLoading ? (
     <div className="prompt">
       <Modal
         isOpen={openDiscardModal}
@@ -267,11 +391,11 @@ export default function CreatePrompt(): JSX.Element {
           </>
         }
       >
-        <div>Are you sure you would like to discard the changes to this prompt?</div>
+        <div>Are you sure you would like to discard the changes to this file?</div>
       </Modal>
       <div className="prompt__section-header">
         <div>
-          <h3>Create Prompt</h3>
+          <h3>Create File</h3>
         </div>
         <div>
           <ButtonGroup
@@ -317,7 +441,7 @@ export default function CreatePrompt(): JSX.Element {
                           key={option}
                           selected={index === selectedIndexSave}
                           onClick={(event) => handleMenuItemClick(event, index)}
-                          className={index === 2 ? "prompt__discard_background" : ""}
+                          className={index === 2 ? "file__discard_background" : ""}
                         >
                           {option}
                         </MenuItem>
@@ -335,34 +459,56 @@ export default function CreatePrompt(): JSX.Element {
         <span>* indicates a required field</span>
       </div>
       <Box className="prompt__add">
-        <form onSubmit={(e) => handleSubmit(e)}>
-          <FormLabel>Enter Prompt Information</FormLabel>
+        <form onSubmit={(e) => handleUpload(e)}>
+          <FormLabel>Enter File Information</FormLabel>
           <TextField
             name="name"
-            label="Prompt Name"
+            label="File Name"
             fullWidth
             sx={{ margin: ".5rem 0" }}
-            value={newPrompt.name}
+            value={newFile.name}
             onChange={handleChange}
             error={errors.name !== ""}
             helperText={errors.name}
             disabled={isLoading}
             required
           />
-          <TextField
-            name="prompt"
-            label="Prompt"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={newPrompt.prompt}
-            onChange={handleChange}
-            error={errors.prompt !== ""}
-            multiline
-            maxRows={5}
-            helperText={errors.prompt}
-            disabled={isLoading}
-            required
+          <input
+            ref={fileRef}
+            hidden
+            type="file"
+            onChange={handleFileSelect}
           />
+          {!selectedFiles?.name && (
+            <Button
+              variant="contained"
+              component="label"
+              style={{ textTransform: 'none' }}
+              onClick={() => fileRef.current?.click()}
+            >
+              Choose file to upload
+            </Button>
+          )}
+          {selectedFiles?.name && (
+            <Button
+              variant="contained"
+              component="label"
+              style={{ textTransform: 'none' }}
+              onClick={onUpdate}
+            >
+              <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
+              <span style={{ padding: '10px' }}> Change</span>
+              <span>Clear</span>
+            </Button>
+          )}
+          {/* <Button
+            color="primary"
+            disabled={!selectedFiles}
+            style={{ textTransform: 'none' }}
+            onClick={handleUpload}
+          >
+            Upload
+          </Button> */}
           {/* add dropdown to handle tags  */}
           <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
             <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
@@ -370,19 +516,18 @@ export default function CreatePrompt(): JSX.Element {
               labelId="multiple-tag-checkbox-select"
               id="multiple-tag-checkbox-select"
               multiple
-              value={newPrompt.tags}
+              value={newFile.tags}
               onChange={handleSelectChange}
-              renderValue={(selected) => {//find the name for the prompt id
+              renderValue={(selected) => {//find the name for the file id
                 return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
               }}
               label="Tags"
               MenuProps={MenuProps}
               fullWidth
-              disabled={isLoading}
             >
               {tagList.map((tag, index) => (
                 <MenuItem key={index} value={tag.id}>
-                  <Checkbox checked={newPrompt.tags.indexOf(tag.id) > -1} />
+                  <Checkbox checked={newFile.tags.indexOf(tag.id) > -1} />
                   <ListItemText primary={tag.id} />
                 </MenuItem>
               ))}

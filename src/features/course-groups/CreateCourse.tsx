@@ -198,6 +198,8 @@ export default function CreateCourse(): JSX.Element {
             // pop up notifying user of creation
             setAlert({ message: "Course Created", type: "success" });
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           // set errors
           setAlert({ message: res.data, type: "error" })

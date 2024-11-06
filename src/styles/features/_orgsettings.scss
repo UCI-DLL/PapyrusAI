@@ -23,7 +23,7 @@
     div {
       display: flex;
       flex-direction: row;
-      align-items: center;
+      align-self: center;
       justify-content: center;
 
       @media (max-width: global.$sm-break) {

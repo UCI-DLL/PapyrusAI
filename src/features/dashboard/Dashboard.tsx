@@ -10,11 +10,13 @@ import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
 import AddCourseForm from "../course-groups/AddCourseForm";
 import { Modal } from "../../components/Modal";
+import { AlertContext } from "../../utility/context/AlertContext";
 
 
 export default function Dashboard(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
+  const { setAlert } = useContext(AlertContext);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   //open the modal for a user to add a course
@@ -50,6 +52,7 @@ export default function Dashboard(): JSX.Element {
           // handle error
           setCourseList([]);
           setIsLoading(false);
+          setAlert({ message: "Encountered an error. Please try again later.", type: "error" });
         }
       }
     });

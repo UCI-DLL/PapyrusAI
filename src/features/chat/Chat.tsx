@@ -156,6 +156,8 @@ export default function Chat(): JSX.Element {
               onConnect(location.pathname.split("/")[3], location.pathname.split("/")[4], location.pathname.split("/")[5]);
             }
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           if (res === undefined) {
           } else {
@@ -343,10 +345,10 @@ export default function Chat(): JSX.Element {
     //save message in message array
     setChatError(undefined);
     if (messages && isConnected) {
-      //check that message length is less that 50000
+      //check that message length is less that 100000
       var messagesToSend: Array<{ role: string, content: string }> = []
       messageList.map(message => {
-        if (message.content.length > 50000) {
+        if (message.content.length > 100000) {
           setChatError("Message Too Long");
           return ""
         } else {
@@ -384,9 +386,10 @@ export default function Chat(): JSX.Element {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    //check that message length is less that 50000
+    setIsLoading(true)
+    //check that message length is less that 100000
     setChatError(undefined);
-    if (newMessage.length < 50000 && newMessage.length > 0) {
+    if (newMessage.length < 100000 && newMessage.length > 0) {
       const tempTimestamp = Date.now();
       const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
@@ -406,6 +409,7 @@ export default function Chat(): JSX.Element {
     } else {
       setChatError("Message Too Long");
     }
+    setIsLoading(false);
   }
 
   function handleWizardReturnPrompts(selectedPrompt: string) {
@@ -490,7 +494,7 @@ export default function Chat(): JSX.Element {
 
   function returnDocText(docText: string) {
     setOpenDocumentModal(false);
-    if (docText.length < 50000 && docText.length > 0) {
+    if (docText.length < 100000 && docText.length > 0) {
       const tempTimestamp = Date.now();
       const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
@@ -512,7 +516,7 @@ export default function Chat(): JSX.Element {
 
   function returnSpeakingText(text: string) {
     setOpenSpeechToTextModal(false);
-    if (text.length < 50000 && text.length > 0) {
+    if (text.length < 100000 && text.length > 0) {
       const tempTimestamp = Date.now();
       const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
@@ -933,10 +937,11 @@ export default function Chat(): JSX.Element {
                     label="Send a message"
                     sx={{ width: "100%" }}
                     value={newMessage}
+                    disabled={isLoading}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      //check that message length is less that 50000
+                      //check that message length is less that 100000
                       setChatError(undefined);
-                      if (e.target.value.length < 50000) {
+                      if (e.target.value.length < 100000) {
                         setNewMessage(e.target.value)
                       } else {
                         setChatError("Message Too Long");

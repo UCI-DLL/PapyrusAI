@@ -119,6 +119,8 @@ export default function ConversationList(): JSX.Element {
             if (res.data) {
               setViewUser(res.data);
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
             if (res === undefined) {
             } else {
@@ -338,7 +340,7 @@ export default function ConversationList(): JSX.Element {
                       `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}` :
                       `${course.term ? course.term : ""}${course.year ? course.year : ""}`}
                   </Typography>
-                  <Typography variant="h5" component={"div"}>
+                  <Typography variant="h5">
                     {course.modules.find(x => x.id === moduleIds?.moduleId)?.name} - {course.name}
                   </Typography>
                   <Typography sx={{ fontSize: 14 }} color="text.secondary" >

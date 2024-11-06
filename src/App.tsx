@@ -51,6 +51,8 @@ import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
+import CreateFile from "./features/library/CreateFile";
+import EditFile from "./features/library/EditFile";
 import OrgSettings from "./features/org-settings/OrgSettings";
 import CourseReports from "./features/reports/ModuleReports";
 
@@ -95,41 +97,39 @@ function App(): JSX.Element {
   }, [user])
 
   useEffect(() => {
-    setTimeout(() => {
-      // Check if we have an access token, if not, redirect to aws cognito login page
-      if (!localStorage.getItem("papyrusai_access_token") && !user) {
-        if (navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
-          //do nothing here if on safari (or it creates a weird loop)
-        } else {
-          // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-        }
+    // Check if we have an access token, if not, redirect to aws cognito login page
+    if (!localStorage.getItem("papyrusai_access_token") && !user) {
+      if (navigator.userAgent.indexOf("Chrome") < 0 && navigator.userAgent.indexOf("Safari") > -1) {
+        //do nothing here if on safari (or it creates a weird loop)
       } else {
-        // get user's most update-to-date info
-        //If access denied, then update the access token
-        Get(getUserData()).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              //update our version of user
-              setUser(res.data);
-              localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-              //if user is missing name, then open the modal
-              //NOTE: family_name optional (aka can be empty string)
-              if (!res.data.name || !res.data.family_name || res.data.name === "") {
-                setShowUpdateUserInfoModal(true);
-              }
-            }
-          } else {
-            //remove user data
-            localStorage.removeItem("papyrusai_access_token");
-            localStorage.removeItem("papyrusai_user");
-            setUser(null);
-            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-          }
-        });
+        // window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
       }
-    }, 500);
+    } else if (localStorage.getItem("papyrusai_access_token") && !user) {
+      // get user's most update-to-date info
+      //If access denied, then update the access token
+      Get(getUserData()).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            //update our version of user
+            setUser(res.data);
+            localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+            //if user is missing name, then open the modal
+            //NOTE: family_name optional (aka can be empty string)
+            if (!res.data.name || !res.data.family_name || res.data.name === "") {
+              setShowUpdateUserInfoModal(true);
+            }
+          }
+        } else {
+          //remove user data
+          localStorage.removeItem("papyrusai_access_token");
+          localStorage.removeItem("papyrusai_user");
+          setUser(null);
+          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+        }
+      });
+    } //else all is good
     // eslint-disable-next-line
-  }, [showUpdateUserInfoModal]);
+  }, [user]);
 
   //handle log out
   function handleLogOut() {
@@ -312,6 +312,22 @@ function App(): JSX.Element {
 
                       <Route path="/library/:id/prompts/:id" element={<PrivateRoute user={user} />}>
                         <Route path="/library/:id/prompts/:id" element={<EditPrompt />} />
+                      </Route>
+
+                      <Route path="/library/org/:id/createfile" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id/createfile" element={<CreateFile />} />
+                      </Route>
+
+                      <Route path="/library/org/:id/files/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id/files/:id" element={<EditFile />} />
+                      </Route>
+
+                      <Route path="/library/:id/createfile" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id/createfile" element={<CreateFile />} />
+                      </Route>
+
+                      <Route path="/library/:id/files/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id/files/:id" element={<EditFile />} />
                       </Route>
                     </>
                   )}

@@ -105,6 +105,8 @@ export default function UserReports(): JSX.Element {
         if (res.data) {
           setViewUser(res.data);
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         if (res === undefined) {
         } else {

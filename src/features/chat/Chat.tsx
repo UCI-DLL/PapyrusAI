@@ -5,7 +5,6 @@ import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import SendIcon from '@mui/icons-material/Send';
-// import AddIcon from '@mui/icons-material/Add';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import MicIcon from '@mui/icons-material/Mic';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
@@ -31,6 +30,7 @@ import Post from "../../utility/Post";
 import { Tooltip } from "@mui/material";
 import SpeechToTextModal from "./SpeechToTextModal";
 import RaterEssay from "../../components/RaterEssay";
+import EssayWizard from "./EssayWizard";
 
 
 export default function Chat(): JSX.Element {
@@ -57,6 +57,7 @@ export default function Chat(): JSX.Element {
   const { user } = useContext(UserContext); //current user signed in
   const [viewUser, setViewUser] = useState<UserType>(); //The user viewing the conversation
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
+  const [showWizard, setShowWizard] = useState(false); //show normal wizard (either under normal conditions or after we get rater essay back)
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
   const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
@@ -103,9 +104,6 @@ export default function Chat(): JSX.Element {
     setAnchorEl(null);
   };
 
-  // const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-  //   setAddAnchorEl(event.currentTarget);
-  // };
   const handleAddClose = () => {
     setAddAnchorEl(null);
   };
@@ -263,6 +261,37 @@ export default function Chat(): JSX.Element {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // if rater enabled module, then show the rater essay wizard essay first and then
+    // show the normal prompt wizard afterwards
+    if (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled) {
+      if (viewUser &&
+        user &&
+        user.username === viewUser.username &&
+        moduleInfo &&
+        messages.length > 0 &&
+        messages.length < 4 &&
+        moduleInfo.prompts.length !== 0
+      ) {
+        setShowWizard(true)
+      } else {
+        setShowWizard(false)
+      }
+    } else {
+      if (viewUser &&
+        user &&
+        user.username === viewUser.username &&
+        moduleInfo &&
+        messages.length < 1 &&
+        moduleInfo.prompts.length !== 0
+      ) {
+        setShowWizard(true)
+      } else {
+        setShowWizard(false)
+      }
+    }
+  }, [viewUser, user, moduleInfo, messages])
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -324,7 +353,6 @@ export default function Chat(): JSX.Element {
         setOpenUpdateConvoModal(prev => ({ ...prev, completed: true }))
       }
     }
-
   }, [messages]);
 
   const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
@@ -384,6 +412,28 @@ export default function Chat(): JSX.Element {
     }
   }, [messages, isConnected]);
 
+  const onSendEssay = useCallback((essay: string) => {
+    console.log("essay", essay)
+    //save message in message array
+    setChatError(undefined);
+    if (isConnected) {
+      //check that essay/message length is less that 100000
+      if (essay.length > 100000) {
+        setChatError("Essay Too Long to Evaluate");
+      } else {
+        socket.current?.send(JSON.stringify({
+          "action": "raterEssay",
+          "essay": essay,
+          "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
+        }));
+      }
+      //Set the typing indicator for chatgpt while we wait for a response
+      setShowTypingIndicator(true);
+    } else {
+      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
+    }
+  }, [isConnected]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true)
@@ -437,6 +487,21 @@ export default function Chat(): JSX.Element {
       //Send full message objects
       onSendMessage(messagesToSend);
     }
+  }
+
+  function handleWizardReturnEssay(essay: string) {
+    setIsLoading(true);
+    //check that message length is less that 100000
+    setChatError(undefined);
+    if (essay.length < 100000 && essay.length > 0) {
+      onSendEssay(essay);
+      setShowWizard(true);
+    } else if (essay.length < 1) {
+      setChatError("Message Too Short");
+    } else {
+      setChatError("Message Too Long");
+    }
+    setIsLoading(false);
   }
 
   // function handleRepeatPrompt(selectedPrompt: string) {
@@ -820,22 +885,31 @@ export default function Chat(): JSX.Element {
           )}
         </div>
         <div style={{ padding: "0.4rem", paddingTop: "1.8rem" }}>{moduleInfo.moduleDescription}</div>
+        {/* Show the rater essay wizard if rater enabled and we have no prev messages. Show normal prompt wizard afterwards.  */}
         {/* Only show the chat wizard if we don't have selected prompt and if there are no previous messages  */}
         {user &&
           viewUser &&
           user.username === viewUser.username &&
-          (messages.length < 1) && (moduleInfo.prompts.length !== 0) && (
-            <ChatWizard
-              prompts={moduleInfo.prompts}
-              returnPrompt={handleWizardReturnPrompts}
+          (messages.length < 1) && (moduleInfo.prompts.length !== 0) &&
+          moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled && (
+            <EssayWizard
+              returnEssay={handleWizardReturnEssay}
             />
           )}
+        {showWizard && (
+          <ChatWizard
+            prompts={moduleInfo.prompts}
+            returnPrompt={handleWizardReturnPrompts}
+          />
+        )}
       </div>
 
       &nbsp;&nbsp;&nbsp;
 
       <Box className="chat__chat-log">
         {/* list of messages  */}
+        {/* //TODO handle hidden messages  */}
+        {/* TODO handle messages that can be clicked on and have more information */}
         {messages.length > 0 && messages.map((message, index) => {
           if (message.role === "assistant") {
             return (
@@ -886,14 +960,14 @@ export default function Chat(): JSX.Element {
         })}
 
         {/* this is a temp TODO: delete  */}
-        <button key={6786} onClick={() => setShowEssay(true)}>
+        {/* <button key={6786} onClick={() => setShowEssay(true)}>
           <MessageLeft
             message={"View your essay feedback by clicking on this message."}
             displayName={"Papyrus"}
             messageType={"text"}
             outOfContext={true}
           />
-        </button>
+        </button> */}
 
         {showTypingIndicator && (
           <MessageLeft
@@ -980,7 +1054,6 @@ export default function Chat(): JSX.Element {
                             aria-controls={addOpen ? 'add-menu' : undefined}
                             aria-haspopup="true"
                             aria-expanded={addOpen ? 'true' : undefined}
-                            // onClick={handleAddClick}
                             onClick={() => {
                               handleAddClose()
                               setOpenDocumentModal(true)
@@ -989,36 +1062,6 @@ export default function Chat(): JSX.Element {
                             {<AttachFileIcon />}
                           </IconButton>
                         </InputAdornment>
-                        {/* <Menu
-                          id="add-menu"
-                          anchorEl={addAnchorEl}
-                          open={addOpen}
-                          onClose={handleAddClose}
-                          MenuListProps={{
-                            'aria-labelledby': 'add-menu-button',
-                          }}
-                          anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'left',
-                          }}
-                          transformOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
-                          }}
-                        >
-                          <MenuItem onClick={() => {
-                            handleAddClose()
-                            setOpenDocumentModal(true)
-                          }}>
-                            Attach File
-                          </MenuItem>
-                          <MenuItem onClick={() => {
-                            handleAddClose()
-                            setOpenSpeechToTextModal(true)
-                          }}>
-                            Speech To Text
-                          </MenuItem>
-                        </Menu> */}
                       </>
                     }
                     multiline

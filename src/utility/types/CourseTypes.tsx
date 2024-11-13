@@ -29,6 +29,7 @@ export type ModuleType = {
   prompts: Array<PromptType>,
   showInitialPrompt: boolean,
   showWizard: boolean,
+  raterEnabled?: boolean,
 }
 //Note: the difference between this folder/prompt and the old prompt type is 
 //old one has organization

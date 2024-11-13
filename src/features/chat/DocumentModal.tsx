@@ -124,7 +124,7 @@ export default function DocumentModal({
               setDocText("");
             }}
           >
-            Send Document
+            Submit Document
           </Button>
         </div>
       </div>

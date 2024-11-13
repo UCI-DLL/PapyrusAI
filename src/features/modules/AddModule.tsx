@@ -40,7 +40,8 @@ type AddModuleType = {
   isPublished: boolean,
   showInitialPrompt: boolean,
   prompts: Array<PromptType>,
-  files: Array<FileType>
+  files: Array<FileType>,
+  raterEnabled: boolean,
 }
 //Note: ^ missing showWizard. Need to add later
 
@@ -63,7 +64,8 @@ export default function AddModule(): JSX.Element {
     isPublished: false,
     showInitialPrompt: true,
     prompts: [],
-    files: []
+    files: [],
+    raterEnabled: false
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -152,6 +154,7 @@ export default function AddModule(): JSX.Element {
         prompts: session.prompts, //Send prompts with all information + folderId 
         files: session.files, //send files with all information + folderid
         isDeleted: false,
+        raterEnabled: session.raterEnabled,
       }
       // post data back
       Put(putCreateModule(courseId), dataToSend).then((res) => {
@@ -612,6 +615,20 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           >
             <span>
               Show Embedded Prompt
+            </span>
+          </Checkbox>
+          <Checkbox
+            onClick={() => {
+              setSession((prev) => ({
+                ...prev,
+                raterEnabled: !session.raterEnabled
+              }))
+            }}
+            checked={session.raterEnabled}
+            isDisabled={isLoading}
+          >
+            <span>
+              RATER Enabled
             </span>
           </Checkbox>
         </form>

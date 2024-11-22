@@ -39,6 +39,7 @@ export default function Login(props: LoginProps): JSX.Element {
   }, []);
 
   function getUserInfo(token: string) {
+    console.log("getuserinfo")
     const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
     axios
       .get(API_URL, {
@@ -53,7 +54,9 @@ export default function Login(props: LoginProps): JSX.Element {
         // return response;
       })
       .catch(function (error) {
+        console.log("here error", error)
         if (error.code === "ERR_CANCELED") return;
+        if (error.code === "ERR_NETWORK") window.location.reload();
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx

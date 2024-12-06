@@ -11,6 +11,23 @@
   padding: global.$base;
   width: 100%;
 
+  &__section-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+
+    @media (max-width: global.$sm-break) {
+      flex-direction: column;
+    }
+
+    div {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-self: center;
+    }
+  }
 
   &__filters {
     display: flex;

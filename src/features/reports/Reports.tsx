@@ -6,7 +6,10 @@ import {
   Divider,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Button,
+  Checkbox,
+  ListItemButton
 } from "@mui/material";
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
@@ -14,10 +17,13 @@ import { UserContext } from "../../utility/context/UserContext";
 import Get from "../../utility/Get";
 import { getAllCourseList, getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
-import { CourseType } from "../../utility/types/CourseTypes";
+import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import { Link } from "react-router-dom";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Modal } from "../../components/Modal";
+import { ConversationType } from "../../utility/types/ConversationTypes";
+import { getConversation, getConversationList } from "../../utility/endpoints/ConversationEndpoints";
 
 
 export default function Reports(): JSX.Element {
@@ -25,9 +31,26 @@ export default function Reports(): JSX.Element {
   const { user } = useContext(UserContext);
   const [userList, setUserList] = useState<Array<{ users: Array<CustomUserType>, course: CourseType }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [openDownloadCourseModal, setOpenDownloadCourseModal] = useState<boolean>(false);
   const style = {
     width: '100%',
     bgcolor: 'background.paper',
+  };
+  var promiseArray: any[] = [];
+
+  const [checked, setChecked] = useState<Array<number>>([]);
+
+  const handleToggle = (value: number) => () => {
+    const currentIndex = checked.indexOf(value);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(value);
+    } else {
+      newChecked.splice(currentIndex, 1);
+    }
+
+    setChecked(newChecked);
   };
 
   useEffect(() => {
@@ -168,9 +191,164 @@ export default function Reports(): JSX.Element {
     })
   }
 
+  function downloadCourses() {
+    // TODO 
+    // setOpenDownloadCourseModal(false);
+    // setIsLoading(true);
+    type DownloadType = CourseType & { users: Array<CustomUserType> } & { modules: Array<ModuleType & { conversations: Array<ConversationType & { user: CustomUserType }> }> }
+    var coursesToDownload: DownloadType[] = [];
+    checked.forEach(x => {
+      var course: any = sortCourseList(userList)[x].course;
+      course["users"] = sortCourseList(userList)[x].users;
+      coursesToDownload.push(course);
+    })
+    //TODO get content mod
+
+    //For each course, for each module in course, for each user in course, get conversation list (for length of array) and then the actual convo
+    const controller = new AbortController();
+    coursesToDownload.forEach((course, courseIndex) => {
+      course.modules.forEach((module, moduleIndex) => {
+        //create conversation array if it doesnt exist
+        if (coursesToDownload[courseIndex].modules[moduleIndex].conversations === undefined) {
+          coursesToDownload[courseIndex].modules[moduleIndex].conversations = [];
+        }
+        course.users.forEach(user => {
+          //get conversation list based on course and module and user
+          promiseArray.push(Get(getConversationList(course.id, module.id, user.sub), controller.signal).then(res => {
+            if (res && res.status && res.status < 300) {
+              if (res.data) {
+                //check if conversation for course, module, user / get conversation list length
+                //get conversation data (with message data)
+                if (res.data.conversations && res.data.conversations.length > 0) {
+                  res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
+                    var convoData = await getConvo(course.id, module.id, convoIndex.toString(), user.sub, controller);
+                    promiseArray.push(convoData);
+                    if (convoData) {
+                      var convoData2 = { ...convoData, user: user }
+                      // save convo data in the main json in the right place in coursesToDownload
+                      // push to convo list because it will be a list of ALL convos from all users 
+                      // check if convo list already has convo with same id to prevent duplicates
+                      if (!coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(e => e.id === convoData2.id)) {
+                        coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
+                      }
+                    }
+                  })
+                }
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              //Do nothing and skip. The user doesnt have any conversations within the course/module
+            }
+          }))
+        })
+      })
+    })
+
+    Promise.allSettled(promiseArray).then(() => {
+      // download here
+      setTimeout(() => {
+        downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`)
+      }, 10000);
+    });
+  }
+
+  //helper function to get the conversation for the json download
+  async function getConvo(courseId: string, moduleId: string, convoIndex: string, username: string, controller: AbortController): Promise<any> {
+    const temp = await Get(
+      getConversation(
+        courseId,
+        moduleId,
+        convoIndex,
+        username
+      ),
+      controller.signal).then(async (res1: any) => {
+        if (res1 && res1.status && res1.status < 300) {
+          if (res1.data) {
+            return res1.data;
+          }
+        } else if (res1 && res1.status === 401) {
+          navigator("/login");
+        } else {
+          //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
+          var some = await getConvo(courseId, moduleId, convoIndex, username, controller);
+          promiseArray.push(some)
+          return some;
+        }
+      });
+    return await temp;
+  }
+
+  //code from: https://stackoverflow.com/questions/19721439/download-json-object-as-a-file-from-browser
+  function downloadObjectAsJson(exportObj: any, exportName: string) {
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+    var downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", exportName + ".json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  }
+
   return !isLoading ? (
     <div className="reports">
-      <h3>Reports</h3>
+      {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
+        <Modal
+          isOpen={openDownloadCourseModal}
+          title={"Select Courses to Download"}
+          onRequestClose={() => setOpenDownloadCourseModal(false)}
+          actions={
+            <>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => setOpenDownloadCourseModal(false)}>
+                Close
+              </Button>
+              <Button
+                variant="contained"
+                onClick={downloadCourses}>
+                Download
+              </Button>
+            </>
+          }
+        >
+          <div>
+            <div>Note: downloading multiple courses may take several minutes. Please be patient while your courses, modules, and conversations download.</div>
+            <List dense sx={{ width: '100%', bgcolor: 'background.paper' }}>
+              {sortCourseList(userList).map((x, index) => {
+                const labelId = `checkbox-list-secondary-label-${index}`;
+                return (
+                  <ListItem
+                    key={index}
+                    secondaryAction={
+                      <Checkbox
+                        edge="end"
+                        onChange={handleToggle(index)}
+                        checked={checked.includes(index)}
+                        inputProps={{ 'aria-labelledby': labelId }}
+                      />
+                    }
+                    disablePadding
+                  >
+                    <ListItemButton onClick={handleToggle(index)}>
+                      <ListItemText id={labelId} primary={`${x.course.name} | Instructor: ${x.course.instructor.name} ${x.course.instructor.family_name}`} />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          </div>
+        </Modal>
+      )}
+      <div className="reports__section-header">
+        <h3>Reports</h3>
+        <div>
+          {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
+            <Button variant="outlined" onClick={() => setOpenDownloadCourseModal(true)}>Download Course</Button>
+          )}
+        </div>
+      </div>
       <hr />
       <List style={style}>
         {sortCourseList(userList).map((x, index) => {

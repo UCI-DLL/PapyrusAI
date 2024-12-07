@@ -23,7 +23,7 @@ import { CustomUserType } from "../../utility/types/UserTypes";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Modal } from "../../components/Modal";
 import { ConversationType } from "../../utility/types/ConversationTypes";
-import { getConversation, getConversationList } from "../../utility/endpoints/ConversationEndpoints";
+import { getContentModMessage, getConversation, getConversationList } from "../../utility/endpoints/ConversationEndpoints";
 
 
 export default function Reports(): JSX.Element {
@@ -192,9 +192,8 @@ export default function Reports(): JSX.Element {
   }
 
   function downloadCourses() {
-    // TODO 
-    // setOpenDownloadCourseModal(false);
-    // setIsLoading(true);
+    setOpenDownloadCourseModal(false);
+    setIsLoading(true);
     type DownloadType = CourseType & { users: Array<CustomUserType> } & { modules: Array<ModuleType & { conversations: Array<ConversationType & { user: CustomUserType }> }> }
     var coursesToDownload: DownloadType[] = [];
     checked.forEach(x => {
@@ -202,7 +201,6 @@ export default function Reports(): JSX.Element {
       course["users"] = sortCourseList(userList)[x].users;
       coursesToDownload.push(course);
     })
-    //TODO get content mod
 
     //For each course, for each module in course, for each user in course, get conversation list (for length of array) and then the actual convo
     const controller = new AbortController();
@@ -248,7 +246,8 @@ export default function Reports(): JSX.Element {
     Promise.allSettled(promiseArray).then(() => {
       // download here
       setTimeout(() => {
-        downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`)
+        downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`);
+        setIsLoading(false);
       }, 10000);
     });
   }
@@ -265,7 +264,34 @@ export default function Reports(): JSX.Element {
       controller.signal).then(async (res1: any) => {
         if (res1 && res1.status && res1.status < 300) {
           if (res1.data) {
-            return res1.data;
+            //handle content moderation messages
+            if (res1.data.completed) {
+              const temp2 = await Get(
+                getContentModMessage(
+                  courseId,
+                  moduleId,
+                  convoIndex,
+                  username
+                ),
+                controller.signal).then(async (res2: any) => {
+                  if (res2 && res2.status && res2.status < 300) {
+                    //add content mod message to res1 data before returning
+                    //"should" only be one in the list
+                    if (res2.data && res2.data[0]) {
+                      var tmp = res1.data;
+                      tmp.messages.push(res2.data[0]);
+                      return tmp;
+                    }
+                  } else if (res2 && res2.status === 401) {
+                    navigator("/login");
+                  } else {
+                    //do nothing
+                  }
+                });
+              return await temp2;
+            } else {
+              return res1.data;
+            }
           }
         } else if (res1 && res1.status === 401) {
           navigator("/login");

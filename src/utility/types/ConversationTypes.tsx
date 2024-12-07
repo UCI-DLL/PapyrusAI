@@ -10,13 +10,14 @@ export type ConversationType = {
   id: string,
   isDeleted: boolean,
   messages: Array<string>,
-  name: string
+  name: string,
+  completed?: boolean,
 }
 
 export type MessageType = {
   id: string,
   content: string,
-  messageType: MessageTypeType, 
+  messageType: MessageTypeType,
   role: string,
   sender: string,
   timestamp: string,

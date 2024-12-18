@@ -54,6 +54,7 @@ export default function Login(props: LoginProps): JSX.Element {
       })
       .catch(function (error) {
         if (error.code === "ERR_CANCELED") return;
+        if (error.code === "ERR_NETWORK") window.location.reload();
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx

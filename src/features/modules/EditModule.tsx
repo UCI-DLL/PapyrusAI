@@ -49,6 +49,7 @@ type EditModuleType = {
   files: Array<FileType>,
   showInitialPrompt: boolean,
   showWizard: boolean,
+  raterEnabled: boolean,
 }
 
 export enum SortOptions {
@@ -74,7 +75,8 @@ export default function EditModule(): JSX.Element {
     showWizard: true,
     isDeleted: false, //prev
     isTemplate: false,
-    id: ""
+    id: "",
+    raterEnabled: false
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -231,7 +233,8 @@ export default function EditModule(): JSX.Element {
           showWizard: session.showWizard,
           isDeleted: isDeleted,
           isTemplate: session.isTemplate,
-          id: session.id
+          id: session.id,
+          raterEnabled: session.raterEnabled ? true : false,
         }
         // post data back
         Put(putUpdateModule(moduleIds.courseId, moduleIds.moduleId), dataToSend).then((res) => {
@@ -775,6 +778,20 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
           >
             <span>
               Show Embedded Prompt
+            </span>
+          </Checkbox>
+          <Checkbox
+            onClick={() => {
+              setSession((prev) => ({
+                ...prev,
+                raterEnabled: !session.raterEnabled
+              }))
+            }}
+            checked={session.raterEnabled}
+            isDisabled={isLoading}
+          >
+            <span>
+              RATER Enabled
             </span>
           </Checkbox>
         </form>

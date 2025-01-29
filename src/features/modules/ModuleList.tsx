@@ -233,6 +233,15 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
                     user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
                     user?.groups.includes(course.id + "-TA")) && (
                       <Button onClick={() => {
+                        navigator(`/dashboard/${course.id}/${module.id}`)
+                      }}>
+                        View
+                      </Button>
+                    )}
+                  {(user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
+                    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
+                    user?.groups.includes(course.id + "-TA")) && (
+                      <Button onClick={() => {
                         setOpenDuplicateModal({
                           courseId: course.id,
                           moduleId: module.id,

@@ -23,6 +23,9 @@ export type MessageType = {
   timestamp: string,
   inContext?: boolean,
   promptId?: null | string,
+  userVisible?: boolean,
+  raterReference?: string | Array<Array<string>>,
+  expandableMessage?: string,
 }
 
 export type MessageTypeType = "text" | "file"

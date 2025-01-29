@@ -29,7 +29,6 @@ import DocumentModal from "./DocumentModal";
 import Post from "../../utility/Post";
 import { Tooltip } from "@mui/material";
 import SpeechToTextModal from "./SpeechToTextModal";
-import RaterEssay from "../../components/RaterEssay";
 import EssayWizard from "./EssayWizard";
 
 
@@ -49,7 +48,6 @@ export default function Chat(): JSX.Element {
   const [courseInfo, setCourseInfo] = useState<CourseType>();
   const [moduleInfo, setModuleInfo] = useState<ModuleType>();
   const [newMessage, setNewMessage] = useState<string>("");
-  const [showEssay, setShowEssay] = useState<boolean>(false);
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>();
   //After a prompt has been selected, then add it to this list
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
@@ -270,12 +268,12 @@ export default function Chat(): JSX.Element {
         user.username === viewUser.username &&
         moduleInfo &&
         messages.length > 0 &&
-        messages.length < 4 &&
+        messages.length < 5 &&
         moduleInfo.prompts.length !== 0
       ) {
         setShowWizard(true)
       } else {
-        setShowWizard(false)
+        // setShowWizard(false)
       }
     } else {
       if (viewUser &&
@@ -328,20 +326,58 @@ export default function Chat(): JSX.Element {
 
   const onSocketMessage = useCallback((dataStr: string) => {
     const returnData = JSON.parse(dataStr);
+    console.log("return data", returnData);
     //turn off typing indicator for chatgpt
     setShowTypingIndicator(false);
-    if (returnData.status < 300) {
-      //Only the message as a string comes back so make some temp stuff for the message
+    if (returnData.essay && returnData.status < 300 && returnData.rater) {
+      //if we get the essay response back, then we need to update the list of messages
+      //since the essay has a expandable message
       const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-      var responseMessage: MessageType = {
-        id: tempTimestamp.toString(),
+      const essayTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId = (Number(essayTempId) + 1).toString();
+      var essayMessage: MessageType = {
+        id: essayTempId,
+        content: "View your essay feedback by clicking on this message.",
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: tempTimestamp.toString(),
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: returnData,
+      }
+      var essayResponseMessage: MessageType = {
+        id: messageTempId,
         content: returnData.data,
         messageType: "text",
         role: "assistant",
         sender: "ChatGPT",
-        timestamp: messageTempId,
+        timestamp: tempTimestamp.toString(),
         promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: "",
+      }
+      if (messages) {
+        setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
+      }
+      setShowWizard(false)
+    } else if (returnData.status < 300) {
+      //Only the message as a string comes back so make some temp stuff for the message
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: messageTempId,
+        content: returnData.data,
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: tempTimestamp.toString(),
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: "",
       }
       if (messages) {
         setMessages((prev) => [...prev, responseMessage]);
@@ -413,13 +449,14 @@ export default function Chat(): JSX.Element {
   }, [messages, isConnected]);
 
   const onSendEssay = useCallback((essay: string) => {
-    console.log("essay", essay)
     //save message in message array
     setChatError(undefined);
     if (isConnected) {
       //check that essay/message length is less that 100000
       if (essay.length > 100000) {
         setChatError("Essay Too Long to Evaluate");
+      } else if (essay.length < 750) { //~5 characters in a word * 150 words
+        setChatError("Essay Too Short to Evaluate");
       } else {
         socket.current?.send(JSON.stringify({
           "action": "raterEssay",
@@ -495,7 +532,24 @@ export default function Chat(): JSX.Element {
     setChatError(undefined);
     if (essay.length < 100000 && essay.length > 0) {
       onSendEssay(essay);
-      setShowWizard(true);
+      //set temp essay message
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: essay,
+        messageType: "file",
+        role: "user",
+        sender: user ? user.name : "You",
+        timestamp: messageTempId,
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: "Loading...",
+      }
+      if (messages) {
+        setMessages((prev) => [...prev, responseMessage]);
+      }
     } else if (essay.length < 1) {
       setChatError("Message Too Short");
     } else {
@@ -684,23 +738,6 @@ export default function Chat(): JSX.Element {
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="chat">
-      <Modal
-        isOpen={showEssay}
-        title={"Essay Feedback"}
-        onRequestClose={() => setShowEssay(false)}
-        actions={
-          <>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => setShowEssay(false)}>
-              Back to Conversation
-            </Button>
-          </>
-        }
-      >
-        <RaterEssay />
-      </Modal>
       <Modal
         isOpen={openErrorModal.open}
         title={"We ran into an error!"}
@@ -908,7 +945,7 @@ export default function Chat(): JSX.Element {
 
       <Box className="chat__chat-log">
         {/* list of messages  */}
-        {/* //TODO handle hidden messages  */}
+        {/* handle hidden messages  */}
         {/* TODO handle messages that can be clicked on and have more information */}
         {messages.length > 0 && messages.map((message, index) => {
           if (message.role === "assistant") {
@@ -927,6 +964,8 @@ export default function Chat(): JSX.Element {
                     displayName={message.sender === "ChatGPT" ? "Papyrus" : message.sender}
                     messageType={message.messageType}
                     outOfContext={message.inContext ? true : false}
+                    visible={(message.userVisible === undefined || message.userVisible) ? true : false}
+                    expandableMessage={message.expandableMessage && message.expandableMessage !== "" ? message.expandableMessage : undefined}
                   />
                 </div>
               </div>
@@ -951,6 +990,7 @@ export default function Chat(): JSX.Element {
                       displayName={viewUser?.name}
                       messageType={message.messageType}
                       outOfContext={message.inContext ? true : false}
+                      visible={(message.userVisible === undefined || message.userVisible) ? true : false}
                     />
                   </div>
                 )}
@@ -958,16 +998,6 @@ export default function Chat(): JSX.Element {
             )
           }
         })}
-
-        {/* this is a temp TODO: delete  */}
-        {/* <button key={6786} onClick={() => setShowEssay(true)}>
-          <MessageLeft
-            message={"View your essay feedback by clicking on this message."}
-            displayName={"Papyrus"}
-            messageType={"text"}
-            outOfContext={true}
-          />
-        </button> */}
 
         {showTypingIndicator && (
           <MessageLeft

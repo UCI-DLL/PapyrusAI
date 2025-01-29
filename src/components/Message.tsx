@@ -13,8 +13,9 @@ import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
 import StopIcon from '@mui/icons-material/Stop';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CloseIcon from '@mui/icons-material/Close';
-import { Tooltip, SnackbarCloseReason, Snackbar, IconButton } from "@mui/material";
+import { Tooltip, SnackbarCloseReason, Snackbar, IconButton, Button } from "@mui/material";
 import { Modal } from "./Modal";
+import RaterEssay from "./RaterEssay";
 
 interface MessageProps {
   message: string;
@@ -22,6 +23,8 @@ interface MessageProps {
   typing?: boolean;
   messageType?: MessageTypeType,
   outOfContext?: boolean,
+  visible?: boolean, // visible to user?
+  expandableMessage?: string, //message is clickable and shows extra text in modal
 }
 
 export const MessageLeft = (props: MessageProps) => {
@@ -29,6 +32,8 @@ export const MessageLeft = (props: MessageProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState<any>(null);
   const [open, setOpen] = React.useState(false); //open snackbar
+  const [showExpandableMessage, setShowExpandableMessage] = useState<boolean>(false);
+  const [expandableMessage] = useState(props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined);
 
   useEffect(() => {
     const synth = window.speechSynthesis;
@@ -78,10 +83,29 @@ export const MessageLeft = (props: MessageProps) => {
     </React.Fragment>
   );
 
-  return (
+  return (props.visible === undefined || props.visible) ? (
     <div
       className={"message__row-left"}
     >
+      {props.expandableMessage && expandableMessage ? (
+        <Modal
+          isOpen={showExpandableMessage}
+          title={"Essay Feedback"}
+          onRequestClose={() => setShowExpandableMessage(false)}
+          actions={
+            <>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => setShowExpandableMessage(false)}>
+                Back to Conversation
+              </Button>
+            </>
+          }
+        >
+          <RaterEssay message={expandableMessage.message} raterArray={expandableMessage.rater} essay={expandableMessage.essay} />
+        </Modal>
+      ) : <></>}
       <div className={"message__left-display-name"}>
         {displayName}
         &nbsp;
@@ -116,13 +140,27 @@ export const MessageLeft = (props: MessageProps) => {
           </Tooltip>
         </div>
       </div>
-      <div className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}>
-        {props.typing ? (
-          <CustomTypingIndicator />
-        ) : (
-          <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
-        )}
-      </div>
+      {props.expandableMessage ? (
+        <button
+          onClick={() => setShowExpandableMessage(true)}
+          className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}
+        >
+          {props.typing ? (
+            <CustomTypingIndicator />
+          ) : (
+            <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
+          )}
+        </button>
+      ) : (
+        <div className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}>
+          {props.typing ? (
+            <CustomTypingIndicator />
+          ) : (
+            <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
+          )}
+        </div>
+      )}
+
       <Snackbar
         open={open}
         autoHideDuration={6000}
@@ -131,7 +169,7 @@ export const MessageLeft = (props: MessageProps) => {
         action={action}
       />
     </div>
-  );
+  ) : (<></>);
 };
 
 
@@ -190,7 +228,7 @@ export const MessageRight = (props: MessageProps) => {
     </React.Fragment>
   );
 
-  return (
+  return (props.visible === undefined || props.visible) ? (
     <div
       className={"message__row-right"}
     >
@@ -277,6 +315,6 @@ export const MessageRight = (props: MessageProps) => {
         action={action}
       />
     </div>
-  );
+  ) : <></>;
 };
 

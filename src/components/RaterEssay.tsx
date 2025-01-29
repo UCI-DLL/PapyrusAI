@@ -3,7 +3,7 @@ import {
   Typography,
 } from "@mui/material";
 import { BarSeriesType, ChartsLegend, ResponsiveChartContainer } from "@mui/x-charts";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface RaterEssayProps {
   message: string;
@@ -12,7 +12,7 @@ interface RaterEssayProps {
 }
 
 export default function RaterEssay(props: RaterEssayProps): JSX.Element {
-  // const [itemData, setItemData] = useState<any>();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const barSeries: BarSeriesType[] = [
     {
       type: 'bar',
@@ -64,6 +64,15 @@ export default function RaterEssay(props: RaterEssayProps): JSX.Element {
       color: "#7ab800",
     },
   ];
+
+  //create a use effect to get updated window size when user resizes window
+  useEffect(() => {
+    function handleResize() {
+      setWindowWidth(window.innerWidth)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, []);
 
   useEffect(() => {
     //https://stackoverflow.com/questions/58532751/highlighting-a-string-based-on-given-indices
@@ -167,7 +176,7 @@ export default function RaterEssay(props: RaterEssayProps): JSX.Element {
 
     let result = resultt.processed.reduce((str, [id, start, end, discourse, type]) => {
       const color = barSeries[Number(type)] && barSeries[Number(type)].color ? barSeries[Number(type)].color : "#000";
-      if (Number(start) > -1 && Number(end) > -1 && str[Number(start)] && str[Number(end)]) {
+      if (Number(start) > -1 && Number(end) > -1) {
         str[Number(start)] = `<mark style="background-color:${color}">${str[Number(start)]}`;
         str[Number(end)] = `${str[Number(end)]}</mark>`;
         return str;
@@ -175,9 +184,8 @@ export default function RaterEssay(props: RaterEssayProps): JSX.Element {
       else {
         return str;
       }
-      //TODO need to split by punctuation to get the right amount
-      //Problem is that then you have a hard time joining the str back together cause you dont know how it got split
-    }, props.essay.replace(/\n/g, " ").split(" ")).join(" "); //replace new lines with spaces and then split on spaces
+      //Really handle markdown (double new lines, new lines)
+    }, props.essay.replace(/\n\n/g, " ").replace(/\n/g, " ").split(" ")).join(" "); //replace new lines with spaces and then split on spaces
     if (document.getElementById("raterEssay") && document.getElementById("raterEssay") !== null) {
       document.getElementById("raterEssay")!.innerHTML = result;
     }
@@ -193,7 +201,7 @@ export default function RaterEssay(props: RaterEssayProps): JSX.Element {
       <div className="chat__wizard__modal">
         {/* //TODO figure out this part on mobile  */}
         <Typography>Feedback Legend</Typography>
-        <ResponsiveChartContainer series={barSeries} height={100} disableAxisListener>
+        <ResponsiveChartContainer series={barSeries} width={windowWidth < 1024 ? 195 : 450} height={windowWidth < 1024 ? 200 : 70} disableAxisListener>
           <ChartsLegend
             direction="row"
             position={{

@@ -3,77 +3,213 @@ import {
   Typography,
 } from "@mui/material";
 import { BarSeriesType, ChartsLegend, ResponsiveChartContainer } from "@mui/x-charts";
-import { useState } from "react";
+import { useEffect } from "react";
 
+interface RaterEssayProps {
+  message: string;
+  raterArray: Array<Array<string>>;
+  essay: string;
+}
 
-
-export default function RaterEssay(): JSX.Element {
-  const [itemData, setItemData] = useState<any>();
+export default function RaterEssay(props: RaterEssayProps): JSX.Element {
+  // const [itemData, setItemData] = useState<any>();
   const barSeries: BarSeriesType[] = [
     {
       type: 'bar',
-      id: 'claims',
-      label: 'Claims',
-      data: [0, 1, 2],
+      id: 'lead',
+      label: 'Lead',
+      data: [],
       color: "#ffd200"
-    },
-    {
-      type: 'bar',
-      id: 'counter',
-      label: 'Counterclaim',
-      data: [0, 1, 2],
-      color: "#0064a4",
-    },
-    {
-      type: 'bar',
-      id: 'evidence',
-      label: 'Evidence',
-      data: [0, 1, 2],
-      color: "#6aa2b8",
     },
     {
       type: 'bar',
       id: 'position',
       label: 'Position',
-      data: [0, 1, 2],
+      data: [],
+      color: "#0064a4",
+    },
+    {
+      type: 'bar',
+      id: 'claim',
+      label: 'Claim',
+      data: [],
+      color: "#6aa2b8",
+    },
+    {
+      type: 'bar',
+      id: 'counterclaim',
+      label: 'Counterclaim',
+      data: [],
       color: "#f78d2d",
+    },
+    {
+      type: 'bar',
+      id: 'rebuttal',
+      label: 'Rebuttal',
+      data: [],
+      color: "#934D6D",
+    },
+    {
+      type: 'bar',
+      id: 'evidence',
+      label: 'Evidence',
+      data: [],
+      color: "#8D91C7",
+    },
+    {
+      type: 'bar',
+      id: 'conclude',
+      label: 'Concluding Summary',
+      data: [],
+      color: "#7ab800",
     },
   ];
 
+  useEffect(() => {
+    //https://stackoverflow.com/questions/58532751/highlighting-a-string-based-on-given-indices
+    console.log("rater", props);
+
+    function removeOverlapsArray(dataArray: any, byDiscourse = false) {
+      // Convert array of arrays into objects for easier manipulation
+      const headers = dataArray[0];
+      const data = dataArray
+        .slice(1)
+        .filter((row: any) => row.length > 0) // Remove empty rows
+        .map((row: any) =>
+          Object.fromEntries(
+            headers.map((header: any, index: number) => [header, row[index]])
+          )
+        );
+
+      // Parse relevant fields as integers or floats
+      const parsedData = data.map((item: any) => ({
+        ...item,
+        start: parseInt(item.start, 10),
+        end: parseInt(item.end, 10),
+        score_discourse_type: parseFloat(item.score_discourse_type),
+      }));
+
+      // Sort data by start index and, in case of ties, by end index
+      parsedData.sort((a: any, b: any) => {
+        if (a.start === b.start) return a.end - b.end;
+        return a.start - b.start;
+      });
+
+      const processed = [];
+      const trimmed = [];
+
+      // Group by discourse type if byDiscourse is true
+      const groups = byDiscourse
+        ? parsedData.reduce((acc: any, item: any) => {
+          acc[item.discourse_type] = acc[item.discourse_type] || [];
+          acc[item.discourse_type].push(item);
+          return acc;
+        }, {})
+        : { all: parsedData };
+
+      // Process each group independently
+      for (const groupKey in groups) {
+        const group = groups[groupKey];
+        let prevSegment = null;
+
+        for (const segment of group) {
+          if (!prevSegment || segment.start > prevSegment.end) {
+            // No overlap, include the segment as is
+            processed.push(segment);
+            prevSegment = segment;
+          } else {
+            // Overlap detected
+            if (segment.score_discourse_type > prevSegment.score_discourse_type) {
+              // Adjust the end of the previous segment
+              trimmed.push({ ...prevSegment, end: segment.start - 1 });
+              prevSegment.end = segment.start - 1; // Modify the previous segment in place
+              processed.pop();
+              processed.push(prevSegment);
+
+              // Keep the current segment fully
+              processed.push(segment);
+              prevSegment = segment;
+            } else {
+              // Adjust the start of the current segment
+              if (segment.start <= prevSegment.end) {
+                trimmed.push({ ...segment, start: prevSegment.end + 1 });
+                segment.start = prevSegment.end + 1; // Modify the current segment in place
+              }
+
+              // Include the trimmed segment only if it still has a valid range
+              if (segment.start <= segment.end) {
+                processed.push(segment);
+                prevSegment = segment;
+              }
+            }
+          }
+        }
+      }
+
+      // Convert processed and trimmed data back to array-of-arrays format
+      const convertToArray = (segments: any) => [
+        headers,
+        ...segments.map((item: any) =>
+          headers.map((header: any) => item[header] || item[header.toLowerCase()]?.toString() || "")
+        ),
+      ];
+
+      return {
+        processed: convertToArray(processed),
+        trimmed: convertToArray(trimmed),
+      };
+    }
+
+    const resultt = removeOverlapsArray(props.raterArray, false);
+
+    console.log("Processed Segments:", resultt.processed);
+    console.log("Trimmed Segments:", resultt.trimmed);
+
+    let result = resultt.processed.reduce((str, [id, start, end, discourse, type]) => {
+      const color = barSeries[Number(type)] && barSeries[Number(type)].color ? barSeries[Number(type)].color : "#000";
+      if (Number(start) > -1 && Number(end) > -1 && str[Number(start)] && str[Number(end)]) {
+        str[Number(start)] = `<mark style="background-color:${color}">${str[Number(start)]}`;
+        str[Number(end)] = `${str[Number(end)]}</mark>`;
+        return str;
+      }
+      else {
+        return str;
+      }
+      //TODO need to split by punctuation to get the right amount
+      //Problem is that then you have a hard time joining the str back together cause you dont know how it got split
+    }, props.essay.replace(/\n/g, " ").split(" ")).join(" "); //replace new lines with spaces and then split on spaces
+    if (document.getElementById("raterEssay") && document.getElementById("raterEssay") !== null) {
+      document.getElementById("raterEssay")!.innerHTML = result;
+    }
+    // eslint-disable-next-line
+  }, [props]);
 
   return (
     <div className="chat__wizard">
+      <div>
+        {props.message}
+      </div>
+      <hr />
       <div className="chat__wizard__modal">
+        {/* //TODO figure out this part on mobile  */}
         <Typography>Feedback Legend</Typography>
-        <ResponsiveChartContainer series={barSeries} width={600} height={60}>
+        <ResponsiveChartContainer series={barSeries} height={100} disableAxisListener>
           <ChartsLegend
             direction="row"
             position={{
               horizontal: 'left',
               vertical: 'top',
             }}
-            onItemClick={(event, context, index) => setItemData([context, index])}
+          // onItemClick={(event, context, index) => setItemData([context, index])}
           />
         </ResponsiveChartContainer>
 
-        <Typography>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. <mark style={{ backgroundColor: "#0064a4" }}>Proin vulputate id tellus eget tincidunt.</mark> Integer egestas hendrerit nunc ut vestibulum. Aliquam pharetra ante vitae lorem accumsan, quis porttitor enim auctor. Ut eu libero enim. Integer iaculis, ligula eget convallis elementum, mauris urna lobortis enim, rutrum porttitor orci orci in justo. Proin at gravida mi. Etiam urna ipsum, eleifend et nibh a, tristique varius elit. Curabitur facilisis sed erat ut volutpat. Suspendisse pellentesque efficitur consequat. Aliquam ac rhoncus libero. Aenean lorem nibh, sodales ut pharetra bibendum, convallis a mi. Vivamus a eros sit amet mauris mattis fringilla. Etiam volutpat ante ut feugiat varius. Curabitur porttitor luctus sem sed mattis. Duis pharetra, ex id suscipit consectetur, dolor leo lobortis nisi, nec varius felis ex lobortis sem.
-        </Typography>
-        <Typography>
-          Donec arcu dolor, dignissim quis tempus sed, imperdiet eget diam. Vestibulum arcu nulla, mattis ut dignissim quis, consequat sed ex. Quisque aliquet nisi ut dignissim ornare. Mauris sed aliquet orci. <mark style={{ backgroundColor: "#6aa2b8" }}>In non arcu in magna maximus auctor. Interdum et malesuada fames ac ante ipsum primis in faucibus. </mark>In ornare a arcu quis dictum. Suspendisse vitae dolor ut sem porttitor fermentum in eu enim.
-        </Typography>
-        <Typography>
-          Morbi commodo eget tortor quis luctus. Curabitur vitae lorem at tortor ullamcorper luctus sit amet at lorem. Etiam hendrerit felis eu neque semper, eu venenatis libero luctus. Vivamus tellus nulla, ultricies non augue in, suscipit laoreet felis. Cras quis elementum risus, quis feugiat ipsum. Cras imperdiet, ante sed consequat porta, lorem mauris imperdiet risus, id vestibulum orci leo eu metus. Morbi consectetur aliquam mauris et mollis. Vivamus ornare fringilla leo non porta. Vestibulum interdum fringilla placerat. Integer a imperdiet nisi. Sed viverra neque vel arcu aliquam ornare sed in tortor. Phasellus vitae ornare ligula. Quisque viverra rutrum risus, sit amet vehicula enim efficitur sed. Quisque tristique commodo urna, vel elementum tellus congue consequat.
+        <hr />
 
-        </Typography>
         <Typography>
-          Vestibulum malesuada mi leo, nec tristique magna convallis vel. Nunc quis lorem sed tellus euismod facilisis. Ut rhoncus, arcu a vestibulum laoreet, metus enim placerat arcu, eu mollis lectus massa at dui. Vestibulum molestie nulla eget laoreet mollis. Nullam molestie justo a rhoncus faucibus. <mark style={{ backgroundColor: "#f78d2d" }}>Morbi eget lectus ornare, consequat dolor id, condimentum diam.</mark> Sed feugiat maximus lorem, a dictum eros auctor vitae. Proin faucibus semper molestie.
-
+          <div id="raterEssay"></div>
         </Typography>
-        <Typography>
-          Aenean nec pharetra lectus, sit amet imperdiet nunc. Integer fringilla libero vel nunc ullamcorper, sit amet bibendum erat faucibus. Suspendisse bibendum sollicitudin arcu ut commodo. Ut in massa massa. Ut nulla purus, pellentesque ac turpis vitae, faucibus vestibulum nunc. Aliquam luctus cursus rhoncus. Fusce lobortis ipsum augue, non posuere risus rutrum et. Integer pretium, leo in molestie finibus, ligula lectus finibus nulla, et suscipit felis turpis ut nisl. Aliquam fringilla nunc ac tempor commodo. Proin vulputate eu velit a dignissim. Donec placerat vulputate pellentesque.
 
-        </Typography>
       </div>
     </div>
   )

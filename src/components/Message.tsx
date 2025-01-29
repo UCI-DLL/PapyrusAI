@@ -25,6 +25,7 @@ interface MessageProps {
   outOfContext?: boolean,
   visible?: boolean, // visible to user?
   expandableMessage?: string, //message is clickable and shows extra text in modal
+  isInstructor?: boolean, //show the message if not user visible and is an instructor
 }
 
 export const MessageLeft = (props: MessageProps) => {
@@ -83,7 +84,7 @@ export const MessageLeft = (props: MessageProps) => {
     </React.Fragment>
   );
 
-  return (props.visible === undefined || props.visible) ? (
+  return (props.visible === undefined || props.visible || props.isInstructor) ? (
     <div
       className={"message__row-left"}
     >
@@ -107,6 +108,7 @@ export const MessageLeft = (props: MessageProps) => {
         </Modal>
       ) : <></>}
       <div className={"message__left-display-name"}>
+        {props.isInstructor && !props.visible ? "Hidden Message - " : ""}
         {displayName}
         &nbsp;
         <div className="message__left-controls" style={{ display: 'block' }}>
@@ -152,7 +154,7 @@ export const MessageLeft = (props: MessageProps) => {
           )}
         </button>
       ) : (
-        <div className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}>
+        <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__left-message message__out-context" : "message__left-message"}>
           {props.typing ? (
             <CustomTypingIndicator />
           ) : (
@@ -228,11 +230,12 @@ export const MessageRight = (props: MessageProps) => {
     </React.Fragment>
   );
 
-  return (props.visible === undefined || props.visible) ? (
+  return (props.visible === undefined || props.visible || props.isInstructor) ? (
     <div
       className={"message__row-right"}
     >
       <div className={"message__right-display-name"}>
+        {props.isInstructor && !props.visible ? "Hidden Message - " : ""}
         {props.displayName ? props.displayName : "You"}
         &nbsp;
         <div className="message__right-controls" style={{ display: 'block' }}>
@@ -303,7 +306,7 @@ export const MessageRight = (props: MessageProps) => {
           </div>
         </div>
       ) : (
-        <div className={props.outOfContext ? "message__right-message message__out-context" : "message__right-message"}>
+        <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__right-message message__out-context" : "message__right-message"}>
           <Markdown className={""}>{props.message}</Markdown>
         </div>
       )}

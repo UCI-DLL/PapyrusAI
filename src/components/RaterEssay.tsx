@@ -199,7 +199,6 @@ export default function RaterEssay(props: RaterEssayProps): JSX.Element {
       </div>
       <hr />
       <div className="chat__wizard__modal">
-        {/* //TODO figure out this part on mobile  */}
         <Typography>Feedback Legend</Typography>
         <ResponsiveChartContainer series={barSeries} width={windowWidth < 1024 ? 195 : 450} height={windowWidth < 1024 ? 200 : 70} disableAxisListener>
           <ChartsLegend

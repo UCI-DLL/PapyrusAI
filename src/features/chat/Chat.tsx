@@ -53,7 +53,7 @@ export default function Chat(): JSX.Element {
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const { setAlert } = useContext(AlertContext);
   const { user } = useContext(UserContext); //current user signed in
-  const [viewUser, setViewUser] = useState<UserType>(); //The user viewing the conversation
+  const [viewUser, setViewUser] = useState<UserType>(); //The user that owns the conversation
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const [showWizard, setShowWizard] = useState(false); //show normal wizard (either under normal conditions or after we get rater essay back)
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
@@ -105,6 +105,9 @@ export default function Chat(): JSX.Element {
   const handleAddClose = () => {
     setAddAnchorEl(null);
   };
+
+  const instructor = process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors";
+  const admin = process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin";
 
   //create a use effect to get updated window size when user resizes window
   useEffect(() => {
@@ -345,7 +348,7 @@ export default function Chat(): JSX.Element {
         promptId: null,
         userVisible: true,
         raterReference: "",
-        expandableMessage: returnData,
+        expandableMessage: JSON.stringify(returnData.rater),
       }
       var essayResponseMessage: MessageType = {
         id: messageTempId,
@@ -421,7 +424,7 @@ export default function Chat(): JSX.Element {
           const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
           var responseMessage: MessageType = {
             id: tempTimestamp.toString(),
-            content: message.content,
+            content: message.content.replace(/\n\n/g, " ").replace(/\n/g, " "), //replace new lines
             messageType: message.content.length < 1000 ? "text" : "file",
             role: "user",
             sender: "username",
@@ -596,10 +599,19 @@ export default function Chat(): JSX.Element {
       var fileData = courseInfo.name + "\n" +
         moduleInfo.name + "\n" + courseInfo.instructor.name + " " +
         courseInfo.instructor.family_name + "\n";
-      messages.forEach(message => {
-        var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
-        var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
-        fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
+      const isInstructor = user && (user.groups.includes(admin) || user.groups.includes(instructor))
+      messages.forEach((message, index) => {
+        //If instructor, then download all messages
+        // else dont download if module.showInitialPrompt is false OR hidden messages
+        if (!moduleInfo.showInitialPrompt && index === 0 && !isInstructor) {
+          //if dont showing init prompt and it is the first message and we are not an instructor, then dont add message to text
+        } else if (message.userVisible !== undefined && !message.userVisible && !isInstructor) {
+          //If the message is hidden and we are not an instructor, then dont add the message to text
+        } else {
+          var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
+          var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
+          fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
+        }
       })
       const blob = new Blob([fileData], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
@@ -946,7 +958,7 @@ export default function Chat(): JSX.Element {
       <Box className="chat__chat-log">
         {/* list of messages  */}
         {/* handle hidden messages  */}
-        {/* TODO handle messages that can be clicked on and have more information */}
+        {/* handle messages that can be clicked on and have more information */}
         {messages.length > 0 && messages.map((message, index) => {
           if (message.role === "assistant") {
             return (
@@ -966,6 +978,7 @@ export default function Chat(): JSX.Element {
                     outOfContext={message.inContext ? true : false}
                     visible={(message.userVisible === undefined || message.userVisible) ? true : false}
                     expandableMessage={message.expandableMessage && message.expandableMessage !== "" ? message.expandableMessage : undefined}
+                    isInstructor={(user?.groups.includes(instructor) || user?.groups.includes(admin)) ? true : false}
                   />
                 </div>
               </div>
@@ -991,6 +1004,7 @@ export default function Chat(): JSX.Element {
                       messageType={message.messageType}
                       outOfContext={message.inContext ? true : false}
                       visible={(message.userVisible === undefined || message.userVisible) ? true : false}
+                      isInstructor={(user?.groups.includes(instructor) || user?.groups.includes(admin)) ? true : false}
                     />
                   </div>
                 )}

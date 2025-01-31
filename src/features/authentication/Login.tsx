@@ -65,7 +65,10 @@ export default function Login(props: LoginProps): JSX.Element {
           // showMsg(Object.values(error.response.data), "error");
           if (error.response.status === 401) {
             console.log("here2")
-            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+            setTimeout(() => {
+              window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+            }, 500);
+
             // window.location.reload()
           }
           return error.response;

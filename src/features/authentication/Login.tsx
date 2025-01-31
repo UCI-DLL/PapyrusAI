@@ -22,7 +22,16 @@ export default function Login(props: LoginProps): JSX.Element {
         }, 500);
       } else {
         console.log("location", location.hash)
-        const token = location.hash.split("&")[1].split("=")[1];
+        const hash = location.hash.split("&")
+        var token = "";
+        if (hash[0].startsWith("#id")) {
+          //get access token if normal login
+          token = location.hash.split("&")[1].split("=")[1];
+        } else {
+          //get access token if google login
+          token = location.hash.split("&")[0].split("=")[1];
+        }
+        // const 
         console.log("token", token)
         localStorage.setItem("papyrusai_access_token", token);
         setTimeout(() => {

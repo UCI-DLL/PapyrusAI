@@ -54,13 +54,19 @@ export default function Login(props: LoginProps): JSX.Element {
       })
       .catch(function (error) {
         if (error.code === "ERR_CANCELED") return;
-        if (error.code === "ERR_NETWORK") window.location.reload();
+        if (error.code === "ERR_NETWORK") {
+          console.log("here1")
+          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+          // window.location.reload();
+        }
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           // showMsg(Object.values(error.response.data), "error");
           if (error.response.status === 401) {
-            window.location.reload()
+            console.log("here2")
+            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+            // window.location.reload()
           }
           return error.response;
         } else if (error.request) {

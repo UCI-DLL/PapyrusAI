@@ -21,7 +21,7 @@ export default function Login(props: LoginProps): JSX.Element {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
         }, 500);
       } else {
-        console.log("location", location.hash.split("&")[1].split("="))
+        console.log("location", location.hash)
         const token = location.hash.split("&")[1].split("=")[1];
         console.log("token", token)
         localStorage.setItem("papyrusai_access_token", token);

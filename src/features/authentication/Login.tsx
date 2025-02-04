@@ -21,18 +21,7 @@ export default function Login(props: LoginProps): JSX.Element {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
         }, 500);
       } else {
-        console.log("location", location.hash)
-        const hash = location.hash.split("&")
-        var token = "";
-        if (hash[0].startsWith("#id")) {
-          //get access token if normal login
-          token = location.hash.split("&")[1].split("=")[1];
-        } else {
-          //get access token if google login
-          token = location.hash.split("&")[0].split("=")[1];
-        }
-        // const 
-        console.log("token", token)
+        const token = location.hash.split("&")[1].split("=")[1];
         localStorage.setItem("papyrusai_access_token", token);
         setTimeout(() => {
           getUserInfo(token)
@@ -65,17 +54,13 @@ export default function Login(props: LoginProps): JSX.Element {
       })
       .catch(function (error) {
         if (error.code === "ERR_CANCELED") return;
-        if (error.code === "ERR_NETWORK") {
-          console.log("here1")
-          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-        }
+        if (error.code === "ERR_NETWORK") window.location.reload();
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           // showMsg(Object.values(error.response.data), "error");
           if (error.response.status === 401) {
-            console.log("here2")
-            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+            window.location.reload()
           }
           return error.response;
         } else if (error.request) {

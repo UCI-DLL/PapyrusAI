@@ -35,4 +35,36 @@
     flex-direction: row;
     justify-content: space-between;
   }
+
+  &__progressbar_row {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-evenly;
+
+    @media (max-width: global.$sm-break) {
+      flex-wrap: wrap;
+    }
+  }
+
+  &__progressbar_item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    width: 20%;
+
+    @media (max-width: global.$sm-break) {
+      width: 45%;
+    }
+  }
+
+  &__progressbar_text {
+    color: black;
+    text-align: center;
+
+    @media (max-width: global.$md-break) and (min-width: global.$sm-break) {
+      font-size: 70%;
+    }
+  }
 }

@@ -8,17 +8,22 @@ import {
   TableBody,
   TablePagination
 } from "@mui/material";
-import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import React, { useContext, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 import LinearProgress from '@mui/material/LinearProgress';
-import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
+import { buildStyles, CircularProgressbarWithChildren } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import { UserContext } from "../../utility/context/UserContext";
+import Get from "../../utility/Get";
+import { getCourse, getRaterModuleData, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
+import { CustomUserType } from "../../utility/types/UserTypes";
+import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 
 
 interface Column {
-  id: 'name' | 'claim' | 'counter' | 'evidence' | 'position';
+  id: 'name' | 'essays' | 'lead' | 'position' | 'claim' | 'counterclaim' | 'rebuttal' | 'evidence' | 'conclude';
   label: string;
   minWidth?: number;
   align?: 'right';
@@ -27,10 +32,22 @@ interface Column {
 
 const columns: readonly Column[] = [
   { id: 'name', label: 'Name', minWidth: 170 },
+  { id: 'essays', label: "Num Essays", minWidth: 100 },
+  { id: 'lead', label: 'Lead', minWidth: 100 },
+  {
+    id: 'position',
+    label: 'Position',
+    minWidth: 100,
+  },
   { id: 'claim', label: 'Claim', minWidth: 100 },
   {
-    id: 'counter',
+    id: 'counterclaim',
     label: 'Counterclaim',
+    minWidth: 100,
+  },
+  {
+    id: 'rebuttal',
+    label: 'Rebuttal',
     minWidth: 100,
   },
   {
@@ -39,59 +56,248 @@ const columns: readonly Column[] = [
     minWidth: 100,
   },
   {
-    id: 'position',
-    label: 'Position',
+    id: 'conclude',
+    label: 'Concluding Summary',
     minWidth: 100,
   },
+
 ];
 
 interface Data {
   name: string;
-  claim: boolean;
-  counter: boolean;
-  evidence: boolean;
+  essays: number;
+  lead: boolean;
   position: boolean;
+  claim: boolean;
+  counterclaim: boolean;
+  rebuttal: boolean;
+  evidence: boolean;
+  conclude: boolean;
+  username: string;
 }
 
 function createData(
   name: string,
-  claim: boolean,
-  counter: boolean,
-  evidence: boolean,
+  essays: number,
+  lead: boolean,
   position: boolean,
+  claim: boolean,
+  counterclaim: boolean,
+  rebuttal: boolean,
+  evidence: boolean,
+  conclude: boolean,
+  username: string
 ): Data {
-  return { name, claim, counter, evidence, position };
+  return { name, essays, lead, position, claim, counterclaim, rebuttal, evidence, conclude, username };
 }
 
-const rows = [
-  createData('Liam', false, true, false, true),
-  createData('Olivia', true, false, true, false),
-  createData('Noah', false, false, true, true),
-  createData('Emma', false, false, true, false),
-  createData('Oliver', true, true, true, false),
-  createData('Charlotte', true, false, true, true),
-  createData('James', false, true, false, true),
-  createData('Amelia', true, false, false, true),
-  createData('Elijah', false, true, true, false),
-  createData('Sophia', false, false, true, false),
-  createData('Mateo', true, false, true, false),
-  createData('Mia', false, false, false, true),
-  createData('Theodore', true, true, true, true),
-  createData('Isabella', true, false, true, false),
-  createData('William', false, true, false, false),
-];
+type RaterDataType = {
+  content: Array<Array<string>>,
+  conversationIndex: string,
+  courseId: string,
+  id: string,
+  input: string, // essay
+  moduleId: string,
+  timestamp: string,
+  username: string
+}
 
 
 export default function ModuleReports(): JSX.Element {
   let navigator = useNavigate();
+  let location = useLocation();
+  const { user } = useContext(UserContext);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const style = {
-    width: '100%',
-    bgcolor: 'background.paper',
-  };
-
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [raterData, setRaterData] = useState<Array<RaterDataType>>([]);
+  const [error, setError] = useState<string>();
+  const [userList, setUserList] = useState<Array<CustomUserType>>([]);
+  const [courseData, setCourseData] = useState<CourseType>();
+  const [moduleData, setModuleData] = useState<ModuleType>();
+  const [rows, setRows] = useState<Array<Data>>([]);
+  const [stats, setStats] = useState<{
+    lead: number,
+    position: number,
+    claim: number,
+    counterClaim: number,
+    rebuttal: number,
+    evidence: number,
+    conclude: number
+  }>()
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (user) {
+      setIsLoading(true);
+      if (
+        location.pathname &&
+        location.pathname.split("/") &&
+        location.pathname.split("/")[1] &&
+        location.pathname.split("/")[2] &&
+        location.pathname.split("/")[3]
+      ) {
+        const courseId = location.pathname.split("/")[2];
+        const moduleId = location.pathname.split("/")[3];
+
+        //Get user list
+        if (userList.length === 0) {
+          getUsersInCourseList(courseId, controller.signal);
+        }
+
+        //Get course and module data
+        Get(getCourse(courseId), controller.signal).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data && res.data.modules) {
+              setCourseData(res.data);
+              const module = res.data.modules.find((mod: ModuleType) => mod.id === moduleId)
+              setModuleData(module)
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res === undefined) {
+            } else {
+              //handle error
+              setError("Course Does Not Exist");
+              setIsLoading(false);
+            }
+          }
+        });
+
+        //Get rater data for module
+        Get(getRaterModuleData(courseId, moduleId), controller.signal).then(res => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //Get rater data for the module
+              res.data.forEach((item: any) => {
+                //convert the rater info to 2d array
+                const rater = item.content.split("\n").map((row: string) => row.split(","))
+                setRaterData((prev) => [...prev, { ...item, content: rater }])
+              })
+
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              if (res === undefined) {
+              } else {
+                // handle error
+                setError("No Data Found");
+              }
+            }
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+
+    return (() => {
+      setRaterData([]);
+      setUserList([]);
+      controller.abort();
+    });
+
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    if (userList.length > 0 && raterData.length > 0) {
+      userList.forEach(user => {
+        const userRater = raterData.filter(e => e.username === user.username); //TODO double check this with google users
+        const row = createData(
+          user.name + " " + user.family_name,
+          userRater.length,
+          userRater.some(e => e.content.some(c => c[4] === "0")),
+          userRater.some(e => e.content.some(c => c[4] === "1")),
+          userRater.some(e => e.content.some(c => c[4] === "2")),
+          userRater.some(e => e.content.some(c => c[4] === "3")),
+          userRater.some(e => e.content.some(c => c[4] === "4")),
+          userRater.some(e => e.content.some(c => c[4] === "5")),
+          userRater.some(e => e.content.some(c => c[4] === "6")),
+          user.username
+        )
+        setRows(prev => [...prev, row])
+      })
+    } else if (userList.length > 0 && moduleData && !moduleData.raterEnabled) {
+      //for modules that are not rater enabled, then just list out the students
+      userList.forEach(user => {
+        const row = createData(
+          user.name + " " + user.family_name,
+          0,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          user.username
+        )
+        setRows(prev => [...prev, row])
+      })
+    }
+  }, [userList, raterData, moduleData])
+
+  useEffect(() => {
+    if (raterData.length > 0) {
+      //calculate class stats
+      setStats({
+        lead: Math.round(getAverageOfDiscourseType(raterData, "0") * 100),
+        position: Math.round(getAverageOfDiscourseType(raterData, "1") * 100),
+        claim: Math.round(getAverageOfDiscourseType(raterData, "2") * 100),
+        counterClaim: Math.round(getAverageOfDiscourseType(raterData, "3") * 100),
+        rebuttal: Math.round(getAverageOfDiscourseType(raterData, "4") * 100),
+        evidence: Math.round(getAverageOfDiscourseType(raterData, "5") * 100),
+        conclude: Math.round(getAverageOfDiscourseType(raterData, "6") * 100)
+      })
+    }
+  }, [raterData])
+
+  function getAverageOfDiscourseType(raterArray: Array<RaterDataType>, type: string) {
+    let totalCount = 0;
+    let arrayLength = raterArray.length;
+
+    //this calculates how many essays have a discourse type of all essays 
+    raterArray.forEach((item) => {
+      let leadEntries = item.content.filter(e => e[4] === type);
+      totalCount += (leadEntries.length > 0 ? 1 : 0);
+    })
+    return totalCount > 0 ? totalCount / arrayLength : 0;
+  }
+
+
+  function getUsersInCourseList(course: string, signal: AbortSignal, nextToken?: string) {
+    var limit = 25;
+    Get(getUsersInCourse(course, limit, nextToken), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data.users) {
+          //filter out current user and email_verified 
+          var tempUserList = res.data.users.map((u: CustomUserType) => {
+            return {
+              name: u.name,
+              family_name: u.family_name,
+              email: u.email,
+              sub: u.sub,
+              username: u.username
+            }
+          });
+          setUserList((prev) => [...prev, ...tempUserList]);
+
+          //if the we get a nexttoken, then call for the next page
+          //handle pages
+          if (res.data.nextToken) {
+            getUsersInCourseList(course, signal, res.data.nextToken);
+          }
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // handle error
+      }
+      setIsLoading(false);
+    });
+  }
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -105,135 +311,203 @@ export default function ModuleReports(): JSX.Element {
 
   return !isLoading ? (
     <div className="reports">
-      <h3>LANG 101 Spring 2024</h3>
-      <hr />
-      <h4>Module Stats </h4>
-      &nbsp;
-      <div style={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-evenly" }}>
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", width: "20%" }}>
-          <CircularProgressbar
-            value={66}
-            text={`${66}%`}
-            styles={buildStyles({
-              // Whether to use rounded or flat corners on the ends - can use 'butt' or 'round'
-              strokeLinecap: 'butt',
-              // Colors
-              pathColor: '#ffd200',//`rgba(62, 152, 199, ${66 / 100})`,
-              textColor: '#000',
-              trailColor: '#d6d6d6', //white
-              backgroundColor: '#000',
-            })}
-          />
-          &nbsp;
-          <h5 style={{ textAlign: "center" }}>Claims</h5>
-        </div>
+      {error ? (
+        <div>{error}</div>
+      ) : (
+        <>
+          <h3>{courseData?.name}</h3>
 
-
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", width: "20%" }}>
-          <CircularProgressbar
-            value={45}
-            text={`${45}%`}
-            styles={buildStyles({
-              // Whether to use rounded or flat corners on the ends - can use 'butt' or 'round'
-              strokeLinecap: 'butt',
-              // Colors
-              pathColor: '#0064a4',//`rgba(62, 152, 199, ${66 / 100})`,
-              textColor: '#000',
-              trailColor: '#d6d6d6', //white
-              backgroundColor: '#000',
-            })}
-          />
-          &nbsp;
-          <h5 style={{ textAlign: "center" }}>Counterclaim</h5>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", width: "20%" }}>
-          <CircularProgressbar
-            value={78}
-            text={`${78}%`}
-            styles={buildStyles({
-              // Whether to use rounded or flat corners on the ends - can use 'butt' or 'round'
-              strokeLinecap: 'butt',
-              // Colors
-              pathColor: '#6aa2b8',//`rgba(62, 152, 199, ${66 / 100})`,
-              textColor: '#000',
-              trailColor: '#d6d6d6', //white
-              backgroundColor: '#000',
-            })}
-          />
-          &nbsp;
-          <h5 style={{ textAlign: "center" }}>Evidence</h5>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignContent: "center", width: "20%" }}>
-          <CircularProgressbar
-            value={22}
-            text={`${22}%`}
-            styles={buildStyles({
-              // Whether to use rounded or flat corners on the ends - can use 'butt' or 'round'
-              strokeLinecap: 'butt',
-              // Colors
-              pathColor: '#f78d2d',//`rgba(62, 152, 199, ${66 / 100})`,
-              textColor: '#000',
-              trailColor: '#d6d6d6', //white
-              backgroundColor: '#000',
-            })}
-          />
-          &nbsp;
-          <h5 style={{ textAlign: "center" }}>Position</h5>
-        </div>
-
-      </div>
-
-      <hr />
-
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 440 }} >
-          <Table stickyHeader aria-label="sticky table" >
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.id}
-                    align={column.align}
-                    style={{ minWidth: column.minWidth, backgroundColor: "white" }}
+          {stats ? (
+            <>
+              <hr />
+              <h4>{moduleData?.name} Stats</h4>
+              <div className="reports__progressbar_row">
+                <div className="reports__progressbar_item">
+                  <CircularProgressbarWithChildren
+                    value={stats.lead}
+                    background
+                    styles={buildStyles({
+                      strokeLinecap: 'round',
+                      pathColor: '#ffd200',
+                      textColor: '#000',
+                      trailColor: '#d6d6d6', //white
+                      backgroundColor: '#d6d6d6',
+                      textSize: 8,
+                      pathTransitionDuration: 0.15
+                    })}
                   >
-                    {column.label}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => {
-                  return (
-                    <TableRow hover role="checkbox" tabIndex={-1} key={row.name}>
-                      {columns.map((column) => {
-                        const value = row[column.id];
-                        return (
-                          <TableCell key={column.id} align={column.align}>
-                            {typeof value === 'boolean'
-                              ? value ? <CheckCircleOutlineIcon color="success" /> : <HighlightOffIcon color="error" />
-                              : value}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[10, 25, 100]}
-          component="div"
-          count={rows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </Paper>
+                    <div className="reports__progressbar_text">{`${stats.lead}%`}</div>
+                    <div className="reports__progressbar_text">{`Lead`}</div>
+                  </CircularProgressbarWithChildren>
+                </div>
 
+                <div className="reports__progressbar_item">
+                  <CircularProgressbarWithChildren
+                    value={stats.position}
+                    background
+                    styles={buildStyles({
+                      strokeLinecap: 'round',
+                      pathColor: '#0064a4',
+                      textColor: '#000',
+                      trailColor: '#d6d6d6', //white
+                      backgroundColor: '#d6d6d6',
+                      textSize: 8,
+                      pathTransitionDuration: 0.15
+                    })}
+                  >
+                    <div className="reports__progressbar_text">{`${stats.position}%`}</div>
+                    <div className="reports__progressbar_text">{`Position`}</div>
+                  </CircularProgressbarWithChildren>
+                </div>
+                <div className="reports__progressbar_item">
+                  <CircularProgressbarWithChildren
+                    value={stats.claim}
+                    background
+                    styles={buildStyles({
+                      strokeLinecap: 'round',
+                      pathColor: '#6aa2b8',
+                      textColor: '#000',
+                      trailColor: '#d6d6d6', //white
+                      backgroundColor: '#d6d6d6',
+                      textSize: 8,
+                      pathTransitionDuration: 0.15
+                    })}
+                  >
+                    <div className="reports__progressbar_text">{`${stats.claim}%`}</div>
+                    <div className="reports__progressbar_text">{`Claim`}</div>
+                  </CircularProgressbarWithChildren>
+                </div>
+                <div className="reports__progressbar_item">
+                  <CircularProgressbarWithChildren
+                    value={stats.counterClaim}
+                    background
+                    styles={buildStyles({
+                      strokeLinecap: 'round',
+                      pathColor: '#f78d2d',
+                      textColor: '#000',
+                      trailColor: '#d6d6d6', //white
+                      backgroundColor: '#d6d6d6',
+                      textSize: 8,
+                      pathTransitionDuration: 0.15
+                    })}
+                  >
+                    <div className="reports__progressbar_text">{`${stats.counterClaim}%`}</div>
+                    <div className="reports__progressbar_text">{`Counterclaim`}</div>
+                  </CircularProgressbarWithChildren>
+                </div>
+              </div>
+              <div className="reports__progressbar_row">
+                <div className="reports__progressbar_item">
+                  <CircularProgressbarWithChildren
+                    value={stats.rebuttal}
+                    background
+                    styles={buildStyles({
+                      strokeLinecap: 'round',
+                      pathColor: '#934D6D',
+                      textColor: '#000',
+                      trailColor: '#d6d6d6', //white
+                      backgroundColor: '#d6d6d6',
+                      textSize: 8,
+                      pathTransitionDuration: 0.15
+                    })}
+                  >
+                    <div className="reports__progressbar_text">{`${stats.rebuttal}%`}</div>
+                    <div className="reports__progressbar_text">{`Rebuttal`}</div>
+                  </CircularProgressbarWithChildren>
+                </div>
+
+                <div className="reports__progressbar_item">
+                  <CircularProgressbarWithChildren
+                    value={stats.evidence}
+                    background
+                    styles={buildStyles({
+                      strokeLinecap: 'round',
+                      pathColor: '#8D91C7',
+                      textColor: '#000',
+                      trailColor: '#d6d6d6', //white
+                      backgroundColor: '#d6d6d6',
+                      textSize: 8,
+                      pathTransitionDuration: 0.15
+                    })}
+                  >
+                    <div className="reports__progressbar_text">{`${stats.evidence}%`}</div>
+                    <div className="reports__progressbar_text">{`Evidence`}</div>
+                  </CircularProgressbarWithChildren>
+                </div>
+                <div className="reports__progressbar_item">
+                  <CircularProgressbarWithChildren
+                    value={stats.conclude}
+                    background
+                    styles={buildStyles({
+                      strokeLinecap: 'round',
+                      pathColor: '#7ab800',
+                      textColor: '#000',
+                      trailColor: '#d6d6d6', //white
+                      backgroundColor: '#d6d6d6',
+                      textSize: 8,
+                      pathTransitionDuration: 0.15
+                    })}
+                  >
+                    <div className="reports__progressbar_text">{`${stats.conclude}%`}</div>
+                    <div className="reports__progressbar_text">{`Concluding Summary`}</div>
+                  </CircularProgressbarWithChildren>
+                </div>
+              </div>
+            </>
+          ) : <></>}
+
+          <hr />
+
+          <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+            <TableContainer sx={{ maxHeight: 440, border: "1px solid black" }}>
+              <Table stickyHeader aria-label="rater table" >
+                <TableHead >
+                  <TableRow>
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        align={column.align}
+                        style={{ minWidth: column.minWidth }}
+                      >
+                        {column.label}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((row) => {
+                      return (
+                        <TableRow hover role="checkbox" tabIndex={-1} key={row.name}>
+                          {columns.map((column) => {
+                            const value = row[column.id];
+                            return ( //add button on row to view user's conversations
+                              <TableCell key={column.id} align={column.align}>
+                                {typeof value === 'boolean'
+                                  ? value ? <CheckCircleOutlineIcon color="success" /> : <HighlightOffIcon color="error" />
+                                  : <button onClick={() => navigator(`/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`)}>{value}</button>}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      );
+                    })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[10, 25, 100]}
+              component="div"
+              count={rows.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </Paper>
+        </>
+      )}
     </div>
   ) : (
     <LinearProgress />

@@ -533,7 +533,7 @@ export default function Chat(): JSX.Element {
     setIsLoading(true);
     //check that message length is less that 100000
     setChatError(undefined);
-    if (essay.length < 100000 && essay.length > 0) {
+    if (essay.length < 100000 && essay.length > 150) {
       onSendEssay(essay);
       //set temp essay message
       const tempTimestamp = Date.now();
@@ -553,7 +553,7 @@ export default function Chat(): JSX.Element {
       if (messages) {
         setMessages((prev) => [...prev, responseMessage]);
       }
-    } else if (essay.length < 1) {
+    } else if (essay.length <= 150) {
       setChatError("Message Too Short");
     } else {
       setChatError("Message Too Long");

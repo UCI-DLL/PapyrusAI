@@ -76,7 +76,7 @@ export default function RaterEssay(props: RaterEssayProps): JSX.Element {
 
   useEffect(() => {
     //https://stackoverflow.com/questions/58532751/highlighting-a-string-based-on-given-indices
-    console.log("rater", props);
+    console.log("Rater", props);
 
     function removeOverlapsArray(dataArray: any, byDiscourse = false) {
       // Convert array of arrays into objects for easier manipulation
@@ -91,13 +91,14 @@ export default function RaterEssay(props: RaterEssayProps): JSX.Element {
         );
 
       // Parse relevant fields as integers or floats
+      //Hard code position is more important than lead
+      // If position discourse type, then change the confidence lvl to 1 so that it is always shown
       const parsedData = data.map((item: any) => ({
         ...item,
         start: parseInt(item.start, 10),
         end: parseInt(item.end, 10),
-        score_discourse_type: parseFloat(item.score_discourse_type),
+        score_discourse_type: item.discourse_type === '1' ? 1 : parseFloat(item.score_discourse_type),
       }));
-
       // Sort data by start index and, in case of ties, by end index
       parsedData.sort((a: any, b: any) => {
         if (a.start === b.start) return a.end - b.end;

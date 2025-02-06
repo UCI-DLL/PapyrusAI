@@ -84,6 +84,11 @@ export const MessageLeft = (props: MessageProps) => {
     </React.Fragment>
   );
 
+  //if empty message
+  if (props.message === "" && !props.typing) {
+    return <></>;
+  }
+
   return (props.visible === undefined || props.visible || props.isInstructor) ? (
     <div
       className={"message__row-left"}
@@ -143,16 +148,17 @@ export const MessageLeft = (props: MessageProps) => {
         </div>
       </div>
       {props.expandableMessage ? (
-        <button
+        <Button
           onClick={() => setShowExpandableMessage(true)}
           className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}
+          variant="outlined"
         >
           {props.typing ? (
             <CustomTypingIndicator />
           ) : (
             <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
           )}
-        </button>
+        </Button>
       ) : (
         <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__left-message message__out-context" : "message__left-message"}>
           {props.typing ? (

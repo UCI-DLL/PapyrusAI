@@ -5,20 +5,38 @@ import {
   IconButton,
   InputAdornment,
   InputLabel,
+  ListItemText,
+  MenuItem,
   OutlinedInput,
+  Select,
+  SelectChangeEvent,
 } from "@mui/material";
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { Modal } from "../../components/Modal";
 import DocumentModal from "./DocumentModal";
+import { PromptType } from "../../utility/types/CourseTypes";
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+    },
+  },
+};
 
 interface EssayWizardProps {
-  returnEssay: (selectedPrompt: string) => void;
+  prompts?: Array<PromptType> | undefined;
+  returnEssay: (essay: string, returnMessage?: string) => void;
 }
 
 export default function EssayWizard({
   returnEssay,
+  prompts,
 }: EssayWizardProps): JSX.Element {
   const [essay, setEssay] = useState<string>("");
+  const [selectedPrompt, setSelectedPrompt] = useState<string>("");
   const [error, setError] = useState("");
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
   //add file menu
@@ -33,11 +51,23 @@ export default function EssayWizard({
     setEssay(docText)
   }
 
+  const handleSelectChange = (event: SelectChangeEvent) => {
+    setSelectedPrompt(event.target.value as string);
+  };
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (essay.length > 0) {
       setError("");
-      returnEssay(essay)
+      if (prompts) {
+        if (selectedPrompt) {
+          returnEssay(essay, selectedPrompt)
+        } else {
+          setError("Select a prompt")
+        }
+      } else {
+        returnEssay(essay)
+      }
     } else {
       setError("Essay Missing")
     }
@@ -57,6 +87,29 @@ export default function EssayWizard({
       >
         <DocumentModal returnDocText={returnDocText} />
       </Modal>
+      {prompts ? (
+        <div>
+          <h6>Select prompt option</h6>
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
+            {/* add dropdown to handle prompts  */}
+            <Select
+              labelId="wizard-prompt-select"
+              id="wizard-prompt-select"
+              value={selectedPrompt}
+              onChange={handleSelectChange}
+              MenuProps={MenuProps}
+              fullWidth
+              required
+            >
+              {prompts.map((prompt, index) => (
+                <MenuItem key={index} value={prompt.id}>
+                  <ListItemText primary={prompt.name} />
+                </MenuItem>
+              ))}
+            </Select>
+          </div>
+        </div>
+      ) : <></>}
       <h6>Enter Essay</h6>
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
         <form onSubmit={handleSubmit}>
@@ -121,7 +174,8 @@ export default function EssayWizard({
           variant="contained"
           type="submit"
           onClick={handleSubmit}
-          disabled={essay.length < 1}
+          disabled={essay.length < 1 || (prompts && !selectedPrompt)}
+        //disabled if no essay OR if we have prompts but non selected
         >
           Send Essay
         </Button>

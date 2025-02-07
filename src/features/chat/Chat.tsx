@@ -266,23 +266,13 @@ export default function Chat(): JSX.Element {
     // if rater enabled module, then show the rater essay wizard essay first and then
     // show the normal prompt wizard afterwards
     if (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled) {
-      if (viewUser &&
-        user &&
-        user.username === viewUser.username &&
-        moduleInfo &&
-        messages.length > 0 &&
-        messages.length < 5 &&
-        moduleInfo.prompts.length !== 0
-      ) {
-        setShowWizard(true)
-      } else {
-        // setShowWizard(false)
-      }
+      setShowWizard(false)
     } else {
       if (viewUser &&
         user &&
         user.username === viewUser.username &&
         moduleInfo &&
+        (moduleInfo.raterEnabled === undefined || !moduleInfo.raterEnabled) &&
         messages.length < 1 &&
         moduleInfo.prompts.length !== 0
       ) {
@@ -451,7 +441,7 @@ export default function Chat(): JSX.Element {
     }
   }, [messages, isConnected]);
 
-  const onSendEssay = useCallback((essay: string) => {
+  const onSendEssay = useCallback((essay: string, message?: string) => {
     //save message in message array
     setChatError(undefined);
     if (isConnected) {
@@ -461,11 +451,16 @@ export default function Chat(): JSX.Element {
       } else if (essay.length < 750) { //~5 characters in a word * 150 words
         setChatError("Essay Too Short to Evaluate");
       } else {
-        socket.current?.send(JSON.stringify({
+        var sendEssay: any = {
           "action": "raterEssay",
           "essay": essay,
           "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
-        }));
+        }
+        //add optional message/prompt
+        if (message) {
+          sendEssay["message"] = message;
+        }
+        socket.current?.send(JSON.stringify(sendEssay));
       }
       //Set the typing indicator for chatgpt while we wait for a response
       setShowTypingIndicator(true);
@@ -529,12 +524,16 @@ export default function Chat(): JSX.Element {
     }
   }
 
-  function handleWizardReturnEssay(essay: string) {
+  function handleWizardReturnEssay(essay: string, message?: string) { //right now message is a prompt
     setIsLoading(true);
     //check that message length is less that 100000
     setChatError(undefined);
+    var actualPrompt;
+    if (message && moduleInfo) {
+      actualPrompt = moduleInfo.prompts.filter(x => x.id === message);
+    }
     if (essay.length < 100000 && essay.length > 150) {
-      onSendEssay(essay);
+      onSendEssay(essay, actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "");
       //set temp essay message
       const tempTimestamp = Date.now();
       const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
@@ -549,6 +548,25 @@ export default function Chat(): JSX.Element {
         userVisible: true,
         raterReference: "",
         expandableMessage: "Loading...",
+      }
+      if (messages && message && moduleInfo && moduleInfo.showInitialPrompt) {
+        //only show if module settings show init prompt true
+        //set temp prompt message
+        const tempTimestamp2 = Date.now();
+        const messageTempId2 = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        var responseMessage2: MessageType = {
+          id: tempTimestamp2.toString(),
+          content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
+          messageType: (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
+          role: "user",
+          sender: user ? user.name : "You",
+          timestamp: messageTempId2,
+          promptId: actualPrompt ? actualPrompt[0].id : null,
+          userVisible: moduleInfo?.showInitialPrompt ? true : false,
+          raterReference: "",
+          expandableMessage: "",
+        }
+        setMessages((prev) => [...prev, responseMessage2]);
       }
       if (messages) {
         setMessages((prev) => [...prev, responseMessage]);
@@ -939,9 +957,10 @@ export default function Chat(): JSX.Element {
         {user &&
           viewUser &&
           user.username === viewUser.username &&
-          (messages.length < 1) && (moduleInfo.prompts.length !== 0) &&
+          (messages.length < 1) &&
           moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled && (
             <EssayWizard
+              prompts={moduleInfo.prompts && moduleInfo.prompts.length > 0 ? moduleInfo.prompts : undefined}
               returnEssay={handleWizardReturnEssay}
             />
           )}

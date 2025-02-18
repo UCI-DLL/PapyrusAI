@@ -127,12 +127,11 @@ function App(): JSX.Element {
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       });
-    } else if (user && (!user.name || !user.family_name || user.name === "")) {
+    } else if (user && (!user.name || user.name === "")) {
       //if user is missing name, then open the modal
       //NOTE: family_name optional (aka can be empty string)
       setShowUpdateUserInfoModal(true);
     }//else all is good
-    // eslint-disable-next-line
   }, [user]);
 
   //handle log out
@@ -179,8 +178,21 @@ function App(): JSX.Element {
                 >
                   <MissingUserInfoForm
                     user={user ? user : undefined}
-                    closeForm={() => {
+                    closeForm={(updatedUser) => {
                       //Set user with new information
+                      if (user) {
+                        setUser((prev) => {
+                          if (prev)
+                            return { ...prev, name: updatedUser.name, family_name: updatedUser.family_name }
+                          else return null
+                        })
+                      }
+                      if (localStorage.getItem("papyrusai_user") && localStorage.getItem("papyrusai_user") !== null) {
+                        var old = JSON.parse(localStorage.getItem("papyrusai_user") ?? "");
+                        old.name = updatedUser.name;
+                        old.family_name = updatedUser.family_name;
+                        localStorage.setItem("papyrusai_user", JSON.stringify(old));
+                      }
                       //then close modal
                       setShowUpdateUserInfoModal(false);
                     }}

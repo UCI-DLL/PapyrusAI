@@ -123,17 +123,36 @@ export function postMoveUserPromptToUserFolder(folderid: string, promptid: strin
  * RAG stuff
  */
 
-export function getSignedS3BucketUploadOrgFolder(folderId: string, fileId: string) {
+export function getSignedS3BucketUploadOrgFolderRag(folderId: string, fileId: string) {
   return `ragfile/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function getSignedS3BucketUploadUserFolder(folderId: string, fileId: string) {
+export function getSignedS3BucketUploadUserFolderRag(folderId: string, fileId: string) {
   return `ragfile/upload/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function getSignedS3BucketDownloadFile(fileId: string) {
+export function getSignedS3BucketDownloadFileRag(fileId: string) {
   return `ragfile/download/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
+
+
+/**
+ * Document endpoints
+ */
+
+export function getSignedS3BucketUploadOrgFolder(folderId: string, fileId: string) {
+  return `document/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+}
+
+export function getSignedS3BucketUploadUserFolder(folderId: string, fileId: string) {
+  return `document/upload/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+}
+
+export function getSignedS3BucketDownloadFile(fileId: string) {
+  return `document/download/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+}
+
+
 /**
  * files in folders
  */

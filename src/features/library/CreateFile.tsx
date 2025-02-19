@@ -287,7 +287,7 @@ export default function CreateFile(): JSX.Element {
           if (res && res.status && res.status < 300) {
             //handle upload to s3 -> handleUploadToS3
             if (res.data) {
-              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+              handleUploadToS3(res.data.url, res.data.id);
             } else {
               //handle error
               setAlert({ message: "Error creating file. Please try again later", type: "error" })
@@ -308,7 +308,7 @@ export default function CreateFile(): JSX.Element {
           if (res && res.status && res.status < 300) {
             //handle upload to s3 -> handleUploadToS3
             if (res.data) {
-              handleUploadToS3(res.data.url, res.data.metadataUrl, fileId);
+              handleUploadToS3(res.data.url, fileId);
             } else {
               //handle error
               setAlert({ message: "Error creating file. Please try again later", type: "error" })
@@ -329,35 +329,17 @@ export default function CreateFile(): JSX.Element {
     }
   }
 
-  async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
+  async function handleUploadToS3(url: string, id: string) {
     try {
       // Upload original file directly to s3
       await axios.put(url, selectedFiles, {
         headers: {
           'Content-Type': selectedFiles.type
         }
-      }).then(val => {
-        handleSubmit(id);
-      });
-
-      // Create corresponding metadata
-      const metadata = {
-        metadataAttributes: {
-          filename: newFile.name,
-          fileId: id,
-        }
-      };
-
-      const metadataBlob = new Blob([JSON.stringify(metadata)]);
-
-      // Upload the metadata
-      await axios.put(metadataUrl, metadataBlob, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
       }).then(res => {
         if (res && res.status && res.status < 300) {
-          // metadata complete
+          handleSubmit(id);
+
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
@@ -369,6 +351,7 @@ export default function CreateFile(): JSX.Element {
         }
       });
 
+  
     } catch (error) {
       console.error((error as Error).message);
     }

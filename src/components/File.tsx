@@ -26,8 +26,8 @@ import {
   postMoveOrgFileToUserFolder,
   postMoveUserFileToOrgFolder,
   postMoveUserFileToUserFolder,
-  postUpdateOrgFile,
-  postUpdateUserFile,
+  putUpdateOrgFile,
+  putUpdateUserFile,
 } from "../utility/endpoints/FolderEndpoints";
 import { Modal } from "./Modal";
 import { useNavigate } from "react-router";
@@ -166,8 +166,8 @@ export const File = (props: FileProps) => {
           isDeleted: true,
           tags: props.file.tags,
         }
-        // post data back
-        Put(postUpdateOrgFile(props.folder.id, props.file.id), dataToSend).then((res) => {
+        // put data back
+        Put(putUpdateOrgFile(props.folder.id, props.file.id), dataToSend).then((res) => {
           if (res.status && res.status < 300) {
             if (res.data && res.data) {
               //pop up notifying user of delete
@@ -187,8 +187,8 @@ export const File = (props: FileProps) => {
           isDeleted: true,
           tags: props.file.tags,
         }
-        // post data back
-        Put(postUpdateUserFile(props.folder.id, props.file.id), dataToSend).then((res) => {
+        // put data back
+        Put(putUpdateUserFile(props.folder.id, props.file.id), dataToSend).then((res) => {
           if (res.status && res.status < 300) {
             if (res.data && res.data) {
               //pop up notifying user of delete
@@ -400,7 +400,11 @@ export const File = (props: FileProps) => {
             )
           }
           title={
-            <button className="c-file__title" onClick={edit}>
+            <button className="c-file__title" onClick={(e) => (props.noShowMenu && props.onClick) ?
+              (props.showRemove) ?
+                e.preventDefault() :
+                props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile ?? false, "file") : edit()
+            }>
               <InsertDriveFileIcon />
               <div>{props.file.name}</div>
             </button>

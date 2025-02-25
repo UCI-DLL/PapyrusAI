@@ -206,6 +206,7 @@ export default function CreateFile(): JSX.Element {
 
   function handleSubmit(id: string) {
     if (fileInfo && fileInfo.isOrgFolder) {
+      setIsLoading(true);
       const dataToSend = {
         name: newFile.name,
         isDeleted: false,
@@ -227,9 +228,11 @@ export default function CreateFile(): JSX.Element {
             setAlert({ message: "File could not be created. Try again later.", type: "error" });
           }
         }
+        setIsLoading(false)
         navigator(`/library/org/${fileInfo.folderId}`);
       });
     } else if (fileInfo) {
+      setIsLoading(true);
       const dataToSend = {
         name: newFile.name,
         isDeleted: false,
@@ -249,6 +252,7 @@ export default function CreateFile(): JSX.Element {
           // set errors
           setAlert({ message: "File could not be created. Try again later.", type: "error" })
         }
+        setIsLoading(false)
         navigator(`/library/${fileInfo.folderId}`);
       });
     }
@@ -279,6 +283,7 @@ export default function CreateFile(): JSX.Element {
     }
     // Handle here
     if (fileInfo) {
+      setIsLoading(true)
       const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : "";
       const fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
       //if is org folder, then upload to org folder
@@ -287,7 +292,7 @@ export default function CreateFile(): JSX.Element {
           if (res && res.status && res.status < 300) {
             //handle upload to s3 -> handleUploadToS3
             if (res.data) {
-              handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+              handleUploadToS3(res.data.url, res.data.id);
             } else {
               //handle error
               setAlert({ message: "Error creating file. Please try again later", type: "error" })
@@ -308,7 +313,7 @@ export default function CreateFile(): JSX.Element {
           if (res && res.status && res.status < 300) {
             //handle upload to s3 -> handleUploadToS3
             if (res.data) {
-              handleUploadToS3(res.data.url, res.data.metadataUrl, fileId);
+              handleUploadToS3(res.data.url, fileId);
             } else {
               //handle error
               setAlert({ message: "Error creating file. Please try again later", type: "error" })
@@ -329,35 +334,17 @@ export default function CreateFile(): JSX.Element {
     }
   }
 
-  async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
+  async function handleUploadToS3(url: string, id: string) {
     try {
       // Upload original file directly to s3
       await axios.put(url, selectedFiles, {
         headers: {
           'Content-Type': selectedFiles.type
         }
-      }).then(val => {
-        handleSubmit(id);
-      });
-
-      // Create corresponding metadata
-      const metadata = {
-        metadataAttributes: {
-          filename: newFile.name,
-          fileId: id,
-        }
-      };
-
-      const metadataBlob = new Blob([JSON.stringify(metadata)]);
-
-      // Upload the metadata
-      await axios.put(metadataUrl, metadataBlob, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
       }).then(res => {
         if (res && res.status && res.status < 300) {
-          // metadata complete
+          handleSubmit(id);
+
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
@@ -368,6 +355,7 @@ export default function CreateFile(): JSX.Element {
           }
         }
       });
+
 
     } catch (error) {
       console.error((error as Error).message);
@@ -403,7 +391,7 @@ export default function CreateFile(): JSX.Element {
             ref={anchorRefSave}
             aria-label="Button group with a nested menu"
           >
-            <Button onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
+            <Button disabled={isLoading} onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
             <Button
               size="small"
               aria-controls={openSave ? 'split-button-menu' : undefined}
@@ -411,6 +399,7 @@ export default function CreateFile(): JSX.Element {
               aria-label="select save and activation strategy"
               aria-haspopup="menu"
               onClick={handleToggle}
+              disabled={isLoading}
             >
               <ArrowDropDownIcon />
             </Button>
@@ -477,6 +466,7 @@ export default function CreateFile(): JSX.Element {
             ref={fileRef}
             hidden
             type="file"
+            disabled={isLoading}
             onChange={handleFileSelect}
           />
           {!selectedFiles?.name && (
@@ -485,6 +475,7 @@ export default function CreateFile(): JSX.Element {
               component="label"
               style={{ textTransform: 'none' }}
               onClick={() => fileRef.current?.click()}
+              disabled={isLoading}
             >
               Choose file to upload
             </Button>
@@ -495,6 +486,7 @@ export default function CreateFile(): JSX.Element {
               component="label"
               style={{ textTransform: 'none' }}
               onClick={onUpdate}
+              disabled={isLoading}
             >
               <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
               <span style={{ padding: '10px' }}> Change</span>
@@ -524,6 +516,7 @@ export default function CreateFile(): JSX.Element {
               label="Tags"
               MenuProps={MenuProps}
               fullWidth
+              disabled={isLoading}
             >
               {tagList.map((tag, index) => (
                 <MenuItem key={index} value={tag.id}>

@@ -54,7 +54,8 @@ export type FileType = {
   tags: Array<string>,
   isOrganizationFile: boolean,
   folderId?: string,
-  url?: string,
+  hiddenMessageId: string,
+  fileReference: string,
 }
 
 export type FolderType = {

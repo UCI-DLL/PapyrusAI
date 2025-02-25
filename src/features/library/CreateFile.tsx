@@ -206,6 +206,7 @@ export default function CreateFile(): JSX.Element {
 
   function handleSubmit(id: string) {
     if (fileInfo && fileInfo.isOrgFolder) {
+      setIsLoading(true);
       const dataToSend = {
         name: newFile.name,
         isDeleted: false,
@@ -227,9 +228,11 @@ export default function CreateFile(): JSX.Element {
             setAlert({ message: "File could not be created. Try again later.", type: "error" });
           }
         }
+        setIsLoading(false)
         navigator(`/library/org/${fileInfo.folderId}`);
       });
     } else if (fileInfo) {
+      setIsLoading(true);
       const dataToSend = {
         name: newFile.name,
         isDeleted: false,
@@ -249,6 +252,7 @@ export default function CreateFile(): JSX.Element {
           // set errors
           setAlert({ message: "File could not be created. Try again later.", type: "error" })
         }
+        setIsLoading(false)
         navigator(`/library/${fileInfo.folderId}`);
       });
     }
@@ -279,6 +283,7 @@ export default function CreateFile(): JSX.Element {
     }
     // Handle here
     if (fileInfo) {
+      setIsLoading(true)
       const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : "";
       const fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
       //if is org folder, then upload to org folder
@@ -351,7 +356,7 @@ export default function CreateFile(): JSX.Element {
         }
       });
 
-  
+
     } catch (error) {
       console.error((error as Error).message);
     }
@@ -386,7 +391,7 @@ export default function CreateFile(): JSX.Element {
             ref={anchorRefSave}
             aria-label="Button group with a nested menu"
           >
-            <Button onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
+            <Button disabled={isLoading} onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
             <Button
               size="small"
               aria-controls={openSave ? 'split-button-menu' : undefined}
@@ -394,6 +399,7 @@ export default function CreateFile(): JSX.Element {
               aria-label="select save and activation strategy"
               aria-haspopup="menu"
               onClick={handleToggle}
+              disabled={isLoading}
             >
               <ArrowDropDownIcon />
             </Button>
@@ -460,6 +466,7 @@ export default function CreateFile(): JSX.Element {
             ref={fileRef}
             hidden
             type="file"
+            disabled={isLoading}
             onChange={handleFileSelect}
           />
           {!selectedFiles?.name && (
@@ -468,6 +475,7 @@ export default function CreateFile(): JSX.Element {
               component="label"
               style={{ textTransform: 'none' }}
               onClick={() => fileRef.current?.click()}
+              disabled={isLoading}
             >
               Choose file to upload
             </Button>
@@ -478,6 +486,7 @@ export default function CreateFile(): JSX.Element {
               component="label"
               style={{ textTransform: 'none' }}
               onClick={onUpdate}
+              disabled={isLoading}
             >
               <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
               <span style={{ padding: '10px' }}> Change</span>
@@ -507,6 +516,7 @@ export default function CreateFile(): JSX.Element {
               label="Tags"
               MenuProps={MenuProps}
               fullWidth
+              disabled={isLoading}
             >
               {tagList.map((tag, index) => (
                 <MenuItem key={index} value={tag.id}>

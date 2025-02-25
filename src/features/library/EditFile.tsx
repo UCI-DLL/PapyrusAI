@@ -28,7 +28,6 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Get from "../../utility/Get";
-import Post from "../../utility/Post";
 import { FileType, TagType } from "../../utility/types/CourseTypes";
 import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -40,11 +39,13 @@ import {
   getSignedS3BucketUploadOrgFolder,
   getSignedS3BucketUploadUserFolder,
   getUserFile,
-  postUpdateOrgFile,
-  postUpdateUserFile
+  putUpdateOrgFile,
+  putUpdateUserFile
 } from "../../utility/endpoints/FolderEndpoints";
 import axios from "axios";
 import { Document, Page, pdfjs } from 'react-pdf';
+import Put from "../../utility/Put";
+import DocViewer from "react-doc-viewer";
 
 
 const ITEM_HEIGHT = 48;
@@ -189,25 +190,39 @@ export default function EditFile(): JSX.Element {
           if (res.data) {
             //also set session
             setFile(res.data);
-            Get(getSignedS3BucketDownloadFile(fileId), signal).then(res1 => {
-              if (res1 && res1.status && res1.status < 300) {
-                if (res1.data) {
-                  //also set session
-                  setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: res1.data.url })
-                }
-              } else if (res1 && res1.status === 401) {
-                navigator("/login");
-              } else {
-                if (res1 === undefined) {
+            if (res.data.fileReference) {
+              //pass fileReference
+              Get(getSignedS3BucketDownloadFile(res.data.fileReference), signal).then(async res1 => {
+                if (res1 && res1.status && res1.status < 300) {
+                  if (res1.data) {
+                    //also set session
+                    //if txt file, get txt to replace url
+                    if (res.data.fileReference.split(".")[1] === "txt") {
+                      const temp = await fetch(res1.data.url).then((r) => {
+                        return r.text()
+                      })
+                      setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: temp })
+                    } else {
+                      setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: res1.data.url })
+                    }
+                  }
+                } else if (res1 && res1.status === 401) {
+                  navigator("/login");
                 } else {
-                  //handle error
-                  //redirect to file list
-                  navigator("/library");
-                  setAlert({ message: "File Does Not Exist", type: "error" });
+                  if (res1 === undefined) {
+                  } else {
+                    //handle error
+                    //redirect to file list
+                    navigator("/library");
+                    setAlert({ message: "File Does Not Exist", type: "error" });
+                  }
                 }
-              }
+                setIsLoading(false);
+              });
+            } else {
+              setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: "" })
               setIsLoading(false);
-            });
+            }
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -228,25 +243,39 @@ export default function EditFile(): JSX.Element {
           if (res.data) {
             //also set session
             setFile(res.data);
-            Get(getSignedS3BucketDownloadFile(fileId), signal).then(res1 => {
-              if (res1 && res1.status && res1.status < 300) {
-                if (res1.data) {
-                  //also set session
-                  setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: res1.data.url })
-                }
-              } else if (res1 && res1.status === 401) {
-                navigator("/login");
-              } else {
-                if (res1 === undefined) {
+            if (res.data.fileReference) {
+              //pass fileReference
+              Get(getSignedS3BucketDownloadFile(res.data.fileReference), signal).then(async res1 => {
+                if (res1 && res1.status && res1.status < 300) {
+                  if (res1.data) {
+                    //also set session
+                    //if txt file, get txt to replace url
+                    if (res.data.fileReference.split(".")[1] === "txt") {
+                      const temp = await fetch(res1.data.url).then((r) => {
+                        return r.text()
+                      })
+                      setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: temp })
+                    } else {
+                      setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: res1.data.url })
+                    }
+                  }
+                } else if (res1 && res1.status === 401) {
+                  navigator("/login");
                 } else {
-                  //handle error
-                  //redirect to file list
-                  navigator("/library");
-                  setAlert({ message: "File Does Not Exist", type: "error" });
+                  if (res1 === undefined) {
+                  } else {
+                    //handle error
+                    //redirect to file list
+                    navigator("/library");
+                    setAlert({ message: "File Does Not Exist", type: "error" });
+                  }
                 }
-              }
-              setIsLoading(false);
-            });
+                setIsLoading(false);
+              });
+            } else {
+              setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: "" })
+              setIsLoading(false)
+            }
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -340,8 +369,8 @@ export default function EditFile(): JSX.Element {
       id: id
     }
     if (fileInfo && fileInfo.isOrgFolder) {
-      // post data back
-      Post(postUpdateOrgFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
+      // put data back
+      Put(putUpdateOrgFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of update
@@ -359,8 +388,8 @@ export default function EditFile(): JSX.Element {
         setIsLoading(false);
       });
     } else if (fileInfo) {
-      // post data back
-      Post(postUpdateUserFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
+      // put data back
+      Put(putUpdateUserFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of updated
@@ -502,6 +531,73 @@ export default function EditFile(): JSX.Element {
     }
   }
 
+  function renderFile(): React.JSX.Element {
+    if (file && file.fileReference) {
+      switch (file.fileReference.split(".")[1]) {
+        case "txt": {
+          return (
+            <div>{newFile && newFile.url ? newFile.url : ""}</div>
+          );
+        }
+        case "pdf":
+          // {/* https://www.geeksforgeeks.org/how-to-display-a-pdf-as-an-image-in-react-app-using-url/ */}
+          return (
+            <div>
+              <div>Current File</div>
+              <div style={{ display: "flex", flexDirection: "row" }}>
+                <IconButton
+                  type="button"
+                  disabled={pageNumber <= 1}
+                  onClick={previousPage}
+                  className="Pre"
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+                <div style={{ alignSelf: "center" }}>
+                  Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
+                </div>
+                <IconButton
+                  type="button"
+                  disabled={pageNumber >= numPages}
+                  onClick={nextPage}
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              </div>
+              <Document
+                file={newFile.url}
+                onLoadSuccess={onDocumentLoadSuccess}>
+                <Page pageNumber={pageNumber} renderTextLayer={false} renderAnnotationLayer={false} />
+              </Document>
+            </div>
+          )
+        case "png":
+          return (
+            <img style={{ width: "100%" }} src={newFile && newFile.url ? newFile.url : ""} alt="File" />
+          )
+        case "jpg":
+          return (
+            <img style={{ width: "100%" }} src={newFile && newFile.url ? newFile.url : ""} alt="File" />
+          )
+        case "jpeg":
+          return (
+            <img style={{ width: "100%" }} src={newFile && newFile.url ? newFile.url : ""} alt="File" />
+          )
+        case "docx":
+          const doc = [{ uri: newFile && newFile.url ? newFile.url : "" }];
+          //TODO check this
+          return <DocViewer
+            documents={doc}
+          />;
+        default:
+          return <></>
+      }
+    } else {
+      return <></>
+    }
+
+  }
+
   return fileInfo && !isLoading ? (
     <div className="prompt">
       {newFile.name ? (
@@ -563,6 +659,7 @@ export default function EditFile(): JSX.Element {
                   onClick={() => setOpenDeleteModal(true)}
                   aria-label="Delete File"
                   className="file__delete_background"
+                  disabled={isLoading}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -573,7 +670,7 @@ export default function EditFile(): JSX.Element {
                 ref={anchorRefSave}
                 aria-label="Button group with a nested menu"
               >
-                <Button onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
+                <Button onClick={handleSaveClick} disabled={isLoading}>{options[selectedIndexSave]}</Button>
                 <Button
                   size="small"
                   aria-controls={openSave ? 'split-button-menu' : undefined}
@@ -581,6 +678,7 @@ export default function EditFile(): JSX.Element {
                   aria-label="select save and activation strategy"
                   aria-haspopup="menu"
                   onClick={handleToggle}
+                  disabled={isLoading}
                 >
                   <ArrowDropDownIcon />
                 </Button>
@@ -648,6 +746,7 @@ export default function EditFile(): JSX.Element {
                 hidden
                 type="file"
                 onChange={handleFileSelect}
+                disabled={isLoading}
               />
               {!selectedFiles?.name && (
                 <Button
@@ -655,6 +754,7 @@ export default function EditFile(): JSX.Element {
                   component="label"
                   style={{ textTransform: 'none' }}
                   onClick={() => fileRef.current?.click()}
+                  disabled={isLoading}
                 >
                   Choose new file to upload
                 </Button>
@@ -665,6 +765,7 @@ export default function EditFile(): JSX.Element {
                   component="label"
                   style={{ textTransform: 'none' }}
                   onClick={onUpdate}
+                  disabled={isLoading}
                 >
                   <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
                   <span style={{ padding: '10px' }}> Change</span>
@@ -686,6 +787,7 @@ export default function EditFile(): JSX.Element {
                   }}
                   label="Tags"
                   MenuProps={MenuProps}
+                  disabled={isLoading}
                   fullWidth
                 >
                   {tagList.map((tag, index) => (
@@ -698,37 +800,11 @@ export default function EditFile(): JSX.Element {
               </FormControl>
             </form>
             <hr />
-            {/* https://www.geeksforgeeks.org/how-to-display-a-pdf-as-an-image-in-react-app-using-url/ */}
-            {newFile && newFile.url && (
-              <div>
-                <div>Current File</div>
-                <div style={{ display: "flex", flexDirection: "row" }}>
-                  <IconButton
-                    type="button"
-                    disabled={pageNumber <= 1}
-                    onClick={previousPage}
-                    className="Pre"
-                  >
-                    <ChevronLeftIcon />
-                  </IconButton>
-                  <div style={{ alignSelf: "center" }}>
-                    Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
-                  </div>
-                  <IconButton
-                    type="button"
-                    disabled={pageNumber >= numPages}
-                    onClick={nextPage}
-                  >
-                    <ChevronRightIcon />
-                  </IconButton>
-                </div>
-                <Document
-                  file={newFile.url}
-                  onLoadSuccess={onDocumentLoadSuccess}>
-                  <Page pageNumber={pageNumber} renderTextLayer={false} renderAnnotationLayer={false} />
-                </Document>
-              </div>
-            )}
+
+            {/* render file view  */}
+            {newFile && newFile.url &&
+              renderFile()
+            }
           </Box>
         </>
       ) : (

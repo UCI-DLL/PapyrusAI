@@ -119,21 +119,24 @@ export function postMoveUserPromptToUserFolder(folderid: string, promptid: strin
 }
 
 
+
 /**
- * RAG stuff
+ * Document endpoints
  */
 
 export function getSignedS3BucketUploadOrgFolder(folderId: string, fileId: string) {
-  return `ragfile/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  return `document/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
 export function getSignedS3BucketUploadUserFolder(folderId: string, fileId: string) {
-  return `ragfile/upload/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  return `document/upload/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
 export function getSignedS3BucketDownloadFile(fileId: string) {
-  return `ragfile/download/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  return `document/download/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
+
+
 /**
  * files in folders
  */
@@ -145,15 +148,14 @@ export function getOrgFile(folderid: string, fileid: string) {
   return `org/${process.env.REACT_APP_ORGANIZATION}/folder/${folderid}/file/${fileid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function postUpdateOrgFile(folderid: string, fileid: string) { //(only admin)
+export function putUpdateOrgFile(folderid: string, fileid: string) { //(only admin)
   return `org/${process.env.REACT_APP_ORGANIZATION}/folder/${folderid}/file/${fileid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-//TODO fix in backend to actually copy the file
 export function postCopyOrgFileToOrgFolder(folderid: string, fileid: string, orgfolderid: string) { //(only admin)
   return `org/${process.env.REACT_APP_ORGANIZATION}/folder/${folderid}/file/${fileid}/copy/org/${orgfolderid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
-//TODO fix in backend to actually copy the file
+
 export function postCopyOrgFileToUserFolder(folderid: string, fileid: string, userfolderid: string) {
   return `org/${process.env.REACT_APP_ORGANIZATION}/folder/${folderid}/file/${fileid}/copy/user/${userfolderid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
@@ -174,14 +176,14 @@ export function getUserFile(folderid: string, fileid: string) {
   return `folder/${folderid}/file/${fileid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
-export function postUpdateUserFile(folderid: string, fileid: string) {
+export function putUpdateUserFile(folderid: string, fileid: string) {
   return `folder/${folderid}/file/${fileid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
-//TODO fix in backend to actually copy the file
+
 export function postCopyUserFileToOrgFolder(folderid: string, fileid: string, orgfolderid: string) { //(only admin)
   return `folder/${folderid}/file/${fileid}/copy/org/${orgfolderid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
-//TODO fix in backend to actually copy the file
+
 export function postCopyUserFileToUserFolder(folderid: string, fileid: string, userfolderid: string) {
   return `folder/${folderid}/file/${fileid}/copy/user/${userfolderid}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }

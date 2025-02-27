@@ -617,6 +617,9 @@ export default function Chat(): JSX.Element {
       var fileData = courseInfo.name + "\n" +
         moduleInfo.name + "\n" + courseInfo.instructor.name + " " +
         courseInfo.instructor.family_name + "\n";
+      if (user) {
+        fileData += "User: " + user.email + "\n";
+      }
       const isInstructor = user && (user.groups.includes(admin) || user.groups.includes(instructor))
       messages.forEach((message, index) => {
         //If instructor, then download all messages
@@ -628,13 +631,13 @@ export default function Chat(): JSX.Element {
         } else {
           var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
           var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
-          fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
+          fileData += sender + " - " + dateTime + "\n" + message.content + "\n\n";
         }
       })
       const blob = new Blob([fileData], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.download = `${courseInfo.name}_${moduleInfo.name}_conversation${conversationIds.conversationIndex}.txt`;
+      link.download = `${courseInfo.name}_${moduleInfo.name}_${user?.email}_conversation${conversationIds.conversationIndex}.txt`;
       link.href = url;
       link.click();
       setIsLoading(false);

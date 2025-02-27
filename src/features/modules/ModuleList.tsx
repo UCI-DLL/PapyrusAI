@@ -11,6 +11,7 @@ import Put from "../../utility/Put";
 import { Modal } from "../../components/Modal";
 import { Checkbox } from "../../components/Checkbox";
 import CourseCard from "../../components/CourseCard";
+import { orderModuleAlphabetically } from "../../utility/Helpers";
 
 interface ModuleListProps {
   course: CourseType;
@@ -219,7 +220,7 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
         </div>
       </Modal>
       <List sx={style} aria-label="modules list">
-        {course.modules.map((module, index) => {
+        {orderModuleAlphabetically(course.modules).map((module, index) => {
           return (
             <div key={index}>
               {/* button redirect to the conversation */}

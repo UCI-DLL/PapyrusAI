@@ -356,7 +356,6 @@ export default function CreateFile(): JSX.Element {
         }
       });
 
-
     } catch (error) {
       console.error((error as Error).message);
     }

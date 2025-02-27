@@ -11,6 +11,7 @@ import { UserContext } from "../../utility/context/UserContext";
 import AddCourseForm from "../course-groups/AddCourseForm";
 import { Modal } from "../../components/Modal";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { orderCourseAlphabetically } from "../../utility/Helpers";
 
 
 export default function Dashboard(): JSX.Element {
@@ -98,7 +99,7 @@ export default function Dashboard(): JSX.Element {
 
       <hr />
       {courseList.length > 0 ? (
-        <CourseList list={courseList.slice(0, 6)} refreshList={refreshList} />
+        <CourseList list={orderCourseAlphabetically(courseList).slice(0, 6)} refreshList={refreshList} />
       ) : <></>}
 
       &nbsp;&nbsp;&nbsp;

@@ -45,7 +45,8 @@ import {
 import axios from "axios";
 import { Document, Page, pdfjs } from 'react-pdf';
 import Put from "../../utility/Put";
-import DocViewer from "react-doc-viewer";
+import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
+import CustomFileRender from "../../components/CustomFileRender";
 
 
 const ITEM_HEIGHT = 48;
@@ -120,7 +121,25 @@ export default function EditFile(): JSX.Element {
   const [selectedFiles, setSelectedFiles] = React.useState<any>();
 
   const handleFileSelect = (event: any) => {
-    setSelectedFiles(event?.target?.files?.[0]);
+    const file = event?.target?.files?.[0];
+
+    if (file) {
+      const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        "text/csv",
+        "text/plain"
+      ];
+
+      if (allowedTypes.includes(file.type)) {
+        setSelectedFiles(file);
+      } else {
+        setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, CSV, TXT, DOCX file.' }));
+        setSelectedFiles(null);
+      }
+    }
   };
 
   const onClear = () => {
@@ -433,19 +452,17 @@ export default function EditFile(): JSX.Element {
     if (selectedFiles) {
       // Handle here
       if (fileInfo) {
-        const newExt = selectedFiles.name.includes(".") ? selectedFiles.name.split('.').pop() : "";
-        const oldExt = fileInfo.fileId.includes(".") ? fileInfo.fileId.split('.').pop() : "";
-        if (newExt !== oldExt) {
-          setErrors((prev: any) => ({ ...prev, name: "Must upload file of same type." }));
-          setIsLoading(false);
-          return;
+        var fileId = fileInfo.fileId
+        if (selectedFiles) {
+          const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : "";
+          fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
         }
         //if is org folder, then upload to org folder
         if (fileInfo?.isOrgFolder) {
-          Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
+          Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileId)).then(res => {
             if (res && res.status && res.status < 300) {
               if (res.data) {
-                handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+                handleUploadToS3(res.data.url, res.data.id);
               } else {
                 //handle error
                 setAlert({ message: "Error updating file. Please try again later", type: "error" })
@@ -462,10 +479,10 @@ export default function EditFile(): JSX.Element {
           });
 
         } else {//else an user folder
-          Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileInfo.fileId)).then(res => {
+          Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileId)).then(res => {
             if (res && res.status && res.status < 300) {
               if (res.data) {
-                handleUploadToS3(res.data.url, res.data.metadataUrl, res.data.id);
+                handleUploadToS3(res.data.url, res.data.id);
               } else {
                 //handle error
                 setAlert({ message: "Error updating file. Please try again later", type: "error" })
@@ -487,34 +504,17 @@ export default function EditFile(): JSX.Element {
     }
   }
 
-  async function handleUploadToS3(url: string, metadataUrl: string, id: string) {
+  async function handleUploadToS3(url: string, id: string) {
     try {
       // Upload original file directly to s3
       await axios.put(url, selectedFiles, {
         headers: {
           'Content-Type': selectedFiles.type
         }
-      }).then(val => {
-        handleSubmit(id);
-      });
-
-      // Create corresponding metadata
-      const metadata = {
-        metadataAttributes: {
-          filename: selectedFiles.name
-        }
-      };
-
-      const metadataBlob = new Blob([JSON.stringify(metadata)]);
-
-      // Upload the metadata
-      await axios.put(metadataUrl, metadataBlob, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
       }).then(res => {
         if (res && res.status && res.status < 300) {
-          //metadata complete
+          handleSubmit(id);
+
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
@@ -533,7 +533,7 @@ export default function EditFile(): JSX.Element {
 
   function renderFile(): React.JSX.Element {
     if (file && file.fileReference) {
-      switch (file.fileReference.split(".")[1]) {
+      switch (file.fileReference.split(".")[1].toLocaleLowerCase()) {
         case "txt": {
           return (
             <div>{newFile && newFile.url ? newFile.url : ""}</div>
@@ -584,10 +584,11 @@ export default function EditFile(): JSX.Element {
             <img style={{ width: "100%" }} src={newFile && newFile.url ? newFile.url : ""} alt="File" />
           )
         case "docx":
-          const doc = [{ uri: newFile && newFile.url ? newFile.url : "" }];
-          //TODO check this
+          const doc = [{ uri: newFile && newFile.url ? newFile.url : "", fileType: 'docx' }];
           return <DocViewer
+            pluginRenderers={[CustomFileRender, ...DocViewerRenderers]}
             documents={doc}
+            style={{ width: "100%", height: 500 }}
           />;
         default:
           return <></>

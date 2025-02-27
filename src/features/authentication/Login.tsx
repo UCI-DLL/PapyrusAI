@@ -21,7 +21,6 @@ export default function Login(props: LoginProps): JSX.Element {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
         }, 500);
       } else {
-        console.log("location", location.hash)
         const hash = location.hash.split("&")
         var token = "";
         if (hash[0].startsWith("#id")) {
@@ -32,7 +31,6 @@ export default function Login(props: LoginProps): JSX.Element {
           token = location.hash.split("&")[0].split("=")[1];
         }
         // const 
-        console.log("token", token)
         localStorage.setItem("papyrusai_access_token", token);
         setTimeout(() => {
           getUserInfo(token)
@@ -66,7 +64,6 @@ export default function Login(props: LoginProps): JSX.Element {
       .catch(function (error) {
         if (error.code === "ERR_CANCELED") return;
         if (error.code === "ERR_NETWORK") {
-          console.log("here1")
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
         if (error.response) {
@@ -74,7 +71,6 @@ export default function Login(props: LoginProps): JSX.Element {
           // that falls out of the range of 2xx
           // showMsg(Object.values(error.response.data), "error");
           if (error.response.status === 401) {
-            console.log("here2")
             window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
           }
           return error.response;

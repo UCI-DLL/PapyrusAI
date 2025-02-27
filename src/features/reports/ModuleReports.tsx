@@ -462,38 +462,89 @@ export default function ModuleReports(): JSX.Element {
             <TableContainer sx={{ maxHeight: 440, border: "1px solid black" }}>
               <Table stickyHeader aria-label="rater table" >
                 <TableHead >
-                  <TableRow>
-                    {columns.map((column) => (
+                  {moduleData?.raterEnabled ? (
+                    <TableRow>
+                      {columns.map((column) => (
+                        <TableCell
+                          key={column.id}
+                          align={column.align}
+                          style={{ minWidth: column.minWidth }}
+                        >
+                          {column.label}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ) : (
+                    <TableRow style={{ width: "100%" }}>
                       <TableCell
-                        key={column.id}
-                        align={column.align}
-                        style={{ minWidth: column.minWidth }}
+                        key={"name"}
+                        align={"left"}
+                        style={{ minWidth: 170, width: "100%" }}
                       >
-                        {column.label}
+                        Name
                       </TableCell>
-                    ))}
-                  </TableRow>
+                      <TableCell
+                        key={"essay"}
+                        align={"left"}
+                        style={{ minWidth: 170, width: "100%" }}
+                      >
+                        Num Essays
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableHead>
-                <TableBody>
-                  {rows
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => {
-                      return (
-                        <TableRow hover role="checkbox" tabIndex={-1} key={row.name}>
-                          {columns.map((column) => {
-                            const value = row[column.id];
-                            return ( //add button on row to view user's conversations
-                              <TableCell key={column.id} align={column.align}>
-                                {typeof value === 'boolean'
-                                  ? value ? <CheckCircleOutlineIcon color="success" /> : <HighlightOffIcon color="error" />
-                                  : <button onClick={() => navigator(`/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`)}>{value}</button>}
-                              </TableCell>
-                            );
-                          })}
-                        </TableRow>
-                      );
-                    })}
-                </TableBody>
+                {moduleData?.raterEnabled ? (
+                  <TableBody>
+                    {rows
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((row) => {
+                        return (
+                          <TableRow hover role="button" tabIndex={-1} key={row.name} onClick={() => navigator(`/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`)}>
+                            {columns.map((column) => {
+                              const value = row[column.id];
+                              return ( //add button on row to view user's conversations
+                                <TableCell key={column.id} align={column.align}>
+                                  {typeof value === 'boolean'
+                                    ? value ? <CheckCircleOutlineIcon color="success" /> : <HighlightOffIcon color="error" />
+                                    : <button onClick={() => navigator(`/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`)}>{value}</button>}
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                ) : (
+                  <TableBody>
+                    {rows
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((row) => {
+                        return (
+                          <TableRow
+                            hover
+                            role="button"
+                            tabIndex={-1}
+                            key={row.name}
+                            onClick={() => navigator(`/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`)}
+                          >
+                            {columns.map((column) => {
+                              const value = row[column.id];
+                              if (typeof value !== 'boolean') {
+                                return ( //add button on row to view user's conversations
+                                  <TableCell key={column.id} align={column.align}>
+                                    <button onClick={() => navigator(`/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`)}>{value}</button>
+                                  </TableCell>
+                                );
+                              } else {
+                                return <></>
+                              }
+
+                            })}
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                )}
               </Table>
             </TableContainer>
             <TablePagination

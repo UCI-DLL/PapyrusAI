@@ -1,3 +1,5 @@
+import { CourseType, ModuleType } from "./types/CourseTypes";
+
 /**
  * Get a random integer between min and max
  * @param min
@@ -46,4 +48,17 @@ export function truncateString(str: string, maxLength: number) {
     return str.slice(0, maxLength - 3) + '...';
   }
   return str;
+}
+
+
+export function orderCourseAlphabetically(list: Array<CourseType>) {
+  return list.sort((a, b) => {
+    return a.name.localeCompare(b.name)
+  })
+}
+
+export function orderModuleAlphabetically(list: Array<ModuleType>) {
+  return list.sort((a, b) => {
+    return a.name.localeCompare(b.name)
+  })
 }

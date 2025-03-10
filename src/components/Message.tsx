@@ -150,7 +150,7 @@ export const MessageLeft = (props: MessageProps) => {
       {props.expandableMessage ? (
         <Button
           onClick={() => setShowExpandableMessage(true)}
-          className={props.outOfContext ? "message__left-message message__out-context" : "message__left-message"}
+          className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__left-message message__out-context" : "message__left-message"}
           variant="outlined"
         >
           {props.typing ? (
@@ -276,7 +276,7 @@ export const MessageRight = (props: MessageProps) => {
         </div>
       </div>
       {props.messageType && props.messageType === "file" ? (
-        <div className={props.outOfContext ? "message__right-message message__out-context" : "message__right-message"}>
+        <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__right-message message__out-context" : "message__right-message"}>
           <Modal
             isOpen={openFileModal}
             onRequestClose={() => setOpenFileModal(false)}

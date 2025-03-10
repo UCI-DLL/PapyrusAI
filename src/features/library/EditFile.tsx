@@ -128,15 +128,15 @@ export default function EditFile(): JSX.Element {
         'image/jpeg',
         'image/png',
         'application/pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        "text/csv",
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', //docx
         "text/plain"
       ];
 
       if (allowedTypes.includes(file.type)) {
+        setErrors((prev: any) => ({ ...prev, file: '' }));
         setSelectedFiles(file);
       } else {
-        setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, CSV, TXT, DOCX file.' }));
+        setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.' }));
         setSelectedFiles(null);
       }
     }
@@ -589,6 +589,13 @@ export default function EditFile(): JSX.Element {
             pluginRenderers={[CustomFileRender, ...DocViewerRenderers]}
             documents={doc}
             style={{ width: "100%", height: 500 }}
+            config={{
+              header: {
+                disableHeader: false,
+                disableFileName: true,
+                retainURLParams: false
+              }
+            }}
           />;
         default:
           return <></>
@@ -772,6 +779,9 @@ export default function EditFile(): JSX.Element {
                   <span style={{ padding: '10px' }}> Change</span>
                   <span>Clear</span>
                 </Button>
+              )}
+              {errors.file && errors.file !== "" && (
+                <span className="error">&nbsp;{errors.file}</span>
               )}
 
               {/* add dropdown to handle tags  */}

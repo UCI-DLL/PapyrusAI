@@ -78,7 +78,25 @@ export default function CreateFile(): JSX.Element {
   const [selectedFiles, setSelectedFiles] = React.useState<any>();
 
   const handleFileSelect = (event: any) => {
-    setSelectedFiles(event?.target?.files?.[0]);
+    const file = event?.target?.files?.[0];
+
+    if (file) {
+      const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', //docx
+        "text/plain"
+      ];
+
+      if (allowedTypes.includes(file.type)) {
+        setErrors((prev: any) => ({ ...prev, file: '' }));
+        setSelectedFiles(file);
+      } else {
+        setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.' }));
+        setSelectedFiles(null);
+      }
+    }
   };
 
   const onClear = () => {
@@ -492,14 +510,9 @@ export default function CreateFile(): JSX.Element {
               <span>Clear</span>
             </Button>
           )}
-          {/* <Button
-            color="primary"
-            disabled={!selectedFiles}
-            style={{ textTransform: 'none' }}
-            onClick={handleUpload}
-          >
-            Upload
-          </Button> */}
+          {errors.file && errors.file !== "" && (
+            <span className="error">&nbsp;{errors.file}</span>
+          )}
           {/* add dropdown to handle tags  */}
           <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
             <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>

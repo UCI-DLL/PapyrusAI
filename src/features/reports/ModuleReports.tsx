@@ -20,10 +20,11 @@ import Get from "../../utility/Get";
 import { getCourse, getRaterModuleData, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
+import { getUserConversationList } from "../../utility/endpoints/ConversationEndpoints";
 
 
 interface Column {
-  id: 'name' | 'essays' | 'lead' | 'position' | 'claim' | 'counterclaim' | 'rebuttal' | 'evidence' | 'conclude';
+  id: 'name' | 'convos' | 'essays' | 'lead' | 'position' | 'claim' | 'counterclaim' | 'rebuttal' | 'evidence' | 'conclude';
   label: string;
   minWidth?: number;
   align?: 'right';
@@ -31,8 +32,9 @@ interface Column {
 }
 
 const columns: readonly Column[] = [
-  { id: 'name', label: 'Name', minWidth: 170 },
-  { id: 'essays', label: "Num Essays", minWidth: 100 },
+  { id: 'name', label: 'Name', minWidth: 100 },
+  { id: 'convos', label: "Num Convos", minWidth: 75 },
+  { id: 'essays', label: "Num Essays", minWidth: 75 },
   { id: 'lead', label: 'Lead', minWidth: 100 },
   {
     id: 'position',
@@ -65,6 +67,7 @@ const columns: readonly Column[] = [
 
 interface Data {
   name: string;
+  convos: number;
   essays: number;
   lead: boolean;
   position: boolean;
@@ -78,6 +81,7 @@ interface Data {
 
 function createData(
   name: string,
+  convos: number,
   essays: number,
   lead: boolean,
   position: boolean,
@@ -88,7 +92,7 @@ function createData(
   conclude: boolean,
   username: string
 ): Data {
-  return { name, essays, lead, position, claim, counterclaim, rebuttal, evidence, conclude, username };
+  return { name, convos, essays, lead, position, claim, counterclaim, rebuttal, evidence, conclude, username };
 }
 
 type RaterDataType = {
@@ -112,7 +116,7 @@ export default function ModuleReports(): JSX.Element {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [raterData, setRaterData] = useState<Array<RaterDataType>>([]);
   const [error, setError] = useState<string>();
-  const [userList, setUserList] = useState<Array<CustomUserType>>([]);
+  const [userList, setUserList] = useState<Array<CustomUserType & { numConvos: number }>>([]);
   const [courseData, setCourseData] = useState<CourseType>();
   const [moduleData, setModuleData] = useState<ModuleType>();
   const [rows, setRows] = useState<Array<Data>>([]);
@@ -142,7 +146,7 @@ export default function ModuleReports(): JSX.Element {
 
         //Get user list
         if (userList.length === 0) {
-          getUsersInCourseList(courseId, controller.signal);
+          getUsersInCourseList(courseId, moduleId, controller.signal);
         }
 
         //Get course and module data
@@ -207,6 +211,7 @@ export default function ModuleReports(): JSX.Element {
         const userRater = raterData.filter(e => e.username === user.username); //TODO double check this with google users
         const row = createData(
           user.name + " " + user.family_name,
+          user.numConvos,
           userRater.length,
           userRater.some(e => e.content.some(c => c[4] === "0")),
           userRater.some(e => e.content.some(c => c[4] === "1")),
@@ -224,6 +229,7 @@ export default function ModuleReports(): JSX.Element {
       userList.forEach(user => {
         const row = createData(
           user.name + " " + user.family_name,
+          user.numConvos,
           0,
           false,
           false,
@@ -266,28 +272,41 @@ export default function ModuleReports(): JSX.Element {
     return totalCount > 0 ? totalCount / arrayLength : 0;
   }
 
-
-  function getUsersInCourseList(course: string, signal: AbortSignal, nextToken?: string) {
+  function getUsersInCourseList(course: string, module: string, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
     Get(getUsersInCourse(course, limit, nextToken), signal).then(res => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.users) {
           //filter out current user and email_verified 
-          var tempUserList = res.data.users.map((u: CustomUserType) => {
-            return {
-              name: u.name,
-              family_name: u.family_name,
-              email: u.email,
-              sub: u.sub,
-              username: u.username
-            }
+          res.data.users.map(async (u: CustomUserType) => {
+            await Get(getUserConversationList(u.username), signal).then(res => {
+              if (res && res.status && res.status < 300) {
+                if (res.data) {
+                  //Get the list of all conversations
+                  //for the specific courseid and moduleid, get the number of conversations for the user
+                  const temp = res.data.find((con: any) => con.courseId === course && con.moduleId === module)
+                  const tempObj = {
+                    name: u.name,
+                    family_name: u.family_name,
+                    email: u.email,
+                    sub: u.sub,
+                    username: u.username,
+                    numConvos: temp && temp.conversations ? temp.conversations.length : 0
+                  }
+                  setUserList((prev) => [...prev, tempObj]);
+                }
+              } else if (res && res.status === 401) {
+                navigator("/login");
+              } else {
+                // handle error
+              }
+            });
           });
-          setUserList((prev) => [...prev, ...tempUserList]);
 
           //if the we get a nexttoken, then call for the next page
           //handle pages
           if (res.data.nextToken) {
-            getUsersInCourseList(course, signal, res.data.nextToken);
+            getUsersInCourseList(course, module, signal, res.data.nextToken);
           }
         }
       } else if (res && res.status === 401) {
@@ -482,6 +501,13 @@ export default function ModuleReports(): JSX.Element {
                         style={{ minWidth: 170, width: "100%" }}
                       >
                         Name
+                      </TableCell>
+                      <TableCell
+                        key={"convos"}
+                        align={"left"}
+                        style={{ minWidth: 170, width: "100%" }}
+                      >
+                        Num Convos
                       </TableCell>
                       <TableCell
                         key={"essay"}

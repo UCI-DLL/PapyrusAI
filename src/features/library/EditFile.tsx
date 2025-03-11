@@ -92,6 +92,7 @@ export default function EditFile(): JSX.Element {
 
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
+  const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
   /*To Prevent right click on screen*/
   document.addEventListener("contextmenu", (event) => {
@@ -122,7 +123,6 @@ export default function EditFile(): JSX.Element {
 
   const handleFileSelect = (event: any) => {
     const file = event?.target?.files?.[0];
-
     if (file) {
       const allowedTypes = [
         'image/jpeg',
@@ -131,13 +131,19 @@ export default function EditFile(): JSX.Element {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document', //docx
         "text/plain"
       ];
-
-      if (allowedTypes.includes(file.type)) {
-        setErrors((prev: any) => ({ ...prev, file: '' }));
-        setSelectedFiles(file);
-      } else {
-        setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.' }));
+      //handle file size
+      if (file.size > MAX_FILE_SIZE) {
+        setErrors((prev: any) => ({ ...prev, file: 'File is too large. File must be smaller than 1GB.' }));
         setSelectedFiles(null);
+      } else {
+        //handle file formats
+        if (allowedTypes.includes(file.type)) {
+          setErrors((prev: any) => ({ ...prev, file: '' }));
+          setSelectedFiles(file);
+        } else {
+          setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.' }));
+          setSelectedFiles(null);
+        }
       }
     }
   };

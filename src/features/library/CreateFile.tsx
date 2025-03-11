@@ -74,12 +74,12 @@ export default function CreateFile(): JSX.Element {
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
   const fileRef = React.useRef<any>();
+  const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
   const [selectedFiles, setSelectedFiles] = React.useState<any>();
 
   const handleFileSelect = (event: any) => {
     const file = event?.target?.files?.[0];
-
     if (file) {
       const allowedTypes = [
         'image/jpeg',
@@ -88,13 +88,19 @@ export default function CreateFile(): JSX.Element {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document', //docx
         "text/plain"
       ];
-
-      if (allowedTypes.includes(file.type)) {
-        setErrors((prev: any) => ({ ...prev, file: '' }));
-        setSelectedFiles(file);
-      } else {
-        setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.' }));
+      //handle file size
+      if (file.size > MAX_FILE_SIZE) {
+        setErrors((prev: any) => ({ ...prev, file: 'File is too large. File must be smaller than 1GB.' }));
         setSelectedFiles(null);
+      } else {
+        //handle file formats
+        if (allowedTypes.includes(file.type)) {
+          setErrors((prev: any) => ({ ...prev, file: '' }));
+          setSelectedFiles(file);
+        } else {
+          setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.' }));
+          setSelectedFiles(null);
+        }
       }
     }
   };

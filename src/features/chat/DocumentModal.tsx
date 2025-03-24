@@ -6,8 +6,7 @@ import {
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
-import * as PDFJS from 'pdfjs-dist';
-PDFJS.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+import { pdfjs } from 'react-pdf';
 
 
 interface ChatWizardProps {
@@ -17,6 +16,7 @@ interface ChatWizardProps {
 export default function DocumentModal({
   returnDocText,
 }: ChatWizardProps): JSX.Element {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
   //Need to save the index of the document just in case some documents are the same name
   const [docText, setDocText] = useState<string>("");
   const [error, setError] = useState("");
@@ -44,12 +44,12 @@ export default function DocumentModal({
       reader.readAsBinaryString(file);
     } else if (file.type === "application/pdf") {
       const temp = URL.createObjectURL(file);
-      const doc = PDFJS.getDocument(temp);
+      const doc = pdfjs.getDocument(temp);
       const pdfDocument = await doc.promise;
       //handle multiple pages
       var numPages = pdfDocument.numPages;
       var currentPage = 1;
-      while (currentPage !== numPages) {
+      while (currentPage <= numPages) {
         const page = await pdfDocument.getPage(currentPage);
         const textContent = await page.getTextContent();
         const text = textContent["items"].reduce((result: any, item: any) => {
@@ -124,7 +124,7 @@ export default function DocumentModal({
               setDocText("");
             }}
           >
-            Send Document
+            Submit Document
           </Button>
         </div>
       </div>

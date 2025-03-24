@@ -5,7 +5,6 @@ import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputAdornment from '@mui/material/InputAdornment';
 import SendIcon from '@mui/icons-material/Send';
-// import AddIcon from '@mui/icons-material/Add';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import MicIcon from '@mui/icons-material/Mic';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
@@ -30,6 +29,7 @@ import DocumentModal from "./DocumentModal";
 import Post from "../../utility/Post";
 import { Tooltip } from "@mui/material";
 import SpeechToTextModal from "./SpeechToTextModal";
+import EssayWizard from "./EssayWizard";
 
 
 export default function Chat(): JSX.Element {
@@ -53,8 +53,9 @@ export default function Chat(): JSX.Element {
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const { setAlert } = useContext(AlertContext);
   const { user } = useContext(UserContext); //current user signed in
-  const [viewUser, setViewUser] = useState<UserType>(); //The user viewing the conversation
+  const [viewUser, setViewUser] = useState<UserType>(); //The user that owns the conversation
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
+  const [showWizard, setShowWizard] = useState(false); //show normal wizard (either under normal conditions or after we get rater essay back)
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
   const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
@@ -101,12 +102,12 @@ export default function Chat(): JSX.Element {
     setAnchorEl(null);
   };
 
-  // const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-  //   setAddAnchorEl(event.currentTarget);
-  // };
   const handleAddClose = () => {
     setAddAnchorEl(null);
   };
+
+  const instructor = process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors";
+  const admin = process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin";
 
   //create a use effect to get updated window size when user resizes window
   useEffect(() => {
@@ -154,6 +155,8 @@ export default function Chat(): JSX.Element {
               onConnect(location.pathname.split("/")[3], location.pathname.split("/")[4], location.pathname.split("/")[5]);
             }
           }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
           if (res === undefined) {
           } else {
@@ -259,6 +262,27 @@ export default function Chat(): JSX.Element {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // if rater enabled module, then show the rater essay wizard essay first and then
+    // show the normal prompt wizard afterwards
+    if (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled) {
+      setShowWizard(false)
+    } else {
+      if (viewUser &&
+        user &&
+        user.username === viewUser.username &&
+        moduleInfo &&
+        (moduleInfo.raterEnabled === undefined || !moduleInfo.raterEnabled) &&
+        messages.length < 1 &&
+        moduleInfo.prompts.length !== 0
+      ) {
+        setShowWizard(true)
+      } else {
+        setShowWizard(false)
+      }
+    }
+  }, [viewUser, user, moduleInfo, messages])
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -295,20 +319,58 @@ export default function Chat(): JSX.Element {
 
   const onSocketMessage = useCallback((dataStr: string) => {
     const returnData = JSON.parse(dataStr);
+    console.log("return data", returnData);
     //turn off typing indicator for chatgpt
     setShowTypingIndicator(false);
-    if (returnData.status < 300) {
-      //Only the message as a string comes back so make some temp stuff for the message
+    if (returnData.essay && returnData.status < 300 && returnData.rater) {
+      //if we get the essay response back, then we need to update the list of messages
+      //since the essay has a expandable message
       const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-      var responseMessage: MessageType = {
-        id: tempTimestamp.toString(),
+      const essayTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId = (Number(essayTempId) + 1).toString();
+      var essayMessage: MessageType = {
+        id: essayTempId,
+        content: "View your essay feedback by clicking on this message.",
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: tempTimestamp.toString(),
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: JSON.stringify(returnData.rater),
+      }
+      var essayResponseMessage: MessageType = {
+        id: messageTempId,
         content: returnData.data,
         messageType: "text",
         role: "assistant",
         sender: "ChatGPT",
-        timestamp: messageTempId,
+        timestamp: tempTimestamp.toString(),
         promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: "",
+      }
+      if (messages) {
+        setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
+      }
+      setShowWizard(false)
+    } else if (returnData.status < 300) {
+      //Only the message as a string comes back so make some temp stuff for the message
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: messageTempId,
+        content: returnData.data,
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: tempTimestamp.toString(),
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: "",
       }
       if (messages) {
         setMessages((prev) => [...prev, responseMessage]);
@@ -320,7 +382,6 @@ export default function Chat(): JSX.Element {
         setOpenUpdateConvoModal(prev => ({ ...prev, completed: true }))
       }
     }
-
   }, [messages]);
 
   const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
@@ -353,7 +414,7 @@ export default function Chat(): JSX.Element {
           const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
           var responseMessage: MessageType = {
             id: tempTimestamp.toString(),
-            content: message.content,
+            content: message.content.replace(/\n\n/g, " ").replace(/\n/g, " "), //replace new lines
             messageType: message.content.length < 1000 ? "text" : "file",
             role: "user",
             sender: "username",
@@ -379,6 +440,34 @@ export default function Chat(): JSX.Element {
       setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
     }
   }, [messages, isConnected]);
+
+  const onSendEssay = useCallback((essay: string, message?: string) => {
+    //save message in message array
+    setChatError(undefined);
+    if (isConnected) {
+      //check that essay/message length is less that 100000
+      if (essay.length > 100000) {
+        setChatError("Essay Too Long to Evaluate");
+      } else if (essay.length < 750) { //~5 characters in a word * 150 words
+        setChatError("Essay Too Short to Evaluate");
+      } else {
+        var sendEssay: any = {
+          "action": "raterEssay",
+          "essay": essay,
+          "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
+        }
+        //add optional message/prompt
+        if (message) {
+          sendEssay["message"] = message;
+        }
+        socket.current?.send(JSON.stringify(sendEssay));
+      }
+      //Set the typing indicator for chatgpt while we wait for a response
+      setShowTypingIndicator(true);
+    } else {
+      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
+    }
+  }, [isConnected]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -435,6 +524,61 @@ export default function Chat(): JSX.Element {
     }
   }
 
+  function handleWizardReturnEssay(essay: string, message?: string) { //right now message is a prompt
+    setIsLoading(true);
+    //check that message length is less that 100000
+    setChatError(undefined);
+    var actualPrompt;
+    if (message && moduleInfo) {
+      actualPrompt = moduleInfo.prompts.filter(x => x.id === message);
+    }
+    if (essay.length < 100000 && essay.length > 150) {
+      onSendEssay(essay, actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "");
+      //set temp essay message
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: essay,
+        messageType: "file",
+        role: "user",
+        sender: user ? user.name : "You",
+        timestamp: messageTempId,
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: "Loading...",
+      }
+      if (messages && message && moduleInfo && moduleInfo.showInitialPrompt) {
+        //only show if module settings show init prompt true
+        //set temp prompt message
+        const tempTimestamp2 = Date.now();
+        const messageTempId2 = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        var responseMessage2: MessageType = {
+          id: tempTimestamp2.toString(),
+          content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
+          messageType: (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
+          role: "user",
+          sender: user ? user.name : "You",
+          timestamp: messageTempId2,
+          promptId: actualPrompt ? actualPrompt[0].id : null,
+          userVisible: moduleInfo?.showInitialPrompt ? true : false,
+          raterReference: "",
+          expandableMessage: "",
+        }
+        setMessages((prev) => [...prev, responseMessage2]);
+      }
+      if (messages) {
+        setMessages((prev) => [...prev, responseMessage]);
+      }
+    } else if (essay.length <= 150) {
+      setChatError("Message Too Short");
+    } else {
+      setChatError("Message Too Long");
+    }
+    setIsLoading(false);
+  }
+
   // function handleRepeatPrompt(selectedPrompt: string) {
   //   if (courseInfo && moduleInfo && selectedPrompt !== "") {
   //     setSelectedPrompt(selectedPrompt);
@@ -473,15 +617,27 @@ export default function Chat(): JSX.Element {
       var fileData = courseInfo.name + "\n" +
         moduleInfo.name + "\n" + courseInfo.instructor.name + " " +
         courseInfo.instructor.family_name + "\n";
-      messages.forEach(message => {
-        var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
-        var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
-        fileData += sender + " - " + dateTime + "\n" + message.content + "\n";
+      if (user) {
+        fileData += "User: " + user.email + "\n";
+      }
+      const isInstructor = user && (user.groups.includes(admin) || user.groups.includes(instructor))
+      messages.forEach((message, index) => {
+        //If instructor, then download all messages
+        // else dont download if module.showInitialPrompt is false OR hidden messages
+        if (!moduleInfo.showInitialPrompt && index === 0 && !isInstructor) {
+          //if dont showing init prompt and it is the first message and we are not an instructor, then dont add message to text
+        } else if (message.userVisible !== undefined && !message.userVisible && !isInstructor) {
+          //If the message is hidden and we are not an instructor, then dont add the message to text
+        } else {
+          var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
+          var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
+          fileData += sender + " - " + dateTime + "\n" + message.content + "\n\n";
+        }
       })
       const blob = new Blob([fileData], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.download = `${courseInfo.name}_${moduleInfo.name}_conversation${conversationIds.conversationIndex}.txt`;
+      link.download = `${courseInfo.name}_${moduleInfo.name}_${user?.email}_conversation${conversationIds.conversationIndex}.txt`;
       link.href = url;
       link.click();
       setIsLoading(false);
@@ -799,22 +955,32 @@ export default function Chat(): JSX.Element {
           )}
         </div>
         <div style={{ padding: "0.4rem", paddingTop: "1.8rem" }}>{moduleInfo.moduleDescription}</div>
+        {/* Show the rater essay wizard if rater enabled and we have no prev messages. Show normal prompt wizard afterwards.  */}
         {/* Only show the chat wizard if we don't have selected prompt and if there are no previous messages  */}
         {user &&
           viewUser &&
           user.username === viewUser.username &&
-          (messages.length < 1) && (moduleInfo.prompts.length !== 0) && (
-            <ChatWizard
-              prompts={moduleInfo.prompts}
-              returnPrompt={handleWizardReturnPrompts}
+          (messages.length < 1) &&
+          moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled && (
+            <EssayWizard
+              prompts={moduleInfo.prompts && moduleInfo.prompts.length > 0 ? moduleInfo.prompts : undefined}
+              returnEssay={handleWizardReturnEssay}
             />
           )}
+        {showWizard && (
+          <ChatWizard
+            prompts={moduleInfo.prompts}
+            returnPrompt={handleWizardReturnPrompts}
+          />
+        )}
       </div>
 
       &nbsp;&nbsp;&nbsp;
 
       <Box className="chat__chat-log">
         {/* list of messages  */}
+        {/* handle hidden messages  */}
+        {/* handle messages that can be clicked on and have more information */}
         {messages.length > 0 && messages.map((message, index) => {
           if (message.role === "assistant") {
             return (
@@ -832,6 +998,9 @@ export default function Chat(): JSX.Element {
                     displayName={message.sender === "ChatGPT" ? "Papyrus" : message.sender}
                     messageType={message.messageType}
                     outOfContext={message.inContext ? true : false}
+                    visible={(message.userVisible === undefined || message.userVisible) ? true : false}
+                    expandableMessage={message.expandableMessage && message.expandableMessage !== "" ? message.expandableMessage : undefined}
+                    isInstructor={(user?.groups.includes(instructor) || user?.groups.includes(admin)) ? true : false}
                   />
                 </div>
               </div>
@@ -856,6 +1025,8 @@ export default function Chat(): JSX.Element {
                       displayName={viewUser?.name}
                       messageType={message.messageType}
                       outOfContext={message.inContext ? true : false}
+                      visible={(message.userVisible === undefined || message.userVisible) ? true : false}
+                      isInstructor={(user?.groups.includes(instructor) || user?.groups.includes(admin)) ? true : false}
                     />
                   </div>
                 )}
@@ -949,7 +1120,6 @@ export default function Chat(): JSX.Element {
                             aria-controls={addOpen ? 'add-menu' : undefined}
                             aria-haspopup="true"
                             aria-expanded={addOpen ? 'true' : undefined}
-                            // onClick={handleAddClick}
                             onClick={() => {
                               handleAddClose()
                               setOpenDocumentModal(true)
@@ -958,36 +1128,6 @@ export default function Chat(): JSX.Element {
                             {<AttachFileIcon />}
                           </IconButton>
                         </InputAdornment>
-                        {/* <Menu
-                          id="add-menu"
-                          anchorEl={addAnchorEl}
-                          open={addOpen}
-                          onClose={handleAddClose}
-                          MenuListProps={{
-                            'aria-labelledby': 'add-menu-button',
-                          }}
-                          anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'left',
-                          }}
-                          transformOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
-                          }}
-                        >
-                          <MenuItem onClick={() => {
-                            handleAddClose()
-                            setOpenDocumentModal(true)
-                          }}>
-                            Attach File
-                          </MenuItem>
-                          <MenuItem onClick={() => {
-                            handleAddClose()
-                            setOpenSpeechToTextModal(true)
-                          }}>
-                            Speech To Text
-                          </MenuItem>
-                        </Menu> */}
                       </>
                     }
                     multiline

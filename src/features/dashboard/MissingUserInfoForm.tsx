@@ -58,7 +58,7 @@ export default function MissingUserInfoForm({
       if (user && user.family_name && user.family_name !== "") {
         setSession((prev) => ({ ...prev, family_name: user.family_name }))
       }
-      if(user && user["custom:theme"] && user["custom:theme"] !== "") {
+      if (user && user["custom:theme"] && user["custom:theme"] !== "") {
         setSession((prev) => ({ ...prev, theme: user["custom:theme"] }))
       }
       setIsLoading(false);
@@ -82,6 +82,7 @@ export default function MissingUserInfoForm({
           if (res.data && res.data) {
             //close modal if user data was updated
             closeForm(res.data);
+            // localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
           }
         } else {
           // set errors
@@ -108,9 +109,9 @@ export default function MissingUserInfoForm({
       changeTheme(root, "dark");
     } else if (e.target.value === "light") {
       changeTheme(root, "light");
-    }else if (e.target.value === "colorful-light") {
+    } else if (e.target.value === "colorful-light") {
       changeTheme(root, "colorful-light");
-    }else if (e.target.value === "colorful-dark") {
+    } else if (e.target.value === "colorful-dark") {
       changeTheme(root, "colorful-dark");
     } else { //default is light
       changeTheme(root, "light");

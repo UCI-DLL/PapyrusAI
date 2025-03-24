@@ -51,7 +51,10 @@ import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
+import CreateFile from "./features/library/CreateFile";
+import EditFile from "./features/library/EditFile";
 import OrgSettings from "./features/org-settings/OrgSettings";
+import CourseReports from "./features/reports/ModuleReports";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -176,8 +179,21 @@ function App(): JSX.Element {
                 >
                   <MissingUserInfoForm
                     user={user ? user : undefined}
-                    closeForm={() => {
+                    closeForm={(updatedUser) => {
                       //Set user with new information
+                      if (user) {
+                        setUser((prev) => {
+                          if (prev)
+                            return { ...prev, name: updatedUser.name, family_name: updatedUser.family_name }
+                          else return null
+                        })
+                      }
+                      if (localStorage.getItem("papyrusai_user") && localStorage.getItem("papyrusai_user") !== null) {
+                        var old = JSON.parse(localStorage.getItem("papyrusai_user") ?? "");
+                        old.name = updatedUser.name;
+                        old.family_name = updatedUser.family_name;
+                        localStorage.setItem("papyrusai_user", JSON.stringify(old));
+                      }
                       //then close modal
                       setShowUpdateUserInfoModal(false);
                     }}
@@ -266,6 +282,10 @@ function App(): JSX.Element {
                           <Route path="/reports/:id" element={<UserReports />} />
                         </Route>
 
+                        <Route path="/dashboard/:id/:id" element={<PrivateRoute user={user} />}>
+                          <Route path="/dashboard/:id/:id" element={<CourseReports />} />
+                        </Route>
+
                         {/* shows conversation list of other users  */}
                         <Route path="/courses/:id/modules/:id/username/:id" element={<PrivateRoute user={user} />}>
                           <Route path="/courses/:id/modules/:id/username/:id" element={<ConversationList />} />
@@ -309,6 +329,22 @@ function App(): JSX.Element {
 
                       <Route path="/library/:id/prompts/:id" element={<PrivateRoute user={user} />}>
                         <Route path="/library/:id/prompts/:id" element={<EditPrompt />} />
+                      </Route>
+
+                      <Route path="/library/org/:id/createfile" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id/createfile" element={<CreateFile />} />
+                      </Route>
+
+                      <Route path="/library/org/:id/files/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/org/:id/files/:id" element={<EditFile />} />
+                      </Route>
+
+                      <Route path="/library/:id/createfile" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id/createfile" element={<CreateFile />} />
+                      </Route>
+
+                      <Route path="/library/:id/files/:id" element={<PrivateRoute user={user} />}>
+                        <Route path="/library/:id/files/:id" element={<EditFile />} />
                       </Route>
                     </>
                   )}

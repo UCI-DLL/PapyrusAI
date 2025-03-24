@@ -56,3 +56,7 @@ export function postCopyCourse(courseId: string) {
 export function putCopyModule(courseId: string, moduleId: string, copyToCourseId: string) {
   return `course/${courseId}/module/${moduleId}/copy/${copyToCourseId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
+
+export function getRaterModuleData(courseId: string, moduleId: string) {
+  return `course/${courseId}/module/${moduleId}/rater?organization=${process.env.REACT_APP_ORGANIZATION}`;
+}

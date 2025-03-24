@@ -181,6 +181,12 @@ export default function Navigation(): JSX.Element {
               </ListItem>
             ))}
             <hr />
+            <ListItem key={"resources"} disablePadding>
+              <ListItemButton onClick={() => window.open("https://www.genaied.org/resources.html", "_blank")}>
+                <ListItemText primary={"Resources"} />
+              </ListItemButton>
+            </ListItem>
+            <hr />
             <ListItem key={"logout"} disablePadding>
               <ListItemButton onClick={handleLogOut}>
                 <ListItemText primary={"Log Out"} />
@@ -229,6 +235,12 @@ export default function Navigation(): JSX.Element {
                   </ListItemButton>
                 </ListItem>
               ))}
+              <hr />
+              <ListItem key={"resources"} disablePadding>
+                <ListItemButton onClick={() => window.open("https://www.genaied.org/resources.html", "_blank")}>
+                  <ListItemText primary={"Resources"} />
+                </ListItemButton>
+              </ListItem>
               <hr />
               <ListItem key={"logout"} disablePadding>
                 <ListItemButton onClick={handleLogOut}>

@@ -119,6 +119,8 @@ export default function ConversationList(): JSX.Element {
             if (res.data) {
               setViewUser(res.data);
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
             if (res === undefined) {
             } else {
@@ -384,7 +386,7 @@ export default function ConversationList(): JSX.Element {
                                 <Chip label="This is a deleted conversation" color="error" icon={<DeleteForeverIcon />} />
                               )}
                               &nbsp;
-                              <Button variant="contained" onClick={() => navigator(link)}>View</Button>
+                              <Button variant="contained" onClick={() => navigator(link)} href={link}>View</Button>
                             </>
 
                           ) : (
@@ -438,7 +440,7 @@ export default function ConversationList(): JSX.Element {
                               >
                                 Edit
                               </Button>
-                              <Button variant="contained" onClick={() => navigator(link)}>Chat</Button>
+                              <Button variant="contained" onClick={() => navigator(link)} href={link}>Chat</Button>
                             </>
                           )}
                         </ListItem>

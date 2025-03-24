@@ -11,6 +11,7 @@ import Put from "../../utility/Put";
 import { Modal } from "../../components/Modal";
 import { Checkbox } from "../../components/Checkbox";
 import CourseCard from "../../components/CourseCard";
+import { orderModuleAlphabetically } from "../../utility/Helpers";
 
 interface ModuleListProps {
   course: CourseType;
@@ -99,6 +100,8 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
             isPublished: false
           })
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         // set errors
         setAlert({ message: res.data, type: "error" })
@@ -217,7 +220,7 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
         </div>
       </Modal>
       <List sx={style} aria-label="modules list">
-        {course.modules.map((module, index) => {
+        {orderModuleAlphabetically(course.modules).map((module, index) => {
           return (
             <div key={index}>
               {/* button redirect to the conversation */}
@@ -227,6 +230,15 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
                   <div>{module.moduleDescription}</div>
                 </button>
                 <div style={{ display: "flex" }}>
+                  {(user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
+                    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
+                    user?.groups.includes(course.id + "-TA")) && (
+                      <Button onClick={() => {
+                        navigator(`/dashboard/${course.id}/${module.id}`)
+                      }}>
+                        View
+                      </Button>
+                    )}
                   {(user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
                     user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
                     user?.groups.includes(course.id + "-TA")) && (

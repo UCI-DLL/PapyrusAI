@@ -29,6 +29,8 @@ export type ModuleType = {
   prompts: Array<PromptType>,
   showInitialPrompt: boolean,
   showWizard: boolean,
+  raterEnabled?: boolean,
+  files?: Array<FileType>,
 }
 //Note: the difference between this folder/prompt and the old prompt type is 
 //old one has organization
@@ -44,6 +46,18 @@ export type PromptType = {
   folderId?: string,
 }
 
+export type FileType = {
+  id: string,
+  creator: CustomUserType,
+  isDeleted: boolean,
+  name: string,
+  tags: Array<string>,
+  isOrganizationFile: boolean,
+  folderId?: string,
+  hiddenMessageId: string,
+  fileReference: string,
+}
+
 export type FolderType = {
   id: string,
   creator: CustomUserType,
@@ -53,6 +67,7 @@ export type FolderType = {
   isDeleted: boolean,
   name: string,
   prompts: Array<PromptType>,
+  files: Array<FileType>,
 }
 
 export type TagType = {

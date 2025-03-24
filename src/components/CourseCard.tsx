@@ -76,6 +76,8 @@ export default function CourseCard({ course, refreshList, keyy, onClick }: Cours
             isActive: false
           })
         }
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
         // set errors
         setAlert({ message: res.data, type: "error" })

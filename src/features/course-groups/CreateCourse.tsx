@@ -26,7 +26,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import LinearProgress from '@mui/material/LinearProgress';
 import Get from "../../utility/Get";
 import { getUserList } from "../../utility/endpoints/UserEndpoints";
-import { CustomUserType } from "../../utility/types/UserTypes";
+import { CustomUserType, UserType } from "../../utility/types/UserTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { Modal } from "../../components/Modal";
 
@@ -65,7 +65,7 @@ export default function CreateCourse(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<CustomUserType>>([]);
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const [openSave, setOpenSave] = useState(false);
   const anchorRefSave = useRef<HTMLDivElement>(null);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
@@ -193,8 +193,13 @@ export default function CreateCourse(): JSX.Element {
       Post(postCreateCourse(), dataToSend).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data && res.data) {
+            // update user and group list
+            var newGroups = user?.groups;
+            newGroups?.push(res.data.id)
+            setUser(({ ...user, groups: newGroups }) as UserType)
+            localStorage.setItem("papyrusai_user", JSON.stringify({ ...user, groups: newGroups }));
             //redirect to course list
-            navigator("/");
+            navigator("/courses");
             // pop up notifying user of creation
             setAlert({ message: "Course Created", type: "success" });
           }

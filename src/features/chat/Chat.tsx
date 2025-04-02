@@ -824,7 +824,7 @@ export default function Chat(): JSX.Element {
       </Modal>
       <Modal
         isOpen={openUpdateConvoModal.deleteOpen}
-        title={"Delete Conversation?"}
+        title={"Hide Conversation?"}
         onRequestClose={() => setOpenUpdateConvoModal(prev => ({ ...prev, deleteOpen: false }))}
         actions={
           <>
@@ -840,7 +840,7 @@ export default function Chat(): JSX.Element {
           </>
         }
       >
-        <div>Are you sure you would like to delete this conversation? Instructors can still view deleted conversations.</div>
+        <div>Are you sure you would like to hide this conversation? Instructors can still view hidden conversations.</div>
       </Modal>
       <Modal
         isOpen={openUpdateConvoModal.open}
@@ -929,7 +929,7 @@ export default function Chat(): JSX.Element {
                   handleClose()
                   setOpenUpdateConvoModal(prev => ({ ...prev, deleteOpen: true }))
                 }}>
-                  Delete Conversation
+                  Hide Conversation
                 </MenuItem>
               )}
           </Menu>

@@ -4,7 +4,7 @@ import { Button, ListItem, ListItemText, Divider, List, Typography, TextField, I
 import Get from "../../utility/Get";
 import LinearProgress from '@mui/material/LinearProgress';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import DeleteIcon from '@mui/icons-material/Delete';
+import HideSourceIcon from '@mui/icons-material/HideSource';
 import { getConversationList, postCreateConversation, postUpdateConversation } from "../../utility/endpoints/ConversationEndpoints";
 import Post from "../../utility/Post";
 import { ConversationListType } from "../../utility/types/ConversationTypes";
@@ -250,7 +250,7 @@ export default function ConversationList(): JSX.Element {
         <>
           <Modal
             isOpen={openUpdateConvoModal.deleteOpen}
-            title={"Delete Conversation?"}
+            title={"Hide Conversation?"}
             onRequestClose={() => setOpenUpdateConvoModal({
               open: false,
               deleteOpen: false,
@@ -284,7 +284,7 @@ export default function ConversationList(): JSX.Element {
               </>
             }
           >
-            <div>Are you sure you would like to delete this conversation? Instructors can still view deleted conversations.</div>
+            <div>Are you sure you would like to hide this conversation? Instructors can still view hidden conversations.</div>
           </Modal>
           <Modal
             isOpen={openUpdateConvoModal.open}
@@ -392,7 +392,7 @@ export default function ConversationList(): JSX.Element {
                           ) : (
                             <>
                               <Tooltip
-                                title={"Delete"}
+                                title={"Hide"}
                                 arrow
                                 componentsProps={{
                                   tooltip: {
@@ -419,10 +419,10 @@ export default function ConversationList(): JSX.Element {
                                       error: ""
                                     })
                                   }}
-                                  aria-label="Delete Conversation"
+                                  aria-label="Hide Conversation"
                                   className="courses__delete_background"
                                 >
-                                  <DeleteIcon />
+                                  <HideSourceIcon />
                                 </IconButton>
                               </Tooltip>
                               <Button onClick={() => {

@@ -5,6 +5,7 @@ import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
 import LinearProgress from '@mui/material/LinearProgress';
+import { orderCourseRecentlyCreated } from "../../utility/Helpers";
 
 
 export default function AllModules(): JSX.Element {
@@ -67,7 +68,7 @@ export default function AllModules(): JSX.Element {
                 <h3>All Available Modules</h3>
               </div>
               <hr />
-              {courseList.map((course, index) => {
+              {orderCourseRecentlyCreated(courseList).map((course, index) => {
                 return course.modules.length > 0 ? (
                   <div key={index} style={{ width: "100%" }}>
                     <h4>{course.name}</h4>

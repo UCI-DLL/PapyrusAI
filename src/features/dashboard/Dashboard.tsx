@@ -11,7 +11,7 @@ import { UserContext } from "../../utility/context/UserContext";
 import AddCourseForm from "../course-groups/AddCourseForm";
 import { Modal } from "../../components/Modal";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { orderCourseAlphabetically } from "../../utility/Helpers";
+import { orderCourseRecentlyCreated } from "../../utility/Helpers";
 
 
 export default function Dashboard(): JSX.Element {
@@ -99,22 +99,22 @@ export default function Dashboard(): JSX.Element {
 
       <hr />
       {courseList.length > 0 ? (
-        <CourseList list={orderCourseAlphabetically(courseList).slice(0, 6)} refreshList={refreshList} />
+        <CourseList list={orderCourseRecentlyCreated(courseList).slice(0, 6)} refreshList={refreshList} />
       ) : <></>}
 
       &nbsp;&nbsp;&nbsp;
 
       <div className="dashboard__section-header">
-        <h3>Available Modules</h3>
+        <h3>Recent Modules</h3>
         <div>
           <Button onClick={() => navigator("/modules")}>View All Modules</Button>
         </div>
       </div>
       <hr />
-      {courseList.length > 0 && courseList.map((course, index) => {
+      {courseList.length > 0 && mostRecentModules(orderCourseRecentlyCreated(courseList)).map((course, index) => {
         return course.modules.length > 0 ? (
           <div style={{ width: "100%" }} key={index}>
-            <ModuleList course={course} refreshList={refreshList} />
+            <ModuleList course={({ ...course, modules: course.mostRecentItem ? [course.mostRecentItem] : [] })} refreshList={refreshList} />
             <Divider />
           </div>
         ) : null
@@ -123,4 +123,19 @@ export default function Dashboard(): JSX.Element {
   ) : (
     <LinearProgress />
   )
+}
+
+//get the most recently created module within each course to display on dashboard
+function mostRecentModules(courses: Array<CourseType>) {
+  // Get the most recently created object in each subarray
+  const categoriesWithRecentItems = courses.map(course => {
+    const mostRecentItem = course.modules.length > 0
+      ? course.modules.reduce((latest, item) =>
+        item.id > latest.id ? item : latest
+      )
+      : null; // Handle empty items array
+
+    return { ...course, mostRecentItem };
+  });
+  return categoriesWithRecentItems
 }

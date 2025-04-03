@@ -62,3 +62,15 @@ export function orderModuleAlphabetically(list: Array<ModuleType>) {
     return a.name.localeCompare(b.name)
   })
 }
+
+export function orderCourseRecentlyCreated(list: Array<CourseType>) {
+  return list.sort((a, b) => {
+    return a.createdTimestamp < b.createdTimestamp ? 1 : -1;
+  })
+}
+
+export function orderModuleRecentlyCreated(list: Array<ModuleType>) {
+  return list.sort((a, b) => {
+    return a.id < b.id ? 1 : -1;
+  })
+}

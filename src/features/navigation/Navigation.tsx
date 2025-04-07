@@ -36,18 +36,9 @@ export default function Navigation(): JSX.Element {
 
   //For the side drawer main nav menu
   // base this list off instuctor, admin, student access, and TAs
-  var mainMenuList = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-    user?.groups.find(a => a.includes("-TA")) ?
-    user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
-      ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About", "Settings"] :
-      ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About"] :
-    ["Dashboard", "Courses", "Modules", "Account", "About"];
-  var mainMenuLinks = user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-    user?.groups.find(a => a.includes("-TA")) ?
-    user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ?
-      ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about", "/org-settings"] :
-      ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about"] :
-    ["/", "/courses", "/modules", "/account", "/about"];
+  // tas dont have access to library
+  var mainMenuList = ["Dashboard", "Courses", "Modules", "Account", "About"];
+  var mainMenuLinks = ["/", "/courses", "/modules", "/account", "/about"];
   const [sideDrawer, setSideDrawer] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
@@ -60,6 +51,24 @@ export default function Navigation(): JSX.Element {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, []);
+
+  //decide nav bar based on user permissions
+  useEffect(() => {
+    if (user) {
+      if (user.groups.find(a => a.includes("-TA"))) {
+        mainMenuList = ["Dashboard", "Courses", "Modules", "Reports", "Account", "About"];
+        mainMenuLinks = ["/", "/courses", "/modules", "/reports", "/account", "/about"]
+      }
+      if (user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors")) {
+        mainMenuList = ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About"]
+        mainMenuLinks = ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about"]
+      }
+      if (user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin")) {
+        mainMenuList = ["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About", "Settings"]
+        mainMenuLinks = ["/", "/courses", "/modules", "/reports", "/library", "/account", "/about", "/org-settings"]
+      }
+    }
+  }, [user])
 
   useEffect(() => {
     //set breadcrumb text based on the url location

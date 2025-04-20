@@ -1,11 +1,12 @@
 
 
-export function getAllData2(courseIds: string[], lastKeyId?: number, lastModuleId?: string) {
-  //TODO: Include courseIds into URL
+export function getAllData2(courseIds: string[], lastKeyId?: string, lastModuleId?: string): string {
+  let url = `data?organization=${process.env.REACT_APP_ORGANIZATION}`;
   if (lastKeyId) {
-    return `data?organization=${process.env.REACT_APP_ORGANIZATION}&LastEvaluatedKeyId=${lastKeyId}&LastEvaluatedKeyModuleId=${lastModuleId}`
-  } else {
-    return `data?organization=${process.env.REACT_APP_ORGANIZATION}`;
+    url += `&LastEvaluatedKeyId=${lastKeyId}&LastEvaluatedKeyModuleId=${lastModuleId}`;
   }
+  for (const id of courseIds) {
+    url += `&courseId=${id}`;
+  }
+  return url;
 }
-

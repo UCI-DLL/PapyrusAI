@@ -9,7 +9,8 @@ import {
   AccordionDetails,
   Button,
   Checkbox,
-  ListItemButton
+  ListItemButton,
+  FormControlLabel
 } from "@mui/material";
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
@@ -24,6 +25,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Modal } from "../../components/Modal";
 import { ConversationType } from "../../utility/types/ConversationTypes";
 import { getContentModMessage, getConversation, getConversationList } from "../../utility/endpoints/ConversationEndpoints";
+import { getAllData2 } from "../../utility/endpoints/DataCsvEndpoints";
 
 
 export default function Reports(): JSX.Element {
@@ -32,6 +34,7 @@ export default function Reports(): JSX.Element {
   const [userList, setUserList] = useState<Array<{ users: Array<CustomUserType>, course: CourseType }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [openDownloadCourseModal, setOpenDownloadCourseModal] = useState<boolean>(false);
+  const [researchCSV, setResearchCSV] = useState(false);
   const style = {
     width: '100%',
     bgcolor: 'background.paper',
@@ -202,6 +205,17 @@ export default function Reports(): JSX.Element {
       coursesToDownload.push(course);
     })
 
+    // If "CSV Mode" is checked on, run this section instead of the logic below
+    if (researchCSV) {
+      // Get a list of all courseIds selected
+      const courseIds = coursesToDownload.map(course => course.id);
+      setTimeout(() => {
+        downloadCoursesAsCsv(courseIds);
+        setIsLoading(false);
+      }, 10000);
+    return;
+  }
+
     //For each course, for each module in course, for each user in course, get conversation list (for length of array) and then the actual convo
     const controller = new AbortController();
     coursesToDownload.forEach((course, courseIndex) => {
@@ -316,6 +330,30 @@ export default function Reports(): JSX.Element {
     downloadAnchorNode.remove();
   }
 
+  async function downloadCoursesAsCsv(courseIds: string[]) {
+    // Get the data as a CSV
+    const csvContent = await getUserMessagesAsCsv(courseIds);
+
+    // Create a blob and trigger a download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Messages_Data.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  async function getUserMessagesAsCsv(courseIds: any) {
+    const header = 'id\n';
+    const rows = courseIds.join('\n');
+    const url = await Get(getAllData2(courseIds))
+    console.log(url)
+    return header + rows;
+  }
+
   return !isLoading ? (
     <div className="reports">
       {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
@@ -364,6 +402,18 @@ export default function Reports(): JSX.Element {
                 );
               })}
             </List>
+
+            <FormControlLabel
+              label="Download as CSV"
+              labelPlacement="start"
+              control={
+                <Checkbox
+                  checked={researchCSV}
+                  onChange={e => setResearchCSV(e.target.checked)}
+                  size="small"
+                />
+              }
+            />
           </div>
         </Modal>
       )}

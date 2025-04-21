@@ -210,8 +210,11 @@ export default function Reports(): JSX.Element {
     if (researchCSV) {
       // Get a list of all courseIds selected
       const courseIds = coursesToDownload.map(course => course.id);
-      setTimeout(() => {
-        downloadCoursesAsCsv(courseIds, controller);
+      setTimeout(async () => {
+        // Get all the content as a csv string
+        const csvContent: string = await getUserMessagesAsCsv(courseIds, controller);
+        // Download the string as a CSV (include the extension .csv)
+        downloadStringAsCsv(csvContent, "Messages_Data.csv");
         setIsLoading(false);
       }, 10000);
     return;
@@ -330,16 +333,12 @@ export default function Reports(): JSX.Element {
     downloadAnchorNode.remove();
   }
 
-  async function downloadCoursesAsCsv(courseIds: string[], controller: AbortController) {
-    // Get the data as a CSV
-    const csvContent = await getUserMessagesAsCsv(courseIds, controller);
-    // Blob + Object URL approach, using this approach I found since it can handle larger loads at once
-    // Create a blob and trigger a download
+  function downloadStringAsCsv(csvContent: string, fileName: string) {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    const url  = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'Messages_Data.csv';
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -354,6 +353,7 @@ export default function Reports(): JSX.Element {
 
     // Paginate through the getAllData2 based on keys returned
     while (isFirstPage || (lastKeyId && lastModuleId)) {
+      // First loop won't contain lastKeyId nor lastModuleId
       const res = await Get(getAllData2(courseIds, lastKeyId, lastModuleId), controller.signal);
       // If response is successful, save the csv data
       if (res && res.status && res.status < 300) {

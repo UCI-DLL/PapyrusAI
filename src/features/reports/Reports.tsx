@@ -213,8 +213,8 @@ export default function Reports(): JSX.Element {
       setTimeout(async () => {
         // Get all the content as a csv string
         const csvContent: string = await getUserMessagesAsCsv(courseIds, controller);
-        // Download the string as a CSV (include the extension .csv)
-        downloadStringAsCsv(csvContent, "Messages_Data.csv");
+        // Download the string as a CSV
+        downloadStringAsCsv(csvContent, "PapyrusAI_messages");
         setIsLoading(false);
       }, 10000);
     return;
@@ -353,6 +353,8 @@ export default function Reports(): JSX.Element {
 
     // Paginate through the getAllData2 based on keys returned
     while (isFirstPage || (lastKeyId && lastModuleId)) {
+      // Update the first LCV
+      isFirstPage = false;
       // First loop won't contain lastKeyId nor lastModuleId
       const res = await Get(getAllData2(courseIds, lastKeyId, lastModuleId), controller.signal);
       // If response is successful, save the csv data
@@ -363,7 +365,6 @@ export default function Reports(): JSX.Element {
             // If it is the first chunk, keep the headers
             if (isFirstPage) {
               allCsv += chunkCsv;
-              isFirstPage = false;
             } else {
               // Separate by "new lines"
               const lines = chunkCsv.split("\n");
@@ -372,7 +373,7 @@ export default function Reports(): JSX.Element {
               allCsv += "\n" + dataLines.join("\n");
             }
           }
-          // Update the LCV
+          // Update the second LCV
           lastKeyId = res.data?.LastEvaluatedKeyId;
           lastModuleId = res.data?.LastEvaluatedKeyModuleId;
         }

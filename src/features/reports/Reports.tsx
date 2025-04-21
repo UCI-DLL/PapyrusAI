@@ -204,20 +204,20 @@ export default function Reports(): JSX.Element {
       course["users"] = sortCourseList(userList)[x].users;
       coursesToDownload.push(course);
     })
-
+    // Both download methods will be using this as the controller
+    const controller = new AbortController();
     // If "CSV Mode" is checked on, run this section instead of the logic below
     if (researchCSV) {
       // Get a list of all courseIds selected
       const courseIds = coursesToDownload.map(course => course.id);
       setTimeout(() => {
-        downloadCoursesAsCsv(courseIds);
+        downloadCoursesAsCsv(courseIds, controller);
         setIsLoading(false);
       }, 10000);
     return;
   }
 
     //For each course, for each module in course, for each user in course, get conversation list (for length of array) and then the actual convo
-    const controller = new AbortController();
     coursesToDownload.forEach((course, courseIndex) => {
       course.modules.forEach((module, moduleIndex) => {
         //create conversation array if it doesnt exist
@@ -330,10 +330,10 @@ export default function Reports(): JSX.Element {
     downloadAnchorNode.remove();
   }
 
-  async function downloadCoursesAsCsv(courseIds: string[]) {
+  async function downloadCoursesAsCsv(courseIds: string[], controller: AbortController) {
     // Get the data as a CSV
-    const csvContent = await getUserMessagesAsCsv(courseIds);
-
+    const csvContent = await getUserMessagesAsCsv(courseIds, controller);
+    // Blob + Object URL approach, using this approach I found since it can handle larger loads at once
     // Create a blob and trigger a download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -346,12 +346,47 @@ export default function Reports(): JSX.Element {
     URL.revokeObjectURL(url);
   }
 
-  async function getUserMessagesAsCsv(courseIds: any) {
-    const header = 'id\n';
-    const rows = courseIds.join('\n');
-    const url = await Get(getAllData2(courseIds))
-    console.log(url)
-    return header + rows;
+  async function getUserMessagesAsCsv(courseIds: string[], controller: AbortController): Promise<string> {
+    let allCsv = "";
+    let lastKeyId: string | undefined;
+    let lastModuleId: string | undefined;
+    let isFirstPage = true;
+
+    // Paginate through the getAllData2 based on keys returned
+    while (isFirstPage || (lastKeyId && lastModuleId)) {
+      const res = await Get(getAllData2(courseIds, lastKeyId, lastModuleId), controller.signal);
+      // If response is successful, save the csv data
+      if (res && res.status && res.status < 300) {
+        if (res.data?.csv) {
+          const chunkCsv: string = res.data?.csv ?? "";
+          if (chunkCsv) {
+            // If it is the first chunk, keep the headers
+            if (isFirstPage) {
+              allCsv += chunkCsv;
+              isFirstPage = false;
+            } else {
+              // Separate by "new lines"
+              const lines = chunkCsv.split("\n");
+              // Drop the header line, then join the rest
+              const [, ...dataLines] = lines;
+              allCsv += "\n" + dataLines.join("\n");
+            }
+          }
+          // Update the LCV
+          lastKeyId = res.data?.LastEvaluatedKeyId;
+          lastModuleId = res.data?.LastEvaluatedKeyModuleId;
+        }
+      } else if (res?.status === 401) {
+        navigator("/login");
+        return allCsv;
+      }
+      // "if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error"
+      else {
+        // Nothing for now, not sure how to handle this edge case yet
+        console.info(`Unhandled response status: ${res.status}`, res);
+      }
+    }
+    return allCsv;
   }
 
   return !isLoading ? (

@@ -213,6 +213,7 @@ export default function Reports(): JSX.Element {
       setTimeout(async () => {
         // Get all the content as a csv string
         const csvContent: string = await getUserMessagesAsCsv(courseIds, controller);
+        // const csvContent: string = await "id,name\n1,TestUser"
         // Download the string as a CSV
         downloadStringAsCsv(csvContent, "PapyrusAI_messages");
         setIsLoading(false);
@@ -349,12 +350,12 @@ export default function Reports(): JSX.Element {
     let allCsv = "";
     let lastKeyId: string | undefined;
     let lastModuleId: string | undefined;
-    let isFirstPage = true;
+    let isFirstPage = [true, true];
 
     // Paginate through the getAllData2 based on keys returned
-    while (isFirstPage || (lastKeyId && lastModuleId)) {
+    while (isFirstPage[0] || (lastKeyId && lastModuleId)) {
       // Update the first LCV
-      isFirstPage = false;
+      isFirstPage[0] = false;
       // First loop won't contain lastKeyId nor lastModuleId
       const res = await Get(getAllData2(courseIds, lastKeyId, lastModuleId), controller.signal);
       // If response is successful, save the csv data
@@ -363,8 +364,9 @@ export default function Reports(): JSX.Element {
           const chunkCsv: string = res.data?.csv ?? "";
           if (chunkCsv) {
             // If it is the first chunk, keep the headers
-            if (isFirstPage) {
+            if (isFirstPage[1]) {
               allCsv += chunkCsv;
+              isFirstPage[1] = false
             } else {
               // Separate by "new lines"
               const lines = chunkCsv.split("\n");

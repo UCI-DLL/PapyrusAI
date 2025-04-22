@@ -31,6 +31,7 @@ export default function ConversationList(): JSX.Element {
   const { user } = useContext(UserContext);
   const [conversationList, setConversationList] = useState<ConversationListType>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [creatingConvo, setCreatingConvo] = useState<boolean>(false); //disable button after clicking
   const [error, setError] = useState<string>();
   const [course, setCourse] = useState<CourseType>();
   //This is for when instructors or admins are looking up a different student
@@ -137,11 +138,14 @@ export default function ConversationList(): JSX.Element {
     // eslint-disable-next-line
   }, []);
 
-  function handleNewConversation() {
+  function handleNewConversation(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    e.preventDefault();
     if (moduleIds) {
+      setCreatingConvo(true);
       Post(postCreateConversation(moduleIds?.courseId, moduleIds?.moduleId), {}).then(res => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
+            setCreatingConvo(false);
             //update conversation list with new conversation list
             setConversationList(res.data);
             //then go right into chat
@@ -352,7 +356,13 @@ export default function ConversationList(): JSX.Element {
 
             <div>
               {viewUser ? <></> : (
-                <Button variant="contained" onClick={handleNewConversation}>New Conversation</Button>
+                <Button
+                  variant="contained"
+                  onClick={handleNewConversation}
+                  disabled={creatingConvo}
+                >
+                  New Conversation
+                </Button>
               )}
             </div>
           </div>
@@ -454,7 +464,13 @@ export default function ConversationList(): JSX.Element {
                       {viewUser ? (
                         <div>No conversations yet</div>
                       ) : (
-                        <Button variant="contained" onClick={handleNewConversation}>Start a Conversation</Button>
+                        <Button
+                          variant="contained"
+                          onClick={handleNewConversation}
+                          disabled={creatingConvo}
+                        >
+                          Start a Conversation
+                        </Button>
                       )}
                     </div>
                   )}

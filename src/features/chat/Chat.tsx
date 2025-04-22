@@ -268,12 +268,13 @@ export default function Chat(): JSX.Element {
     if (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled) {
       setShowWizard(false)
     } else {
+      var visibleMessages = messages.filter(m => m.userVisible !== undefined && m.userVisible)
       if (viewUser &&
         user &&
         user.username === viewUser.username &&
         moduleInfo &&
         (moduleInfo.raterEnabled === undefined || !moduleInfo.raterEnabled) &&
-        messages.length < 1 &&
+        visibleMessages.length < 1 &&
         moduleInfo.prompts.length !== 0
       ) {
         setShowWizard(true)

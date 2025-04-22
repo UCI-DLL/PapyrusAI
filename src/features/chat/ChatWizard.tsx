@@ -70,7 +70,8 @@ export default function ChatWizard({
               setError("Select prompt");
             }
             else {
-              returnPrompt(selectedPrompt);
+              returnPrompt(selectedPrompt); //disable button after click
+              setSelectedPrompt("");
             }
           }}
           disabled={!selectedPrompt}

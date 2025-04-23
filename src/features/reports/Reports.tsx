@@ -209,14 +209,7 @@ export default function Reports(): JSX.Element {
     if (researchCSV) {
       // Get a list of all courseIds selected
       const courseIds = coursesToDownload.map(course => course.id);
-      setTimeout(async () => {
-        // Get all the content as a csv string
-        const csvContent: string = await getUserMessagesAsCsv(courseIds, controller);
-        // const csvContent: string = await "id,name\n1,TestUser"
-        // Download the string as a CSV
-        downloadStringAsCsv(csvContent, "PapyrusAI_messages");
-        setIsLoading(false);
-      }, 10000);
+      downloadUserMessagesAsCsv(courseIds, controller);
     return;
   }
 
@@ -345,50 +338,42 @@ export default function Reports(): JSX.Element {
     URL.revokeObjectURL(url);
   }
 
-  async function getUserMessagesAsCsv(courseIds: string[], controller: AbortController): Promise<string> {
-    let allCsv = "";
-    let lastKeyId: string | undefined;
-    let lastModuleId: string | undefined;
-    let isFirstPage = [true, true];
+  function downloadUserMessagesAsCsv(courseIds: string[], controller: AbortController) {
+    setIsLoading(true);
+    getUserMessagesAsCsv(courseIds, controller).then(csv => downloadStringAsCsv(csv, "PapyrusAI_messages"))
+        .finally(() => setIsLoading(false))
+  }
 
-    // Paginate through the getAllMessages based on keys returned
-    while (isFirstPage[0] || (lastKeyId && lastModuleId)) {
-      // Update the first LCV
-      isFirstPage[0] = false;
-      // First loop won't contain lastKeyId nor lastModuleId
-      const res = await Get(getAllMessages(courseIds, lastKeyId, lastModuleId), controller.signal);
-      // If response is successful, save the csv data
+  function getUserMessagesAsCsv(courseIds: string[], controller: AbortController, accCsv: string = "", lastKeyId?: string, lastModuleId?: string ): Promise<string> {
+    return Get(getAllMessages(courseIds, lastKeyId, lastModuleId), controller.signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data?.csv) {
-          const chunkCsv: string = res.data?.csv ?? "";
-          if (chunkCsv) {
-            // If it is the first chunk, keep the headers
-            if (isFirstPage[1]) {
-              allCsv += chunkCsv;
-              isFirstPage[1] = false;
-            } else {
-              // Separate by "new lines"
-              const lines = chunkCsv.split("\n");
-              // Drop the header line, then join the rest
-              const [, ...dataLines] = lines;
-              allCsv += "\n" + dataLines.join("\n");
-            }
-          }
-          // Update the second LCV
-          lastKeyId = res.data?.LastEvaluatedKeyId;
-          lastModuleId = res.data?.LastEvaluatedKeyModuleId;
+        const chunkCsv: string = res.data.csv!;
+        if (accCsv === "") {
+          // First chunk keeps the header
+          accCsv = chunkCsv;
+        } else {
+          // All other chunks drop the header line
+          const [, ...dataLines] = chunkCsv.split("\n");
+          accCsv += "\n" + dataLines.join("\n");
+        }
+        // Get next pagination keys, if any
+        const nextKeyId = res.data?.LastEvaluatedKeyId;
+        const nextModuleId = res.data?.LastEvaluatedKeyModuleId;
+        // Call the next endpoint if it is incomplete, recursively
+        if (nextKeyId && nextModuleId) {
+          return getUserMessagesAsCsv(courseIds, controller, accCsv, nextKeyId, nextModuleId)
+        } else {
+          return accCsv.trim()
         }
       } else if (res?.status === 401) {
         navigator("/login");
-        return allCsv;
+        return Promise.reject(new Error("Unauthorized"));
+      } else {
+        // Log and return whatever was leftover
+        console.info(`Unhandled response status: ${res?.status}`, res);
+        return accCsv;
       }
-      // "if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error"
-      else {
-        // Nothing for now, not sure how to handle this edge case yet
-        console.info(`Unhandled response status: ${res.status}`, res);
-      }
-    }
-    return allCsv;
+    });
   }
 
   return !isLoading ? (

@@ -371,7 +371,7 @@ export default function Reports(): JSX.Element {
       } else {
         // Log and return whatever was leftover
         console.info(`Unhandled response status: ${res?.status}`, res);
-        return accCsv;
+        return accCsv.trim();
       }
     });
   }

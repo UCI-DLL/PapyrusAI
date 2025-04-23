@@ -16,7 +16,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
 import { UserContext } from "../../utility/context/UserContext";
 import Get from "../../utility/Get";
-import { getAllCourseList, getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
+import { getAllCourseList, getCourse, getUsersInCourse, getAllMessages } from "../../utility/endpoints/CourseEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import { Link } from "react-router-dom";
@@ -25,7 +25,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Modal } from "../../components/Modal";
 import { ConversationType } from "../../utility/types/ConversationTypes";
 import { getContentModMessage, getConversation, getConversationList } from "../../utility/endpoints/ConversationEndpoints";
-import { getAllData2 } from "../../utility/endpoints/DataCsvEndpoints";
 
 
 export default function Reports(): JSX.Element {
@@ -352,12 +351,12 @@ export default function Reports(): JSX.Element {
     let lastModuleId: string | undefined;
     let isFirstPage = [true, true];
 
-    // Paginate through the getAllData2 based on keys returned
+    // Paginate through the getAllMessages based on keys returned
     while (isFirstPage[0] || (lastKeyId && lastModuleId)) {
       // Update the first LCV
       isFirstPage[0] = false;
       // First loop won't contain lastKeyId nor lastModuleId
-      const res = await Get(getAllData2(courseIds, lastKeyId, lastModuleId), controller.signal);
+      const res = await Get(getAllMessages(courseIds, lastKeyId, lastModuleId), controller.signal);
       // If response is successful, save the csv data
       if (res && res.status && res.status < 300) {
         if (res.data?.csv) {
@@ -366,7 +365,7 @@ export default function Reports(): JSX.Element {
             // If it is the first chunk, keep the headers
             if (isFirstPage[1]) {
               allCsv += chunkCsv;
-              isFirstPage[1] = false
+              isFirstPage[1] = false;
             } else {
               // Separate by "new lines"
               const lines = chunkCsv.split("\n");

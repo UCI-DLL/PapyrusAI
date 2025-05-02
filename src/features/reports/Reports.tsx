@@ -10,7 +10,10 @@ import {
   Button,
   Checkbox,
   ListItemButton,
-  FormControlLabel
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from "@mui/material";
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
@@ -33,7 +36,7 @@ export default function Reports(): JSX.Element {
   const [userList, setUserList] = useState<Array<{ users: Array<CustomUserType>, course: CourseType }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [openDownloadCourseModal, setOpenDownloadCourseModal] = useState<boolean>(false);
-  const [researchCSV, setResearchCSV] = useState(false);
+  const [downloadType, setDownloadType] = useState<string>('json');
   const style = {
     width: '100%',
     bgcolor: 'background.paper',
@@ -206,60 +209,82 @@ export default function Reports(): JSX.Element {
     // Both download methods will be using this as the controller
     const controller = new AbortController();
     // If "CSV Mode" is checked on, run this section instead of the logic below
-    if (researchCSV) {
-      // Get a list of all courseIds selected
-      const courseIds = coursesToDownload.map(course => course.id);
-      downloadUserMessagesAsCsv(courseIds, controller);
-    return;
-  }
+    switch (downloadType) {
+      case 'csv': {
+        const courseIds = coursesToDownload.map(course => course.id);
+        // TODO: Get convoIds instead of courseIds for optimal query performance in backend or (just make the backend support it)
+        downloadUserMessagesAsCsv(courseIds, controller);
+        break;
+      }
 
-    //For each course, for each module in course, for each user in course, get conversation list (for length of array) and then the actual convo
-    coursesToDownload.forEach((course, courseIndex) => {
-      course.modules.forEach((module, moduleIndex) => {
-        //create conversation array if it doesnt exist
-        if (coursesToDownload[courseIndex].modules[moduleIndex].conversations === undefined) {
-          coursesToDownload[courseIndex].modules[moduleIndex].conversations = [];
-        }
-        course.users.forEach(user => {
-          //get conversation list based on course and module and user
-          promiseArray.push(Get(getConversationList(course.id, module.id, user.sub), controller.signal).then(res => {
-            if (res && res.status && res.status < 300) {
-              if (res.data) {
-                //check if conversation for course, module, user / get conversation list length
-                //get conversation data (with message data)
-                if (res.data.conversations && res.data.conversations.length > 0) {
-                  res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
-                    var convoData = await getConvo(course.id, module.id, convoIndex.toString(), user.sub, controller);
-                    promiseArray.push(convoData);
-                    if (convoData) {
-                      var convoData2 = { ...convoData, user: user }
-                      // save convo data in the main json in the right place in coursesToDownload
-                      // push to convo list because it will be a list of ALL convos from all users 
-                      // check if convo list already has convo with same id to prevent duplicates
-                      if (!coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(e => e.id === convoData2.id)) {
-                        coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
-                      }
-                    }
-                  })
-                }
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              //Do nothing and skip. The user doesnt have any conversations within the course/module
+      case 'json': {
+        //For each course, for each module in course, for each user in course, get conversation list (for length of array) and then the actual convo
+        coursesToDownload.forEach((course, courseIndex) => {
+          course.modules.forEach((module, moduleIndex) => {
+            //create conversation array if it doesnt exist
+            if (coursesToDownload[courseIndex].modules[moduleIndex].conversations === undefined) {
+              coursesToDownload[courseIndex].modules[moduleIndex].conversations = [];
             }
-          }))
+            course.users.forEach(user => {
+              //get conversation list based on course and module and user
+              promiseArray.push(Get(getConversationList(course.id, module.id, user.sub), controller.signal).then(res => {
+                if (res && res.status && res.status < 300) {
+                  if (res.data) {
+                    //check if conversation for course, module, user / get conversation list length
+                    //get conversation data (with message data)
+                    if (res.data.conversations && res.data.conversations.length > 0) {
+                      res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
+                        var convoData = await getConvo(course.id, module.id, convoIndex.toString(), user.sub, controller);
+                        promiseArray.push(convoData);
+                        if (convoData) {
+                          var convoData2 = { ...convoData, user: user }
+                          // save convo data in the main json in the right place in coursesToDownload
+                          // push to convo list because it will be a list of ALL convos from all users
+                          // check if convo list already has convo with same id to prevent duplicates
+                          if (!coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(e => e.id === convoData2.id)) {
+                            coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
+                          }
+                        }
+                      })
+                    }
+                  }
+                } else if (res && res.status === 401) {
+                  navigator("/login");
+                } else {
+                  //Do nothing and skip. The user doesnt have any conversations within the course/module
+                }
+              }))
+            })
+          })
         })
-      })
-    })
 
-    Promise.allSettled(promiseArray).then(() => {
-      // download here
-      setTimeout(() => {
-        downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`);
-        setIsLoading(false);
-      }, 10000);
-    });
+        Promise.allSettled(promiseArray).then(() => {
+          // download here
+          setTimeout(() => {
+            downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`);
+            setIsLoading(false);
+          }, 10000);
+        });
+        break;
+      }
+
+      case 'txt': {
+        console.log("Hi Boss, have fun coding! Hope you been having a good day!\n" +
+            "Here is some mental health tips for us as SWE:\n" +
+            "\nIt is said that SWEs are commonly overwhlemed by deadlines causing stess and a good destressent is doing" +
+            " small tasks like reviewing junior code or other non-big task. This was found in a research paper" +
+            " convering SWE stress. They found that SWEs almost never have dedicated time for documentation or" +
+            " the smaller tasks so making time for it and avoiding the bigger tasks is still productive and should" +
+            " be viewed as productive. OK, thats all, have fund writing the TXT case!")
+        setIsLoading(false)
+        break;
+      }
+
+      default: {
+        console.error("Invalid downloadType value");
+        navigator("/login");
+      }
+    }
   }
 
   //helper function to get the conversation for the json download
@@ -425,17 +450,20 @@ export default function Reports(): JSX.Element {
               })}
             </List>
 
-            <FormControlLabel
-              label="Download as CSV"
-              labelPlacement="start"
-              control={
-                <Checkbox
-                  checked={researchCSV}
-                  onChange={e => setResearchCSV(e.target.checked)}
-                  size="small"
-                />
-              }
-            />
+            <FormControl size="small" sx={{ mt: 1, minWidth: 100, float: 'right' }}>
+              <InputLabel id="download-format-label">Format</InputLabel>
+              <Select
+                labelId="download-format-label"
+                id="download-format"
+                value={downloadType}
+                label="Format"
+                onChange={e => setDownloadType(e.target.value)}
+              >
+                <MenuItem value="json">JSON</MenuItem>
+                <MenuItem value="csv">CSV</MenuItem>
+                <MenuItem value="txt">TXT</MenuItem>
+              </Select>
+            </FormControl>
           </div>
         </Modal>
       )}

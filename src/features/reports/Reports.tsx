@@ -28,11 +28,15 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Modal } from "../../components/Modal";
 import { ConversationType } from "../../utility/types/ConversationTypes";
 import { getContentModMessage, getConversation, getConversationList } from "../../utility/endpoints/ConversationEndpoints";
+import { AlertContext } from "../../utility/context/AlertContext";
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 
 export default function Reports(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
+  const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<{ users: Array<CustomUserType>, course: CourseType }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [openDownloadCourseModal, setOpenDownloadCourseModal] = useState<boolean>(false);
@@ -199,7 +203,10 @@ export default function Reports(): JSX.Element {
   function downloadCourses() {
     setOpenDownloadCourseModal(false);
     setIsLoading(true);
-    type DownloadType = CourseType & { users: Array<CustomUserType> } & { modules: Array<ModuleType & { conversations: Array<ConversationType & { user: CustomUserType }> }> }
+    type DownloadType = CourseType & { users: Array<CustomUserType> } & {
+      modules: Array<ModuleType &
+      { conversations: Array<ConversationType & { user: CustomUserType }> }>
+    }
     var coursesToDownload: DownloadType[] = [];
     checked.forEach(x => {
       var course: any = sortCourseList(userList)[x].course;
@@ -216,9 +223,9 @@ export default function Reports(): JSX.Element {
         downloadUserMessagesAsCsv(courseIds, controller);
         break;
       }
-
       case 'json': {
-        //For each course, for each module in course, for each user in course, get conversation list (for length of array) and then the actual convo
+        //For each course, for each module in course, for each user in course, get conversation list 
+        // (for length of array) and then the actual convo
         coursesToDownload.forEach((course, courseIndex) => {
           course.modules.forEach((module, moduleIndex) => {
             //create conversation array if it doesnt exist
@@ -267,24 +274,97 @@ export default function Reports(): JSX.Element {
         });
         break;
       }
-
       case 'txt': {
-        console.log("Hi Boss, have fun coding! Hope you been having a good day!\n" +
-            "Here is some mental health tips for us as SWE:\n" +
-            "\nIt is said that SWEs are commonly overwhlemed by deadlines causing stess and a good destressent is doing" +
-            " small tasks like reviewing junior code or other non-big task. This was found in a research paper" +
-            " convering SWE stress. They found that SWEs almost never have dedicated time for documentation or" +
-            " the smaller tasks so making time for it and avoiding the bigger tasks is still productive and should" +
-            " be viewed as productive. OK, thats all, have fund writing the TXT case!")
-        setIsLoading(false)
+        //get conversations within the courses
+        //For each course, for each module in course, for each user in course, get conversation list 
+        //(for length of array) and then the actual convo
+        coursesToDownload.forEach((course, courseIndex) => {
+          course.modules.forEach((module, moduleIndex) => {
+            //create conversation array if it doesnt exist
+            if (coursesToDownload[courseIndex].modules[moduleIndex].conversations === undefined) {
+              coursesToDownload[courseIndex].modules[moduleIndex].conversations = [];
+            }
+            course.users.forEach(user => {
+              //get conversation list based on course and module and user
+              promiseArray.push(Get(getConversationList(course.id, module.id, user.sub), controller.signal).then(res => {
+                if (res && res.status && res.status < 300) {
+                  if (res.data) {
+                    //check if conversation for course, module, user / get conversation list length
+                    //get conversation data (with message data)
+                    if (res.data.conversations && res.data.conversations.length > 0) {
+                      res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
+                        var convoData = await getConvo(course.id, module.id, convoIndex.toString(), user.sub, controller);
+                        promiseArray.push(convoData);
+                        if (convoData) {
+                          var convoData2 = { ...convoData, user: user }
+                          // push to convo list because it will be a list of ALL convos from all users
+                          // check if convo list already has convo with same id to prevent duplicates
+                          if (!coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(e => e.id === convoData2.id)) {
+                            coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
+                          }
+                        }
+                      })
+                    }
+                  }
+                } else if (res && res.status === 401) {
+                  navigator("/login");
+                } else {
+                  //Do nothing and skip. The user doesnt have any conversations within the course/module
+                }
+              }))
+            })
+          })
+        })
+
+        Promise.allSettled(promiseArray).then(() => {
+          // download here
+          setTimeout(() => {
+            downloadTxtZip(coursesToDownload, `PapyrusAI_courses`)
+          }, 10000);
+        });
         break;
       }
-
       default: {
         console.error("Invalid downloadType value");
-        navigator("/login");
+        setAlert({ message: "Could not download data. Try again later.", type: "error" })
       }
     }
+  }
+
+  async function downloadTxtZip(exportObj: any, exportName: string) {
+    //convert each conversation to txt
+    const zip = new JSZip();
+
+    //for each course, module, conversation create a txt file 
+    exportObj.forEach((courseInfo: any) => {
+      courseInfo.modules.forEach((moduleInfo: any) => {
+        moduleInfo.conversations.forEach((converation: any, convoIndex: number) => {
+          var fileData = courseInfo.name + "\n" +
+            moduleInfo.name + "\n" + courseInfo.instructor.name + " " +
+            courseInfo.instructor.family_name + "\n";
+          if (converation.user) {
+            fileData += "User: " + converation.user.email + "\n";
+          }
+          fileData += "Conversation Index: " + convoIndex + "\n";
+          fileData += "Conversation ID: " + converation.id + "\n";
+          converation.messages.forEach((message: any) => {
+
+            var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
+            var sender = message.sender === "ChatGPT" ? "Papyrus" : converation.user.name + " " + converation.user.family_name;
+            fileData += sender + " - " + dateTime + "\n" + message.content + "\n\n";
+          });
+
+          //add txt files to zip file and download
+          zip.file(`${courseInfo.name}/${moduleInfo.name}/${converation.user.email}_${convoIndex}.txt`, fileData);
+        })
+      })
+    })
+
+    // Generate the zip file as a Blob
+    const zipContent = await zip.generateAsync({ type: 'blob' });
+    // Trigger the download
+    saveAs(zipContent, `${exportName}.zip`);
+    setIsLoading(false)
   }
 
   //helper function to get the conversation for the json download
@@ -353,7 +433,7 @@ export default function Reports(): JSX.Element {
 
   function downloadStringAsCsv(csvContent: string, fileName: string) {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = fileName;
@@ -366,10 +446,10 @@ export default function Reports(): JSX.Element {
   function downloadUserMessagesAsCsv(courseIds: string[], controller: AbortController) {
     setIsLoading(true);
     getUserMessagesAsCsv(courseIds, controller).then(csv => downloadStringAsCsv(csv, "PapyrusAI_messages"))
-        .finally(() => setIsLoading(false))
+      .finally(() => setIsLoading(false))
   }
 
-  function getUserMessagesAsCsv(courseIds: string[], controller: AbortController, accCsv: string = "", lastKeyId?: string, lastModuleId?: string ): Promise<string> {
+  function getUserMessagesAsCsv(courseIds: string[], controller: AbortController, accCsv: string = "", lastKeyId?: string, lastModuleId?: string): Promise<string> {
     return Get(getAllMessages(courseIds, lastKeyId, lastModuleId), controller.signal).then(res => {
       if (res && res.status && res.status < 300) {
         const chunkCsv: string = res.data.csv!;

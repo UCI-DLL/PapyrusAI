@@ -30,6 +30,7 @@ import Post from "../../utility/Post";
 import { Tooltip } from "@mui/material";
 import SpeechToTextModal from "./SpeechToTextModal";
 import EssayWizard from "./EssayWizard";
+import { removeSpecialCharacters } from "../../utility/Helpers";
 
 
 export default function Chat(): JSX.Element {
@@ -1084,7 +1085,7 @@ export default function Chat(): JSX.Element {
                       //check that message length is less that 100000
                       setChatError(undefined);
                       if (e.target.value.length < 100000) {
-                        setNewMessage(e.target.value)
+                        setNewMessage(removeSpecialCharacters(e.target.value))
                       } else {
                         setChatError("Message Too Long");
                       }

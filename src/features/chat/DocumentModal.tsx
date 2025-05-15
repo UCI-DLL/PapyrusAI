@@ -7,6 +7,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { pdfjs } from 'react-pdf';
+import { removeSpecialCharacters } from "../../utility/Helpers";
 
 
 interface ChatWizardProps {
@@ -38,7 +39,7 @@ export default function DocumentModal({
           return;
         }
         const { result } = evt.target;
-        setDocText(result as string);
+        setDocText(removeSpecialCharacters(result as string));
         setIsLoading(false);
       };
       reader.readAsBinaryString(file);
@@ -55,7 +56,7 @@ export default function DocumentModal({
         const text = textContent["items"].reduce((result: any, item: any) => {
           return `${result} ${item["str"]}`
         }, "")
-        setDocText(prev => prev + text as string);
+        setDocText(prev => prev + removeSpecialCharacters(text as string));
         currentPage++
       }
       setIsLoading(false);
@@ -74,7 +75,7 @@ export default function DocumentModal({
         });
 
         var text = doc.getFullText();
-        setDocText(text as string);
+        setDocText(removeSpecialCharacters(text as string));
         setIsLoading(false);
       };
     } else {
@@ -84,7 +85,7 @@ export default function DocumentModal({
   };
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDocText(e.target.value);
+    setDocText(removeSpecialCharacters(e.target.value));
   }
 
   return (

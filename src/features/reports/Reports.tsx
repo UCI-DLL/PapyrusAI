@@ -506,6 +506,21 @@ export default function Reports(): JSX.Element {
         >
           <div>
             <div>Note: downloading multiple courses may take several minutes. Please be patient while your courses, modules, and conversations download.</div>
+            <FormControl size="small" sx={{ width: "100%", marginTop: "1rem" }}>
+              <InputLabel id="download-format-label">Download Format</InputLabel>
+              <Select
+                labelId="download-format-label"
+                id="download-format"
+                value={downloadType}
+                label="Download Format"
+                onChange={e => setDownloadType(e.target.value)}
+                fullWidth
+              >
+                <MenuItem value="json">JSON</MenuItem>
+                <MenuItem value="csv">CSV</MenuItem>
+                <MenuItem value="txt">TXT</MenuItem>
+              </Select>
+            </FormControl>
             <List dense sx={{ width: '100%', bgcolor: 'background.paper' }}>
               {sortCourseList(userList).map((x, index) => {
                 const labelId = `checkbox-list-secondary-label-${index}`;
@@ -529,21 +544,6 @@ export default function Reports(): JSX.Element {
                 );
               })}
             </List>
-
-            <FormControl size="small" sx={{ mt: 1, minWidth: 100, float: 'right' }}>
-              <InputLabel id="download-format-label">Format</InputLabel>
-              <Select
-                labelId="download-format-label"
-                id="download-format"
-                value={downloadType}
-                label="Format"
-                onChange={e => setDownloadType(e.target.value)}
-              >
-                <MenuItem value="json">JSON</MenuItem>
-                <MenuItem value="csv">CSV</MenuItem>
-                <MenuItem value="txt">TXT</MenuItem>
-              </Select>
-            </FormControl>
           </div>
         </Modal>
       )}

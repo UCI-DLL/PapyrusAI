@@ -32,6 +32,10 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
+type DownloadType = CourseType & { users: Array<CustomUserType> } & {
+  modules: Array<ModuleType &
+  { conversations: Array<ConversationType & { user: CustomUserType }> }>
+}
 
 export default function Reports(): JSX.Element {
   let navigator = useNavigate();
@@ -150,7 +154,7 @@ export default function Reports(): JSX.Element {
 
   function getUsersInCourseList(course: CourseType, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
-    Get(getUsersInCourse(course.id, limit, nextToken), signal).then(res => {
+    Get(getUsersInCourse(course.id, limit, nextToken), signal).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //Get the list of all users in the group
@@ -177,6 +181,14 @@ export default function Reports(): JSX.Element {
         navigator("/login");
       } else {
         // handle error
+        if (res.name && res.name === "AxiosError") {
+          //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
+          setTimeout(async () => {
+            var some = await getUsersInCourseList(course, signal, nextToken);
+            return some;
+          }, 5000)
+
+        }
       }
       setIsLoading(false);
     });
@@ -203,10 +215,6 @@ export default function Reports(): JSX.Element {
   function downloadCourses() {
     setOpenDownloadCourseModal(false);
     setIsLoading(true);
-    type DownloadType = CourseType & { users: Array<CustomUserType> } & {
-      modules: Array<ModuleType &
-      { conversations: Array<ConversationType & { user: CustomUserType }> }>
-    }
     var coursesToDownload: DownloadType[] = [];
     checked.forEach(x => {
       var course: any = sortCourseList(userList)[x].course;
@@ -234,33 +242,7 @@ export default function Reports(): JSX.Element {
             }
             course.users.forEach(user => {
               //get conversation list based on course and module and user
-              promiseArray.push(Get(getConversationList(course.id, module.id, user.sub), controller.signal).then(res => {
-                if (res && res.status && res.status < 300) {
-                  if (res.data) {
-                    //check if conversation for course, module, user / get conversation list length
-                    //get conversation data (with message data)
-                    if (res.data.conversations && res.data.conversations.length > 0) {
-                      res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
-                        var convoData = await getConvo(course.id, module.id, convoIndex.toString(), user.sub, controller);
-                        promiseArray.push(convoData);
-                        if (convoData) {
-                          var convoData2 = { ...convoData, user: user }
-                          // save convo data in the main json in the right place in coursesToDownload
-                          // push to convo list because it will be a list of ALL convos from all users
-                          // check if convo list already has convo with same id to prevent duplicates
-                          if (!coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(e => e.id === convoData2.id)) {
-                            coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
-                          }
-                        }
-                      })
-                    }
-                  }
-                } else if (res && res.status === 401) {
-                  navigator("/login");
-                } else {
-                  //Do nothing and skip. The user doesnt have any conversations within the course/module
-                }
-              }))
+              promiseArray.push(getConvoList(course.id, module.id, user, controller, coursesToDownload, courseIndex, moduleIndex))
             })
           })
         })
@@ -286,32 +268,7 @@ export default function Reports(): JSX.Element {
             }
             course.users.forEach(user => {
               //get conversation list based on course and module and user
-              promiseArray.push(Get(getConversationList(course.id, module.id, user.sub), controller.signal).then(res => {
-                if (res && res.status && res.status < 300) {
-                  if (res.data) {
-                    //check if conversation for course, module, user / get conversation list length
-                    //get conversation data (with message data)
-                    if (res.data.conversations && res.data.conversations.length > 0) {
-                      res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
-                        var convoData = await getConvo(course.id, module.id, convoIndex.toString(), user.sub, controller);
-                        promiseArray.push(convoData);
-                        if (convoData) {
-                          var convoData2 = { ...convoData, user: user }
-                          // push to convo list because it will be a list of ALL convos from all users
-                          // check if convo list already has convo with same id to prevent duplicates
-                          if (!coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(e => e.id === convoData2.id)) {
-                            coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
-                          }
-                        }
-                      })
-                    }
-                  }
-                } else if (res && res.status === 401) {
-                  navigator("/login");
-                } else {
-                  //Do nothing and skip. The user doesnt have any conversations within the course/module
-                }
-              }))
+              promiseArray.push(getConvoList(course.id, module.id, user, controller, coursesToDownload, courseIndex, moduleIndex))
             })
           })
         })
@@ -365,6 +322,55 @@ export default function Reports(): JSX.Element {
     // Trigger the download
     saveAs(zipContent, `${exportName}.zip`);
     setIsLoading(false)
+  }
+
+  async function getConvoList(
+    courseId: string,
+    moduleId: string,
+    user: CustomUserType,
+    controller: AbortController,
+    coursesToDownload: DownloadType[],
+    courseIndex: number,
+    moduleIndex: number
+  ): Promise<any> {
+    const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal).then(async (res) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //check if conversation for course, module, user / get conversation list length
+          //get conversation data (with message data)
+          if (res.data.conversations && res.data.conversations.length > 0) {
+            res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
+              var convoData = await getConvo(courseId, moduleId, convoIndex.toString(), user.username, controller);
+              promiseArray.push(convoData);
+              if (convoData) {
+                var convoData2 = { ...convoData, user: user }
+                // push to convo list because it will be a list of ALL convos from all users
+                // check if convo list already has convo with same id to prevent duplicates
+                if (!coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(e => e.id === convoData2.id)) {
+                  coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
+                }
+              }
+            })
+          }
+        }
+        return res.data;
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        //Do nothing and skip. The user doesnt have any conversations within the course/module
+        if (res.name && res.name === "AxiosError") {
+          //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
+          const delay = 2000 + (Math.random() * 1000);
+          setTimeout(async () => {
+            var some = await getConvoList(courseId, moduleId, user, controller, coursesToDownload, courseIndex, moduleIndex);
+            promiseArray.push(some)
+            return some;
+          }, delay);
+
+        }
+      }
+    })
+    return await temp;
   }
 
   //helper function to get the conversation for the json download

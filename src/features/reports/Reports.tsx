@@ -26,7 +26,7 @@ import { Link } from "react-router-dom";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Modal } from "../../components/Modal";
-import { ConversationType } from "../../utility/types/ConversationTypes";
+import { ConversationType, MessageType } from "../../utility/types/ConversationTypes";
 import { getContentModMessage, getConversation, getConversationList } from "../../utility/endpoints/ConversationEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import JSZip from 'jszip';
@@ -304,7 +304,8 @@ export default function Reports(): JSX.Element {
           }
           fileData += "Conversation Index: " + convoIndex + "\n";
           fileData += "Conversation ID: " + converation.id + "\n";
-          converation.messages.forEach((message: any) => {
+          var sortedMessages = converation.messages.sort((a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp));
+          sortedMessages.forEach((message: any) => {
 
             var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
             var sender = message.sender === "ChatGPT" ? "Papyrus" : converation.user.name + " " + converation.user.family_name;

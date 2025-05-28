@@ -199,6 +199,7 @@ export default function ModuleReports(): JSX.Element {
     return (() => {
       setRaterData([]);
       setUserList([]);
+      setRows([]);
       controller.abort();
     });
 
@@ -222,7 +223,18 @@ export default function ModuleReports(): JSX.Element {
           userRater.some(e => e.content.some(c => c[4] === "6")),
           user.username
         )
-        setRows(prev => [...prev, row])
+        setRows(prev => {
+          const newArray = [...prev]
+          if (newArray.some(p => p.username === row.username)) {
+            //if user is in the list already, just update it
+            const index = newArray.findIndex(p => p.username === row.username)
+            newArray[index] = row
+            return newArray
+          } else {
+            //otherwise, just add new row
+            return [...prev, row]
+          }
+        })
       })
     } else if (userList.length > 0 && moduleData && !moduleData.raterEnabled) {
       //for modules that are not rater enabled, then just list out the students
@@ -240,7 +252,18 @@ export default function ModuleReports(): JSX.Element {
           false,
           user.username
         )
-        setRows(prev => [...prev, row])
+        setRows(prev => {
+          const newArray = [...prev]
+          if (newArray.some(p => p.username === row.username)) {
+            //if user is in the list already, just update it
+            const index = newArray.findIndex(p => p.username === row.username)
+            newArray[index] = row
+            return newArray
+          } else {
+            //otherwise, just add new row
+            return [...prev, row]
+          }
+        })
       })
     }
   }, [userList, raterData, moduleData])

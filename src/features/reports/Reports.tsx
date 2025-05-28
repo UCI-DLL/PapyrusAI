@@ -304,7 +304,7 @@ export default function Reports(): JSX.Element {
           }
           fileData += "Conversation Index: " + convoIndex + "\n";
           fileData += "Conversation ID: " + converation.id + "\n";
-          var sortedMessages = converation.messages.sort((a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp));
+          var sortedMessages = converation.messages.sort((a: MessageType, b: MessageType) => parseInt(a.timestamp) - parseInt(b.timestamp));
           sortedMessages.forEach((message: any) => {
 
             var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();

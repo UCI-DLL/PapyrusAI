@@ -19,7 +19,8 @@ import {
   Grow,
   Paper,
   ClickAwayListener,
-  MenuList
+  MenuList,
+  Tooltip
 } from "@mui/material";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Get from "../../utility/Get";
@@ -36,6 +37,7 @@ import {
   postCreateUserFile
 } from "../../utility/endpoints/FolderEndpoints";
 import axios from "axios";
+import InfoIcon from '@mui/icons-material/Info';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -466,6 +468,13 @@ export default function CreateFile(): JSX.Element {
           </Popper>
         </div>
       </div>
+      <div>
+        You can upload documents for your course that will factor into generated AI output.
+        For more information on this system, please see the <a
+          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
+          target="_blank" rel="noreferrer">“Uploading a Document” section of our instructor guide
+        </a>.
+      </div>
       <hr />
       <div className="prompt__section-header">
         <span>* indicates a required field</span>
@@ -473,77 +482,93 @@ export default function CreateFile(): JSX.Element {
       <Box className="prompt__add">
         <form onSubmit={(e) => handleUpload(e)}>
           <FormLabel>Enter File Information</FormLabel>
-          <TextField
-            name="name"
-            label="File Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={newFile.name}
-            onChange={handleChange}
-            error={errors.name !== ""}
-            helperText={errors.name}
-            disabled={isLoading}
-            required
-          />
-          <input
-            ref={fileRef}
-            hidden
-            type="file"
-            disabled={isLoading}
-            onChange={handleFileSelect}
-          />
-          {!selectedFiles?.name && (
-            <Button
-              variant="contained"
-              component="label"
-              style={{ textTransform: 'none' }}
-              onClick={() => fileRef.current?.click()}
-              disabled={isLoading}
-            >
-              Choose file to upload
-            </Button>
-          )}
-          {selectedFiles?.name && (
-            <Button
-              variant="contained"
-              component="label"
-              style={{ textTransform: 'none' }}
-              onClick={onUpdate}
-              disabled={isLoading}
-            >
-              <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
-              <span style={{ padding: '10px' }}> Change</span>
-              <span>Clear</span>
-            </Button>
-          )}
-          {errors.file && errors.file !== "" && (
-            <span className="error">&nbsp;{errors.file}</span>
-          )}
-          {/* add dropdown to handle tags  */}
-          <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
-            <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
-            <Select
-              labelId="multiple-tag-checkbox-select"
-              id="multiple-tag-checkbox-select"
-              multiple
-              value={newFile.tags}
-              onChange={handleSelectChange}
-              renderValue={(selected) => {//find the name for the file id
-                return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
-              }}
-              label="Tags"
-              MenuProps={MenuProps}
+          <div className="form-tooltips">
+            <TextField
+              name="name"
+              label="File Name"
               fullWidth
+              sx={{ margin: ".5rem 0" }}
+              value={newFile.name}
+              onChange={handleChange}
+              error={errors.name !== ""}
+              helperText={errors.name}
               disabled={isLoading}
-            >
-              {tagList.map((tag, index) => (
-                <MenuItem key={index} value={tag.id}>
-                  <Checkbox checked={newFile.tags.indexOf(tag.id) > -1} />
-                  <ListItemText primary={tag.id} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              required
+            />
+            <Tooltip title="The name for the document." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
+          <div className="form-tooltips">
+            <input
+              ref={fileRef}
+              hidden
+              type="file"
+              disabled={isLoading}
+              onChange={handleFileSelect}
+            />
+            {!selectedFiles?.name && (
+              <Button
+                variant="contained"
+                component="label"
+                style={{ textTransform: 'none' }}
+                onClick={() => fileRef.current?.click()}
+                disabled={isLoading}
+              >
+                Choose file to upload
+              </Button>
+            )}
+            {selectedFiles?.name && (
+              <Button
+                variant="contained"
+                component="label"
+                style={{ textTransform: 'none' }}
+                onClick={onUpdate}
+                disabled={isLoading}
+              >
+                <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
+                <span style={{ padding: '10px' }}> Change</span>
+                <span>Clear</span>
+              </Button>
+            )}
+            {errors.file && errors.file !== "" && (
+              <span className="error">&nbsp;{errors.file}</span>
+            )}
+            <Tooltip title="Select a JPEG, PNG, PDF, TXT, DOCX file." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
+
+          {/* add dropdown to handle tags  */}
+          <div className="form-tooltips">
+            <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
+              <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
+              <Select
+                labelId="multiple-tag-checkbox-select"
+                id="multiple-tag-checkbox-select"
+                multiple
+                value={newFile.tags}
+                onChange={handleSelectChange}
+                renderValue={(selected) => {//find the name for the file id
+                  return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
+                }}
+                label="Tags"
+                MenuProps={MenuProps}
+                fullWidth
+                disabled={isLoading}
+              >
+                {tagList.map((tag, index) => (
+                  <MenuItem key={index} value={tag.id}>
+                    <Checkbox checked={newFile.tags.indexOf(tag.id) > -1} />
+                    <ListItemText primary={tag.id} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Tooltip title="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
         </form>
       </Box>
     </div>

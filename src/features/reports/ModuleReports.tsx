@@ -358,7 +358,10 @@ export default function ModuleReports(): JSX.Element {
       ) : (
         <>
           <h3>{courseData?.name}</h3>
-
+          <div>
+            On this page, you can view the overall usage within this module. If you wish to view a specific user’s activity,
+            click on their name to access their conversations.
+          </div>
           {stats ? (
             <>
               <hr />

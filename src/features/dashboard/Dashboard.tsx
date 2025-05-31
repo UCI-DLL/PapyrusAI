@@ -96,7 +96,14 @@ export default function Dashboard(): JSX.Element {
           <Button variant="contained" onClick={() => setShowAddCourseModal(true)}>Join Course</Button>
         </div>
       </div>
-
+      <span>Courses are spaces in which instructors can create and organize modules that customize how students can interact with the AI.</span>
+      {courseList.length > 0 ? (
+        <span> To access a course, click the “Modules” button for your desired course and choose from the available modules.
+          {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+            " To edit or duplicate a course, click on the options button (three dots in a column) for the course you wish to use." :
+            ""}
+        </span>
+      ) : ""}
       <hr />
       {courseList.length > 0 ? (
         <CourseList list={orderCourseRecentlyCreated(courseList).slice(0, 6)} refreshList={refreshList} />

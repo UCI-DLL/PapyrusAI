@@ -28,7 +28,6 @@ import Put from "../../utility/Put";
 import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { Modal } from "../../components/Modal";
-import Markdown from "react-markdown";
 import InfoIcon from '@mui/icons-material/Info';
 import ListFolders from "../library/ListFolders";
 import ListFolderContents from "../library/ListFolderContents";
@@ -95,13 +94,13 @@ export default function EditModule(): JSX.Element {
     folderId: string,
     isOrgFolder: boolean,
   }>({ folderId: "", isOrgFolder: false });
-  const [showInfoModal, setShowInfoModal] = useState<boolean>(false);
   const [openSave, setOpenSave] = useState(false);
   const anchorRefSave = useRef<HTMLDivElement>(null);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
+  const [showSavePublishTooltip, setShowSavePublishTooltip] = useState<boolean>(false);
   const [openConfirmationModal, setOpenConfirmationModal] = useState<{ id: string, type: string }>({
     id: "",
     type: "",
@@ -163,9 +162,9 @@ export default function EditModule(): JSX.Element {
   }, [location.pathname]);
 
   function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and activate
+    if (selectedIndexSave === 0) { //Save and publish
       handleSubmit(e, true, false);
-    } else if (selectedIndexSave === 1) { //save and not activate
+    } else if (selectedIndexSave === 1) { //save and not publish
       if (session.isPublished) { //handle case that module is already active and they are switching it
         setOpenActiveModal(true);
       } else {
@@ -180,9 +179,9 @@ export default function EditModule(): JSX.Element {
     e: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number,
   ) => {
-    if (index === 0) { //Save and activate
+    if (index === 0) { //Save and publish
       handleSubmit(e, true, false);
-    } else if (index === 1) { //save and not activate
+    } else if (index === 1) { //save and not publish
       if (session.isPublished) { //handle case that module is already active and they are switching it
         setOpenActiveModal(true);
       } else {
@@ -406,23 +405,21 @@ export default function EditModule(): JSX.Element {
   return moduleIds && session.name !== "" ? (
     <div className="modules">
       <Modal
-        isOpen={showInfoModal}
-        title={"Module Form Field Descriptions"}
-        onRequestClose={() => setShowInfoModal(false)}
+        isOpen={showSavePublishTooltip}
+        title={"What is Save & Publish?"}
+        onRequestClose={() => setShowSavePublishTooltip(false)}
         actions={
-          <Button sx={{ width: "100%" }} variant="contained" onClick={() => setShowInfoModal(false)}>
-            Close
-          </Button>
+          <>
+            <Button variant="contained" onClick={() => setShowSavePublishTooltip(false)}>
+              Close
+            </Button>
+          </>
         }
       >
-        <div className="">
-          <Markdown>
-            {`A **module** is a space for students to connect with AI using certain pre-approved sets of instructions. It can be used for an entire class term or you can have a module for a single assignment, unit, or other subset. \n
-The **module description** will show up on the top of the module when it is selected. It should provide a brief description of what the module covers. The description should uniquely identify each module, so that users can determine which module they want. \n
-The **Module Prompts** drop down shows you the various prompts, or instructions to the AI, that you can incorporate into your module.  You need at least one activated for your module to have any content. If you want to see the actual wording of the prompt, click on **Show Full Prompts**. \n
-**Module Settings** let you control how the users can interact with the AI and the activated prompts within your module.  **Repeating Prompts** allows users to select another prompt after they interact with the prior prompt.  For example, if you activated Topics, Feedback, and Grammar, a user could first select “Grammar” and run through the AI interaction around that prompt. When finished, the student could then select one of the remaining options, such as “Feedback” for an interaction with the AI using the instructions embedded for “Feedback.” **Continued Interaction** allows students to converse back and forth with the AI even if the AI has not asked the user a question.  This allows the user to request additional information, explanations, expansions, etc. But it also allows the user to go off topic and interact freely with the AI. **Show Embedded Prompts** when checked will show the embedded prompt created by the admins. In most cases this will just be the first prompt in a conversation, but if Multiple Prompts is checked then it will affect future uses of embedded prompts. \n
- Select **Publish** when you are ready for users to have access to your module and interact with the AI as permitted by your selections here. Until you select “Publish,” only you see the module. `}
-          </Markdown>
+        <div>
+          To save and publish (i.e., make visible to students) your module, select “Save & Publish”.
+          If you want to save your module without publishing it, select “Save without Publishing”
+          <span style={{ fontStyle: "italic" }}> Note: Choosing this option after the module has already been published will unpublish the module.</span>
         </div>
       </Modal>
       <Modal
@@ -538,11 +535,6 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
       <div className="modules__section-header">
         <div>
           <h3>Edit {session.name}</h3>
-          <Tooltip title="Info">
-            <IconButton onClick={() => setShowInfoModal(true)}>
-              <InfoIcon />
-            </IconButton>
-          </Tooltip>
         </div>
         <div>
           <Tooltip
@@ -568,7 +560,10 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             </IconButton>
           </Tooltip>
           &nbsp;&nbsp;&nbsp;
-          <div>
+          <div className="form-tooltips">
+            <button onClick={() => setShowSavePublishTooltip(true)}>
+              <InfoIcon />
+            </button>
             <ButtonGroup
               variant="contained"
               ref={anchorRefSave}
@@ -628,6 +623,13 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
 
         </div>
       </div>
+      <div>
+        Modules provide users access to conversations with the AI. Modules can be customized to allow or restrict access to specific assets,
+        including conversation prompts (AI instructions) and documents. For more information on editing a module, please see the <a
+          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.cabsr1px9wcb"
+          target="_blank" rel="noreferrer">“Editing a Module” section of our instructor guide
+        </a>.
+      </div>
       <hr />
       <div className="modules__section-header">
         <span>* indicates a required field</span>
@@ -649,30 +651,40 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
       <Box className="modules__add">
         <form onSubmit={(e) => handleSubmit(e, true, false)}>
           <FormLabel>Enter Module Information</FormLabel>
-          <TextField
-            name="name"
-            label="Module Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.name}
-            onChange={handleChange}
-            error={errors.name !== ""}
-            helperText={errors.name}
-            disabled={isLoading}
-            required
-          />
-          <TextField
-            name="moduleDescription"
-            label="Module Description"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.moduleDescription}
-            onChange={handleChange}
-            error={errors.moduleDescription !== ""}
-            helperText={errors.moduleDescription}
-            disabled={isLoading}
-            required
-          />
+          <div className="form-tooltips">
+            <TextField
+              name="name"
+              label="Module Name"
+              fullWidth
+              sx={{ margin: ".5rem 0" }}
+              value={session.name}
+              onChange={handleChange}
+              error={errors.name !== ""}
+              helperText={errors.name}
+              disabled={isLoading}
+              required
+            />
+            <Tooltip title="The name for your module that users will see." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
+          <div className="form-tooltips">
+            <TextField
+              name="moduleDescription"
+              label="Module Description"
+              fullWidth
+              sx={{ margin: ".5rem 0" }}
+              value={session.moduleDescription}
+              onChange={handleChange}
+              error={errors.moduleDescription !== ""}
+              helperText={errors.moduleDescription}
+              disabled={isLoading}
+              required
+            />
+            <Tooltip title="The description for your module to help users understand the purpose or instructional goals for the module." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
 
           <hr />
 
@@ -680,77 +692,87 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
             <FormLabel sx={{ alignContent: "center" }}>Module Assets</FormLabel>
             <Button variant="outlined" onClick={() => setOpenSelectFolderModal(true)}>Add Asset</Button>
           </div>
-          <div className="modules__prompt-list">
-            {session.prompts.map((prompt: PromptType, i) => {
-              return (
-                <div key={i}>
-                  <Prompt
-                    prompt={prompt}
-                    folder={{ //pass in temp folder
-                      id: prompt.folderId ? prompt.folderId : "",
-                      creator: {
-                        email: "",
-                        sub: "",
-                        name: "",
-                        family_name: "",
-                        username: "",
-                      },
-                      isDeleted: false,
-                      name: "",
-                      prompts: [],
-                      organization: "",
-                      timestamp: "",
-                      files: [],
-                    }}
-                    keyy={`${i}`}
-                    refreshList={() => refreshList()}
-                    loading={() => setIsLoading(true)}
-                    noShowMenu={true}
-                    showRemove
-                    onClick={setConfirmationModal}
-                  />
-                </div>
-              )
-            })}
-          </div>
+          {session.prompts.length < 1 && session.files.length < 1 ? (
+            <div>No assets added. To add an asset (including prompts and documents), click “Add Asset” to the right.</div>
+          ) : (
+            <>
+              <div className="modules__prompt-list">
+                {session.prompts.map((prompt: PromptType, i) => {
+                  return (
+                    <div key={i}>
+                      <Prompt
+                        prompt={prompt}
+                        folder={{ //pass in temp folder
+                          id: prompt.folderId ? prompt.folderId : "",
+                          creator: {
+                            email: "",
+                            sub: "",
+                            name: "",
+                            family_name: "",
+                            username: "",
+                          },
+                          isDeleted: false,
+                          name: "",
+                          prompts: [],
+                          organization: "",
+                          timestamp: "",
+                          files: [],
+                        }}
+                        keyy={`${i}`}
+                        refreshList={() => refreshList()}
+                        loading={() => setIsLoading(true)}
+                        noShowMenu={true}
+                        showRemove
+                        onClick={setConfirmationModal}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
 
-          <div className="modules__prompt-list">
-            {session.files && session.files.map((file: FileType, i) => {
-              return (
-                <div key={i}>
-                  <File
-                    file={file}
-                    folder={{ //pass in temp folder
-                      id: file.folderId ? file.folderId : "",
-                      creator: {
-                        email: "",
-                        sub: "",
-                        name: "",
-                        family_name: "",
-                        username: ""
-                      },
-                      isDeleted: false,
-                      name: "",
-                      prompts: [],
-                      organization: "",
-                      timestamp: "",
-                      files: [],
-                    }}
-                    keyy={`${i}`}
-                    refreshList={() => refreshList()}
-                    loading={() => setIsLoading(true)}
-                    noShowMenu={true}
-                    showRemove
-                    onClick={setConfirmationModal}
-                  />
-                </div>
-              )
-            })}
-          </div>
-
+              <div className="modules__prompt-list">
+                {session.files && session.files.map((file: FileType, i) => {
+                  return (
+                    <div key={i}>
+                      <File
+                        file={file}
+                        folder={{ //pass in temp folder
+                          id: file.folderId ? file.folderId : "",
+                          creator: {
+                            email: "",
+                            sub: "",
+                            name: "",
+                            family_name: "",
+                            username: ""
+                          },
+                          isDeleted: false,
+                          name: "",
+                          prompts: [],
+                          organization: "",
+                          timestamp: "",
+                          files: [],
+                        }}
+                        keyy={`${i}`}
+                        refreshList={() => refreshList()}
+                        loading={() => setIsLoading(true)}
+                        noShowMenu={true}
+                        showRemove
+                        onClick={setConfirmationModal}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
           <hr />
 
-          <FormLabel>Module Settings</FormLabel>
+          <div className="form-tooltips">
+            <FormLabel>Module Settings</FormLabel>
+            <Tooltip title="You can customize your module to allow or restrict certain functions." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
           {/* <Checkbox
             onClick={() => {
               setSession((prev) => ({
@@ -780,6 +802,15 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
               Show Embedded Prompt
             </span>
           </Checkbox>
+          <div style={{ marginBottom: "1rem" }}>
+            Allows users to see the full text of the embedded prompt with
+            which they begin their chat with the AI. Unchecking this will mean that the user will
+            not be able to see the initial text of the prompt sent initially to the AI. For more
+            information on why you might choose one or the other, see the <a
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+              target="_blank" rel="noreferrer">“Creating a Module” section of our instructor guide
+            </a>.
+          </div>
           <Checkbox
             onClick={() => {
               setSession((prev) => ({
@@ -794,6 +825,12 @@ The **Module Prompts** drop down shows you the various prompts, or instructions 
               RATER Enabled
             </span>
           </Checkbox>
+          <div>
+            TODO RATER description <a
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+              target="_blank" rel="noreferrer">“Creating a Module” section of our instructor guide
+            </a>.
+          </div>
         </form>
       </Box>
     </div>

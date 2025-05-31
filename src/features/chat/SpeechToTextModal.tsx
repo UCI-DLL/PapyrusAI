@@ -35,6 +35,12 @@ export default function SpeechToTextModal({
 
   return (
     <div className="chat__wizard">
+      <div style={{ marginBottom: "0.4rem" }}>
+        When you are ready to record your message, click “Start Listening”.
+        When you are done recording your message, click “Stop Listening”,
+        then wait for your message to be transcribed. You can edit the transcribed message.
+        Once you are satisfied with your message, click “Send Message” to send your message to the AI.
+      </div>
       <div className="chat__wizard__modal">
         {hasRecognitionSupport ? (
           <>

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Button, Box, TextField, FormLabel } from "@mui/material";
+import { Button, Box, TextField } from "@mui/material";
 import Post from "../../utility/Post";
 import { postAddUserToCourseGroup } from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -66,7 +66,7 @@ export default function AddCourseForm({
     <div className="addcourseform">
       <Box className="addcourseform__add">
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
-          <FormLabel>Enter Course Sign Up Code Information</FormLabel>
+          <span>Enter the unique course sign up code associated with the course you want to join. Not sure what the sign up code is? Ask the instructor of the course!</span>
           &nbsp;&nbsp;&nbsp;
           <TextField
             name="signUpCode"

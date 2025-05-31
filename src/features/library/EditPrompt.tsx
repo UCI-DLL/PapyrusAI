@@ -202,7 +202,7 @@ export default function EditPrompt(): JSX.Element {
   }
 
   function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and activate
+    if (selectedIndexSave === 0) { //Save and publish
       handleSubmit(e, false);
     } else if (selectedIndexSave === 1) { //discard changes
       setOpenDiscardModal(true);
@@ -213,7 +213,7 @@ export default function EditPrompt(): JSX.Element {
     e: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number,
   ) => {
-    if (index === 0) { //Save and activate
+    if (index === 0) { //Save and publish
       handleSubmit(e, false);
     } else if (index === 1) { //discard changes
       setOpenDiscardModal(true);

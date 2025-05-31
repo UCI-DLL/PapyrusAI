@@ -120,6 +120,12 @@ export default function UserReports(): JSX.Element {
   return !isLoading ? (
     <div className="reports">
       <h3>{`Reports ${viewUser ? `for ${viewUser.name} ${viewUser.family_name}` : ""}`}</h3>
+      <div>
+        The user report page summarizes a specific user’s interactions with AI in all of the
+        courses of which you are an instructor. To view a user’s conversations within a given
+        module, click “List Conversations” on the row for your desired module. You will then
+        be able to select a specific conversation to see both the student and AI output.
+      </div>
       <hr />
 
       <TableContainer component={Paper}>

@@ -35,6 +35,7 @@ import { CustomUserType } from "../../utility/types/UserTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserList } from "../../utility/endpoints/UserEndpoints";
 import { Modal } from "../../components/Modal";
+import InfoIcon from '@mui/icons-material/Info';
 
 type EditCourseType = {
   name: string,
@@ -84,6 +85,7 @@ export default function EditCourse(): JSX.Element {
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
+  const [showSavePublishTooltip, setShowSavePublishTooltip] = useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -148,9 +150,9 @@ export default function EditCourse(): JSX.Element {
   }, [location.pathname]);
 
   function handleClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and activate
+    if (selectedIndexSave === 0) { //Save and publish
       handleSubmit(e, true, false);
-    } else if (selectedIndexSave === 1) { //save and not activate
+    } else if (selectedIndexSave === 1) { //save and not publish
       if (session.isActive) { //handle case that course is already active and they are switching it
         setOpenActiveModal(true);
       } else {
@@ -165,9 +167,9 @@ export default function EditCourse(): JSX.Element {
     e: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number,
   ) => {
-    if (index === 0) { //Save and activate
+    if (index === 0) { //Save and publish
       handleSubmit(e, true, false);
-    } else if (index === 1) { //save and not activate
+    } else if (index === 1) { //save and not publish
       if (session.isActive) { //handle case that course is already active and they are switching it
         setOpenActiveModal(true);
       } else {
@@ -311,6 +313,24 @@ export default function EditCourse(): JSX.Element {
   return !isLoading ? (
     <div className="courses">
       <Modal
+        isOpen={showSavePublishTooltip}
+        title={"What is Save & Publish?"}
+        onRequestClose={() => setShowSavePublishTooltip(false)}
+        actions={
+          <>
+            <Button variant="contained" onClick={() => setShowSavePublishTooltip(false)}>
+              Close
+            </Button>
+          </>
+        }
+      >
+        <div>
+          To save and publish (i.e., make visible to students) your course, select “Save & Publish”.
+          If you want to save your course without publishing the course, select “Save without Publishing”.
+          <span style={{ fontStyle: "italic" }}> Note: Choosing this option after the course has already been published will unpublish the course.</span>
+        </div>
+      </Modal>
+      <Modal
         isOpen={openDeleteModal}
         title={"Delete Course?"}
         onRequestClose={() => setOpenDeleteModal(false)}
@@ -389,61 +409,73 @@ export default function EditCourse(): JSX.Element {
                 </IconButton>
               </Tooltip>
               &nbsp;&nbsp;&nbsp;
-              <ButtonGroup
-                variant="contained"
-                ref={anchorRefSave}
-                aria-label="Button group with a nested menu"
-              >
-                <Button onClick={handleClick}>{options[selectedIndexSave]}</Button>
-                <Button
-                  size="small"
-                  aria-controls={openSave ? 'split-button-menu' : undefined}
-                  aria-expanded={openSave ? 'true' : undefined}
-                  aria-label="select save and ativation strategy"
-                  aria-haspopup="menu"
-                  onClick={handleToggle}
+              <div className="form-tooltips">
+                <button onClick={() => setShowSavePublishTooltip(true)}>
+                  <InfoIcon />
+                </button>
+                <ButtonGroup
+                  variant="contained"
+                  ref={anchorRefSave}
+                  aria-label="Button group with a nested menu"
                 >
-                  <ArrowDropDownIcon />
-                </Button>
-              </ButtonGroup>
-              <Popper
-                sx={{
-                  zIndex: 1,
-                }}
-                open={openSave}
-                anchorEl={anchorRefSave.current}
-                role={undefined}
-                transition
-                disablePortal
-              >
-                {({ TransitionProps, placement }) => (
-                  <Grow
-                    {...TransitionProps}
-                    style={{
-                      transformOrigin:
-                        placement === 'bottom' ? 'center top' : 'center bottom',
-                    }}
+                  <Button onClick={handleClick}>{options[selectedIndexSave]}</Button>
+                  <Button
+                    size="small"
+                    aria-controls={openSave ? 'split-button-menu' : undefined}
+                    aria-expanded={openSave ? 'true' : undefined}
+                    aria-label="select save and ativation strategy"
+                    aria-haspopup="menu"
+                    onClick={handleToggle}
                   >
-                    <Paper>
-                      <ClickAwayListener onClickAway={handleClose}>
-                        <MenuList id="split-button-menu" autoFocusItem>
-                          {options.map((option, index) => (
-                            <MenuItem
-                              key={option}
-                              selected={index === selectedIndexSave}
-                              onClick={(event) => handleMenuItemClick(event, index)}
-                              className={index === 2 ? "courses__discard_background" : ""}
-                            >
-                              {option}
-                            </MenuItem>
-                          ))}
-                        </MenuList>
-                      </ClickAwayListener>
-                    </Paper>
-                  </Grow>
-                )}
-              </Popper>
+                    <ArrowDropDownIcon />
+                  </Button>
+                </ButtonGroup>
+                <Popper
+                  sx={{
+                    zIndex: 1,
+                  }}
+                  open={openSave}
+                  anchorEl={anchorRefSave.current}
+                  role={undefined}
+                  transition
+                  disablePortal
+                >
+                  {({ TransitionProps, placement }) => (
+                    <Grow
+                      {...TransitionProps}
+                      style={{
+                        transformOrigin:
+                          placement === 'bottom' ? 'center top' : 'center bottom',
+                      }}
+                    >
+                      <Paper>
+                        <ClickAwayListener onClickAway={handleClose}>
+                          <MenuList id="split-button-menu" autoFocusItem>
+                            {options.map((option, index) => (
+                              <MenuItem
+                                key={option}
+                                selected={index === selectedIndexSave}
+                                onClick={(event) => handleMenuItemClick(event, index)}
+                                className={index === 2 ? "courses__discard_background" : ""}
+                              >
+                                {option}
+                              </MenuItem>
+                            ))}
+                          </MenuList>
+                        </ClickAwayListener>
+                      </Paper>
+                    </Grow>
+                  )}
+                </Popper>
+              </div>
             </div>
+          </div>
+          <div>
+            Courses are spaces in which instructors can create and organize modules that customize how students can interact with the AI.
+            For more information on editing a course, please see the <a
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1pkdik3iscqd"
+              target="_blank" rel="noreferrer">“Editing a Course” section of our instructor guide
+            </a>.
           </div>
           <hr />
           <div className="courses__section-header">
@@ -467,78 +499,105 @@ export default function EditCourse(): JSX.Element {
           <Box className="courses__add">
             <form onSubmit={(e) => handleSubmit(e, true, false)}>
               <FormLabel>Enter Course Information</FormLabel>
-              <TextField
-                name="name"
-                label="Course Name"
-                placeholder="Eng190W Communications in the Professional World"
-                fullWidth
-                sx={{ margin: ".5rem 0" }}
-                value={session.name}
-                onChange={handleChange}
-                error={errors.name !== ""}
-                helperText={errors.name}
-                disabled={isLoading}
-                required
-              />
-              <TextField
-                name="signUpCode"
-                label="Course Sign Up Code"
-                fullWidth
-                sx={{ margin: ".5rem 0" }}
-                placeholder="FALLCSE100ISCOOL"
-                value={session.signUpCode}
-                onChange={handleChange}
-                error={errors.signUpCode !== ""}
-                helperText={errors.signUpCode}
-                disabled={isLoading}
-                required
-              />
-              <TextField
-                name="year"
-                label="Year"
-                fullWidth
-                placeholder="2023"
-                sx={{ margin: ".5rem 0" }}
-                value={session.year}
-                onChange={handleChange}
-                error={errors.year !== ""}
-                helperText={errors.year}
-                disabled={isLoading}
-                inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]' }}
-                type="number"
-              />
-              <FormControl fullWidth>
-                <InputLabel id="select-term">Term</InputLabel>
-                <Select
-                  labelId="select-term"
-                  id="course-select-term"
-                  value={session.term}
+              <div className="form-tooltips">
+                <TextField
+                  name="name"
+                  label="Course Name"
+                  placeholder="Eng190W Communications in the Professional World"
                   fullWidth
-                  name="term"
-                  label="Term"
-                  onChange={handleTermChange}
-                  error={errors.term !== ""}
+                  sx={{ margin: ".5rem 0" }}
+                  value={session.name}
+                  onChange={handleChange}
+                  error={errors.name !== ""}
+                  helperText={errors.name}
                   disabled={isLoading}
+                  required
+                />
+                <Tooltip title="The name for your course that users will see upon joining." enterTouchDelay={0}>
+                  <InfoIcon />
+                </Tooltip>
+              </div>
+              <div className="form-tooltips">
+                <TextField
+                  name="signUpCode"
+                  label="Course Sign Up Code"
+                  fullWidth
+                  sx={{ margin: ".5rem 0" }}
+                  placeholder="FALLCSE100ISCOOL"
+                  value={session.signUpCode}
+                  onChange={handleChange}
+                  error={errors.signUpCode !== ""}
+                  helperText={errors.signUpCode}
+                  disabled={isLoading}
+                  required
+                />
+                <Tooltip
+                  title="The unique sign up code that users will use to join your course. You can use any combination of letters and numbers. This is case sensitive."
+                  enterTouchDelay={0}
                 >
-                  <MenuItem value={"spring"}>Spring</MenuItem>
-                  <MenuItem value={"summer"}>Summer</MenuItem>
-                  <MenuItem value={"fall"}>Fall</MenuItem>
-                  <MenuItem value={"winter"}>Winter</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                name="section"
-                label="Section / Period"
-                placeholder="Section 02"
-                fullWidth
-                sx={{ margin: ".5rem 0" }}
-                value={session.section}
-                onChange={handleChange}
-                error={errors.section !== ""}
-                helperText={errors.section}
-                disabled={isLoading}
-              />
-
+                  <InfoIcon />
+                </Tooltip>
+              </div>
+              <div className="form-tooltips">
+                <TextField
+                  name="year"
+                  label="Year"
+                  fullWidth
+                  placeholder="2023"
+                  sx={{ margin: ".5rem 0" }}
+                  value={session.year}
+                  onChange={handleChange}
+                  error={errors.year !== ""}
+                  helperText={errors.year}
+                  disabled={isLoading}
+                  inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]' }}
+                  type="number"
+                />
+                <Tooltip title="The year in which your course is taking place." enterTouchDelay={0}>
+                  <InfoIcon />
+                </Tooltip>
+              </div>
+              <div className="form-tooltips">
+                <FormControl fullWidth>
+                  <InputLabel id="select-term">Term</InputLabel>
+                  <Select
+                    labelId="select-term"
+                    id="course-select-term"
+                    value={session.term}
+                    fullWidth
+                    name="term"
+                    label="Term"
+                    onChange={handleTermChange}
+                    error={errors.term !== ""}
+                    disabled={isLoading}
+                  >
+                    <MenuItem value={"spring"}>Spring</MenuItem>
+                    <MenuItem value={"summer"}>Summer</MenuItem>
+                    <MenuItem value={"fall"}>Fall</MenuItem>
+                    <MenuItem value={"winter"}>Winter</MenuItem>
+                  </Select>
+                </FormControl>
+                <Tooltip title="The term in which your course is taking place." enterTouchDelay={0}>
+                  <InfoIcon />
+                </Tooltip>
+              </div>
+              <div className="form-tooltips">
+                <TextField
+                  name="section"
+                  label="Section / Period"
+                  placeholder="Section 02"
+                  fullWidth
+                  sx={{ margin: ".5rem 0" }}
+                  value={session.section}
+                  onChange={handleChange}
+                  error={errors.section !== ""}
+                  helperText={errors.section}
+                  disabled={isLoading}
+                />
+                <Tooltip title="The section number or period for your course." enterTouchDelay={0}>
+                  <InfoIcon />
+                </Tooltip>
+              </div>
               <Autocomplete
                 value={session.taList}
                 onChange={(event, newValue) => {
@@ -579,6 +638,11 @@ export default function EditCourse(): JSX.Element {
               {errors.taList !== "" && (
                 <span className="error">{errors.taList}</span>
               )}
+              <span>
+                The name and email address of the teaching assistant(s) assigned to your course. Teaching assistants can
+                create and edit modules for you, but not delete or unpublish the course. You can assign multiple people to this role.
+                <span style={{ fontStyle: "italic" }}> In order to add someone as a teaching assistant, they must already have a PapyrusAI account.</span>
+              </span>
             </form>
           </Box>
         </>

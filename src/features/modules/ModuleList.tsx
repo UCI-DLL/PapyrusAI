@@ -137,7 +137,11 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
         }
       >
         <div>
-          <div>Please select a course you would like to copy this module to.</div>
+          <div>
+            Please select a course you would like to copy this module to.
+            Copying a module will copy over all module customizations, including the module name,
+            description, added assets, and settings.
+          </div>
           <div className="courses__list">
             {courseList.map((course, index) => {
               return (
@@ -277,6 +281,10 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
       </List>
     </div>
   ) : (
-    <div>No available modules</div>
+    <div>No modules are currently available to you.
+      {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+        " To create a module, go to the course in which you would like to create the module." :
+        ""}
+    </div>
   )
 }

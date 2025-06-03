@@ -957,6 +957,19 @@ export default function Chat(): JSX.Element {
           )}
         </div>
         <div style={{ padding: "0.4rem", paddingTop: "1.8rem" }}>{moduleInfo.moduleDescription}</div>
+        <div style={{ margin: "0.5rem 0" }}>
+          For more information on how to converse with the AI, please see the&nbsp;
+          {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? <a
+            href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
+            target="_blank" rel="noreferrer">“Starting a Conversation” section of our user guide
+          </a> : (
+            <a
+              href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
+              target="_blank" rel="noreferrer">“Starting a Conversation” section of our user guide
+            </a>
+          )}
+          .
+        </div>
         {/* Show the rater essay wizard if rater enabled and we have no prev messages. Show normal prompt wizard afterwards.  */}
         {/* Only show the chat wizard if we don't have selected prompt and if there are no previous messages  */}
         {user &&

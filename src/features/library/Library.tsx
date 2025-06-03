@@ -285,6 +285,7 @@ export default function Library(): JSX.Element {
       >
         <div>
           &nbsp;
+          <div>Enter a name for your personal folder, then click “Create Folder”. Your folder and its contents will only be visible to you.</div>
           <form onSubmit={handleCreateFolder} style={{ display: "flex", flexDirection: "row", width: "100%" }}>
             <TextField
               name="foldername"
@@ -322,6 +323,18 @@ export default function Library(): JSX.Element {
             <Button variant="contained" onClick={() => setOpenCreateFolderModal(true)}>Create Folder</Button>
           )}
         </div>
+      </div>
+      <div>
+        The library contains all of the conversation prompts and documents hosted within PapyrusAI.
+        By default, you have access to all prompts designed and tested by the PapyrusAI research team.
+      </div>
+      <div style={{ margin: "0.4rem 0" }}>
+        You can click through the folders to browse our researcher-created prompts. If you would like to use
+        your own assets (including your own prompts and documents) in your course, you will need to host these
+        within your own folder. For more information on navigating the library, please see the <a
+          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.i0aofs3p0aio"
+          target="_blank" rel="noreferrer">“Library” section of our instructor guide
+        </a>.
       </div>
       <ListFolders />
     </div>

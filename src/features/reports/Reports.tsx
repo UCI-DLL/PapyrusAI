@@ -562,6 +562,13 @@ export default function Reports(): JSX.Element {
           )}
         </div>
       </div>
+      <div>
+        Reports summarize users’ activity and interactions with the AI in your courses. For any course of which you are the instructor,
+        you may view specific students’ interactions with AI. For more information on reports please see the <a
+          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.bsxols4iy4zg"
+          target="_blank" rel="noreferrer">“Instructor Reports” section of our instructor guide
+        </a>.
+      </div>
       <hr />
       <List style={style}>
         {sortCourseList(userList).map((x, index) => {

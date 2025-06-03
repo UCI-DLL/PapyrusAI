@@ -19,7 +19,8 @@ import {
   Grow,
   Paper,
   ClickAwayListener,
-  MenuList
+  MenuList,
+  Tooltip
 } from "@mui/material";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Get from "../../utility/Get";
@@ -30,6 +31,7 @@ import { Modal } from "../../components/Modal";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import Post from "../../utility/Post";
 import { postCreateOrgPrompt, postCreateUserPrompt } from "../../utility/endpoints/FolderEndpoints";
+import InfoIcon from '@mui/icons-material/Info';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -141,7 +143,7 @@ export default function CreatePrompt(): JSX.Element {
   }
 
   function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and activate
+    if (selectedIndexSave === 0) { //Save and publish
       handleSubmit(e);
     } else if (selectedIndexSave === 1) { //discard changes
       setOpenDiscardModal(true);
@@ -152,7 +154,7 @@ export default function CreatePrompt(): JSX.Element {
     e: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number,
   ) => {
-    if (index === 0) { //Save and activate
+    if (index === 0) { //Save and publish
       handleSubmit(e,);
     } else if (index === 1) { //discard changes
       setOpenDiscardModal(true);
@@ -330,6 +332,13 @@ export default function CreatePrompt(): JSX.Element {
           </Popper>
         </div>
       </div>
+      <div>
+        Prompts function in PapyrusAI as the first set of instructions sent to the AI that will guide
+        students’ interactions with the AI. For more information on creating a prompt, please see the <a
+          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
+          target="_blank" rel="noreferrer">“Creating a Prompt” section of our instructor guide
+        </a>.
+      </div>
       <hr />
       <div className="prompt__section-header">
         <span>* indicates a required field</span>
@@ -337,57 +346,74 @@ export default function CreatePrompt(): JSX.Element {
       <Box className="prompt__add">
         <form onSubmit={(e) => handleSubmit(e)}>
           <FormLabel>Enter Prompt Information</FormLabel>
-          <TextField
-            name="name"
-            label="Prompt Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={newPrompt.name}
-            onChange={handleChange}
-            error={errors.name !== ""}
-            helperText={errors.name}
-            disabled={isLoading}
-            required
-          />
-          <TextField
-            name="prompt"
-            label="Prompt"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={newPrompt.prompt}
-            onChange={handleChange}
-            error={errors.prompt !== ""}
-            multiline
-            maxRows={5}
-            helperText={errors.prompt}
-            disabled={isLoading}
-            required
-          />
-          {/* add dropdown to handle tags  */}
-          <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
-            <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
-            <Select
-              labelId="multiple-tag-checkbox-select"
-              id="multiple-tag-checkbox-select"
-              multiple
-              value={newPrompt.tags}
-              onChange={handleSelectChange}
-              renderValue={(selected) => {//find the name for the prompt id
-                return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
-              }}
-              label="Tags"
-              MenuProps={MenuProps}
+          <div className="form-tooltips">
+            <TextField
+              name="name"
+              label="Prompt Name"
               fullWidth
+              sx={{ margin: ".5rem 0" }}
+              value={newPrompt.name}
+              onChange={handleChange}
+              error={errors.name !== ""}
+              helperText={errors.name}
               disabled={isLoading}
-            >
-              {tagList.map((tag, index) => (
-                <MenuItem key={index} value={tag.id}>
-                  <Checkbox checked={newPrompt.tags.indexOf(tag.id) > -1} />
-                  <ListItemText primary={tag.id} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              required
+            />
+            <Tooltip title="The name for the prompt that users will see. We recommend choosing a name that makes 
+            it easy for students to understand what the prompt will do or help them with." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
+          <div className="form-tooltips">
+            <TextField
+              name="prompt"
+              label="Prompt"
+              fullWidth
+              sx={{ margin: ".5rem 0" }}
+              value={newPrompt.prompt}
+              onChange={handleChange}
+              error={errors.prompt !== ""}
+              multiline
+              maxRows={5}
+              helperText={errors.prompt}
+              disabled={isLoading}
+              required
+            />
+            <Tooltip title="The instructions that will be sent to the AI (i.e., the first message sent to 
+            the AI that will guide the interaction)." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
+          {/* add dropdown to handle tags  */}
+          <div className="form-tooltips">
+            <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
+              <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
+              <Select
+                labelId="multiple-tag-checkbox-select"
+                id="multiple-tag-checkbox-select"
+                multiple
+                value={newPrompt.tags}
+                onChange={handleSelectChange}
+                renderValue={(selected) => {//find the name for the prompt id
+                  return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
+                }}
+                label="Tags"
+                MenuProps={MenuProps}
+                fullWidth
+                disabled={isLoading}
+              >
+                {tagList.map((tag, index) => (
+                  <MenuItem key={index} value={tag.id}>
+                    <Checkbox checked={newPrompt.tags.indexOf(tag.id) > -1} />
+                    <ListItemText primary={tag.id} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Tooltip title="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type." enterTouchDelay={0}>
+              <InfoIcon />
+            </Tooltip>
+          </div>
         </form>
       </Box>
     </div>

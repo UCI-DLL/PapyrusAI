@@ -366,6 +366,27 @@ export default function ConversationList(): JSX.Element {
               )}
             </div>
           </div>
+
+          <div style={{ margin: "0.5rem 0" }}>
+            This page lists all of the conversations started within this module. For more information on viewing,
+            renaming, and hiding conversations, please see the&nbsp;
+            {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? <a
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
+              target="_blank" rel="noreferrer">“Starting a Conversation” section of our user guide
+            </a> : (
+              <a
+                href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
+                target="_blank" rel="noreferrer">“Starting a Conversation” section of our user guide
+              </a>
+            )}
+            .
+          </div>
+          <div>
+            To start a new conversation with the AI, click “New Conversation”. To continue an existing conversation with the AI,
+            click “Chat” next to the desired conversation.
+            (If you wish to return to an existing conversation, consider renaming it to more easily identify and return to a
+            particular conversation at a later time.)
+          </div>
           <hr />
           <List sx={style} aria-label="conversation list">
             {conversationList ? (

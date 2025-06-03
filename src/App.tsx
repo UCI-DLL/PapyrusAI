@@ -55,6 +55,8 @@ import CreateFile from "./features/library/CreateFile";
 import EditFile from "./features/library/EditFile";
 import OrgSettings from "./features/org-settings/OrgSettings";
 import CourseReports from "./features/reports/ModuleReports";
+import introJs from "intro.js";
+import "intro.js/introjs.css";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -186,6 +188,25 @@ function App(): JSX.Element {
                             return { ...prev, name: updatedUser.name, family_name: updatedUser.family_name }
                           else return null
                         })
+
+                        //Handle new user tutorial 
+                        introJs().setOptions({
+                          steps: [
+                            {
+                              intro: 'Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.',
+                            },
+                            {
+                              intro: 'For help with navigating PapyrusAI and other resources, see “Resources” in the left sidebar.',
+                            },
+                            {
+                              intro: 'If you encounter any bugs or issues while using PapyrusAI, click “Report Issue” on the bottom left of the navigation to report to the development team.',
+                            },
+                            {
+                              intro: user.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+                                "To join a course, click “Join Course” at the top right. To create a course, click “Create Course” at the top right." :
+                                "To join a course, click “Join Course” at the top right. Your instructor will give you the course code.",
+                            }]
+                        }).start();
                       }
                       if (localStorage.getItem("papyrusai_user") && localStorage.getItem("papyrusai_user") !== null) {
                         var old = JSON.parse(localStorage.getItem("papyrusai_user") ?? "");

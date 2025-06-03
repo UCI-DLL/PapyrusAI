@@ -345,6 +345,12 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
 
   return !isLoading ? (
     <div className="library">
+      {props.noShowMenu ? (
+        <div>
+          To add an asset (including prompts and documents) to your module, navigate to the folder in which the asset is hosted.
+          <span style={{ fontStyle: "italic" }}> Note: Assets must be created or uploaded in the Library before they can be added to a module.</span>
+        </div>
+      ) : ""}
       <Menu
         id="basic-menu"
         anchorEl={anchorEl}

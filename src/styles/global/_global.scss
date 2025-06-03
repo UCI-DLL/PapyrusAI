@@ -200,3 +200,9 @@ hr {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.form-tooltips {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}

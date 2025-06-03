@@ -159,6 +159,9 @@ export default function ViewFolder(): JSX.Element {
           )}
         </div>
       </div>
+      <div>
+        To create a custom prompt or upload a document, click “New” at the top right.
+      </div>
 
       <ListFolderContents folderId={folder.id} isOrgFolder={location.pathname.split("/")[2] === "org"} />
     </div>

@@ -38,6 +38,7 @@ export default function ChatWizard({
   return prompts && prompts.length > 0 ? (
     <div className="chat__wizard">
       <h6>Select prompt option</h6>
+      <div>Select the prompt with which you would like to begin your conversation with the AI.</div>
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
         {/* add dropdown to handle prompts  */}
         <Select

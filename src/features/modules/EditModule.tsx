@@ -826,10 +826,8 @@ export default function EditModule(): JSX.Element {
             </span>
           </Checkbox>
           <div>
-            TODO RATER description <a
-              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
-              target="_blank" rel="noreferrer">“Creating a Module” section of our instructor guide
-            </a>.
+            Provide students with more tailored feedback on their argumentative essays. Should only
+            be used with essay drafts longer than 150 words. Checking this will also provide analytics on students’ essays with the “View” button.
           </div>
         </form>
       </Box>

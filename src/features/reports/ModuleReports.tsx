@@ -209,7 +209,7 @@ export default function ModuleReports(): JSX.Element {
   useEffect(() => {
     if (userList.length > 0 && raterData.length > 0) {
       userList.forEach(user => {
-        const userRater = raterData.filter(e => e.username === user.username); //TODO double check this with google users
+        const userRater = raterData.filter(e => e.username === user.username);
         const row = createData(
           user.name + " " + user.family_name,
           user.numConvos,
@@ -357,7 +357,7 @@ export default function ModuleReports(): JSX.Element {
         <div>{error}</div>
       ) : (
         <>
-          <h3>{courseData?.name}</h3>
+          <h3>{courseData?.name} - {moduleData?.name}</h3>
           <div>
             On this page, you can view the overall usage within this module. If you wish to view a specific user’s activity,
             click on their name to access their conversations.
@@ -365,7 +365,6 @@ export default function ModuleReports(): JSX.Element {
           {stats ? (
             <>
               <hr />
-              <h4>{moduleData?.name} Stats</h4>
               <div className="reports__progressbar_row">
                 <div className="reports__progressbar_item">
                   <CircularProgressbarWithChildren

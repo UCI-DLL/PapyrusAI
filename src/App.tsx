@@ -129,11 +129,12 @@ function App(): JSX.Element {
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       });
-    } else if (user && (!user.name || user.name === "")) {
+    } else if (user && (!user.name || !user.family_name || user.name === "")) {
       //if user is missing name, then open the modal
       //NOTE: family_name optional (aka can be empty string)
       setShowUpdateUserInfoModal(true);
     }//else all is good
+    // eslint-disable-next-line
   }, [user]);
 
   //handle log out

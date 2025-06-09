@@ -91,11 +91,33 @@ export default function Modules(): JSX.Element {
               </Typography>
             </>
           ) : null}
+          <span>
+            Modules provide users access to conversations with the AI.
+            {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+              " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)." :
+              ""}
+            {course && course.modules.length > 0 ? (
+              <span> To access a module, click the “Begin Module” button for the desired module.
+                {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+                  <span>
+                    &nbsp;For information on creating, editing, copying, or viewing activity for a module, please see the <a
+                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
+                      target="_blank" rel="noreferrer">“Modules” section of our instructor guide
+                    </a>.
+                  </span> :
+                  ""}
+              </span>
+            ) : ""}
+          </span>
           <hr />
           {course ? (
             <ModuleList course={course} refreshList={refreshList} />
           ) : (
-            <div>Course does not have any modules</div>
+            <div>No modules in this course are currently available to you.
+              {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+                " To create a module, go to the course in which you would like to create the module." :
+                ""}
+            </div>
           )}
         </>
       )}

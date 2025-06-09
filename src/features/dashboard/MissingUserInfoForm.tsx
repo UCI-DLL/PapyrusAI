@@ -5,6 +5,7 @@ import Post from "../../utility/Post";
 import { postUserData } from "../../utility/endpoints/UserEndpoints";
 import { changeTheme } from "../../utility/Themes";
 import { UserContext } from "../../utility/context/UserContext";
+import { AlertContext } from "../../utility/context/AlertContext";
 
 /**
  * This form is to update user's missing data
@@ -22,6 +23,7 @@ export default function MissingUserInfoForm({
   closeForm,
   requireUpdate = true
 }: MissingUserInfoFormProps): JSX.Element {
+  const { setAlert } = useContext(AlertContext);
   //New user information
   const [session, setSession] = useState<{
     name: string,
@@ -83,6 +85,7 @@ export default function MissingUserInfoForm({
             //close modal if user data was updated
             closeForm(res.data);
             // localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+            setAlert({ message: "Account Updated!", type: "success" })
           }
         } else {
           // set errors
@@ -164,6 +167,7 @@ export default function MissingUserInfoForm({
             variant="contained"
             onClick={handleSubmit}
             type="submit"
+            disabled={isLoading}
           >
             Save
           </Button>

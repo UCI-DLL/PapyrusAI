@@ -350,7 +350,7 @@ export default function EditFile(): JSX.Element {
 
   function handleSaveClick(e: any) {
     setIsLoading(true)
-    if (selectedIndexSave === 0 && file) { //Save and activate
+    if (selectedIndexSave === 0 && file) { //Save and publish
       handleUpload(e, false);
     } else if (selectedIndexSave === 1) { //discard changes
       setOpenDiscardModal(true);
@@ -361,7 +361,7 @@ export default function EditFile(): JSX.Element {
     e: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number,
   ) => {
-    if (index === 0) { //Save and activate
+    if (index === 0) { //Save and publish
       handleUpload(e, false);
     } else if (index === 1) { //discard changes
       setOpenDiscardModal(true);

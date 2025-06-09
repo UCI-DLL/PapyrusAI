@@ -122,7 +122,8 @@ export default function CourseCard({ course, refreshList, keyy, onClick }: Cours
         }
       >
         <div>
-          <div>Please name your course and enter in a unique sign up code for the duplicated course. Duplicating the course will also copy over all the modules and settings within this course.</div>
+          <div>Enter a name and a unique sign up code for the duplicated course. Duplicating a course will also copy over all the modules and settings within this course.</div>
+          <div>If you wish to publish (i.e., make visible to students) the new course immediately, check the “Publish Course” button.</div>
           <TextField
             name="name"
             label="New Course Name"
@@ -154,7 +155,7 @@ export default function CourseCard({ course, refreshList, keyy, onClick }: Cours
             isDisabled={isLoading}
           >
             <span>
-              Activate Course
+              Publish Course
             </span>
           </Checkbox>
           &nbsp;

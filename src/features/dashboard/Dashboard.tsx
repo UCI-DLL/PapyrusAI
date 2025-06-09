@@ -96,7 +96,6 @@ export default function Dashboard(): JSX.Element {
           <Button variant="contained" onClick={() => setShowAddCourseModal(true)}>Join Course</Button>
         </div>
       </div>
-
       <hr />
       {courseList.length > 0 ? (
         <CourseList list={orderCourseRecentlyCreated(courseList).slice(0, 6)} refreshList={refreshList} />

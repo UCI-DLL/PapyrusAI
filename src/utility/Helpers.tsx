@@ -74,3 +74,7 @@ export function orderModuleRecentlyCreated(list: Array<ModuleType>) {
     return a.id < b.id ? 1 : -1;
   })
 }
+
+export function removeSpecialCharacters(str: string) {
+  return str.replace(/[^a-zA-Z0-9!@#$%^()"'.?-_+=*~<>,;:&|\s]/g, "");
+}

@@ -199,6 +199,7 @@ export default function ModuleReports(): JSX.Element {
     return (() => {
       setRaterData([]);
       setUserList([]);
+      setRows([]);
       controller.abort();
     });
 
@@ -208,7 +209,7 @@ export default function ModuleReports(): JSX.Element {
   useEffect(() => {
     if (userList.length > 0 && raterData.length > 0) {
       userList.forEach(user => {
-        const userRater = raterData.filter(e => e.username === user.username); //TODO double check this with google users
+        const userRater = raterData.filter(e => e.username === user.username);
         const row = createData(
           user.name + " " + user.family_name,
           user.numConvos,
@@ -222,7 +223,18 @@ export default function ModuleReports(): JSX.Element {
           userRater.some(e => e.content.some(c => c[4] === "6")),
           user.username
         )
-        setRows(prev => [...prev, row])
+        setRows(prev => {
+          const newArray = [...prev]
+          if (newArray.some(p => p.username === row.username)) {
+            //if user is in the list already, just update it
+            const index = newArray.findIndex(p => p.username === row.username)
+            newArray[index] = row
+            return newArray
+          } else {
+            //otherwise, just add new row
+            return [...prev, row]
+          }
+        })
       })
     } else if (userList.length > 0 && moduleData && !moduleData.raterEnabled) {
       //for modules that are not rater enabled, then just list out the students
@@ -240,7 +252,18 @@ export default function ModuleReports(): JSX.Element {
           false,
           user.username
         )
-        setRows(prev => [...prev, row])
+        setRows(prev => {
+          const newArray = [...prev]
+          if (newArray.some(p => p.username === row.username)) {
+            //if user is in the list already, just update it
+            const index = newArray.findIndex(p => p.username === row.username)
+            newArray[index] = row
+            return newArray
+          } else {
+            //otherwise, just add new row
+            return [...prev, row]
+          }
+        })
       })
     }
   }, [userList, raterData, moduleData])
@@ -334,12 +357,14 @@ export default function ModuleReports(): JSX.Element {
         <div>{error}</div>
       ) : (
         <>
-          <h3>{courseData?.name}</h3>
-
+          <h3>{courseData?.name} - {moduleData?.name}</h3>
+          <div>
+            On this page, you can view the overall usage within this module. If you wish to view a specific user’s activity,
+            click on their name to access their conversations.
+          </div>
           {stats ? (
             <>
               <hr />
-              <h4>{moduleData?.name} Stats</h4>
               <div className="reports__progressbar_row">
                 <div className="reports__progressbar_item">
                   <CircularProgressbarWithChildren

@@ -50,7 +50,6 @@ export default function Login(props: LoginProps): JSX.Element {
   }, []);
 
   function getUserInfo(token: string) {
-    console.log("getuserinfo")
     const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
     axios
       .get(API_URL, {
@@ -65,10 +64,9 @@ export default function Login(props: LoginProps): JSX.Element {
         // return response;
       })
       .catch(function (error) {
-        console.log("here error", error)
+        console.log("error", error)
         if (error.code === "ERR_CANCELED") return;
         if (error.code === "ERR_NETWORK") {
-          console.log("here1")
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
         if (error.response) {
@@ -76,7 +74,6 @@ export default function Login(props: LoginProps): JSX.Element {
           // that falls out of the range of 2xx
           // showMsg(Object.values(error.response.data), "error");
           if (error.response.status === 401) {
-            console.log("here2")
             window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
           }
           return error.response;

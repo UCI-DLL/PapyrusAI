@@ -236,6 +236,14 @@ export const MessageRight = (props: MessageProps) => {
     </React.Fragment>
   );
 
+  function LinkRenderer(props: any) {
+    return (
+      <a href={props.href} target="_blank" rel="noreferrer">
+        {props.children}
+      </a>
+    );
+  }
+
   return (props.visible === undefined || props.visible || props.isInstructor) ? (
     <div
       className={"message__row-right"}
@@ -313,7 +321,7 @@ export const MessageRight = (props: MessageProps) => {
         </div>
       ) : (
         <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__right-message message__out-context" : "message__right-message"}>
-          <Markdown className={""}>{props.message}</Markdown>
+          <Markdown className={""} components={{ a: LinkRenderer }}>{props.message}</Markdown>
         </div>
       )}
       <Snackbar

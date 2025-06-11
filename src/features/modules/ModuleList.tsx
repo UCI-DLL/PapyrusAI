@@ -143,6 +143,7 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
             description, added assets, and settings.
           </div>
           <div className="courses__list">
+            {/* TODO figure out starred courses  */}
             {courseList.map((course, index) => {
               return (
                 <div key={index}>
@@ -154,6 +155,8 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
                       setOpenCourseListModal(false);
                       setOpenDuplicateModal(prev => ({ ...prev, copyCourseId: courseId }));
                     }}
+                    createStarredCourse={() => { }}
+                    removeStarredCourse={() => { }}
                   />
                 </div>
               )

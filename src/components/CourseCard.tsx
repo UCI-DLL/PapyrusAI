@@ -20,6 +20,8 @@ import Post from "../utility/Post";
 import { postCopyCourse } from "../utility/endpoints/CourseEndpoints";
 import { Modal } from "./Modal";
 import { Checkbox } from "./Checkbox";
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
 
 
 interface CourseListProps {
@@ -27,9 +29,20 @@ interface CourseListProps {
   refreshList: () => void;
   keyy: number | string;
   onClick?: (courseId: string) => void;
+  isStarred?: boolean;
+  createStarredCourse: (courseId: string) => void;
+  removeStarredCourse: (courseId: string) => void;
 }
 
-export default function CourseCard({ course, refreshList, keyy, onClick }: CourseListProps): JSX.Element {
+export default function CourseCard({
+  course,
+  refreshList,
+  keyy,
+  onClick,
+  isStarred,
+  createStarredCourse,
+  removeStarredCourse
+}: CourseListProps): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
@@ -44,6 +57,7 @@ export default function CourseCard({ course, refreshList, keyy, onClick }: Cours
     signUpCode: "",
     isActive: false
   });
+  const [starred, setStarred] = useState<boolean>(isStarred ? isStarred : false)
   const [menuAnchorEl, setAddAnchorEl] = React.useState<null | HTMLElement>(null);
   const menuOpen = Boolean(menuAnchorEl);
   const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -94,6 +108,48 @@ export default function CourseCard({ course, refreshList, keyy, onClick }: Cours
   const ownerMenuFunctions = [editCourse, duplicateCourse]
   const nonOwnerMenu = ["Duplicate"]
   const nonOwnerMenuFunctions = [duplicateCourse]
+
+  function updateStar() {
+    console.log(starred)
+    setStarred(prev => !prev)
+    if (starred) {
+      removeStarredCourse(course.id)
+    } else {
+      createStarredCourse(course.id)
+    }
+  }
+
+  const StarredComponents = () => (
+    starred ? (
+      <Tooltip title={"Unstar Course"}>
+        <IconButton
+          className="courses__button__menu-btn"
+          aria-label="favorite course"
+          id={`${course.id}favorite-button`}
+          onClick={(e: any) => {
+            e.stopPropagation()
+            updateStar()
+          }}
+        >
+          <StarIcon />
+        </IconButton>
+      </Tooltip>
+    ) : (
+      <Tooltip title={"Star Course"}>
+        <IconButton
+          className="courses__button__menu-btn"
+          aria-label="favorite course"
+          id={`${course.id}favorite-button`}
+          onClick={(e: any) => {
+            e.stopPropagation()
+            updateStar()
+          }}
+        >
+          <StarBorderIcon />
+        </IconButton>
+      </Tooltip>
+    )
+  )
 
   return course && user ? (
     <div className="courses__list">
@@ -208,23 +264,30 @@ export default function CourseCard({ course, refreshList, keyy, onClick }: Cours
               user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmins") ||
               user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
               user?.groups.includes(course.id + "-TA") //handle tas
-            ) && (
-              <Tooltip title={"Course Options"}>
-                <IconButton
-                  className="courses__button__menu-btn"
-                  aria-label="course menu"
-                  id={`${keyy}${user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? "admin" : "instructor"}-button`}
-                  aria-controls={menuOpen ? `${keyy}${user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? "admin" : "instructor"}-menu` : ""}
-                  aria-haspopup="true"
-                  aria-expanded={menuOpen ? 'true' : undefined}
-                  onClick={(e: any) => {
-                    e.stopPropagation()
-                    handleMenuClick(e)
-                  }}
-                >
-                  <MoreVertIcon />
-                </IconButton>
-              </Tooltip>
+            ) ? (
+              <>
+                <StarredComponents />
+                <Tooltip title={"Course Options"}>
+                  <IconButton
+                    className="courses__button__menu-btn"
+                    aria-label="course menu"
+                    id={`${keyy}${user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? "admin" : "instructor"}-button`}
+                    aria-controls={menuOpen ? `${keyy}${user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? "admin" : "instructor"}-menu` : ""}
+                    aria-haspopup="true"
+                    aria-expanded={menuOpen ? 'true' : undefined}
+                    onClick={(e: any) => {
+                      e.stopPropagation()
+                      handleMenuClick(e)
+                    }}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                </Tooltip>
+              </>
+            ) : (
+              <>
+                <StarredComponents />
+              </>
             )
           }
           title={course.name}

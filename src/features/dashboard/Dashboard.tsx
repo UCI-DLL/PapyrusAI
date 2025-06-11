@@ -12,6 +12,7 @@ import AddCourseForm from "../course-groups/AddCourseForm";
 import { Modal } from "../../components/Modal";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreated } from "../../utility/Helpers";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 
 
 export default function Dashboard(): JSX.Element {
@@ -22,11 +23,13 @@ export default function Dashboard(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   //open the modal for a user to add a course
   const [showAddCourseModal, setShowAddCourseModal] = useState<boolean>(false);
+  const [starredCourses, setStarredCourses] = useState<Array<string>>([]);
 
   useEffect(() => {
     const controller = new AbortController();
     if (!showAddCourseModal) {
       getCourses(controller.signal)
+      getStarredCourses(controller.signal)
     }
 
     return () => {
@@ -54,6 +57,25 @@ export default function Dashboard(): JSX.Element {
           setCourseList([]);
           setIsLoading(false);
           setAlert({ message: "Encountered an error. Please try again later.", type: "error" });
+        }
+      }
+    });
+  }
+
+  function getStarredCourses(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data.course) {
+          //get the list of all favorited courses for this specific user
+          console.log("favorited list", res.data.course)
+          setStarredCourses(res.data.course);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
         }
       }
     });
@@ -106,7 +128,7 @@ export default function Dashboard(): JSX.Element {
       ) : ""}
       <hr />
       {courseList.length > 0 ? (
-        <CourseList list={orderCourseRecentlyCreated(courseList).slice(0, 6)} refreshList={refreshList} />
+        <CourseList list={orderCourseRecentlyCreated(courseList).slice(0, 6)} refreshList={refreshList} starredList={starredCourses} />
       ) : <></>}
 
       &nbsp;&nbsp;&nbsp;

@@ -128,7 +128,7 @@ button {
   font-family: $opensans;
   color: var(--black);
 
-  &:focus {
+  &:focus-visible {
     outline: auto;
   }
 }

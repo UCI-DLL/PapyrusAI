@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import Button from '@mui/material/Button';
@@ -22,6 +22,8 @@ import { Modal } from "./Modal";
 import { Checkbox } from "./Checkbox";
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
+import Put from "../utility/Put";
+import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
 
 
 interface CourseListProps {
@@ -30,8 +32,6 @@ interface CourseListProps {
   keyy: number | string;
   onClick?: (courseId: string) => void;
   isStarred?: boolean;
-  createStarredCourse: (courseId: string) => void;
-  removeStarredCourse: (courseId: string) => void;
 }
 
 export default function CourseCard({
@@ -40,8 +40,6 @@ export default function CourseCard({
   keyy,
   onClick,
   isStarred,
-  createStarredCourse,
-  removeStarredCourse
 }: CourseListProps): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
@@ -66,6 +64,10 @@ export default function CourseCard({
   const handleMenuClose = () => {
     setAddAnchorEl(null);
   };
+
+  useEffect(() => {
+    setStarred(isStarred ? isStarred : false)
+  }, [isStarred])
 
   function editCourse(courseId: string) {
     navigator(`/editcourse/${courseId}`)
@@ -109,14 +111,42 @@ export default function CourseCard({
   const nonOwnerMenu = ["Duplicate"]
   const nonOwnerMenuFunctions = [duplicateCourse]
 
-  function updateStar() {
-    console.log(starred)
-    setStarred(prev => !prev)
-    if (starred) {
-      removeStarredCourse(course.id)
-    } else {
-      createStarredCourse(course.id)
-    }
+  function createStarredCourse(courseId: string) {
+    setIsLoading(true);
+    Post(postCreateUserFavoritingData(), { id: { courseId: courseId }, type: "courses" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.courses) {
+          //update course lists as needed
+          setStarred(res.data.courses)
+          setAlert({ message: "Course added to favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+      refreshList()
+    });
+  }
+
+  function removeStarredCourse(courseId: string) {
+    setIsLoading(true);
+    Put(putUpdateUserFavoritingData(), { id: { courseId: courseId }, type: "courses" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.courses) {
+          //update course lists as needed
+          setStarred(res.data.courses)
+          setAlert({ message: "Course removed from favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+      refreshList()
+    });
   }
 
   const StarredComponents = () => (
@@ -126,9 +156,10 @@ export default function CourseCard({
           className="courses__button__menu-btn"
           aria-label="favorite course"
           id={`${course.id}favorite-button`}
+          disabled={isLoading}
           onClick={(e: any) => {
             e.stopPropagation()
-            updateStar()
+            removeStarredCourse(course.id)
           }}
         >
           <StarIcon />
@@ -140,9 +171,10 @@ export default function CourseCard({
           className="courses__button__menu-btn"
           aria-label="favorite course"
           id={`${course.id}favorite-button`}
+          disabled={isLoading}
           onClick={(e: any) => {
             e.stopPropagation()
-            updateStar()
+            createStarredCourse(course.id)
           }}
         >
           <StarBorderIcon />

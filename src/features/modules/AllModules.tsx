@@ -7,6 +7,8 @@ import ModuleList from "./ModuleList";
 import LinearProgress from '@mui/material/LinearProgress';
 import { orderCourseRecentlyCreated } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { UserStarred } from "../../utility/types/UserTypes";
 
 
 export default function AllModules(): JSX.Element {
@@ -15,12 +17,14 @@ export default function AllModules(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [courseList, setCourseList] = useState<Array<CourseType>>([])
+  const [starred, setStarred] = useState<UserStarred | undefined>();
 
   useEffect(() => {
     const controller = new AbortController();
     setIsLoading(true);
     //show all modules
     getCourses(controller.signal);
+    getStarred(controller.signal);
 
     return () => {
       controller.abort();
@@ -48,6 +52,24 @@ export default function AllModules(): JSX.Element {
           // handle error
           setError("No Modules Found");
           setIsLoading(false);
+        }
+      }
+    });
+  }
+
+  function getStarred(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all favorited for this specific user
+          setStarred(res.data);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
         }
       }
     });
@@ -91,7 +113,7 @@ export default function AllModules(): JSX.Element {
                 return course.modules.length > 0 ? (
                   <div key={index} style={{ width: "100%" }}>
                     <h4>{course.name}</h4>
-                    <ModuleList course={course} refreshList={refreshList} />
+                    <ModuleList course={course} refreshList={refreshList} starredList={starred ? starred : undefined} />
                   </div>
                 ) : (<div key={index}></div>)
               })}

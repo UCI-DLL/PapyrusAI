@@ -19,7 +19,7 @@ export default function Courses(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [showAddCourseModal, setShowAddCourseModal] = useState<boolean>(false);
-  const [starredCourses, setStarredCourses] = useState<Array<string>>([]);
+  const [starredCourses, setStarredCourses] = useState<Array<{ courseId: string }>>([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -59,10 +59,10 @@ export default function Courses(): JSX.Element {
   function getStarredCourses(signal: AbortSignal) {
     Get(getUserFavoritingData(), signal).then(res => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.course) {
+        if (res.data && res.data.courses) {
           //get the list of all favorited courses for this specific user
-          console.log("favorited list", res.data.course)
-          setStarredCourses(res.data.course);
+          console.log("favorited list", res.data.courses)
+          setStarredCourses(res.data.courses);
         }
       } else if (res && res.status === 401) {
         navigator("/login");
@@ -78,6 +78,7 @@ export default function Courses(): JSX.Element {
   function refreshList() {
     const controller = new AbortController();
     getCourses(controller.signal)
+    getStarredCourses(controller.signal)
   }
 
   return !isLoading ? (

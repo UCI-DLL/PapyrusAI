@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Button, Divider, List, ListItem, ListItemText, TextField } from "@mui/material";
+import { Button, Divider, IconButton, List, ListItem, ListItemText, TextField, Tooltip } from "@mui/material";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
-import { CustomUserType } from "../../utility/types/UserTypes";
+import { CustomUserType, UserStarred } from "../../utility/types/UserTypes";
 import Get from "../../utility/Get";
 import { getCourseList, putCopyModule } from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -11,18 +11,25 @@ import Put from "../../utility/Put";
 import { Modal } from "../../components/Modal";
 import { Checkbox } from "../../components/Checkbox";
 import CourseCard from "../../components/CourseCard";
-import { orderModuleRecentlyCreated } from "../../utility/Helpers";
+import { orderCourseRecentlyCreatedAndStarred, orderModuleRecentlyCreatedAndStarred } from "../../utility/Helpers";
+import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
+import Post from "../../utility/Post";
 
 interface ModuleListProps {
   course: CourseType;
+  starredList: UserStarred | undefined; //user favorited
   refreshList: () => void;
 }
 
-export default function ModuleList({ course, refreshList }: ModuleListProps): JSX.Element {
+export default function ModuleList({ course, starredList, refreshList }: ModuleListProps): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
+  const [starredCourses, setStarredCourses] = useState<Array<{ courseId: string }>>([]);
+  const [starredModules, setStarredModules] = useState<Array<{ courseId: string, moduleId: string }>>([]);
   const [openCourseListModal, setOpenCourseListModal] = useState<boolean>(false);
   const [openDuplicateModal, setOpenDuplicateModal] = useState<{
     courseId: string, //current course
@@ -47,18 +54,29 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
   };
 
   useEffect(() => {
+    if (starredList) {
+      if (starredList.courses) {
+        setStarredCourses(starredList.courses);
+      }
+      if (starredList.modules) {
+        setStarredModules(starredList.modules);
+      }
+    }
+  }, [starredList]);
+
+  useEffect(() => {
     const controller = new AbortController();
     //if user is more than a normal user (permission-wise)
-    if (user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
+    if ((user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
       user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-      user?.groups.includes(course.id + "-TA")) {
+      user?.groups.includes(course.id + "-TA")) && openCourseListModal) {
       getCourses(controller.signal)
     }
     return () => {
       controller.abort();
     };
     // eslint-disable-next-line
-  }, [user, course])
+  }, [user, course, openCourseListModal])
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
@@ -119,6 +137,42 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
     setDuplicateModuleData({ ...duplicateModuleData, [e.target.name]: e.target.value });
   }
 
+  function createStarredModule(courseId: string, moduleId: string) {
+    setIsLoading(true)
+    Post(postCreateUserFavoritingData(), { id: { courseId: courseId, moduleId: moduleId }, type: "modules" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.modules) {
+          //update module lists as needed
+          setStarredModules(res.data.modules)
+          setAlert({ message: "Module added to favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+    });
+  }
+
+  function removeStarredModule(courseId: string, moduleId: string) {
+    setIsLoading(true)
+    Put(putUpdateUserFavoritingData(), { id: { courseId: courseId, moduleId: moduleId }, type: "modules" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.modules) {
+          //update module lists as needed
+          setStarredModules(res.data.modules)
+          setAlert({ message: "Module removed from favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+    });
+  }
+
   return course.modules.length > 0 ? (
     <div className="modules__list">
       <Modal
@@ -143,8 +197,7 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
             description, added assets, and settings.
           </div>
           <div className="courses__list">
-            {/* TODO figure out starred courses  */}
-            {courseList.map((course, index) => {
+            {orderCourseRecentlyCreatedAndStarred(courseList, starredCourses).map((course, index) => {
               return (
                 <div key={index}>
                   <CourseCard
@@ -155,8 +208,7 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
                       setOpenCourseListModal(false);
                       setOpenDuplicateModal(prev => ({ ...prev, copyCourseId: courseId }));
                     }}
-                    createStarredCourse={() => { }}
-                    removeStarredCourse={() => { }}
+                    isStarred={starredCourses.some(c => c.courseId === course.id)}
                   />
                 </div>
               )
@@ -227,7 +279,7 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
         </div>
       </Modal>
       <List sx={style} aria-label="modules list">
-        {orderModuleRecentlyCreated(course.modules).map((module, index) => {
+        {orderModuleRecentlyCreatedAndStarred(course.modules, starredModules).map((module, index) => {
           return (
             <div key={index}>
               {/* button redirect to the conversation */}
@@ -237,6 +289,40 @@ export default function ModuleList({ course, refreshList }: ModuleListProps): JS
                   <div>{module.moduleDescription}</div>
                 </button>
                 <div style={{ display: "flex" }}>
+                  {
+                    starredModules.some(m => m.moduleId === module.id) ? (
+                      <Tooltip title={"Unstar Module"}>
+                        <IconButton
+                          className="courses__button__menu-btn"
+                          aria-label="favorite course"
+                          id={`${module.id}favorite-button`}
+                          disabled={!isLoading}
+                          onClick={(e: any) => {
+                            e.stopPropagation()
+                            removeStarredModule(course.id, module.id)
+                          }}
+                        >
+                          <StarIcon />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title={"Star Module"}>
+                        <IconButton
+                          className="courses__button__menu-btn"
+                          aria-label="favorite course"
+                          id={`${module.id}favorite-button`}
+                          disabled={!isLoading}
+                          onClick={(e: any) => {
+                            e.stopPropagation()
+                            createStarredModule(course.id, module.id)
+                          }}
+                        >
+                          <StarBorderIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }
+
                   {(user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
                     user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
                     user?.groups.includes(course.id + "-TA")) && (

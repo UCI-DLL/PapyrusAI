@@ -11,7 +11,9 @@ import { UserContext } from "../../utility/context/UserContext";
 import AddCourseForm from "../course-groups/AddCourseForm";
 import { Modal } from "../../components/Modal";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { orderCourseRecentlyCreated } from "../../utility/Helpers";
+import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { UserStarred } from "../../utility/types/UserTypes";
 
 
 export default function Dashboard(): JSX.Element {
@@ -22,11 +24,13 @@ export default function Dashboard(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   //open the modal for a user to add a course
   const [showAddCourseModal, setShowAddCourseModal] = useState<boolean>(false);
+  const [starred, setStarred] = useState<UserStarred | undefined>();
 
   useEffect(() => {
     const controller = new AbortController();
     if (!showAddCourseModal) {
       getCourses(controller.signal)
+      getStarred(controller.signal)
     }
 
     return () => {
@@ -34,7 +38,7 @@ export default function Dashboard(): JSX.Element {
     };
 
     // eslint-disable-next-line
-  }, [showAddCourseModal]);
+  }, []);
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
@@ -59,9 +63,28 @@ export default function Dashboard(): JSX.Element {
     });
   }
 
+  function getStarred(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all favorited for this specific user
+          setStarred(res.data);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+  }
+
   function refreshList() {
     const controller = new AbortController();
     getCourses(controller.signal)
+    getStarred(controller.signal)
   }
 
   return !isLoading ? (
@@ -98,7 +121,11 @@ export default function Dashboard(): JSX.Element {
       </div>
       <hr />
       {courseList.length > 0 ? (
-        <CourseList list={orderCourseRecentlyCreated(courseList).slice(0, 6)} refreshList={refreshList} />
+        <CourseList
+          list={orderCourseRecentlyCreatedAndStarred(courseList, starred && starred.courses ? starred.courses : []).slice(0, 6)}
+          refreshList={refreshList}
+          starredList={starred && starred.courses ? starred.courses : []}
+        />
       ) : <></>}
 
       &nbsp;&nbsp;&nbsp;
@@ -110,10 +137,14 @@ export default function Dashboard(): JSX.Element {
         </div>
       </div>
       <hr />
-      {courseList.length > 0 && mostRecentModules(orderCourseRecentlyCreated(courseList)).map((course, index) => {
+      {courseList.length > 0 && mostRecentModules(orderCourseRecentlyCreatedAndStarred(courseList, starred && starred.courses ? starred.courses : [])).map((course, index) => {
         return course.modules.length > 0 ? (
           <div style={{ width: "100%" }} key={index}>
-            <ModuleList course={({ ...course, modules: course.mostRecentItem ? [course.mostRecentItem] : [] })} refreshList={refreshList} />
+            <ModuleList
+              course={({ ...course, modules: course.mostRecentItem ? [course.mostRecentItem] : [] })}
+              refreshList={refreshList}
+              starredList={starred ? starred : undefined}
+            />
             <Divider />
           </div>
         ) : null

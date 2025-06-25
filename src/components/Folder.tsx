@@ -1,5 +1,5 @@
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button, IconButton, Menu, MenuItem, TextField, Tooltip } from "@mui/material";
 import FolderIcon from '@mui/icons-material/Folder';
 import PushPinIcon from '@mui/icons-material/PushPin';
@@ -19,6 +19,9 @@ import {
 } from "../utility/endpoints/FolderEndpoints";
 import { Modal } from "./Modal";
 import Post from "../utility/Post";
+import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
 
 interface FolderProps {
   displayName: string;
@@ -29,6 +32,7 @@ interface FolderProps {
   refreshList: () => void;
   loading: () => void;
   noShowMenu?: boolean;
+  isStarred?: boolean;
 }
 
 export const Folder = (props: FolderProps) => {
@@ -49,7 +53,11 @@ export const Folder = (props: FolderProps) => {
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openPromoteModal, setOpenPromoteModal] = useState<boolean>(false);
   const [openDemoteModal, setOpenDemoteModal] = useState<boolean>(false);
+  const [starred, setStarred] = useState<boolean>(props.isStarred ? props.isStarred : false)
 
+  useEffect(() => {
+    setStarred(props.isStarred ? props.isStarred : false)
+  }, [props.isStarred])
 
   function view() {
     handleAddClose()
@@ -244,14 +252,62 @@ export const Folder = (props: FolderProps) => {
     });
   }
 
-  const instructorUserMenu = ["View", "Rename", "Duplicate", "Delete"]
-  const instructorUserMenuFunctions = [view, openRename, duplicate, openDelete]
-  const adminUserMenu = ["View", "Rename", "Duplicate", "Promote", "Delete"]
-  const adminUserMenuFunctions = [view, openRename, duplicate, openPromote, openDelete]
-  const instructorOrgMenu = ["View", "Duplicate"]
-  const instructorOrgMenuFunctions = [view, duplicate]
-  const adminOrgMenu = ["View", "Rename", "Duplicate", "Demote", "Delete"]
-  const adminOrgMenuFunctions = [view, openRename, duplicate, openDemote, openDelete]
+  function createStarredFolder() {
+    props.loading()
+    Post(postCreateUserFavoritingData(), { id: { folderId: props.folder.id }, type: "folders" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.folders) {
+          //update course lists as needed
+          setStarred(res.data.folders)
+          setAlert({ message: "Course added to favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+      props.refreshList()
+    });
+  }
+
+  function removeStarredFolder() {
+    props.loading()
+    Put(putUpdateUserFavoritingData(), { id: { folderId: props.folder.id }, type: "folders" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.folders) {
+          //update course lists as needed
+          setStarred(res.data.folders)
+          setAlert({ message: "Folder removed from favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+      props.refreshList()
+    });
+  }
+
+  const instructorUserMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Duplicate", "Delete"]
+  const instructorUserMenuFunctions = [view, starred ? removeStarredFolder : createStarredFolder, openRename, duplicate, openDelete]
+  const adminUserMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Rename", "Duplicate", "Promote", "Delete"]
+  const adminUserMenuFunctions = [view, starred ? removeStarredFolder : createStarredFolder, openRename, duplicate, openPromote, openDelete]
+  const instructorOrgMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Duplicate"]
+  const instructorOrgMenuFunctions = [view, starred ? removeStarredFolder : createStarredFolder, duplicate]
+  const adminOrgMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Rename", "Duplicate", "Demote", "Delete"]
+  const adminOrgMenuFunctions = [view, starred ? removeStarredFolder : createStarredFolder, openRename, duplicate, openDemote, openDelete]
+
+  //Note: these are not buttons because we cannot have a button within a button
+  // and folders are button
+  const StarredComponents = () => (
+    starred ? (
+      <StarIcon />
+    ) : (
+      <StarBorderIcon />
+    )
+  )
 
   return (
     <div key={props.keyy ? props.keyy : "key"} className="c-folder">
@@ -362,6 +418,7 @@ export const Folder = (props: FolderProps) => {
         onClick={props.onClick}
       >
         <div className="c-folder__button__org-spacing">
+          <StarredComponents />
           {props.isOrganizationFolder ? (
             <PushPinIcon />
           ) : <></>}

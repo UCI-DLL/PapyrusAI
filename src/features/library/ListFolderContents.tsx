@@ -28,6 +28,8 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { Prompt } from "../../components/Prompt";
 import { File } from "../../components/File";
+import { UserStarred } from "../../utility/types/UserTypes";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 
 
 export enum SortOptions {
@@ -43,6 +45,12 @@ export enum TypeOptions {
   File = "File"
 }
 
+export enum StarredOptions {
+  All = "All",
+  Starred = "Starred",
+  "Not Starred" = "Not Starred"
+}
+
 interface ListPromptsProps {
   folderId: string;
   isOrgFolder: boolean;
@@ -56,9 +64,11 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
   const [folder, setFolder] = useState<FolderType>();
   const [filteredFolder, setFilteredFolder] = useState<FolderType>();
   const { setAlert } = useContext(AlertContext);
+  const [starred, setStarred] = useState<UserStarred | undefined>();
   const [filters, setFilters] = useState<{
     search: string,
     sort: SortOptions,
+    starred: StarredOptions,
     startDate: Dayjs | null,
     endDate: Dayjs | null,
     tags: string,
@@ -66,6 +76,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
   }>({
     search: "", //title of folder or title or contents of prompts
     sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+    starred: StarredOptions.All,
     startDate: null,
     endDate: null,
     tags: "",
@@ -89,6 +100,8 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     if (tagList.length === 0) {
       getTags("", controller.signal)
     }
+
+    getStarred(controller.signal)
 
     return () => {
       controller.abort();
@@ -176,6 +189,25 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     });
   }
 
+  function getStarred(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all favorited for this specific user
+          setStarred(res.data);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+  }
+
+
   function handleFilter(e: React.FormEvent) {
     e.preventDefault()
     if (!folder) return //return if no folder
@@ -190,6 +222,17 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     }
     if (filters.type === TypeOptions.File) {
       filteredPrompts = []
+    }
+
+    //handle starred filter
+    if (filters.starred as string === StarredOptions.All) {
+      //Do nothing
+    } else if (filters.starred as string === StarredOptions.Starred && starred && (starred.files || starred.prompts)) {
+      filteredFiles = filteredFiles.filter((x: FileType) => starred.files && starred.files.some(y => y.fileId === x.id && y.folderId === folder.id))
+      filteredPrompts = filteredPrompts.filter((x: PromptType) => starred.prompts && starred.prompts.some(y => y.promptId === x.id && y.folderId === folder.id))
+    } else if (filters.starred as string === StarredOptions["Not Starred"] && starred && (starred.files || starred.prompts)) {
+      filteredFiles = filteredFiles.filter((x: FileType) => starred.files && !starred.files.some(y => y.fileId === x.id))
+      filteredPrompts = filteredPrompts.filter((x: PromptType) => starred.prompts && !starred.prompts.some(y => y.promptId === x.id))
     }
 
     //handle searching
@@ -294,6 +337,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     setFilters({
       search: "", //title of folder or title or contents of prompts
       sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+      starred: StarredOptions.All,
       startDate: null,
       endDate: null,
       tags: "",
@@ -309,6 +353,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     //get user folder data
     getFolder(props.isOrgFolder, props.folderId, controller.signal)
     getTags("", controller.signal);
+    getStarred(controller.signal);
   }
 
   return !isLoading && filteredFolder ? (
@@ -381,6 +426,26 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
               notched={true}
             >
               {Object.keys(SortOptions).map(key => {
+                return (
+                  <MenuItem value={key} key={key}>{key}</MenuItem>
+                )
+              })}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
+            <InputLabel shrink={true} id="sort-select-label">Starred</InputLabel>
+            <Select
+              value={filters.starred}
+              onChange={(e: SelectChangeEvent) => {
+                setFilters((prev) => ({ ...prev, starred: StarredOptions[e.target.value as keyof typeof StarredOptions] }));
+              }}
+              label="Starred"
+              labelId="starred-select-label"
+              id="starred-select"
+              sx={{ width: 320, maxWidth: '100%' }}
+              notched={true}
+            >
+              {Object.keys(StarredOptions).map(key => {
                 return (
                   <MenuItem value={key} key={key}>{key}</MenuItem>
                 )
@@ -508,6 +573,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
                 loading={() => setIsLoading(true)}
                 noShowMenu={props.noShowMenu}
                 onClick={props.onClick}
+                isStarred={starred && starred.prompts && starred.prompts.some(p => p.promptId === prompt.id) && starred.prompts.some(c => c.folderId === props.folderId)}
               />
             </div>
           )
@@ -525,6 +591,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
                 loading={() => setIsLoading(true)}
                 noShowMenu={props.noShowMenu}
                 onClick={props.onClick}
+                isStarred={starred && starred.files && starred.files.some(p => p.fileId === file.id) && starred.files.some(c => c.folderId === props.folderId)}
               />
             </div>
           )

@@ -15,7 +15,7 @@
     width: 100%;
     display: grid;
     grid-gap: global.$base;
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
   }
 
   &__prompt-list {
@@ -29,7 +29,7 @@
     width: 100%;
     display: grid;
     grid-gap: global.$base;
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
   }
 
   &__section-header {

@@ -24,7 +24,7 @@ export type UserStarred = {
   organization: string,
   courses?: Array<{ courseId: string }>,
   modules?: Array<{ courseId: string, moduleId: string }>,
-  folders?: Array<{}>,
-  prompts?: Array<{}>,
-  files?: Array<{}>
+  folders?: Array<{ folderId: string }>,
+  prompts?: Array<{ folderId: string, promptId: string }>,
+  files?: Array<{ folderId: string, fileId: string }>
 }

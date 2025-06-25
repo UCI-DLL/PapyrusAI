@@ -22,7 +22,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { Modal } from "../../components/Modal";
 import InfoIcon from '@mui/icons-material/Info';
 import LinearProgress from '@mui/material/LinearProgress';
-import ListPrompts from "../library/ListFolderContents";
+import ListFolderContents from "../library/ListFolderContents";
 import ListFolders from "../library/ListFolders";
 import Get from "../../utility/Get";
 import { getOrgFile, getOrgPrompt, getUserFile, getUserPrompt } from "../../utility/endpoints/FolderEndpoints";
@@ -390,7 +390,7 @@ export default function AddModule(): JSX.Element {
         }
       >
         <div>
-          <ListPrompts folderId={openSelectPromptModal.folderId} isOrgFolder={openSelectPromptModal.isOrgFolder} noShowMenu onClick={selectAsset} />
+          <ListFolderContents folderId={openSelectPromptModal.folderId} isOrgFolder={openSelectPromptModal.isOrgFolder} noShowMenu onClick={selectAsset} />
         </div>
       </Modal>
       <Modal

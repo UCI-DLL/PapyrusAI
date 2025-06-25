@@ -209,7 +209,7 @@ export default function ModuleReports(): JSX.Element {
   useEffect(() => {
     if (userList.length > 0 && raterData.length > 0) {
       userList.forEach(user => {
-        const userRater = raterData.filter(e => e.username === user.username); //TODO double check this with google users
+        const userRater = raterData.filter(e => e.username === user.username);
         const row = createData(
           user.name + " " + user.family_name,
           user.numConvos,

@@ -61,7 +61,6 @@ export default function Courses(): JSX.Element {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.courses) {
           //get the list of all favorited courses for this specific user
-          console.log("favorited list", res.data.courses)
           setStarredCourses(res.data.courses);
         }
       } else if (res && res.status === 401) {

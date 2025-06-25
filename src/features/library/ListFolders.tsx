@@ -29,6 +29,8 @@ import {
   getUserFolderList
 } from "../../utility/endpoints/FolderEndpoints";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { UserStarred } from "../../utility/types/UserTypes";
 
 
 export enum SortOptions {
@@ -42,6 +44,12 @@ export enum OwnerTypeOptions {
   Any = "Any",
   "Me" = "Me",
   "Organization" = "Organization"
+}
+
+export enum StarredOptions {
+  All = "All",
+  Starred = "Starred",
+  "Not Starred" = "Not Starred"
 }
 
 interface ListFoldersProps {
@@ -58,9 +66,11 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   const [orgFilteredFolderList, setOrgFilteredFolderList] = useState<Array<FolderType>>([]);
   const [userFilteredFolderList, setUserFilteredFolderList] = useState<Array<FolderType>>([]);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
+  const [starred, setStarred] = useState<UserStarred | undefined>();
   const [filters, setFilters] = useState<{
     search: string,
     sort: SortOptions,
+    starred: StarredOptions,
     owner: OwnerTypeOptions,
     startDate: Dayjs | null,
     endDate: Dayjs | null,
@@ -68,6 +78,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   }>({
     search: "", //title of folder or title or contents of prompts
     sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+    starred: StarredOptions.All,
     owner: OwnerTypeOptions.Any,
     startDate: null,
     endDate: null,
@@ -94,6 +105,8 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     if (tagList.length === 0) {
       getTags("", controller.signal)
     }
+
+    getStarred(controller.signal)
 
     return () => {
       controller.abort();
@@ -199,6 +212,24 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     });
   }
 
+  function getStarred(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all favorited for this specific user
+          setStarred(res.data);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+  }
+
   function refreshList() {
     setIsLoading(true);
     setOrgFolderList([]);
@@ -208,6 +239,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     const controller = new AbortController();
     getOrgFolders("", controller.signal);
     getUserFolders("", controller.signal);
+    getStarred(controller.signal);
   }
 
   function loading() {
@@ -227,6 +259,17 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     } else if (filters.owner === OwnerTypeOptions.Organization) {
       //then remove user folders
       userFilteredFolderList = [];
+    }
+
+    //handle starred filter
+    if (filters.starred as string === StarredOptions.All) {
+      //Do nothing
+    } else if (filters.starred as string === StarredOptions.Starred && starred && starred.folders) {
+      orgFilteredFolderList = orgFilteredFolderList.filter((x: FolderType) => starred.folders && starred.folders.some(y => y.folderId === x.id))
+      userFilteredFolderList = userFilteredFolderList.filter((x: FolderType) => starred.folders && starred.folders.some(y => y.folderId === x.id))
+    } else if (filters.starred as string === StarredOptions["Not Starred"] && starred && starred.folders) {
+      orgFilteredFolderList = orgFilteredFolderList.filter((x: FolderType) => starred.folders && !starred.folders.some(y => y.folderId === x.id))
+      userFilteredFolderList = userFilteredFolderList.filter((x: FolderType) => starred.folders && !starred.folders.some(y => y.folderId === x.id))
     }
 
     //handle searching
@@ -333,6 +376,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     setFilters({
       search: "", //title of folder or title or contents of prompts
       sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+      starred: StarredOptions.All,
       owner: OwnerTypeOptions.Any,
       startDate: null,
       endDate: null,
@@ -399,6 +443,26 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               notched={true}
             >
               {Object.keys(SortOptions).map(key => {
+                return (
+                  <MenuItem value={key} key={key}>{key}</MenuItem>
+                )
+              })}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
+            <InputLabel shrink={true} id="sort-select-label">Starred</InputLabel>
+            <Select
+              value={filters.starred}
+              onChange={(e: SelectChangeEvent) => {
+                setFilters((prev) => ({ ...prev, starred: StarredOptions[e.target.value as keyof typeof StarredOptions] }));
+              }}
+              label="Starred"
+              labelId="starred-select-label"
+              id="starred-select"
+              sx={{ width: 320, maxWidth: '100%' }}
+              notched={true}
+            >
+              {Object.keys(StarredOptions).map(key => {
                 return (
                   <MenuItem value={key} key={key}>{key}</MenuItem>
                 )
@@ -548,6 +612,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                 keyy={`${i}org`}
                 refreshList={refreshList}
                 loading={loading}
+                isStarred={starred && starred.folders && starred.folders.some(c => c.folderId === folder.id)}
                 noShowMenu={props.noShowMenu}
               />
             </div>
@@ -566,6 +631,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                 keyy={`${i}`}
                 refreshList={refreshList}
                 loading={loading}
+                isStarred={starred && starred.folders && starred.folders.some(c => c.folderId === folder.id)}
                 noShowMenu={props.noShowMenu}
               />
             </div>

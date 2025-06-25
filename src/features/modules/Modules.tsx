@@ -7,6 +7,8 @@ import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
 import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { UserStarred } from "../../utility/types/UserTypes";
 
 
 export default function Modules(): JSX.Element {
@@ -16,6 +18,7 @@ export default function Modules(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [course, setCourse] = useState<CourseType>();
+  const [starred, setStarred] = useState<UserStarred | undefined>();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -23,6 +26,7 @@ export default function Modules(): JSX.Element {
     if (location.pathname.split("/")[1] === "courses" && location.pathname.split("/")[2]) {
       const courseId = location.pathname.split("/")[2];
       getThisCourse(courseId, controller.signal);
+      getStarred(controller.signal)
     }
 
     return () => {
@@ -52,9 +56,28 @@ export default function Modules(): JSX.Element {
     });
   }
 
+  function getStarred(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all favorited for this specific user
+          setStarred(res.data);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+  }
+
   function refreshList() {
     const controller = new AbortController();
     getThisCourse(location.pathname.split("/")[2], controller.signal)
+    getStarred(controller.signal)
   }
 
   return !isLoading ? (
@@ -111,7 +134,7 @@ export default function Modules(): JSX.Element {
           </span>
           <hr />
           {course ? (
-            <ModuleList course={course} refreshList={refreshList} />
+            <ModuleList course={course} refreshList={refreshList} starredList={starred ? starred : undefined} />
           ) : (
             <div>No modules in this course are currently available to you.
               {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?

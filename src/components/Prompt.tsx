@@ -1,5 +1,5 @@
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -40,6 +40,9 @@ import { truncateString } from "../utility/Helpers";
 import { useNavigate } from "react-router";
 import ListFolders from "../features/library/ListFolders";
 import Post from "../utility/Post";
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
+import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
 
 
 interface ExpandMoreProps extends IconButtonProps {
@@ -69,6 +72,7 @@ interface PromptProps {
   showRemove?: boolean;
   selected?: boolean;
   noShowDesc?: boolean;
+  isStarred?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -77,6 +81,7 @@ export const Prompt = (props: PromptProps) => {
   const { setAlert } = useContext(AlertContext);
   const [openCopyToModal, setOpenCopyToModal] = useState<boolean>(false);
   const [openMoveModal, setOpenMoveModal] = useState<boolean>(false);
+  const [starred, setStarred] = useState<boolean>(props.isStarred ? props.isStarred : false)
   const [addAnchorEl, setAddAnchorEl] = React.useState<null | HTMLElement>(null);
   const addOpen = Boolean(addAnchorEl);
   const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -96,6 +101,10 @@ export const Prompt = (props: PromptProps) => {
     setOpenDeleteModal(true)
   }
 
+  useEffect(() => {
+    setStarred(props.isStarred ? props.isStarred : false)
+  }, [props.isStarred])
+
   function edit() {
     if (props.folder) {
       props.loading();
@@ -105,7 +114,6 @@ export const Prompt = (props: PromptProps) => {
         navigator(`/library/${props.folder.id}/prompts/${props.prompt.id}`)
       }
     }
-
   }
 
   function openCopyTo() {
@@ -313,6 +321,44 @@ export const Prompt = (props: PromptProps) => {
     }
   }
 
+  function createStarredPrompt() {
+    props.loading()
+    Post(postCreateUserFavoritingData(), { id: { folderId: props.folder.id, promptId: props.prompt.id }, type: "prompts" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.prompts) {
+          //update prompt lists as needed
+          setStarred(res.data.prompts)
+          setAlert({ message: "Prompt added to favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+      props.refreshList()
+    });
+  }
+
+  function removeStarredPrompt() {
+    props.loading()
+    Put(putUpdateUserFavoritingData(), { id: { folderId: props.folder.id, promptId: props.prompt.id }, type: "prompts" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.prompts) {
+          //update Prompt lists as needed
+          setStarred(res.data.prompts)
+          setAlert({ message: "Prompt removed from favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+      props.refreshList()
+    });
+  }
+
   const instructorUserMenu = ["Edit", "Copy To", "Move", "Delete"]
   const instructorUserMenuFunctions = [edit, openCopyTo, openMovePrompt, openDelete]
   const adminUserMenu = ["Edit", "Copy To", "Move", "Delete"]
@@ -321,6 +367,38 @@ export const Prompt = (props: PromptProps) => {
   const instructorOrgMenuFunctions = [openCopyTo]
   const adminOrgMenu = ["Edit", "Copy To", "Move", "Delete"]
   const adminOrgMenuFunctions = [edit, openCopyTo, openMovePrompt, openDelete]
+
+  const StarredComponents = () => (
+    starred ? (
+      <Tooltip title={"Unstar Prompt"}>
+        <IconButton
+          className="courses__button__menu-btn"
+          aria-label="favorite prompt"
+          id={`${props.prompt.id}favorite-button`}
+          onClick={(e: any) => {
+            e.stopPropagation()
+            removeStarredPrompt()
+          }}
+        >
+          <StarIcon />
+        </IconButton>
+      </Tooltip>
+    ) : (
+      <Tooltip title={"Star Prompt"}>
+        <IconButton
+          className="courses__button__menu-btn"
+          aria-label="favorite prompt"
+          id={`${props.prompt.id}favorite-button`}
+          onClick={(e: any) => {
+            e.stopPropagation()
+            createStarredPrompt()
+          }}
+        >
+          <StarBorderIcon />
+        </IconButton>
+      </Tooltip>
+    )
+  )
 
   return (
     <div key={props.keyy ? props.keyy : "key"} className="c-prompt">
@@ -379,60 +457,64 @@ export const Prompt = (props: PromptProps) => {
       >
         <CardHeader
           action={
-            props.onCardClick === undefined ? props.noShowMenu ? props.showRemove ? (
-              <Tooltip title={"Remove Prompt"}>
-                <IconButton
-                  className="c-prompt__button__menu-btn"
-                  aria-label="prompt menu"
-                  id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
-                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
-                  aria-haspopup="true"
-                  aria-expanded={addOpen ? 'true' : undefined}
-                  onClick={(e: any) => {
-                    e.stopPropagation()
-                    if (props.onClick) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt, "prompt")
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <Tooltip title={"Add Prompt"}>
-                <IconButton
-                  className="c-prompt__button__menu-btn"
-                  aria-label="prompt menu"
-                  id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
-                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
-                  aria-haspopup="true"
-                  aria-expanded={addOpen ? 'true' : undefined}
-                  onClick={(e: any) => {
-                    e.stopPropagation()
-                    if (props.onClick && props.folder) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt ?? false, "prompt")
-                  }}
-                >
-                  <AddIcon fontSize={"large"} />
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <Tooltip title={"Prompt Options"}>
-                <IconButton
-                  className="c-prompt__button__menu-btn"
-                  aria-label="prompt menu"
-                  id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
-                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
-                  aria-haspopup="true"
-                  aria-expanded={addOpen ? 'true' : undefined}
-                  onClick={(e: any) => {
-                    e.stopPropagation()
-                    handleAddClick(e)
-                  }}
-                >
-                  <MoreVertIcon />
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <></>
-            )
+            <>
+              {props.showRemove ? <></> : <StarredComponents />}
+              {props.onCardClick === undefined ? props.noShowMenu ? props.showRemove ? (
+                <Tooltip title={"Remove Prompt"}>
+                  <IconButton
+                    className="c-prompt__button__menu-btn"
+                    aria-label="prompt menu"
+                    id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
+                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
+                    aria-haspopup="true"
+                    aria-expanded={addOpen ? 'true' : undefined}
+                    onClick={(e: any) => {
+                      e.stopPropagation()
+                      if (props.onClick) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt, "prompt")
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
+              ) : (
+                <Tooltip title={"Add Prompt"}>
+                  <IconButton
+                    className="c-prompt__button__menu-btn"
+                    aria-label="prompt menu"
+                    id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
+                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
+                    aria-haspopup="true"
+                    aria-expanded={addOpen ? 'true' : undefined}
+                    onClick={(e: any) => {
+                      e.stopPropagation()
+                      if (props.onClick && props.folder) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt ?? false, "prompt")
+                    }}
+                  >
+                    <AddIcon fontSize={"large"} />
+                  </IconButton>
+                </Tooltip>
+              ) : (
+                <Tooltip title={"Prompt Options"}>
+                  <IconButton
+                    className="c-prompt__button__menu-btn"
+                    aria-label="prompt menu"
+                    id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
+                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
+                    aria-haspopup="true"
+                    aria-expanded={addOpen ? 'true' : undefined}
+                    onClick={(e: any) => {
+                      e.stopPropagation()
+                      handleAddClick(e)
+                    }}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                </Tooltip>
+              ) : (
+                <></>
+              )}
+            </>
+
           }
           title={props.prompt.name}
           subheader={

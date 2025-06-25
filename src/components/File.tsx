@@ -1,5 +1,5 @@
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -34,6 +34,9 @@ import { useNavigate } from "react-router";
 import ListFolders from "../features/library/ListFolders";
 import Post from "../utility/Post";
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
+import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
 
 
 interface FileProps {
@@ -45,6 +48,7 @@ interface FileProps {
   noShowMenu?: boolean;
   onClick?: (folderId: string, fileId: string, isOrgFolder: boolean, type: string) => void; //type is "prompt" or "file"
   showRemove?: boolean;
+  isStarred?: boolean;
 }
 
 export const File = (props: FileProps) => {
@@ -53,6 +57,7 @@ export const File = (props: FileProps) => {
   const { setAlert } = useContext(AlertContext);
   const [openCopyToModal, setOpenCopyToModal] = useState<boolean>(false);
   const [openMoveModal, setOpenMoveModal] = useState<boolean>(false);
+  const [starred, setStarred] = useState<boolean>(props.isStarred ? props.isStarred : false)
   const [addAnchorEl, setAddAnchorEl] = React.useState<null | HTMLElement>(null);
   const addOpen = Boolean(addAnchorEl);
   const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -67,6 +72,10 @@ export const File = (props: FileProps) => {
     handleAddClose()
     setOpenDeleteModal(true)
   }
+
+  useEffect(() => {
+    setStarred(props.isStarred ? props.isStarred : false)
+  }, [props.isStarred])
 
   function edit() {
     if (props.folder) {
@@ -283,6 +292,44 @@ export const File = (props: FileProps) => {
     }
   }
 
+  function createStarredFile() {
+    props.loading()
+    Post(postCreateUserFavoritingData(), { id: { folderId: props.folder.id, fileId: props.file.id }, type: "files" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.files) {
+          //update files lists as needed
+          setStarred(res.data.files)
+          setAlert({ message: "File added to favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+      props.refreshList()
+    });
+  }
+
+  function removeStarredFile() {
+    props.loading()
+    Put(putUpdateUserFavoritingData(), { id: { folderId: props.folder.id, fileId: props.file.id }, type: "files" }).then((res) => {
+      if (res.status && res.status < 300) {
+        if (res.data && res.data.files) {
+          //update files lists as needed
+          setStarred(res.data.files)
+          setAlert({ message: "File removed from favorites.", type: "info" })
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        // set errors
+        setAlert({ message: res.data, type: "error" })
+      }
+      props.refreshList()
+    });
+  }
+
   const instructorUserMenu = ["Edit", "Copy To", "Move", "Delete"]
   const instructorUserMenuFunctions = [edit, openCopyTo, openMoveFile, openDelete]
   const adminUserMenu = ["Edit", "Copy To", "Move", "Delete"]
@@ -291,6 +338,38 @@ export const File = (props: FileProps) => {
   const instructorOrgMenuFunctions = [openCopyTo]
   const adminOrgMenu = ["Edit", "Copy To", "Move", "Delete"]
   const adminOrgMenuFunctions = [edit, openCopyTo, openMoveFile, openDelete]
+
+  const StarredComponents = () => (
+    starred ? (
+      <Tooltip title={"Unstar File"}>
+        <IconButton
+          className="courses__button__menu-btn"
+          aria-label="favorite File"
+          id={`${props.file.id}favorite-button`}
+          onClick={(e: any) => {
+            e.stopPropagation()
+            removeStarredFile()
+          }}
+        >
+          <StarIcon />
+        </IconButton>
+      </Tooltip>
+    ) : (
+      <Tooltip title={"Star File"}>
+        <IconButton
+          className="courses__button__menu-btn"
+          aria-label="favorite file"
+          id={`${props.file.id}favorite-button`}
+          onClick={(e: any) => {
+            e.stopPropagation()
+            createStarredFile()
+          }}
+        >
+          <StarBorderIcon />
+        </IconButton>
+      </Tooltip>
+    )
+  )
 
   return (
     <div key={props.keyy ? props.keyy : "key"} className="c-file">
@@ -346,58 +425,62 @@ export const File = (props: FileProps) => {
       <Card>
         <CardHeader
           action={
-            props.noShowMenu ? props.showRemove ? (
-              <Tooltip title={"Remove File"}>
-                <IconButton
-                  className="c-file__button__menu-btn"
-                  aria-label="file menu"
-                  id={`${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-button`}
-                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-menu` : ""}
-                  aria-haspopup="true"
-                  aria-expanded={addOpen ? 'true' : undefined}
-                  onClick={(e: any) => {
-                    e.stopPropagation()
-                    if (props.onClick) props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile, "file")
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <Tooltip title={"Add File"}>
-                <IconButton
-                  className="c-file__button__menu-btn"
-                  aria-label="file menu"
-                  id={`${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-button`}
-                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-menu` : ""}
-                  aria-haspopup="true"
-                  aria-expanded={addOpen ? 'true' : undefined}
-                  onClick={(e: any) => {
-                    e.stopPropagation()
-                    if (props.onClick && props.folder) props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile ?? false, "file")
-                  }}
-                >
-                  <AddIcon />
-                </IconButton>
-              </Tooltip>
-            ) : (
-              <Tooltip title={"File Options"}>
-                <IconButton
-                  className="c-file__button__menu-btn"
-                  aria-label="file menu"
-                  id={`${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-button`}
-                  aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-menu` : ""}
-                  aria-haspopup="true"
-                  aria-expanded={addOpen ? 'true' : undefined}
-                  onClick={(e: any) => {
-                    e.stopPropagation()
-                    handleAddClick(e)
-                  }}
-                >
-                  <MoreVertIcon />
-                </IconButton>
-              </Tooltip>
-            )
+            <>
+              {props.showRemove ? <></> : <StarredComponents />}
+              {props.noShowMenu ? props.showRemove ? (
+                <Tooltip title={"Remove File"}>
+                  <IconButton
+                    className="c-file__button__menu-btn"
+                    aria-label="file menu"
+                    id={`${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-button`}
+                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-menu` : ""}
+                    aria-haspopup="true"
+                    aria-expanded={addOpen ? 'true' : undefined}
+                    onClick={(e: any) => {
+                      e.stopPropagation()
+                      if (props.onClick) props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile, "file")
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
+              ) : (
+                <Tooltip title={"Add File"}>
+                  <IconButton
+                    className="c-file__button__menu-btn"
+                    aria-label="file menu"
+                    id={`${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-button`}
+                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-menu` : ""}
+                    aria-haspopup="true"
+                    aria-expanded={addOpen ? 'true' : undefined}
+                    onClick={(e: any) => {
+                      e.stopPropagation()
+                      if (props.onClick && props.folder) props.onClick(props.folder.id, props.file.id, props.file.isOrganizationFile ?? false, "file")
+                    }}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </Tooltip>
+              ) : (
+                <Tooltip title={"File Options"}>
+                  <IconButton
+                    className="c-file__button__menu-btn"
+                    aria-label="file menu"
+                    id={`${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-button`}
+                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.file.isOrganizationFile ? "org" : ""}-menu` : ""}
+                    aria-haspopup="true"
+                    aria-expanded={addOpen ? 'true' : undefined}
+                    onClick={(e: any) => {
+                      e.stopPropagation()
+                      handleAddClick(e)
+                    }}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </>
+
           }
           title={
             <button className="c-file__title" onClick={(e) => (props.noShowMenu && props.onClick) ?

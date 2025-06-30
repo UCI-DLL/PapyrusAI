@@ -1,22 +1,37 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { CourseType } from "../../utility/types/CourseTypes";
 import CourseCard from "../../components/CourseCard";
-import { orderCourseRecentlyCreated } from "../../utility/Helpers";
+import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
 
 interface CourseListProps {
   list: Array<CourseType>;
   refreshList: () => void;
+  starredList: Array<{ courseId: string }>;
 }
 
-export default function CourseList({ list, refreshList }: CourseListProps): JSX.Element {
+export default function CourseList({ list, refreshList, starredList }: CourseListProps): JSX.Element {
   const { user } = useContext(UserContext);
+  const [starred, setStarred] = useState<Array<{ courseId: string }>>(starredList);
+
+  useEffect(() => {
+    setStarred(starredList)
+    // eslint-disable-next-line
+  }, [starredList]);
+
+
   return list.length > 0 ? (
     <div className="courses__list">
-      {orderCourseRecentlyCreated(list).map((course, index) => {
+      {/*  pin starred courses to top of list */}
+      {orderCourseRecentlyCreatedAndStarred(list, starred).map((course, index) => {
         return (
           <div key={index}>
-            <CourseCard course={course} keyy={index} refreshList={refreshList} />
+            <CourseCard
+              course={course}
+              keyy={index}
+              refreshList={refreshList}
+              isStarred={starredList.some(x => x.courseId === course.id)}
+            />
           </div>
         )
       })}

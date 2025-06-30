@@ -9,6 +9,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
 import { Modal } from "../../components/Modal";
 import AddCourseForm from "./AddCourseForm";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 
 
 export default function Courses(): JSX.Element {
@@ -18,11 +19,13 @@ export default function Courses(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [showAddCourseModal, setShowAddCourseModal] = useState<boolean>(false);
+  const [starredCourses, setStarredCourses] = useState<Array<{ courseId: string }>>([]);
 
   useEffect(() => {
     const controller = new AbortController();
     if (!showAddCourseModal) {
       getCourses(controller.signal)
+      getStarredCourses(controller.signal)
     }
 
     return () => {
@@ -53,9 +56,28 @@ export default function Courses(): JSX.Element {
     });
   }
 
+  function getStarredCourses(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data.courses) {
+          //get the list of all favorited courses for this specific user
+          setStarredCourses(res.data.courses);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+  }
+
   function refreshList() {
     const controller = new AbortController();
     getCourses(controller.signal)
+    getStarredCourses(controller.signal)
   }
 
   return !isLoading ? (
@@ -101,7 +123,7 @@ export default function Courses(): JSX.Element {
             </span>
           ) : ""}
           <hr />
-          <CourseList list={courseList} refreshList={refreshList} />
+          <CourseList list={courseList} refreshList={refreshList} starredList={starredCourses} />
         </>
       )}
     </div>

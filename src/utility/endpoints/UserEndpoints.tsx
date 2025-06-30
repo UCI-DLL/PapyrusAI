@@ -21,3 +21,15 @@ export function getUserList(limit?: number, PaginationToken: string = "") {
     return `user/list?organization=${process.env.REACT_APP_ORGANIZATION}`;
   }
 }
+
+export function getUserFavoritingData() {
+  return `user/data?organization=${process.env.REACT_APP_ORGANIZATION}`
+}
+
+export function postCreateUserFavoritingData() {
+  return `user/data?organization=${process.env.REACT_APP_ORGANIZATION}`
+}
+
+export function putUpdateUserFavoritingData() {
+  return `user/data?organization=${process.env.REACT_APP_ORGANIZATION}`
+}

@@ -69,10 +69,38 @@ export function orderCourseRecentlyCreated(list: Array<CourseType>) {
   })
 }
 
+export function orderCourseRecentlyCreatedAndStarred(list: Array<CourseType>, starred: Array<{ courseId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.courseId === a.id);
+    const bIsFavorite = starred.some(m => m.courseId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by most recent (assuming ISO date string or timestamp)
+    return a.id < b.id ? 1 : -1;
+  });
+}
+
 export function orderModuleRecentlyCreated(list: Array<ModuleType>) {
   return list.sort((a, b) => {
     return a.id < b.id ? 1 : -1;
   })
+}
+
+export function orderModuleRecentlyCreatedAndStarred(list: Array<ModuleType>, starred: Array<{ courseId: string, moduleId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.moduleId === a.id);
+    const bIsFavorite = starred.some(m => m.moduleId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by most recent (assuming ISO date string or timestamp)
+    return a.id < b.id ? 1 : -1;
+  });
 }
 
 export function removeSpecialCharacters(str: string) {

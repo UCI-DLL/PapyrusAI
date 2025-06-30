@@ -1,7 +1,7 @@
 
 
 export type UserType = {
-  email: string;
+  email: string,
   email_verified: string,
   family_name: string,
   groups: Array<string>,
@@ -12,10 +12,19 @@ export type UserType = {
 }
 
 export type CustomUserType = {
-  username: string;
+  username: string,
   email: string,
   family_name: string,
   name: string,
   sub: string,
 }
 
+export type UserStarred = {
+  id: string, //username
+  organization: string,
+  courses?: Array<{ courseId: string }>,
+  modules?: Array<{ courseId: string, moduleId: string }>,
+  folders?: Array<{ folderId: string }>,
+  prompts?: Array<{ folderId: string, promptId: string }>,
+  files?: Array<{ folderId: string, fileId: string }>
+}

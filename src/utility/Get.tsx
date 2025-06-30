@@ -16,8 +16,8 @@ export default async function Get(url: String, signal?: AbortSignal | undefined)
     })
     .catch(function (error) {
       if (error.code === "ERR_CANCELED") return;
-      //Note: commented cause reports page will retry these types of errors
-      // if (error.code === "ERR_NETWORK") localStorage.removeItem("papyrusai_access_token"); 
+      //Note: commented cause reports page will retry these types of errors //TODO check this
+      if (error.code === "ERR_NETWORK") localStorage.removeItem("papyrusai_access_token");
       if (error.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx

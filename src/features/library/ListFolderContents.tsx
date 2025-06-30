@@ -28,6 +28,8 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { Prompt } from "../../components/Prompt";
 import { File } from "../../components/File";
+import { UserStarred } from "../../utility/types/UserTypes";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 
 
 export enum SortOptions {
@@ -43,6 +45,12 @@ export enum TypeOptions {
   File = "File"
 }
 
+export enum StarredOptions {
+  All = "All",
+  Starred = "Starred",
+  "Not Starred" = "Not Starred"
+}
+
 interface ListPromptsProps {
   folderId: string;
   isOrgFolder: boolean;
@@ -56,16 +64,19 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
   const [folder, setFolder] = useState<FolderType>();
   const [filteredFolder, setFilteredFolder] = useState<FolderType>();
   const { setAlert } = useContext(AlertContext);
+  const [starred, setStarred] = useState<UserStarred | undefined>();
   const [filters, setFilters] = useState<{
     search: string,
     sort: SortOptions,
+    starred: StarredOptions,
     startDate: Dayjs | null,
     endDate: Dayjs | null,
     tags: string,
     type: TypeOptions,
   }>({
     search: "", //title of folder or title or contents of prompts
-    sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+    sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+    starred: StarredOptions.All,
     startDate: null,
     endDate: null,
     tags: "",
@@ -90,11 +101,30 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
       getTags("", controller.signal)
     }
 
+    getStarred(controller.signal)
+
     return () => {
       controller.abort();
     };
     // eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+    if (starred && folder) {
+      //Default Sort by newest and starred
+      //Only update the filtered folder since it is the only one shown to the user
+      // and if you update folder, then it will create a loop
+      setFilteredFolder((prev) => {
+        if (prev) {
+          const orderedPrev = { ...prev };
+          orderedPrev.prompts = orderPromptNewestCreatedAndStarred(prev.prompts, starred && starred.prompts ? starred.prompts : []);
+          orderedPrev.files = orderFileNewestCreatedAndStarred(prev.files, starred && starred.files ? starred.files : []);
+          return orderedPrev
+        } else return prev
+      });
+    }
+    // eslint-disable-next-line
+  }, [starred, folder])
 
   function getFolder(isOrg: boolean, folderId: string, signal: AbortSignal) {
     if (!isOrg) {
@@ -176,6 +206,25 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     });
   }
 
+  function getStarred(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all favorited for this specific user
+          setStarred(res.data);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+  }
+
+
   function handleFilter(e: React.FormEvent) {
     e.preventDefault()
     if (!folder) return //return if no folder
@@ -190,6 +239,17 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     }
     if (filters.type === TypeOptions.File) {
       filteredPrompts = []
+    }
+
+    //handle starred filter
+    if (filters.starred as string === StarredOptions.All) {
+      //Do nothing
+    } else if (filters.starred as string === StarredOptions.Starred && starred && (starred.files || starred.prompts)) {
+      filteredFiles = filteredFiles.filter((x: FileType) => starred.files && starred.files.some(y => y.fileId === x.id && y.folderId === folder.id))
+      filteredPrompts = filteredPrompts.filter((x: PromptType) => starred.prompts && starred.prompts.some(y => y.promptId === x.id && y.folderId === folder.id))
+    } else if (filters.starred as string === StarredOptions["Not Starred"] && starred && (starred.files || starred.prompts)) {
+      filteredFiles = filteredFiles.filter((x: FileType) => starred.files && !starred.files.some(y => y.fileId === x.id))
+      filteredPrompts = filteredPrompts.filter((x: PromptType) => starred.prompts && !starred.prompts.some(y => y.promptId === x.id))
     }
 
     //handle searching
@@ -270,20 +330,20 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
 
     // handle sorting
     if (filters.sort as string === SortOptions.Ascending) {
-      filteredPrompts.sort((a: PromptType, b: PromptType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
-      filteredFiles.sort((a: FileType, b: FileType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
+      filteredPrompts = orderPromptAscendingNameAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
+      filteredFiles = orderFileAscendingNameAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
     } else if (filters.sort as string === SortOptions.Descending) {
-      filteredPrompts.sort((a: PromptType, b: PromptType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
-      filteredFiles.sort((a: FileType, b: FileType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
+      filteredPrompts = orderPromptDescendingNameAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
+      filteredFiles = orderFileDescendingNameAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
     } else if (filters.sort as string === SortOptions.Oldest) {
-      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
-      filteredFiles.sort((a: FileType, b: FileType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
+      filteredPrompts = orderPromptOldestCreatedAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
+      filteredFiles = orderFileOldestCreatedAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
     } else if (filters.sort as string === SortOptions.Newest) {
-      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
-      filteredFiles.sort((a: FileType, b: FileType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      filteredPrompts = orderPromptNewestCreatedAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
+      filteredFiles = orderFileNewestCreatedAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
     } else { //newest
-      filteredPrompts.sort((a: PromptType, b: PromptType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
-      filteredFiles.sort((a: FileType, b: FileType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      filteredPrompts = orderPromptNewestCreatedAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
+      filteredFiles = orderFileNewestCreatedAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
     }
 
     //finally set the filtered lists
@@ -293,7 +353,8 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
   function handleResetFilters() {
     setFilters({
       search: "", //title of folder or title or contents of prompts
-      sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+      sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+      starred: StarredOptions.All,
       startDate: null,
       endDate: null,
       tags: "",
@@ -309,6 +370,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     //get user folder data
     getFolder(props.isOrgFolder, props.folderId, controller.signal)
     getTags("", controller.signal);
+    getStarred(controller.signal);
   }
 
   return !isLoading && filteredFolder ? (
@@ -381,6 +443,26 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
               notched={true}
             >
               {Object.keys(SortOptions).map(key => {
+                return (
+                  <MenuItem value={key} key={key}>{key}</MenuItem>
+                )
+              })}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
+            <InputLabel shrink={true} id="sort-select-label">Starred</InputLabel>
+            <Select
+              value={filters.starred}
+              onChange={(e: SelectChangeEvent) => {
+                setFilters((prev) => ({ ...prev, starred: StarredOptions[e.target.value as keyof typeof StarredOptions] }));
+              }}
+              label="Starred"
+              labelId="starred-select-label"
+              id="starred-select"
+              sx={{ width: 320, maxWidth: '100%' }}
+              notched={true}
+            >
+              {Object.keys(StarredOptions).map(key => {
                 return (
                   <MenuItem value={key} key={key}>{key}</MenuItem>
                 )
@@ -508,6 +590,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
                 loading={() => setIsLoading(true)}
                 noShowMenu={props.noShowMenu}
                 onClick={props.onClick}
+                isStarred={starred && starred.prompts && starred.prompts.some(p => p.promptId === prompt.id) && starred.prompts.some(c => c.folderId === props.folderId)}
               />
             </div>
           )
@@ -525,6 +608,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
                 loading={() => setIsLoading(true)}
                 noShowMenu={props.noShowMenu}
                 onClick={props.onClick}
+                isStarred={starred && starred.files && starred.files.some(p => p.fileId === file.id) && starred.files.some(c => c.folderId === props.folderId)}
               />
             </div>
           )
@@ -534,4 +618,116 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
   ) : (
     <LinearProgress />
   )
+}
+
+export function orderFileAscendingNameAndStarred(list: Array<FileType>, starred: Array<{ fileId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.fileId === a.id);
+    const bIsFavorite = starred.some(m => m.fileId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by name
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  });
+}
+
+export function orderFileDescendingNameAndStarred(list: Array<FileType>, starred: Array<{ fileId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.fileId === a.id);
+    const bIsFavorite = starred.some(m => m.fileId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by name
+    return b.name.toLowerCase().localeCompare(a.name.toLowerCase());
+  });
+}
+
+export function orderFileOldestCreatedAndStarred(list: Array<FileType>, starred: Array<{ fileId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.fileId === a.id);
+    const bIsFavorite = starred.some(m => m.fileId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by oldest
+    return a.id > b.id ? 1 : -1;
+  });
+}
+
+export function orderFileNewestCreatedAndStarred(list: Array<FileType>, starred: Array<{ fileId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.fileId === a.id);
+    const bIsFavorite = starred.some(m => m.fileId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by most recent 
+    return a.id < b.id ? 1 : -1;
+  });
+}
+
+export function orderPromptAscendingNameAndStarred(list: Array<PromptType>, starred: Array<{ promptId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.promptId === a.id);
+    const bIsFavorite = starred.some(m => m.promptId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by name
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  });
+}
+
+export function orderPromptDescendingNameAndStarred(list: Array<PromptType>, starred: Array<{ promptId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.promptId === a.id);
+    const bIsFavorite = starred.some(m => m.promptId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by name
+    return b.name.toLowerCase().localeCompare(a.name.toLowerCase());
+  });
+}
+
+export function orderPromptOldestCreatedAndStarred(list: Array<PromptType>, starred: Array<{ promptId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.promptId === a.id);
+    const bIsFavorite = starred.some(m => m.promptId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by oldest
+    return a.id > b.id ? 1 : -1;
+  });
+}
+
+export function orderPromptNewestCreatedAndStarred(list: Array<PromptType>, starred: Array<{ promptId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.promptId === a.id);
+    const bIsFavorite = starred.some(m => m.promptId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by most recent 
+    return a.id < b.id ? 1 : -1;
+  });
 }

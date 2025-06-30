@@ -29,6 +29,8 @@ import {
   getUserFolderList
 } from "../../utility/endpoints/FolderEndpoints";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
+import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { UserStarred } from "../../utility/types/UserTypes";
 
 
 export enum SortOptions {
@@ -42,6 +44,12 @@ export enum OwnerTypeOptions {
   Any = "Any",
   "Me" = "Me",
   "Organization" = "Organization"
+}
+
+export enum StarredOptions {
+  All = "All",
+  Starred = "Starred",
+  "Not Starred" = "Not Starred"
 }
 
 interface ListFoldersProps {
@@ -58,16 +66,19 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   const [orgFilteredFolderList, setOrgFilteredFolderList] = useState<Array<FolderType>>([]);
   const [userFilteredFolderList, setUserFilteredFolderList] = useState<Array<FolderType>>([]);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
+  const [starred, setStarred] = useState<UserStarred | undefined>();
   const [filters, setFilters] = useState<{
     search: string,
     sort: SortOptions,
+    starred: StarredOptions,
     owner: OwnerTypeOptions,
     startDate: Dayjs | null,
     endDate: Dayjs | null,
     tags: string
   }>({
     search: "", //title of folder or title or contents of prompts
-    sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+    sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+    starred: StarredOptions.All,
     owner: OwnerTypeOptions.Any,
     startDate: null,
     endDate: null,
@@ -95,11 +106,33 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
       getTags("", controller.signal)
     }
 
+    getStarred(controller.signal)
+
     return () => {
       controller.abort();
     };
     // eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+    if (starred && starred.folders) {
+      //Default Sort by newest and starred
+      setOrgFolderList((prev) => {
+        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : [])
+      });
+      setOrgFilteredFolderList((prev) => {
+        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : [])
+      });
+      setUserFolderList((prev) => {
+        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : [])
+      });
+      setUserFilteredFolderList((prev) => {
+        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : [])
+      });
+    }
+    //Note: only these ones cause they don't change that often
+    // eslint-disable-next-line
+  }, [starred, orgFolderList, userFolderList])
 
   function getOrgFolders(startKey: string, signal: AbortSignal) {
     var limit = 20;
@@ -199,6 +232,24 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     });
   }
 
+  function getStarred(signal: AbortSignal) {
+    Get(getUserFavoritingData(), signal).then(res => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          //get the list of all favorited for this specific user
+          setStarred(res.data);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          // handle error
+        }
+      }
+    });
+  }
+
   function refreshList() {
     setIsLoading(true);
     setOrgFolderList([]);
@@ -208,6 +259,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     const controller = new AbortController();
     getOrgFolders("", controller.signal);
     getUserFolders("", controller.signal);
+    getStarred(controller.signal);
   }
 
   function loading() {
@@ -227,6 +279,17 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     } else if (filters.owner === OwnerTypeOptions.Organization) {
       //then remove user folders
       userFilteredFolderList = [];
+    }
+
+    //handle starred filter
+    if (filters.starred as string === StarredOptions.All) {
+      //Do nothing
+    } else if (filters.starred as string === StarredOptions.Starred && starred && starred.folders) {
+      orgFilteredFolderList = orgFilteredFolderList.filter((x: FolderType) => starred.folders && starred.folders.some(y => y.folderId === x.id))
+      userFilteredFolderList = userFilteredFolderList.filter((x: FolderType) => starred.folders && starred.folders.some(y => y.folderId === x.id))
+    } else if (filters.starred as string === StarredOptions["Not Starred"] && starred && starred.folders) {
+      orgFilteredFolderList = orgFilteredFolderList.filter((x: FolderType) => starred.folders && !starred.folders.some(y => y.folderId === x.id))
+      userFilteredFolderList = userFilteredFolderList.filter((x: FolderType) => starred.folders && !starred.folders.some(y => y.folderId === x.id))
     }
 
     //handle searching
@@ -308,20 +371,20 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
 
     // handle sorting
     if (filters.sort as string === SortOptions.Ascending) {
-      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
-      userFilteredFolderList.sort((a: FolderType, b: FolderType) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0));
+      orgFilteredFolderList = orderFolderAscendingNameAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
+      userFilteredFolderList = orderFolderAscendingNameAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
     } else if (filters.sort as string === SortOptions.Descending) {
-      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
-      userFilteredFolderList.sort((a: FolderType, b: FolderType) => (b.name.toLowerCase() > a.name.toLowerCase()) ? 1 : ((a.name.toLowerCase() > b.name.toLowerCase()) ? -1 : 0));
+      orgFilteredFolderList = orderFolderDescendingNameAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
+      userFilteredFolderList = orderFolderDescendingNameAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
     } else if (filters.sort as string === SortOptions.Oldest) {
-      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
-      userFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(a.id.substring(0, a.id.length - 6)) - parseInt(b.id.substring(0, b.id.length - 6)));
+      orgFilteredFolderList = orderFolderOldestCreatedAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
+      userFilteredFolderList = orderFolderOldestCreatedAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
     } else if (filters.sort as string === SortOptions.Newest) {
-      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
-      userFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      orgFilteredFolderList = orderFolderNewestCreatedAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
+      userFilteredFolderList = orderFolderNewestCreatedAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
     } else { //newest
-      orgFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
-      userFilteredFolderList.sort((a: FolderType, b: FolderType) => parseInt(b.id.substring(0, b.id.length - 6)) - parseInt(a.id.substring(0, a.id.length - 6)));
+      orgFilteredFolderList = orderFolderNewestCreatedAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
+      userFilteredFolderList = orderFolderNewestCreatedAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
     }
 
     //Finally set the filtered lists
@@ -332,7 +395,8 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   function handleResetFilters() {
     setFilters({
       search: "", //title of folder or title or contents of prompts
-      sort: SortOptions.Ascending, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+      sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
+      starred: StarredOptions.All,
       owner: OwnerTypeOptions.Any,
       startDate: null,
       endDate: null,
@@ -399,6 +463,26 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               notched={true}
             >
               {Object.keys(SortOptions).map(key => {
+                return (
+                  <MenuItem value={key} key={key}>{key}</MenuItem>
+                )
+              })}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
+            <InputLabel shrink={true} id="sort-select-label">Starred</InputLabel>
+            <Select
+              value={filters.starred}
+              onChange={(e: SelectChangeEvent) => {
+                setFilters((prev) => ({ ...prev, starred: StarredOptions[e.target.value as keyof typeof StarredOptions] }));
+              }}
+              label="Starred"
+              labelId="starred-select-label"
+              id="starred-select"
+              sx={{ width: 320, maxWidth: '100%' }}
+              notched={true}
+            >
+              {Object.keys(StarredOptions).map(key => {
                 return (
                   <MenuItem value={key} key={key}>{key}</MenuItem>
                 )
@@ -548,6 +632,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                 keyy={`${i}org`}
                 refreshList={refreshList}
                 loading={loading}
+                isStarred={starred && starred.folders && starred.folders.some(c => c.folderId === folder.id)}
                 noShowMenu={props.noShowMenu}
               />
             </div>
@@ -566,6 +651,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                 keyy={`${i}`}
                 refreshList={refreshList}
                 loading={loading}
+                isStarred={starred && starred.folders && starred.folders.some(c => c.folderId === folder.id)}
                 noShowMenu={props.noShowMenu}
               />
             </div>
@@ -576,4 +662,60 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   ) : (
     <LinearProgress />
   )
+}
+
+export function orderFolderAscendingNameAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.folderId === a.id);
+    const bIsFavorite = starred.some(m => m.folderId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by name
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  });
+}
+
+export function orderFolderDescendingNameAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.folderId === a.id);
+    const bIsFavorite = starred.some(m => m.folderId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by name
+    return b.name.toLowerCase().localeCompare(a.name.toLowerCase());
+  });
+}
+
+export function orderFolderOldestCreatedAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.folderId === a.id);
+    const bIsFavorite = starred.some(m => m.folderId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by oldest
+    return a.id > b.id ? 1 : -1;
+  });
+}
+
+export function orderFolderNewestCreatedAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
+  return list.sort((a, b) => {
+    const aIsFavorite = starred.some(m => m.folderId === a.id);
+    const bIsFavorite = starred.some(m => m.folderId === b.id);
+
+    // Step 1: Put favorites first
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+
+    // Step 2: Sort by most recent (assuming ISO date string or timestamp)
+    return a.id < b.id ? 1 : -1;
+  });
 }

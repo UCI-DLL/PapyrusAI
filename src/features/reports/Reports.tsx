@@ -154,7 +154,8 @@ export default function Reports(): JSX.Element {
 
   function getUsersInCourseList(course: CourseType, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
-    Get(getUsersInCourse(course.id, limit, nextToken), signal).then(async (res) => {
+    //Note: add true to Get function so that it will try again if it fails
+    Get(getUsersInCourse(course.id, limit, nextToken), signal, true).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //Get the list of all users in the group
@@ -334,7 +335,8 @@ export default function Reports(): JSX.Element {
     courseIndex: number,
     moduleIndex: number
   ): Promise<any> {
-    const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal).then(async (res) => {
+    //Note: add true to Get function so that it will try again if it fails
+    const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal, true).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //check if conversation for course, module, user / get conversation list length
@@ -376,18 +378,20 @@ export default function Reports(): JSX.Element {
 
   //helper function to get the conversation for the json download
   async function getConvo(courseId: string, moduleId: string, convoIndex: string, username: string, controller: AbortController): Promise<any> {
+    //Note: add true to Get function so that it will try again if it fails
     const temp = await Get(
       getConversation(
         courseId,
         moduleId,
         convoIndex,
-        username
+        username,
       ),
-      controller.signal).then(async (res1: any) => {
+      controller.signal, true).then(async (res1: any) => {
         if (res1 && res1.status && res1.status < 300) {
           if (res1.data) {
             //handle content moderation messages
             if (res1.data.completed) {
+              //Note: add true to Get function so that it will try again if it fails
               const temp2 = await Get(
                 getContentModMessage(
                   courseId,
@@ -395,7 +399,7 @@ export default function Reports(): JSX.Element {
                   convoIndex,
                   username
                 ),
-                controller.signal).then(async (res2: any) => {
+                controller.signal, true).then(async (res2: any) => {
                   if (res2 && res2.status && res2.status < 300) {
                     //add content mod message to res1 data before returning
                     //"should" only be one in the list

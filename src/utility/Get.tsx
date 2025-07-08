@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export default async function Get(url: String, signal?: AbortSignal | undefined) {
+export default async function Get(url: String, signal?: AbortSignal | undefined, reports: Boolean = false) {
   const user = localStorage.getItem("papyrusai_access_token")
   const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + url;
 
@@ -16,8 +16,15 @@ export default async function Get(url: String, signal?: AbortSignal | undefined)
     })
     .catch(function (error) {
       if (error.code === "ERR_CANCELED") return;
-      //Note: commented cause reports page will retry these types of errors //TODO check this
-      if (error.code === "ERR_NETWORK") localStorage.removeItem("papyrusai_access_token");
+
+      if (error.code === "ERR_NETWORK") {
+        if (reports) {
+          //do nothing
+          //Note: commented cause reports page will retry these types of errors 
+        } else {
+          localStorage.removeItem("papyrusai_access_token");
+        }
+      }
       if (error.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx

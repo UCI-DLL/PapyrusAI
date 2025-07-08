@@ -292,11 +292,11 @@ export const Folder = (props: FolderProps) => {
 
   const instructorUserMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Duplicate", "Delete"]
   const instructorUserMenuFunctions = [view, starred ? removeStarredFolder : createStarredFolder, openRename, duplicate, openDelete]
-  const adminUserMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Rename", "Duplicate", "Promote", "Delete"]
+  const adminUserMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Duplicate", "Promote", "Delete"]
   const adminUserMenuFunctions = [view, starred ? removeStarredFolder : createStarredFolder, openRename, duplicate, openPromote, openDelete]
   const instructorOrgMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Duplicate"]
   const instructorOrgMenuFunctions = [view, starred ? removeStarredFolder : createStarredFolder, duplicate]
-  const adminOrgMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Rename", "Duplicate", "Demote", "Delete"]
+  const adminOrgMenu = ["View", starred ? "Unstar" : "Star", "Rename", "Duplicate", "Demote", "Delete"]
   const adminOrgMenuFunctions = [view, starred ? removeStarredFolder : createStarredFolder, openRename, duplicate, openDemote, openDelete]
 
   //Note: these are not buttons because we cannot have a button within a button

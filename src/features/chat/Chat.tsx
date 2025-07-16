@@ -15,7 +15,7 @@ import Get from "../../utility/Get";
 import { getConversation, postUpdateConversation } from "../../utility/endpoints/ConversationEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
-import { MessageType } from "../../utility/types/ConversationTypes";
+import { MessageType, StreamMessageType } from "../../utility/types/ConversationTypes";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import ChatWizard from "./ChatWizard";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -46,6 +46,8 @@ export default function Chat(): JSX.Element {
   const socket = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<Array<MessageType>>([]);
+  const messagesRef = useRef<Array<MessageType>>();
+  messagesRef.current = messages;
   const [courseInfo, setCourseInfo] = useState<CourseType>();
   const [moduleInfo, setModuleInfo] = useState<ModuleType>();
   const [newMessage, setNewMessage] = useState<string>("");
@@ -321,7 +323,6 @@ export default function Chat(): JSX.Element {
 
   const onSocketMessage = useCallback((dataStr: string) => {
     const returnData = JSON.parse(dataStr);
-    console.log("return data", returnData);
     //turn off typing indicator for chatgpt
     setShowTypingIndicator(false);
     if (returnData.essay && returnData.status < 300 && returnData.rater) {
@@ -359,24 +360,82 @@ export default function Chat(): JSX.Element {
       }
       setShowWizard(false)
     } else if (returnData.status < 300) {
-      //Only the message as a string comes back so make some temp stuff for the message
-      const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-      var responseMessage: MessageType = {
-        id: messageTempId,
-        content: returnData.data,
-        messageType: "text",
-        role: "assistant",
-        sender: "ChatGPT",
-        timestamp: tempTimestamp.toString(),
-        promptId: null,
-        userVisible: true,
-        raterReference: "",
-        expandableMessage: "",
+      const returnMessage: StreamMessageType = JSON.parse(returnData.data)
+      //if we are still streaming and not finished
+      if (returnMessage.messageType === "streamMessage" && !returnMessage.finished) {
+        //if the current message id matches incoming message,
+        // then add new message stream to it
+        // else create a new message in list
+        //Note: use message ref to get current state of messages
+        // https://stackoverflow.com/questions/57847594/accessing-up-to-date-state-from-within-a-callback
+        if (
+          messagesRef.current &&
+          messagesRef.current.length > 0 &&
+          messagesRef.current[messagesRef.current.length - 1].stream &&
+          messagesRef.current[messagesRef.current.length - 1].stream?.[0].id === returnMessage.id
+        ) {
+          setMessages((prev) => {
+            if (prev && messagesRef.current) {
+              var temp = [...messagesRef.current];
+              if (temp[temp.length - 1].stream) {
+                //add new stream message to list
+                temp[temp.length - 1].stream?.push(returnMessage)
+                const stream = temp[temp.length - 1].stream || []
+                //update message based on stream array (timestamps) and index
+                //remove duplicates
+                const filteredArray: StreamMessageType[] = Object.values(stream.reduce((unique: any, o) => {
+                  if (!unique[o.message] || +o.timestamp > +unique[o.message].timestamp) unique[o.message] = o;
+                  return unique;
+                }, {}));
+                const reconstructed = filteredArray.sort((a, b) => a.timestamp - b.timestamp)
+                  .map(m => m.message)
+                  .join('');
+                temp[temp.length - 1].content = reconstructed || temp[temp.length - 1].content;
+              }
+              return temp;
+            } else return prev;
+          })
+        } else {
+          // make some temp stuff for the message
+          const tempTimestamp = Date.now();
+          const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+          var responseMessage: MessageType = {
+            id: messageTempId,
+            content: returnMessage.message,
+            messageType: "text",
+            role: "assistant",
+            sender: "ChatGPT",
+            timestamp: tempTimestamp.toString(),
+            promptId: null,
+            userVisible: true,
+            raterReference: "",
+            expandableMessage: "",
+            stream: [returnMessage]
+          }
+          if (messages) {
+            setMessages((prev) => [...prev, responseMessage]);
+          }
+        }
+      } else if (returnMessage.finished && returnMessage.messageType === "finalMessage") {
+        //if final message, update the message matching the id so that we know the words/stream is in order
+        // Note: this section is overkill but always nice to have just in case since we take out duplcates
+        // if stream id matches id it messages list
+        if (
+          messagesRef.current &&
+          messagesRef.current.length > 0 &&
+          messagesRef.current[messagesRef.current.length - 1].stream &&
+          messagesRef.current[messagesRef.current.length - 1].stream?.[0].id === returnMessage.id
+        ) {
+          setMessages((prev) => {
+            if (prev && messagesRef.current) {
+              var temp = [...messagesRef.current];
+              temp[temp.length - 1].content = returnMessage.message;
+              return temp;
+            } else return prev;
+          })
+        }
       }
-      if (messages) {
-        setMessages((prev) => [...prev, responseMessage]);
-      }
+
     } else {
       //update conversation data and handle errors
       setOpenErrorModal({ open: true, message: returnData.data });

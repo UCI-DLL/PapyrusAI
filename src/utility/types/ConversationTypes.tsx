@@ -26,6 +26,15 @@ export type MessageType = {
   userVisible?: boolean,
   raterReference?: string | Array<Array<string>>,
   expandableMessage?: string,
+  stream?: Array<StreamMessageType>,
 }
 
 export type MessageTypeType = "text" | "file"
+
+export type StreamMessageType = {
+  message: string,
+  id: string,
+  timestamp: number,
+  finished: boolean,
+  messageType: string
+}

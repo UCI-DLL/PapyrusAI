@@ -491,7 +491,7 @@ export default function Chat(): JSX.Element {
       });
 
       socket.current?.send(JSON.stringify({
-        "action": "sendMessageTest",
+        "action": "sendMessage",
         "messages": messagesToSend,
         "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
       }));

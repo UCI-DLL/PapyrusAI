@@ -12,7 +12,7 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import { useLocation, useNavigate } from "react-router";
 import Get from "../../utility/Get";
-import { getConversation, postUpdateConversation } from "../../utility/endpoints/ConversationEndpoints";
+import { getConversation, postAutoCreateConvoName, postUpdateConversation } from "../../utility/endpoints/ConversationEndpoints";
 import LinearProgress from '@mui/material/LinearProgress';
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { MessageType, StreamMessageType } from "../../utility/types/ConversationTypes";
@@ -459,7 +459,7 @@ export default function Chat(): JSX.Element {
     }
   }, [onSocketClose, onSocketMessage, onSocketOpen]);
 
-  const onSendMessage = useCallback((messageList: Array<MessageType>) => {
+  const onSendMessage = useCallback((messageList: Array<MessageType>, autoCreateConvoName: any) => {
     //save message in message array
     setChatError(undefined);
     if (messages && isConnected) {
@@ -497,6 +497,11 @@ export default function Chat(): JSX.Element {
       }));
       //Set the typing indicator for chatgpt while we wait for a response
       setShowTypingIndicator(true);
+      //one first user message, auto create a name for the conversation
+      if (messages.concat(messageList).filter(m => (m.promptId === null || m.promptId === "") && m.role === "user").length === 1) {
+        autoCreateConvoName(messagesToSend)
+      }
+
     } else {
       setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
     }
@@ -532,7 +537,7 @@ export default function Chat(): JSX.Element {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setIsLoading(true)
+    setIsLoading(true);
     //check that message length is less that 100000
     setChatError(undefined);
     if (newMessage.length < 100000 && newMessage.length > 0) {
@@ -547,7 +552,7 @@ export default function Chat(): JSX.Element {
         timestamp: messageTempId,
         promptId: null
       }
-      onSendMessage([responseMessage]);
+      onSendMessage([responseMessage], autoCreateConvoName);
       //Then reset newMessage
       setNewMessage("");
     } else if (newMessage.length < 1) {
@@ -556,6 +561,39 @@ export default function Chat(): JSX.Element {
       setChatError("Message Too Long");
     }
     setIsLoading(false);
+  }
+
+  function autoCreateConvoName(messages: Array<{ role: string, content: string }>) {
+    if (user) {
+      Post(postAutoCreateConvoName(
+        openUpdateConvoModal.courseId,
+        openUpdateConvoModal.moduleId,
+        openUpdateConvoModal.index.toString(),
+        user?.username
+      ), { messages: messages }).then(res => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            //update conversation list with new conversation list
+            setOpenUpdateConvoModal({
+              open: false,
+              deleteOpen: false,
+              courseId: location.pathname.split("/")[3],
+              moduleId: location.pathname.split("/")[4],
+              index: location.pathname.split("/")[5],
+              name: res.data.conversations[location.pathname.split("/")[5]].name,
+              isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
+              completed: res.data.conversations[location.pathname.split("/")[5]].completed ? res.data.conversations[location.pathname.split("/")[5]].completed : false,
+              error: ""
+            });
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          // handle error
+          setOpenErrorModal({ open: true, message: "Something went wrong. Try again later" });
+        }
+      });
+    }
   }
 
   function handleWizardReturnPrompts(selectedPrompt: string) {
@@ -581,7 +619,7 @@ export default function Chat(): JSX.Element {
         messagesToSend.unshift(responseMessage);
       }
       //Send full message objects
-      onSendMessage(messagesToSend);
+      onSendMessage(messagesToSend, autoCreateConvoName);
     }
   }
 
@@ -719,7 +757,7 @@ export default function Chat(): JSX.Element {
         timestamp: messageTempId,
         promptId: null
       }
-      onSendMessage([responseMessage]);
+      onSendMessage([responseMessage], autoCreateConvoName);
     } else if (docText.length < 1) {
       setChatError("Document Too Short");
     } else {
@@ -741,7 +779,7 @@ export default function Chat(): JSX.Element {
         timestamp: messageTempId,
         promptId: null
       }
-      onSendMessage([responseMessage]);
+      onSendMessage([responseMessage], autoCreateConvoName);
     } else if (text.length < 1) {
       setChatError("Message Too Short");
     } else {

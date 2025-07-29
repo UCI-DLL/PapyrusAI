@@ -1,0 +1,654 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* UCI Primary Colors */
+        --color-primary: #255799;
+        --color-primary-foreground: #ffffff;
+
+        /* UCI Secondary Colors */
+        --color-secondary: #1b3d6d;
+        --color-secondary-foreground: #ffffff;
+        --color-darkest-blue: #002244;
+        --color-teal-blue: #0083b3;
+        --color-turquoise: #00b0ca;
+        --color-orange: #f78d2d;
+        --color-gold: #f0ab00;
+        --color-light-gray: #c6beb5;
+
+        /* UCI Accent Colors */
+        --color-accent: #6aa2b8;
+        --color-accent-foreground: #ffffff;
+        --color-athletics-gold: #f8cf56;
+        --color-light-yellow: #f7eb5f;
+        --color-green: #3f9c35;
+        --color-lime-green: #7ab800;
+        --color-royal-blue: #00639e;
+        --color-bright-purple: #7c109a;
+        --color-magenta: #d462ad;
+
+        /* Additional UI Colors */
+        --color-background: #f8fafc;
+        --color-card: #ffffff;
+        --color-border: #e2e8f0;
+        --color-muted: #64748b;
+        --color-muted-foreground: #475569;
+
+        /* Shadcn UI Compatibility */
+        --background: 248 250 252;
+        --foreground: 71 85 105;
+        --card: 0 0% 100%;
+        --card-foreground: 71 85 105;
+        --popover: 0 0% 100%;
+        --popover-foreground: 71 85 105;
+        --primary: 212 59% 37%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 27 59% 21%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 200 50% 57%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 212 59% 37%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        /* Dark theme color overrides */
+        --color-background: #0f172a;
+        --color-card: #1e293b;
+        --color-border: #334155;
+        --color-muted: #94a3b8;
+        --color-muted-foreground: #cbd5e1;
+
+        /* Shadcn UI Dark Mode */
+        --background: 15 23 42;
+        --foreground: 203 213 225;
+        --card: 30 41 59;
+        --card-foreground: 203 213 225;
+        --popover: 30 41 59;
+        --popover-foreground: 203 213 225;
+        --primary: 212 59% 37%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 200 50% 57%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 51 65 85;
+        --input: 51 65 85;
+        --ring: 212 59% 37%;
+    }
+
+    .playful {
+        /* Playful theme - bright and fun colors */
+        --color-primary: #ec4899;
+        --color-secondary: #8b5cf6;
+        --color-darkest-blue: #3b82f6;
+        --color-teal-blue: #06b6d4;
+        --color-turquoise: #14b8a6;
+        --color-orange: #f97316;
+        --color-gold: #eab308;
+        --color-green: #22c55e;
+        --color-accent: #a855f7;
+        --color-background: #fef7ff;
+        --color-card: #ffffff;
+        --color-border: #f3e8ff;
+        --color-muted: #a855f7;
+        --color-muted-foreground: #7c3aed;
+
+        /* Shadcn UI Playful Mode */
+        --background: 317 100% 97%;
+        --foreground: 124 58% 29%;
+        --card: 0 0% 100%;
+        --card-foreground: 124 58% 29%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 124 58% 29%;
+        --primary: 330 81% 60%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 255 91% 76%;
+        --secondary-foreground: 124 58% 29%;
+        --muted: 255 91% 76%;
+        --muted-foreground: 124 58% 29%;
+        --accent: 271 81% 56%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 317 100% 94%;
+        --input: 317 100% 94%;
+        --ring: 330 81% 60%;
+    }
+
+    * {
+        border-color: hsl(var(--border));
+    }
+
+    body {
+        background: linear-gradient(
+            135deg,
+            #f1f5f9 0%,
+            #e2e8f0 50%,
+            #f8fafc 100%
+        );
+        color: var(--color-muted-foreground);
+        font-feature-settings: "rlig" 1, "calt" 1;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+            sans-serif;
+        min-height: 100vh;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .dark body {
+        background: linear-gradient(
+            135deg,
+            #0f172a 0%,
+            #1e293b 50%,
+            #0f172a 100%
+        );
+    }
+
+    .playful body {
+        background: linear-gradient(
+            135deg,
+            #fef7ff 0%,
+            #f3e8ff 25%,
+            #fae8ff 50%,
+            #f0f9ff 75%,
+            #fef7ff 100%
+        );
+        background-size: 400% 400%;
+        animation: playfulGradient 8s ease infinite;
+    }
+}
+
+@layer utilities {
+    .text-primary {
+        color: var(--color-primary);
+    }
+
+    .text-secondary {
+        color: var(--color-secondary);
+    }
+
+    .text-teal-blue {
+        color: var(--color-teal-blue);
+    }
+
+    .text-turquoise {
+        color: var(--color-turquoise);
+    }
+
+    .text-orange {
+        color: var(--color-orange);
+    }
+
+    .text-gold {
+        color: var(--color-gold);
+    }
+
+    .text-green {
+        color: var(--color-green);
+    }
+
+    .bg-primary {
+        background-color: var(--color-primary);
+    }
+
+    .bg-secondary {
+        background-color: var(--color-secondary);
+    }
+
+    .bg-darkest-blue {
+        background-color: var(--color-darkest-blue);
+    }
+
+    .bg-teal-blue {
+        background-color: var(--color-teal-blue);
+    }
+
+    .bg-turquoise {
+        background-color: var(--color-turquoise);
+    }
+
+    .bg-orange {
+        background-color: var(--color-orange);
+    }
+
+    .bg-gold {
+        background-color: var(--color-gold);
+    }
+
+    .bg-green {
+        background-color: var(--color-green);
+    }
+
+    .bg-accent {
+        background-color: var(--color-accent);
+    }
+
+    .bg-card {
+        background-color: var(--color-card);
+    }
+
+    .text-foreground {
+        color: var(--color-muted-foreground);
+    }
+
+    .border-primary {
+        border-color: var(--color-primary);
+    }
+
+    .gradient-primary {
+        background: linear-gradient(
+            135deg,
+            var(--color-primary) 0%,
+            var(--color-secondary) 100%
+        );
+    }
+
+    .gradient-accent {
+        background: linear-gradient(
+            135deg,
+            var(--color-teal-blue) 0%,
+            var(--color-turquoise) 100%
+        );
+    }
+
+    .gradient-warm {
+        background: linear-gradient(
+            135deg,
+            var(--color-orange) 0%,
+            var(--color-gold) 100%
+        );
+    }
+
+    .gradient-purple {
+        background: linear-gradient(
+            135deg,
+            var(--color-bright-purple) 0%,
+            var(--color-magenta) 100%
+        );
+    }
+
+    .gradient-green {
+        background: linear-gradient(
+            135deg,
+            var(--color-green) 0%,
+            var(--color-lime-green) 100%
+        );
+    }
+
+    .gradient-royal {
+        background: linear-gradient(
+            135deg,
+            var(--color-royal-blue) 0%,
+            var(--color-primary) 100%
+        );
+    }
+
+    .gradient-playful {
+        background: linear-gradient(
+            135deg,
+            #ec4899 0%,
+            #8b5cf6 50%,
+            #06b6d4 100%
+        );
+    }
+
+    .gradient-playful-warm {
+        background: linear-gradient(
+            135deg,
+            #f97316 0%,
+            #eab308 50%,
+            #22c55e 100%
+        );
+    }
+
+    .gradient-playful-cool {
+        background: linear-gradient(
+            135deg,
+            #06b6d4 0%,
+            #8b5cf6 50%,
+            #ec4899 100%
+        );
+    }
+
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hover-lift {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(37, 87, 153, 0.15);
+    }
+
+    .floating-animation {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .pulse-glow {
+        animation: pulse-glow 3s ease-in-out infinite alternate;
+    }
+
+    .slide-in-left {
+        animation: slideInLeft 0.6s ease-out;
+    }
+
+    .slide-in-up {
+        animation: slideInUp 0.8s ease-out;
+    }
+
+    .fade-in {
+        animation: fadeIn 1s ease-out;
+    }
+
+    .stagger-1 {
+        animation-delay: 0.1s;
+    }
+    .stagger-2 {
+        animation-delay: 0.2s;
+    }
+    .stagger-3 {
+        animation-delay: 0.3s;
+    }
+    .stagger-4 {
+        animation-delay: 0.4s;
+    }
+
+    .playful .bounce-gentle {
+        animation: bounceGentle 2s ease-in-out infinite;
+    }
+
+    .playful .wiggle {
+        animation: wiggle 1s ease-in-out infinite;
+    }
+
+    .playful .rainbow-text {
+        background: linear-gradient(
+            45deg,
+            #ec4899,
+            #8b5cf6,
+            #06b6d4,
+            #22c55e,
+            #eab308,
+            #f97316
+        );
+        background-size: 400% 400%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: rainbowText 3s ease infinite;
+    }
+}
+
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 20px rgba(37, 87, 153, 0.3);
+    }
+    100% {
+        box-shadow: 0 0 40px rgba(37, 87, 153, 0.6);
+    }
+}
+
+@keyframes slideInLeft {
+    0% {
+        transform: translateX(-100px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInUp {
+    0% {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes playfulGradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes bounceGentle {
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes wiggle {
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(1deg);
+    }
+    75% {
+        transform: rotate(-1deg);
+    }
+}
+
+@keyframes rainbowText {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
+}
+
+/* Dark mode component styles */
+.dark .bg-white {
+    background-color: var(--color-card);
+}
+
+.dark .bg-gray-50 {
+    background-color: #374151;
+}
+
+.dark .bg-gray-100 {
+    background-color: #4b5563;
+}
+
+.dark .text-gray-900 {
+    color: #f9fafb;
+}
+
+.dark .text-gray-700 {
+    color: #d1d5db;
+}
+
+.dark .text-gray-600 {
+    color: #9ca3af;
+}
+
+.dark .text-gray-500 {
+    color: #6b7280;
+}
+
+.dark .border-gray-200 {
+    border-color: var(--color-border);
+}
+
+.dark .border-gray-100 {
+    border-color: #374151;
+}
+
+.dark .hover\:bg-gray-50:hover {
+    background-color: #374151;
+}
+
+.dark .hover\:bg-gray-100:hover {
+    background-color: #4b5563;
+}
+
+/* Playful theme styles */
+.playful .bg-white {
+    background: linear-gradient(135deg, #ffffff 0%, #fef7ff 100%);
+    border: 2px solid #f3e8ff;
+    border-radius: 1rem;
+}
+
+.playful .bg-gray-50 {
+    background: linear-gradient(135deg, #fae8ff 0%, #f0f9ff 100%);
+    border-radius: 1rem;
+}
+
+.playful .bg-gray-100 {
+    background: linear-gradient(135deg, #e879f9 0%, #a855f7 100%);
+    color: white;
+    border-radius: 1rem;
+}
+
+.playful .text-gray-900 {
+    color: #581c87;
+    font-weight: 600;
+}
+
+.playful .text-gray-700 {
+    color: #7c3aed;
+}
+
+.playful .text-gray-600 {
+    color: #a855f7;
+}
+
+.playful .text-gray-500 {
+    color: #c084fc;
+}
+
+.playful .border-gray-200 {
+    border-color: #f3e8ff;
+    border-width: 2px;
+    border-radius: 1rem;
+}
+
+.playful .border-gray-100 {
+    border-color: #fae8ff;
+    border-width: 2px;
+}
+
+.playful .hover\:bg-gray-50:hover {
+    background: linear-gradient(135deg, #f0abfc 0%, #c084fc 100%);
+    transform: scale(1.02);
+}
+
+.playful .hover\:bg-gray-100:hover {
+    background: linear-gradient(135deg, #d946ef 0%, #9333ea 100%);
+    transform: scale(1.02);
+}
+
+.playful .rounded-xl {
+    border-radius: 1.5rem;
+}
+
+.playful .rounded-lg {
+    border-radius: 1rem;
+}
+
+.playful .shadow-sm {
+    box-shadow: 0 4px 6px -1px rgba(236, 72, 153, 0.1),
+        0 2px 4px -1px rgba(139, 92, 246, 0.06);
+}
+
+.playful .shadow-md {
+    box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.1),
+        0 4px 6px -2px rgba(139, 92, 246, 0.05);
+}
+
+.playful .shadow-lg {
+    box-shadow: 0 20px 25px -5px rgba(236, 72, 153, 0.1),
+        0 10px 10px -5px rgba(139, 92, 246, 0.04);
+}
+
+/* Playful scrollbar */
+.playful ::-webkit-scrollbar-track {
+    background: linear-gradient(135deg, #fae8ff 0%, #f0f9ff 100%);
+}
+
+.playful ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+    border-radius: 10px;
+}
+
+.playful ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #db2777 0%, #7c3aed 100%);
+}

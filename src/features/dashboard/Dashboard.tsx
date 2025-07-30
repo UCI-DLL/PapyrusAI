@@ -14,7 +14,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
-import { ExternalLink, EyeIcon, PlusIcon } from "lucide-react";
+import { ExternalLink, EyeIcon, PlusIcon, Target } from "lucide-react";
 import { Dialog, DialogTrigger } from "../../components/ui/dialog";
 
 export default function Dashboard(): JSX.Element {
@@ -88,14 +88,31 @@ export default function Dashboard(): JSX.Element {
 
     return !isLoading ? (
         <div className="bg-background text-foreground p-4 flex flex-col gap-4">
-            <div className="flex flex-col gap-4 shadow-md p-4 rounded-lg bg-white">
-                <h1 className="text-2xl font-extrabold text-black">
-                    Welcome back,{" "}
-                    <span className="text-primary font-bold text-2xl">
-                        {user?.name}
-                    </span>
-                </h1>
-            </div>
+            <section className="slide-in-up">
+                <div className="relative overflow-hidden bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6 shadow-lg">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 bg-gradient-to-br "></div>
+                    <div className="absolute top-0 right-0 w-48 h-48 opacity-10">
+                        <Target
+                            size={192}
+                            className="floating-animation text-primary"
+                        />
+                    </div>
+
+                    <div className="relative z-10">
+                        <h1 className="text-2xl font-bold mb-1 text-gray-900">
+                            Welcome back,{" "}
+                            <span className="text-primary text-2xl">
+                                {user?.name}!
+                            </span>
+                        </h1>
+                        <p className="text-gray-600 max-w-2xl text-sm">
+                            Continue your learning journey and unlock your
+                            potential.
+                        </p>
+                    </div>
+                </div>
+            </section>
 
             <div className="flex flex-col gap-4 p-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">

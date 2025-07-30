@@ -1,14 +1,12 @@
 import { useContext, useEffect, useState } from "react";
-import {
-    Card,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-} from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+    TooltipProvider,
+} from "./ui/tooltip";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -23,7 +21,7 @@ import {
     DialogDescription,
 } from "./ui/dialog";
 import { useNavigate } from "react-router";
-import { MoreVertical, Star } from "lucide-react";
+import { Star, BookOpen, Calendar, User, MoreHorizontal } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType } from "../utility/types/CourseTypes";
@@ -168,45 +166,6 @@ export default function CourseCard({
         });
     }
 
-    const StarredComponents = () =>
-        starred ? (
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        disabled={isLoading}
-                        onClick={(e: any) => {
-                            e.stopPropagation();
-                            removeStarredCourse(course.id);
-                        }}
-                    >
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>Unstar Course</TooltipContent>
-            </Tooltip>
-        ) : (
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        disabled={isLoading}
-                        onClick={(e: any) => {
-                            e.stopPropagation();
-                            createStarredCourse(course.id);
-                        }}
-                    >
-                        <Star className="h-4 w-4" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent>Star Course</TooltipContent>
-            </Tooltip>
-        );
-
     return course && user ? (
         <div>
             <Dialog
@@ -282,131 +241,199 @@ export default function CourseCard({
                 </DialogContent>
             </Dialog>
 
-            <Card className="hover-lift">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <div className="space-y-1">
-                        <CardTitle className="text-lg font-bold text-primary">
-                            {course.name}
-                        </CardTitle>
-                        <CardDescription className="space-y-1">
-                            <div className="text-sm text-muted-foreground">
-                                {course.section
-                                    ? `${course.term ? course.term : ""} ${
-                                          course.year ? course.year : ""
-                                      } - ${course.section}`
-                                    : `${course.term ? course.term : ""} ${
-                                          course.year ? course.year : ""
-                                      }`}
+            <div className="group bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl hover-lift shadow-sm relative h-40 flex flex-col">
+                {/* Background Pattern */}
+                <div className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl">
+                    <BookOpen size={80} className="transform rotate-12" />
+                </div>
+
+                {/* Content Area with Padding */}
+                <div className="p-4 flex flex-col flex-1 relative z-10">
+                    {/* Header */}
+                    <div className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                                {course.name}
+                            </h3>
+                            <div className="flex items-center gap-2 text-xs text-gray-600">
+                                <div className="flex items-center gap-1">
+                                    <Calendar size={10} />
+                                    <span className="font-medium">
+                                        {course.section
+                                            ? `${course.term || ""} ${
+                                                  course.year || ""
+                                              } - ${course.section}`
+                                            : `${course.term || ""} ${
+                                                  course.year || ""
+                                              }`}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <User size={10} />
+                                    <span className="font-medium truncate">
+                                        {`${course.instructor.name} ${course.instructor.family_name}`}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                                {`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
-                            </div>
-                        </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <StarredComponents />
-                        {user.groups.includes(course.id) &&
-                            !onClick &&
-                            (user?.groups.includes(
-                                process.env.REACT_APP_ADMIN
-                                    ? process.env.REACT_APP_ADMIN
-                                    : "PapyrusAIAdmins"
-                            ) ||
-                                user?.groups.includes(
-                                    process.env.REACT_APP_INSTRUCTOR
-                                        ? process.env.REACT_APP_INSTRUCTOR
-                                        : "PapyrusAIInstructors"
+                        </div>
+
+                        <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                            {/* Star Button */}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            onClick={(e: any) => {
+                                                e.stopPropagation();
+                                                starred
+                                                    ? removeStarredCourse(
+                                                          course.id
+                                                      )
+                                                    : createStarredCourse(
+                                                          course.id
+                                                      );
+                                            }}
+                                            disabled={isLoading}
+                                            className={`p-1 rounded-full transition-all duration-300 ${
+                                                starred
+                                                    ? "text-yellow-500 bg-yellow-50"
+                                                    : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
+                                            }`}
+                                        >
+                                            <Star
+                                                size={12}
+                                                fill={
+                                                    starred
+                                                        ? "currentColor"
+                                                        : "none"
+                                                }
+                                            />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                        side="top"
+                                        className="z-50 text-black"
+                                    >
+                                        {starred
+                                            ? "Unstar Course"
+                                            : "Star Course"}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
+                            {/* Dropdown Menu */}
+                            {user.groups.includes(course.id) &&
+                                !onClick &&
+                                (user?.groups.includes(
+                                    process.env.REACT_APP_ADMIN
+                                        ? process.env.REACT_APP_ADMIN
+                                        : "PapyrusAIAdmins"
                                 ) ||
-                                user?.groups.includes(course.id + "-TA")) && (
-                                <DropdownMenu
-                                    open={menuOpen}
-                                    onOpenChange={setMenuOpen}
-                                >
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    onClick={(e: any) => {
-                                                        e.stopPropagation();
-                                                    }}
+                                    user?.groups.includes(
+                                        process.env.REACT_APP_INSTRUCTOR
+                                            ? process.env.REACT_APP_INSTRUCTOR
+                                            : "PapyrusAIInstructors"
+                                    ) ||
+                                    user?.groups.includes(
+                                        course.id + "-TA"
+                                    )) && (
+                                    <DropdownMenu
+                                        open={menuOpen}
+                                        onOpenChange={setMenuOpen}
+                                    >
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
+                                                        <button
+                                                            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-300"
+                                                            onClick={(
+                                                                e: any
+                                                            ) => {
+                                                                e.stopPropagation();
+                                                            }}
+                                                        >
+                                                            <MoreHorizontal
+                                                                size={12}
+                                                            />
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    side="top"
+                                                    className="z-50 text-black"
                                                 >
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            Course Options
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    <DropdownMenuContent align="end">
-                                        {course.instructor.username ===
-                                        user.username
-                                            ? ownerMenu.map(
-                                                  (
-                                                      item: string,
-                                                      index: number
-                                                  ) => (
-                                                      <DropdownMenuItem
-                                                          key={index}
-                                                          onClick={() => {
-                                                              ownerMenuFunctions[
-                                                                  index
-                                                              ](course.id);
-                                                          }}
-                                                          className="cursor-pointer text-primary"
-                                                      >
-                                                          {item}
-                                                      </DropdownMenuItem>
+                                                    Course Options
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                        <DropdownMenuContent align="end">
+                                            {course.instructor.username ===
+                                            user.username
+                                                ? ownerMenu.map(
+                                                      (
+                                                          item: string,
+                                                          index: number
+                                                      ) => (
+                                                          <DropdownMenuItem
+                                                              key={index}
+                                                              onClick={() => {
+                                                                  ownerMenuFunctions[
+                                                                      index
+                                                                  ](course.id);
+                                                              }}
+                                                              className="cursor-pointer text-primary"
+                                                          >
+                                                              {item}
+                                                          </DropdownMenuItem>
+                                                      )
                                                   )
-                                              )
-                                            : nonOwnerMenu.map(
-                                                  (
-                                                      item: string,
-                                                      index: number
-                                                  ) => (
-                                                      <DropdownMenuItem
-                                                          key={index}
-                                                          onClick={() => {
-                                                              nonOwnerMenuFunctions[
-                                                                  index
-                                                              ](course.id);
-                                                          }}
-                                                          className="cursor-pointer text-primary"
-                                                      >
-                                                          {item}
-                                                      </DropdownMenuItem>
-                                                  )
-                                              )}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            )}
+                                                : nonOwnerMenu.map(
+                                                      (
+                                                          item: string,
+                                                          index: number
+                                                      ) => (
+                                                          <DropdownMenuItem
+                                                              key={index}
+                                                              onClick={() => {
+                                                                  nonOwnerMenuFunctions[
+                                                                      index
+                                                                  ](course.id);
+                                                              }}
+                                                              className="cursor-pointer text-primary"
+                                                          >
+                                                              {item}
+                                                          </DropdownMenuItem>
+                                                      )
+                                                  )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                        </div>
                     </div>
-                </CardHeader>
-                <CardFooter className="pt-0">
-                    {onClick ? (
-                        <Button
-                            size="sm"
-                            onClick={() => onClick(course.id)}
-                            className="w-full hover:bg-primary/10 hover:text-primary"
-                        >
-                            Select
-                        </Button>
-                    ) : (
-                        <Button
-                            size="sm"
-                            onClick={() =>
-                                navigator(`/courses/${course.id}/modules`)
-                            }
-                            className="w-full hover:bg-primary/10 hover:text-primary"
-                        >
-                            Modules
-                        </Button>
-                    )}
-                </CardFooter>
-            </Card>
+
+                    {/* Spacer to push button to bottom */}
+                    <div className="flex-1"></div>
+
+                    {/* Action Button */}
+                    <Button
+                        onClick={
+                            onClick
+                                ? () => onClick(course.id)
+                                : () =>
+                                      navigator(`/courses/${course.id}/modules`)
+                        }
+                        variant="default"
+                        size="sm"
+                        className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2 hover:bg-primary/10 hover:text-primary"
+                    >
+                        <BookOpen size={14} />
+                        {onClick ? "Select" : "View Modules"}
+                    </Button>
+                </div>
+            </div>
         </div>
     ) : (
         <div className="text-center py-8 text-muted-foreground">

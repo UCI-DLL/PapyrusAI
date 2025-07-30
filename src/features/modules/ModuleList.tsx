@@ -1,367 +1,875 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
-import { Separator } from "../../components/ui/separator";
 import { Input } from "../../components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../../components/ui/tooltip";
+import { Label } from "../../components/ui/label";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+    TooltipProvider,
+} from "../../components/ui/tooltip";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "../../components/ui/dialog";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { CustomUserType, UserStarred } from "../../utility/types/UserTypes";
 import Get from "../../utility/Get";
-import { getCourseList, putCopyModule } from "../../utility/endpoints/CourseEndpoints";
+import {
+    getCourseList,
+    putCopyModule,
+} from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import Put from "../../utility/Put";
-import { Modal } from "../../components/Modal";
 import { Checkbox } from "../../components/Checkbox";
 import CourseCard from "../../components/CourseCard";
-import { orderCourseRecentlyCreatedAndStarred, orderModuleRecentlyCreatedAndStarred } from "../../utility/Helpers";
-import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
+import {
+    orderCourseRecentlyCreatedAndStarred,
+    orderModuleRecentlyCreatedAndStarred,
+} from "../../utility/Helpers";
+import {
+    postCreateUserFavoritingData,
+    putUpdateUserFavoritingData,
+} from "../../utility/endpoints/UserEndpoints";
+import { Star, Play, Eye, Copy, Edit } from "lucide-react";
 import Post from "../../utility/Post";
 
 interface ModuleListProps {
-  course: CourseType;
-  starredList: UserStarred | undefined;
-  refreshList: () => void;
+    course: CourseType;
+    starredList: UserStarred | undefined;
+    refreshList: () => void;
 }
 
-export default function ModuleList({ course, starredList, refreshList }: ModuleListProps): JSX.Element {
-  let navigator = useNavigate();
-  const { user } = useContext(UserContext);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [courseList, setCourseList] = useState<Array<CourseType>>([]);
-  const [starredCourses, setStarredCourses] = useState<Array<{ courseId: string }>>([]);
-  const [starredModules, setStarredModules] = useState<Array<{ courseId: string, moduleId: string }>>([]);
-  const [openCourseListModal, setOpenCourseListModal] = useState<boolean>(false);
-  const [openDuplicateModal, setOpenDuplicateModal] = useState<{
-    courseId: string,
-    moduleId: string,
-    copyCourseId: string
-  }>({
-    courseId: "",
-    moduleId: "",
-    copyCourseId: ""
-  });
-  const [duplicateModuleData, setDuplicateModuleData] = useState<{
-    name: string,
-    isPublished: boolean
-  }>({
-    name: "",
-    isPublished: false
-  });
-  const { setAlert } = useContext(AlertContext);
-
-  useEffect(() => {
-    if (starredList) {
-      if (starredList.courses) {
-        setStarredCourses(starredList.courses);
-      }
-      if (starredList.modules) {
-        setStarredModules(starredList.modules);
-      }
-    }
-  }, [starredList]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if ((user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
-      user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-      user?.groups.includes(course.id + "-TA")) && openCourseListModal) {
-      getCourses(controller.signal)
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [user, course, openCourseListModal])
-
-  function getCourses(signal: AbortSignal) {
-    setIsLoading(true);
-    Get(getCourseList(), signal).then(res => {
-      if (res && res.status && res.status < 300) {
-        if (res.data) {
-          setCourseList(res.data);
-          setIsLoading(false);
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        if (res === undefined) {
-        } else {
-          setAlert({ message: "No Courses Found. Cannot copy module.", type: "error" });
-          setIsLoading(false);
-        }
-      }
-    });
-  }
-
-  function handleCopyModuleTo() {
-    setIsLoading(true);
-    Put(putCopyModule(
-      openDuplicateModal.courseId,
-      openDuplicateModal.moduleId,
-      openDuplicateModal.copyCourseId),
-      duplicateModuleData
-    ).then((res) => {
-      if (res.status && res.status < 300) {
-        if (res.data && res.data) {
-          setOpenCourseListModal(false);
-          setAlert({ message: "Module copied to course", type: "success" })
-          setDuplicateModuleData({
-            name: "",
-            isPublished: false
-          })
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-          setAlert({ message: res.data, type: "error" })
-      }
-      setOpenDuplicateModal({
+export default function ModuleList({
+    course,
+    starredList,
+    refreshList,
+}: ModuleListProps): JSX.Element {
+    let navigator = useNavigate();
+    const { user } = useContext(UserContext);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [courseList, setCourseList] = useState<Array<CourseType>>([]);
+    const [starredCourses, setStarredCourses] = useState<
+        Array<{ courseId: string }>
+    >([]);
+    const [starredModules, setStarredModules] = useState<
+        Array<{ courseId: string; moduleId: string }>
+    >([]);
+    const [openCourseListModal, setOpenCourseListModal] =
+        useState<boolean>(false);
+    const [openDuplicateModal, setOpenDuplicateModal] = useState<{
+        courseId: string;
+        moduleId: string;
+        copyCourseId: string;
+    }>({
         courseId: "",
         moduleId: "",
-        copyCourseId: ""
-      });
-      refreshList();
+        copyCourseId: "",
     });
-  }
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDuplicateModuleData({ ...duplicateModuleData, [e.target.name]: e.target.value });
-  }
-
-  function createStarredModule(courseId: string, moduleId: string) {
-    setIsLoading(true)
-    Post(postCreateUserFavoritingData(), { id: { courseId: courseId, moduleId: moduleId }, type: "modules" }).then((res) => {
-      if (res.status && res.status < 300) {
-        if (res.data && res.data.modules) {
-          setStarredModules(res.data.modules)
-          setAlert({ message: "Module added to favorites.", type: "info" })
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-          setAlert({ message: res.data, type: "error" })
-      }
+    const [duplicateModuleData, setDuplicateModuleData] = useState<{
+        name: string;
+        isPublished: boolean;
+    }>({
+        name: "",
+        isPublished: false,
     });
-  }
+    const { setAlert } = useContext(AlertContext);
 
-  function removeStarredModule(courseId: string, moduleId: string) {
-    setIsLoading(true)
-    Put(putUpdateUserFavoritingData(), { id: { courseId: courseId, moduleId: moduleId }, type: "modules" }).then((res) => {
-      if (res.status && res.status < 300) {
-        if (res.data && res.data.modules) {
-          setStarredModules(res.data.modules)
-          setAlert({ message: "Module removed from favorites.", type: "info" })
+    useEffect(() => {
+        if (starredList) {
+            if (starredList.courses) {
+                setStarredCourses(starredList.courses);
+            }
+            if (starredList.modules) {
+                setStarredModules(starredList.modules);
+            }
         }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-          setAlert({ message: res.data, type: "error" })
-      }
-    });
-  }
+    }, [starredList]);
 
-  return course.modules.length > 0 ? (
-    <div className="modules__list">
-      <Modal
-        isOpen={openCourseListModal}
-        title={"Copy Module To?"}
-        onRequestClose={() => setOpenCourseListModal(false)}
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setOpenCourseListModal(false)}>
-              Close
-            </Button>
-          </>
+    useEffect(() => {
+        const controller = new AbortController();
+        if (
+            (user?.groups.includes(
+                process.env.REACT_APP_ADMIN
+                    ? process.env.REACT_APP_ADMIN
+                    : "PapyrusAIAdmin"
+            ) ||
+                user?.groups.includes(
+                    process.env.REACT_APP_INSTRUCTOR
+                        ? process.env.REACT_APP_INSTRUCTOR
+                        : "PapyrusAIInstructors"
+                ) ||
+                user?.groups.includes(course.id + "-TA")) &&
+            openCourseListModal
+        ) {
+            getCourses(controller.signal);
         }
-      >
-        <div>
-          <div className="mb-4 text-sm text-muted-foreground">
-            Please select a course you would like to copy this module to.
-            Copying a module will copy over all module customizations, including the module name,
-            description, added assets, and settings.
-          </div>
-          <div className="courses__list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {orderCourseRecentlyCreatedAndStarred(courseList, starredCourses).map((course, index) => {
-              return (
-                <div key={index}>
-                  <CourseCard
-                    course={course}
-                    keyy={index}
-                    refreshList={refreshList}
-                    onClick={(courseId: string) => {
-                      setOpenCourseListModal(false);
-                      setOpenDuplicateModal(prev => ({ ...prev, copyCourseId: courseId }));
-                    }}
-                    isStarred={starredCourses.some(c => c.courseId === course.id)}
-                  />
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </Modal>
-      <Modal
-        isOpen={openDuplicateModal.copyCourseId !== ""}
-        title={"Duplicate Module"}
-        onRequestClose={() => setOpenDuplicateModal({
-          courseId: "",
-          moduleId: "",
-          copyCourseId: ""
-        })}
-        actions={
-          <>
-            <Button
-              onClick={(e) => {
-                handleCopyModuleTo()
-              }}
-            >
-              Duplicate
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setOpenDuplicateModal({
+        return () => {
+            controller.abort();
+        };
+    }, [user, course, openCourseListModal]);
+
+    function getCourses(signal: AbortSignal) {
+        setIsLoading(true);
+        Get(getCourseList(), signal).then((res) => {
+            if (res && res.status && res.status < 300) {
+                if (res.data) {
+                    setCourseList(res.data);
+                    setIsLoading(false);
+                }
+            } else if (res && res.status === 401) {
+                navigator("/login");
+            } else {
+                if (res === undefined) {
+                } else {
+                    setAlert({
+                        message: "No Courses Found. Cannot copy module.",
+                        type: "error",
+                    });
+                    setIsLoading(false);
+                }
+            }
+        });
+    }
+
+    function handleCopyModuleTo() {
+        setIsLoading(true);
+        Put(
+            putCopyModule(
+                openDuplicateModal.courseId,
+                openDuplicateModal.moduleId,
+                openDuplicateModal.copyCourseId
+            ),
+            duplicateModuleData
+        ).then((res) => {
+            if (res.status && res.status < 300) {
+                if (res.data && res.data) {
+                    setOpenCourseListModal(false);
+                    setAlert({
+                        message: "Module copied to course",
+                        type: "success",
+                    });
+                    setDuplicateModuleData({
+                        name: "",
+                        isPublished: false,
+                    });
+                }
+            } else if (res && res.status === 401) {
+                navigator("/login");
+            } else {
+                setAlert({ message: res.data, type: "error" });
+            }
+            setOpenDuplicateModal({
                 courseId: "",
                 moduleId: "",
-                copyCourseId: ""
-              })}>
-              Close
-            </Button>
-          </>
-        }
-      >
-        <div>
-          <div className="mb-4 text-sm text-muted-foreground">Please enter a unique name for your module. Duplicating the module will also copy over all settings within this module.</div>
-          <Input
-            name="name"
-            placeholder="New Module Name"
-            className="mb-4"
-            value={duplicateModuleData.name}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-          />
-          <Checkbox
-            onClick={() => {
-              setDuplicateModuleData((prev) => ({
-                ...prev,
-                isPublished: !duplicateModuleData.isPublished
-              }))
-            }}
-            checked={duplicateModuleData.isPublished}
-            isDisabled={isLoading}
-          >
-            <span>
-              Publish Module
-            </span>
-          </Checkbox>
-        </div>
-      </Modal>
-      <div className="bg-card rounded-lg border">
-        {orderModuleRecentlyCreatedAndStarred(course.modules, starredModules).map((module, index) => {
-          return (
-            <div key={index}>
-              <div className="flex items-center justify-between p-4">
-                <button onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)} className="text-left flex-1">
-                  <div className="font-medium">{module.name}</div>
-                  <div className="text-sm text-muted-foreground">{course.name + " - " + course.instructor.name + " " + course.instructor.family_name}</div>
-                  <div className="text-sm text-muted-foreground mt-1">{module.moduleDescription}</div>
-                </button>
-                <div className="flex items-center gap-2">
-                  {
-                    starredModules.some(m => m.moduleId === module.id) ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            disabled={!isLoading}
-                            onClick={(e: any) => {
-                              e.stopPropagation()
-                              removeStarredModule(course.id, module.id)
-                            }}
-                          >
-                            <StarIcon />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Unstar Module</TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            disabled={!isLoading}
-                            onClick={(e: any) => {
-                              e.stopPropagation()
-                              createStarredModule(course.id, module.id)
-                            }}
-                          >
-                            <StarBorderIcon />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Star Module</TooltipContent>
-                      </Tooltip>
-                    )
-                  }
+                copyCourseId: "",
+            });
+            refreshList();
+        });
+    }
 
-                  {(user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
-                    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-                    user?.groups.includes(course.id + "-TA")) && (
-                      <Button variant="outline" size="sm" onClick={() => {
-                        navigator(`/dashboard/${course.id}/${module.id}`)
-                      }}>
-                        View
-                      </Button>
-                    )}
-                  {(user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
-                    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-                    user?.groups.includes(course.id + "-TA")) && (
-                      <Button variant="outline" size="sm" onClick={() => {
-                        setOpenDuplicateModal({
-                          courseId: course.id,
-                          moduleId: module.id,
-                          copyCourseId: ""
-                        })
-                        setOpenCourseListModal(true)
-                      }}>
-                        Copy
-                      </Button>
-                    )}
-                  {(
-                    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-                    user?.groups.includes(course.id + "-TA")
-                  ) &&
-                    user?.groups.includes(course.id) &&
-                    (course.instructor.username === user.username || (
-                      course.taList &&
-                      course.taList.find((a: CustomUserType) => a.username === user?.username)
-                    )) ? (
-                    <Button variant="outline" size="sm" onClick={() => navigator(`/courses/${course.id}/editmodule/${module.id}`)}>Edit</Button>
-                  ) : <></>}
-                  <Button size="sm" onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)}>Begin Module</Button>
-                </div>
-              </div>
-              {index !== course.modules.length - 1 ? (
-                <Separator />
-              ) : <></>}
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setDuplicateModuleData({
+            ...duplicateModuleData,
+            [e.target.name]: e.target.value,
+        });
+    }
+
+    function createStarredModule(courseId: string, moduleId: string) {
+        setIsLoading(true);
+        Post(postCreateUserFavoritingData(), {
+            id: { courseId: courseId, moduleId: moduleId },
+            type: "modules",
+        }).then((res) => {
+            if (res.status && res.status < 300) {
+                if (res.data && res.data.modules) {
+                    setStarredModules(res.data.modules);
+                    setAlert({
+                        message: "Module added to favorites.",
+                        type: "info",
+                    });
+                }
+            } else if (res && res.status === 401) {
+                navigator("/login");
+            } else {
+                setAlert({ message: res.data, type: "error" });
+            }
+        });
+    }
+
+    function removeStarredModule(courseId: string, moduleId: string) {
+        setIsLoading(true);
+        Put(putUpdateUserFavoritingData(), {
+            id: { courseId: courseId, moduleId: moduleId },
+            type: "modules",
+        }).then((res) => {
+            if (res.status && res.status < 300) {
+                if (res.data && res.data.modules) {
+                    setStarredModules(res.data.modules);
+                    setAlert({
+                        message: "Module removed from favorites.",
+                        type: "info",
+                    });
+                }
+            } else if (res && res.status === 401) {
+                navigator("/login");
+            } else {
+                setAlert({ message: res.data, type: "error" });
+            }
+        });
+    }
+
+    return course.modules.length > 0 ? (
+        <div>
+            {/* Copy Module To Course Dialog */}
+            <Dialog
+                open={openCourseListModal}
+                onOpenChange={setOpenCourseListModal}
+            >
+                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto bg-white">
+                    <DialogHeader>
+                        <DialogTitle>Copy Module To?</DialogTitle>
+                        <DialogDescription>
+                            Please select a course you would like to copy this
+                            module to. Copying a module will copy over all
+                            module customizations, including the module name,
+                            description, added assets, and settings.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="courses__list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {orderCourseRecentlyCreatedAndStarred(
+                            courseList,
+                            starredCourses
+                        ).map((course, index) => {
+                            return (
+                                <div key={index}>
+                                    <CourseCard
+                                        course={course}
+                                        keyy={index}
+                                        refreshList={refreshList}
+                                        onClick={(courseId: string) => {
+                                            setOpenCourseListModal(false);
+                                            setOpenDuplicateModal((prev) => ({
+                                                ...prev,
+                                                copyCourseId: courseId,
+                                            }));
+                                        }}
+                                        isStarred={starredCourses.some(
+                                            (c) => c.courseId === course.id
+                                        )}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpenCourseListModal(false)}
+                        >
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Duplicate Module Dialog */}
+            <Dialog
+                open={openDuplicateModal.copyCourseId !== ""}
+                onOpenChange={(open) =>
+                    !open &&
+                    setOpenDuplicateModal({
+                        courseId: "",
+                        moduleId: "",
+                        copyCourseId: "",
+                    })
+                }
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Duplicate Module</DialogTitle>
+                        <DialogDescription>
+                            Please enter a unique name for your module.
+                            Duplicating the module will also copy over all
+                            settings within this module.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div>
+                        <div className="space-y-2">
+                            <Label htmlFor="module-name">Module Name</Label>
+                            <Input
+                                id="module-name"
+                                name="name"
+                                placeholder="New Module Name"
+                                value={duplicateModuleData.name}
+                                onChange={handleChange}
+                                required
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <Checkbox
+                            onClick={() => {
+                                setDuplicateModuleData((prev) => ({
+                                    ...prev,
+                                    isPublished:
+                                        !duplicateModuleData.isPublished,
+                                }));
+                            }}
+                            checked={duplicateModuleData.isPublished}
+                            isDisabled={isLoading}
+                        >
+                            <span>Publish Module</span>
+                        </Checkbox>
+                    </div>
+                    <DialogFooter className="flex-col gap-2 sm:flex-row">
+                        <Button
+                            variant="outline"
+                            onClick={() =>
+                                setOpenDuplicateModal({
+                                    courseId: "",
+                                    moduleId: "",
+                                    copyCourseId: "",
+                                })
+                            }
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleCopyModuleTo}
+                            disabled={isLoading}
+                        >
+                            Duplicate
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Module Cards */}
+            <div>
+                {orderModuleRecentlyCreatedAndStarred(
+                    course.modules,
+                    starredModules
+                ).map((module, index) => {
+                    const isStarred = starredModules.some(
+                        (m) => m.moduleId === module.id
+                    );
+                    const courseInfo = `${course.name} - ${course.instructor.name} ${course.instructor.family_name}`;
+
+                    return (
+                        <div
+                            key={index}
+                            className="group bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl hover-lift shadow-sm relative overflow-hidden"
+                        >
+                            {/* Background Pattern */}
+                            <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
+                                <Play
+                                    size={64}
+                                    className="transform rotate-12"
+                                />
+                            </div>
+
+                            {/* Mobile Layout */}
+                            <div className="block md:hidden">
+                                <div className="p-3">
+                                    {/* Header with title and favorite */}
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors duration-300 leading-tight">
+                                                {module.name}
+                                            </h3>
+                                        </div>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button
+                                                        onClick={(e: any) => {
+                                                            e.stopPropagation();
+                                                            isStarred
+                                                                ? removeStarredModule(
+                                                                      course.id,
+                                                                      module.id
+                                                                  )
+                                                                : createStarredModule(
+                                                                      course.id,
+                                                                      module.id
+                                                                  );
+                                                        }}
+                                                        disabled={isLoading}
+                                                        className={`p-1.5 rounded-full transition-all duration-300 ml-2 flex-shrink-0 ${
+                                                            isStarred
+                                                                ? "text-yellow-500 bg-yellow-50"
+                                                                : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
+                                                        }`}
+                                                    >
+                                                        <Star
+                                                            size={14}
+                                                            fill={
+                                                                isStarred
+                                                                    ? "currentColor"
+                                                                    : "none"
+                                                            }
+                                                        />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent
+                                                    side="top"
+                                                    className="z-50 text-black"
+                                                >
+                                                    {isStarred
+                                                        ? "Unstar Module"
+                                                        : "Star Module"}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
+
+                                    {/* Course info */}
+                                    <p className="text-xs text-gray-600 mb-2 font-medium leading-relaxed">
+                                        {courseInfo}
+                                    </p>
+
+                                    {/* Description */}
+                                    {module.moduleDescription && (
+                                        <p className="text-gray-700 leading-relaxed text-sm mb-3">
+                                            {module.moduleDescription}
+                                        </p>
+                                    )}
+
+                                    {/* Actions row */}
+                                    <div className="flex items-center justify-between">
+                                        {/* Secondary actions */}
+                                        <div className="flex items-center gap-1">
+                                            {(user?.groups.includes(
+                                                process.env.REACT_APP_ADMIN
+                                                    ? process.env
+                                                          .REACT_APP_ADMIN
+                                                    : "PapyrusAIAdmin"
+                                            ) ||
+                                                user?.groups.includes(
+                                                    process.env
+                                                        .REACT_APP_INSTRUCTOR
+                                                        ? process.env
+                                                              .REACT_APP_INSTRUCTOR
+                                                        : "PapyrusAIInstructors"
+                                                ) ||
+                                                user?.groups.includes(
+                                                    course.id + "-TA"
+                                                )) && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <button
+                                                                onClick={() =>
+                                                                    navigator(
+                                                                        `/dashboard/${course.id}/${module.id}`
+                                                                    )
+                                                                }
+                                                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-300"
+                                                            >
+                                                                <Eye
+                                                                    size={14}
+                                                                />
+                                                            </button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent
+                                                            side="top"
+                                                            className="z-50 text-black"
+                                                        >
+                                                            View Reports
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+
+                                            {(user?.groups.includes(
+                                                process.env.REACT_APP_ADMIN
+                                                    ? process.env
+                                                          .REACT_APP_ADMIN
+                                                    : "PapyrusAIAdmin"
+                                            ) ||
+                                                user?.groups.includes(
+                                                    process.env
+                                                        .REACT_APP_INSTRUCTOR
+                                                        ? process.env
+                                                              .REACT_APP_INSTRUCTOR
+                                                        : "PapyrusAIInstructors"
+                                                ) ||
+                                                user?.groups.includes(
+                                                    course.id + "-TA"
+                                                )) && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setOpenDuplicateModal(
+                                                                        {
+                                                                            courseId:
+                                                                                course.id,
+                                                                            moduleId:
+                                                                                module.id,
+                                                                            copyCourseId:
+                                                                                "",
+                                                                        }
+                                                                    );
+                                                                    setOpenCourseListModal(
+                                                                        true
+                                                                    );
+                                                                }}
+                                                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-300"
+                                                            >
+                                                                <Copy
+                                                                    size={14}
+                                                                />
+                                                            </button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent
+                                                            side="top"
+                                                            className="z-50 text-black"
+                                                        >
+                                                            Copy Module
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+
+                                            {(user?.groups.includes(
+                                                process.env.REACT_APP_INSTRUCTOR
+                                                    ? process.env
+                                                          .REACT_APP_INSTRUCTOR
+                                                    : "PapyrusAIInstructors"
+                                            ) ||
+                                                user?.groups.includes(
+                                                    course.id + "-TA"
+                                                )) &&
+                                                user?.groups.includes(
+                                                    course.id
+                                                ) &&
+                                                (course.instructor.username ===
+                                                    user.username ||
+                                                    (course.taList &&
+                                                        course.taList.find(
+                                                            (
+                                                                a: CustomUserType
+                                                            ) =>
+                                                                a.username ===
+                                                                user?.username
+                                                        ))) && (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger
+                                                                asChild
+                                                            >
+                                                                <button
+                                                                    onClick={() =>
+                                                                        navigator(
+                                                                            `/courses/${course.id}/editmodule/${module.id}`
+                                                                        )
+                                                                    }
+                                                                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-300"
+                                                                >
+                                                                    <Edit
+                                                                        size={
+                                                                            14
+                                                                        }
+                                                                    />
+                                                                </button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent
+                                                                side="top"
+                                                                className="z-50 text-black"
+                                                            >
+                                                                Edit Module
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )}
+                                        </div>
+
+                                        {/* Primary action */}
+                                        <Button
+                                            onClick={() =>
+                                                navigator(
+                                                    `/courses/${course.id}/modules/${module.id}`
+                                                )
+                                            }
+                                            variant="default"
+                                            size="sm"
+                                            className="flex items-center gap-2 hover:bg-primary/10 hover:text-primary"
+                                        >
+                                            <Play size={14} />
+                                            Begin
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Desktop Layout */}
+                            <div className="hidden md:block">
+                                <div className="p-4">
+                                    <div className="relative flex items-start justify-between">
+                                        <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
+                                            <Play
+                                                size={64}
+                                                className="transform rotate-12"
+                                            />
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors duration-300 truncate">
+                                                    {module.name}
+                                                </h3>
+                                            </div>
+
+                                            <p className="text-xs text-gray-600 mb-1 font-medium">
+                                                {courseInfo}
+                                            </p>
+                                            {module.moduleDescription && (
+                                                <p className="text-gray-700 leading-relaxed text-sm">
+                                                    {module.moduleDescription}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-1 ml-4 flex-shrink-0">
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <button
+                                                            onClick={(
+                                                                e: any
+                                                            ) => {
+                                                                e.stopPropagation();
+                                                                isStarred
+                                                                    ? removeStarredModule(
+                                                                          course.id,
+                                                                          module.id
+                                                                      )
+                                                                    : createStarredModule(
+                                                                          course.id,
+                                                                          module.id
+                                                                      );
+                                                            }}
+                                                            disabled={isLoading}
+                                                            className={`p-1.5 rounded-full transition-all duration-300 ${
+                                                                isStarred
+                                                                    ? "text-yellow-500 bg-yellow-50"
+                                                                    : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
+                                                            }`}
+                                                        >
+                                                            <Star
+                                                                size={12}
+                                                                fill={
+                                                                    isStarred
+                                                                        ? "currentColor"
+                                                                        : "none"
+                                                                }
+                                                            />
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent
+                                                        side="top"
+                                                        className="z-50 text-black"
+                                                    >
+                                                        {isStarred
+                                                            ? "Unstar Module"
+                                                            : "Star Module"}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+
+                                            {(user?.groups.includes(
+                                                process.env.REACT_APP_ADMIN
+                                                    ? process.env
+                                                          .REACT_APP_ADMIN
+                                                    : "PapyrusAIAdmin"
+                                            ) ||
+                                                user?.groups.includes(
+                                                    process.env
+                                                        .REACT_APP_INSTRUCTOR
+                                                        ? process.env
+                                                              .REACT_APP_INSTRUCTOR
+                                                        : "PapyrusAIInstructors"
+                                                ) ||
+                                                user?.groups.includes(
+                                                    course.id + "-TA"
+                                                )) && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <button
+                                                                onClick={() =>
+                                                                    navigator(
+                                                                        `/dashboard/${course.id}/${module.id}`
+                                                                    )
+                                                                }
+                                                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-300"
+                                                            >
+                                                                <Eye
+                                                                    size={12}
+                                                                />
+                                                            </button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent
+                                                            side="top"
+                                                            className="z-50 text-black"
+                                                        >
+                                                            View Reports
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+
+                                            {(user?.groups.includes(
+                                                process.env.REACT_APP_ADMIN
+                                                    ? process.env
+                                                          .REACT_APP_ADMIN
+                                                    : "PapyrusAIAdmin"
+                                            ) ||
+                                                user?.groups.includes(
+                                                    process.env
+                                                        .REACT_APP_INSTRUCTOR
+                                                        ? process.env
+                                                              .REACT_APP_INSTRUCTOR
+                                                        : "PapyrusAIInstructors"
+                                                ) ||
+                                                user?.groups.includes(
+                                                    course.id + "-TA"
+                                                )) && (
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setOpenDuplicateModal(
+                                                                        {
+                                                                            courseId:
+                                                                                course.id,
+                                                                            moduleId:
+                                                                                module.id,
+                                                                            copyCourseId:
+                                                                                "",
+                                                                        }
+                                                                    );
+                                                                    setOpenCourseListModal(
+                                                                        true
+                                                                    );
+                                                                }}
+                                                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-300"
+                                                            >
+                                                                <Copy
+                                                                    size={12}
+                                                                />
+                                                            </button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent
+                                                            side="top"
+                                                            className="z-50 text-black"
+                                                        >
+                                                            Copy Module
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            )}
+
+                                            {(user?.groups.includes(
+                                                process.env.REACT_APP_INSTRUCTOR
+                                                    ? process.env
+                                                          .REACT_APP_INSTRUCTOR
+                                                    : "PapyrusAIInstructors"
+                                            ) ||
+                                                user?.groups.includes(
+                                                    course.id + "-TA"
+                                                )) &&
+                                                user?.groups.includes(
+                                                    course.id
+                                                ) &&
+                                                (course.instructor.username ===
+                                                    user.username ||
+                                                    (course.taList &&
+                                                        course.taList.find(
+                                                            (
+                                                                a: CustomUserType
+                                                            ) =>
+                                                                a.username ===
+                                                                user?.username
+                                                        ))) && (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger
+                                                                asChild
+                                                            >
+                                                                <button
+                                                                    onClick={() =>
+                                                                        navigator(
+                                                                            `/courses/${course.id}/editmodule/${module.id}`
+                                                                        )
+                                                                    }
+                                                                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-300"
+                                                                >
+                                                                    <Edit
+                                                                        size={
+                                                                            12
+                                                                        }
+                                                                    />
+                                                                </button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent
+                                                                side="top"
+                                                                className="z-50 text-black"
+                                                            >
+                                                                Edit Module
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                )}
+
+                                            <Button
+                                                onClick={() =>
+                                                    navigator(
+                                                        `/courses/${course.id}/modules/${module.id}`
+                                                    )
+                                                }
+                                                variant="default"
+                                                size="sm"
+                                                className="flex items-center gap-2 ml-2 hover:bg-primary/10 hover:text-primary"
+                                            >
+                                                <Play size={14} />
+                                                Begin Module
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
-          )
-        })}
-      </div>
-    </div>
-  ) : (
-    <div className="text-center py-8 text-muted-foreground">
-      <p className="mb-2">No modules are currently available to you.</p>
-      {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
-        <p>To create a module, go to the course in which you would like to create the module.</p> :
-        ""}
-    </div>
-  )
+        </div>
+    ) : (
+        <div className="text-center py-8 text-muted-foreground">
+            <p className="mb-2">No modules are currently available to you.</p>
+            {user?.groups.includes(
+                process.env.REACT_APP_INSTRUCTOR
+                    ? process.env.REACT_APP_INSTRUCTOR
+                    : "PapyrusAIInstructors"
+            ) ? (
+                <p>
+                    To create a module, go to the course in which you would like
+                    to create the module.
+                </p>
+            ) : (
+                ""
+            )}
+        </div>
+    );
 }

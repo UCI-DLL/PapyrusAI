@@ -10,19 +10,12 @@ import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import AddCourseForm from "../course-groups/AddCourseForm";
-import { Modal } from "../../components/Modal";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { ExternalLink, EyeIcon, PlusIcon } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "../../components/ui/dialog";
+import { Dialog, DialogTrigger } from "../../components/ui/dialog";
 
 export default function Dashboard(): JSX.Element {
     let navigator = useNavigate();

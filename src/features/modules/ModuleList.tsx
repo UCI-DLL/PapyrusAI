@@ -1,6 +1,9 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Button, Divider, IconButton, List, ListItem, ListItemText, TextField, Tooltip } from "@mui/material";
+import { Button } from "../../components/ui/button";
+import { Separator } from "../../components/ui/separator";
+import { Input } from "../../components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../components/ui/tooltip";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { CustomUserType, UserStarred } from "../../utility/types/UserTypes";
@@ -19,7 +22,7 @@ import Post from "../../utility/Post";
 
 interface ModuleListProps {
   course: CourseType;
-  starredList: UserStarred | undefined; //user favorited
+  starredList: UserStarred | undefined;
   refreshList: () => void;
 }
 
@@ -32,9 +35,9 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
   const [starredModules, setStarredModules] = useState<Array<{ courseId: string, moduleId: string }>>([]);
   const [openCourseListModal, setOpenCourseListModal] = useState<boolean>(false);
   const [openDuplicateModal, setOpenDuplicateModal] = useState<{
-    courseId: string, //current course
-    moduleId: string, //currently selected module
-    copyCourseId: string //course to copy module to 
+    courseId: string,
+    moduleId: string,
+    copyCourseId: string
   }>({
     courseId: "",
     moduleId: "",
@@ -48,10 +51,6 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
     isPublished: false
   });
   const { setAlert } = useContext(AlertContext);
-  const style = {
-    width: '100%',
-    bgcolor: 'background.paper',
-  };
 
   useEffect(() => {
     if (starredList) {
@@ -66,7 +65,6 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
 
   useEffect(() => {
     const controller = new AbortController();
-    //if user is more than a normal user (permission-wise)
     if ((user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
       user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
       user?.groups.includes(course.id + "-TA")) && openCourseListModal) {
@@ -75,7 +73,6 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
     return () => {
       controller.abort();
     };
-    // eslint-disable-next-line
   }, [user, course, openCourseListModal])
 
   function getCourses(signal: AbortSignal) {
@@ -83,7 +80,6 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
     Get(getCourseList(), signal).then(res => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
-          //get the list of all courses for this user
           setCourseList(res.data);
           setIsLoading(false);
         }
@@ -92,7 +88,6 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
       } else {
         if (res === undefined) {
         } else {
-          // handle error
           setAlert({ message: "No Courses Found. Cannot copy module.", type: "error" });
           setIsLoading(false);
         }
@@ -110,7 +105,6 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
     ).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
-          //pop up notifying user of Duplicated
           setOpenCourseListModal(false);
           setAlert({ message: "Module copied to course", type: "success" })
           setDuplicateModuleData({
@@ -121,8 +115,7 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        // set errors
-        setAlert({ message: res.data, type: "error" })
+          setAlert({ message: res.data, type: "error" })
       }
       setOpenDuplicateModal({
         courseId: "",
@@ -142,15 +135,13 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
     Post(postCreateUserFavoritingData(), { id: { courseId: courseId, moduleId: moduleId }, type: "modules" }).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data.modules) {
-          //update module lists as needed
           setStarredModules(res.data.modules)
           setAlert({ message: "Module added to favorites.", type: "info" })
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        // set errors
-        setAlert({ message: res.data, type: "error" })
+          setAlert({ message: res.data, type: "error" })
       }
     });
   }
@@ -160,15 +151,13 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
     Put(putUpdateUserFavoritingData(), { id: { courseId: courseId, moduleId: moduleId }, type: "modules" }).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data.modules) {
-          //update module lists as needed
           setStarredModules(res.data.modules)
           setAlert({ message: "Module removed from favorites.", type: "info" })
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        // set errors
-        setAlert({ message: res.data, type: "error" })
+          setAlert({ message: res.data, type: "error" })
       }
     });
   }
@@ -182,8 +171,7 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
         actions={
           <>
             <Button
-              variant="contained"
-              color="secondary"
+              variant="secondary"
               onClick={() => setOpenCourseListModal(false)}>
               Close
             </Button>
@@ -191,12 +179,12 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
         }
       >
         <div>
-          <div>
+          <div className="mb-4 text-sm text-muted-foreground">
             Please select a course you would like to copy this module to.
             Copying a module will copy over all module customizations, including the module name,
             description, added assets, and settings.
           </div>
-          <div className="courses__list">
+          <div className="courses__list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {orderCourseRecentlyCreatedAndStarred(courseList, starredCourses).map((course, index) => {
               return (
                 <div key={index}>
@@ -214,7 +202,6 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
               )
             })}
           </div>
-          &nbsp;
         </div>
       </Modal>
       <Modal
@@ -228,8 +215,6 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
         actions={
           <>
             <Button
-              variant="contained"
-              color="primary"
               onClick={(e) => {
                 handleCopyModuleTo()
               }}
@@ -237,8 +222,7 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
               Duplicate
             </Button>
             <Button
-              variant="contained"
-              color="secondary"
+              variant="secondary"
               onClick={() => setOpenDuplicateModal({
                 courseId: "",
                 moduleId: "",
@@ -250,12 +234,11 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
         }
       >
         <div>
-          <div>Please enter a unique name for your module. Duplicating the module will also copy over all settings within this module.</div>
-          <TextField
+          <div className="mb-4 text-sm text-muted-foreground">Please enter a unique name for your module. Duplicating the module will also copy over all settings within this module.</div>
+          <Input
             name="name"
-            label="New Module Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
+            placeholder="New Module Name"
+            className="mb-4"
             value={duplicateModuleData.name}
             onChange={handleChange}
             required
@@ -275,50 +258,55 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
               Publish Module
             </span>
           </Checkbox>
-          &nbsp;
         </div>
       </Modal>
-      <List sx={style} aria-label="modules list">
+      <div className="bg-card rounded-lg border">
         {orderModuleRecentlyCreatedAndStarred(course.modules, starredModules).map((module, index) => {
           return (
             <div key={index}>
-              {/* button redirect to the conversation */}
-              <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
-                <button onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)} style={{ textAlign: "left", width: "100%" }}>
-                  <ListItemText primary={module.name} secondary={course.name + " - " + course.instructor.name + " " + course.instructor.family_name} />
-                  <div>{module.moduleDescription}</div>
+              <div className="flex items-center justify-between p-4">
+                <button onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)} className="text-left flex-1">
+                  <div className="font-medium">{module.name}</div>
+                  <div className="text-sm text-muted-foreground">{course.name + " - " + course.instructor.name + " " + course.instructor.family_name}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{module.moduleDescription}</div>
                 </button>
-                <div style={{ display: "flex" }}>
+                <div className="flex items-center gap-2">
                   {
                     starredModules.some(m => m.moduleId === module.id) ? (
-                      <Tooltip title={"Unstar Module"}>
-                        <IconButton
-                          className="courses__button__menu-btn"
-                          aria-label="favorite course"
-                          id={`${module.id}favorite-button`}
-                          disabled={!isLoading}
-                          onClick={(e: any) => {
-                            e.stopPropagation()
-                            removeStarredModule(course.id, module.id)
-                          }}
-                        >
-                          <StarIcon />
-                        </IconButton>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            disabled={!isLoading}
+                            onClick={(e: any) => {
+                              e.stopPropagation()
+                              removeStarredModule(course.id, module.id)
+                            }}
+                          >
+                            <StarIcon />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Unstar Module</TooltipContent>
                       </Tooltip>
                     ) : (
-                      <Tooltip title={"Star Module"}>
-                        <IconButton
-                          className="courses__button__menu-btn"
-                          aria-label="favorite course"
-                          id={`${module.id}favorite-button`}
-                          disabled={!isLoading}
-                          onClick={(e: any) => {
-                            e.stopPropagation()
-                            createStarredModule(course.id, module.id)
-                          }}
-                        >
-                          <StarBorderIcon />
-                        </IconButton>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            disabled={!isLoading}
+                            onClick={(e: any) => {
+                              e.stopPropagation()
+                              createStarredModule(course.id, module.id)
+                            }}
+                          >
+                            <StarBorderIcon />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Star Module</TooltipContent>
                       </Tooltip>
                     )
                   }
@@ -326,7 +314,7 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
                   {(user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
                     user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
                     user?.groups.includes(course.id + "-TA")) && (
-                      <Button onClick={() => {
+                      <Button variant="outline" size="sm" onClick={() => {
                         navigator(`/dashboard/${course.id}/${module.id}`)
                       }}>
                         View
@@ -335,7 +323,7 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
                   {(user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
                     user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
                     user?.groups.includes(course.id + "-TA")) && (
-                      <Button onClick={() => {
+                      <Button variant="outline" size="sm" onClick={() => {
                         setOpenDuplicateModal({
                           courseId: course.id,
                           moduleId: module.id,
@@ -348,31 +336,31 @@ export default function ModuleList({ course, starredList, refreshList }: ModuleL
                     )}
                   {(
                     user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-                    user?.groups.includes(course.id + "-TA") //handle tas
+                    user?.groups.includes(course.id + "-TA")
                   ) &&
                     user?.groups.includes(course.id) &&
                     (course.instructor.username === user.username || (
                       course.taList &&
-                      course.taList.find((a: CustomUserType) => a.username === user?.username) //handle tas too
+                      course.taList.find((a: CustomUserType) => a.username === user?.username)
                     )) ? (
-                    <Button onClick={() => navigator(`/courses/${course.id}/editmodule/${module.id}`)}>Edit</Button>
+                    <Button variant="outline" size="sm" onClick={() => navigator(`/courses/${course.id}/editmodule/${module.id}`)}>Edit</Button>
                   ) : <></>}
-                  <Button variant="contained" onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)}>Begin Module</Button>
+                  <Button size="sm" onClick={() => navigator(`/courses/${course.id}/modules/${module.id}`)}>Begin Module</Button>
                 </div>
-
-              </ListItem>
-              {index !== course.modules.length - 1 ? ( //only have dividers between modules
-                <Divider />
+              </div>
+              {index !== course.modules.length - 1 ? (
+                <Separator />
               ) : <></>}
             </div>
           )
         })}
-      </List>
+      </div>
     </div>
   ) : (
-    <div>No modules are currently available to you.
+    <div className="text-center py-8 text-muted-foreground">
+      <p className="mb-2">No modules are currently available to you.</p>
       {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
-        " To create a module, go to the course in which you would like to create the module." :
+        <p>To create a module, go to the course in which you would like to create the module.</p> :
         ""}
     </div>
   )

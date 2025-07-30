@@ -1,58 +1,74 @@
 import React, { useContext, useState, useEffect } from "react";
-import {
-  Box,
-  Button,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  // Menu,
-  // MenuItem,
-  List,
-  Breadcrumbs,
-  Link,
-  Typography,
-  SwipeableDrawer
-} from "@mui/material";
 import { UserContext } from "../../utility/context/UserContext";
 import { useLocation, useNavigate } from "react-router";
-// import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
+import { 
+  Home, 
+  BookOpen, 
+  Layers, 
+  BarChart3, 
+  Library, 
+  User, 
+  Info, 
+  Settings, 
+  ExternalLink,
+  LogOut, 
+  HelpCircle
+} from "lucide-react";
 
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from "../../components/ui/sidebar";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "../../components/ui/breadcrumb";
+import { Button } from "../../components/ui/button";
 
-export default function Navigation(): JSX.Element {
+// Icon mapping for menu items
+const menuIcons: Record<string, React.ComponentType<any>> = {
+  "Dashboard": Home,
+  "Courses": BookOpen,
+  "Modules": Layers,
+  "Reports": BarChart3,
+  "Library": Library,
+  "Account": User,
+  "About": Info,
+  "Settings": Settings,
+};
+
+// NavigationContent component to be used inside SidebarProvider
+interface NavigationContentProps {
+  children: React.ReactNode;
+}
+
+function NavigationContent({ children }: NavigationContentProps): JSX.Element {
   const { user, setUser } = useContext(UserContext);
   let navigator = useNavigate();
   const location = useLocation();
 
-  //little menu for logout and account
-  // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  // const open = Boolean(anchorEl);
-  // const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-  //   setAnchorEl(event.currentTarget);
-  // };
-  // const handleClose = () => {
-  //   setAnchorEl(null);
-  // };
-
-  //For the side drawer main nav menu
-  // base this list off instuctor, admin, student access, and TAs
+  // For the side drawer main nav menu
+  // base this list off instructor, admin, student access, and TAs
   // tas dont have access to library
   const [mainMenuList, setMainMenuList] = useState(["Dashboard", "Courses", "Modules", "Account", "About"]);
   const [mainMenuLinks, setMainMenuLinks] = useState(["/", "/courses", "/modules", "/account", "/about"]);
-  const [sideDrawer, setSideDrawer] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [breadcrumbText, setBreadcrumbText] = useState(["", ""])
+  const [breadcrumbText, setBreadcrumbText] = useState(["", ""]);
 
-  //create a use effect to get updated window size when user resizes window
-  useEffect(() => {
-    function handleResize() {
-      setWindowWidth(window.innerWidth)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, []);
-
-  //decide nav bar based on user permissions
+  // decide nav bar based on user permissions
   useEffect(() => {
     if (user) {
       if (user.groups.find(a => a.includes("-TA"))) {
@@ -72,18 +88,6 @@ export default function Navigation(): JSX.Element {
 
   useEffect(() => {
     //set breadcrumb text based on the url location
-    /**
-     * Dashboard > Overview
-     * Courses
-     * modules
-     * Course # > modules
-     * course # > module #
-     * Chat
-     * Reports
-     * library
-     * account
-     * about
-     */
     const pathnameSplit = location.pathname.split("/");
     if (location.pathname === "/") {
       setBreadcrumbText(["Dashboard", "Overview"])
@@ -135,211 +139,146 @@ export default function Navigation(): JSX.Element {
     window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
   }
 
-  const toggleDrawer =
-    (open: boolean) =>
-      (event: React.KeyboardEvent | React.MouseEvent) => {
-        if (
-          event &&
-          event.type === 'keydown' &&
-          ((event as React.KeyboardEvent).key === 'Tab' ||
-            (event as React.KeyboardEvent).key === 'Shift')
-        ) {
-          return;
-        }
-
-        setSideDrawer(open);
-      };
-
-  //Mobile drawer list
-  const list = () => (
-    <Box
-      sx={{ width: 'auto' }}
-      role="presentation"
-      onClick={toggleDrawer(false)}
-      onKeyDown={toggleDrawer(false)}
-      className={"top-nav-title"}
-    >
-      <header className="top">
-        <a href={"/"} className="top__logo" aria-label="PapyrusAI">
-          <span className="for-screen-readers-only">PapyrusAI</span>
-          <span className="top__logo-dimensions">
-            <img src="/dll-logo-noname.png" alt="PapyrusAI logo" />
-            <h6 className="top__logo-title">PapyrusAI</h6>
-          </span>
-          &nbsp;&nbsp;&nbsp;
-        </a>
-      </header>
-
-      &nbsp;&nbsp;&nbsp;
-      <Box sx={{
-        position: "fixed",
-        width: "13rem", //same in navigation.scss
-        paddingTop: "3rem",
-        zIndex: "10000"
-      }}>
-        <nav>
-          <List>
-            {mainMenuList.map((text, index) => (
-              <ListItem key={text} disablePadding>
-                <ListItemButton
-                  href={mainMenuLinks[index]}
-                  selected={location.pathname === mainMenuLinks[index]}
-                >
-                  <ListItemText primary={text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-            <hr />
-            <ListItem key={"resources"} disablePadding>
-              <ListItemButton onClick={() => window.open("https://www.genaied.org/resources.html", "_blank")}>
-                <ListItemText primary={"Resources"} />
-              </ListItemButton>
-            </ListItem>
-            <hr />
-            <ListItem key={"logout"} disablePadding>
-              <ListItemButton onClick={handleLogOut}>
-                <ListItemText primary={"Log Out"} />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </nav>
-        <div style={{ position: "fixed", bottom: "0", padding: "0.4rem", zIndex: "120" }}>
-          <Button onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform", "_blank")}>
-            Report Issue
-          </Button>
-        </div>
-      </Box>
-    </Box>
-  );
-
-
   return (
-    <div>
-      <div className="navigation top-nav-title">
-        <header className="top">
-          <a href={"/"} className="top__logo" aria-label="PapyrusAI Logo" >
-            <span className="for-screen-readers-only">PapyrusAI</span>
-            <span className="top__logo-dimensions">
-              <img src="/dll-logo-noname.png" alt="PapyrusAI logo" />
-              <h6 className="top__logo-title">PapyrusAI</h6>
-            </span>
-          </a>
-        </header>
+    <div className="flex h-screen w-full">
+      <Sidebar collapsible="icon" variant="sidebar">
+        <SidebarHeader className="border-b border-sidebar-border">
+          <div className="flex items-center gap-3 px-4 py-2">
+            <img src="/dll-logo-noname.png" alt="PapyrusAI logo" className="h-8 w-8 shrink-0" />
+            <h6 className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">PapyrusAI</h6>
+          </div>
+        </SidebarHeader>
 
-        <hr style={{ width: "100%" }} />
-        <Box sx={{
-          width: '100%',
-          maxWidth: 360,
-          paddingTop: "3rem"
-        }}>
-          <nav aria-label="Main menu">
-            <List sx={{ zIndex: "1000" }}>
-              {mainMenuList.map((text, index) => (
-                <ListItem key={text} disablePadding>
-                  <ListItemButton
-                    href={mainMenuLinks[index]}
-                    selected={location.pathname === mainMenuLinks[index]}
+        <SidebarContent className="py-4">
+          <SidebarGroup className="space-y-1">
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                {mainMenuList.map((text, index) => {
+                  const IconComponent = menuIcons[text];
+                  const isActive = location.pathname === mainMenuLinks[index];
+                  
+                  return (
+                    <SidebarMenuItem key={text}>
+                      <SidebarMenuButton 
+                        isActive={isActive} 
+                        onClick={() => navigator(mainMenuLinks[index])}
+                        className="h-10 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          {IconComponent && <IconComponent className="h-4 w-4 shrink-0" />}
+                          <span className="text-sm font-medium">{text}</span>
+                        </div>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <div className="flex-1" />
+
+          <SidebarGroup className="space-y-1">
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    onClick={() => window.open("https://www.genaied.org/resources.html", "_blank")}
+                    className="h-10 rounded-lg px-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    tooltip="Resources"
                   >
-                    <ListItemText primary={text} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-              <hr />
-              <ListItem key={"resources"} disablePadding>
-                <ListItemButton onClick={() => window.open("https://www.genaied.org/resources.html", "_blank")}>
-                  <ListItemText primary={"Resources"} />
-                </ListItemButton>
-              </ListItem>
-              <hr />
-              <ListItem key={"logout"} disablePadding>
-                <ListItemButton onClick={handleLogOut}>
-                  <ListItemText primary={"Log Out"} />
-                </ListItemButton>
-              </ListItem>
-            </List>
-          </nav>
-          <div style={{ position: "fixed", bottom: "0", padding: "0.4rem", zIndex: "120" }}>
-            <Button onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform", "_blank")}>
-              Report Issue
-            </Button>
-          </div>
-        </Box>
-      </div>
+                    <ExternalLink className="h-4 w-4 shrink-0" />
+                    <span className="text-sm font-medium">Resources</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
 
-      <div className="top-breadcrumb-bar">
-        {windowWidth < 1024 ? (
-          <React.Fragment>
-            <Button
-              aria-controls="super-sidebar"
-              onClick={toggleDrawer(true)}
-            >
-              <ViewSidebarOutlinedIcon />
-            </Button>
-            <SwipeableDrawer
-              anchor={"left"}
-              open={sideDrawer}
-              onClose={toggleDrawer(false)}
-              onOpen={toggleDrawer(true)}
-            >
-              {list()}
-            </SwipeableDrawer>
-          </React.Fragment>
-        ) : <></>}
-
-        &nbsp;&nbsp;&nbsp;
-
-        <nav role="presentation">
-          <Breadcrumbs aria-label="breadcrumb">
-            {breadcrumbText[0] !== "" && breadcrumbText[1] !== "" ? (
-              <Link
-                underline="hover"
-                color="inherit"
-                href={
-                  breadcrumbText[0] === "Dashboard" ? "/" :
-                    `/courses/${breadcrumbText[0]}/modules`
-                }
+        <SidebarFooter className="border-t border-sidebar-border px-2 py-4">
+          <SidebarMenu className="space-y-1">
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                onClick={handleLogOut}
+                className="h-10 rounded-lg px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                tooltip="Log Out"
               >
-                {breadcrumbText[0]}
-              </Link>
-            ) : (
-              <Typography color="text.primary">{breadcrumbText[0]}</Typography>
-            )}
-            {breadcrumbText[1] !== "" && (
-              <Typography color="text.primary">{breadcrumbText[1]}</Typography>
-            )}
-          </Breadcrumbs>
-        </nav>
-
-        &nbsp;&nbsp;&nbsp;
-
-        {windowWidth < 1024 ? (
-          <div style={{ opacity: "0", minWidth: "64px", padding: "6px 8px" }} aria-hidden="true">
-            {/* <Button
-              // id="basic-button"
-              // aria-controls={open ? 'basic-menu' : undefined}
-              // aria-haspopup="true"
-              // aria-expanded={open ? 'true' : undefined}
-              // onClick={handleClick}
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span className="text-sm font-medium">Log Out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          
+          <div className="mt-2 px-1 group-data-[collapsible=icon]:px-0">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-9 w-full justify-start rounded-lg border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
+              onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform", "_blank")}
+              title="Report Issue"
             >
-              <AccountCircleIcon />
-            </Button> */}
-            {/* <Menu
-              id="basic-menu"
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleClose}
-              MenuListProps={{
-                'aria-labelledby': 'basic-button',
-              }}
-              sx={{ zIndex: "100001" }}
-            >
-              <MenuItem onClick={() => navigator("/account")}>My account</MenuItem>
-              <MenuItem onClick={handleLogOut}>Logout</MenuItem>
-            </Menu> */}
+              <span className="text-xs font-medium group-data-[collapsible=icon]:hidden">Report Issue</span>
+              <HelpCircle className="h-4 w-4 hidden group-data-[collapsible=icon]:inline" />
+            </Button>
           </div>
-        ) : <></>}
-      </div>
+        </SidebarFooter>
+      </Sidebar>
+
+      <SidebarInset className="flex flex-1 flex-col overflow-hidden">
+        {/* Top Navigation Bar */}
+        <header className="flex h-16 items-center gap-4 border-b border-sidebar-border bg-sidebar px-6 shrink-0">
+          <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent" />
+          
+          <Breadcrumb>
+            <BreadcrumbList className="text-sidebar-foreground">
+              {breadcrumbText[0] !== "" && breadcrumbText[1] !== "" ? (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <button
+                        onClick={() => navigator(
+                          breadcrumbText[0] === "Dashboard" ? "/" :
+                            `/courses/${breadcrumbText[0]}/modules`
+                        )}
+                        className="cursor-pointer hover:underline text-sidebar-foreground hover:text-sidebar-accent-foreground"
+                      >
+                        {breadcrumbText[0]}
+                      </button>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="text-sidebar-foreground" />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="text-sidebar-foreground font-medium">{breadcrumbText[1]}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              ) : (
+                <BreadcrumbItem>
+                  <BreadcrumbPage className="text-sidebar-foreground font-medium">{breadcrumbText[0]}</BreadcrumbPage>
+                </BreadcrumbItem>
+              )}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </header>
+        
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </SidebarInset>
     </div>
-  )
+  );
+}
+
+interface NavigationProps {
+  children?: React.ReactNode;
+}
+
+export default function Navigation({ children }: NavigationProps): JSX.Element {
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <NavigationContent>{children}</NavigationContent>
+    </SidebarProvider>
+  );
 }
 

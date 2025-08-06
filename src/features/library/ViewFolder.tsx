@@ -1,8 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
 import { FolderType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { UserContext } from "../../utility/context/UserContext";
@@ -13,8 +11,6 @@ import {
 import { AlertContext } from "../../utility/context/AlertContext";
 import {
     Plus,
-    Search,
-    Filter,
     MessageSquare,
     FileText,
     Folder,
@@ -178,25 +174,6 @@ export default function ViewFolder(): JSX.Element {
                     </div>
                 </div>
 
-                {/* Search and Filter Section */}
-                <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                placeholder="Search content..."
-                                className="pl-10"
-                            />
-                        </div>
-                        <Button
-                            variant="outline"
-                            className="flex items-center gap-2"
-                        >
-                            <Filter className="h-4 w-4" />
-                            Filters
-                        </Button>
-                    </div>
-                </div>
 
                 {/* Category Tabs */}
                 <div className="flex gap-2 mb-6">

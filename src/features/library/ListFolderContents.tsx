@@ -11,25 +11,14 @@ import {
     SelectValue,
 } from "../../components/ui/select";
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-    SheetFooter,
-    SheetTrigger,
-} from "../../components/ui/sheet";
-import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "../../components/ui/popover";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "../../components/ui/tooltip";
+import { Badge } from "../../components/ui/badge";
+import { cn } from "../../lib/utils";
+import { format } from "date-fns";
+import { SlidersHorizontal, Calendar as CalendarIcon } from "lucide-react";
 import {
     FileType,
     FolderType,
@@ -37,9 +26,7 @@ import {
     TagType,
 } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs, { Dayjs } from "dayjs";
+import { Calendar } from "../../components/ui/calendar";
 import {
     getOrgFolder,
     getUserFolder,
@@ -50,7 +37,7 @@ import { Prompt } from "../../components/Prompt";
 import { File } from "../../components/File";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
-import { Search, Filter, Calendar, FileText } from "lucide-react";
+import { Search, Filter, FileText } from "lucide-react";
 
 export enum SortOptions {
     Ascending = "Ascending",
@@ -97,21 +84,32 @@ export default function ListFolderContents(
         search: string;
         sort: SortOptions;
         starred: StarredOptions;
-        startDate: Dayjs | null;
-        endDate: Dayjs | null;
+        startDate: Date | undefined;
+        endDate: Date | undefined;
         tags: string;
         type: TypeOptions;
     }>({
         search: "", //title of folder or title or contents of prompts
         sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
         starred: StarredOptions.All,
-        startDate: null,
-        endDate: null,
-        tags: "",
+        startDate: undefined,
+        endDate: undefined,
+        tags: "none",
         type: TypeOptions.All,
     });
     const [tagList, setTagList] = useState<Array<TagType>>([]);
-    const [openFilters, setOpenFilters] = useState<boolean>(false);
+    const [isFilterPopoverOpen, setIsFilterPopoverOpen] =
+        useState<boolean>(false);
+    const [startDateOpen, setStartDateOpen] = useState(false);
+    const [endDateOpen, setEndDateOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    // Handle search filtering
+    useEffect(() => {
+        const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+        handleFilter(syntheticEvent);
+        // eslint-disable-next-line
+    }, [searchTerm]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -341,28 +339,22 @@ export default function ListFolderContents(
         }
 
         //handle searching
-        if (filters.search !== "") {
+        if (searchTerm !== "") {
             filteredPrompts = filteredPrompts.filter(
                 (prompt: PromptType) =>
                     prompt.name
                         .toLowerCase()
-                        .includes(filters.search.toLowerCase()) ||
+                        .includes(searchTerm.toLowerCase()) ||
                     prompt.prompt
                         .toLowerCase()
-                        .includes(filters.search.toLowerCase())
+                        .includes(searchTerm.toLowerCase())
             );
-            filteredFiles = filteredFiles.filter(
-                (file: FileType) =>
-                    file.name
-                        .toLowerCase()
-                        .includes(filters.search.toLowerCase()) ||
-                    file.name
-                        .toLowerCase()
-                        .includes(filters.search.toLowerCase())
+            filteredFiles = filteredFiles.filter((file: FileType) =>
+                file.name.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
         //handle tag
-        if (filters.tags) {
+        if (filters.tags && filters.tags !== "none") {
             filteredPrompts = filteredPrompts.filter((prompt: PromptType) =>
                 prompt.tags ? prompt.tags.includes(filters.tags) : prompt
             );
@@ -372,61 +364,24 @@ export default function ListFolderContents(
         }
 
         //handle date
-        //Note: have to do a lot of date converting
-        if (filters.startDate !== null) {
+        if (filters.startDate) {
             filteredPrompts = filteredPrompts.filter((prompt: PromptType) => {
-                if (filters.startDate !== null) {
-                    var date = new Date(
-                        parseInt(prompt.id.substring(0, 13), 10)
-                    );
-                    if (dayjs(date.toISOString()) > filters.startDate) {
-                        return prompt;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return prompt;
-                }
+                var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
+                return filters.startDate ? date > filters.startDate : true;
             });
             filteredFiles = filteredFiles.filter((file: FileType) => {
-                if (filters.startDate !== null) {
-                    var date = new Date(parseInt(file.id.substring(0, 13), 10));
-                    if (dayjs(date.toISOString()) > filters.startDate) {
-                        return file;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return file;
-                }
+                var date = new Date(parseInt(file.id.substring(0, 13), 10));
+                return filters.startDate ? date > filters.startDate : true;
             });
         }
-        if (filters.endDate !== null) {
+        if (filters.endDate) {
             filteredPrompts = filteredPrompts.filter((prompt: PromptType) => {
-                if (filters.endDate !== null) {
-                    var date = new Date(
-                        parseInt(prompt.id.substring(0, 13), 10)
-                    );
-                    if (dayjs(date.toISOString()) < filters.endDate) {
-                        return prompt;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return prompt;
-                }
+                var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
+                return filters.endDate ? date < filters.endDate : true;
             });
             filteredFiles = filteredFiles.filter((file: FileType) => {
-                if (filters.endDate !== null) {
-                    var date = new Date(parseInt(file.id.substring(0, 13), 10));
-                    if (dayjs(date.toISOString()) < filters.endDate) {
-                        return file;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return file;
-                }
+                var date = new Date(parseInt(file.id.substring(0, 13), 10));
+                return filters.endDate ? date < filters.endDate : true;
             });
         }
 
@@ -488,13 +443,14 @@ export default function ListFolderContents(
     }
 
     function handleResetFilters() {
+        setSearchTerm("");
         setFilters({
             search: "", //title of folder or title or contents of prompts
             sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
             starred: StarredOptions.All,
-            startDate: null,
-            endDate: null,
-            tags: "",
+            startDate: undefined,
+            endDate: undefined,
+            tags: "none",
             type: TypeOptions.All,
         });
         setFilteredFolder(folder);
@@ -510,177 +466,303 @@ export default function ListFolderContents(
         getStarred(controller.signal);
     }
 
+    // Count active filters
+    const getActiveFilterCount = () => {
+        let count = 0;
+        if (searchTerm !== "") count++;
+        if (filters.type !== TypeOptions.All) count++;
+        if (filters.starred !== StarredOptions.All) count++;
+        if (filters.sort !== SortOptions.Newest) count++;
+        if (filters.tags !== "none") count++;
+        if (filters.startDate || filters.endDate) count++;
+        return count;
+    };
+
     return !isLoading && filteredFolder ? (
         <div className="space-y-6">
-            {/* Advanced Filters Sheet */}
-            <Sheet open={openFilters} onOpenChange={setOpenFilters}>
-                <SheetContent className="w-[400px] sm:w-[540px]">
-                    <SheetHeader>
-                        <SheetTitle>Advanced Filters</SheetTitle>
-                        <SheetDescription>
-                            Filter content by various criteria
-                        </SheetDescription>
-                    </SheetHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="search">Search</Label>
-                            <Input
-                                id="search"
-                                placeholder="Search content..."
-                                value={filters.search}
-                                onChange={(e) =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        search: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Type</Label>
-                            <Select
-                                value={filters.type}
-                                onValueChange={(value) =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        type: value as TypeOptions,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.values(TypeOptions).map((type) => (
-                                        <SelectItem key={type} value={type}>
-                                            {type}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Sort</Label>
-                            <Select
-                                value={filters.sort}
-                                onValueChange={(value) =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        sort: value as SortOptions,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.values(SortOptions).map((sort) => (
-                                        <SelectItem key={sort} value={sort}>
-                                            {sort}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Starred</Label>
-                            <Select
-                                value={filters.starred}
-                                onValueChange={(value) =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        starred: value as StarredOptions,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.values(StarredOptions).map(
-                                        (starred) => (
-                                            <SelectItem
-                                                key={starred}
-                                                value={starred}
-                                            >
-                                                {starred}
-                                            </SelectItem>
-                                        )
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Tags</Label>
-                            <Select
-                                value={filters.tags}
-                                onValueChange={(value) =>
-                                    setFilters((prev) => ({
-                                        ...prev,
-                                        tags: value,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a tag" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {tagList.map((tag) => (
-                                        <SelectItem key={tag.id} value={tag.id}>
-                                            {tag.id}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Date Range</Label>
-                            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <DatePicker
-                                        label="Start Date"
-                                        value={filters.startDate}
-                                        onChange={(value) =>
-                                            setFilters((prev) => ({
-                                                ...prev,
-                                                startDate: value,
-                                            }))
-                                        }
-                                    />
-                                    <DatePicker
-                                        label="End Date"
-                                        value={filters.endDate}
-                                        onChange={(value) =>
-                                            setFilters((prev) => ({
-                                                ...prev,
-                                                endDate: value,
-                                            }))
-                                        }
-                                    />
-                                </div>
-                            </LocalizationProvider>
-                        </div>
+            {/* Search and Filter Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            placeholder="Search content..."
+                            className="pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                    <SheetFooter>
-                        <Button variant="outline" onClick={handleResetFilters}>
-                            Clear All
-                        </Button>
-                        <Button
-                            onClick={(e) => {
-                                handleFilter(e);
-                                setOpenFilters(false);
-                            }}
-                        >
-                            Apply Filters
-                        </Button>
-                    </SheetFooter>
-                </SheetContent>
-            </Sheet>
+                    <Popover
+                        open={isFilterPopoverOpen}
+                        onOpenChange={setIsFilterPopoverOpen}
+                    >
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="flex items-center gap-2"
+                            >
+                                <Filter className="h-4 w-4" />
+                                Filters
+                                {getActiveFilterCount() > 0 && (
+                                    <Badge
+                                        variant="secondary"
+                                        className="ml-1 px-1.5 py-0.5 text-xs"
+                                    >
+                                        {getActiveFilterCount()}
+                                    </Badge>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-96 p-0" align="start">
+                            <div className="border-b px-4 py-3">
+                                <div className="flex items-center gap-2 font-medium">
+                                    <SlidersHorizontal className="h-5 w-5" />
+                                    Filters
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Filter content by various criteria
+                                </p>
+                            </div>
+                            <div className="space-y-6 p-4 max-h-96 overflow-y-auto">
+                                <div className="space-y-2">
+                                    <Label>Type</Label>
+                                    <Select
+                                        value={filters.type}
+                                        onValueChange={(value) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                type: value as TypeOptions,
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.values(TypeOptions).map(
+                                                (type) => (
+                                                    <SelectItem
+                                                        key={type}
+                                                        value={type}
+                                                    >
+                                                        {type}
+                                                    </SelectItem>
+                                                )
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Sort</Label>
+                                    <Select
+                                        value={filters.sort}
+                                        onValueChange={(value) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                sort: value as SortOptions,
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.values(SortOptions).map(
+                                                (sort) => (
+                                                    <SelectItem
+                                                        key={sort}
+                                                        value={sort}
+                                                    >
+                                                        {sort}
+                                                    </SelectItem>
+                                                )
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Starred</Label>
+                                    <Select
+                                        value={filters.starred}
+                                        onValueChange={(value) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                starred:
+                                                    value as StarredOptions,
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.values(StarredOptions).map(
+                                                (starred) => (
+                                                    <SelectItem
+                                                        key={starred}
+                                                        value={starred}
+                                                    >
+                                                        {starred}
+                                                    </SelectItem>
+                                                )
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Tags</Label>
+                                    <Select
+                                        value={filters.tags}
+                                        onValueChange={(value) =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                tags: value,
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a tag" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none" key="none">
+                                                No filter
+                                            </SelectItem>
+                                            {tagList.map((tag) => (
+                                                <SelectItem
+                                                    key={tag.id}
+                                                    value={tag.id}
+                                                >
+                                                    {tag.id}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label className="text-sm font-medium">
+                                        Date Created
+                                    </Label>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="start-date">
+                                            Start Date
+                                        </Label>
+                                        <Popover
+                                            open={startDateOpen}
+                                            onOpenChange={setStartDateOpen}
+                                        >
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !filters.startDate &&
+                                                            "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {filters.startDate
+                                                        ? format(
+                                                              filters.startDate,
+                                                              "PPP"
+                                                          )
+                                                        : "Pick a start date"}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-auto p-0"
+                                                align="start"
+                                            >
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={filters.startDate}
+                                                    onSelect={(date) => {
+                                                        setFilters((prev) => ({
+                                                            ...prev,
+                                                            startDate: date,
+                                                        }));
+                                                        setStartDateOpen(false);
+                                                    }}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="end-date">
+                                            End Date
+                                        </Label>
+                                        <Popover
+                                            open={endDateOpen}
+                                            onOpenChange={setEndDateOpen}
+                                        >
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !filters.endDate &&
+                                                            "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {filters.endDate
+                                                        ? format(
+                                                              filters.endDate,
+                                                              "PPP"
+                                                          )
+                                                        : "Pick an end date"}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-auto p-0"
+                                                align="start"
+                                            >
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={filters.endDate}
+                                                    onSelect={(date) => {
+                                                        setFilters((prev) => ({
+                                                            ...prev,
+                                                            endDate: date,
+                                                        }));
+                                                        setEndDateOpen(false);
+                                                    }}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="border-t p-4 flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={handleResetFilters}
+                                    className="flex-1"
+                                >
+                                    Clear Filters
+                                </Button>
+                                <Button
+                                    onClick={(e) => {
+                                        setIsFilterPopoverOpen(false);
+                                        handleFilter(e);
+                                    }}
+                                    className="flex-1"
+                                >
+                                    Apply Filters
+                                </Button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+            </div>
 
             {/* Content Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

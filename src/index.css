@@ -42,7 +42,6 @@
         --card: 0 0% 100%;
         --card-foreground: 71 85 105;
         --popover: 0 0% 100%;
-        --popover-foreground: 71 85 105;
         --primary: 212 59% 37%;
         --primary-foreground: 0 0% 100%;
         --secondary: 210 40% 96%;
@@ -81,7 +80,6 @@
         --card: 30 41 59;
         --card-foreground: 203 213 225;
         --popover: 30 41 59;
-        --popover-foreground: 203 213 225;
         --primary: 212 59% 37%;
         --primary-foreground: 0 0% 100%;
         --secondary: 217.2 32.6% 17.5%;
@@ -128,7 +126,6 @@
         --card: 0 0% 100%;
         --card-foreground: 124 58% 29%;
         --popover: 0 0% 100%;
-        --popover-foreground: 124 58% 29%;
         --primary: 330 81% 60%;
         --primary-foreground: 0 0% 100%;
         --secondary: 255 91% 76%;
@@ -149,21 +146,21 @@
     }
 
     body {
-    background: linear-gradient(
-        135deg,
-        #f1f5f9 0%,
-        #e2e8f0 50%,
-        #f8fafc 100%
-    );
-    color: var(--color-muted-foreground);
-    font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
-    min-height: 100vh;
-    height: 100vh;
-    overflow: hidden;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
+        background: linear-gradient(
+            135deg,
+            #f1f5f9 0%,
+            #e2e8f0 50%,
+            #f8fafc 100%
+        );
+        color: var(--color-muted-foreground);
+        font-feature-settings: "rlig" 1, "calt" 1;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+            sans-serif;
+        min-height: 100vh;
+        height: 100vh;
+        overflow: hidden;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
 
     .dark body {
         background: linear-gradient(
@@ -189,12 +186,62 @@
 }
 
 @layer utilities {
+    /* Text Colors */
     .text-primary {
         color: var(--color-primary);
     }
 
+    .text-primary-foreground {
+        color: var(--color-primary-foreground);
+    }
+
     .text-secondary {
         color: var(--color-secondary);
+    }
+
+    .text-secondary-foreground {
+        color: var(--color-secondary-foreground);
+    }
+
+    .text-accent {
+        color: var(--color-accent);
+    }
+
+    .text-accent-foreground {
+        color: var(--color-accent-foreground);
+    }
+
+    .text-background {
+        color: var(--color-background);
+    }
+
+    .text-foreground {
+        color: var(--color-muted-foreground);
+    }
+
+    .text-muted {
+        color: var(--color-muted);
+    }
+
+    .text-muted-foreground {
+        color: var(--color-muted-foreground);
+    }
+
+    .text-card {
+        color: var(--color-card);
+    }
+
+    .text-card-foreground {
+        color: var(--color-muted-foreground);
+    }
+
+    .text-border {
+        color: var(--color-border);
+    }
+
+    /* UCI Brand Colors */
+    .text-darkest-blue {
+        color: var(--color-darkest-blue);
     }
 
     .text-teal-blue {
@@ -217,14 +264,92 @@
         color: var(--color-green);
     }
 
+    .text-lime-green {
+        color: var(--color-lime-green);
+    }
+
+    .text-royal-blue {
+        color: var(--color-royal-blue);
+    }
+
+    .text-bright-purple {
+        color: var(--color-bright-purple);
+    }
+
+    .text-magenta {
+        color: var(--color-magenta);
+    }
+
+    .text-athletics-gold {
+        color: var(--color-athletics-gold);
+    }
+
+    .text-light-yellow {
+        color: var(--color-light-yellow);
+    }
+
+    .text-light-gray {
+        color: var(--color-light-gray);
+    }
+
+    /* Background Colors */
     .bg-primary {
         background-color: var(--color-primary);
+    }
+
+    .bg-primary-foreground {
+        background-color: var(--color-primary-foreground);
     }
 
     .bg-secondary {
         background-color: var(--color-secondary);
     }
 
+    .bg-secondary-foreground {
+        background-color: var(--color-secondary-foreground);
+    }
+
+    .bg-accent {
+        background-color: var(--color-accent);
+    }
+
+    .bg-accent-foreground {
+        background-color: var(--color-accent-foreground);
+    }
+
+    .bg-background {
+        background-color: var(--color-background);
+    }
+
+    .bg-foreground {
+        background-color: var(--color-muted-foreground);
+    }
+
+    .bg-card {
+        background-color: var(--color-card);
+    }
+
+    .bg-card-foreground {
+        background-color: var(--color-muted-foreground);
+    }
+
+    .bg-muted {
+        background-color: var(--color-muted);
+    }
+
+    .bg-muted-foreground {
+        background-color: var(--color-muted-foreground);
+    }
+
+    .bg-border {
+        background-color: var(--color-border);
+    }
+
+    .bg-primary\/90:hover {
+        background-color: var(--color-secondary);
+    }
+
+    /* UCI Brand Backgrounds */
     .bg-darkest-blue {
         background-color: var(--color-darkest-blue);
     }
@@ -249,20 +374,138 @@
         background-color: var(--color-green);
     }
 
-    .bg-accent {
-        background-color: var(--color-accent);
+    .bg-lime-green {
+        background-color: var(--color-lime-green);
     }
 
-    .bg-card {
-        background-color: var(--color-card);
+    .bg-royal-blue {
+        background-color: var(--color-royal-blue);
     }
 
-    .text-foreground {
-        color: var(--color-muted-foreground);
+    .bg-bright-purple {
+        background-color: var(--color-bright-purple);
     }
 
+    .bg-magenta {
+        background-color: var(--color-magenta);
+    }
+
+    .bg-athletics-gold {
+        background-color: var(--color-athletics-gold);
+    }
+
+    .bg-light-yellow {
+        background-color: var(--color-light-yellow);
+    }
+
+    .bg-light-gray {
+        background-color: var(--color-light-gray);
+    }
+
+    /* Border Colors */
     .border-primary {
         border-color: var(--color-primary);
+    }
+
+    .border-primary-foreground {
+        border-color: var(--color-primary-foreground);
+    }
+
+    .border-secondary {
+        border-color: var(--color-secondary);
+    }
+
+    .border-secondary-foreground {
+        border-color: var(--color-secondary-foreground);
+    }
+
+    .border-accent {
+        border-color: var(--color-accent);
+    }
+
+    .border-accent-foreground {
+        border-color: var(--color-accent-foreground);
+    }
+
+    .border-background {
+        border-color: var(--color-background);
+    }
+
+    .border-foreground {
+        border-color: var(--color-muted-foreground);
+    }
+
+    .border-card {
+        border-color: var(--color-card);
+    }
+
+    .border-card-foreground {
+        border-color: var(--color-muted-foreground);
+    }
+
+    .border-muted {
+        border-color: var(--color-muted);
+    }
+
+    .border-muted-foreground {
+        border-color: var(--color-muted-foreground);
+    }
+
+    .border-border {
+        border-color: var(--color-border);
+    }
+
+    /* UCI Brand Borders */
+    .border-darkest-blue {
+        border-color: var(--color-darkest-blue);
+    }
+
+    .border-teal-blue {
+        border-color: var(--color-teal-blue);
+    }
+
+    .border-turquoise {
+        border-color: var(--color-turquoise);
+    }
+
+    .border-orange {
+        border-color: var(--color-orange);
+    }
+
+    .border-gold {
+        border-color: var(--color-gold);
+    }
+
+    .border-green {
+        border-color: var(--color-green);
+    }
+
+    .border-lime-green {
+        border-color: var(--color-lime-green);
+    }
+
+    .border-royal-blue {
+        border-color: var(--color-royal-blue);
+    }
+
+    .border-bright-purple {
+        border-color: var(--color-bright-purple);
+    }
+
+    .border-magenta {
+        border-color: var(--color-magenta);
+    }
+
+    .border-athletics-gold {
+        border-color: var(--color-athletics-gold);
+    }
+
+    .border-light-yellow {
+        border-color: var(--color-light-yellow);
+    }
+
+    .border-light-gray {
+        border-color: var(--color-light-gray);
     }
 
     .gradient-primary {
@@ -671,17 +914,17 @@
     background: linear-gradient(135deg, #db2777 0%, #7c3aed 100%);
 }
 
-
-
 @layer base {
-  * {
-    @apply border-border;
+    * {
+        @apply border-border;
     }
-      body {
+    body {
         @apply bg-background text-foreground;
     }
-    
-    html, body, #root {
+
+    html,
+    body,
+    #root {
         height: 100%;
         overflow: hidden;
     }

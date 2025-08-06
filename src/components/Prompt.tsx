@@ -1,635 +1,860 @@
-
 import React, { useContext, useEffect, useState } from "react";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
 import {
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  CardHeader,
-  Chip,
-  IconButton,
-  IconButtonProps,
-  Menu,
-  MenuItem,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { FolderType, PromptType } from "../utility/types/CourseTypes";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
 import { AlertContext } from "../utility/context/AlertContext";
 import {
-  postCopyOrgPromptToOrgFolder,
-  postCopyOrgPromptToUserFolder,
-  postCopyUserPromptToOrgFolder,
-  postCopyUserPromptToUserFolder,
-  postMoveOrgPromptToOrgFolder,
-  postMoveOrgPromptToUserFolder,
-  postMoveUserPromptToOrgFolder,
-  postMoveUserPromptToUserFolder,
-  postUpdateOrgPrompt,
-  postUpdateUserPrompt
+    postCopyOrgPromptToOrgFolder,
+    postCopyOrgPromptToUserFolder,
+    postCopyUserPromptToOrgFolder,
+    postCopyUserPromptToUserFolder,
+    postMoveOrgPromptToOrgFolder,
+    postMoveOrgPromptToUserFolder,
+    postMoveUserPromptToOrgFolder,
+    postMoveUserPromptToUserFolder,
+    postUpdateOrgPrompt,
+    postUpdateUserPrompt,
 } from "../utility/endpoints/FolderEndpoints";
-import { Modal } from "./Modal";
-import { styled } from '@mui/material/styles';
-import { truncateString } from "../utility/Helpers";
+import Post from "../utility/Post";
+import {
+    postCreateUserFavoritingData,
+    putUpdateUserFavoritingData,
+} from "../utility/endpoints/UserEndpoints";
+import {
+    Star,
+    StarOff as StarBorder,
+    MessageSquare,
+    MoreHorizontal,
+    ExternalLink,
+    Eye,
+} from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { useNavigate } from "react-router";
 import ListFolders from "../features/library/ListFolders";
-import Post from "../utility/Post";
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
-import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
-
-
-interface ExpandMoreProps extends IconButtonProps {
-  expand: boolean;
-}
-
-const ExpandMore = styled((props: ExpandMoreProps) => {
-  const { expand, ...other } = props;
-  return <IconButton {...other} />;
-})(({ theme, expand }) => ({
-  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
-  marginLeft: 'auto',
-  transition: theme.transitions.create('transform', {
-    duration: theme.transitions.duration.shortest,
-  }),
-}));
+import { truncateString } from "../utility/Helpers";
 
 interface PromptProps {
-  prompt: PromptType;
-  folder: FolderType;
-  keyy: string;
-  refreshList: () => void;
-  loading: () => void;
-  noShowMenu?: boolean;
-  onClick?: (folderId: string, promptId: string, isOrgFolder: boolean, type: string) => void; //type is "prompt" or "file"
-  onCardClick?: (folderId: string, promptId: string, isOrgFolder: boolean) => void;
-  showRemove?: boolean;
-  selected?: boolean;
-  noShowDesc?: boolean;
-  isStarred?: boolean;
+    prompt: PromptType;
+    folder: FolderType;
+    keyy: string;
+    refreshList: () => void;
+    loading: () => void;
+    noShowMenu?: boolean;
+    onClick?: (
+        folderId: string,
+        promptId: string,
+        isOrgFolder: boolean,
+        type: string
+    ) => void; //type is "prompt" or "file"
+    onCardClick?: (
+        folderId: string,
+        promptId: string,
+        isOrgFolder: boolean
+    ) => void;
+    showRemove?: boolean;
+    selected?: boolean;
+    noShowDesc?: boolean;
+    isStarred?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
-  let navigator = useNavigate();
-  const { user } = useContext(UserContext);
-  const { setAlert } = useContext(AlertContext);
-  const [openCopyToModal, setOpenCopyToModal] = useState<boolean>(false);
-  const [openMoveModal, setOpenMoveModal] = useState<boolean>(false);
-  const [starred, setStarred] = useState<boolean>(props.isStarred ? props.isStarred : false)
-  const [addAnchorEl, setAddAnchorEl] = React.useState<null | HTMLElement>(null);
-  const addOpen = Boolean(addAnchorEl);
-  const handleAddClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAddAnchorEl(event.currentTarget);
-  };
-  const handleAddClose = () => {
-    setAddAnchorEl(null);
-  };
-  const [expanded, setExpanded] = React.useState(false);
-  const handleExpandClick = () => {
-    setExpanded(!expanded);
-  };
-  const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
+    let navigator = useNavigate();
+    const { user } = useContext(UserContext);
+    const { setAlert } = useContext(AlertContext);
+    const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
+    const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
+    const [openEditDialog, setOpenEditDialog] = useState<boolean>(false);
+    const [editPromptText, setEditPromptText] = useState<string>(
+        props.prompt.prompt
+    );
+    const [editNameText, setEditNameText] = useState<string>(props.prompt.name);
+    const [starred, setStarred] = useState<boolean>(
+        props.isStarred ? props.isStarred : false
+    );
 
-  const openDelete = () => {
-    handleAddClose()
-    setOpenDeleteModal(true)
-  }
+    useEffect(() => {
+        setStarred(props.isStarred ? props.isStarred : false);
+    }, [props.isStarred]);
 
-  useEffect(() => {
-    setStarred(props.isStarred ? props.isStarred : false)
-  }, [props.isStarred])
-
-  function edit() {
-    if (props.folder) {
-      props.loading();
-      if (props.prompt.isOrganizationPrompt) {
-        navigator(`/library/org/${props.folder.id}/prompts/${props.prompt.id}`)
-      } else {
-        navigator(`/library/${props.folder.id}/prompts/${props.prompt.id}`)
-      }
+    function edit() {
+        props.loading();
+        if (props.prompt.isOrganizationPrompt) {
+            const dataToSend = {
+                name: editNameText,
+                prompt: editPromptText,
+                isDeleted: props.prompt.isDeleted,
+            };
+            Put(
+                postUpdateOrgPrompt(props.prompt.id, props.folder.id),
+                dataToSend
+            ).then((res) => {
+                if (res.status && res.status < 300) {
+                    setAlert({
+                        message: "Prompt updated successfully",
+                        type: "success",
+                    });
+                    props.refreshList();
+                } else if (res && res.status === 401) {
+                    navigator("/login");
+                } else {
+                    setAlert({
+                        message: "Failed to update prompt",
+                        type: "error",
+                    });
+                }
+                setOpenEditDialog(false);
+            });
+        } else {
+            const dataToSend = {
+                name: editNameText,
+                prompt: editPromptText,
+                isDeleted: props.prompt.isDeleted,
+            };
+            Put(
+                postUpdateUserPrompt(props.prompt.id, props.folder.id),
+                dataToSend
+            ).then((res) => {
+                if (res.status && res.status < 300) {
+                    setAlert({
+                        message: "Prompt updated successfully",
+                        type: "success",
+                    });
+                    props.refreshList();
+                } else if (res && res.status === 401) {
+                    navigator("/login");
+                } else {
+                    setAlert({
+                        message: "Failed to update prompt",
+                        type: "error",
+                    });
+                }
+                setOpenEditDialog(false);
+            });
+        }
     }
-  }
 
-  function openCopyTo() {
-    handleAddClose();
-    setOpenCopyToModal(true);
-  }
-
-  function copyTo(folderId: string, isOrgFolder: boolean) {
-    handleAddClose();
-    if (props.folder) {
-      props.loading();
-      if (props.prompt.isOrganizationPrompt) {
-        if (isOrgFolder) { //copy from org folder to org foler
-          Post(postCopyOrgPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of Duplicated
-                setAlert({ message: "Prompt Copied", type: "success" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
-            }
-            props.refreshList();
-          });
-        } else { //copy from org folder to user folder
-          Post(postCopyOrgPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of Duplicated
-                setAlert({ message: "Prompt Copied", type: "success" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
-            }
-            props.refreshList();
-          });
-        }
-      } else {
-        if (isOrgFolder) { //copy from user folder to org foler
-          Post(postCopyUserPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of Duplicated
-                setAlert({ message: "Prompt Copied", type: "success" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
-            }
-            props.refreshList();
-          });
-        } else { //copy from user folder to user folder
-          Post(postCopyUserPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of Duplicated
-                setAlert({ message: "Prompt Copied", type: "success" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({ message: "Prompt could not be Copied. Try again later.", type: "error" })
-            }
-            props.refreshList();
-          });
-        }
-      }
+    function openCopyTo() {
+        setOpenCopyToDialog(true);
     }
-  }
 
-  function deletePrompt() {
-    if (props.folder) {
-      props.loading()
-      if (props.prompt.isOrganizationPrompt) {
-        const dataToSend = {
-          name: props.prompt.name,
-          isDeleted: true,
-          tags: props.prompt.tags,
-          prompt: props.prompt.prompt
-        }
-        // post data back
-        Put(postUpdateOrgPrompt(props.folder.id, props.prompt.id), dataToSend).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of delete
-              setAlert({ message: "Prompt Deleted", type: "success" })
+    function copyTo(folderId: string, isOrgFolder: boolean) {
+        props.loading();
+        if (props.prompt.isOrganizationPrompt) {
+            if (isOrgFolder) {
+                Post(
+                    postCopyOrgPromptToOrgFolder(
+                        props.prompt.id,
+                        folderId,
+                        props.folder.id
+                    ),
+                    {}
+                ).then((res) => {
+                    if (res.status && res.status < 300) {
+                        setAlert({
+                            message: "Prompt copied successfully",
+                            type: "success",
+                        });
+                        props.refreshList();
+                    } else if (res && res.status === 401) {
+                        navigator("/login");
+                    } else {
+                        setAlert({
+                            message: "Failed to copy prompt",
+                            type: "error",
+                        });
+                    }
+                    setOpenCopyToDialog(false);
+                });
+            } else {
+                Post(
+                    postCopyOrgPromptToUserFolder(
+                        props.prompt.id,
+                        folderId,
+                        props.folder.id
+                    ),
+                    {}
+                ).then((res) => {
+                    if (res.status && res.status < 300) {
+                        setAlert({
+                            message: "Prompt copied successfully",
+                            type: "success",
+                        });
+                        props.refreshList();
+                    } else if (res && res.status === 401) {
+                        navigator("/login");
+                    } else {
+                        setAlert({
+                            message: "Failed to copy prompt",
+                            type: "error",
+                        });
+                    }
+                    setOpenCopyToDialog(false);
+                });
             }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            // set errors
-            setAlert({ message: "Prompt could not be deleted. Try again later.", type: "error" })
-          }
-          props.refreshList();
+        } else {
+            if (isOrgFolder) {
+                Post(
+                    postCopyUserPromptToOrgFolder(
+                        props.prompt.id,
+                        folderId,
+                        props.folder.id
+                    ),
+                    {}
+                ).then((res) => {
+                    if (res.status && res.status < 300) {
+                        setAlert({
+                            message: "Prompt copied successfully",
+                            type: "success",
+                        });
+                        props.refreshList();
+                    } else if (res && res.status === 401) {
+                        navigator("/login");
+                    } else {
+                        setAlert({
+                            message: "Failed to copy prompt",
+                            type: "error",
+                        });
+                    }
+                    setOpenCopyToDialog(false);
+                });
+            } else {
+                Post(
+                    postCopyUserPromptToUserFolder(
+                        props.prompt.id,
+                        folderId,
+                        props.folder.id
+                    ),
+                    {}
+                ).then((res) => {
+                    if (res.status && res.status < 300) {
+                        setAlert({
+                            message: "Prompt copied successfully",
+                            type: "success",
+                        });
+                        props.refreshList();
+                    } else if (res && res.status === 401) {
+                        navigator("/login");
+                    } else {
+                        setAlert({
+                            message: "Failed to copy prompt",
+                            type: "error",
+                        });
+                    }
+                    setOpenCopyToDialog(false);
+                });
+            }
+        }
+    }
+
+    function deletePrompt() {
+        props.loading();
+        if (props.prompt.isOrganizationPrompt) {
+            const dataToSend = {
+                name: props.prompt.name,
+                prompt: props.prompt.prompt,
+                isDeleted: true,
+            };
+            Put(
+                postUpdateOrgPrompt(props.prompt.id, props.folder.id),
+                dataToSend
+            ).then((res) => {
+                if (res.status && res.status < 300) {
+                    setAlert({
+                        message: "Prompt deleted successfully",
+                        type: "success",
+                    });
+                    props.refreshList();
+                } else if (res && res.status === 401) {
+                    navigator("/login");
+                } else {
+                    setAlert({
+                        message: "Failed to delete prompt",
+                        type: "error",
+                    });
+                }
+                setOpenDeleteDialog(false);
+            });
+        } else {
+            const dataToSend = {
+                name: props.prompt.name,
+                prompt: props.prompt.prompt,
+                isDeleted: true,
+            };
+            Put(
+                postUpdateUserPrompt(props.prompt.id, props.folder.id),
+                dataToSend
+            ).then((res) => {
+                if (res.status && res.status < 300) {
+                    setAlert({
+                        message: "Prompt deleted successfully",
+                        type: "success",
+                    });
+                    props.refreshList();
+                } else if (res && res.status === 401) {
+                    navigator("/login");
+                } else {
+                    setAlert({
+                        message: "Failed to delete prompt",
+                        type: "error",
+                    });
+                }
+                setOpenDeleteDialog(false);
+            });
+        }
+    }
+
+    function openMovePrompt() {
+        setOpenMoveDialog(true);
+    }
+
+    function moveTo(folderId: string, isOrgFolder: boolean) {
+        props.loading();
+        if (props.prompt.isOrganizationPrompt) {
+            if (isOrgFolder) {
+                Post(
+                    postMoveOrgPromptToOrgFolder(
+                        props.prompt.id,
+                        folderId,
+                        props.folder.id
+                    ),
+                    {}
+                ).then((res) => {
+                    if (res.status && res.status < 300) {
+                        setAlert({
+                            message: "Prompt moved successfully",
+                            type: "success",
+                        });
+                        props.refreshList();
+                    } else if (res && res.status === 401) {
+                        navigator("/login");
+                    } else {
+                        setAlert({
+                            message: "Failed to move prompt",
+                            type: "error",
+                        });
+                    }
+                    setOpenMoveDialog(false);
+                });
+            } else {
+                Post(
+                    postMoveOrgPromptToUserFolder(
+                        props.prompt.id,
+                        folderId,
+                        props.folder.id
+                    ),
+                    {}
+                ).then((res) => {
+                    if (res.status && res.status < 300) {
+                        setAlert({
+                            message: "Prompt moved successfully",
+                            type: "success",
+                        });
+                        props.refreshList();
+                    } else if (res && res.status === 401) {
+                        navigator("/login");
+                    } else {
+                        setAlert({
+                            message: "Failed to move prompt",
+                            type: "error",
+                        });
+                    }
+                    setOpenMoveDialog(false);
+                });
+            }
+        } else {
+            if (isOrgFolder) {
+                Post(
+                    postMoveUserPromptToOrgFolder(
+                        props.prompt.id,
+                        folderId,
+                        props.folder.id
+                    ),
+                    {}
+                ).then((res) => {
+                    if (res.status && res.status < 300) {
+                        setAlert({
+                            message: "Prompt moved successfully",
+                            type: "success",
+                        });
+                        props.refreshList();
+                    } else if (res && res.status === 401) {
+                        navigator("/login");
+                    } else {
+                        setAlert({
+                            message: "Failed to move prompt",
+                            type: "error",
+                        });
+                    }
+                    setOpenMoveDialog(false);
+                });
+            } else {
+                Post(
+                    postMoveUserPromptToUserFolder(
+                        props.prompt.id,
+                        folderId,
+                        props.folder.id
+                    ),
+                    {}
+                ).then((res) => {
+                    if (res.status && res.status < 300) {
+                        setAlert({
+                            message: "Prompt moved successfully",
+                            type: "success",
+                        });
+                        props.refreshList();
+                    } else if (res && res.status === 401) {
+                        navigator("/login");
+                    } else {
+                        setAlert({
+                            message: "Failed to move prompt",
+                            type: "error",
+                        });
+                    }
+                    setOpenMoveDialog(false);
+                });
+            }
+        }
+    }
+
+    function createStarredPrompt() {
+        Post(postCreateUserFavoritingData(), {
+            prompts: [{ promptId: props.prompt.id, folderId: props.folder.id }],
+        }).then((res) => {
+            if (res.status && res.status < 300) {
+                setStarred(true);
+                setAlert({ message: "Prompt starred", type: "success" });
+            } else if (res && res.status === 401) {
+                navigator("/login");
+            } else {
+                setAlert({ message: "Failed to star prompt", type: "error" });
+            }
         });
-      } else {
-        const dataToSend = {
-          name: props.prompt.name,
-          isDeleted: true,
-          tags: props.prompt.tags,
-          prompt: props.prompt.prompt
-        }
-        // post data back
-        Put(postUpdateUserPrompt(props.folder.id, props.prompt.id), dataToSend).then((res) => {
-          if (res.status && res.status < 300) {
-            if (res.data && res.data) {
-              //pop up notifying user of delete
-              setAlert({ message: "Prompt Deleted", type: "success" })
+    }
+
+    function removeStarredPrompt() {
+        Put(putUpdateUserFavoritingData(), {
+            prompts: starred
+                ? [{ promptId: props.prompt.id, folderId: props.folder.id }]
+                : [],
+        }).then((res) => {
+            if (res.status && res.status < 300) {
+                setStarred(false);
+                setAlert({ message: "Prompt unstarred", type: "success" });
+            } else if (res && res.status === 401) {
+                navigator("/login");
+            } else {
+                setAlert({ message: "Failed to unstar prompt", type: "error" });
             }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            // set errors
-            setAlert({ message: "Prompt could not be deleted. Try again later.", type: "error" })
-          }
-          props.refreshList();
         });
-      }
     }
-  }
 
-  function openMovePrompt() {
-    handleAddClose();
-    setOpenMoveModal(true);
-  }
-
-  function moveTo(folderId: string, isOrgFolder: boolean) {
-    handleAddClose();
-    if (props.folder) {
-      props.loading();
-      if (props.prompt.isOrganizationPrompt) {
-        if (isOrgFolder) { //move from org folder to org foler
-          Post(postMoveOrgPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of Moved
-                setAlert({ message: "Prompt Moved", type: "success" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
-            }
-            props.refreshList();
-          });
-        } else { //move from org folder to user folder
-          Post(postMoveOrgPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of Moved
-                setAlert({ message: "Prompt Moved", type: "success" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
-            }
-            props.refreshList();
-          });
+    const toggleStar = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (starred) {
+            removeStarredPrompt();
+        } else {
+            createStarredPrompt();
         }
-      } else {
-        if (isOrgFolder) { //move from user folder to org foler
-          Post(postMoveUserPromptToOrgFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of Moved
-                setAlert({ message: "Prompt Moved", type: "success" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
-            }
-            props.refreshList();
-          });
-        } else { //move from user folder to user folder
-          Post(postMoveUserPromptToUserFolder(props.folder.id, props.prompt.id, folderId), {}).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of Moved
-                setAlert({ message: "Prompt Moved", type: "success" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({ message: "Prompt could not be moved. Try again later.", type: "error" })
-            }
-            props.refreshList();
-          });
-        }
-      }
-    }
-  }
+    };
 
-  function createStarredPrompt() {
-    props.loading()
-    Post(postCreateUserFavoritingData(), { id: { folderId: props.folder.id, promptId: props.prompt.id }, type: "prompts" }).then((res) => {
-      if (res.status && res.status < 300) {
-        if (res.data && res.data.prompts) {
-          //update prompt lists as needed
-          setStarred(res.data.prompts)
-          setAlert({ message: "Prompt added to favorites.", type: "info" })
+    const getPromptCategory = () => {
+        // Determine category based on prompt content or tags
+        if (props.prompt.tags && props.prompt.tags.length > 0) {
+            const firstTag = props.prompt.tags[0];
+            if (firstTag.toLowerCase().includes("creative")) return "CREATIVE";
+            if (firstTag.toLowerCase().includes("technical"))
+                return "TECHNICAL";
+            if (firstTag.toLowerCase().includes("business")) return "BUSINESS";
+            if (firstTag.toLowerCase().includes("academic")) return "ACADEMIC";
         }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        // set errors
-        setAlert({ message: res.data, type: "error" })
-      }
-      props.refreshList()
-    });
-  }
+        return "PROMPT";
+    };
 
-  function removeStarredPrompt() {
-    props.loading()
-    Put(putUpdateUserFavoritingData(), { id: { folderId: props.folder.id, promptId: props.prompt.id }, type: "prompts" }).then((res) => {
-      if (res.status && res.status < 300) {
-        if (res.data && res.data.prompts) {
-          //update Prompt lists as needed
-          setStarred(res.data.prompts)
-          setAlert({ message: "Prompt removed from favorites.", type: "info" })
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        // set errors
-        setAlert({ message: res.data, type: "error" })
-      }
-      props.refreshList()
-    });
-  }
+    const getPromptPreview = () => {
+        // Extract a preview from the prompt content
+        const preview = truncateString(props.prompt.prompt, 100);
+        return preview;
+    };
 
-  const instructorUserMenu = ["Edit", "Copy To", "Move", "Delete"]
-  const instructorUserMenuFunctions = [edit, openCopyTo, openMovePrompt, openDelete]
-  const adminUserMenu = ["Edit", "Copy To", "Move", "Delete"]
-  const adminUserMenuFunctions = [edit, openCopyTo, openMovePrompt, openDelete]
-  const instructorOrgMenu = ["Copy To"]
-  const instructorOrgMenuFunctions = [openCopyTo]
-  const adminOrgMenu = ["Edit", "Copy To", "Move", "Delete"]
-  const adminOrgMenuFunctions = [edit, openCopyTo, openMovePrompt, openDelete]
+    const adminOrgMenu = [
+        "View",
+        starred ? "Unstar" : "Star",
+        "Edit",
+        "Copy To",
+        "Move To",
+        "Delete",
+    ];
+    const instructorOrgMenu = ["View", starred ? "Unstar" : "Star", "Copy To"];
+    const adminUserMenu = [
+        "View",
+        starred ? "Unstar" : "Star",
+        "Edit",
+        "Copy To",
+        "Move To",
+        "Delete",
+    ];
+    const instructorUserMenu = [
+        "View",
+        starred ? "Unstar" : "Star",
+        "Edit",
+        "Copy To",
+        "Move To",
+        "Delete",
+    ];
 
-  const StarredComponents = () => (
-    starred ? (
-      <Tooltip title={"Unstar Prompt"}>
-        <IconButton
-          className="courses__button__menu-btn"
-          aria-label="favorite prompt"
-          id={`${props.prompt.id}favorite-button`}
-          onClick={(e: any) => {
-            e.stopPropagation()
-            removeStarredPrompt()
-          }}
-        >
-          <StarIcon />
-        </IconButton>
-      </Tooltip>
-    ) : (
-      <Tooltip title={"Star Prompt"}>
-        <IconButton
-          className="courses__button__menu-btn"
-          aria-label="favorite prompt"
-          id={`${props.prompt.id}favorite-button`}
-          onClick={(e: any) => {
-            e.stopPropagation()
-            createStarredPrompt()
-          }}
-        >
-          <StarBorderIcon />
-        </IconButton>
-      </Tooltip>
-    )
-  )
+    const adminOrgMenuFunctions = [
+        () => {},
+        starred ? removeStarredPrompt : createStarredPrompt,
+        () => setOpenEditDialog(true),
+        openCopyTo,
+        openMovePrompt,
+        () => setOpenDeleteDialog(true),
+    ];
+    const instructorOrgMenuFunctions = [
+        () => {},
+        starred ? removeStarredPrompt : createStarredPrompt,
+        openCopyTo,
+    ];
+    const adminUserMenuFunctions = [
+        () => {},
+        starred ? removeStarredPrompt : createStarredPrompt,
+        () => setOpenEditDialog(true),
+        openCopyTo,
+        openMovePrompt,
+        () => setOpenDeleteDialog(true),
+    ];
+    const instructorUserMenuFunctions = [
+        () => {},
+        starred ? removeStarredPrompt : createStarredPrompt,
+        () => setOpenEditDialog(true),
+        openCopyTo,
+        openMovePrompt,
+        () => setOpenDeleteDialog(true),
+    ];
 
-  return (
-    <div key={props.keyy ? props.keyy : "key"} className="c-prompt">
-      <Modal
-        isOpen={openDeleteModal}
-        title={"Delete Prompt?"}
-        onRequestClose={() => setOpenDeleteModal(false)}
-        actions={
-          <>
-            <Button variant="contained" color="error" onClick={(e) => deletePrompt()}>
-              Delete
-            </Button>
-            <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(false)}>
-              Cancel
-            </Button>
-          </>
-        }
-      >
-        <div>Are you sure you would like to permanently delete this prompt?</div>
-      </Modal>
-      <Modal
-        isOpen={openCopyToModal}
-        title={"Copy Prompt To?"}
-        onRequestClose={() => setOpenCopyToModal(false)}
-        actions={
-          <>
-            <Button variant="contained" color="secondary" onClick={() => setOpenCopyToModal(false)}>
-              Cancel
-            </Button>
-          </>
-        }
-      >
-        <div>
-          <ListFolders noShowMenu onClick={copyTo} />
+    return (
+        <div key={props.keyy ? props.keyy : "key"}>
+            {/* Delete Dialog */}
+            <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Prompt?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you would like to permanently delete
+                            this prompt?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpenDeleteDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={deletePrompt}>
+                            Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Copy To Dialog */}
+            <Dialog open={openCopyToDialog} onOpenChange={setOpenCopyToDialog}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Copy Prompt To?</DialogTitle>
+                        <DialogDescription>
+                            Select a folder to copy this prompt to.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-96 overflow-y-auto">
+                        <ListFolders noShowMenu onClick={copyTo} />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpenCopyToDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Move To Dialog */}
+            <Dialog open={openMoveDialog} onOpenChange={setOpenMoveDialog}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Move Prompt To?</DialogTitle>
+                        <DialogDescription>
+                            Select a folder to move this prompt to.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-96 overflow-y-auto">
+                        <ListFolders
+                            noShowMenu
+                            onClick={moveTo}
+                            disableFolderId={props.folder.id}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpenMoveDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Dialog */}
+            <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Prompt</DialogTitle>
+                        <DialogDescription>
+                            Update the prompt name and content.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="prompt-name">Prompt Name</Label>
+                            <Input
+                                id="prompt-name"
+                                value={editNameText}
+                                onChange={(
+                                    e: React.ChangeEvent<HTMLInputElement>
+                                ) => {
+                                    setEditNameText(e.target.value);
+                                }}
+                                placeholder="Enter prompt name"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="prompt-content">
+                                Prompt Content
+                            </Label>
+                            <textarea
+                                id="prompt-content"
+                                value={editPromptText}
+                                onChange={(
+                                    e: React.ChangeEvent<HTMLTextAreaElement>
+                                ) => {
+                                    setEditPromptText(e.target.value);
+                                }}
+                                placeholder="Enter prompt content"
+                                className="w-full min-h-[200px] p-3 border border-gray-300 rounded-md resize-none"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpenEditDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setOpenEditDialog(false);
+                                edit();
+                            }}
+                        >
+                            Save Changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Card className="h-full hover:shadow-md transition-shadow duration-200 cursor-pointer group">
+                <CardContent className="p-4 h-full flex flex-col">
+                    {/* Header with icon, category, and star */}
+                    <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4 text-blue-600" />
+                            <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                                {getPromptCategory()}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={toggleStar}
+                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                {starred ? (
+                                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                                ) : (
+                                    <StarBorder className="h-4 w-4 text-gray-400" />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Prompt title */}
+                    <h3 className="font-semibold text-gray-900 mb-2 text-lg leading-tight">
+                        {props.prompt.name}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-sm text-gray-600 mb-4 flex-grow leading-relaxed">
+                        {props.prompt.prompt.length > 100
+                            ? truncateString(props.prompt.prompt, 100) + "..."
+                            : props.prompt.prompt}
+                    </p>
+
+                    {/* Prompt preview box */}
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                        <p className="text-sm text-gray-700 font-mono">
+                            {getPromptPreview()}
+                        </p>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1 mb-4">
+                        {props.prompt.tags &&
+                            props.prompt.tags.map((tag, index) => (
+                                <Badge
+                                    key={index}
+                                    variant="outline"
+                                    className="text-xs bg-green-50 text-green-700 border-green-200"
+                                >
+                                    {tag}
+                                </Badge>
+                            ))}
+                    </div>
+
+                    {/* Footer with actions */}
+                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                            {!props.noShowMenu && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <MoreHorizontal className="h-3 w-3" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        {props.prompt.isOrganizationPrompt
+                                            ? user?.groups.includes(
+                                                  process.env.REACT_APP_ADMIN
+                                                      ? process.env
+                                                            .REACT_APP_ADMIN
+                                                      : "PapyrusAIAdmin"
+                                              )
+                                                ? adminOrgMenu.map(
+                                                      (
+                                                          item: string,
+                                                          index: number
+                                                      ) => (
+                                                          <DropdownMenuItem
+                                                              key={index}
+                                                              onClick={(e) => {
+                                                                  e.stopPropagation();
+                                                                  adminOrgMenuFunctions[
+                                                                      index
+                                                                  ]();
+                                                              }}
+                                                          >
+                                                              {item}
+                                                          </DropdownMenuItem>
+                                                      )
+                                                  )
+                                                : instructorOrgMenu.map(
+                                                      (
+                                                          item: string,
+                                                          index: number
+                                                      ) => (
+                                                          <DropdownMenuItem
+                                                              key={index}
+                                                              onClick={(e) => {
+                                                                  e.stopPropagation();
+                                                                  instructorOrgMenuFunctions[
+                                                                      index
+                                                                  ]();
+                                                              }}
+                                                          >
+                                                              {item}
+                                                          </DropdownMenuItem>
+                                                      )
+                                                  )
+                                            : user?.groups.includes(
+                                                  process.env.REACT_APP_ADMIN
+                                                      ? process.env
+                                                            .REACT_APP_ADMIN
+                                                      : "PapyrusAIAdmin"
+                                              )
+                                            ? adminUserMenu.map(
+                                                  (
+                                                      item: string,
+                                                      index: number
+                                                  ) => (
+                                                      <DropdownMenuItem
+                                                          key={index}
+                                                          onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              adminUserMenuFunctions[
+                                                                  index
+                                                              ]();
+                                                          }}
+                                                      >
+                                                          {item}
+                                                      </DropdownMenuItem>
+                                                  )
+                                              )
+                                            : instructorUserMenu.map(
+                                                  (
+                                                      item: string,
+                                                      index: number
+                                                  ) => (
+                                                      <DropdownMenuItem
+                                                          key={index}
+                                                          onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              instructorUserMenuFunctions[
+                                                                  index
+                                                              ]();
+                                                          }}
+                                                      >
+                                                          {item}
+                                                      </DropdownMenuItem>
+                                                  )
+                                              )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-1 text-blue-600 text-xs font-medium">
+                            <Eye className="h-3 w-3" />
+                            View
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
-      </Modal>
-      <Modal
-        isOpen={openMoveModal}
-        title={"Move Prompt To?"}
-        onRequestClose={() => setOpenMoveModal(false)}
-        actions={
-          <>
-            <Button variant="contained" color="secondary" onClick={() => setOpenMoveModal(false)}>
-              Cancel
-            </Button>
-          </>
-        }
-      >
-        <div>
-          <ListFolders noShowMenu onClick={moveTo} disableFolderId={props.folder.id} />
-        </div>
-      </Modal>
-      <Card
-        onClick={() => props.onCardClick ? props.onCardClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt) : {}}
-        className={props.selected ? "prompt__selected" : "prompt__not-selected"}
-      >
-        <CardHeader
-          action={
-            <>
-              {props.showRemove ? <></> : <StarredComponents />}
-              {props.onCardClick === undefined ? props.noShowMenu ? props.showRemove ? (
-                <Tooltip title={"Remove Prompt"}>
-                  <IconButton
-                    className="c-prompt__button__menu-btn"
-                    aria-label="prompt menu"
-                    id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
-                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
-                    aria-haspopup="true"
-                    aria-expanded={addOpen ? 'true' : undefined}
-                    onClick={(e: any) => {
-                      e.stopPropagation()
-                      if (props.onClick) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt, "prompt")
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              ) : (
-                <Tooltip title={"Add Prompt"}>
-                  <IconButton
-                    className="c-prompt__button__menu-btn"
-                    aria-label="prompt menu"
-                    id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
-                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
-                    aria-haspopup="true"
-                    aria-expanded={addOpen ? 'true' : undefined}
-                    onClick={(e: any) => {
-                      e.stopPropagation()
-                      if (props.onClick && props.folder) props.onClick(props.folder.id, props.prompt.id, props.prompt.isOrganizationPrompt ?? false, "prompt")
-                    }}
-                  >
-                    <AddIcon fontSize={"large"} />
-                  </IconButton>
-                </Tooltip>
-              ) : (
-                <Tooltip title={"Prompt Options"}>
-                  <IconButton
-                    className="c-prompt__button__menu-btn"
-                    aria-label="prompt menu"
-                    id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-button`}
-                    aria-controls={addOpen ? `${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu` : ""}
-                    aria-haspopup="true"
-                    aria-expanded={addOpen ? 'true' : undefined}
-                    onClick={(e: any) => {
-                      e.stopPropagation()
-                      handleAddClick(e)
-                    }}
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </Tooltip>
-              ) : (
-                <></>
-              )}
-            </>
-
-          }
-          title={props.prompt.name}
-          subheader={
-            <>
-              {
-                props.prompt.tags && props.prompt.tags.map((tag: string, i: number) => {
-                  return (
-                    <Chip sx={{ marginRight: "0.4rem" }} key={i} label={tag} variant="outlined" size="small" />
-                  )
-                })
-              }
-            </>
-          }
-        />
-        {expanded ? (
-          <CardContent>
-            <Typography color="text.secondary">
-              {props.prompt.prompt}
-            </Typography>
-          </CardContent>
-        ) : props.noShowDesc ? (
-          <></>
-        ) : (
-          <CardContent>
-            <Typography variant="body2" color="text.secondary">
-              {truncateString(props.prompt.prompt, 130)}
-            </Typography>
-          </CardContent>
-        )}
-        <CardActions disableSpacing>
-          <ExpandMore
-            expand={expanded}
-            onClick={handleExpandClick}
-            aria-expanded={expanded}
-            aria-label="show more"
-          >
-            <ExpandMoreIcon />
-          </ExpandMore>
-        </CardActions>
-      </Card>
-      <Menu
-        id={`${props.keyy ? props.keyy : "key"}${props.prompt.isOrganizationPrompt ? "org" : ""}-menu`}
-        anchorEl={addAnchorEl}
-        open={addOpen}
-        onClose={handleAddClose}
-        MenuListProps={{
-          'aria-labelledby': 'prompt-menu-button',
-        }}
-      >
-        {props.prompt.isOrganizationPrompt ? (
-          //if org folder
-          <div>
-            {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? (
-              //if admin
-              <>
-                {adminOrgMenu.map((item: string, index: number) => {
-                  return (
-                    <MenuItem key={index} onClick={(e: any) => {
-                      adminOrgMenuFunctions[index]()
-                    }}>
-                      {item}
-                    </MenuItem>
-                  )
-                })}
-              </>
-            ) : (
-              //else if instructor
-              <>
-                {instructorOrgMenu.map((item: string, index: number) => {
-                  return (
-                    <MenuItem key={index} onClick={(e: any) => {
-                      instructorOrgMenuFunctions[index]()
-                    }}>
-                      {item}
-                    </MenuItem>
-                  )
-                })}
-              </>
-            )}
-          </div>
-        ) : (
-          //if user folder
-          <div>
-            {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? (
-              //if admin
-              <>
-                {adminUserMenu.map((item: string, index: number) => {
-                  return (
-                    <MenuItem key={index} onClick={(e: any) => {
-                      adminUserMenuFunctions[index]()
-                    }}>
-                      {item}
-                    </MenuItem>
-                  )
-                })}
-              </>
-            ) : (
-              //else if instructor
-              <>
-                {instructorUserMenu.map((item: string, index: number) => {
-                  return (
-                    <MenuItem key={index} onClick={(e: any) => {
-                      instructorUserMenuFunctions[index]()
-                    }}>
-                      {item}
-                    </MenuItem>
-                  )
-                })}
-              </>
-            )}
-          </div>
-        )}
-      </Menu>
-    </div>
-  );
+    );
 };
-
-

@@ -233,7 +233,6 @@ export default function CourseCard({
                         <Button
                             onClick={handleDuplicateCourse}
                             disabled={isLoading}
-                            className="hover:bg-primary/10 hover:text-primary"
                         >
                             Duplicate
                         </Button>
@@ -427,7 +426,7 @@ export default function CourseCard({
                         }
                         variant="default"
                         size="sm"
-                        className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2 hover:bg-primary/10 hover:text-primary"
+                        className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2"
                     >
                         <BookOpen size={14} />
                         {onClick ? "Select" : "View Modules"}

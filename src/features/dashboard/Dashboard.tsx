@@ -149,10 +149,7 @@ export default function Dashboard(): JSX.Element {
                         )}
                         <Dialog>
                             <DialogTrigger asChild>
-                                <Button
-                                    size="sm"
-                                    className="hover:bg-primary/10 hover:text-primary"
-                                >
+                                <Button size="sm">
                                     <ExternalLink className="w-4 h-4" />
                                     Join Course
                                 </Button>

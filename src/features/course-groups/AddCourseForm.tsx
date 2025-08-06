@@ -91,11 +91,7 @@ export default function AddCourseForm({
                     )}
                 </div>
                 <div className="flex gap-2 justify-end">
-                    <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="hover:bg-primary/10 hover:text-primary"
-                    >
+                    <Button type="submit" disabled={isLoading}>
                         Join Course
                     </Button>
                 </div>

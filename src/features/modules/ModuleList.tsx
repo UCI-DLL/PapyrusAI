@@ -364,7 +364,7 @@ export default function ModuleList({
                     return (
                         <div
                             key={index}
-                            className="group bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl hover-lift shadow-sm relative overflow-hidden"
+                            className="group bg-white backdrop-blur-sm border border-gray-200/50 rounded-xl hover-lift shadow-sm relative overflow-hidden"
                         >
                             {/* Background Pattern */}
                             <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
@@ -601,7 +601,7 @@ export default function ModuleList({
                                             }
                                             variant="default"
                                             size="sm"
-                                            className="flex items-center gap-2 hover:bg-primary/10 hover:text-primary"
+                                            className="flex items-center gap-2"
                                         >
                                             <Play size={14} />
                                             Begin
@@ -841,7 +841,7 @@ export default function ModuleList({
                                                 }
                                                 variant="default"
                                                 size="sm"
-                                                className="flex items-center gap-2 ml-2 hover:bg-primary/10 hover:text-primary"
+                                                className="flex items-center gap-2 ml-2"
                                             >
                                                 <Play size={14} />
                                                 Begin Module

@@ -37,6 +37,15 @@ export default function Login(props: LoginProps): JSX.Element {
 
       }
     }
+    // Place any token found in params into local storage
+    else if (new URLSearchParams(location.search).has("papyrusai_access_token")) {
+      const params = new URLSearchParams(location.search);
+      const token  = params.get("papyrusai_access_token") as string;
+      localStorage.setItem("papyrusai_access_token", token);
+      setTimeout(() => {
+        getUserInfo(token);
+      }, 500);
+    }
     else if (!localStorage.getItem("papyrusai_access_token")) {
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }

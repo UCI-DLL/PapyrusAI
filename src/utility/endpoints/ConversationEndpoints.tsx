@@ -28,6 +28,10 @@ export function getContentModMessage(courseId: string, moduleId: string, index: 
   return `conversation/${courseId}/${moduleId}/${index}/contentmod?username=${username}&organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
+export function postAutoCreateConvoName(courseId: string, moduleId: string, index: string, username: string) {
+  return `conversation/${courseId}/${moduleId}/${index}/autoname?username=${username}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+}
+
 //The list of all conversations for a user
 export function getUserConversationList(username: string, limit?: number, startKeyCourse: string = "", startKeyModule: string = "") {
   //TODO handle pagination

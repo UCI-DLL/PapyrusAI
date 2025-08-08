@@ -426,6 +426,7 @@ export default function Chat(): JSX.Element {
           messagesRef.current[messagesRef.current.length - 1].stream &&
           messagesRef.current[messagesRef.current.length - 1].stream?.[0].id === returnMessage.id
         ) {
+          console.log("final message", returnMessage)
           setMessages((prev) => {
             if (prev && messagesRef.current) {
               var temp = [...messagesRef.current];

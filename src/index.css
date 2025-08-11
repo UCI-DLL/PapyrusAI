@@ -67,40 +67,48 @@
   }
 
   .dark {
-    /* Dark theme color overrides */
-    --color-background: #0f172a;
-    --color-card: #1e293b;
-    --color-border: #334155;
-    --color-muted: #94a3b8;
-    --color-muted-foreground: #cbd5e1;
+    /* Modern Dark Theme with subtle UCI accents */
+    --color-background: #0a0a0b;
+    --color-card: #1a1a1b;
+    --color-border: #2d2d30;
+    --color-muted: #6b7280;
+    --color-muted-foreground: #9ca3af;
 
-    /* Shadcn UI Dark Mode */
-    --background: 15 23 42;
-    --foreground: 203 213 225;
-    --card: 30 41 59;
-    --card-foreground: 203 213 225;
-    --popover: 30 41 59;
-    --primary: 212 59% 37%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 200 50% 57%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    /* Keep some UCI colors as accents */
+    --color-primary: #255799; /* UCI primary blue */
+    --color-secondary: #1b3d6d; /* UCI secondary blue */
+    --color-accent: #6aa2b8; /* UCI accent blue */
+    --color-gold: #f0ab00; /* UCI gold */
+    --color-orange: #f78d2d; /* UCI orange */
+    --color-light-yellow: #fef3c7; /* Soft yellow background */
+
+    /* Shadcn UI Dark Mode - Modern */
+    --background: 240 10% 4%; /* Very dark with slight warmth */
+    --foreground: 210 40% 98%; /* High contrast white */
+    --card: 240 10% 10%; /* Dark cards with subtle warmth */
+    --card-foreground: 210 40% 98%;
+    --popover: 240 10% 10%;
+    --primary: 212 59% 37%; /* UCI primary blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 4.9% 83.9%; /* Light gray for secondary */
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 3.7% 15.9%; /* Subtle muted backgrounds */
+    --muted-foreground: 240 5% 64.9%; /* Readable muted text */
+    --accent: 200 50% 57%; /* UCI accent blue */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%; /* Bright red for visibility */
     --destructive-foreground: 210 40% 98%;
-    --border: 51 65 85;
-    --input: 51 65 85;
-    --ring: 212 59% 37%;
-    --sidebar-background: 240 5.9% 10%;
+    --border: 240 3.7% 15.9%; /* Subtle borders */
+    --input: 240 3.7% 15.9%;
+    --ring: 212 59% 37%; /* UCI blue ring */
+    --sidebar-background: 240 10% 4%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 212 59% 37%;
+    --sidebar-primary-foreground: 210 40% 98%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 212 59% 37%;
   }
 
   * {
@@ -120,7 +128,7 @@
   }
 
   .dark body {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    background: linear-gradient(135deg, #0a0a0b 0%, #111113 50%, #0a0a0b 100%);
   }
 }
 
@@ -639,7 +647,7 @@
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: #1a1a1b;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -651,17 +659,17 @@
   background: var(--color-secondary);
 }
 
-/* Dark mode component styles */
+/* Dark mode component styles - Modern dark theme */
 .dark .bg-white {
   background-color: var(--color-card);
 }
 
 .dark .bg-gray-50 {
-  background-color: #374151;
+  background-color: #1f1f23;
 }
 
 .dark .bg-gray-100 {
-  background-color: #4b5563;
+  background-color: #2d2d30;
 }
 
 .dark .text-gray-900 {
@@ -685,15 +693,15 @@
 }
 
 .dark .border-gray-100 {
-  border-color: #374151;
+  border-color: #2d2d30;
 }
 
 .dark .hover\:bg-gray-50:hover {
-  background-color: #374151;
+  background-color: #1f1f23;
 }
 
 .dark .hover\:bg-gray-100:hover {
-  background-color: #4b5563;
+  background-color: #2d2d30;
 }
 
 @layer base {

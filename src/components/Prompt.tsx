@@ -663,7 +663,7 @@ export const Prompt = (props: PromptProps) => {
                                     setEditPromptText(e.target.value);
                                 }}
                                 placeholder="Enter prompt content"
-                                className="w-full min-h-[200px] p-3 border border-gray-300 rounded-md resize-none"
+                                className="w-full min-h-[200px] p-3 border border rounded-md resize-none"
                             />
                         </div>
                     </div>
@@ -699,32 +699,32 @@ export const Prompt = (props: PromptProps) => {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={toggleStar}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                className="p-1 hover:bg-muted rounded-full transition-colors"
                             >
                                 {starred ? (
-                                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                                    <Star className="h-4 w-4 text-gold fill-current" />
                                 ) : (
-                                    <StarBorder className="h-4 w-4 text-gray-400" />
+                                    <StarBorder className="h-4 w-4 text-muted" />
                                 )}
                             </button>
                         </div>
                     </div>
 
                     {/* Prompt title */}
-                    <h3 className="font-semibold text-gray-900 mb-2 text-lg leading-tight">
+                    <h3 className="font-semibold text-foreground mb-2 text-lg leading-tight">
                         {props.prompt.name}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-sm text-gray-600 mb-4 flex-grow leading-relaxed">
+                    <p className="text-sm text-muted-foreground mb-4 flex-grow leading-relaxed">
                         {props.prompt.prompt.length > 100
                             ? truncateString(props.prompt.prompt, 100) + "..."
                             : props.prompt.prompt}
                     </p>
 
                     {/* Prompt preview box */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                        <p className="text-sm text-gray-700 font-mono">
+                    <div className="bg-muted border rounded-lg p-3 mb-4">
+                        <p className="text-sm text-muted-foreground font-mono">
                             {getPromptPreview()}
                         </p>
                     </div>
@@ -744,7 +744,7 @@ export const Prompt = (props: PromptProps) => {
                     </div>
 
                     {/* Footer with actions */}
-                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between mt-auto pt-3 border-t border">
                         <div className="flex items-center gap-2">
                             {!props.noShowMenu && (
                                 <DropdownMenu>

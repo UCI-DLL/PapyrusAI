@@ -87,19 +87,18 @@ export default function Dashboard(): JSX.Element {
   return !isLoading ? (
     <div className="bg-background text-foreground p-4 flex flex-col gap-4">
       <section className="slide-in-up">
-        <div className="relative overflow-hidden bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl p-6 shadow-lg">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
           {/* Background Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br "></div>
           <div className="absolute top-0 right-0 w-48 h-48 opacity-10">
             <Target size={192} className="floating-animation text-primary" />
           </div>
 
           <div className="relative z-10">
-            <h1 className="text-2xl font-bold mb-1 text-gray-900">
+            <h1 className="text-2xl font-bold mb-1 text-foreground">
               Welcome back,{" "}
               <span className="text-primary text-2xl">{user?.name}!</span>
             </h1>
-            <p className="text-gray-600 max-w-2xl text-sm">
+            <p className="text-muted-foreground max-w-2xl text-sm">
               Continue your learning journey and unlock your potential.
             </p>
           </div>
@@ -109,7 +108,7 @@ export default function Dashboard(): JSX.Element {
       <div className="flex flex-col gap-4 p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
-            <h3 className="text-2xl font-extrabold text-black">My Courses</h3>
+            <h3 className="text-2xl font-extrabold text-foreground">My Courses</h3>
             <div className="flex gap-2">Continue your learning journey</div>
           </div>
           <div className="flex flex-col md:flex-row gap-2">
@@ -174,7 +173,7 @@ export default function Dashboard(): JSX.Element {
       <div className="flex flex-col gap-4 p-4">
         <div className="flex flex-row items-center justify-between gap-2">
           <div>
-            <h3 className="text-2xl font-extrabold text-black">
+            <h3 className="text-2xl font-extrabold text-foreground">
               Recent Modules
             </h3>
             <div className="flex gap-2">Pick up where you left off</div>
@@ -220,7 +219,7 @@ export default function Dashboard(): JSX.Element {
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-gray-600">Loading Dashboard</p>
+        <p className="text-muted-foreground">Loading Dashboard</p>
       </div>
     </div>
   );

@@ -590,24 +590,24 @@ export const File = (props: FileProps) => {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={toggleStar}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                className="p-1 hover:bg-muted rounded-full transition-colors"
                             >
                                 {starred ? (
-                                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                                    <Star className="h-4 w-4 text-gold fill-current" />
                                 ) : (
-                                    <StarBorder className="h-4 w-4 text-gray-400" />
+                                    <StarBorder className="h-4 w-4 text-muted" />
                                 )}
                             </button>
                         </div>
                     </div>
 
                     {/* File title */}
-                    <h3 className="font-semibold text-gray-900 mb-2 text-lg leading-tight">
+                    <h3 className="font-semibold text-foreground mb-2 text-lg leading-tight">
                         {props.file.name}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-sm text-gray-600 mb-4 flex-grow leading-relaxed">
+                    <p className="text-sm text-muted-foreground mb-4 flex-grow leading-relaxed">
                         {getFileDescription()}
                     </p>
 
@@ -626,7 +626,7 @@ export const File = (props: FileProps) => {
                     </div>
 
                     {/* Footer with actions */}
-                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between mt-auto pt-3 border-t border">
                         <div className="flex items-center gap-2">
                             {!props.noShowMenu && (
                                 <DropdownMenu>

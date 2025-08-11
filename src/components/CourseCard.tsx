@@ -172,7 +172,7 @@ export default function CourseCard({
                 open={openDuplicateModal}
                 onOpenChange={setOpenDuplicateModal}
             >
-                <DialogContent className="sm:max-w-md bg-white">
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Duplicate Course</DialogTitle>
                         <DialogDescription>
@@ -240,7 +240,7 @@ export default function CourseCard({
                 </DialogContent>
             </Dialog>
 
-            <div className="group bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-xl hover-lift shadow-sm relative h-40 flex flex-col">
+            <div className="group bg-card border rounded-xl hover-lift shadow-sm relative h-40 flex flex-col">
                 {/* Background Pattern */}
                 <div className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl">
                     <BookOpen size={80} className="transform rotate-12" />
@@ -251,10 +251,10 @@ export default function CourseCard({
                     {/* Header */}
                     <div className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                            <h3 className="text-base font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-300">
                                 {course.name}
                             </h3>
-                            <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <div className="flex items-center gap-1">
                                     <Calendar size={10} />
                                     <span className="font-medium">
@@ -295,8 +295,8 @@ export default function CourseCard({
                                             disabled={isLoading}
                                             className={`p-1 rounded-full transition-all duration-300 ${
                                                 starred
-                                                    ? "text-yellow-500 bg-yellow-50"
-                                                    : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
+                                                    ? "text-gold bg-light-yellow"
+                                                    : "text-muted hover:text-gold hover:bg-light-yellow"
                                             }`}
                                         >
                                             <Star
@@ -311,7 +311,7 @@ export default function CourseCard({
                                     </TooltipTrigger>
                                     <TooltipContent
                                         side="top"
-                                        className="z-50 text-black"
+                                        className=""
                                     >
                                         {starred
                                             ? "Unstar Course"
@@ -347,7 +347,7 @@ export default function CourseCard({
                                                         asChild
                                                     >
                                                         <button
-                                                            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-300"
+                                                            className="p-1 text-muted hover:text-muted-foreground hover:bg-muted rounded-full transition-all duration-300"
                                                             onClick={(
                                                                 e: any
                                                             ) => {
@@ -362,7 +362,7 @@ export default function CourseCard({
                                                 </TooltipTrigger>
                                                 <TooltipContent
                                                     side="top"
-                                                    className="z-50 text-black"
+                                                    className=""
                                                 >
                                                     Course Options
                                                 </TooltipContent>

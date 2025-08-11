@@ -232,7 +232,7 @@ export default function ModuleList({
                 open={openCourseListModal}
                 onOpenChange={setOpenCourseListModal}
             >
-                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto bg-white">
+                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Copy Module To?</DialogTitle>
                         <DialogDescription>
@@ -364,7 +364,7 @@ export default function ModuleList({
                     return (
                         <div
                             key={index}
-                            className="group bg-white backdrop-blur-sm border border-gray-200/50 rounded-xl hover-lift shadow-sm relative overflow-hidden"
+                            className="group bg-card border rounded-xl hover-lift shadow-sm relative overflow-hidden"
                         >
                             {/* Background Pattern */}
                             <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
@@ -380,7 +380,7 @@ export default function ModuleList({
                                     {/* Header with title and favorite */}
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors duration-300 leading-tight">
+                                            <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors duration-300 leading-tight">
                                                 {module.name}
                                             </h3>
                                         </div>
@@ -403,8 +403,8 @@ export default function ModuleList({
                                                         disabled={isLoading}
                                                         className={`p-1.5 rounded-full transition-all duration-300 ml-2 flex-shrink-0 ${
                                                             isStarred
-                                                                ? "text-yellow-500 bg-yellow-50"
-                                                                : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
+                                                                ? "text-gold bg-light-yellow"
+                                                                : "text-muted hover:text-gold hover:bg-light-yellow"
                                                         }`}
                                                     >
                                                         <Star
@@ -419,7 +419,7 @@ export default function ModuleList({
                                                 </TooltipTrigger>
                                                 <TooltipContent
                                                     side="top"
-                                                    className="z-50 text-black"
+                                                    className=""
                                                 >
                                                     {isStarred
                                                         ? "Unstar Module"
@@ -430,13 +430,13 @@ export default function ModuleList({
                                     </div>
 
                                     {/* Course info */}
-                                    <p className="text-xs text-gray-600 mb-2 font-medium leading-relaxed">
+                                    <p className="text-xs text-muted-foreground mb-2 font-medium leading-relaxed">
                                         {courseInfo}
                                     </p>
 
                                     {/* Description */}
                                     {module.moduleDescription && (
-                                        <p className="text-gray-700 leading-relaxed text-sm mb-3">
+                                        <p className="text-muted-foreground leading-relaxed text-sm mb-3">
                                             {module.moduleDescription}
                                         </p>
                                     )}
@@ -470,7 +470,7 @@ export default function ModuleList({
                                                                         `/dashboard/${course.id}/${module.id}`
                                                                     )
                                                                 }
-                                                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-300"
+                                                                className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-lg transition-all duration-300"
                                                             >
                                                                 <Eye
                                                                     size={14}
@@ -479,7 +479,7 @@ export default function ModuleList({
                                                         </TooltipTrigger>
                                                         <TooltipContent
                                                             side="top"
-                                                            className="z-50 text-black"
+                                                            className=""
                                                         >
                                                             View Reports
                                                         </TooltipContent>
@@ -522,7 +522,7 @@ export default function ModuleList({
                                                                         true
                                                                     );
                                                                 }}
-                                                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-300"
+                                                                className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-lg transition-all duration-300"
                                                             >
                                                                 <Copy
                                                                     size={14}
@@ -531,7 +531,7 @@ export default function ModuleList({
                                                         </TooltipTrigger>
                                                         <TooltipContent
                                                             side="top"
-                                                            className="z-50 text-black"
+                                                            className=""
                                                         >
                                                             Copy Module
                                                         </TooltipContent>
@@ -572,7 +572,7 @@ export default function ModuleList({
                                                                             `/courses/${course.id}/editmodule/${module.id}`
                                                                         )
                                                                     }
-                                                                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all duration-300"
+                                                                    className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-lg transition-all duration-300"
                                                                 >
                                                                     <Edit
                                                                         size={
@@ -583,7 +583,7 @@ export default function ModuleList({
                                                             </TooltipTrigger>
                                                             <TooltipContent
                                                                 side="top"
-                                                                className="z-50 text-black"
+                                                                className=""
                                                             >
                                                                 Edit Module
                                                             </TooltipContent>
@@ -624,16 +624,16 @@ export default function ModuleList({
                                         {/* Content */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors duration-300 truncate">
+                                                <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors duration-300 truncate">
                                                     {module.name}
                                                 </h3>
                                             </div>
 
-                                            <p className="text-xs text-gray-600 mb-1 font-medium">
+                                            <p className="text-xs text-muted-foreground mb-1 font-medium">
                                                 {courseInfo}
                                             </p>
                                             {module.moduleDescription && (
-                                                <p className="text-gray-700 leading-relaxed text-sm">
+                                                <p className="text-muted-foreground leading-relaxed text-sm">
                                                     {module.moduleDescription}
                                                 </p>
                                             )}
@@ -662,8 +662,8 @@ export default function ModuleList({
                                                             disabled={isLoading}
                                                             className={`p-1.5 rounded-full transition-all duration-300 ${
                                                                 isStarred
-                                                                    ? "text-yellow-500 bg-yellow-50"
-                                                                    : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
+                                                                    ? "text-gold bg-light-yellow"
+                                                                    : "text-muted hover:text-gold hover:bg-light-yellow"
                                                             }`}
                                                         >
                                                             <Star
@@ -678,7 +678,7 @@ export default function ModuleList({
                                                     </TooltipTrigger>
                                                     <TooltipContent
                                                         side="top"
-                                                        className="z-50 text-black"
+                                                        className=""
                                                     >
                                                         {isStarred
                                                             ? "Unstar Module"
@@ -712,7 +712,7 @@ export default function ModuleList({
                                                                         `/dashboard/${course.id}/${module.id}`
                                                                     )
                                                                 }
-                                                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-300"
+                                                                className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-full transition-all duration-300"
                                                             >
                                                                 <Eye
                                                                     size={12}
@@ -721,7 +721,7 @@ export default function ModuleList({
                                                         </TooltipTrigger>
                                                         <TooltipContent
                                                             side="top"
-                                                            className="z-50 text-black"
+                                                            className=""
                                                         >
                                                             View Reports
                                                         </TooltipContent>
@@ -764,7 +764,7 @@ export default function ModuleList({
                                                                         true
                                                                     );
                                                                 }}
-                                                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-300"
+                                                                className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-full transition-all duration-300"
                                                             >
                                                                 <Copy
                                                                     size={12}
@@ -773,7 +773,7 @@ export default function ModuleList({
                                                         </TooltipTrigger>
                                                         <TooltipContent
                                                             side="top"
-                                                            className="z-50 text-black"
+                                                            className=""
                                                         >
                                                             Copy Module
                                                         </TooltipContent>
@@ -814,7 +814,7 @@ export default function ModuleList({
                                                                             `/courses/${course.id}/editmodule/${module.id}`
                                                                         )
                                                                     }
-                                                                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-300"
+                                                                    className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-full transition-all duration-300"
                                                                 >
                                                                     <Edit
                                                                         size={
@@ -825,7 +825,7 @@ export default function ModuleList({
                                                             </TooltipTrigger>
                                                             <TooltipContent
                                                                 side="top"
-                                                                className="z-50 text-black"
+                                                                className=""
                                                             >
                                                                 Edit Module
                                                             </TooltipContent>

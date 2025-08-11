@@ -108,7 +108,9 @@ export default function Dashboard(): JSX.Element {
       <div className="flex flex-col gap-4 p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
-            <h3 className="text-2xl font-extrabold text-foreground">My Courses</h3>
+            <h3 className="text-2xl font-extrabold text-foreground">
+              My Courses
+            </h3>
             <div className="flex gap-2">Continue your learning journey</div>
           </div>
           <div className="flex flex-col md:flex-row gap-2">
@@ -188,7 +190,7 @@ export default function Dashboard(): JSX.Element {
             View All
           </Button>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
           {courseList.length > 0 &&
             mostRecentModules(
               orderCourseRecentlyCreatedAndStarred(
@@ -197,7 +199,7 @@ export default function Dashboard(): JSX.Element {
               )
             ).map((course, index) => {
               return course.modules.length > 0 ? (
-                <div className="w-full mb-6" key={index}>
+                <div className="w-full" key={index}>
                   <ModuleList
                     course={{
                       ...course,
@@ -208,7 +210,6 @@ export default function Dashboard(): JSX.Element {
                     refreshList={refreshList}
                     starredList={starred ? starred : undefined}
                   />
-                  <Separator className="mt-4" />
                 </div>
               ) : null;
             })}

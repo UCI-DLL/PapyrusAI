@@ -2,7 +2,11 @@ import { useContext, useEffect, useState } from "react";
 import Get from "../../utility/Get";
 import { useNavigate } from "react-router";
 import { OrgPermissionType } from "../../utility/types/OrganizationTypes";
-import { getOrgPermissionsList, postCreateOrgPermission, updateOrgPermission } from "../../utility/endpoints/OrgSettingsEndpoints";
+import {
+  getOrgPermissionsList,
+  postCreateOrgPermission,
+  updateOrgPermission,
+} from "../../utility/endpoints/OrgSettingsEndpoints";
 import {
   Button,
   FormControl,
@@ -22,12 +26,12 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Tooltip
+  Tooltip,
 } from "@mui/material";
 import { Modal } from "../../components/Modal";
-import SearchIcon from '@mui/icons-material/Search';
-import BlockIcon from '@mui/icons-material/Block';
-import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from "@mui/icons-material/Search";
+import BlockIcon from "@mui/icons-material/Block";
+import DeleteIcon from "@mui/icons-material/Delete";
 import Put from "../../utility/Put";
 import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -41,38 +45,46 @@ export enum PermissionsOptions {
 export default function OrgSettings(): JSX.Element {
   let navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
-  const [orgPermissionsList, setOrgPermissionsList] = useState<Array<OrgPermissionType>>([]); //org permissions list
+  const [orgPermissionsList, setOrgPermissionsList] = useState<
+    Array<OrgPermissionType>
+  >([]); //org permissions list
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [showAddOrgPermissionModal, setShowAddOrgPermissionModal] = useState<{
-    open: boolean,
-    email: string,
-    permission: string
+    open: boolean;
+    email: string;
+    permission: string;
   }>({
     open: false,
     email: "",
-    permission: "None"
+    permission: "None",
   });
-  const [showUpdateOrgPermissionModal, setShowUpdateOrgPermissionModal] = useState<{ //update permission modal
-    id: string; //email
-    permission: string
-  }>({
-    id: "",
-    permission: "None"
-  });
-  const [openDeleteModal, setOpenDeleteModal] = useState<OrgPermissionType | undefined>(undefined);
+  const [showUpdateOrgPermissionModal, setShowUpdateOrgPermissionModal] =
+    useState<{
+      //update permission modal
+      id: string; //email
+      permission: string;
+    }>({
+      id: "",
+      permission: "None",
+    });
+  const [openDeleteModal, setOpenDeleteModal] = useState<
+    OrgPermissionType | undefined
+  >(undefined);
   const [filter, setFilter] = useState<{
-    search: string,
+    search: string;
   }>({
     search: "", //email
   });
-  const [filteredOrgPermissionList, setFilteredOrgPermissionList] = useState<Array<OrgPermissionType>>([]);
+  const [filteredOrgPermissionList, setFilteredOrgPermissionList] = useState<
+    Array<OrgPermissionType>
+  >([]);
 
   useEffect(() => {
     const controller = new AbortController();
     if (!showAddOrgPermissionModal.open && orgPermissionsList.length === 0) {
       setIsLoading(true);
-      getOrgPermissions("", controller.signal)
+      getOrgPermissions("", controller.signal);
     }
 
     return () => {
@@ -83,12 +95,19 @@ export default function OrgSettings(): JSX.Element {
 
   function getOrgPermissions(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getOrgPermissionsList(limit, startKey), signal).then(res => {
+    Get(getOrgPermissionsList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.permission && res.data.ScannedCount !== undefined) {
+        if (
+          res.data &&
+          res.data.permission &&
+          res.data.ScannedCount !== undefined
+        ) {
           //Get the list of all permissions
           setOrgPermissionsList((prev) => [...prev, ...res.data.permission]);
-          setFilteredOrgPermissionList((prev) => [...prev, ...res.data.permission]);
+          setFilteredOrgPermissionList((prev) => [
+            ...prev,
+            ...res.data.permission,
+          ]);
 
           //if the data is 20 permissions, then call for the next page
           //handle pages
@@ -121,18 +140,22 @@ export default function OrgSettings(): JSX.Element {
 
     //handle search
     if (filter.search !== "") {
-      filteredList = filteredList.filter(
-        permission => permission.id.toLowerCase().includes(filter.search.toLowerCase()));
+      filteredList = filteredList.filter((permission) =>
+        permission.id.toLowerCase().includes(filter.search.toLowerCase())
+      );
     }
     //handle sort
-    filteredList = filteredList.sort((a, b) => (b.isAdmin) ? 1 : ((a.isInstructor) ? -1 : 0))
+    filteredList = filteredList.sort((a, b) =>
+      b.isAdmin ? 1 : a.isInstructor ? -1 : 0
+    );
     //then set filtered list
     setFilteredOrgPermissionList(filteredList);
-
   }, [filter, orgPermissionsList]);
 
-  function handleSearchOrgPermissionList(e: React.ChangeEvent<HTMLInputElement>) {
-    e.preventDefault()
+  function handleSearchOrgPermissionList(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    e.preventDefault();
     setFilter((prev) => ({ ...prev, search: e.target.value }));
   }
 
@@ -150,8 +173,8 @@ export default function OrgSettings(): JSX.Element {
       setShowAddOrgPermissionModal({
         open: false,
         email: "",
-        permission: "None"
-      })
+        permission: "None",
+      });
     }
     //add permissions
     if (showAddOrgPermissionModal.email === "") {
@@ -159,39 +182,41 @@ export default function OrgSettings(): JSX.Element {
       setShowAddOrgPermissionModal({
         open: false,
         email: "",
-        permission: "None"
-      })
-    }
-    else {
+        permission: "None",
+      });
+    } else {
       // set is loading
       setIsLoading(true);
-      const dataToSend = { //if admin, then admin and instructor permissions
+      const dataToSend = {
+        //if admin, then admin and instructor permissions
         isAdmin: false,
-        isInstructor: showAddOrgPermissionModal.permission === PermissionsOptions.Instructor,
-        id: showAddOrgPermissionModal.email
-      }
+        isInstructor:
+          showAddOrgPermissionModal.permission ===
+          PermissionsOptions.Instructor,
+        id: showAddOrgPermissionModal.email,
+      };
       // post data back
       Post(postCreateOrgPermission(), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             // update list
-            setOrgPermissionsList((prev) => ([...prev, res.data]))
+            setOrgPermissionsList((prev) => [...prev, res.data]);
             //pop up notifying user of creation
-            setAlert({ message: "Permission added", type: "success" })
+            setAlert({ message: "Permission added", type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // set errors
-          setAlert({ message: res.data, type: "error" })
+          setAlert({ message: res.data, type: "error" });
         }
-        // set is loading back 
+        // set is loading back
         setIsLoading(false);
         setShowAddOrgPermissionModal({
           open: false,
           email: "",
-          permission: "None"
-        })
+          permission: "None",
+        });
       });
     }
   }
@@ -202,45 +227,58 @@ export default function OrgSettings(): JSX.Element {
     if (showUpdateOrgPermissionModal.permission === PermissionsOptions.None) {
       setShowUpdateOrgPermissionModal({
         id: "",
-        permission: ""
-      })
-      setOpenDeleteModal({ id: showUpdateOrgPermissionModal.id, isAdmin: false, isInstructor: false, organization: process.env.REACT_APP_ORGANIZATION ?? "" })
+        permission: "",
+      });
+      setOpenDeleteModal({
+        id: showUpdateOrgPermissionModal.id,
+        isAdmin: false,
+        isInstructor: false,
+        organization: process.env.REACT_APP_ORGANIZATION ?? "",
+      });
     } else {
       // set is loading
       setIsLoading(true);
-      const dataToSend = { //if admin, then admin and instructor permissions
+      const dataToSend = {
+        //if admin, then admin and instructor permissions
         isAdmin: false,
-        isInstructor: showUpdateOrgPermissionModal.permission === PermissionsOptions.Instructor,
+        isInstructor:
+          showUpdateOrgPermissionModal.permission ===
+          PermissionsOptions.Instructor,
         id: showUpdateOrgPermissionModal.id,
         isDeleted: false,
-      }
+      };
       // post data back
-      Put(updateOrgPermission(showUpdateOrgPermissionModal.id), dataToSend).then((res) => {
+      Put(
+        updateOrgPermission(showUpdateOrgPermissionModal.id),
+        dataToSend
+      ).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             // update list
             setOrgPermissionsList((prev) => {
-              const index = prev.findIndex((x) => x.id === showUpdateOrgPermissionModal.id);
+              const index = prev.findIndex(
+                (x) => x.id === showUpdateOrgPermissionModal.id
+              );
               const newList = prev;
               newList[index] = res.data;
               return newList;
-            })
+            });
             //pop up notifying user of creation
-            setAlert({ message: "Permission updated", type: "success" })
+            setAlert({ message: "Permission updated", type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // set errors
-          setAlert({ message: res.data, type: "error" })
+          setAlert({ message: res.data, type: "error" });
         }
-        // set is loading back 
+        // set is loading back
         setIsLoading(false);
         //then close modal
         setShowUpdateOrgPermissionModal({
           id: "",
-          permission: ""
-        })
+          permission: "",
+        });
       });
     }
   }
@@ -250,12 +288,13 @@ export default function OrgSettings(): JSX.Element {
     if (openDeleteModal) {
       // set is loading
       setIsLoading(true);
-      const dataToSend = { //if admin, then admin and instructor permissions
+      const dataToSend = {
+        //if admin, then admin and instructor permissions
         isAdmin: openDeleteModal.isAdmin,
         isInstructor: openDeleteModal.isInstructor,
         id: openDeleteModal.id,
         isDeleted: true,
-      }
+      };
       // post data back
       Put(updateOrgPermission(openDeleteModal.id), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
@@ -264,23 +303,26 @@ export default function OrgSettings(): JSX.Element {
             setOrgPermissionsList((prev) => {
               const newList = prev.filter((x) => x.id !== openDeleteModal.id);
               return newList;
-            })
+            });
             //pop up notifying user of creation
-            setAlert({ message: "Permission removed", type: "success" })
+            setAlert({ message: "Permission removed", type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // set errors
-          setAlert({ message: res.data, type: "error" })
+          setAlert({ message: res.data, type: "error" });
         }
-        // set is loading back 
+        // set is loading back
         setIsLoading(false);
         //then close modal
-        setOpenDeleteModal(undefined)
+        setOpenDeleteModal(undefined);
       });
     } else {
-      setAlert({ message: "Something went wrong. Please contact support.", type: "error" })
+      setAlert({
+        message: "Something went wrong. Please contact support.",
+        type: "error",
+      });
     }
   }
 
@@ -294,53 +336,79 @@ export default function OrgSettings(): JSX.Element {
             <Modal
               isOpen={showAddOrgPermissionModal.open}
               title={"Add New Permissions"}
-              onRequestClose={() => setShowAddOrgPermissionModal({
-                open: false,
-                email: "",
-                permission: "None"
-              })}
-              actions={
-                <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setShowAddOrgPermissionModal({
+              onRequestClose={() =>
+                setShowAddOrgPermissionModal({
                   open: false,
                   email: "",
-                  permission: "None"
-                })}>
+                  permission: "None",
+                })
+              }
+              actions={
+                <Button
+                  sx={{ width: "100%" }}
+                  variant="contained"
+                  color="secondary"
+                  onClick={() =>
+                    setShowAddOrgPermissionModal({
+                      open: false,
+                      email: "",
+                      permission: "None",
+                    })
+                  }
+                >
                   Cancel
                 </Button>
               }
             >
-              <form onSubmit={addPermission} style={{ display: "flex", flexDirection: "column" }}>
+              <form
+                onSubmit={addPermission}
+                style={{ display: "flex", flexDirection: "column" }}
+              >
                 <TextField
                   name="email"
                   label="email"
                   fullWidth
                   sx={{ margin: ".5rem 0" }}
                   value={showAddOrgPermissionModal.email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowAddOrgPermissionModal((prev) => ({ ...prev, email: e.target.value }))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setShowAddOrgPermissionModal((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
                   disabled={isLoading}
                   required
                 />
                 <FormControl sx={{ width: "100%", marginTop: "1rem" }}>
-                  <InputLabel shrink={true} id="permission-select-label">Permission Level</InputLabel>
+                  <InputLabel shrink={true} id="permission-select-label">
+                    Permission Level
+                  </InputLabel>
                   <Select
                     value={showAddOrgPermissionModal.permission}
                     onChange={(e: SelectChangeEvent) => {
-                      setShowAddOrgPermissionModal((prev) => ({ ...prev, permission: PermissionsOptions[e.target.value as keyof typeof PermissionsOptions] }));
+                      setShowAddOrgPermissionModal((prev) => ({
+                        ...prev,
+                        permission:
+                          PermissionsOptions[
+                            e.target.value as keyof typeof PermissionsOptions
+                          ],
+                      }));
                     }}
                     label="Permission Level"
                     labelId="permission-select-label"
                     id="permission-select"
-                    sx={{ maxWidth: '100%' }}
+                    sx={{ maxWidth: "100%" }}
                     notched={true}
                   >
-                    {Object.keys(PermissionsOptions).map(key => {
+                    {Object.keys(PermissionsOptions).map((key) => {
                       return (
-                        <MenuItem value={key} key={key}>{key}</MenuItem>
-                      )
+                        <MenuItem value={key} key={key}>
+                          {key}
+                        </MenuItem>
+                      );
                     })}
                   </Select>
                 </FormControl>
-
                 &nbsp;&nbsp;&nbsp;
                 <Button
                   variant="contained"
@@ -358,61 +426,91 @@ export default function OrgSettings(): JSX.Element {
               onRequestClose={() => setOpenDeleteModal(undefined)}
               actions={
                 <>
-                  <Button variant="contained" color="error" onClick={handleDelete}>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={handleDelete}
+                  >
                     Remove
                   </Button>
-                  <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(undefined)}>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => setOpenDeleteModal(undefined)}
+                  >
                     Cancel
                   </Button>
                 </>
               }
             >
-              <div>Are you sure you would like to remove permissions from this user? {openDeleteModal?.id} will still have student level acess.</div>
+              <div>
+                Are you sure you would like to remove permissions from this
+                user? {openDeleteModal?.id} will still have student level acess.
+              </div>
             </Modal>
             <Modal
               isOpen={showUpdateOrgPermissionModal.id !== ""}
               title={"Update Permissions?"}
-              onRequestClose={() => setShowUpdateOrgPermissionModal({
-                id: "",
-                permission: ""
-              })}
+              onRequestClose={() =>
+                setShowUpdateOrgPermissionModal({
+                  id: "",
+                  permission: "",
+                })
+              }
               actions={
                 <Button
                   variant="contained"
                   color="secondary"
                   sx={{ width: "100%" }}
-                  onClick={() => setShowUpdateOrgPermissionModal({
-                    id: "",
-                    permission: ""
-                  })}
+                  onClick={() =>
+                    setShowUpdateOrgPermissionModal({
+                      id: "",
+                      permission: "",
+                    })
+                  }
                 >
                   Cancel
                 </Button>
               }
             >
-              <form onSubmit={updatePermission} style={{ display: "flex", flexDirection: "column" }}>
-                <div>Would you like to update the permissions for {showUpdateOrgPermissionModal.id}?</div>
+              <form
+                onSubmit={updatePermission}
+                style={{ display: "flex", flexDirection: "column" }}
+              >
+                <div>
+                  Would you like to update the permissions for{" "}
+                  {showUpdateOrgPermissionModal.id}?
+                </div>
                 <FormControl sx={{ width: "100%", marginTop: "1rem" }}>
-                  <InputLabel shrink={true} id="permission-select-label">Permission Level</InputLabel>
+                  <InputLabel shrink={true} id="permission-select-label">
+                    Permission Level
+                  </InputLabel>
                   <Select
                     value={showUpdateOrgPermissionModal.permission}
                     onChange={(e: SelectChangeEvent) => {
-                      setShowUpdateOrgPermissionModal((prev) => ({ ...prev, permission: PermissionsOptions[e.target.value as keyof typeof PermissionsOptions] }));
+                      setShowUpdateOrgPermissionModal((prev) => ({
+                        ...prev,
+                        permission:
+                          PermissionsOptions[
+                            e.target.value as keyof typeof PermissionsOptions
+                          ],
+                      }));
                     }}
                     label="Permission Level"
                     labelId="permission-select-label"
                     id="permission-select"
-                    sx={{ maxWidth: '100%' }}
+                    sx={{ maxWidth: "100%" }}
                     notched={true}
                   >
-                    {Object.keys(PermissionsOptions).map(key => {
+                    {Object.keys(PermissionsOptions).map((key) => {
                       return (
-                        <MenuItem value={key} key={key}>{key}</MenuItem>
-                      )
+                        <MenuItem value={key} key={key}>
+                          {key}
+                        </MenuItem>
+                      );
                     })}
                   </Select>
                 </FormControl>
-
                 &nbsp;&nbsp;&nbsp;
                 <Button
                   variant="contained"
@@ -427,9 +525,18 @@ export default function OrgSettings(): JSX.Element {
 
             <h3>Organization Settings</h3>
             <div>
-              <Button variant="contained" onClick={() => setShowAddOrgPermissionModal((prev) => ({ ...prev, open: true }))}>Add Permission</Button>
+              <Button
+                variant="contained"
+                onClick={() =>
+                  setShowAddOrgPermissionModal((prev) => ({
+                    ...prev,
+                    open: true,
+                  }))
+                }
+              >
+                Add Permission
+              </Button>
             </div>
-
           </div>
           <hr />
 
@@ -475,22 +582,53 @@ export default function OrgSettings(): JSX.Element {
                     {filteredOrgPermissionList.map((permission, index) => (
                       <TableRow
                         key={index}
-                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
                       >
                         <TableCell component="th" scope="row">
-                          {permission.isAdmin ? <>{permission.id}</> : (
-                            <button onClick={() => setShowUpdateOrgPermissionModal({ id: permission.id, permission: permission.isAdmin ? "Admin" : permission.isInstructor ? "Instructor" : "None" })}>
+                          {permission.isAdmin ? (
+                            <>{permission.id}</>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                setShowUpdateOrgPermissionModal({
+                                  id: permission.id,
+                                  permission: permission.isAdmin
+                                    ? "Admin"
+                                    : permission.isInstructor
+                                    ? "Instructor"
+                                    : "None",
+                                })
+                              }
+                            >
                               {permission.id}
                             </button>
                           )}
                         </TableCell>
-                        <TableCell align="right">{
-                          permission.isAdmin ? <span>Admin</span> : (
-                            <button onClick={() => setShowUpdateOrgPermissionModal({ id: permission.id, permission: permission.isAdmin ? "Admin" : permission.isInstructor ? "Instructor" : "None" })}>
-                              {permission.isInstructor ? <span>Instructor</span> : <BlockIcon color="error" />}
+                        <TableCell align="right">
+                          {permission.isAdmin ? (
+                            <span>Admin</span>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                setShowUpdateOrgPermissionModal({
+                                  id: permission.id,
+                                  permission: permission.isAdmin
+                                    ? "Admin"
+                                    : permission.isInstructor
+                                    ? "Instructor"
+                                    : "None",
+                                })
+                              }
+                            >
+                              {permission.isInstructor ? (
+                                <span>Instructor</span>
+                              ) : (
+                                <BlockIcon color="error" />
+                              )}
                             </button>
-                          )
-                        }
+                          )}
                           &nbsp;
                           {!permission.isAdmin && (
                             <Tooltip
@@ -499,9 +637,9 @@ export default function OrgSettings(): JSX.Element {
                               componentsProps={{
                                 tooltip: {
                                   sx: {
-                                    bgcolor: '#da0222', //error color
-                                    '& .MuiTooltip-arrow': {
-                                      color: '#da0222',
+                                    bgcolor: "#da0222", //error color
+                                    "& .MuiTooltip-arrow": {
+                                      color: "#da0222",
                                     },
                                   },
                                 },
@@ -516,7 +654,6 @@ export default function OrgSettings(): JSX.Element {
                               </IconButton>
                             </Tooltip>
                           )}
-
                         </TableCell>
                       </TableRow>
                     ))}
@@ -532,5 +669,5 @@ export default function OrgSettings(): JSX.Element {
     </div>
   ) : (
     <LinearProgress />
-  )
+  );
 }

@@ -28,7 +28,7 @@ export default function MissingUserInfoForm({
   const [session, setSession] = useState<{
     name: string,
     family_name: string,
-    theme: string, //"light" | "dark" | "colorful-light" | "colorful-dark",
+    theme: string, //"light" | "dark",
   }>({
     name: "",
     family_name: "",
@@ -61,7 +61,9 @@ export default function MissingUserInfoForm({
         setSession((prev) => ({ ...prev, family_name: user.family_name }))
       }
       if (user && user["custom:theme"] && user["custom:theme"] !== "") {
-        setSession((prev) => ({ ...prev, theme: user["custom:theme"] }))
+        // Map colorful themes to light theme
+        const normalizedTheme = user["custom:theme"] === "dark" ? "dark" : "light";
+        setSession((prev) => ({ ...prev, theme: normalizedTheme }))
       }
       setIsLoading(false);
     }
@@ -108,17 +110,8 @@ export default function MissingUserInfoForm({
       setUser({ ...user, "custom:theme": e.target.value });
       localStorage.setItem("papyrusai_user", JSON.stringify({ ...user, "custom:theme": e.target.value }));
     }
-    if (e.target.value === "dark") {
-      changeTheme(root, "dark");
-    } else if (e.target.value === "light") {
-      changeTheme(root, "light");
-    } else if (e.target.value === "colorful-light") {
-      changeTheme(root, "colorful-light");
-    } else if (e.target.value === "colorful-dark") {
-      changeTheme(root, "colorful-dark");
-    } else { //default is light
-      changeTheme(root, "light");
-    }
+    // Apply theme change - colorful themes will fallback to light in changeTheme function
+    changeTheme(root, e.target.value);
   }
 
   return (
@@ -158,8 +151,6 @@ export default function MissingUserInfoForm({
             >
               <FormControlLabel value="light" control={<Radio />} label="Light" />
               <FormControlLabel value="dark" control={<Radio />} label="Dark" />
-              <FormControlLabel value="colorful-light" control={<Radio />} label="Colorful Light" />
-              <FormControlLabel value="colorful-dark" control={<Radio />} label="Colorful Dark" />
             </RadioGroup>
             <FormHelperText>{errors.theme}</FormHelperText>
           </FormControl>

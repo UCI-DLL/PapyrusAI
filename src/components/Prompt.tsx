@@ -56,6 +56,7 @@ import { cn } from "../lib/utils";
 import { useNavigate } from "react-router";
 import ListFolders from "../features/library/ListFolders";
 import { truncateString } from "../utility/Helpers";
+import { Textarea } from "./ui/textarea";
 
 interface PromptProps {
   prompt: PromptType;
@@ -678,7 +679,7 @@ export const Prompt = (props: PromptProps) => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="prompt-content">Prompt Content</Label>
-              <textarea
+              <Textarea
                 id="prompt-content"
                 value={editPromptText}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {

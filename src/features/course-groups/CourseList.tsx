@@ -24,29 +24,25 @@ export default function CourseList({
     }, [starredList]);
 
     return list.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full" role="list" aria-label="Course list">
             {orderCourseRecentlyCreatedAndStarred(list, starred).map(
-                (course, index) => {
-                    return (
-                        <div key={course.id}>
-                            <CourseCard
-                                course={course}
-                                keyy={index}
-                                refreshList={refreshList}
-                                isStarred={starredList.some(
-                                    (x) => x.courseId === course.id
-                                )}
-                            />
-                        </div>
-                    );
-                }
+                (course) => (
+                    <div key={course.id} role="listitem">
+                        <CourseCard
+                            course={course}
+                            refreshList={refreshList}
+                            isStarred={starredList.some(
+                                (x) => x.courseId === course.id
+                            )}
+                        />
+                    </div>
+                )
             )}
-        </div>
+        </section>
     ) : (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-center py-8 text-muted-foreground" role="status">
             <p className="mb-2">
-                No courses added yet. To join a course, click "Join Course" at
-                the top right.
+                No courses added yet. To join a course, click "Join Course" above.
             </p>
             {user?.groups.includes(
                 process.env.REACT_APP_INSTRUCTOR
@@ -54,12 +50,11 @@ export default function CourseList({
                     : "PapyrusAIInstructors"
             ) ? (
                 <p>
-                    To create a course, click "Create Course" at the top right.
+                    To create a course, click "Create Course" above.
                 </p>
             ) : (
                 <p>
-                    Then, use the code your instructor gave you to join their
-                    course.
+                    Then, use the code your instructor gave you to join their course.
                 </p>
             )}
         </div>

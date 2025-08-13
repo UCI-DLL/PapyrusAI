@@ -1,10 +1,10 @@
 @use "./variables";
 
-html,
-body {
-  background-color: var(--background);
-  color: var(--primary);
-}
+// html,
+// body {
+//   background-color: var(--background);
+//   color: var(--primary);
+// }
 
 button {
   cursor: pointer;
@@ -45,7 +45,7 @@ h2 {
   font-family: $default-header-font-family;
   font-weight: $default-header-font-weight;
   margin: $default-header-margin;
-  color: $default-header-color;
+  // color: $default-header-color; 
 }
 
 h3,
@@ -55,7 +55,7 @@ h6 {
   font-family: $montserrat;
   font-weight: $default-header-font-weight;
   margin: $default-header-margin;
-  color: $default-header-color;
+  // color: $default-header-color;
 }
 
 @each $i, $size in $heading-font-sizes {
@@ -120,22 +120,9 @@ label {
   font-family: $opensans;
 }
 
-// ------- button ------- //
-button {
-  background: none;
-  border: none;
-  padding: 0;
-  font-family: $opensans;
-  color: var(--black);
-
-  &:focus-visible {
-    outline: auto;
-  }
-}
-
 // ------- a ------- //
 a {
-  color: var(--primary);
+  // color: var(--primary);
   text-decoration: underline;
   font-family: $opensans;
 

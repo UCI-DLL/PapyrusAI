@@ -39,6 +39,7 @@ import {
 } from "../../utility/endpoints/UserEndpoints";
 import { Star, Play, Eye, Copy, Edit } from "lucide-react";
 import Post from "../../utility/Post";
+import { cn } from "../../lib/utils";
 
 interface ModuleListProps {
   course: CourseType;
@@ -389,15 +390,21 @@ export default function ModuleList({
                                 : createStarredModule(course.id, module.id);
                             }}
                             disabled={isLoading}
-                            className={`p-1.5 rounded-full transition-all duration-300 ml-2 flex-shrink-0 ${
+                            className={cn(
+                              "p-1.5 rounded-full ml-2 flex-shrink-0",
                               isStarred
-                                ? "text-gold bg-light-yellow"
-                                : "text-muted hover:text-gold hover:bg-light-yellow"
-                            }`}
+                                ? "text-gold hover:text-muted"
+                                : "text-muted hover:text-gold"
+                            )}
                           >
                             <Star
                               size={14}
                               fill={isStarred ? "currentColor" : "none"}
+                              className={cn(
+                                isStarred
+                                  ? "hover:fill-none"
+                                  : "hover:fill-current"
+                              )}
                             />
                           </button>
                         </TooltipTrigger>
@@ -581,15 +588,21 @@ export default function ModuleList({
                                   : createStarredModule(course.id, module.id);
                               }}
                               disabled={isLoading}
-                              className={`p-1.5 rounded-full transition-all duration-300 ${
+                              className={cn(
+                                "p-1.5 rounded-full",
                                 isStarred
-                                  ? "text-gold bg-light-yellow"
-                                  : "text-muted hover:text-gold hover:bg-light-yellow"
-                              }`}
+                                  ? "text-gold hover:text-muted"
+                                  : "text-muted hover:text-gold"
+                              )}
                             >
                               <Star
                                 size={12}
                                 fill={isStarred ? "currentColor" : "none"}
+                                className={cn(
+                                  isStarred
+                                    ? "hover:fill-none"
+                                    : "hover:fill-current"
+                                )}
                               />
                             </button>
                           </TooltipTrigger>

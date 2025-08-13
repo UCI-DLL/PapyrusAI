@@ -399,8 +399,26 @@ export default function Library(): JSX.Element {
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
                 Library
               </h1>
-              <p className="text-muted-foreground text-base sm:text-lg">
-                Organize your prompts and documents
+              <p className="text-muted-foreground text-sm">
+                The library contains all of the conversation prompts and
+                documents hosted within PapyrusAI. By default, you have access
+                to all prompts designed and tested by the PapyrusAI research
+                team.
+              </p>
+              <p className="text-muted-foreground text-sm">
+                You can click through the folders to browse our
+                researcher-created prompts. If you would like to use your own
+                assets (including your own prompts and documents) in your
+                course, you will need to host these within your own folder. For
+                more information on navigating the library, please see the&nbsp;
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.i0aofs3p0aio"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2 hover:no-underline text-primary"
+                >
+                  “Library” section of our instructor guide.
+                </a>
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

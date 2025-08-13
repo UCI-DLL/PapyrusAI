@@ -1,37 +1,50 @@
-
-
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Checkbox } from "../../components/ui/checkbox";
 import {
-  Button,
-  Box,
-  TextField,
-  FormLabel,
-  Select,
-  MenuItem,
-  ListItemText,
-  SelectChangeEvent,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import {
   Tooltip,
-  IconButton,
-  LinearProgress,
-  FormControl,
-  InputLabel,
-  ButtonGroup,
-  Popper,
-  Grow,
-  Paper,
-  ClickAwayListener,
-  MenuList
-} from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Loader2,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import Get from "../../utility/Get";
 import { FileType, TagType } from "../../utility/types/CourseTypes";
-import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { Modal } from "../../components/Modal";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import {
   getOrgFile,
@@ -40,26 +53,15 @@ import {
   getSignedS3BucketUploadUserFolder,
   getUserFile,
   putUpdateOrgFile,
-  putUpdateUserFile
+  putUpdateUserFile,
 } from "../../utility/endpoints/FolderEndpoints";
 import axios from "axios";
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page, pdfjs } from "react-pdf";
 import Put from "../../utility/Put";
 import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
 import CustomFileRender from "../../components/CustomFileRender";
 
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-    },
-  },
-};
-
-const options = ['Save & Publish', 'Discard Changes'];
+const options = ["Save & Publish", "Discard Changes"];
 
 export default function EditFile(): JSX.Element {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -67,24 +69,28 @@ export default function EditFile(): JSX.Element {
   let navigator = useNavigate();
   const [file, setFile] = useState<FileType>();
   const [newFile, setNewFile] = useState<{
-    name: string, id: string, tags: Array<string>, url: string
+    name: string;
+    id: string;
+    tags: Array<string>;
+    url: string;
   }>({
-    name: "", id: "", tags: [], url: ""
+    name: "",
+    id: "",
+    tags: [],
+    url: "",
   });
   const [errors, setErrors] = useState<any>({
     name: "",
     file: "",
-    tags: ""
+    tags: "",
   });
   const [fileInfo, setFileInfo] = useState<{
-    isOrgFolder: boolean,
-    folderId: string,
-    fileId: string
+    isOrgFolder: boolean;
+    folderId: string;
+    fileId: string;
   }>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
-  const [openSave, setOpenSave] = useState(false);
-  const anchorRefSave = useRef<HTMLDivElement>(null);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
@@ -106,7 +112,7 @@ export default function EditFile(): JSX.Element {
   }
 
   function changePage(offset: number) {
-    setPageNumber(prevPageNumber => prevPageNumber + offset);
+    setPageNumber((prevPageNumber) => prevPageNumber + offset);
   }
 
   function previousPage() {
@@ -121,27 +127,33 @@ export default function EditFile(): JSX.Element {
 
   const [selectedFiles, setSelectedFiles] = React.useState<any>();
 
-  const handleFileSelect = (event: any) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event?.target?.files?.[0];
     if (file) {
       const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'application/pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', //docx
-        "text/plain"
+        "image/jpeg",
+        "image/png",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", //docx
+        "text/plain",
       ];
       //handle file size
       if (file.size > MAX_FILE_SIZE) {
-        setErrors((prev: any) => ({ ...prev, file: 'File is too large. File must be smaller than 1GB.' }));
+        setErrors((prev: any) => ({
+          ...prev,
+          file: "File is too large. File must be smaller than 1GB.",
+        }));
         setSelectedFiles(null);
       } else {
         //handle file formats
         if (allowedTypes.includes(file.type)) {
-          setErrors((prev: any) => ({ ...prev, file: '' }));
+          setErrors((prev: any) => ({ ...prev, file: "" }));
           setSelectedFiles(file);
         } else {
-          setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.' }));
+          setErrors((prev: any) => ({
+            ...prev,
+            file: "Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.",
+          }));
           setSelectedFiles(null);
         }
       }
@@ -152,13 +164,13 @@ export default function EditFile(): JSX.Element {
     setSelectedFiles(undefined);
   };
 
-  const onUpdate = (event: any) => {
-    if (event.target.textContent.trim().toLowerCase() === 'change' && fileRef.current) {
+  const onUpdate = (action: "change" | "clear") => {
+    if (action === "change" && fileRef.current) {
       onClear();
       fileRef.current.click();
       return;
     }
-    if (event.target.textContent.trim().toLowerCase() === 'clear') {
+    if (action === "clear") {
       onClear();
       return;
     }
@@ -166,7 +178,7 @@ export default function EditFile(): JSX.Element {
 
   useEffect(() => {
     const controller = new AbortController();
-    //get pathname to figure out if we are editing 
+    //get pathname to figure out if we are editing
     if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -178,10 +190,10 @@ export default function EditFile(): JSX.Element {
     ) {
       //get prev file data
       const folderId = location.pathname.split("/")[3];
-      const fileId = location.pathname.split("/")[5]
+      const fileId = location.pathname.split("/")[5];
       //save the ids
       setFileInfo({ isOrgFolder: true, folderId: folderId, fileId: fileId });
-      getFile(true, folderId, fileId, controller.signal)
+      getFile(true, folderId, fileId, controller.signal);
     } else if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -192,14 +204,14 @@ export default function EditFile(): JSX.Element {
     ) {
       //get prev file data
       const folderId = location.pathname.split("/")[2];
-      const fileId = location.pathname.split("/")[4]
+      const fileId = location.pathname.split("/")[4];
       //save the ids
       setFileInfo({ isOrgFolder: false, folderId: folderId, fileId: fileId });
-      getFile(false, folderId, fileId, controller.signal)
+      getFile(false, folderId, fileId, controller.signal);
     }
 
     if (tagList.length === 0) {
-      getTags("", controller.signal)
+      getTags("", controller.signal);
     }
 
     return () => {
@@ -208,27 +220,45 @@ export default function EditFile(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname]);
 
-  function getFile(isOrg: boolean, folderId: string, fileId: string, signal: AbortSignal) {
+  function getFile(
+    isOrg: boolean,
+    folderId: string,
+    fileId: string,
+    signal: AbortSignal
+  ) {
     if (!isOrg) {
-      Get(getUserFile(folderId, fileId), signal).then(res => {
+      Get(getUserFile(folderId, fileId), signal).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //also set session
             setFile(res.data);
             if (res.data.fileReference) {
               //pass fileReference
-              Get(getSignedS3BucketDownloadFile(res.data.fileReference), signal).then(async res1 => {
+              Get(
+                getSignedS3BucketDownloadFile(res.data.fileReference),
+                signal
+              ).then(async (res1) => {
                 if (res1 && res1.status && res1.status < 300) {
                   if (res1.data) {
                     //also set session
                     //if txt file, get txt to replace url
                     if (res.data.fileReference.split(".")[1] === "txt") {
                       const temp = await fetch(res1.data.url).then((r) => {
-                        return r.text()
-                      })
-                      setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: temp })
+                        return r.text();
+                      });
+                      setNewFile({
+                        name: res.data.name,
+                        id: res.data.id,
+                        tags: res.data.tags,
+                        url: temp,
+                      });
                     } else {
-                      setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: res1.data.url })
+                      setNewFile({
+                        name: res.data.name,
+                        id: res.data.id,
+                        tags: res.data.tags,
+                        url: res1.data.url,
+                      });
                     }
                   }
                 } else if (res1 && res1.status === 401) {
@@ -245,7 +275,12 @@ export default function EditFile(): JSX.Element {
                 setIsLoading(false);
               });
             } else {
-              setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: "" })
+              setNewFile({
+                name: res.data.name,
+                id: res.data.id,
+                tags: res.data.tags,
+                url: "",
+              });
               setIsLoading(false);
             }
           }
@@ -263,25 +298,38 @@ export default function EditFile(): JSX.Element {
         }
       });
     } else {
-      Get(getOrgFile(folderId, fileId), signal).then(res => {
+      Get(getOrgFile(folderId, fileId), signal).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //also set session
             setFile(res.data);
             if (res.data.fileReference) {
               //pass fileReference
-              Get(getSignedS3BucketDownloadFile(res.data.fileReference), signal).then(async res1 => {
+              Get(
+                getSignedS3BucketDownloadFile(res.data.fileReference),
+                signal
+              ).then(async (res1) => {
                 if (res1 && res1.status && res1.status < 300) {
                   if (res1.data) {
                     //also set session
                     //if txt file, get txt to replace url
                     if (res.data.fileReference.split(".")[1] === "txt") {
                       const temp = await fetch(res1.data.url).then((r) => {
-                        return r.text()
-                      })
-                      setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: temp })
+                        return r.text();
+                      });
+                      setNewFile({
+                        name: res.data.name,
+                        id: res.data.id,
+                        tags: res.data.tags,
+                        url: temp,
+                      });
                     } else {
-                      setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: res1.data.url })
+                      setNewFile({
+                        name: res.data.name,
+                        id: res.data.id,
+                        tags: res.data.tags,
+                        url: res1.data.url,
+                      });
                     }
                   }
                 } else if (res1 && res1.status === 401) {
@@ -298,8 +346,13 @@ export default function EditFile(): JSX.Element {
                 setIsLoading(false);
               });
             } else {
-              setNewFile({ name: res.data.name, id: res.data.id, tags: res.data.tags, url: "" })
-              setIsLoading(false)
+              setNewFile({
+                name: res.data.name,
+                id: res.data.id,
+                tags: res.data.tags,
+                url: "",
+              });
+              setIsLoading(false);
             }
           }
         } else if (res && res.status === 401) {
@@ -320,7 +373,7 @@ export default function EditFile(): JSX.Element {
 
   function getTags(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getTagList(limit, startKey), signal).then(res => {
+    Get(getTagList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
@@ -334,6 +387,8 @@ export default function EditFile(): JSX.Element {
             res.data.LastEvaluatedKey.id
           ) {
             getTags(res.data.LastEvaluatedKey.id, signal);
+          } else {
+            setIsLoading(false);
           }
         }
       } else if (res && res.status === 401) {
@@ -348,41 +403,15 @@ export default function EditFile(): JSX.Element {
     });
   }
 
-  function handleSaveClick(e: any) {
-    setIsLoading(true)
-    if (selectedIndexSave === 0 && file) { //Save and publish
-      handleUpload(e, false);
-    } else if (selectedIndexSave === 1) { //discard changes
-      setOpenDiscardModal(true);
-    }
-  };
-
-  const handleMenuItemClick = (
-    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
-    index: number,
-  ) => {
-    if (index === 0) { //Save and publish
-      handleUpload(e, false);
-    } else if (index === 1) { //discard changes
+  const handleMenuItemClick = (index: number) => {
+    if (index === 0) {
+      //Save and publish
+      handleUpload(undefined, false);
+    } else if (index === 1) {
+      //discard changes
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
-    setOpenSave(false);
-  };
-
-  const handleToggle = () => {
-    setOpenSave((prevOpen) => !prevOpen);
-  };
-
-  const handleSaveClose = (event: Event) => {
-    if (
-      anchorRefSave.current &&
-      anchorRefSave.current.contains(event.target as HTMLElement)
-    ) {
-      return;
-    }
-
-    setOpenSave(false);
   };
 
   function handleSubmit(id: string, isDeleted = false) {
@@ -391,22 +420,28 @@ export default function EditFile(): JSX.Element {
       name: newFile.name,
       isDeleted: isDeleted,
       tags: newFile.tags,
-      id: id
-    }
+      id: id,
+    };
     if (fileInfo && fileInfo.isOrgFolder) {
       // put data back
-      Put(putUpdateOrgFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
+      Put(
+        putUpdateOrgFile(fileInfo.folderId, fileInfo.fileId),
+        dataToSend
+      ).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of update
-            setAlert({ message: "File Updated", type: "success" })
+            setAlert({ message: "File Updated", type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // handle error
           if (res) {
-            setAlert({ message: "File could not be updated. Try again later.", type: "error" });
+            setAlert({
+              message: "File could not be updated. Try again later.",
+              type: "error",
+            });
           }
         }
         navigator(`/library/org/${fileInfo.folderId}`);
@@ -414,17 +449,23 @@ export default function EditFile(): JSX.Element {
       });
     } else if (fileInfo) {
       // put data back
-      Put(putUpdateUserFile(fileInfo.folderId, fileInfo.fileId), dataToSend).then((res) => {
+      Put(
+        putUpdateUserFile(fileInfo.folderId, fileInfo.fileId),
+        dataToSend
+      ).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of updated
-            setAlert({ message: "File updated", type: "success" })
+            setAlert({ message: "File updated", type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // set errors
-          setAlert({ message: "File could not be updated. Try again later.", type: "error" })
+          setAlert({
+            message: "File could not be updated. Try again later.",
+            type: "error",
+          });
         }
         navigator(`/library/${fileInfo.folderId}`);
         setIsLoading(false);
@@ -438,60 +479,75 @@ export default function EditFile(): JSX.Element {
     setNewFile((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  const handleSelectChange = (event: SelectChangeEvent<typeof newFile.tags>) => {
-    const {
-      target: { value },
-    } = event;
-    setNewFile((prev) => ({
-      ...prev,
-      tags: typeof value === 'string' ? value.split(',') : value
-    }))
+  const handleTagToggle = (tagId: string) => {
+    setNewFile((prev) => {
+      const isSelected = prev.tags.includes(tagId);
+      return {
+        ...prev,
+        tags: isSelected
+          ? prev.tags.filter((id) => id !== tagId)
+          : [...prev.tags, tagId],
+      };
+    });
   };
 
-  function handleUpload(e: React.FormEvent, isDeleted = false) {
-    e.preventDefault();
+  function handleUpload(e?: React.FormEvent, isDeleted = false) {
+    e?.preventDefault();
     if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
+      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }));
     }
     //if new file selected, then get the signed upload url
     //else just update the file information
     if (selectedFiles) {
       // Handle here
       if (fileInfo) {
-        var fileId = fileInfo.fileId
+        var fileId = fileInfo.fileId;
         if (selectedFiles) {
-          const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : "";
-          fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
+          const ext = selectedFiles.name.includes(".")
+            ? "." + selectedFiles.name.split(".").pop()
+            : "";
+          fileId =
+            Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
         }
         //if is org folder, then upload to org folder
         if (fileInfo?.isOrgFolder) {
-          Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileId)).then(res => {
-            if (res && res.status && res.status < 300) {
-              if (res.data) {
-                handleUploadToS3(res.data.url, res.data.id);
+          Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileId)).then(
+            (res) => {
+              if (res && res.status && res.status < 300) {
+                if (res.data) {
+                  handleUploadToS3(res.data.url, res.data.id);
+                } else {
+                  //handle error
+                  setAlert({
+                    message: "Error updating file. Please try again later",
+                    type: "error",
+                  });
+                }
+              } else if (res && res.status === 401) {
+                navigator("/login");
               } else {
-                //handle error
-                setAlert({ message: "Error updating file. Please try again later", type: "error" })
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              if (res === undefined) {
-              } else {
-                // handle error
-                setIsLoading(false);
+                if (res === undefined) {
+                } else {
+                  // handle error
+                  setIsLoading(false);
+                }
               }
             }
-          });
-
-        } else {//else an user folder
-          Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileId)).then(res => {
+          );
+        } else {
+          //else an user folder
+          Get(
+            getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileId)
+          ).then((res) => {
             if (res && res.status && res.status < 300) {
               if (res.data) {
                 handleUploadToS3(res.data.url, res.data.id);
               } else {
                 //handle error
-                setAlert({ message: "Error updating file. Please try again later", type: "error" })
+                setAlert({
+                  message: "Error updating file. Please try again later",
+                  type: "error",
+                });
               }
             } else if (res && res.status === 401) {
               navigator("/login");
@@ -513,25 +569,25 @@ export default function EditFile(): JSX.Element {
   async function handleUploadToS3(url: string, id: string) {
     try {
       // Upload original file directly to s3
-      await axios.put(url, selectedFiles, {
-        headers: {
-          'Content-Type': selectedFiles.type
-        }
-      }).then(res => {
-        if (res && res.status && res.status < 300) {
-          handleSubmit(id);
-
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
+      await axios
+        .put(url, selectedFiles, {
+          headers: {
+            "Content-Type": selectedFiles.type,
+          },
+        })
+        .then((res) => {
+          if (res && res.status && res.status < 300) {
+            handleSubmit(id);
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
-            // handle error
-            setIsLoading(false);
+            if (res === undefined) {
+            } else {
+              // handle error
+              setIsLoading(false);
+            }
           }
-        }
-      });
-
+        });
     } catch (error) {
       console.error((error as Error).message);
     }
@@ -542,293 +598,409 @@ export default function EditFile(): JSX.Element {
       switch (file.fileReference.split(".")[1].toLocaleLowerCase()) {
         case "txt": {
           return (
-            <div>{newFile && newFile.url ? newFile.url : ""}</div>
+            <div className="p-4 bg-muted/30 rounded-md">
+              <pre className="whitespace-pre-wrap text-sm">
+                {newFile && newFile.url ? newFile.url : ""}
+              </pre>
+            </div>
           );
         }
         case "pdf":
-          // {/* https://www.geeksforgeeks.org/how-to-display-a-pdf-as-an-image-in-react-app-using-url/ */}
           return (
-            <div>
-              <div>Current File</div>
-              <div style={{ display: "flex", flexDirection: "row" }}>
-                <IconButton
-                  type="button"
-                  disabled={pageNumber <= 1}
-                  onClick={previousPage}
-                  className="Pre"
-                >
-                  <ChevronLeftIcon />
-                </IconButton>
-                <div style={{ alignSelf: "center" }}>
-                  Page {pageNumber || (numPages ? 1 : '--')} of {numPages || '--'}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-medium">PDF Preview</h4>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={pageNumber <= 1}
+                    onClick={previousPage}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {pageNumber || (numPages ? 1 : "--")} of{" "}
+                    {numPages || "--"}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={pageNumber >= numPages}
+                    onClick={nextPage}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
-                <IconButton
-                  type="button"
-                  disabled={pageNumber >= numPages}
-                  onClick={nextPage}
-                >
-                  <ChevronRightIcon />
-                </IconButton>
               </div>
-              <Document
-                file={newFile.url}
-                onLoadSuccess={onDocumentLoadSuccess}>
-                <Page pageNumber={pageNumber} renderTextLayer={false} renderAnnotationLayer={false} />
-              </Document>
+              <div className="border rounded-md overflow-hidden">
+                <Document
+                  file={newFile.url}
+                  onLoadSuccess={onDocumentLoadSuccess}
+                >
+                  <Page
+                    pageNumber={pageNumber}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                  />
+                </Document>
+              </div>
             </div>
-          )
+          );
         case "png":
-          return (
-            <img style={{ width: "100%" }} src={newFile && newFile.url ? newFile.url : ""} alt="File" />
-          )
         case "jpg":
-          return (
-            <img style={{ width: "100%" }} src={newFile && newFile.url ? newFile.url : ""} alt="File" />
-          )
         case "jpeg":
           return (
-            <img style={{ width: "100%" }} src={newFile && newFile.url ? newFile.url : ""} alt="File" />
-          )
+            <div className="space-y-4">
+              <h4 className="text-lg font-medium">Image Preview</h4>
+              <div className="border rounded-md overflow-hidden">
+                <img
+                  className="w-full h-auto max-h-96 object-contain"
+                  src={newFile && newFile.url ? newFile.url : ""}
+                  alt="File preview"
+                />
+              </div>
+            </div>
+          );
         case "docx":
-          const doc = [{ uri: newFile && newFile.url ? newFile.url : "", fileType: 'docx' }];
-          return <DocViewer
-            pluginRenderers={[CustomFileRender, ...DocViewerRenderers]}
-            documents={doc}
-            style={{ width: "100%", height: 500 }}
-            config={{
-              header: {
-                disableHeader: false,
-                disableFileName: true,
-                retainURLParams: false
-              }
-            }}
-          />;
+          const doc = [
+            {
+              uri: newFile && newFile.url ? newFile.url : "",
+              fileType: "docx",
+            },
+          ];
+          return (
+            <div className="space-y-4">
+              <h4 className="text-lg font-medium">Document Preview</h4>
+              <div className="border rounded-md overflow-hidden">
+                <DocViewer
+                  pluginRenderers={[CustomFileRender, ...DocViewerRenderers]}
+                  documents={doc}
+                  style={{ width: "100%", height: 500 }}
+                  config={{
+                    header: {
+                      disableHeader: false,
+                      disableFileName: true,
+                      retainURLParams: false,
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          );
         default:
-          return <></>
+          return <></>;
       }
     } else {
-      return <></>
+      return <></>;
     }
-
   }
 
   return fileInfo && !isLoading ? (
-    <div className="prompt">
+    <div className="min-h-screen p-6">
       {newFile.name ? (
         <>
-          <Modal
-            isOpen={openDeleteModal}
-            title={"Delete File?"}
-            onRequestClose={() => setOpenDeleteModal(false)}
-            actions={
-              <>
-                <Button variant="contained" color="error" onClick={(e) => handleUpload(e, true)}>
+          <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete File?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you would like to permanently delete this file?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={(e) => handleUpload(e, true)}>
                   Delete
-                </Button>
-                <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(false)}>
-                  Cancel
-                </Button>
-              </>
-            }
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <AlertDialog
+            open={openDiscardModal}
+            onOpenChange={setOpenDiscardModal}
           >
-            <div>Are you sure you would like to permanently delete this file?</div>
-          </Modal>
-          <Modal
-            isOpen={openDiscardModal}
-            title={"Discard Changes?"}
-            onRequestClose={() => setOpenDiscardModal(false)}
-            actions={
-              <>
-                <Button variant="contained" color="primary" onClick={() => navigator(-1)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Discard Changes?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you would like to discard the changes to this
+                  file?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => navigator(-1)}>
                   Discard
-                </Button>
-                <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>
-                  Cancel
-                </Button>
-              </>
-            }
-          >
-            <div>Are you sure you would like to discard the changes to this file?</div>
-          </Modal>
-          <div className="prompt__section-header">
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h3>Edit {file?.name}</h3>
+              <h1 className="text-3xl font-bold text-foreground">
+                Edit {file?.name}
+              </h1>
             </div>
-            <div>
-              <Tooltip
-                title={"Delete"}
-                arrow
-                componentsProps={{
-                  tooltip: {
-                    sx: {
-                      bgcolor: '#da0222', //error color
-                      '& .MuiTooltip-arrow': {
-                        color: '#da0222',
-                      },
-                    },
-                  },
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setOpenDeleteModal(true)}
+                      disabled={isLoading}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Delete File</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Button
+                size="sm"
+                disabled={isLoading}
+                onClick={() => {
+                  if (selectedIndexSave === 0) {
+                    handleUpload(undefined, false);
+                  } else {
+                    setOpenDiscardModal(true);
+                  }
                 }}
               >
-                <IconButton
-                  onClick={() => setOpenDeleteModal(true)}
-                  aria-label="Delete File"
-                  className="file__delete_background"
-                  disabled={isLoading}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-              &nbsp;&nbsp;&nbsp;
-              <ButtonGroup
-                variant="contained"
-                ref={anchorRefSave}
-                aria-label="Button group with a nested menu"
-              >
-                <Button onClick={handleSaveClick} disabled={isLoading}>{options[selectedIndexSave]}</Button>
-                <Button
-                  size="small"
-                  aria-controls={openSave ? 'split-button-menu' : undefined}
-                  aria-expanded={openSave ? 'true' : undefined}
-                  aria-label="select save and activation strategy"
-                  aria-haspopup="menu"
-                  onClick={handleToggle}
-                  disabled={isLoading}
-                >
-                  <ArrowDropDownIcon />
-                </Button>
-              </ButtonGroup>
-              <Popper
-                sx={{
-                  zIndex: 1,
-                }}
-                open={openSave}
-                anchorEl={anchorRefSave.current}
-                role={undefined}
-                transition
-                disablePortal
-              >
-                {({ TransitionProps, placement }) => (
-                  <Grow
-                    {...TransitionProps}
-                    style={{
-                      transformOrigin:
-                        placement === 'bottom' ? 'center top' : 'center bottom',
-                    }}
-                  >
-                    <Paper>
-                      <ClickAwayListener onClickAway={handleSaveClose}>
-                        <MenuList id="split-button-menu" autoFocusItem>
-                          {options.map((option, index) => (
-                            <MenuItem
-                              key={option}
-                              selected={index === selectedIndexSave}
-                              onClick={(event) => handleMenuItemClick(event, index)}
-                              className={index === 2 ? "file__discard_background" : ""}
-                            >
-                              {option}
-                            </MenuItem>
-                          ))}
-                        </MenuList>
-                      </ClickAwayListener>
-                    </Paper>
-                  </Grow>
-                )}
-              </Popper>
-            </div>
-          </div>
-          <hr />
-          <div className="prompt__section-header">
-            <span>* indicates a required field</span>
-          </div>
-          <Box className="prompt__add">
-            <form onSubmit={(e) => handleUpload(e, false)}>
-              <FormLabel>Enter File Information</FormLabel>
-              <TextField
-                name="name"
-                label="File Name"
-                fullWidth
-                sx={{ margin: ".5rem 0" }}
-                value={newFile.name}
-                onChange={handleChange}
-                error={errors.name !== ""}
-                helperText={errors.name}
-                disabled={isLoading}
-                required
-              />
-              <input
-                ref={fileRef}
-                hidden
-                type="file"
-                onChange={handleFileSelect}
-                disabled={isLoading}
-              />
-              {!selectedFiles?.name && (
-                <Button
-                  variant="contained"
-                  component="label"
-                  style={{ textTransform: 'none' }}
-                  onClick={() => fileRef.current?.click()}
-                  disabled={isLoading}
-                >
-                  Choose new file to upload
-                </Button>
-              )}
-              {selectedFiles?.name && (
-                <Button
-                  variant="contained"
-                  component="label"
-                  style={{ textTransform: 'none' }}
-                  onClick={onUpdate}
-                  disabled={isLoading}
-                >
-                  <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
-                  <span style={{ padding: '10px' }}> Change</span>
-                  <span>Clear</span>
-                </Button>
-              )}
-              {errors.file && errors.file !== "" && (
-                <span className="error">&nbsp;{errors.file}</span>
-              )}
-
-              {/* add dropdown to handle tags  */}
-              <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
-                <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
-                <Select
-                  labelId="multiple-tag-checkbox-select"
-                  id="multiple-tag-checkbox-select"
-                  multiple
-                  value={newFile.tags}
-                  onChange={handleSelectChange}
-                  renderValue={(selected) => {//find the name for the file id
-                    return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
-                  }}
-                  label="Tags"
-                  MenuProps={MenuProps}
-                  disabled={isLoading}
-                  fullWidth
-                >
-                  {tagList.map((tag, index) => (
-                    <MenuItem key={index} value={tag.id}>
-                      <Checkbox checked={newFile.tags.indexOf(tag.id) > -1} />
-                      <ListItemText primary={tag.id} />
-                    </MenuItem>
+                {options[selectedIndexSave]}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isLoading}>
+                    <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {options.map((option, index) => (
+                    <DropdownMenuItem
+                      key={option}
+                      onClick={() => handleMenuItemClick(index)}
+                    >
+                      {option}
+                    </DropdownMenuItem>
                   ))}
-                </Select>
-              </FormControl>
-            </form>
-            <hr />
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">
+                * indicates a required field
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Enter File Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form
+                onSubmit={(e) => handleUpload(e, false)}
+                className="space-y-6"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="name" className="text-sm font-medium">
+                      File Name *
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">The name for the document.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={newFile.name}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    required
+                    className={errors.name ? "border-destructive" : ""}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm font-medium">File Upload</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">
+                            Select a JPEG, PNG, PDF, TXT, DOCX file to replace
+                            the current file.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    disabled={isLoading}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept=".jpg,.jpeg,.png,.pdf,.docx,.txt"
+                  />
+                  {!selectedFiles?.name ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={isLoading}
+                      className="w-full h-32 border-dashed border-2 hover:border-primary hover:bg-primary/10 transition-colors"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <span className="text-sm font-medium">
+                          Choose new file to upload
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          JPEG, PNG, PDF, TXT, DOCX (max 1GB)
+                        </span>
+                      </div>
+                    </Button>
+                  ) : (
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Upload className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-medium truncate">
+                          {selectedFiles?.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onUpdate("change")}
+                          disabled={isLoading}
+                        >
+                          Change
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onUpdate("clear")}
+                          disabled={isLoading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {errors.file && (
+                    <p className="text-sm text-destructive">{errors.file}</p>
+                  )}
+                </div>
 
-            {/* render file view  */}
-            {newFile && newFile.url &&
-              renderFile()
-            }
-          </Box>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm font-medium">Tags</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">
+                            Tags describe a feature of the files and will be
+                            used to allow for sorting files by type.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
+                    {tagList.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-2">
+                        {tagList.map((tag) => (
+                          <div
+                            key={tag.id}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`tag-${tag.id}`}
+                              checked={newFile.tags.includes(tag.id)}
+                              onCheckedChange={() => handleTagToggle(tag.id)}
+                              disabled={isLoading}
+                            />
+                            <Label
+                              htmlFor={`tag-${tag.id}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {tag.id}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No tags available
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Selected:{" "}
+                    {newFile.tags.length > 0 ? newFile.tags.join(", ") : "None"}
+                  </p>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* File preview section */}
+          {newFile && newFile.url && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Current File Preview</CardTitle>
+              </CardHeader>
+              <CardContent>{renderFile()}</CardContent>
+            </Card>
+          )}
         </>
       ) : (
-        <div>File does not exist</div>
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-lg text-muted-foreground">File does not exist</p>
+        </div>
       )}
     </div>
   ) : (
-    <LinearProgress />
-  )
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading File Editor</p>
+      </div>
+    </div>
+  );
 }

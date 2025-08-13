@@ -1,9 +1,13 @@
-import React, { useEffect, useState, useContext, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useMemo,
+  useCallback,
+} from "react";
 import CourseList from "../course-groups/CourseList";
 import ModuleList from "../modules/ModuleList";
 import { Button } from "../../components/ui/button";
-import { Separator } from "../../components/ui/separator";
-import { Progress } from "../../components/ui/progress";
 import { useNavigate } from "react-router";
 import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
@@ -84,31 +88,41 @@ export default function Dashboard(): JSX.Element {
     getStarred(controller.signal);
   }, []);
 
-  const starredCourses = useMemo(() => 
-    starred?.courses ?? [], [starred?.courses]
+  const starredCourses = useMemo(
+    () => starred?.courses ?? [],
+    [starred?.courses]
   );
 
-  const orderedCourses = useMemo(() => 
-    orderCourseRecentlyCreatedAndStarred(courseList, starredCourses),
+  const orderedCourses = useMemo(
+    () => orderCourseRecentlyCreatedAndStarred(courseList, starredCourses),
     [courseList, starredCourses]
   );
 
-  const coursesWithRecentModules = useMemo(() => 
-    mostRecentModules(orderedCourses), 
+  const coursesWithRecentModules = useMemo(
+    () => mostRecentModules(orderedCourses),
     [orderedCourses]
   );
 
-  const isInstructor = useMemo(() => 
-    user?.groups.includes(
-      process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
-    ), [user?.groups]
+  const isInstructor = useMemo(
+    () =>
+      user?.groups.includes(
+        process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
+      ),
+    [user?.groups]
   );
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        role="status"
+        aria-live="polite"
+      >
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <Loader2
+            className="h-8 w-8 animate-spin text-primary"
+            aria-hidden="true"
+          />
           <p className="text-muted-foreground">Loading Dashboard</p>
         </div>
       </div>
@@ -119,7 +133,10 @@ export default function Dashboard(): JSX.Element {
     <main className="bg-background text-foreground p-4 space-y-6">
       <header className="slide-in-up">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
-          <div className="absolute top-0 right-0 w-48 h-48 opacity-10" aria-hidden="true">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
+          >
             <Target size={192} className="floating-animation text-primary" />
           </div>
 
@@ -138,12 +155,21 @@ export default function Dashboard(): JSX.Element {
       <section aria-labelledby="courses-heading">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div>
-            <h2 id="courses-heading" className="text-2xl font-extrabold text-foreground">
+            <h2
+              id="courses-heading"
+              className="text-2xl font-extrabold text-foreground"
+            >
               My Courses
             </h2>
-            <p className="text-muted-foreground text-sm">Continue your learning journey</p>
+            <p className="text-muted-foreground text-sm">
+              Continue your learning journey
+            </p>
           </div>
-          <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Course actions">
+          <nav
+            className="flex flex-col md:flex-row gap-2"
+            role="toolbar"
+            aria-label="Course actions"
+          >
             <Button
               size="sm"
               variant="outline"
@@ -179,7 +205,7 @@ export default function Dashboard(): JSX.Element {
             </Dialog>
           </nav>
         </header>
-        
+
         <div className="w-full">
           {courseList.length > 0 ? (
             <CourseList
@@ -188,9 +214,13 @@ export default function Dashboard(): JSX.Element {
               starredList={starredCourses}
             />
           ) : (
-            <div className="text-center py-8 text-muted-foreground" role="status">
+            <div
+              className="text-center py-8 text-muted-foreground"
+              role="status"
+            >
               <p className="mb-2">
-                No courses added yet. To join a course, click "Join Course" above.
+                No courses added yet. To join a course, click "Join Course"
+                above.
               </p>
             </div>
           )}
@@ -200,10 +230,15 @@ export default function Dashboard(): JSX.Element {
       <section aria-labelledby="modules-heading">
         <header className="flex flex-row items-center justify-between gap-4 mb-4">
           <div>
-            <h2 id="modules-heading" className="text-2xl font-extrabold text-foreground">
+            <h2
+              id="modules-heading"
+              className="text-2xl font-extrabold text-foreground"
+            >
               Recent Modules
             </h2>
-            <p className="text-muted-foreground text-sm">Pick up where you left off</p>
+            <p className="text-muted-foreground text-sm">
+              Pick up where you left off
+            </p>
           </div>
 
           <Button
@@ -216,7 +251,7 @@ export default function Dashboard(): JSX.Element {
             View All
           </Button>
         </header>
-        
+
         <div className="space-y-4">
           {courseList.length > 0 &&
             coursesWithRecentModules.map((course, index) => {

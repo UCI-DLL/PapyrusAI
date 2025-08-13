@@ -226,8 +226,7 @@ export default function ModuleList({
   }
 
   return course.modules.length > 0 ? (
-    <div>
-      {/* Copy Module To Course Dialog */}
+    <section>
       <Dialog open={openCourseListModal} onOpenChange={setOpenCourseListModal}>
         <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -239,32 +238,33 @@ export default function ModuleList({
               settings.
             </DialogDescription>
           </DialogHeader>
-          <div className="courses__list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <section
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            role="list"
+            aria-label="Available courses"
+          >
             {orderCourseRecentlyCreatedAndStarred(
               courseList,
               starredCourses
-            ).map((course, index) => {
-              return (
-                <div key={index}>
-                  <CourseCard
-                    course={course}
-                    keyy={index}
-                    refreshList={refreshList}
-                    onClick={(courseId: string) => {
-                      setOpenCourseListModal(false);
-                      setOpenDuplicateModal((prev) => ({
-                        ...prev,
-                        copyCourseId: courseId,
-                      }));
-                    }}
-                    isStarred={starredCourses.some(
-                      (c) => c.courseId === course.id
-                    )}
-                  />
-                </div>
-              );
-            })}
-          </div>
+            ).map((course) => (
+              <div key={course.id} role="listitem">
+                <CourseCard
+                  course={course}
+                  refreshList={refreshList}
+                  onClick={(courseId: string) => {
+                    setOpenCourseListModal(false);
+                    setOpenDuplicateModal((prev) => ({
+                      ...prev,
+                      copyCourseId: courseId,
+                    }));
+                  }}
+                  isStarred={starredCourses.some(
+                    (c) => c.courseId === course.id
+                  )}
+                />
+              </div>
+            ))}
+          </section>
           <DialogFooter>
             <Button
               variant="outline"
@@ -276,7 +276,6 @@ export default function ModuleList({
         </DialogContent>
       </Dialog>
 
-      {/* Duplicate Module Dialog */}
       <Dialog
         open={openDuplicateModal.copyCourseId !== ""}
         onOpenChange={(open) =>
@@ -296,7 +295,13 @@ export default function ModuleList({
               will also copy over all settings within this module.
             </DialogDescription>
           </DialogHeader>
-          <div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleCopyModuleTo();
+            }}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="module-name">Module Name</Label>
               <Input
@@ -321,29 +326,29 @@ export default function ModuleList({
             >
               <span>Publish Module</span>
             </Checkbox>
-          </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button
-              variant="outline"
-              onClick={() =>
-                setOpenDuplicateModal({
-                  courseId: "",
-                  moduleId: "",
-                  copyCourseId: "",
-                })
-              }
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCopyModuleTo} disabled={isLoading}>
-              Duplicate
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setOpenDuplicateModal({
+                    courseId: "",
+                    moduleId: "",
+                    copyCourseId: "",
+                  })
+                }
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                Duplicate
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
-      {/* Module Cards */}
-      <div>
+      <div className="space-y-4" role="list" aria-label="Module list">
         {orderModuleRecentlyCreatedAndStarred(
           course.modules,
           starredModules
@@ -716,21 +721,17 @@ export default function ModuleList({
           );
         })}
       </div>
-    </div>
+    </section>
   ) : (
-    <div className="text-center py-8 text-muted-foreground">
+    <div className="text-center py-8 text-muted-foreground" role="status">
       <p className="mb-2">No modules are currently available to you.</p>
       {user?.groups.includes(
-        process.env.REACT_APP_INSTRUCTOR
-          ? process.env.REACT_APP_INSTRUCTOR
-          : "PapyrusAIInstructors"
-      ) ? (
+        process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
+      ) && (
         <p>
           To create a module, go to the course in which you would like to create
           the module.
         </p>
-      ) : (
-        ""
       )}
     </div>
   );

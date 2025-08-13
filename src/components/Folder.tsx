@@ -323,7 +323,7 @@ export const FolderComponent = (props: FolderProps) => {
   };
 
   const getItemCount = () => {
-    return props.folder.prompts.length;
+    return props.folder.prompts.length + props.folder.files.length;
   };
 
   const getFolderDescription = () => {

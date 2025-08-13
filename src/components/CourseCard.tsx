@@ -34,6 +34,7 @@ import {
   putUpdateUserFavoritingData,
 } from "../utility/endpoints/UserEndpoints";
 import { Label } from "./ui/label";
+import { cn } from "../lib/utils";
 
 interface CourseListProps {
   course: CourseType;
@@ -305,11 +306,12 @@ export default function CourseCard({
                           : createStarredCourse(course.id);
                       }}
                       disabled={isLoading}
-                      className={`p-1 rounded-full transition-all duration-300 ${
+                      className={cn(
+                        "p-1 rounded-full transition-all duration-300",
                         starred
-                          ? "text-gold bg-light-yellow"
-                          : "text-muted hover:text-gold hover:bg-light-yellow"
-                      }`}
+                          ? "text-gold hover:text-muted"
+                          : "text-muted hover:text-gold"
+                      )}
                       aria-label={
                         starred ? "Remove from favorites" : "Add to favorites"
                       }
@@ -317,6 +319,9 @@ export default function CourseCard({
                       <Star
                         size={12}
                         fill={starred ? "currentColor" : "none"}
+                        className={cn(
+                          starred ? "hover:fill-none" : "hover:fill-current"
+                        )}
                         aria-hidden="true"
                       />
                     </button>

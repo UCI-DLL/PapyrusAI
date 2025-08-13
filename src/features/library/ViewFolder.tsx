@@ -1,6 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../components/ui/popover";
 import { FolderType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { UserContext } from "../../utility/context/UserContext";
@@ -146,19 +151,52 @@ export default function ViewFolder(): JSX.Element {
                   ? process.env.REACT_APP_INSTRUCTOR
                   : "PapyrusAIInstructors"
               ) && (
-                <Button
-                  variant="default"
-                  onClick={() => {
-                    navigator(
-                      location.pathname.split("/")[2] !== "org"
-                        ? `/library/${folder.id}/createprompt` //user prompt
-                        : `/library/org/${folder.id}/createprompt`
-                    ); //is org prompt
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" /> Add Content
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="default"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" /> Add Content
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2" align="end">
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant="ghost"
+                        className="justify-start flex items-center gap-2 h-auto p-3"
+                        onClick={() => {
+                          const basePath =
+                            location.pathname.split("/")[2] !== "org"
+                              ? `/library/${folder.id}/createprompt`
+                              : `/library/org/${folder.id}/createprompt`;
+                          navigator(basePath);
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        <div className="text-left">
+                          <div className="font-medium">Add Prompt</div>
+                        </div>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="justify-start flex items-center gap-2 h-auto p-3"
+                        onClick={() => {
+                          const basePath =
+                            location.pathname.split("/")[2] !== "org"
+                              ? `/library/${folder.id}/createfile`
+                              : `/library/org/${folder.id}/createfile`;
+                          navigator(basePath);
+                        }}
+                      >
+                        <FileText className="h-4 w-4" />
+                        <div className="text-left">
+                          <div className="font-medium">Add File</div>
+                        </div>
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
             </div>
           </div>

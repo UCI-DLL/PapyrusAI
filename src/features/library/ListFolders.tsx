@@ -59,6 +59,7 @@ interface ListFoldersProps {
   noShowMenu?: boolean;
   onClick?: (folderId: string, isOrgFolder: boolean) => void;
   disableFolderId?: string;
+  compactGrid?: boolean;
 }
 
 export default function ListFolders(props: ListFoldersProps): JSX.Element {
@@ -717,7 +718,14 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
       </div>
 
       {/* Folder Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        className={cn(
+          "grid gap-6",
+          props.compactGrid
+            ? "grid-cols-1 sm:grid-cols-1 md:grid-cols-2"
+            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        )}
+      >
         {orgFilteredFolderList.map((folder: FolderType, i) => {
           if (props.disableFolderId && props.disableFolderId === folder.id) {
             return null;

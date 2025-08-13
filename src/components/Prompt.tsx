@@ -89,6 +89,7 @@ export const Prompt = (props: PromptProps) => {
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [openEditDialog, setOpenEditDialog] = useState<boolean>(false);
+  const [openPreviewDialog, setOpenPreviewDialog] = useState<boolean>(false);
   const [editPromptText, setEditPromptText] = useState<string>(
     props.prompt.prompt
   );
@@ -496,7 +497,7 @@ export const Prompt = (props: PromptProps) => {
 
   const getPromptPreview = () => {
     // Extract a preview from the prompt content
-    const preview = truncateString(props.prompt.prompt, 100);
+    const preview = truncateString(props.prompt.prompt, 150);
     return preview;
   };
 
@@ -558,6 +559,31 @@ export const Prompt = (props: PromptProps) => {
 
   return (
     <div key={props.keyy ? props.keyy : "key"}>
+      {/* Preview Dialog */}
+      <Dialog open={openPreviewDialog} onOpenChange={setOpenPreviewDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>{props.prompt.name}</DialogTitle>
+            <DialogDescription>Full prompt content</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            <div className="bg-muted/50 border rounded-lg p-4">
+              <pre className="text-sm text-muted-foreground font-mono whitespace-pre-wrap break-words">
+                {props.prompt.prompt}
+              </pre>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setOpenPreviewDialog(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Dialog */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
@@ -591,7 +617,7 @@ export const Prompt = (props: PromptProps) => {
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto">
-            <ListFolders noShowMenu onClick={copyTo} />
+            <ListFolders noShowMenu onClick={copyTo} compactGrid />
           </div>
           <DialogFooter>
             <Button
@@ -618,6 +644,7 @@ export const Prompt = (props: PromptProps) => {
               noShowMenu
               onClick={moveTo}
               disableFolderId={props.folder.id}
+              compactGrid
             />
           </div>
           <DialogFooter>
@@ -658,7 +685,7 @@ export const Prompt = (props: PromptProps) => {
                   setEditPromptText(e.target.value);
                 }}
                 placeholder="Enter prompt content"
-                className="w-full min-h-[200px] p-3 border border rounded-md resize-none"
+                className="w-full min-h-[200px] p-3 border rounded-md resize-none"
               />
             </div>
           </div>
@@ -678,13 +705,13 @@ export const Prompt = (props: PromptProps) => {
         </DialogContent>
       </Dialog>
 
-      <Card className="h-full hover:shadow-md transition-shadow duration-200 cursor-pointer group">
+      <Card className="h-full hover:shadow-md transition-shadow duration-200 group">
         <CardContent className="p-4 h-full flex flex-col">
           {/* Header with icon, category, and star */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-blue-600" />
-              <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+              <MessageSquare className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-primary uppercase tracking-wide">
                 {getPromptCategory()}
               </span>
             </div>
@@ -727,15 +754,11 @@ export const Prompt = (props: PromptProps) => {
             {props.prompt.name}
           </h3>
 
-          {/* Description */}
-          <p className="text-sm text-muted-foreground mb-4 flex-grow leading-relaxed">
-            {props.prompt.prompt.length > 100
-              ? truncateString(props.prompt.prompt, 100) + "..."
-              : props.prompt.prompt}
-          </p>
-
           {/* Prompt preview box */}
-          <div className="bg-muted border rounded-lg p-3 mb-4">
+          <div
+            className="bg-muted/50 border rounded-lg p-3 mb-4 mt-auto cursor-pointer hover:bg-muted/70 transition-colors"
+            onClick={() => setOpenPreviewDialog(true)}
+          >
             <p className="text-sm text-muted-foreground font-mono">
               {getPromptPreview()}
             </p>
@@ -756,7 +779,7 @@ export const Prompt = (props: PromptProps) => {
           </div>
 
           {/* Footer with actions */}
-          <div className="flex items-center justify-between mt-auto pt-3 border-t border">
+          <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center gap-2">
               {!props.noShowMenu && (
                 <DropdownMenu>
@@ -764,7 +787,7 @@ export const Prompt = (props: PromptProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-6 w-6"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal className="h-3 w-3" />
@@ -834,7 +857,7 @@ export const Prompt = (props: PromptProps) => {
                 </DropdownMenu>
               )}
             </div>
-            <div className="flex items-center gap-1 text-blue-600 text-xs font-medium">
+            <div className="flex items-center gap-1 text-primary text-xs font-medium">
               <Eye className="h-3 w-3" />
               View
             </div>

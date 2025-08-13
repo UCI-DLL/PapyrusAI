@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
+import { Card, CardContent, CardFooter } from "./ui/card";
 import { Badge } from "./ui/badge";
 import {
   Dialog,
@@ -509,7 +509,7 @@ export const File = (props: FileProps) => {
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto">
-            <ListFolders noShowMenu onClick={copyTo} />
+            <ListFolders noShowMenu onClick={copyTo} compactGrid />
           </div>
           <DialogFooter>
             <Button
@@ -531,11 +531,12 @@ export const File = (props: FileProps) => {
               Select a folder to move this file to.
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 w-90vw overflow-y-auto">
             <ListFolders
               noShowMenu
               onClick={moveTo}
               disableFolderId={props.folder.id}
+              compactGrid
             />
           </div>
           <DialogFooter>
@@ -546,7 +547,7 @@ export const File = (props: FileProps) => {
         </DialogContent>
       </Dialog>
 
-      <Card className="h-full hover:shadow-md transition-shadow duration-200 cursor-pointer group">
+      <Card className="h-full cursor-pointer" onClick={edit}>
         <CardContent className="p-4 h-full flex flex-col">
           {/* Header with icon, file type, and star */}
           <div className="flex items-start justify-between mb-3">
@@ -613,9 +614,7 @@ export const File = (props: FileProps) => {
                 </Badge>
               ))}
           </div>
-
-          {/* Footer with actions */}
-          <div className="flex items-center justify-between mt-auto pt-3 border-t border">
+          <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               {!props.noShowMenu && (
                 <DropdownMenu>
@@ -623,7 +622,7 @@ export const File = (props: FileProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-6 w-6 p-0"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal className="h-3 w-3" />
@@ -693,7 +692,7 @@ export const File = (props: FileProps) => {
                 </DropdownMenu>
               )}
             </div>
-            <div className="flex items-center gap-1 text-blue-600 text-xs font-medium">
+            <div className="flex items-center gap-1 text-xs font-medium text-primary">
               <Eye className="h-3 w-3" />
               View
             </div>

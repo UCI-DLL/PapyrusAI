@@ -1,0 +1,1688 @@
+{
+  "ENGR 190W | TTH | 5:00pm - 7:20pm": {
+    "moduleUsageFrequency": [
+      {
+        "moduleName": "Drafting",
+        "count": 30
+      },
+      {
+        "moduleName": "Planning",
+        "count": 22
+      },
+      {
+        "moduleName": "Revision",
+        "count": 21
+      }
+    ],
+    "weeklyConvoLengths": [
+      {
+        "week": "3/30 - 4/5",
+        "avg_convo_length": 10.727272727272727
+      },
+      {
+        "week": "4/13 - 4/19",
+        "avg_convo_length": 13.5
+      },
+      {
+        "week": "4/20 - 4/26",
+        "avg_convo_length": 10
+      },
+      {
+        "week": "4/27 - 5/3",
+        "avg_convo_length": 20.4
+      },
+      {
+        "week": "4/6 - 4/12",
+        "avg_convo_length": 7.666666666666667
+      },
+      {
+        "week": "5/11 - 5/17",
+        "avg_convo_length": 61
+      },
+      {
+        "week": "5/18 - 5/24",
+        "avg_convo_length": 45
+      },
+      {
+        "week": "5/25 - 5/31",
+        "avg_convo_length": 25.25
+      },
+      {
+        "week": "5/4 - 5/10",
+        "avg_convo_length": 23.833333333333332
+      }
+    ],
+    "weeklyConvoCounts": [
+      {
+        "week": "3/30 - 4/5",
+        "num_convos": 11
+      },
+      {
+        "week": "4/13 - 4/19",
+        "num_convos": 12
+      },
+      {
+        "week": "4/20 - 4/26",
+        "num_convos": 7
+      },
+      {
+        "week": "4/27 - 5/3",
+        "num_convos": 5
+      },
+      {
+        "week": "4/6 - 4/12",
+        "num_convos": 6
+      },
+      {
+        "week": "5/11 - 5/17",
+        "num_convos": 2
+      },
+      {
+        "week": "5/18 - 5/24",
+        "num_convos": 2
+      },
+      {
+        "week": "5/25 - 5/31",
+        "num_convos": 4
+      },
+      {
+        "week": "5/4 - 5/10",
+        "num_convos": 6
+      }
+    ],
+    "weeklyClassificationCounts": [
+      {
+        "week": "3/30 - 4/5",
+        "classification": "Draft",
+        "count": 1
+      },
+      {
+        "week": "3/30 - 4/5",
+        "classification": "Providing Context",
+        "count": 7
+      },
+      {
+        "week": "3/30 - 4/5",
+        "classification": "Search Engine Use",
+        "count": 1
+      },
+      {
+        "week": "3/30 - 4/5",
+        "classification": "Topics and Ideas",
+        "count": 2
+      },
+      {
+        "week": "4/13 - 4/19",
+        "classification": "Class Information",
+        "count": 1
+      },
+      {
+        "week": "4/13 - 4/19",
+        "classification": "Draft",
+        "count": 2
+      },
+      {
+        "week": "4/13 - 4/19",
+        "classification": "Language Use",
+        "count": 1
+      },
+      {
+        "week": "4/13 - 4/19",
+        "classification": "Providing Context",
+        "count": 7
+      },
+      {
+        "week": "4/13 - 4/19",
+        "classification": "Search Engine Use",
+        "count": 1
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Providing Context",
+        "count": 3
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 1
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Request for Generation",
+        "count": 1
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Request for Revision on What Student Wrote",
+        "count": 1
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Search Engine Use",
+        "count": 1
+      },
+      {
+        "week": "4/27 - 5/3",
+        "classification": "Class Information",
+        "count": 1
+      },
+      {
+        "week": "4/27 - 5/3",
+        "classification": "Draft",
+        "count": 1
+      },
+      {
+        "week": "4/27 - 5/3",
+        "classification": "Providing Context",
+        "count": 2
+      },
+      {
+        "week": "4/27 - 5/3",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 1
+      },
+      {
+        "week": "4/6 - 4/12",
+        "classification": "Providing Context",
+        "count": 3
+      },
+      {
+        "week": "4/6 - 4/12",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 2
+      },
+      {
+        "week": "4/6 - 4/12",
+        "classification": "Request for Generation",
+        "count": 1
+      },
+      {
+        "week": "5/11 - 5/17",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 2
+      },
+      {
+        "week": "5/18 - 5/24",
+        "classification": "Providing Context",
+        "count": 1
+      },
+      {
+        "week": "5/18 - 5/24",
+        "classification": "Search Engine Use",
+        "count": 1
+      },
+      {
+        "week": "5/25 - 5/31",
+        "classification": "Language Use",
+        "count": 2
+      },
+      {
+        "week": "5/25 - 5/31",
+        "classification": "Providing Context",
+        "count": 1
+      },
+      {
+        "week": "5/25 - 5/31",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 1
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Draft",
+        "count": 1
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Providing Context",
+        "count": 1
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 1
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Request for Generation",
+        "count": 1
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Search Engine Use",
+        "count": 1
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Topics and Ideas",
+        "count": 1
+      }
+    ],
+    "weeklyModuleUsage": [
+      {
+        "week": "3/30 - 4/5",
+        "moduleName": "Drafting",
+        "count": 4
+      },
+      {
+        "week": "3/30 - 4/5",
+        "moduleName": "Planning",
+        "count": 6
+      },
+      {
+        "week": "3/30 - 4/5",
+        "moduleName": "Revision",
+        "count": 1
+      },
+      {
+        "week": "4/13 - 4/19",
+        "moduleName": "Drafting",
+        "count": 3
+      },
+      {
+        "week": "4/13 - 4/19",
+        "moduleName": "Planning",
+        "count": 3
+      },
+      {
+        "week": "4/13 - 4/19",
+        "moduleName": "Revision",
+        "count": 6
+      },
+      {
+        "week": "4/20 - 4/26",
+        "moduleName": "Drafting",
+        "count": 4
+      },
+      {
+        "week": "4/20 - 4/26",
+        "moduleName": "Planning",
+        "count": 2
+      },
+      {
+        "week": "4/20 - 4/26",
+        "moduleName": "Revision",
+        "count": 1
+      },
+      {
+        "week": "4/27 - 5/3",
+        "moduleName": "Drafting",
+        "count": 2
+      },
+      {
+        "week": "4/27 - 5/3",
+        "moduleName": "Revision",
+        "count": 3
+      },
+      {
+        "week": "4/6 - 4/12",
+        "moduleName": "Drafting",
+        "count": 4
+      },
+      {
+        "week": "4/6 - 4/12",
+        "moduleName": "Planning",
+        "count": 2
+      },
+      {
+        "week": "5/11 - 5/17",
+        "moduleName": "Revision",
+        "count": 2
+      },
+      {
+        "week": "5/18 - 5/24",
+        "moduleName": "Drafting",
+        "count": 1
+      },
+      {
+        "week": "5/18 - 5/24",
+        "moduleName": "Planning",
+        "count": 1
+      },
+      {
+        "week": "5/25 - 5/31",
+        "moduleName": "Drafting",
+        "count": 2
+      },
+      {
+        "week": "5/25 - 5/31",
+        "moduleName": "Revision",
+        "count": 2
+      },
+      {
+        "week": "5/4 - 5/10",
+        "moduleName": "Drafting",
+        "count": 3
+      },
+      {
+        "week": "5/4 - 5/10",
+        "moduleName": "Planning",
+        "count": 2
+      },
+      {
+        "week": "5/4 - 5/10",
+        "moduleName": "Revision",
+        "count": 1
+      }
+    ],
+    "students": {
+      "6b57b3b9-8d2a-4f91-b1f0-24690b9e4925": {
+        "info": {
+          "sub": "6b57b3b9-8d2a-4f91-b1f0-24690b9e4925",
+          "name": "Waverly",
+          "family_name": "Tseng",
+          "email": "waverlyt@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 4
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 4
+      },
+      "6429f65a-b2da-4019-9504-ce50cd12d988": {
+        "info": {
+          "sub": "6429f65a-b2da-4019-9504-ce50cd12d988",
+          "name": "Nicholas",
+          "family_name": "Chen",
+          "email": "nichoc6@uci.edu"
+        },
+        "weeklyConvoLengths": [],
+        "weeklyConvoCounts": [],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 0
+      },
+      "ebc3435b-1f71-4d1a-a0f9-c4125ecb282e": {
+        "info": {
+          "sub": "ebc3435b-1f71-4d1a-a0f9-c4125ecb282e",
+          "name": "Jessica",
+          "family_name": "Zhou",
+          "email": "jessiz10@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/13 - 4/19",
+            "avg_convo_length": 4
+          },
+          {
+            "week": "4/27 - 5/3",
+            "avg_convo_length": 8
+          },
+          {
+            "week": "4/6 - 4/12",
+            "avg_convo_length": 8
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/13 - 4/19",
+            "num_convos": 1
+          },
+          {
+            "week": "4/27 - 5/3",
+            "num_convos": 1
+          },
+          {
+            "week": "4/6 - 4/12",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 20
+      },
+      "e4b892ec-2d89-40e3-b8e5-9347852ca99d": {
+        "info": {
+          "sub": "e4b892ec-2d89-40e3-b8e5-9347852ca99d",
+          "name": "Chiyelum",
+          "family_name": "Nwagboso",
+          "email": "cnwagbos@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/13 - 4/19",
+            "avg_convo_length": 8
+          },
+          {
+            "week": "4/27 - 5/3",
+            "avg_convo_length": 20
+          },
+          {
+            "week": "5/11 - 5/17",
+            "avg_convo_length": 18
+          },
+          {
+            "week": "5/25 - 5/31",
+            "avg_convo_length": 18
+          },
+          {
+            "week": "5/4 - 5/10",
+            "avg_convo_length": 10
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/13 - 4/19",
+            "num_convos": 4
+          },
+          {
+            "week": "4/27 - 5/3",
+            "num_convos": 1
+          },
+          {
+            "week": "5/11 - 5/17",
+            "num_convos": 1
+          },
+          {
+            "week": "5/25 - 5/31",
+            "num_convos": 1
+          },
+          {
+            "week": "5/4 - 5/10",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 2,
+          "Request for Revision on What Student Wrote": 1,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 1,
+          "Request for Feedback & Evaluation": 2,
+          "Providing Context": 2,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 1,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 98
+      },
+      "8ee91069-e8bc-4f79-bb7b-1c87b572bbc9": {
+        "info": {
+          "sub": "8ee91069-e8bc-4f79-bb7b-1c87b572bbc9",
+          "name": "Jack",
+          "family_name": "Lin",
+          "email": "haolonl1@uci.edu"
+        },
+        "weeklyConvoLengths": [],
+        "weeklyConvoCounts": [],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 0
+      },
+      "d02161e5-569e-4a3a-b744-8dd5d2973157": {
+        "info": {
+          "sub": "d02161e5-569e-4a3a-b744-8dd5d2973157",
+          "name": "Dylan",
+          "family_name": "Nguyen",
+          "email": "dylannn2@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/13 - 4/19",
+            "avg_convo_length": 6
+          },
+          {
+            "week": "4/20 - 4/26",
+            "avg_convo_length": 12
+          },
+          {
+            "week": "4/6 - 4/12",
+            "avg_convo_length": 8
+          },
+          {
+            "week": "5/4 - 5/10",
+            "avg_convo_length": 28
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/13 - 4/19",
+            "num_convos": 1
+          },
+          {
+            "week": "4/20 - 4/26",
+            "num_convos": 2
+          },
+          {
+            "week": "4/6 - 4/12",
+            "num_convos": 1
+          },
+          {
+            "week": "5/4 - 5/10",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 1,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 2,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 66
+      },
+      "6d98e8bc-9d10-4c91-9b2f-e8be9732a54a": {
+        "info": {
+          "sub": "6d98e8bc-9d10-4c91-9b2f-e8be9732a54a",
+          "name": "Sean",
+          "family_name": "Yang",
+          "email": "styang1@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/13 - 4/19",
+            "avg_convo_length": 52
+          },
+          {
+            "week": "4/20 - 4/26",
+            "avg_convo_length": 12
+          },
+          {
+            "week": "4/27 - 5/3",
+            "avg_convo_length": 64
+          },
+          {
+            "week": "5/11 - 5/17",
+            "avg_convo_length": 104
+          },
+          {
+            "week": "5/18 - 5/24",
+            "avg_convo_length": 45
+          },
+          {
+            "week": "5/25 - 5/31",
+            "avg_convo_length": 23
+          },
+          {
+            "week": "5/4 - 5/10",
+            "avg_convo_length": 75
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/13 - 4/19",
+            "num_convos": 1
+          },
+          {
+            "week": "4/20 - 4/26",
+            "num_convos": 1
+          },
+          {
+            "week": "4/27 - 5/3",
+            "num_convos": 1
+          },
+          {
+            "week": "5/11 - 5/17",
+            "num_convos": 1
+          },
+          {
+            "week": "5/18 - 5/24",
+            "num_convos": 2
+          },
+          {
+            "week": "5/25 - 5/31",
+            "num_convos": 1
+          },
+          {
+            "week": "5/4 - 5/10",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 2,
+          "Request for Revision on What Student Wrote": 1,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 1,
+          "Request for Feedback & Evaluation": 2,
+          "Providing Context": 2,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 420
+      },
+      "c6cc2d42-a155-41ba-9606-9512d8dc0367": {
+        "info": {
+          "sub": "c6cc2d42-a155-41ba-9606-9512d8dc0367",
+          "name": "RobertRide",
+          "family_name": "Ridenour",
+          "email": "ridenour@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 8
+          },
+          {
+            "week": "4/13 - 4/19",
+            "avg_convo_length": 8
+          },
+          {
+            "week": "4/20 - 4/26",
+            "avg_convo_length": 14
+          },
+          {
+            "week": "5/25 - 5/31",
+            "avg_convo_length": 14
+          },
+          {
+            "week": "5/4 - 5/10",
+            "avg_convo_length": 8
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 1
+          },
+          {
+            "week": "4/13 - 4/19",
+            "num_convos": 1
+          },
+          {
+            "week": "4/20 - 4/26",
+            "num_convos": 1
+          },
+          {
+            "week": "5/25 - 5/31",
+            "num_convos": 1
+          },
+          {
+            "week": "5/4 - 5/10",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 1,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 52
+      },
+      "e81510c1-7e2e-4bf8-8d95-27df3bc61e00": {
+        "info": {
+          "sub": "e81510c1-7e2e-4bf8-8d95-27df3bc61e00",
+          "name": "Justin",
+          "family_name": "Moorehead",
+          "email": "jmoorehe@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 46
+          },
+          {
+            "week": "4/13 - 4/19",
+            "avg_convo_length": 19
+          },
+          {
+            "week": "4/27 - 5/3",
+            "avg_convo_length": 2
+          },
+          {
+            "week": "4/6 - 4/12",
+            "avg_convo_length": 8
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 1
+          },
+          {
+            "week": "4/13 - 4/19",
+            "num_convos": 2
+          },
+          {
+            "week": "4/27 - 5/3",
+            "num_convos": 1
+          },
+          {
+            "week": "4/6 - 4/12",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 1,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 94
+      },
+      "d456d671-1ef9-4cbd-ba4c-3223f65a35a7": {
+        "info": {
+          "sub": "d456d671-1ef9-4cbd-ba4c-3223f65a35a7",
+          "name": "Paolo",
+          "family_name": "Robles",
+          "email": "aproble1@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/6 - 4/12",
+            "avg_convo_length": 6
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/6 - 4/12",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 6
+      },
+      "3baa8b05-5cbe-4a3b-89bc-c9a2909590f9": {
+        "info": {
+          "sub": "3baa8b05-5cbe-4a3b-89bc-c9a2909590f9",
+          "name": "Anushka",
+          "family_name": "Rawat",
+          "email": "arawat2@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 8
+          },
+          {
+            "week": "5/4 - 5/10",
+            "avg_convo_length": 11
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 1
+          },
+          {
+            "week": "5/4 - 5/10",
+            "num_convos": 2
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 30
+      },
+      "1bbe3c23-c340-45e3-9ca2-9c644c1231c7": {
+        "info": {
+          "sub": "1bbe3c23-c340-45e3-9ca2-9c644c1231c7",
+          "name": "Jake",
+          "family_name": "Harrison",
+          "email": "jakeh2@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/13 - 4/19",
+            "avg_convo_length": 11
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/13 - 4/19",
+            "num_convos": 2
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 22
+      },
+      "87141b6b-717c-47af-84bb-5996f4e23dfe": {
+        "info": {
+          "sub": "87141b6b-717c-47af-84bb-5996f4e23dfe",
+          "name": "Esther Caiying",
+          "family_name": "Yao",
+          "email": "caiyingy@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 2
+          },
+          {
+            "week": "4/20 - 4/26",
+            "avg_convo_length": 9
+          },
+          {
+            "week": "4/27 - 5/3",
+            "avg_convo_length": 8
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 1
+          },
+          {
+            "week": "4/20 - 4/26",
+            "num_convos": 2
+          },
+          {
+            "week": "4/27 - 5/3",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 1,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 28
+      },
+      "7491c430-3d9a-46d4-bbab-7bf20ba491f6": {
+        "info": {
+          "sub": "7491c430-3d9a-46d4-bbab-7bf20ba491f6",
+          "name": "Allen",
+          "family_name": "Wu",
+          "email": "allenyw1@uci.edu"
+        },
+        "weeklyConvoLengths": [],
+        "weeklyConvoCounts": [],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 0
+      },
+      "ebedefe0-c294-48b8-b939-8f89c1c4d188": {
+        "info": {
+          "sub": "ebedefe0-c294-48b8-b939-8f89c1c4d188",
+          "name": "Amin Hollywood ",
+          "family_name": "Mansouri",
+          "email": "mamanso1@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 4
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 4
+      },
+      "1879381d-a492-4e00-892f-744e01f374a8": {
+        "info": {
+          "sub": "1879381d-a492-4e00-892f-744e01f374a8",
+          "name": "Tyler",
+          "family_name": "Buffa",
+          "email": "tbuffa@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 8
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 8
+      },
+      "9a3a7a82-45ae-40be-975f-af9c31b66cdd": {
+        "info": {
+          "sub": "9a3a7a82-45ae-40be-975f-af9c31b66cdd",
+          "name": "Martin",
+          "family_name": "Tang",
+          "email": "mqtang@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/6 - 4/12",
+            "avg_convo_length": 6
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/6 - 4/12",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 6
+      },
+      "4240ef87-3ce7-42ce-9a70-d87707a35fdc": {
+        "info": {
+          "sub": "4240ef87-3ce7-42ce-9a70-d87707a35fdc",
+          "name": "Taha",
+          "family_name": "Zeeshan",
+          "email": "tzeeshan@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/6 - 4/12",
+            "avg_convo_length": 10
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/6 - 4/12",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 10
+      },
+      "a401df3b-8c6d-4207-a036-17538379db8c": {
+        "info": {
+          "sub": "a401df3b-8c6d-4207-a036-17538379db8c",
+          "name": "Arash",
+          "family_name": "Soroushiani",
+          "email": "asoroush@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 2
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 2
+      },
+      "e38cd42a-38b8-4d7a-98ad-5338ac45ddde": {
+        "info": {
+          "sub": "e38cd42a-38b8-4d7a-98ad-5338ac45ddde",
+          "name": "Rico",
+          "family_name": "Zhuang",
+          "email": "zzhuan13@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "3/30 - 4/5",
+            "avg_convo_length": 12
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "3/30 - 4/5",
+            "num_convos": 3
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 1,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 36
+      },
+      "99084dec-774e-4db0-9dde-7f364de5f22e": {
+        "info": {
+          "sub": "99084dec-774e-4db0-9dde-7f364de5f22e",
+          "name": "Ashray",
+          "family_name": "Nair",
+          "email": "ashraysn@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "4/20 - 4/26",
+            "avg_convo_length": 2
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "4/20 - 4/26",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 1,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 2
+      },
+      "30f527b8-b636-4c13-8de3-d2b20c613776": {
+        "info": {
+          "sub": "30f527b8-b636-4c13-8de3-d2b20c613776",
+          "name": "Anna",
+          "family_name": "Park",
+          "email": "gaeunp@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          {
+            "week": "5/25 - 5/31",
+            "avg_convo_length": 46
+          }
+        ],
+        "weeklyConvoCounts": [
+          {
+            "week": "5/25 - 5/31",
+            "num_convos": 1
+          }
+        ],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 46
+      }
+    }
+  },
+  "ENGR 191A | MW | 2:00pm - 3:20pm": {
+    "moduleUsageFrequency": [
+      { "moduleName": "Drafting", "count": 27 },
+      { "moduleName": "Planning", "count": 19 },
+      { "moduleName": "Revision", "count": 24 }
+    ],
+    "weeklyConvoLengths": [
+      { "week": "3/30 - 4/5", "avg_convo_length": 12.5 },
+      { "week": "4/13 - 4/19", "avg_convo_length": 15.2 },
+      { "week": "4/20 - 4/26", "avg_convo_length": 9.8 },
+      { "week": "4/27 - 5/3", "avg_convo_length": 18.7 },
+      { "week": "4/6 - 4/12", "avg_convo_length": 8.1 },
+      { "week": "5/11 - 5/17", "avg_convo_length": 55 },
+      { "week": "5/18 - 5/24", "avg_convo_length": 38 },
+      { "week": "5/25 - 5/31", "avg_convo_length": 28.3 },
+      { "week": "5/4 - 5/10", "avg_convo_length": 21.6 }
+    ],
+    "weeklyConvoCounts": [
+      { "week": "3/30 - 4/5", "num_convos": 10 },
+      { "week": "4/13 - 4/19", "num_convos": 13 },
+      { "week": "4/20 - 4/26", "num_convos": 8 },
+      { "week": "4/27 - 5/3", "num_convos": 6 },
+      { "week": "4/6 - 4/12", "num_convos": 7 },
+      { "week": "5/11 - 5/17", "num_convos": 3 },
+      { "week": "5/18 - 5/24", "num_convos": 3 },
+      { "week": "5/25 - 5/31", "num_convos": 5 },
+      { "week": "5/4 - 5/10", "num_convos": 7 }
+    ],
+    "weeklyClassificationCounts": [
+      { "week": "3/30 - 4/5", "classification": "Draft", "count": 2 },
+      {
+        "week": "3/30 - 4/5",
+        "classification": "Providing Context",
+        "count": 6
+      },
+      {
+        "week": "3/30 - 4/5",
+        "classification": "Search Engine Use",
+        "count": 2
+      },
+      {
+        "week": "3/30 - 4/5",
+        "classification": "Topics and Ideas",
+        "count": 1
+      },
+      {
+        "week": "4/13 - 4/19",
+        "classification": "Class Information",
+        "count": 2
+      },
+      { "week": "4/13 - 4/19", "classification": "Draft", "count": 1 },
+      { "week": "4/13 - 4/19", "classification": "Language Use", "count": 2 },
+      {
+        "week": "4/13 - 4/19",
+        "classification": "Providing Context",
+        "count": 6
+      },
+      {
+        "week": "4/13 - 4/19",
+        "classification": "Search Engine Use",
+        "count": 2
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Providing Context",
+        "count": 4
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 2
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Request for Generation",
+        "count": 2
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Request for Revision on What Student Wrote",
+        "count": 2
+      },
+      {
+        "week": "4/20 - 4/26",
+        "classification": "Search Engine Use",
+        "count": 2
+      },
+      {
+        "week": "4/27 - 5/3",
+        "classification": "Class Information",
+        "count": 2
+      },
+      { "week": "4/27 - 5/3", "classification": "Draft", "count": 2 },
+      {
+        "week": "4/27 - 5/3",
+        "classification": "Providing Context",
+        "count": 3
+      },
+      {
+        "week": "4/27 - 5/3",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 2
+      },
+      {
+        "week": "4/6 - 4/12",
+        "classification": "Providing Context",
+        "count": 2
+      },
+      {
+        "week": "4/6 - 4/12",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 3
+      },
+      {
+        "week": "4/6 - 4/12",
+        "classification": "Request for Generation",
+        "count": 2
+      },
+      {
+        "week": "5/11 - 5/17",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 1
+      },
+      {
+        "week": "5/18 - 5/24",
+        "classification": "Providing Context",
+        "count": 2
+      },
+      {
+        "week": "5/18 - 5/24",
+        "classification": "Search Engine Use",
+        "count": 2
+      },
+      { "week": "5/25 - 5/31", "classification": "Language Use", "count": 1 },
+      {
+        "week": "5/25 - 5/31",
+        "classification": "Providing Context",
+        "count": 2
+      },
+      {
+        "week": "5/25 - 5/31",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 2
+      },
+      { "week": "5/4 - 5/10", "classification": "Draft", "count": 2 },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Providing Context",
+        "count": 2
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Request for Feedback & Evaluation",
+        "count": 2
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Request for Generation",
+        "count": 2
+      },
+      {
+        "week": "5/4 - 5/10",
+        "classification": "Search Engine Use",
+        "count": 2
+      },
+      { "week": "5/4 - 5/10", "classification": "Topics and Ideas", "count": 2 }
+    ],
+    "weeklyModuleUsage": [
+      { "week": "3/30 - 4/5", "moduleName": "Drafting", "count": 5 },
+      { "week": "3/30 - 4/5", "moduleName": "Planning", "count": 5 },
+      { "week": "3/30 - 4/5", "moduleName": "Revision", "count": 2 },
+      { "week": "4/13 - 4/19", "moduleName": "Drafting", "count": 2 },
+      { "week": "4/13 - 4/19", "moduleName": "Planning", "count": 4 },
+      { "week": "4/13 - 4/19", "moduleName": "Revision", "count": 5 },
+      { "week": "4/20 - 4/26", "moduleName": "Drafting", "count": 3 },
+      { "week": "4/20 - 4/26", "moduleName": "Planning", "count": 3 },
+      { "week": "4/20 - 4/26", "moduleName": "Revision", "count": 2 },
+      { "week": "4/27 - 5/3", "moduleName": "Drafting", "count": 3 },
+      { "week": "4/27 - 5/3", "moduleName": "Revision", "count": 2 },
+      { "week": "4/6 - 4/12", "moduleName": "Drafting", "count": 3 },
+      { "week": "4/6 - 4/12", "moduleName": "Planning", "count": 3 },
+      { "week": "5/11 - 5/17", "moduleName": "Revision", "count": 1 },
+      { "week": "5/18 - 5/24", "moduleName": "Drafting", "count": 2 },
+      { "week": "5/18 - 5/24", "moduleName": "Planning", "count": 2 },
+      { "week": "5/25 - 5/31", "moduleName": "Drafting", "count": 1 },
+      { "week": "5/25 - 5/31", "moduleName": "Revision", "count": 3 },
+      { "week": "5/4 - 5/10", "moduleName": "Drafting", "count": 2 },
+      { "week": "5/4 - 5/10", "moduleName": "Planning", "count": 3 },
+      { "week": "5/4 - 5/10", "moduleName": "Revision", "count": 2 }
+    ],
+    "students": {
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890": {
+        "info": {
+          "sub": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "name": "Liam",
+          "family_name": "Smith",
+          "email": "liamsmith@uci.edu"
+        },
+        "weeklyConvoLengths": [{ "week": "3/30 - 4/5", "avg_convo_length": 5 }],
+        "weeklyConvoCounts": [{ "week": "3/30 - 4/5", "num_convos": 1 }],
+        "classificationCounts": {
+          "Request for Generation": 1,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 5
+      },
+      "b2c3d4e5-f678-90ab-cdef-1234567890ab": {
+        "info": {
+          "sub": "b2c3d4e5-f678-90ab-cdef-1234567890ab",
+          "name": "Sophia",
+          "family_name": "Johnson",
+          "email": "sophiaj@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          { "week": "4/13 - 4/19", "avg_convo_length": 7 }
+        ],
+        "weeklyConvoCounts": [{ "week": "4/13 - 4/19", "num_convos": 1 }],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 1,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 7
+      },
+      "c3d4e5f6-7890-abcd-ef12-34567890abcd": {
+        "info": {
+          "sub": "c3d4e5f6-7890-abcd-ef12-34567890abcd",
+          "name": "Noah",
+          "family_name": "Williams",
+          "email": "noahw@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          { "week": "4/20 - 4/26", "avg_convo_length": 6 }
+        ],
+        "weeklyConvoCounts": [{ "week": "4/20 - 4/26", "num_convos": 1 }],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 1,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 6
+      },
+      "d4e5f678-90ab-cdef-1234-567890abcdef": {
+        "info": {
+          "sub": "d4e5f678-90ab-cdef-1234-567890abcdef",
+          "name": "Emma",
+          "family_name": "Brown",
+          "email": "emmab@uci.edu"
+        },
+        "weeklyConvoLengths": [{ "week": "4/27 - 5/3", "avg_convo_length": 9 }],
+        "weeklyConvoCounts": [{ "week": "4/27 - 5/3", "num_convos": 1 }],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 1,
+          "Request for Feedback & Evaluation": 0,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 9
+      },
+      "e5f67890-abcd-ef12-3456-7890abcdef12": {
+        "info": {
+          "sub": "e5f67890-abcd-ef12-3456-7890abcdef12",
+          "name": "Oliver",
+          "family_name": "Jones",
+          "email": "oliverj@uci.edu"
+        },
+        "weeklyConvoLengths": [
+          { "week": "5/11 - 5/17", "avg_convo_length": 8 }
+        ],
+        "weeklyConvoCounts": [{ "week": "5/11 - 5/17", "num_convos": 1 }],
+        "classificationCounts": {
+          "Request for Generation": 0,
+          "Request for Revision on What Student Wrote": 0,
+          "Request for Revision on What AI Wrote": 0,
+          "Language Use": 0,
+          "Request for Feedback & Evaluation": 1,
+          "Providing Context": 0,
+          "Be the Boss": 0,
+          "Request for Summary": 0,
+          "Draft": 0,
+          "Outline": 0,
+          "Topics and Ideas": 0,
+          "Class Information": 0,
+          "Search Engine Use": 0,
+          "Off Task": 0
+        },
+        "totalMessages": 8
+      }
+    }
+  }
+}

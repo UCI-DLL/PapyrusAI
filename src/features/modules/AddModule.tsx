@@ -662,6 +662,12 @@ export default function AddModule(): JSX.Element {
               Allow Web Search
             </span>
           </Checkbox>
+          <div>
+            Allow PapyrusAI to search the internet in response to a query or question from students.
+            Have the students prompt the AI with things like "Look up this topic", and it will get some
+            sources from the internet, give a list of the links to the student, and read them to use
+            those sources in conversation with the student.
+          </div>
         </form>
       </Box>
     </div>

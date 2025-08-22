@@ -40,7 +40,7 @@ export default function Login(props: LoginProps): JSX.Element {
     // Place any token found in params into local storage
     else if (new URLSearchParams(location.search).has("papyrusai_access_token")) {
       const params = new URLSearchParams(location.search);
-      const token  = params.get("papyrusai_access_token") as string;
+      const token = params.get("papyrusai_access_token") as string;
       localStorage.setItem("papyrusai_access_token", token);
       setTimeout(() => {
         getUserInfo(token);

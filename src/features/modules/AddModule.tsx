@@ -39,7 +39,7 @@ type AddModuleType = {
   showInitialPrompt: boolean,
   prompts: Array<PromptType>,
   files: Array<FileType>,
-  raterEnabled: boolean,
+  webSearch: boolean,
 }
 //Note: ^ missing showWizard. Need to add later
 
@@ -63,7 +63,7 @@ export default function AddModule(): JSX.Element {
     showInitialPrompt: true,
     prompts: [],
     files: [],
-    raterEnabled: false
+    webSearch: false
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -152,7 +152,7 @@ export default function AddModule(): JSX.Element {
         prompts: session.prompts, //Send prompts with all information + folderId 
         files: session.files, //send files with all information + folderid
         isDeleted: false,
-        raterEnabled: session.raterEnabled,
+        webSearch: session.webSearch,
       }
       // post data back
       Put(putCreateModule(courseId), dataToSend).then((res) => {
@@ -652,20 +652,16 @@ export default function AddModule(): JSX.Element {
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
-                raterEnabled: !session.raterEnabled
+                webSearch: !session.webSearch
               }))
             }}
-            checked={session.raterEnabled}
+            checked={session.webSearch}
             isDisabled={isLoading}
           >
             <span>
-              RATER Enabled
+              Allow Web Search
             </span>
           </Checkbox>
-          <div>
-            Provide students with more tailored feedback on their argumentative essays. Should only
-            be used with essay drafts longer than 150 words. Checking this will also provide analytics on students’ essays with the “View” button.
-          </div>
         </form>
       </Box>
     </div>

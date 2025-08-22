@@ -13,9 +13,10 @@ import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
 import StopIcon from '@mui/icons-material/Stop';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CloseIcon from '@mui/icons-material/Close';
-import { Tooltip, SnackbarCloseReason, Snackbar, IconButton, Button } from "@mui/material";
+import { Tooltip, SnackbarCloseReason, Snackbar, IconButton, Button, CardContent, Typography, CardActions, Link, Box } from "@mui/material";
 import { Modal } from "./Modal";
 import RaterEssay from "./RaterEssay";
+import { truncateString } from "../utility/Helpers";
 
 interface MessageProps {
   message: string;
@@ -26,7 +27,49 @@ interface MessageProps {
   visible?: boolean, // visible to user?
   expandableMessage?: string, //message is clickable and shows extra text in modal
   isInstructor?: boolean, //show the message if not user visible and is an instructor
+  sources?: Array<any> //web access sources
 }
+
+interface ViewSourcesProps {
+  sources: Array<{ url: string, title: string, summary: string }>; // An array of Source objects
+}
+
+const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
+  return (
+    <div >
+      {sources.map((source: { url: string, title: string, summary: string }, index: number) => { // Use the Source interface for type safety
+        return (
+          <Box component="span"
+            sx={{
+              display: 'inline-block',
+              transform: 'scale(0.8)',
+              width: '75%',
+              backgroundColor: '#fafafa',
+              border: '1px solid #f7f7f7',
+              borderRadius: "0.4rem",
+              color: "#222"
+            }}
+          >
+            <CardContent>
+              <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
+                Source {index + 1} {/* Start numbering from 1 for user-friendliness */}
+              </Typography>
+              <Typography variant="h6" component="div">
+                {truncateString(source.title, 50)}
+              </Typography>
+              <Typography variant="body2">
+                {truncateString(source.summary, 200)}
+              </Typography>
+            </CardContent>
+            <CardActions sx={{ marginLeft: "0.4rem" }}>
+              <Link href={source.url} underline="hover" target="_blank" rel="noopener" color="inherit">Visit</Link>
+            </CardActions>
+          </Box>
+        );
+      })}
+    </div>
+  );
+};
 
 export const MessageLeft = (props: MessageProps) => {
   const displayName = props.displayName ? props.displayName : "Displayname";
@@ -85,7 +128,7 @@ export const MessageLeft = (props: MessageProps) => {
   );
 
   //if empty message
-  if (props.message === "" && !props.typing) {
+  if ((props.message === "" || props.message === null) && !props.typing) {
     return <></>;
   }
 
@@ -168,6 +211,9 @@ export const MessageLeft = (props: MessageProps) => {
           )}
         </div>
       )}
+      {props.sources && (
+        <ViewSources sources={props.sources} />
+      )}
 
       <Snackbar
         open={open}
@@ -176,6 +222,10 @@ export const MessageLeft = (props: MessageProps) => {
         message="Message copied to clipboard"
         action={action}
       />
+    </div>
+  ) : props.sources ? (
+    <div>
+      <ViewSources sources={props.sources} />
     </div>
   ) : (<></>);
 };

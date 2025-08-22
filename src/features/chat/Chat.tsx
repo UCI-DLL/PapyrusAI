@@ -61,6 +61,7 @@ export default function Chat(): JSX.Element {
   const [showWizard, setShowWizard] = useState(false); //show normal wizard (either under normal conditions or after we get rater essay back)
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
+  const [messageNote, setMessageNote] = useState<string>(); //Note to users when using a tool 
   const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
     open: boolean,
     deleteOpen: boolean,
@@ -361,6 +362,11 @@ export default function Chat(): JSX.Element {
       setShowWizard(false)
     } else if (returnData.status < 300) {
       const returnMessage: StreamMessageType = JSON.parse(returnData.data)
+      //if there is a note, then display to user
+      if (returnMessage.message === null && returnMessage.note) {
+        setMessageNote(returnMessage.note)
+        setShowTypingIndicator(true);
+      }
       //if we are still streaming and not finished
       if (returnMessage.messageType === "streamMessage" && !returnMessage.finished) {
         //if the current message id matches incoming message,
@@ -396,6 +402,9 @@ export default function Chat(): JSX.Element {
             } else return prev;
           })
         } else {
+          if (returnMessage.message !== null && !returnMessage.note) {
+            setMessageNote(undefined)
+          }
           // make some temp stuff for the message
           const tempTimestamp = Date.now();
           const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
@@ -430,6 +439,12 @@ export default function Chat(): JSX.Element {
             if (prev && messagesRef.current) {
               var temp = [...messagesRef.current];
               temp[temp.length - 1].content = returnMessage.message;
+              //handle web search sources
+              if (returnMessage.sources && returnMessage.sources.sources) {
+                console.log("search query: ", returnMessage.sources.searchQuery)
+                console.log("final summary: ", returnMessage.sources.content)
+                temp[temp.length - 1].sources = returnMessage.sources.sources;
+              }
               return temp;
             } else return prev;
           })
@@ -1113,6 +1128,7 @@ export default function Chat(): JSX.Element {
                     visible={(message.userVisible === undefined || message.userVisible) ? true : false}
                     expandableMessage={message.expandableMessage && message.expandableMessage !== "" ? message.expandableMessage : undefined}
                     isInstructor={(user?.groups.includes(instructor) || user?.groups.includes(admin)) ? true : false}
+                    sources={message.sources ? JSON.parse(message.sources) : []}
                   />
                 </div>
               </div>
@@ -1153,6 +1169,10 @@ export default function Chat(): JSX.Element {
             displayName={"Papyrus"}
             typing
           />
+        )}
+
+        {messageNote && (
+          <span>{messageNote}</span>
         )}
 
         {/* handles scrolling to the bottom */}

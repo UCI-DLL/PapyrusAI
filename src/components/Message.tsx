@@ -17,6 +17,7 @@ import { Tooltip, SnackbarCloseReason, Snackbar, IconButton, Button, CardContent
 import { Modal } from "./Modal";
 import RaterEssay from "./RaterEssay";
 import { truncateString } from "../utility/Helpers";
+import removeMarkdown from "markdown-to-text";
 
 interface MessageProps {
   message: string;
@@ -183,7 +184,7 @@ export const MessageLeft = (props: MessageProps) => {
           >
             <button onClick={() => {
               handleClick()
-              navigator.clipboard.writeText(props.message)
+              navigator.clipboard.writeText(removeMarkdown(props.message))
             }}>
               <ContentCopyIcon />
             </button>
@@ -326,7 +327,7 @@ export const MessageRight = (props: MessageProps) => {
           >
             <button onClick={() => {
               handleClick()
-              navigator.clipboard.writeText(props.message)
+              navigator.clipboard.writeText(removeMarkdown(props.message))
             }}>
               <ContentCopyIcon />
             </button>

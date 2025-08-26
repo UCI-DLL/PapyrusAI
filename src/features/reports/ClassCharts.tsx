@@ -41,10 +41,10 @@ export default function ClassCharts({
     if (!analysis) return true;
 
     // Check if any of the main data categories have content
-    const weeklyConvoLengths = analysis.weeklyConvoLengths as
+    const dailyConvoLengths = analysis.dailyConvoLengths as
       | Array<any>
       | undefined;
-    const weeklyConvoCounts = analysis.weeklyConvoCounts as
+    const dailyConvoCounts = analysis.dailyConvoCounts as
       | Array<any>
       | undefined;
     const dailyModuleUsage = analysis.dailyModuleUsage as
@@ -55,8 +55,8 @@ export default function ClassCharts({
       | undefined;
 
     return (
-      (!weeklyConvoLengths || weeklyConvoLengths.length === 0) &&
-      (!weeklyConvoCounts || weeklyConvoCounts.length === 0) &&
+      (!dailyConvoLengths || dailyConvoLengths.length === 0) &&
+      (!dailyConvoCounts || dailyConvoCounts.length === 0) &&
       (!dailyModuleUsage || dailyModuleUsage.length === 0) &&
       (!dailyClassificationCounts || dailyClassificationCounts.length === 0)
     );
@@ -81,22 +81,6 @@ export default function ClassCharts({
     setSelectedStudentIds([]);
   };
 
-  // Convert MM/DD format to YYYY-MM-DD for date inputs
-  const convertToDateInputFormat = (dateStr: string): string => {
-    const [month, day] = dateStr.split("/").map(Number);
-    // Assuming current year for simplicity, you might want to get this from the data
-    const currentYear = new Date().getFullYear();
-    return `${currentYear}-${month.toString().padStart(2, "0")}-${day
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  // Convert YYYY-MM-DD back to MM/DD format for comparison
-  const convertFromDateInputFormat = (dateInput: string): string => {
-    const date = new Date(dateInput);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  };
-
   // Set initial selected date range when analysis first loads
   useEffect(() => {
     if (!analysis) return;
@@ -105,8 +89,8 @@ export default function ClassCharts({
     const timer = setTimeout(() => {
       const dates = getAvailableDates();
       if (dates.length > 0) {
-        const firstDate = convertToDateInputFormat(dates[0]);
-        const lastDate = convertToDateInputFormat(dates[dates.length - 1]);
+        const firstDate = dates[0];
+        const lastDate = dates[dates.length - 1];
         setStartDate(firstDate);
         setEndDate(lastDate);
       }
@@ -119,8 +103,8 @@ export default function ClassCharts({
   useEffect(() => {
     const dates = getAvailableDates();
     if (dates.length > 0 && (!startDate || !endDate)) {
-      const firstDate = convertToDateInputFormat(dates[0]);
-      const lastDate = convertToDateInputFormat(dates[dates.length - 1]);
+      const firstDate = dates[0];
+      const lastDate = dates[dates.length - 1];
       setStartDate(firstDate);
       setEndDate(lastDate);
     }
@@ -129,10 +113,8 @@ export default function ClassCharts({
   // Final fallback to ensure dates are set
   useEffect(() => {
     if (analysis && availableDates.length > 0 && (!startDate || !endDate)) {
-      const firstDate = convertToDateInputFormat(availableDates[0]);
-      const lastDate = convertToDateInputFormat(
-        availableDates[availableDates.length - 1]
-      );
+      const firstDate = availableDates[0];
+      const lastDate = availableDates[availableDates.length - 1];
       setStartDate(firstDate);
       setEndDate(lastDate);
     }
@@ -184,7 +166,7 @@ export default function ClassCharts({
     }
   }, [selectedStudentIds, analysis]);
 
-  // Force chart re-rendering when switching back to class view - alternative approach
+  // Force chart re-rendering when switching back to class view
   useEffect(() => {
     if (selectedStudentIds.length === 0 && analysis) {
       // Use a state variable to force re-render
@@ -201,23 +183,32 @@ export default function ClassCharts({
 
   // Manual chart rendering function
   const renderCharts = () => {
-    // Render weekly conversation lengths chart
+    // Render daily conversation lengths chart
     if (analysis && lengthsRef.current) {
-      const lengthsData = analysis.weeklyConvoLengths as
-        | Array<{ week: string | number; avg_convo_length: number }>
+      const lengthsData = analysis.dailyConvoLengths as
+        | Array<{ date: string; avg_convo_length: number }>
         | undefined;
       if (lengthsData && lengthsData.length > 0) {
+        // Parse date strings to Date objects
+        const parsedData = lengthsData.map((item) => ({
+          ...item,
+          date: new Date(item.date),
+        }));
+
         const { width, height } = getChartDimensions();
         const plot = Plot.plot({
           style: {},
-          x: { label: "Week" },
+          x: {
+            type: "time",
+            label: "Date",
+          },
           y: { label: "Avg Conversation Length" },
           marks: [
-            Plot.line(lengthsData, { x: "week", y: "avg_convo_length" }),
-            Plot.dot(lengthsData, { x: "week", y: "avg_convo_length" }),
+            Plot.line(parsedData, { x: "date", y: "avg_convo_length" }),
+            Plot.dot(parsedData, { x: "date", y: "avg_convo_length" }),
             Plot.tip(
-              lengthsData,
-              Plot.pointerX({ x: "week", y: "avg_convo_length", fill: "black" })
+              parsedData,
+              Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "black" })
             ),
           ],
           width,
@@ -228,22 +219,31 @@ export default function ClassCharts({
       }
     }
 
-    // Render weekly conversation counts chart
+    // Render daily conversation counts chart
     if (analysis && countsRef.current) {
-      const countsData = analysis.weeklyConvoCounts as
-        | Array<{ week: string | number; num_convos: number }>
+      const countsData = analysis.dailyConvoCounts as
+        | Array<{ date: string; num_convos: number }>
         | undefined;
       if (countsData && countsData.length > 0) {
+        // Parse date strings to Date objects
+        const parsedData = countsData.map((item) => ({
+          ...item,
+          date: new Date(item.date),
+        }));
+
         const { width, height } = getChartDimensions();
         const plot = Plot.plot({
-          x: { label: "Week" },
+          x: {
+            type: "time",
+            label: "Date",
+          },
           y: { label: "Number of Conversations" },
           marks: [
-            Plot.line(countsData, { x: "week", y: "num_convos" }),
-            Plot.dot(countsData, { x: "week", y: "num_convos" }),
+            Plot.line(parsedData, { x: "date", y: "num_convos" }),
+            Plot.dot(parsedData, { x: "date", y: "num_convos" }),
             Plot.tip(
-              countsData,
-              Plot.pointerX({ x: "week", y: "num_convos", fill: "black" })
+              parsedData,
+              Plot.pointerX({ x: "date", y: "num_convos", fill: "black" })
             ),
           ],
           width,
@@ -338,34 +338,34 @@ export default function ClassCharts({
       : "Unknown";
   };
 
-  const getStackedWeeklyData = (students: Record<string, unknown>[]) => {
-    const counts: Array<{ week: string; value: number; studentName: string }> =
+  const getStackedDailyData = (students: Record<string, unknown>[]) => {
+    const counts: Array<{ date: Date; value: number; studentName: string }> =
       [];
-    const lengths: Array<{ week: string; value: number; studentName: string }> =
+    const lengths: Array<{ date: Date; value: number; studentName: string }> =
       [];
 
     students.forEach((student) => {
       const studentName = getStudentName(student);
-      const weeklyConvoCounts = student.weeklyConvoCounts as
+      const dailyConvoCounts = student.dailyConvoCounts as
         | Array<Record<string, unknown>>
         | undefined;
-      if (weeklyConvoCounts) {
-        weeklyConvoCounts.forEach((w) => {
+      if (dailyConvoCounts) {
+        dailyConvoCounts.forEach((d) => {
           counts.push({
-            week: w.week as string,
-            value: w.num_convos as number,
+            date: new Date(d.date as string),
+            value: d.num_convos as number,
             studentName,
           });
         });
       }
-      const weeklyConvoLengths = student.weeklyConvoLengths as
+      const dailyConvoLengths = student.dailyConvoLengths as
         | Array<Record<string, unknown>>
         | undefined;
-      if (weeklyConvoLengths) {
-        weeklyConvoLengths.forEach((w) => {
+      if (dailyConvoLengths) {
+        dailyConvoLengths.forEach((d) => {
           lengths.push({
-            week: w.week as string,
-            value: w.avg_convo_length as number,
+            date: new Date(d.date as string),
+            value: d.avg_convo_length as number,
             studentName,
           });
         });
@@ -428,19 +428,22 @@ export default function ClassCharts({
 
   // Render stacked charts for collective stats
   const renderStackedCharts = (students: Record<string, unknown>[]) => {
-    const { counts, lengths } = getStackedWeeklyData(students);
+    const { counts, lengths } = getStackedDailyData(students);
     const classificationData = getStackedClassificationData(students);
     const moduleData = getStackedModuleUsageData(students);
 
-    // Render stacked weekly conversation counts
+    // Render stacked daily conversation counts
     if (counts.length > 0) {
       const plot = Plot.plot({
-        x: { label: "Week" },
+        x: {
+          type: "time",
+          label: "Date",
+        },
         y: { label: "Number of Conversations" },
         color: { legend: true, label: "Student", scheme: "category10" },
         marks: [
           Plot.barY(counts, {
-            x: "week",
+            x: "date",
             y: "value",
             fill: "studentName",
             tip: { fill: "black" },
@@ -457,15 +460,18 @@ export default function ClassCharts({
       }
     }
 
-    // Render stacked weekly conversation lengths
+    // Render stacked daily conversation lengths
     if (lengths.length > 0) {
       const plot = Plot.plot({
-        x: { label: "Week" },
+        x: {
+          type: "time",
+          label: "Date",
+        },
         y: { label: "Avg Conversation Length" },
         color: { legend: true, label: "Student", scheme: "category10" },
         marks: [
           Plot.barY(lengths, {
-            x: "week",
+            x: "date",
             y: "value",
             fill: "studentName",
             tip: { fill: "black" },
@@ -542,10 +548,7 @@ export default function ClassCharts({
     const startDateObj = new Date(startDate);
     const endDateObj = new Date(endDate);
 
-    // Convert MM/DD format to a comparable date
-    const [month, day] = dateStr.split("/").map(Number);
-    const currentYear = new Date().getFullYear();
-    const dateObj = new Date(currentYear, month - 1, day);
+    const dateObj = new Date(dateStr);
 
     return dateObj >= startDateObj && dateObj <= endDateObj;
   };
@@ -654,23 +657,43 @@ export default function ClassCharts({
 
   useEffect(() => {
     if (!analysis) return;
-    const lengthsData = analysis.weeklyConvoLengths as
-      | Array<{ week: string | number; avg_convo_length: number }>
+    const lengthsData = analysis.dailyConvoLengths as
+      | Array<{ date: string; avg_convo_length: number }>
       | undefined;
     if (!lengthsData) return;
+
+    // Filter data based on selected date range
+    let filteredData = lengthsData;
+    if (startDate && endDate) {
+      filteredData = lengthsData.filter((item) => {
+        const itemDate = new Date(item.date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+
+    // Parse date strings to Date objects
+    const parsedData = filteredData.map((item) => ({
+      ...item,
+      date: new Date(item.date),
+    }));
 
     const { width, height } = getChartDimensions();
 
     const plot = Plot.plot({
       style: {},
-      x: { label: "Week" },
+      x: {
+        type: "time",
+        label: "Date",
+      },
       y: { label: "Avg Conversation Length" },
       marks: [
-        Plot.line(lengthsData, { x: "week", y: "avg_convo_length" }),
-        Plot.dot(lengthsData, { x: "week", y: "avg_convo_length" }),
+        Plot.line(parsedData, { x: "date", y: "avg_convo_length" }),
+        Plot.dot(parsedData, { x: "date", y: "avg_convo_length" }),
         Plot.tip(
-          lengthsData,
-          Plot.pointerX({ x: "week", y: "avg_convo_length", fill: "black" })
+          parsedData,
+          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "black" })
         ),
       ],
       width,
@@ -680,26 +703,46 @@ export default function ClassCharts({
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
     }
-  }, [analysis]);
+  }, [analysis, startDate, endDate]);
 
   useEffect(() => {
     if (!analysis) return;
-    const countsData = analysis.weeklyConvoCounts as
-      | Array<{ week: string | number; num_convos: number }>
+    const countsData = analysis.dailyConvoCounts as
+      | Array<{ date: string; num_convos: number }>
       | undefined;
     if (!countsData) return;
+
+    // Filter data based on selected date range
+    let filteredData = countsData;
+    if (startDate && endDate) {
+      filteredData = countsData.filter((item) => {
+        const itemDate = new Date(item.date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+
+    // Parse date strings to Date objects
+    const parsedData = filteredData.map((item) => ({
+      ...item,
+      date: new Date(item.date),
+    }));
 
     const { width, height } = getChartDimensions();
 
     const plot = Plot.plot({
-      x: { label: "Week" },
+      x: {
+        type: "time",
+        label: "Date",
+      },
       y: { label: "Number of Conversations" },
       marks: [
-        Plot.line(countsData, { x: "week", y: "num_convos" }),
-        Plot.dot(countsData, { x: "week", y: "num_convos" }),
+        Plot.line(parsedData, { x: "date", y: "num_convos" }),
+        Plot.dot(parsedData, { x: "date", y: "num_convos" }),
         Plot.tip(
-          countsData,
-          Plot.pointerX({ x: "week", y: "num_convos", fill: "black" })
+          parsedData,
+          Plot.pointerX({ x: "date", y: "num_convos", fill: "black" })
         ),
       ],
       width,
@@ -709,7 +752,7 @@ export default function ClassCharts({
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
     }
-  }, [analysis]);
+  }, [analysis, startDate, endDate]);
 
   useEffect(() => {
     if (!analysis || !startDate || !endDate) return;
@@ -902,11 +945,11 @@ export default function ClassCharts({
               <div id="stacked-classification" style={{ minHeight: "300px" }} />
             </div>
             <div style={{ marginBottom: "1rem" }}>
-              <h4>Weekly Conversation Lengths (Stacked by Student)</h4>
+              <h4>Daily Conversation Lengths (Stacked by Student)</h4>
               <div id="stacked-lengths" style={{ minHeight: "300px" }} />
             </div>
             <div style={{ marginBottom: "1rem" }}>
-              <h4>Weekly Conversation Counts (Stacked by Student)</h4>
+              <h4>Daily Conversation Counts (Stacked by Student)</h4>
               <div id="stacked-counts" style={{ minHeight: "300px" }} />
             </div>
           </div>
@@ -968,7 +1011,124 @@ export default function ClassCharts({
         </div>
       ) : (
         <>
-          {/* Weekly Charts Section */}
+          {/* Date Range Selector */}
+          {availableDates.length > 0 && (
+            <div style={{ marginBottom: "2rem" }}>
+              <h3 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+                Select Date Range
+              </h3>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "1rem",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <label
+                    htmlFor="startDate"
+                    style={{ marginBottom: "0.5rem", fontWeight: 500 }}
+                  >
+                    Start Date:
+                  </label>
+                  <input
+                    type="date"
+                    id="startDate"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    style={{
+                      padding: "0.5rem",
+                      borderRadius: 4,
+                      border: "1px solid #ccc",
+                      fontSize: "0.9rem",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <label
+                    htmlFor="endDate"
+                    style={{ marginBottom: "0.5rem", fontWeight: 500 }}
+                  >
+                    End Date:
+                  </label>
+                  <input
+                    type="date"
+                    id="endDate"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    style={{
+                      padding: "0.5rem",
+                      borderRadius: 4,
+                      border: "1px solid #ccc",
+                      fontSize: "0.9rem",
+                    }}
+                  />
+                </div>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: "1rem",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    if (availableDates.length > 0) {
+                      const firstDate = availableDates[0];
+                      const lastDate =
+                        availableDates[availableDates.length - 1];
+                      setStartDate(firstDate);
+                      setEndDate(lastDate);
+                    }
+                  }}
+                  style={{
+                    marginRight: "0.5rem",
+                    padding: "0.3rem 0.8rem",
+                    borderRadius: 4,
+                    border: "1px solid #1976d2",
+                    background: "#fff",
+                    color: "#1976d2",
+                    cursor: "pointer",
+                  }}
+                >
+                  Select All Dates
+                </button>
+                <button
+                  onClick={() => {
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                  style={{
+                    padding: "0.3rem 0.8rem",
+                    borderRadius: 4,
+                    border: "1px solid #e53935",
+                    background: "#fff",
+                    color: "#e53935",
+                    cursor: "pointer",
+                  }}
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          )}
+          {/* Daily Charts Section */}
           <div style={{ marginBottom: "3rem" }}>
             <div
               style={{
@@ -979,140 +1139,19 @@ export default function ClassCharts({
               }}
             >
               <div style={{ marginBottom: "1rem" }}>
-                <h3>Weekly Conversation Lengths</h3>
+                <h3>Daily Conversation Lengths</h3>
                 <div ref={lengthsRef} />
               </div>
 
               <div style={{ marginBottom: "1rem" }}>
-                <h3>Weekly Conversation Counts</h3>
+                <h3>Daily Conversation Counts</h3>
                 <div ref={countsRef} />
               </div>
             </div>
           </div>
 
-          {/* Daily Charts Section */}
+          {/* Module Usage & Classification Charts Section */}
           <div style={{ marginBottom: "3rem" }}>
-            {/* Date Range Selector */}
-            {availableDates.length > 0 && (
-              <div style={{ marginBottom: "2rem" }}>
-                <h3 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                  Select Date Range for Module Usage & Classification
-                </h3>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: "1rem",
-                    marginBottom: "1rem",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <label
-                      htmlFor="startDate"
-                      style={{ marginBottom: "0.5rem", fontWeight: 500 }}
-                    >
-                      Start Date:
-                    </label>
-                    <input
-                      type="date"
-                      id="startDate"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      style={{
-                        padding: "0.5rem",
-                        borderRadius: 4,
-                        border: "1px solid #ccc",
-                        fontSize: "0.9rem",
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                    }}
-                  >
-                    <label
-                      htmlFor="endDate"
-                      style={{ marginBottom: "0.5rem", fontWeight: 500 }}
-                    >
-                      End Date:
-                    </label>
-                    <input
-                      type="date"
-                      id="endDate"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      style={{
-                        padding: "0.5rem",
-                        borderRadius: 4,
-                        border: "1px solid #ccc",
-                        fontSize: "0.9rem",
-                      }}
-                    />
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      if (availableDates.length > 0) {
-                        const firstDate = convertToDateInputFormat(
-                          availableDates[0]
-                        );
-                        const lastDate = convertToDateInputFormat(
-                          availableDates[availableDates.length - 1]
-                        );
-                        setStartDate(firstDate);
-                        setEndDate(lastDate);
-                      }
-                    }}
-                    style={{
-                      marginRight: "0.5rem",
-                      padding: "0.3rem 0.8rem",
-                      borderRadius: 4,
-                      border: "1px solid #1976d2",
-                      background: "#fff",
-                      color: "#1976d2",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Select All Dates
-                  </button>
-                  <button
-                    onClick={() => {
-                      setStartDate("");
-                      setEndDate("");
-                    }}
-                    style={{
-                      padding: "0.3rem 0.8rem",
-                      borderRadius: 4,
-                      border: "1px solid #e53935",
-                      background: "#fff",
-                      color: "#e53935",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Clear Selection
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Daily Charts Grid */}
             <div
               style={{
@@ -1123,7 +1162,7 @@ export default function ClassCharts({
               }}
             >
               <div style={{ marginBottom: "1rem" }}>
-                <h3>Module Usage (Daily)</h3>
+                <h3>Module Usage</h3>
                 {startDate && endDate ? (
                   <div ref={moduleUsageRef} />
                 ) : (
@@ -1132,7 +1171,7 @@ export default function ClassCharts({
               </div>
 
               <div style={{ marginBottom: "1rem" }}>
-                <h3>Chat Classification (Daily)</h3>
+                <h3>Chat Classification</h3>
                 {startDate && endDate ? (
                   <div ref={chatClassificationRef} />
                 ) : (

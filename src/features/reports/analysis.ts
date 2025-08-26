@@ -40,10 +40,12 @@ export function getWeekRangeString(timestamp: number | string): string {
   }/${saturday.getDate()}`;
 }
 
-// Helper to get daily date string (MM/DD) for a given timestamp
+// Helper to get daily date string (MM/DD/YYYY) for a given timestamp
 export function getDailyDateString(timestamp: number | string): string {
   const date = new Date(Number(timestamp));
-  return `${date.getMonth() + 1}/${date.getDate()}`;
+  return `${date.getFullYear()}-${(date.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 }
 
 export function getWeeklyConvoLengths(
@@ -373,8 +375,8 @@ export function getStudentClassificationCounts(
 // Analyze a single course for all metrics, including per-student analysis
 export function analyzeCourse(course: Course): {
   moduleUsageFrequency: { moduleName: string; count: number }[];
-  weeklyConvoLengths: { week: string; avg_convo_length: number }[];
-  weeklyConvoCounts: { week: string; num_convos: number }[];
+  dailyConvoLengths: { date: string; avg_convo_length: number }[];
+  dailyConvoCounts: { date: string; num_convos: number }[];
   dailyClassificationCounts: {
     date: string;
     classification: string;
@@ -385,8 +387,8 @@ export function analyzeCourse(course: Course): {
     string,
     {
       info: User;
-      weeklyConvoLengths: { week: string; avg_convo_length: number }[];
-      weeklyConvoCounts: { week: string; num_convos: number }[];
+      dailyConvoLengths: { date: string; avg_convo_length: number }[];
+      dailyConvoCounts: { date: string; num_convos: number }[];
       totalMessages: number;
       moduleUsage: { moduleName: string; count: number }[];
       classificationCounts: { classification: string; count: number }[];
@@ -395,8 +397,8 @@ export function analyzeCourse(course: Course): {
 } {
   // Wrap course in array to reuse existing functions
   const moduleUsageFrequency = getModuleUsageFrequency([course]);
-  const weeklyConvoLengths = getWeeklyConvoLengths([course]);
-  const weeklyConvoCounts = getWeeklyConvoCounts([course]);
+  const dailyConvoLengths = getDailyConvoLengths([course]);
+  const dailyConvoCounts = getDailyConvoCounts([course]);
   const dailyClassificationCounts = getDailyClassificationCounts([course]);
   const dailyModuleUsage = getDailyModuleUsage([course]);
   // Student-level analysis
@@ -404,8 +406,8 @@ export function analyzeCourse(course: Course): {
     string,
     {
       info: User;
-      weeklyConvoLengths: { week: string; avg_convo_length: number }[];
-      weeklyConvoCounts: { week: string; num_convos: number }[];
+      dailyConvoLengths: { date: string; avg_convo_length: number }[];
+      dailyConvoCounts: { date: string; num_convos: number }[];
       totalMessages: number;
       moduleUsage: { moduleName: string; count: number }[];
       classificationCounts: { classification: string; count: number }[];
@@ -420,8 +422,8 @@ export function analyzeCourse(course: Course): {
     );
     students[student.sub] = {
       info: student,
-      weeklyConvoLengths: getStudentWeeklyConvoLengths([course], student.sub),
-      weeklyConvoCounts: getStudentWeeklyConvoCounts([course], student.sub),
+      dailyConvoLengths: getDailyConvoLengths([course]),
+      dailyConvoCounts: getDailyConvoCounts([course]),
       totalMessages,
       moduleUsage: getStudentModuleUsage([course], student.sub),
       classificationCounts: getStudentClassificationCounts(
@@ -432,8 +434,8 @@ export function analyzeCourse(course: Course): {
   }
   const returnObj = {
     moduleUsageFrequency,
-    weeklyConvoLengths,
-    weeklyConvoCounts,
+    dailyConvoLengths,
+    dailyConvoCounts,
     dailyClassificationCounts,
     dailyModuleUsage,
     students,

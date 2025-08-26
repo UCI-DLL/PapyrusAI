@@ -1,15 +1,20 @@
 import axios from "axios";
 
-export default async function Get(url: String, signal?: AbortSignal | undefined, reports: Boolean = false) {
-  const user = localStorage.getItem("papyrusai_access_token")
-  const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + url;
+export default async function Get(
+  url: String,
+  signal?: AbortSignal | undefined,
+  reports: Boolean = false
+) {
+  const user = localStorage.getItem("papyrusai_access_token");
+  const API_URL =
+    (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + url;
 
   var data = await axios
     .get(API_URL, {
       headers: {
         Authorization: user,
       },
-      signal
+      signal,
     })
     .then((response) => {
       return response;
@@ -20,7 +25,7 @@ export default async function Get(url: String, signal?: AbortSignal | undefined,
       if (error.code === "ERR_NETWORK") {
         if (reports) {
           //do nothing
-          //Note: commented cause reports page will retry these types of errors 
+          //Note: commented cause reports page will retry these types of errors
         } else {
           localStorage.removeItem("papyrusai_access_token");
         }

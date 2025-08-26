@@ -40,6 +40,12 @@ export function getWeekRangeString(timestamp: number | string): string {
   }/${saturday.getDate()}`;
 }
 
+// Helper to get daily date string (MM/DD) for a given timestamp
+export function getDailyDateString(timestamp: number | string): string {
+  const date = new Date(Number(timestamp));
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
 export function getWeeklyConvoLengths(
   data: Course[]
 ): { week: string; avg_convo_length: number }[] {
@@ -87,6 +93,55 @@ export function getWeeklyConvoCounts(
   return Object.entries(weekMap)
     .map(([week, num_convos]) => ({ week, num_convos }))
     .sort((a, b) => a.week.localeCompare(b.week));
+}
+
+export function getDailyConvoLengths(
+  data: Course[]
+): { date: string; avg_convo_length: number }[] {
+  const dateMap: Record<string, { total: number; count: number }> = {};
+  for (const course of data) {
+    if (!course.modules) continue;
+    for (const module of course.modules) {
+      if (!module.conversations) continue;
+      for (const convo of module.conversations) {
+        if (!convo.messages || convo.messages.length === 0) continue;
+        const firstMsg = convo.messages[0];
+        if (!firstMsg.timestamp) continue;
+        const date = getDailyDateString(Number(firstMsg.timestamp));
+        if (!dateMap[date]) dateMap[date] = { total: 0, count: 0 };
+        dateMap[date].total += convo.messages.length;
+        dateMap[date].count += 1;
+      }
+    }
+  }
+  return Object.entries(dateMap)
+    .map(([date, { total, count }]) => ({
+      date,
+      avg_convo_length: count ? total / count : 0,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function getDailyConvoCounts(
+  data: Course[]
+): { date: string; num_convos: number }[] {
+  const dateMap: Record<string, number> = {};
+  for (const course of data) {
+    if (!course.modules) continue;
+    for (const module of course.modules) {
+      if (!module.conversations) continue;
+      for (const convo of module.conversations) {
+        if (!convo.messages || convo.messages.length === 0) continue;
+        const firstMsg = convo.messages[0];
+        if (!firstMsg.timestamp) continue;
+        const date = getDailyDateString(Number(firstMsg.timestamp));
+        dateMap[date] = (dateMap[date] || 0) + 1;
+      }
+    }
+  }
+  return Object.entries(dateMap)
+    .map(([date, num_convos]) => ({ date, num_convos }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export function getStudentList(data: Course[]): User[] {
@@ -185,13 +240,13 @@ export function getModuleUsageFrequency(
 }
 
 /**
- * Returns the count of each conversation classification per week.
- * Output: Array of { week: string, classification: string, count: number }
+ * Returns the count of each conversation classification per day.
+ * Output: Array of { date: string, classification: string, count: number }
  */
-export function getWeeklyClassificationCounts(
+export function getDailyClassificationCounts(
   data: Course[]
-): { week: string; classification: string; count: number }[] {
-  const weekClassMap: Record<string, Record<string, number>> = {};
+): { date: string; classification: string; count: number }[] {
+  const dateClassMap: Record<string, Record<string, number>> = {};
   for (const course of data) {
     if (!course.modules) continue;
     for (const module of course.modules) {
@@ -200,41 +255,41 @@ export function getWeeklyClassificationCounts(
         if (!convo.messages || convo.messages.length === 0) continue;
         const firstMsg = convo.messages[0];
         if (!firstMsg.timestamp) continue;
-        const week = getWeekRangeString(Number(firstMsg.timestamp));
+        const date = getDailyDateString(Number(firstMsg.timestamp));
         const classification = convo.classification || "(Unclassified)";
-        if (!weekClassMap[week]) weekClassMap[week] = {};
-        weekClassMap[week][classification] =
-          (weekClassMap[week][classification] || 0) + 1;
+        if (!dateClassMap[date]) dateClassMap[date] = {};
+        dateClassMap[date][classification] =
+          (dateClassMap[date][classification] || 0) + 1;
       }
     }
   }
   // Flatten to array
-  const result: { week: string; classification: string; count: number }[] = [];
-  for (const week in weekClassMap) {
-    for (const classification in weekClassMap[week]) {
+  const result: { date: string; classification: string; count: number }[] = [];
+  for (const date in dateClassMap) {
+    for (const classification in dateClassMap[date]) {
       result.push({
-        week,
+        date,
         classification,
-        count: weekClassMap[week][classification],
+        count: dateClassMap[date][classification],
       });
     }
   }
-  // Sort by week then classification
+  // Sort by date then classification
   return result.sort((a, b) => {
-    const weekCmp = a.week.localeCompare(b.week);
-    if (weekCmp !== 0) return weekCmp;
+    const dateCmp = a.date.localeCompare(b.date);
+    if (dateCmp !== 0) return dateCmp;
     return a.classification.localeCompare(b.classification);
   });
 }
 
 /**
- * Returns the count of conversations per module per week.
- * Output: Array of { week: string, moduleName: string, count: number }
+ * Returns the count of conversations per module per day.
+ * Output: Array of { date: string, moduleName: string, count: number }
  */
-export function getWeeklyModuleUsage(
+export function getDailyModuleUsage(
   data: Course[]
-): { week: string; moduleName: string; count: number }[] {
-  const weekModuleMap: Record<string, Record<string, number>> = {};
+): { date: string; moduleName: string; count: number }[] {
+  const dateModuleMap: Record<string, Record<string, number>> = {};
   for (const course of data) {
     if (!course.modules) continue;
     for (const module of course.modules) {
@@ -244,28 +299,28 @@ export function getWeeklyModuleUsage(
         if (!convo.messages || convo.messages.length === 0) continue;
         const firstMsg = convo.messages[0];
         if (!firstMsg.timestamp) continue;
-        const week = getWeekRangeString(Number(firstMsg.timestamp));
-        if (!weekModuleMap[week]) weekModuleMap[week] = {};
-        weekModuleMap[week][moduleName] =
-          (weekModuleMap[week][moduleName] || 0) + 1;
+        const date = getDailyDateString(Number(firstMsg.timestamp));
+        if (!dateModuleMap[date]) dateModuleMap[date] = {};
+        dateModuleMap[date][moduleName] =
+          (dateModuleMap[date][moduleName] || 0) + 1;
       }
     }
   }
   // Flatten to array
-  const result: { week: string; moduleName: string; count: number }[] = [];
-  for (const week in weekModuleMap) {
-    for (const moduleName in weekModuleMap[week]) {
+  const result: { date: string; moduleName: string; count: number }[] = [];
+  for (const date in dateModuleMap) {
+    for (const moduleName in dateModuleMap[date]) {
       result.push({
-        week,
+        date,
         moduleName,
-        count: weekModuleMap[week][moduleName],
+        count: dateModuleMap[date][moduleName],
       });
     }
   }
-  // Sort by week then moduleName
+  // Sort by date then moduleName
   return result.sort((a, b) => {
-    const weekCmp = a.week.localeCompare(b.week);
-    if (weekCmp !== 0) return weekCmp;
+    const dateCmp = a.date.localeCompare(b.date);
+    if (dateCmp !== 0) return dateCmp;
     return a.moduleName.localeCompare(b.moduleName);
   });
 }
@@ -320,12 +375,12 @@ export function analyzeCourse(course: Course): {
   moduleUsageFrequency: { moduleName: string; count: number }[];
   weeklyConvoLengths: { week: string; avg_convo_length: number }[];
   weeklyConvoCounts: { week: string; num_convos: number }[];
-  weeklyClassificationCounts: {
-    week: string;
+  dailyClassificationCounts: {
+    date: string;
     classification: string;
     count: number;
   }[];
-  weeklyModuleUsage: { week: string; moduleName: string; count: number }[];
+  dailyModuleUsage: { date: string; moduleName: string; count: number }[];
   students: Record<
     string,
     {
@@ -342,8 +397,8 @@ export function analyzeCourse(course: Course): {
   const moduleUsageFrequency = getModuleUsageFrequency([course]);
   const weeklyConvoLengths = getWeeklyConvoLengths([course]);
   const weeklyConvoCounts = getWeeklyConvoCounts([course]);
-  const weeklyClassificationCounts = getWeeklyClassificationCounts([course]);
-  const weeklyModuleUsage = getWeeklyModuleUsage([course]);
+  const dailyClassificationCounts = getDailyClassificationCounts([course]);
+  const dailyModuleUsage = getDailyModuleUsage([course]);
   // Student-level analysis
   const students: Record<
     string,
@@ -375,14 +430,15 @@ export function analyzeCourse(course: Course): {
       ),
     };
   }
-  return {
+  const returnObj = {
     moduleUsageFrequency,
     weeklyConvoLengths,
     weeklyConvoCounts,
-    weeklyClassificationCounts,
-    weeklyModuleUsage,
+    dailyClassificationCounts,
+    dailyModuleUsage,
     students,
   };
+  return returnObj;
 }
 
 // Main function for analyzing all courses from json

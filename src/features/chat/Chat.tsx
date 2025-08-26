@@ -524,30 +524,31 @@ export default function Chat(): JSX.Element {
 
   const onSendEssay = useCallback((essay: string, message?: string) => {
     //save message in message array
-    setChatError(undefined);
-    if (isConnected) {
-      //check that essay/message length is less that 100000
-      if (essay.length > 100000) {
-        setChatError("Essay Too Long to Evaluate");
-      } else if (essay.length < 750) { //~5 characters in a word * 150 words
-        setChatError("Essay Too Short to Evaluate");
-      } else {
-        var sendEssay: any = {
-          "action": "raterEssay",
-          "essay": essay,
-          "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
-        }
-        //add optional message/prompt
-        if (message) {
-          sendEssay["message"] = message;
-        }
-        socket.current?.send(JSON.stringify(sendEssay));
-      }
-      //Set the typing indicator for chatgpt while we wait for a response
-      setShowTypingIndicator(true);
-    } else {
-      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
-    }
+    setOpenErrorModal({ open: true, message: "RATER model not available." });
+    // setChatError(undefined);
+    // if (isConnected) {
+    //   //check that essay/message length is less that 100000
+    //   if (essay.length > 100000) {
+    //     setChatError("Essay Too Long to Evaluate");
+    //   } else if (essay.length < 750) { //~5 characters in a word * 150 words
+    //     setChatError("Essay Too Short to Evaluate");
+    //   } else {
+    //     var sendEssay: any = {
+    //       "action": "raterEssay",
+    //       "essay": essay,
+    //       "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
+    //     }
+    //     //add optional message/prompt
+    //     if (message) {
+    //       sendEssay["message"] = message;
+    //     }
+    //     socket.current?.send(JSON.stringify(sendEssay));
+    //   }
+    //   //Set the typing indicator for chatgpt while we wait for a response
+    //   setShowTypingIndicator(true);
+    // } else {
+    //   setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
+    // }
   }, [isConnected]);
 
   function handleSubmit(e: React.FormEvent) {

@@ -549,7 +549,7 @@ export default function Chat(): JSX.Element {
     // } else {
     //   setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
     // }
-  }, [isConnected]);
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

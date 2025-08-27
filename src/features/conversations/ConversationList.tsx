@@ -1,11 +1,40 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Button, ListItem, ListItemText, Divider, List, Typography, TextField, IconButton, Tooltip, Chip } from "@mui/material";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Badge } from "../../components/ui/badge";
+import { Card, CardContent } from "../../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../../components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
 import Get from "../../utility/Get";
-import LinearProgress from '@mui/material/LinearProgress';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import HideSourceIcon from '@mui/icons-material/HideSource';
-import { getConversationList, postCreateConversation, postUpdateConversation } from "../../utility/endpoints/ConversationEndpoints";
+import {
+  Loader2,
+  Trash2,
+  EyeOff,
+  MessageSquare,
+  Edit,
+  Plus,
+  User,
+  Clock,
+  Eye,
+} from "lucide-react";
+import {
+  getConversationList,
+  postCreateConversation,
+  postUpdateConversation,
+} from "../../utility/endpoints/ConversationEndpoints";
 import Post from "../../utility/Post";
 import { ConversationListType } from "../../utility/types/ConversationTypes";
 import { Link } from "react-router-dom";
@@ -14,22 +43,19 @@ import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { UserType } from "../../utility/types/UserTypes";
 import { UserContext } from "../../utility/context/UserContext";
-import { Modal } from "../../components/Modal";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { cn } from "../../lib/utils";
 
 export default function ConversationList(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
-  const style = {
-    width: '100%',
-    bgcolor: 'background.paper',
-  };
   const [moduleIds, setModuleIds] = useState<{
-    courseId: string,
-    moduleId: string
+    courseId: string;
+    moduleId: string;
   }>();
   const { user } = useContext(UserContext);
-  const [conversationList, setConversationList] = useState<ConversationListType>();
+  const [conversationList, setConversationList] =
+    useState<ConversationListType>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [creatingConvo, setCreatingConvo] = useState<boolean>(false); //disable button after clicking
   const [error, setError] = useState<string>();
@@ -38,14 +64,14 @@ export default function ConversationList(): JSX.Element {
   const [viewUser, setViewUser] = useState<UserType>();
   const { setAlert } = useContext(AlertContext);
   const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
-    open: boolean,
-    deleteOpen: boolean,
-    courseId: string,
-    moduleId: string,
-    index: number,
-    name: string,
-    isDeleted: boolean,
-    error: string
+    open: boolean;
+    deleteOpen: boolean;
+    courseId: string;
+    moduleId: string;
+    index: number;
+    name: string;
+    isDeleted: boolean;
+    error: string;
   }>({
     open: false,
     deleteOpen: false,
@@ -54,9 +80,8 @@ export default function ConversationList(): JSX.Element {
     index: 0,
     name: "",
     isDeleted: false,
-    error: ""
+    error: "",
   });
-
 
   useEffect(() => {
     const controller = new AbortController();
@@ -78,7 +103,10 @@ export default function ConversationList(): JSX.Element {
       setModuleIds({ courseId: courseId, moduleId: moduleId });
       setIsLoading(true);
       //get conversation list based on course and module
-      Get(getConversationList(courseId, moduleId, username), controller.signal).then(res => {
+      Get(
+        getConversationList(courseId, moduleId, username),
+        controller.signal
+      ).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get conversation list for this course/module
@@ -96,7 +124,7 @@ export default function ConversationList(): JSX.Element {
         setIsLoading(false);
       });
 
-      Get(getCourse(courseId), controller.signal).then(res => {
+      Get(getCourse(courseId), controller.signal).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //Get the course and save the modules
@@ -126,7 +154,7 @@ export default function ConversationList(): JSX.Element {
             if (res === undefined) {
             } else {
               //handle error
-              setError("Could not find user")
+              setError("Could not find user");
             }
           }
         });
@@ -138,11 +166,16 @@ export default function ConversationList(): JSX.Element {
     // eslint-disable-next-line
   }, []);
 
-  function handleNewConversation(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+  function handleNewConversation(
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) {
     e.preventDefault();
     if (moduleIds) {
       setCreatingConvo(true);
-      Post(postCreateConversation(moduleIds?.courseId, moduleIds?.moduleId), {}).then(res => {
+      Post(
+        postCreateConversation(moduleIds?.courseId, moduleIds?.moduleId),
+        {}
+      ).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             setCreatingConvo(false);
@@ -150,38 +183,46 @@ export default function ConversationList(): JSX.Element {
             setConversationList(res.data);
             //then go right into chat
             if (res.data.conversations) {
-              navigator(`/chat/${user?.username}/${moduleIds.courseId}/${moduleIds.moduleId}/${res.data.conversations.length - 1}`)
+              navigator(
+                `/chat/${user?.username}/${moduleIds.courseId}/${
+                  moduleIds.moduleId
+                }/${res.data.conversations.length - 1}`
+              );
             }
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // handle error
-          setAlert({ message: "Something went wrong. Try again later", type: "error" });
+          setAlert({
+            message: "Something went wrong. Try again later",
+            type: "error",
+          });
         }
         setIsLoading(false);
       });
     }
   }
 
-  function handleConverstionNameDeleteUpdate(
-    convoUpdateObject: {
-      open: boolean,
-      courseId: string,
-      moduleId: string,
-      index: number,
-      name: string,
-      isDeleted: boolean,
-      error: string
-    }
-  ) {
+  function handleConverstionNameDeleteUpdate(convoUpdateObject: {
+    open: boolean;
+    courseId: string;
+    moduleId: string;
+    index: number;
+    name: string;
+    isDeleted: boolean;
+    error: string;
+  }) {
     if (convoUpdateObject.isDeleted) {
       setIsLoading(true);
-      Post(postUpdateConversation(
-        convoUpdateObject.courseId,
-        convoUpdateObject.moduleId,
-        convoUpdateObject.index.toString()
-      ), { isDeleted: convoUpdateObject.isDeleted }).then(res => {
+      Post(
+        postUpdateConversation(
+          convoUpdateObject.courseId,
+          convoUpdateObject.moduleId,
+          convoUpdateObject.index.toString()
+        ),
+        { isDeleted: convoUpdateObject.isDeleted }
+      ).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //update conversation list with new conversation list
@@ -191,7 +232,10 @@ export default function ConversationList(): JSX.Element {
           navigator("/login");
         } else {
           // handle error
-          setAlert({ message: "Something went wrong. Try again later~~~", type: "error" });
+          setAlert({
+            message: "Something went wrong. Try again later~~~",
+            type: "error",
+          });
         }
         //then close modal
         setOpenUpdateConvoModal({
@@ -202,22 +246,31 @@ export default function ConversationList(): JSX.Element {
           index: 0,
           name: "",
           isDeleted: false,
-          error: ""
+          error: "",
         });
         setIsLoading(false);
       });
     } else {
       if (convoUpdateObject.name.length > 260) {
-        setOpenUpdateConvoModal(prev => ({ ...prev, error: "Name is too long" }))
+        setOpenUpdateConvoModal((prev) => ({
+          ...prev,
+          error: "Name is too long",
+        }));
       } else if (convoUpdateObject.name.length === 0) {
-        setOpenUpdateConvoModal(prev => ({ ...prev, error: "Name cannot be empty" }))
+        setOpenUpdateConvoModal((prev) => ({
+          ...prev,
+          error: "Name cannot be empty",
+        }));
       } else {
         setIsLoading(true);
-        Post(postUpdateConversation(
-          convoUpdateObject.courseId,
-          convoUpdateObject.moduleId,
-          convoUpdateObject.index.toString()
-        ), { name: convoUpdateObject.name }).then(res => {
+        Post(
+          postUpdateConversation(
+            convoUpdateObject.courseId,
+            convoUpdateObject.moduleId,
+            convoUpdateObject.index.toString()
+          ),
+          { name: convoUpdateObject.name }
+        ).then((res) => {
           if (res && res.status && res.status < 300) {
             if (res.data) {
               //update conversation list with new conversation list
@@ -227,7 +280,10 @@ export default function ConversationList(): JSX.Element {
             navigator("/login");
           } else {
             // handle error
-            setAlert({ message: "Something went wrong. Try again later", type: "error" });
+            setAlert({
+              message: "Something went wrong. Try again later",
+              type: "error",
+            });
           }
           //then close modal
           setOpenUpdateConvoModal({
@@ -238,7 +294,7 @@ export default function ConversationList(): JSX.Element {
             index: 0,
             name: "",
             isDeleted: false,
-            error: ""
+            error: "",
           });
           setIsLoading(false);
         });
@@ -247,262 +303,469 @@ export default function ConversationList(): JSX.Element {
   }
 
   return !isLoading && course ? (
-    <div className="courses">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 space-y-6">
       {error ? (
-        <div>{error}</div>
+        <div className="text-center py-12 text-muted-foreground">
+          <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
+          <p className="text-lg mb-2">{error}</p>
+        </div>
       ) : (
         <>
-          <Modal
-            isOpen={openUpdateConvoModal.deleteOpen}
-            title={"Hide Conversation?"}
-            onRequestClose={() => setOpenUpdateConvoModal({
-              open: false,
-              deleteOpen: false,
-              courseId: "",
-              moduleId: "",
-              index: 0,
-              name: "",
-              isDeleted: false,
-              error: ""
-            })}
-            actions={
-              <>
-                <Button variant="contained" color="primary" onClick={(e) => handleConverstionNameDeleteUpdate({ ...openUpdateConvoModal, isDeleted: true })}>
-                  Submit
-                </Button>
+          <Dialog
+            open={openUpdateConvoModal.deleteOpen}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) {
+                setOpenUpdateConvoModal({
+                  open: false,
+                  deleteOpen: false,
+                  courseId: "",
+                  moduleId: "",
+                  index: 0,
+                  name: "",
+                  isDeleted: false,
+                  error: "",
+                });
+              }
+            }}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <EyeOff className="h-5 w-5" />
+                  Hide Conversation?
+                </DialogTitle>
+                <DialogDescription>
+                  Are you sure you would like to hide this conversation?
+                  Instructors can still view hidden conversations.
+                </DialogDescription>
+              </DialogHeader>
+
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
                 <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => setOpenUpdateConvoModal({
-                    open: false,
-                    deleteOpen: false,
-                    courseId: "",
-                    moduleId: "",
-                    index: 0,
-                    name: "",
-                    isDeleted: false,
-                    error: ""
-                  })}>
+                  variant="outline"
+                  onClick={() =>
+                    setOpenUpdateConvoModal({
+                      open: false,
+                      deleteOpen: false,
+                      courseId: "",
+                      moduleId: "",
+                      index: 0,
+                      name: "",
+                      isDeleted: false,
+                      error: "",
+                    })
+                  }
+                >
                   Cancel
                 </Button>
-              </>
-            }
-          >
-            <div>Are you sure you would like to hide this conversation? Instructors can still view hidden conversations.</div>
-          </Modal>
-          <Modal
-            isOpen={openUpdateConvoModal.open}
-            onRequestClose={() => setOpenUpdateConvoModal({
-              open: false,
-              deleteOpen: false,
-              courseId: "",
-              moduleId: "",
-              index: 0,
-              name: "",
-              isDeleted: false,
-              error: ""
-            })}
-            title="Rename Conversation"
-            actions={
-              <Button
-                sx={{ width: "100%" }}
-                variant="contained"
-                onClick={() => handleConverstionNameDeleteUpdate(openUpdateConvoModal)}
-              >
-                Submit
-              </Button>
-            }
-          >
-            <div>
-              <TextField
-                name="name"
-                label="Conversation Name"
-                fullWidth
-                sx={{ margin: ".5rem 0" }}
-                value={openUpdateConvoModal.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-                  setOpenUpdateConvoModal(prev => ({ ...prev, name: e.target.value }))
-                }}
-                error={openUpdateConvoModal.error !== ""}
-                helperText={openUpdateConvoModal.error}
-                disabled={isLoading}
-                required
-              />
-            </div>
-          </Modal>
-          <div className="courses__section-header">
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "baseline" }}>
-              {viewUser ? (
-                <h3>{viewUser.name} {viewUser.family_name} Conversations</h3>
-              ) : (
-                <h3>My Conversations</h3>
-              )}
-              {course && (
-                <>
-                  <Typography sx={{ fontSize: 14 }} color="text.secondary">
-                    {course.section ?
-                      `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}` :
-                      `${course.term ? course.term : ""}${course.year ? course.year : ""}`}
-                  </Typography>
-                  <Typography variant="h5">
-                    {course.modules.find(x => x.id === moduleIds?.moduleId)?.name} - {course.name}
-                  </Typography>
-                  <Typography sx={{ fontSize: 14 }} color="text.secondary" >
-                    {`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
-                  </Typography>
-                </>
-              )}
-            </div>
-
-            <div>
-              {viewUser ? <></> : (
                 <Button
-                  variant="contained"
-                  onClick={handleNewConversation}
-                  disabled={creatingConvo}
+                  variant="destructive"
+                  onClick={() =>
+                    handleConverstionNameDeleteUpdate({
+                      ...openUpdateConvoModal,
+                      isDeleted: true,
+                    })
+                  }
                 >
-                  New Conversation
+                  Hide Conversation
                 </Button>
-              )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={openUpdateConvoModal.open}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) {
+                setOpenUpdateConvoModal({
+                  open: false,
+                  deleteOpen: false,
+                  courseId: "",
+                  moduleId: "",
+                  index: 0,
+                  name: "",
+                  isDeleted: false,
+                  error: "",
+                });
+              }
+            }}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Edit className="h-5 w-5" />
+                  Rename Conversation
+                </DialogTitle>
+                <DialogDescription>
+                  Enter a new name for this conversation.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Input
+                    name="name"
+                    placeholder="Conversation Name"
+                    value={openUpdateConvoModal.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setOpenUpdateConvoModal((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                        error: "", // Clear error when user types
+                      }));
+                    }}
+                    disabled={isLoading}
+                    className={cn(
+                      openUpdateConvoModal.error && "border-destructive"
+                    )}
+                  />
+                  {openUpdateConvoModal.error && (
+                    <p className="text-sm text-destructive">
+                      {openUpdateConvoModal.error}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setOpenUpdateConvoModal({
+                      open: false,
+                      deleteOpen: false,
+                      courseId: "",
+                      moduleId: "",
+                      index: 0,
+                      name: "",
+                      isDeleted: false,
+                      error: "",
+                    })
+                  }
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() =>
+                    handleConverstionNameDeleteUpdate(openUpdateConvoModal)
+                  }
+                  disabled={isLoading || !openUpdateConvoModal.name.trim()}
+                  className="w-full sm:w-auto"
+                >
+                  {isLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Update Name
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <div className="mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="space-y-2">
+                {viewUser ? (
+                  <h1 className="text-2xl font-bold text-foreground">
+                    <User className="inline-block w-5 h-5 mr-2" />
+                    {viewUser.name} {viewUser.family_name} Conversations
+                  </h1>
+                ) : (
+                  <h1 className="text-2xl font-bold text-foreground">
+                    <MessageSquare className="inline-block w-5 h-5 mr-2" />
+                    My Conversations
+                  </h1>
+                )}
+                {course && (
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">
+                      {course.section
+                        ? `${course.term ? course.term : ""}${
+                            course.year ? course.year : ""
+                          } - ${course.section}`
+                        : `${course.term ? course.term : ""}${
+                            course.year ? course.year : ""
+                          }`}
+                    </p>
+                    <h2 className="text-lg font-semibold text-foreground">
+                      {
+                        course.modules.find((x) => x.id === moduleIds?.moduleId)
+                          ?.name
+                      }{" "}
+                      - {course.name}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Instructor: {course.instructor.name}{" "}
+                      {course.instructor.family_name}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                {!viewUser && (
+                  <Button
+                    onClick={handleNewConversation}
+                    disabled={creatingConvo}
+                    className="flex items-center gap-2"
+                  >
+                    {creatingConvo ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                    New Conversation
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
-          <div style={{ margin: "0.5rem 0" }}>
-            This page lists all of the conversations started within this module. For more information on viewing,
-            renaming, and hiding conversations, please see the&nbsp;
-            {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? <a
-              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
-              target="_blank" rel="noreferrer">“Starting a Conversation” section of our user guide
-            </a> : (
-              <a
-                href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
-                target="_blank" rel="noreferrer">“Starting a Conversation” section of our user guide
-              </a>
-            )}
-            .
+          <div className="bg-card border rounded-lg p-4 space-y-3 mb-6">
+            <p className="text-sm text-muted-foreground">
+              This page lists all of the conversations started within this
+              module. For more information on viewing, renaming, and hiding
+              conversations, please see the{" "}
+              {user?.groups.includes(
+                process.env.REACT_APP_INSTRUCTOR
+                  ? process.env.REACT_APP_INSTRUCTOR
+                  : "PapyrusAIInstructors"
+              ) ? (
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2 hover:no-underline text-primary"
+                >
+                  "Starting a Conversation" section of our user guide
+                </a>
+              ) : (
+                <a
+                  href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2 hover:no-underline text-primary"
+                >
+                  "Starting a Conversation" section of our user guide
+                </a>
+              )}
+              .
+            </p>
+            <p className="text-sm text-muted-foreground">
+              To start a new conversation with the AI, click "New Conversation".
+              To continue an existing conversation with the AI, click "Chat"
+              next to the desired conversation. (If you wish to return to an
+              existing conversation, consider renaming it to more easily
+              identify and return to a particular conversation at a later time.)
+            </p>
           </div>
-          <div>
-            To start a new conversation with the AI, click “New Conversation”. To continue an existing conversation with the AI,
-            click “Chat” next to the desired conversation.
-            (If you wish to return to an existing conversation, consider renaming it to more easily identify and return to a
-            particular conversation at a later time.)
-          </div>
-          <hr />
-          <List sx={style} aria-label="conversation list">
+          <div className="space-y-2" aria-label="conversation list">
             {conversationList ? (
               <>
                 {moduleIds &&
-                  user &&
-                  conversationList.conversations &&
-                  conversationList.conversations.length > 0 ?
-                  conversationList.conversations.sort((a: any, b: any) => (b.id > a.id) ? 1 : ((a.id > b.id) ? -1 : 0)).map((conversation, index) => {
-                    const time = new Date(parseInt(conversation.id.substring(0, 13), 10)).toLocaleString();
-                    const link = viewUser ?
-                      `/chat/${viewUser.username}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}` :
-                      `/chat/${user.username}/${moduleIds.courseId}/${moduleIds.moduleId}/${conversationList.conversations.length - index - 1}`
-                    return (conversation.isDeleted && !viewUser) ? (<div key={index}></div>) : (
-                      <div key={index}>
-                        <ListItem sx={{ justifyContent: "space-between", width: "100%" }}>
-                          {/* redirect to chat with and pass params  */}
-                          <Link
-                            to={link}
-                            style={{ textAlign: "left", display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}
-                          >
-                            <ListItemText primary={`${conversation.name}`} secondary={`Created: ${time}`} />
-
-                          </Link>
-                          {viewUser ? (
-                            <>
-                              {conversation.isDeleted && (
-                                <Chip label="This is a deleted conversation" color="error" icon={<DeleteForeverIcon />} />
-                              )}
-                              &nbsp;
-                              <Button variant="contained" onClick={() => navigator(link)} href={link}>View</Button>
-                            </>
-
-                          ) : (
-                            <>
-                              <Tooltip
-                                title={"Hide"}
-                                arrow
-                                componentsProps={{
-                                  tooltip: {
-                                    sx: {
-                                      bgcolor: '#da0222', //error color
-                                      '& .MuiTooltip-arrow': {
-                                        color: '#da0222',
-                                      },
-                                    },
-                                  },
-                                }}
-                                placement="left"
-                              >
-                                <IconButton
-                                  onClick={() => {
-                                    setOpenUpdateConvoModal({
-                                      open: false,
-                                      deleteOpen: true,
-                                      courseId: moduleIds.courseId,
-                                      moduleId: moduleIds.moduleId,
-                                      index: conversationList.conversations.length - index - 1,
-                                      name: conversation.name,
-                                      isDeleted: conversation.isDeleted,
-                                      error: ""
-                                    })
-                                  }}
-                                  aria-label="Hide Conversation"
-                                  className="courses__delete_background"
-                                >
-                                  <HideSourceIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Button onClick={() => {
-                                setOpenUpdateConvoModal({
-                                  open: true,
-                                  deleteOpen: false,
-                                  courseId: moduleIds.courseId,
-                                  moduleId: moduleIds.moduleId,
-                                  index: conversationList.conversations.length - index - 1,
-                                  name: conversation.name,
-                                  isDeleted: conversation.isDeleted,
-                                  error: ""
-                                })
-                              }}
-                              >
-                                Edit
-                              </Button>
-                              <Button variant="contained" onClick={() => navigator(link)} href={link}>Chat</Button>
-                            </>
-                          )}
-                        </ListItem>
-                        {index !== conversationList.conversations.length - 1 ? ( //only have dividers between modules
-                          <Divider />
-                        ) : <></>}
-                      </div>
+                user &&
+                conversationList.conversations &&
+                conversationList.conversations.length > 0 ? (
+                  conversationList.conversations
+                    .sort((a: any, b: any) =>
+                      b.id > a.id ? 1 : a.id > b.id ? -1 : 0
                     )
-                  }) : (
-                    <div style={{ display: "flex", width: "100%", alignContent: "center", justifyContent: "center" }}>
-                      {viewUser ? (
-                        <div>No conversations yet</div>
+                    .map((conversation, index) => {
+                      const time = new Date(
+                        parseInt(conversation.id.substring(0, 13), 10)
+                      ).toLocaleString();
+                      const link = viewUser
+                        ? `/chat/${viewUser.username}/${moduleIds.courseId}/${
+                            moduleIds.moduleId
+                          }/${
+                            conversationList.conversations.length - index - 1
+                          }`
+                        : `/chat/${user.username}/${moduleIds.courseId}/${
+                            moduleIds.moduleId
+                          }/${
+                            conversationList.conversations.length - index - 1
+                          }`;
+                      return conversation.isDeleted && !viewUser ? (
+                        <div key={index}></div>
                       ) : (
+                        <TooltipProvider key={index}>
+                          <Card className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between gap-4">
+                                {/* Conversation Info */}
+                                <Link
+                                  to={link}
+                                  className="flex-1 min-w-0 no-underline hover:no-underline group"
+                                >
+                                  <div className="space-y-1">
+                                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors truncate no-underline">
+                                      {conversation.name}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1 no-underline">
+                                      <Clock className="h-3 w-3" />
+                                      Created: {time}
+                                    </p>
+                                  </div>
+                                </Link>
+
+                                {/* Actions */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {viewUser ? (
+                                    <>
+                                      {conversation.isDeleted && (
+                                        <Badge
+                                          variant="destructive"
+                                          className="flex items-center gap-1"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                          Deleted
+                                        </Badge>
+                                      )}
+                                      <Button
+                                        size="sm"
+                                        onClick={() => navigator(link)}
+                                        className="flex items-center gap-1 text-xs font-medium"
+                                      >
+                                        <Eye className="h-3 w-3" />
+                                        View
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => {
+                                              setOpenUpdateConvoModal({
+                                                open: false,
+                                                deleteOpen: true,
+                                                courseId: moduleIds.courseId,
+                                                moduleId: moduleIds.moduleId,
+                                                index:
+                                                  conversationList.conversations
+                                                    .length -
+                                                  index -
+                                                  1,
+                                                name: conversation.name,
+                                                isDeleted:
+                                                  conversation.isDeleted,
+                                                error: "",
+                                              });
+                                            }}
+                                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                            aria-label="Hide Conversation"
+                                          >
+                                            <EyeOff className="h-3 w-3" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">
+                                          Hide conversation (instructors can
+                                          still view)
+                                        </TooltipContent>
+                                      </Tooltip>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => {
+                                              setOpenUpdateConvoModal({
+                                                open: true,
+                                                deleteOpen: false,
+                                                courseId: moduleIds.courseId,
+                                                moduleId: moduleIds.moduleId,
+                                                index:
+                                                  conversationList.conversations
+                                                    .length -
+                                                  index -
+                                                  1,
+                                                name: conversation.name,
+                                                isDeleted:
+                                                  conversation.isDeleted,
+                                                error: "",
+                                              });
+                                            }}
+                                            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                                            aria-label="Rename Conversation"
+                                          >
+                                            <Edit className="h-3 w-3" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top">
+                                          Rename conversation
+                                        </TooltipContent>
+                                      </Tooltip>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => navigator(link)}
+                                        className="flex items-center gap-1 text-xs font-medium"
+                                      >
+                                        <MessageSquare className="h-3 w-3" />
+                                        Chat
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </TooltipProvider>
+                      );
+                    })
+                ) : (
+                  <div className="text-center py-12">
+                    {viewUser ? (
+                      <div className="text-muted-foreground">
+                        <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                        <p className="text-lg mb-2">No conversations yet</p>
+                        <p className="text-sm">
+                          This user hasn't started any conversations in this
+                          module.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">
+                        <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                        <p className="text-lg mb-4">No conversations yet</p>
                         <Button
-                          variant="contained"
                           onClick={handleNewConversation}
                           disabled={creatingConvo}
+                          className="flex items-center gap-2"
                         >
+                          {creatingConvo ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Plus className="h-4 w-4" />
+                          )}
                           Start a Conversation
                         </Button>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
-            ) : <></>}
-
-          </List>
+            ) : (
+              <></>
+            )}
+          </div>
         </>
       )}
     </div>
   ) : (
-    <LinearProgress />
-  )
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading Conversations</p>
+      </div>
+    </div>
+  );
 }

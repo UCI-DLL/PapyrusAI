@@ -692,10 +692,14 @@ export const File = (props: FileProps) => {
                 </DropdownMenu>
               )}
             </div>
-            <div className="flex items-center gap-1 text-xs font-medium text-primary">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-xs font-medium text-primary"
+            >
               <Eye className="h-3 w-3" />
               View
-            </div>
+            </Button>
           </div>
         </CardContent>
       </Card>

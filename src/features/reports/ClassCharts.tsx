@@ -442,12 +442,12 @@ export default function ClassCharts({
         y: { label: "Number of Conversations" },
         color: { legend: true, label: "Student", scheme: "category10" },
         marks: [
-          Plot.barY(counts, {
+          Plot.rectY(counts, {
             x: "date",
             y: "value",
             fill: "studentName",
             tip: { fill: "black" },
-            order: "stack",
+            interval: "1 day",
           }),
         ],
         width: 500,
@@ -470,12 +470,12 @@ export default function ClassCharts({
         y: { label: "Avg Conversation Length" },
         color: { legend: true, label: "Student", scheme: "category10" },
         marks: [
-          Plot.barY(lengths, {
+          Plot.rectY(lengths, {
             x: "date",
             y: "value",
             fill: "studentName",
             tip: { fill: "black" },
-            order: "stack",
+            interval: "1 day",
           }),
         ],
         width: 500,

@@ -11,13 +11,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "../../components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Separator } from "../../components/ui/separator";
 import { TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { UserContext } from "../../utility/context/UserContext";
@@ -211,120 +204,104 @@ export default function Library(): JSX.Element {
           open={openManageTagsModal}
           onOpenChange={setOpenManageTagsModal}
         >
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Tag className="h-5 w-5" />
                 Manage Tags
               </DialogTitle>
               <DialogDescription>
-                Create, edit, and delete tags for organizing content in your
-                library.
+                Create, edit, and delete tags for organizing content.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-col h-full space-y-4">
-              {/* Existing Tags Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Existing Tags</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="max-h-64 overflow-y-auto space-y-3">
-                    {tagList.length === 0 ? (
-                      <p className="text-muted-foreground text-sm text-center py-4">
-                        No tags found. Create your first tag below.
-                      </p>
-                    ) : (
-                      tagList.map((tag, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                        >
-                          <Input
-                            name={`${i}_tag`}
-                            className="flex-1"
-                            value={tag.name ? tag.name : tag.id}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>
-                            ) => {
-                              setTagList((prev) => {
-                                if (onlyLettersAndNumbers(e.target.value)) {
-                                  var list = [...prev];
-                                  list[i].name = e.target.value;
-                                  return list;
-                                } else {
-                                  return prev;
-                                }
-                              });
-                            }}
-                          />
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              onClick={() =>
-                                handleUpdateTag(
-                                  tag.id,
-                                  false,
-                                  tagList[i].name ?? ""
-                                )
+            <div className="space-y-6">
+              {/* Existing Tags */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Existing Tags</h3>
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {tagList.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-8">
+                      No tags found. Create your first tag below.
+                    </p>
+                  ) : (
+                    tagList.map((tag, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 p-3 rounded-md border"
+                      >
+                        <Input
+                          name={`${i}_tag`}
+                          className="flex-1"
+                          value={tag.name ? tag.name : tag.id}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLInputElement>
+                          ) => {
+                            setTagList((prev) => {
+                              if (onlyLettersAndNumbers(e.target.value)) {
+                                var list = [...prev];
+                                list[i].name = e.target.value;
+                                return list;
+                              } else {
+                                return prev;
                               }
-                              size="sm"
-                              className="flex items-center gap-1"
-                            >
-                              <Edit3 className="h-3 w-3" />
-                              Update
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              onClick={() => handleUpdateTag(tag.id, true)}
-                              size="sm"
-                              className="flex items-center gap-1"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                            });
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            handleUpdateTag(
+                              tag.id,
+                              false,
+                              tagList[i].name ?? ""
+                            )
+                          }
+                          size="sm"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleUpdateTag(tag.id, true)}
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
 
-              <Separator />
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Create New Tag</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleCreateTag} className="space-y-2">
-                    <Label htmlFor="new-tag">Tag Name</Label>
-                    <Input
-                      id="new-tag"
-                      name="tag"
-                      placeholder="Enter tag name (letters and numbers only)"
-                      value={newTag}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        if (onlyLettersAndNumbers(e.target.value)) {
-                          setNewTag(e.target.value);
-                        }
-                      }}
-                    />
-                    <Button
-                      variant="default"
-                      type="submit"
-                      onClick={handleCreateTag}
-                      className="w-full sm:w-auto flex items-center gap-2"
-                      disabled={!newTag.trim()}
-                    >
-                      <Tag className="h-4 w-4" />
-                      Create Tag
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
+              {/* Create New Tag */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Create New Tag</h3>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter tag name"
+                    value={newTag}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      if (onlyLettersAndNumbers(e.target.value)) {
+                        setNewTag(e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newTag.trim()) {
+                        handleCreateTag();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleCreateTag}
+                    disabled={!newTag.trim()}
+                  >
+                    <Tag className="h-4 w-4 mr-2" />
+                    Create
+                  </Button>
+                </div>
+              </div>
             </div>
 
             <DialogFooter>

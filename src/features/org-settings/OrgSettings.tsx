@@ -7,31 +7,51 @@ import {
   postCreateOrgPermission,
   updateOrgPermission,
 } from "../../utility/endpoints/OrgSettingsEndpoints";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
-  Button,
-  FormControl,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  LinearProgress,
-  MenuItem,
-  OutlinedInput,
-  Paper,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../../components/ui/dialog";
+import {
   Select,
-  SelectChangeEvent,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  TextField,
-  Tooltip,
-} from "@mui/material";
-import { Modal } from "../../components/Modal";
-import SearchIcon from "@mui/icons-material/Search";
-import BlockIcon from "@mui/icons-material/Block";
-import DeleteIcon from "@mui/icons-material/Delete";
+} from "../../components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import {
+  Search,
+  Shield,
+  ShieldCheck,
+  ShieldX,
+  Trash2,
+  UserPlus,
+  Loader2,
+  Users,
+  Settings,
+} from "lucide-react";
 import Put from "../../utility/Put";
 import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -327,268 +347,308 @@ export default function OrgSettings(): JSX.Element {
   }
 
   return !isLoading ? (
-    <div className="org-settings">
+    <main className="bg-background text-foreground p-4 space-y-6">
       {error ? (
-        <div>{error}</div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center text-destructive">{error}</div>
+          </CardContent>
+        </Card>
       ) : (
         <>
-          <div className="org-settings__section-header">
-            <Modal
-              isOpen={showAddOrgPermissionModal.open}
-              title={"Add New Permissions"}
-              onRequestClose={() =>
+          {/* Add Permission Modal */}
+          <Dialog
+            open={showAddOrgPermissionModal.open}
+            onOpenChange={(open) => {
+              if (!open) {
                 setShowAddOrgPermissionModal({
                   open: false,
                   email: "",
                   permission: "None",
-                })
+                });
               }
-              actions={
-                <Button
-                  sx={{ width: "100%" }}
-                  variant="contained"
-                  color="secondary"
-                  onClick={() =>
-                    setShowAddOrgPermissionModal({
-                      open: false,
-                      email: "",
-                      permission: "None",
-                    })
-                  }
-                >
-                  Cancel
-                </Button>
-              }
-            >
-              <form
-                onSubmit={addPermission}
-                style={{ display: "flex", flexDirection: "column" }}
-              >
-                <TextField
-                  name="email"
-                  label="email"
-                  fullWidth
-                  sx={{ margin: ".5rem 0" }}
-                  value={showAddOrgPermissionModal.email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setShowAddOrgPermissionModal((prev) => ({
-                      ...prev,
-                      email: e.target.value,
-                    }))
-                  }
-                  disabled={isLoading}
-                  required
-                />
-                <FormControl sx={{ width: "100%", marginTop: "1rem" }}>
-                  <InputLabel shrink={true} id="permission-select-label">
-                    Permission Level
-                  </InputLabel>
-                  <Select
-                    value={showAddOrgPermissionModal.permission}
-                    onChange={(e: SelectChangeEvent) => {
+            }}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Add New Permissions
+                </DialogTitle>
+                <DialogDescription>
+                  Grant permission access to a user by entering their email
+                  address.
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={addPermission} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="user@example.com"
+                    value={showAddOrgPermissionModal.email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setShowAddOrgPermissionModal((prev) => ({
                         ...prev,
-                        permission:
-                          PermissionsOptions[
-                            e.target.value as keyof typeof PermissionsOptions
-                          ],
+                        email: e.target.value,
+                      }))
+                    }
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="permission-level">Permission Level</Label>
+                  <Select
+                    value={showAddOrgPermissionModal.permission}
+                    onValueChange={(value) => {
+                      setShowAddOrgPermissionModal((prev) => ({
+                        ...prev,
+                        permission: value,
                       }));
                     }}
-                    label="Permission Level"
-                    labelId="permission-select-label"
-                    id="permission-select"
-                    sx={{ maxWidth: "100%" }}
-                    notched={true}
                   >
-                    {Object.keys(PermissionsOptions).map((key) => {
-                      return (
-                        <MenuItem value={key} key={key}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select permission level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(PermissionsOptions).map((key) => (
+                        <SelectItem value={key} key={key}>
                           {key}
-                        </MenuItem>
-                      );
-                    })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
-                </FormControl>
-                &nbsp;&nbsp;&nbsp;
-                <Button
-                  variant="contained"
-                  onClick={addPermission}
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  Add Permission
-                </Button>
-              </form>
-            </Modal>
-            <Modal
-              isOpen={openDeleteModal !== undefined}
-              title={"Remove All Permissions?"}
-              onRequestClose={() => setOpenDeleteModal(undefined)}
-              actions={
-                <>
+                </div>
+
+                <DialogFooter>
                   <Button
-                    variant="contained"
-                    color="error"
-                    onClick={handleDelete}
-                  >
-                    Remove
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={() => setOpenDeleteModal(undefined)}
+                    variant="outline"
+                    onClick={() =>
+                      setShowAddOrgPermissionModal({
+                        open: false,
+                        email: "",
+                        permission: "None",
+                      })
+                    }
                   >
                     Cancel
                   </Button>
-                </>
-              }
-            >
-              <div>
-                Are you sure you would like to remove permissions from this
-                user? {openDeleteModal?.id} will still have student level acess.
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Add Permission
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Permission Modal */}
+          <Dialog
+            open={openDeleteModal !== undefined}
+            onOpenChange={(open) => {
+              if (!open) setOpenDeleteModal(undefined);
+            }}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ShieldX className="h-5 w-5 text-destructive" />
+                  Remove All Permissions?
+                </DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. The user will lose all elevated
+                  permissions.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="py-4">
+                <p>
+                  Are you sure you would like to remove permissions from{" "}
+                  <span className="font-medium">{openDeleteModal?.id}</span>?
+                  They will still have student level access.
+                </p>
               </div>
-            </Modal>
-            <Modal
-              isOpen={showUpdateOrgPermissionModal.id !== ""}
-              title={"Update Permissions?"}
-              onRequestClose={() =>
-                setShowUpdateOrgPermissionModal({
-                  id: "",
-                  permission: "",
-                })
-              }
-              actions={
+
+              <DialogFooter>
                 <Button
-                  variant="contained"
-                  color="secondary"
-                  sx={{ width: "100%" }}
-                  onClick={() =>
-                    setShowUpdateOrgPermissionModal({
-                      id: "",
-                      permission: "",
-                    })
-                  }
+                  variant="outline"
+                  onClick={() => setOpenDeleteModal(undefined)}
                 >
                   Cancel
                 </Button>
+                <Button variant="destructive" onClick={handleDelete}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove Permissions
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Update Permission Modal */}
+          <Dialog
+            open={showUpdateOrgPermissionModal.id !== ""}
+            onOpenChange={(open) => {
+              if (!open) {
+                setShowUpdateOrgPermissionModal({
+                  id: "",
+                  permission: "",
+                });
               }
-            >
-              <form
-                onSubmit={updatePermission}
-                style={{ display: "flex", flexDirection: "column" }}
-              >
-                <div>
-                  Would you like to update the permissions for{" "}
-                  {showUpdateOrgPermissionModal.id}?
+            }}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Update Permissions
+                </DialogTitle>
+                <DialogDescription>
+                  Change the permission level for this user.
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={updatePermission} className="space-y-4">
+                <div className="py-2">
+                  <p>
+                    Update permissions for{" "}
+                    <span className="font-medium">
+                      {showUpdateOrgPermissionModal.id}
+                    </span>
+                    ?
+                  </p>
                 </div>
-                <FormControl sx={{ width: "100%", marginTop: "1rem" }}>
-                  <InputLabel shrink={true} id="permission-select-label">
+
+                <div className="space-y-2">
+                  <Label htmlFor="update-permission-level">
                     Permission Level
-                  </InputLabel>
+                  </Label>
                   <Select
                     value={showUpdateOrgPermissionModal.permission}
-                    onChange={(e: SelectChangeEvent) => {
+                    onValueChange={(value) => {
                       setShowUpdateOrgPermissionModal((prev) => ({
                         ...prev,
-                        permission:
-                          PermissionsOptions[
-                            e.target.value as keyof typeof PermissionsOptions
-                          ],
+                        permission: value,
                       }));
                     }}
-                    label="Permission Level"
-                    labelId="permission-select-label"
-                    id="permission-select"
-                    sx={{ maxWidth: "100%" }}
-                    notched={true}
                   >
-                    {Object.keys(PermissionsOptions).map((key) => {
-                      return (
-                        <MenuItem value={key} key={key}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select permission level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(PermissionsOptions).map((key) => (
+                        <SelectItem value={key} key={key}>
                           {key}
-                        </MenuItem>
-                      );
-                    })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
-                </FormControl>
-                &nbsp;&nbsp;&nbsp;
-                <Button
-                  variant="contained"
-                  onClick={updatePermission}
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  Update Permission
-                </Button>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setShowUpdateOrgPermissionModal({
+                        id: "",
+                        permission: "",
+                      })
+                    }
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Update Permission
+                  </Button>
+                </DialogFooter>
               </form>
-            </Modal>
+            </DialogContent>
+          </Dialog>
 
-            <h3>Organization Settings</h3>
-            <div>
-              <Button
-                variant="contained"
-                onClick={() =>
-                  setShowAddOrgPermissionModal((prev) => ({
-                    ...prev,
-                    open: true,
-                  }))
-                }
-              >
-                Add Permission
-              </Button>
-            </div>
-          </div>
-          <hr />
+          {/* Header Section */}
+          <header className="slide-in-up">
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-2xl">
+                      <Settings className="h-6 w-6" />
+                      Organization Settings
+                    </CardTitle>
+                    <p className="text-muted-foreground text-sm mt-2">
+                      Manage user permissions and access levels for your
+                      organization.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() =>
+                      setShowAddOrgPermissionModal((prev) => ({
+                        ...prev,
+                        open: true,
+                      }))
+                    }
+                    className="flex items-center gap-2"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Add Permission
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+          </header>
 
-          {/* Filter, search  */}
-          <div className="org-settings__filter">
-            <FormControl fullWidth>
-              <OutlinedInput
-                id="outlined-adornment-message"
-                placeholder="Search"
-                sx={{ width: "100%" }}
-                value={filter.search}
-                onChange={handleSearchOrgPermissionList}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="sumbit new message"
-                      edge="end"
-                      type="submit"
-                    >
-                      {<SearchIcon />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-            </FormControl>
-            &nbsp;&nbsp;&nbsp;
-            <Button onClick={clearFilters}>Clear</Button>
-          </div>
-
-          <hr />
-
-          {filteredOrgPermissionList.length > 0 ? (
-            <div className="org-settings__list">
-              <TableContainer component={Paper} aria-label="permissions list">
-                <Table aria-label="simple table">
-                  <TableHead>
+          {/* Permissions List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-4">
+                <Users className="h-5 w-5" />
+                User Permissions ({filteredOrgPermissionList.length})
+              </CardTitle>
+              <CardDescription>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by email address..."
+                      value={filter.search}
+                      onChange={handleSearchOrgPermissionList}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Button variant="outline" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                </div>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell>Email</TableCell>
-                      <TableCell align="right">Access Level</TableCell>
+                      <TableHead>Email Address</TableHead>
+                      <TableHead className="text-right">Access Level</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  </TableHead>
+                  </TableHeader>
                   <TableBody>
                     {filteredOrgPermissionList.map((permission, index) => (
-                      <TableRow
-                        key={index}
-                        sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
-                        }}
-                      >
-                        <TableCell component="th" scope="row">
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">
                           {permission.isAdmin ? (
-                            <>{permission.id}</>
+                            <span className="flex items-center gap-2">
+                              <ShieldCheck className="h-4 w-4 text-primary" />
+                              {permission.id}
+                            </span>
                           ) : (
                             <button
                               onClick={() =>
@@ -601,73 +661,85 @@ export default function OrgSettings(): JSX.Element {
                                     : "None",
                                 })
                               }
+                              className="flex items-center gap-2 hover:text-primary transition-colors"
                             >
+                              <Shield className="h-4 w-4" />
                               {permission.id}
                             </button>
                           )}
                         </TableCell>
-                        <TableCell align="right">
+                        <TableCell className="text-right">
                           {permission.isAdmin ? (
-                            <span>Admin</span>
+                            <Badge variant="default" className="bg-primary">
+                              Admin
+                            </Badge>
+                          ) : permission.isInstructor ? (
+                            <Badge variant="secondary">Instructor</Badge>
                           ) : (
-                            <button
-                              onClick={() =>
-                                setShowUpdateOrgPermissionModal({
-                                  id: permission.id,
-                                  permission: permission.isAdmin
-                                    ? "Admin"
-                                    : permission.isInstructor
-                                    ? "Instructor"
-                                    : "None",
-                                })
-                              }
+                            <Badge
+                              variant="outline"
+                              className="text-muted-foreground"
                             >
-                              {permission.isInstructor ? (
-                                <span>Instructor</span>
-                              ) : (
-                                <BlockIcon color="error" />
-                              )}
-                            </button>
+                              <ShieldX className="mr-1 h-3 w-3" />
+                              No Access
+                            </Badge>
                           )}
-                          &nbsp;
-                          {!permission.isAdmin && (
-                            <Tooltip
-                              title={"Delete"}
-                              arrow
-                              componentsProps={{
-                                tooltip: {
-                                  sx: {
-                                    bgcolor: "#da0222", //error color
-                                    "& .MuiTooltip-arrow": {
-                                      color: "#da0222",
-                                    },
-                                  },
-                                },
-                              }}
-                            >
-                              <IconButton
-                                onClick={() => setOpenDeleteModal(permission)}
-                                aria-label="Delete Module"
-                                className="modules__delete_background"
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {!permission.isAdmin && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    setShowUpdateOrgPermissionModal({
+                                      id: permission.id,
+                                      permission: permission.isAdmin
+                                        ? "Admin"
+                                        : permission.isInstructor
+                                        ? "Instructor"
+                                        : "None",
+                                    })
+                                  }
+                                >
+                                  <Shield className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setOpenDeleteModal(permission)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
-            </div>
-          ) : (
-            <div>No available permissions</div>
-          )}
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
-    </div>
+    </main>
   ) : (
-    <LinearProgress />
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading Organization Settings</p>
+      </div>
+    </div>
   );
 }

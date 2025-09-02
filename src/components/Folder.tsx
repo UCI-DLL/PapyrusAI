@@ -661,10 +661,14 @@ export const FolderComponent = (props: FolderProps) => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              <div className="flex items-center gap-1 text-blue-600 text-xs font-medium">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="flex items-center gap-1 text-primary text-xs font-medium"
+              >
                 <ExternalLink className="h-3 w-3" />
                 View
-              </div>
+              </Button>
             </div>
           </div>
         </CardContent>

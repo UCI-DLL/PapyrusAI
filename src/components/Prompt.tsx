@@ -858,10 +858,15 @@ export const Prompt = (props: PromptProps) => {
                 </DropdownMenu>
               )}
             </div>
-            <div className="flex items-center gap-1 text-primary text-xs font-medium">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-primary text-xs font-medium"
+              onClick={() => setOpenPreviewDialog(true)}
+            >
               <Eye className="h-3 w-3" />
               View
-            </div>
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -26,21 +26,33 @@ export default function Account(): JSX.Element {
   }, [setUser])
 
   return (
-    <div className="account">
-      <div className="account__section-header">
-        <h3>Account</h3>
-        
-      </div>
-      <hr />
-      <MissingUserInfoForm
-        user={user ? user : undefined}
-        closeForm={(newuser: UserType) => {
-          //Set user with new information
-          // setUser(() => user ? user : null);
-          // localStorage.setItem("papyrusai_user", JSON.stringify(user));
-        }}
-        requireUpdate={false}
-      />
-    </div>
+    <main className="bg-background text-foreground p-4 space-y-6">
+      <header className="slide-in-up">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div className="relative z-10">
+            <h1 className="text-2xl font-bold mb-1 text-foreground">
+              Account Settings
+            </h1>
+            <p className="text-muted-foreground max-w-2xl text-sm">
+              Manage your profile information and preferences.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section aria-labelledby="account-heading">
+        <div className="w-full">
+          <MissingUserInfoForm
+            user={user ? user : undefined}
+            closeForm={(_newuser: UserType) => {
+              //Set user with new information
+              // setUser(() => user ? user : null);
+              // localStorage.setItem("papyrusai_user", JSON.stringify(user));
+            }}
+            requireUpdate={false}
+          />
+        </div>
+      </section>
+    </main>
   )
 }

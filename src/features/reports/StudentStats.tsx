@@ -7,10 +7,10 @@ type StudentStatsProps = {
 
 export default function StudentStats({ student }: StudentStatsProps) {
   const info = student.info as Record<string, unknown> | undefined;
-  const weeklyConvoLengths = student.weeklyConvoLengths as
+  const dailyConvoLengths = student.dailyConvoLengths as
     | Array<Record<string, unknown>>
     | undefined;
-  const weeklyConvoCounts = student.weeklyConvoCounts as
+  const dailyConvoCounts = student.dailyConvoCounts as
     | Array<Record<string, unknown>>
     | undefined;
   const classificationCounts = student.classificationCounts as
@@ -27,16 +27,23 @@ export default function StudentStats({ student }: StudentStatsProps) {
   const moduleUsageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!weeklyConvoLengths || weeklyConvoLengths.length === 0) return;
+    if (!dailyConvoLengths || dailyConvoLengths.length === 0) return;
+
+    // Parse date strings to Date objects
+    const processedData = dailyConvoLengths.map((item) => ({
+      ...item,
+      date: new Date(item.date as string),
+    }));
+
     const plot = Plot.plot({
-      x: { label: "Week" },
+      x: { label: "Date", type: "time" },
       y: { label: "Avg Conversation Length" },
       marks: [
-        Plot.line(weeklyConvoLengths, { x: "week", y: "avg_convo_length" }),
-        Plot.dot(weeklyConvoLengths, { x: "week", y: "avg_convo_length" }),
+        Plot.line(processedData, { x: "date", y: "avg_convo_length" }),
+        Plot.dot(processedData, { x: "date", y: "avg_convo_length" }),
         Plot.tip(
-          weeklyConvoLengths,
-          Plot.pointerX({ x: "week", y: "avg_convo_length", fill: "black" })
+          processedData,
+          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "black" })
         ),
       ],
       width: 500,
@@ -46,19 +53,26 @@ export default function StudentStats({ student }: StudentStatsProps) {
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
     }
-  }, [weeklyConvoLengths]);
+  }, [dailyConvoLengths]);
 
   useEffect(() => {
-    if (!weeklyConvoCounts || weeklyConvoCounts.length === 0) return;
+    if (!dailyConvoCounts || dailyConvoCounts.length === 0) return;
+
+    // Parse date strings to Date objects
+    const processedData = dailyConvoCounts.map((item) => ({
+      ...item,
+      date: new Date(item.date as string),
+    }));
+
     const plot = Plot.plot({
-      x: { label: "Week" },
+      x: { label: "Date", type: "time" },
       y: { label: "Number of Conversations" },
       marks: [
-        Plot.line(weeklyConvoCounts, { x: "week", y: "num_convos" }),
-        Plot.dot(weeklyConvoCounts, { x: "week", y: "num_convos" }),
+        Plot.line(processedData, { x: "date", y: "num_convos" }),
+        Plot.dot(processedData, { x: "date", y: "num_convos" }),
         Plot.tip(
-          weeklyConvoCounts,
-          Plot.pointerX({ x: "week", y: "num_convos", fill: "black" })
+          processedData,
+          Plot.pointerX({ x: "date", y: "num_convos", fill: "black" })
         ),
       ],
       width: 500,
@@ -68,7 +82,7 @@ export default function StudentStats({ student }: StudentStatsProps) {
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
     }
-  }, [weeklyConvoCounts]);
+  }, [dailyConvoCounts]);
 
   useEffect(() => {
     if (!classificationCounts || classificationCounts.length === 0) return;
@@ -142,11 +156,11 @@ export default function StudentStats({ student }: StudentStatsProps) {
           <div ref={classificationRef} />
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3>Weekly Conversation Lengths</h3>
+          <h3>Daily Conversation Lengths</h3>
           <div ref={lengthsRef} />
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3>Weekly Conversation Counts</h3>
+          <h3>Daily Conversation Counts</h3>
           <div ref={countsRef} />
         </div>
       </div>

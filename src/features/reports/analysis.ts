@@ -224,6 +224,47 @@ export function getStudentWeeklyConvoCounts(
     .sort((a, b) => a.week.localeCompare(b.week));
 }
 
+export function getStudentDailyConvoLengths(
+  data: Course[],
+  studentSub: string
+): { date: string; avg_convo_length: number }[] {
+  const convos = getStudentConversations(data, studentSub);
+  const dateMap: Record<string, { total: number; count: number }> = {};
+  for (const convo of convos) {
+    if (!convo.messages || convo.messages.length === 0) continue;
+    const firstMsg = convo.messages[0];
+    if (!firstMsg.timestamp) continue;
+    const date = getDailyDateString(Number(firstMsg.timestamp));
+    if (!dateMap[date]) dateMap[date] = { total: 0, count: 0 };
+    dateMap[date].total += convo.messages.length;
+    dateMap[date].count += 1;
+  }
+  return Object.entries(dateMap)
+    .map(([date, { total, count }]) => ({
+      date,
+      avg_convo_length: count ? total / count : 0,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function getStudentDailyConvoCounts(
+  data: Course[],
+  studentSub: string
+): { date: string; num_convos: number }[] {
+  const convos = getStudentConversations(data, studentSub);
+  const dateMap: Record<string, number> = {};
+  for (const convo of convos) {
+    if (!convo.messages || convo.messages.length === 0) continue;
+    const firstMsg = convo.messages[0];
+    if (!firstMsg.timestamp) continue;
+    const date = getDailyDateString(Number(firstMsg.timestamp));
+    dateMap[date] = (dateMap[date] || 0) + 1;
+  }
+  return Object.entries(dateMap)
+    .map(([date, num_convos]) => ({ date, num_convos }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export function getModuleUsageFrequency(
   data: Course[]
 ): { moduleName: string; count: number }[] {
@@ -422,8 +463,8 @@ export function analyzeCourse(course: Course): {
     );
     students[student.sub] = {
       info: student,
-      dailyConvoLengths: getDailyConvoLengths([course]),
-      dailyConvoCounts: getDailyConvoCounts([course]),
+      dailyConvoLengths: getStudentDailyConvoLengths([course], student.sub),
+      dailyConvoCounts: getStudentDailyConvoCounts([course], student.sub),
       totalMessages,
       moduleUsage: getStudentModuleUsage([course], student.sub),
       classificationCounts: getStudentClassificationCounts(

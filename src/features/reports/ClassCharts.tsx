@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StudentStats from "./StudentStats";
 
 interface ClassChartsProps {
@@ -14,6 +15,8 @@ export default function ClassCharts({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [showClassificationChart, setShowClassificationChart] =
+    useState<boolean>(false);
   const lengthsRef = useRef<HTMLDivElement>(null);
   const chatClassificationRef = useRef<HTMLDivElement>(null);
   const countsRef = useRef<HTMLDivElement>(null);
@@ -755,11 +758,10 @@ export default function ClassCharts({
   }, [analysis, startDate, endDate]);
 
   useEffect(() => {
-    if (!analysis || !startDate || !endDate) return;
+    if (!analysis || !startDate || !endDate || !showClassificationChart) return;
 
     const aggregatedData = getAggregatedClassificationData();
     const { width, height } = getChartDimensions();
-
     const plot = Plot.plot({
       x: { label: "Classification" },
       y: { label: "Count", grid: true },
@@ -790,7 +792,7 @@ export default function ClassCharts({
       chatClassificationRef.current.innerHTML = "";
       chatClassificationRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate]);
+  }, [analysis, startDate, endDate, showClassificationChart]);
 
   // Placeholder component for empty charts
   const EmptyChartPlaceholder = ({ title }: { title: string }) => {
@@ -816,6 +818,15 @@ export default function ClassCharts({
         </div>
       </div>
     );
+  };
+
+  // Classification button handler
+  // TODO: Implement AWS call to get classification data and here
+  // Possibly add to local storage?
+  const handleClassification = () => {
+    const dummyData = {};
+
+    setShowClassificationChart(true);
   };
 
   // Student filter component
@@ -912,7 +923,7 @@ export default function ClassCharts({
             marginBottom: "2rem",
           }}
         >
-          <h3 onClick={() => setAnalysis(null)}>Back to Course List</h3>
+          <ArrowBackIcon onClick={() => setAnalysis(null)} />
           <StudentFilter />
         </div>
 
@@ -978,7 +989,24 @@ export default function ClassCharts({
       <div
         style={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}
       >
-        <h3 onClick={() => setAnalysis(null)}>Back to Course List</h3>
+        <div style={{ cursor: "pointer" }}>
+          <ArrowBackIcon
+            onClick={() => setAnalysis(null)}
+            style={{
+              fontSize: "3rem",
+              padding: "0.5rem",
+              margin: "0.5rem",
+              color: "#666",
+              transition: "color 0.2s ease-in-out",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "#1976d2";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "#666";
+            }}
+          />
+        </div>
         <StudentFilter />
       </div>
 
@@ -1173,7 +1201,57 @@ export default function ClassCharts({
               <div style={{ marginBottom: "1rem" }}>
                 <h3>Chat Classification</h3>
                 {startDate && endDate ? (
-                  <div ref={chatClassificationRef} />
+                  showClassificationChart ? (
+                    <div ref={chatClassificationRef} />
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "300px",
+                        border: "2px dashed #ccc",
+                        borderRadius: "8px",
+                        backgroundColor: "#f9f9f9",
+                        textAlign: "center",
+                        padding: "2rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          marginBottom: "1rem",
+                          color: "#666",
+                          fontSize: "1.1rem",
+                        }}
+                      >
+                        Classification Data Available On Request
+                      </div>
+                      <button
+                        onClick={() => setShowClassificationChart(true)}
+                        style={{
+                          padding: "0.75rem 1.5rem",
+                          backgroundColor: "#1976d2",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "6px",
+                          fontSize: "0.9rem",
+                          fontWeight: 500,
+                          cursor: "pointer",
+                          transition: "background-color 0.2s ease",
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor = "#1565c0";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor = "#1976d2";
+                        }}
+                      >
+                        View Classification Chart
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <EmptyChartPlaceholder title="Classification Data" />
                 )}

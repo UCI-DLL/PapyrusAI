@@ -32,13 +32,14 @@ interface MessageProps {
 }
 
 interface ViewSourcesProps {
-  sources: Array<{ url: string, title: string, summary: string }>; // An array of Source objects
+  sources: Array<{ url: string, title: string, summary?: string }>; // An array of Source objects
 }
 
 const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
+  // console.log("sources", sources)
   return (
     <div >
-      {sources.map((source: { url: string, title: string, summary: string }, index: number) => { // Use the Source interface for type safety
+      {sources.map((source: { url: string, title: string, summary?: string }, index: number) => { // Use the Source interface for type safety
         return (
           <Box component="span"
             sx={{
@@ -59,7 +60,7 @@ const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
                 {truncateString(source.title, 50)}
               </Typography>
               <Typography variant="body2">
-                {truncateString(source.summary, 200)}
+                {truncateString(source.summary ? source.summary : "", 200)}
               </Typography>
             </CardContent>
             <CardActions sx={{ marginLeft: "0.4rem" }}>

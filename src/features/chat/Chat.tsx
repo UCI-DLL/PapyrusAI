@@ -380,6 +380,9 @@ export default function Chat(): JSX.Element {
           messagesRef.current[messagesRef.current.length - 1].stream &&
           messagesRef.current[messagesRef.current.length - 1].stream?.[0].id === returnMessage.id
         ) {
+          if (returnMessage.message !== null && !returnMessage.note) {
+            setMessageNote(undefined)
+          }
           setMessages((prev) => {
             if (prev && messagesRef.current) {
               var temp = [...messagesRef.current];

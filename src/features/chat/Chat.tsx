@@ -381,12 +381,10 @@ export default function Chat(): JSX.Element {
                 //add new stream message to list
                 temp[temp.length - 1].stream?.push(returnMessage)
                 const stream = temp[temp.length - 1].stream || []
-                //update message based on stream array (timestamps) and index
-                //remove duplicates
-                const filteredArray: StreamMessageType[] = Object.values(stream.reduce((unique: any, o) => {
-                  if (!unique[o.message] || +o.timestamp > +unique[o.message].timestamp) unique[o.message] = o;
-                  return unique;
-                }, {}));
+                //remove duplicates (by timestamp AND message) and then sort by timestamp
+                const filteredArray: StreamMessageType[] = stream.filter((obj, index, self) =>
+                  index === self.findIndex((t) => t.timestamp === obj.timestamp && t.message === obj.message)
+                )
                 const reconstructed = filteredArray.sort((a, b) => a.timestamp - b.timestamp)
                   .map(m => m.message)
                   .join('');

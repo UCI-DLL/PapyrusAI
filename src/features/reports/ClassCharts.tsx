@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StudentStats from "./StudentStats";
+import IndividualStudentStats from "./IndividualStudentStats";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
@@ -17,6 +18,7 @@ export default function ClassCharts({
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [showClassificationChart, setShowClassificationChart] =
     useState<boolean>(false);
+  const [chartRefreshTrigger, setChartRefreshTrigger] = useState<number>(0);
   const lengthsRef = useRef<HTMLDivElement>(null);
   const chatClassificationRef = useRef<HTMLDivElement>(null);
   const countsRef = useRef<HTMLDivElement>(null);
@@ -26,13 +28,37 @@ export default function ClassCharts({
   const getAvailableDates = () => {
     if (!analysis) return [];
 
+    // Check multiple data sources for dates
     const dailyModuleUsage = analysis.dailyModuleUsage as
       | Array<{ date: string; moduleName: string; count: number }>
       | undefined;
+    const dailyConvoLengths = analysis.dailyConvoLengths as
+      | Array<{ date: string; avg_convo_length: number }>
+      | undefined;
+    const dailyConvoCounts = analysis.dailyConvoCounts as
+      | Array<{ date: string; num_convos: number }>
+      | undefined;
+    const dailyClassificationCounts = analysis.dailyClassificationCounts as
+      | Array<{ date: string; classification: string; count: number }>
+      | undefined;
 
-    if (!dailyModuleUsage) return [];
+    // Collect dates from all available data sources
+    const allDates = new Set<string>();
 
-    const dates = [...new Set(dailyModuleUsage.map((item) => item.date))];
+    if (dailyModuleUsage) {
+      dailyModuleUsage.forEach((item) => allDates.add(item.date));
+    }
+    if (dailyConvoLengths) {
+      dailyConvoLengths.forEach((item) => allDates.add(item.date));
+    }
+    if (dailyConvoCounts) {
+      dailyConvoCounts.forEach((item) => allDates.add(item.date));
+    }
+    if (dailyClassificationCounts) {
+      dailyClassificationCounts.forEach((item) => allDates.add(item.date));
+    }
+
+    const dates = Array.from(allDates);
     return dates.sort((a, b) => a.localeCompare(b));
   };
 
@@ -72,16 +98,6 @@ export default function ClassCharts({
     return Object.entries(
       analysis.students as Record<string, Record<string, unknown>>
     );
-  };
-
-  // Handle student selection
-  const handleStudentSelect = (studentIds: string[]) => {
-    setSelectedStudentIds(studentIds);
-  };
-
-  // Clear student selection
-  const clearStudentSelection = () => {
-    setSelectedStudentIds([]);
   };
 
   // Set initial selected date range when analysis first loads
@@ -126,19 +142,9 @@ export default function ClassCharts({
   // Force chart re-rendering when switching back to class view
   useEffect(() => {
     if (selectedStudentIds.length === 0 && analysis) {
-      // Force a re-render of charts by updating a dependency
+      // Force a re-render of charts by updating the refresh trigger
       const timer = setTimeout(() => {
-        // This will trigger the chart useEffect hooks to run again
-        setStartDate((prev) => prev);
-        // Also clear any existing chart content to ensure fresh rendering
-        if (lengthsRef.current) lengthsRef.current.innerHTML = "";
-        if (countsRef.current) countsRef.current.innerHTML = "";
-        if (moduleUsageRef.current) moduleUsageRef.current.innerHTML = "";
-        if (chatClassificationRef.current)
-          chatClassificationRef.current.innerHTML = "";
-
-        // Manually render the charts
-        renderCharts();
+        setChartRefreshTrigger((prev) => prev + 1);
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -147,10 +153,8 @@ export default function ClassCharts({
   // Ensure charts are rendered when class view is displayed
   useEffect(() => {
     if (selectedStudentIds.length === 0 && analysis && !isAnalysisEmpty()) {
-      const timer = setTimeout(() => {
-        renderCharts();
-      }, 200);
-      return () => clearTimeout(timer);
+      // Charts will be rendered by the individual useEffect hooks
+      // No need to manually call renderCharts()
     }
   }, [selectedStudentIds.length, analysis]);
 
@@ -172,8 +176,6 @@ export default function ClassCharts({
   // Force chart re-rendering when switching back to class view
   useEffect(() => {
     if (selectedStudentIds.length === 0 && analysis) {
-      // Use a state variable to force re-render
-      const forceUpdate = Date.now();
       // This will cause the chart useEffect hooks to run again
       setTimeout(() => {
         // Trigger chart re-rendering by updating dependencies
@@ -183,155 +185,6 @@ export default function ClassCharts({
       }, 200);
     }
   }, [selectedStudentIds.length, analysis, startDate, endDate]);
-
-  // Manual chart rendering function
-  const renderCharts = () => {
-    // Render daily conversation lengths chart
-    if (analysis && lengthsRef.current) {
-      const lengthsData = analysis.dailyConvoLengths as
-        | Array<{ date: string; avg_convo_length: number }>
-        | undefined;
-      if (lengthsData && lengthsData.length > 0) {
-        // Parse date strings to Date objects
-        const parsedData = lengthsData.map((item) => ({
-          ...item,
-          date: new Date(item.date),
-        }));
-
-        const { width, height } = getChartDimensions();
-        const plot = Plot.plot({
-          style: {},
-          x: {
-            type: "time",
-            label: "Date",
-          },
-          y: { label: "Avg Conversation Length" },
-          marks: [
-            Plot.line(parsedData, { x: "date", y: "avg_convo_length" }),
-            Plot.dot(parsedData, { x: "date", y: "avg_convo_length" }),
-            Plot.tip(
-              parsedData,
-              Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "black" })
-            ),
-          ],
-          width,
-          height,
-        });
-        lengthsRef.current.innerHTML = "";
-        lengthsRef.current.appendChild(plot);
-      }
-    }
-
-    // Render daily conversation counts chart
-    if (analysis && countsRef.current) {
-      const countsData = analysis.dailyConvoCounts as
-        | Array<{ date: string; num_convos: number }>
-        | undefined;
-      if (countsData && countsData.length > 0) {
-        // Parse date strings to Date objects
-        const parsedData = countsData.map((item) => ({
-          ...item,
-          date: new Date(item.date),
-        }));
-
-        const { width, height } = getChartDimensions();
-        const plot = Plot.plot({
-          x: {
-            type: "time",
-            label: "Date",
-          },
-          y: { label: "Number of Conversations" },
-          marks: [
-            Plot.line(parsedData, { x: "date", y: "num_convos" }),
-            Plot.dot(parsedData, { x: "date", y: "num_convos" }),
-            Plot.tip(
-              parsedData,
-              Plot.pointerX({ x: "date", y: "num_convos", fill: "black" })
-            ),
-          ],
-          width,
-          height,
-        });
-        countsRef.current.innerHTML = "";
-        countsRef.current.appendChild(plot);
-      }
-    }
-
-    // Render daily charts if dates are selected
-    if (startDate && endDate) {
-      // Render module usage chart
-      if (analysis && moduleUsageRef.current) {
-        const aggregatedData = getAggregatedModuleData();
-        if (aggregatedData.length > 0) {
-          const { width, height } = getChartDimensions();
-          const plot = Plot.plot({
-            x: { label: "Module" },
-            y: { label: "Count", grid: true },
-            color: {
-              legend: true,
-              label: "Module",
-              scheme: "tableau10",
-            },
-            marks: [
-              Plot.barY(aggregatedData, {
-                x: "moduleName",
-                y: "count",
-                fill: "moduleName",
-                tip: {
-                  format: {
-                    x: true,
-                    fill: true,
-                    count: true,
-                  },
-                  fill: "black",
-                },
-              }),
-            ],
-            width,
-            height,
-          });
-          moduleUsageRef.current.innerHTML = "";
-          moduleUsageRef.current.appendChild(plot);
-        }
-      }
-
-      // Render classification chart
-      if (analysis && chatClassificationRef.current) {
-        const aggregatedData = getAggregatedClassificationData();
-        if (aggregatedData.length > 0) {
-          const { width, height } = getChartDimensions();
-          const plot = Plot.plot({
-            x: { label: "Classification" },
-            y: { label: "Count", grid: true },
-            color: {
-              legend: true,
-              label: "Classification",
-              scheme: "tableau10",
-            },
-            marks: [
-              Plot.barY(aggregatedData, {
-                x: "classification",
-                y: "count",
-                fill: "classification",
-                tip: {
-                  format: {
-                    x: true,
-                    fill: true,
-                    count: true,
-                  },
-                  fill: "black",
-                },
-              }),
-            ],
-            width,
-            height,
-          });
-          chatClassificationRef.current.innerHTML = "";
-          chatClassificationRef.current.appendChild(plot);
-        }
-      }
-    }
-  };
 
   // Helper functions for stacked charts
   const getStudentName = (student: Record<string, unknown>) => {
@@ -656,7 +509,7 @@ export default function ClassCharts({
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate]);
+  }, [analysis, startDate, endDate, chartRefreshTrigger]);
 
   useEffect(() => {
     if (!analysis) return;
@@ -706,7 +559,7 @@ export default function ClassCharts({
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate]);
+  }, [analysis, startDate, endDate, chartRefreshTrigger]);
 
   useEffect(() => {
     if (!analysis) return;
@@ -755,7 +608,7 @@ export default function ClassCharts({
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate]);
+  }, [analysis, startDate, endDate, chartRefreshTrigger]);
 
   useEffect(() => {
     if (!analysis || !startDate || !endDate || !showClassificationChart) return;
@@ -792,7 +645,13 @@ export default function ClassCharts({
       chatClassificationRef.current.innerHTML = "";
       chatClassificationRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate, showClassificationChart]);
+  }, [
+    analysis,
+    startDate,
+    endDate,
+    showClassificationChart,
+    chartRefreshTrigger,
+  ]);
 
   // Placeholder component for empty charts
   const EmptyChartPlaceholder = ({ title }: { title: string }) => {
@@ -818,15 +677,6 @@ export default function ClassCharts({
         </div>
       </div>
     );
-  };
-
-  // Classification button handler
-  // TODO: Implement AWS call to get classification data and here
-  // Possibly add to local storage?
-  const handleClassification = () => {
-    const dummyData = {};
-
-    setShowClassificationChart(true);
   };
 
   // Student filter component
@@ -977,7 +827,7 @@ export default function ClassCharts({
               paddingBottom: index < selectedStudents.length - 1 ? "2rem" : "0",
             }}
           >
-            <StudentStats student={student} />
+            <IndividualStudentStats student={student} />
           </div>
         ))}
       </>

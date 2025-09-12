@@ -190,6 +190,8 @@ function App(): JSX.Element {
                           else return null
                         })
 
+                        setShowUpdateUserInfoModal(false);
+
                         //Handle new user tutorial 
                         introJs().setOptions({
                           steps: [
@@ -208,8 +210,6 @@ function App(): JSX.Element {
                                 "To join a course, click “Join Course” at the top right. Your instructor will give you the course code.",
                             }]
                         }).start();
-
-                        setShowUpdateUserInfoModal(false);
                       }
                       if (localStorage.getItem("papyrusai_user") && localStorage.getItem("papyrusai_user") !== null) {
                         var old = JSON.parse(localStorage.getItem("papyrusai_user") ?? "");

@@ -170,9 +170,10 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "2rem",
+          gap: "1.5rem",
           marginTop: "2rem",
         }}
+        className="chart-grid"
       >
         <div className="card" style={{ marginBottom: "1rem" }}>
           <h3>Module Usage</h3>

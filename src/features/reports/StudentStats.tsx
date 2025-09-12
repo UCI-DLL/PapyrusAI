@@ -212,9 +212,10 @@ export default function StudentStats({ students }: StudentStatsProps) {
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "2rem",
+          gap: "1.5rem",
           marginBottom: "3rem",
         }}
+        className="chart-grid"
       >
         <div className="card" style={{ marginBottom: "1rem" }}>
           <h4>Module Usage (Stacked by Student)</h4>

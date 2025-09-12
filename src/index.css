@@ -731,3 +731,10 @@
     color-scheme: light;
   }
 }
+
+/* Responsive chart grids */
+@media (max-width: 768px) {
+  .chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import StudentStats from "./StudentStats";
 import IndividualStudentStats from "./IndividualStudentStats";
+import StudentMenu from "./StudentMenu";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
@@ -19,6 +19,7 @@ export default function ClassCharts({
   const [showClassificationChart, setShowClassificationChart] =
     useState<boolean>(false);
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState<number>(0);
+  const [studentMenuOpen, setStudentMenuOpen] = useState<boolean>(false);
   const lengthsRef = useRef<HTMLDivElement>(null);
   const chatClassificationRef = useRef<HTMLDivElement>(null);
   const countsRef = useRef<HTMLDivElement>(null);
@@ -691,67 +692,14 @@ export default function ClassCharts({
           <span style={{ fontSize: "0.9rem", color: "#666" }}>
             Filter by students:
           </span>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-            {students.map(([id, student]) => {
-              const selected = selectedStudentIds.includes(id);
-              const studentInfo = student as Record<string, unknown>;
-              const info = studentInfo.info as
-                | Record<string, unknown>
-                | undefined;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => {
-                    if (selected) {
-                      setSelectedStudentIds(
-                        selectedStudentIds.filter((sid) => sid !== id)
-                      );
-                    } else {
-                      setSelectedStudentIds([...selectedStudentIds, id]);
-                    }
-                  }}
-                  style={{
-                    padding: "0.2rem 0.6rem",
-                    borderRadius: 16,
-                    border: selected ? "2px solid #1976d2" : "1px solid #ccc",
-                    background: selected ? "#e3f0ff" : "#fff",
-                    color: selected ? "#1976d2" : "#222",
-                    fontWeight: selected ? 600 : 400,
-                    fontSize: "0.9rem",
-                    cursor: "pointer",
-                    outline: "none",
-                    boxShadow: selected
-                      ? "0 2px 8px rgba(25,118,210,0.08)"
-                      : undefined,
-                    marginBottom: 2,
-                    transition: "background 0.15s, color 0.15s, border 0.15s",
-                  }}
-                >
-                  {info?.name as string} {info?.family_name as string}
-                </button>
-              );
-            })}
-          </div>
-          {selectedStudentIds.length > 0 && (
-            <button
-              onClick={() => {
-                setSelectedStudentIds([]);
-              }}
-              style={{
-                padding: "0.2rem 0.6rem",
-                borderRadius: 16,
-                border: "1px solid #e53935",
-                background: "#fff",
-                color: "#e53935",
-                cursor: "pointer",
-                fontSize: "0.9rem",
-                marginLeft: "1rem",
-              }}
-            >
-              Clear
-            </button>
-          )}
+          <StudentMenu
+            analysis={analysis}
+            selectedStudentIds={selectedStudentIds}
+            onStudentSelect={setSelectedStudentIds}
+            smallButtons={true}
+            isOpen={studentMenuOpen}
+            onOpenChange={setStudentMenuOpen}
+          />
         </div>
       </div>
     );
@@ -765,7 +713,7 @@ export default function ClassCharts({
       .map(([id, student]) => ({ id, ...student }));
 
     return (
-      <>
+      <div>
         <div
           style={{
             display: "flex",
@@ -773,7 +721,24 @@ export default function ClassCharts({
             marginBottom: "2rem",
           }}
         >
-          <ArrowBackIcon onClick={() => setAnalysis(null)} />
+          <div style={{ cursor: "pointer" }}>
+            <ArrowBackIcon
+              onClick={() => setAnalysis(null)}
+              style={{
+                fontSize: "3rem",
+                padding: "0.5rem",
+                margin: "0.5rem",
+                color: "#666",
+                transition: "color 0.2s ease-in-out",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "#1976d2";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "#666";
+              }}
+            />
+          </div>
           <StudentFilter />
         </div>
 
@@ -791,11 +756,12 @@ export default function ClassCharts({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(500px, 1fr))",
-              gap: "2rem",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "1.5rem",
               alignItems: "start",
               marginBottom: "2rem",
             }}
+            className="chart-grid"
           >
             <div style={{ marginBottom: "1rem" }}>
               <h4>Module Usage (Stacked by Student)</h4>
@@ -830,12 +796,12 @@ export default function ClassCharts({
             <IndividualStudentStats student={student} />
           </div>
         ))}
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div>
       <div
         style={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}
       >
@@ -1011,10 +977,11 @@ export default function ClassCharts({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(500px, 1fr))",
-                gap: "2rem",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "1.5rem",
                 alignItems: "start",
               }}
+              className="chart-grid"
             >
               <div style={{ marginBottom: "1rem" }}>
                 <h3>Daily Conversation Lengths</h3>
@@ -1034,10 +1001,11 @@ export default function ClassCharts({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(500px, 1fr))",
-                gap: "2rem",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "1.5rem",
                 alignItems: "start",
               }}
+              className="chart-grid"
             >
               <div style={{ marginBottom: "1rem" }}>
                 <h3>Module Usage</h3>
@@ -1110,6 +1078,6 @@ export default function ClassCharts({
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }

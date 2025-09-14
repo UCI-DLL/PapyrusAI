@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import IndividualStudentStats from "./IndividualStudentStats";
@@ -26,7 +26,7 @@ export default function ClassCharts({
   const moduleUsageRef = useRef<HTMLDivElement>(null);
 
   // Get available dates from the data and convert to proper date format
-  const getAvailableDates = () => {
+  const getAvailableDates = useCallback(() => {
     if (!analysis) return [];
 
     // Check multiple data sources for dates
@@ -61,13 +61,13 @@ export default function ClassCharts({
 
     const dates = Array.from(allDates);
     return dates.sort((a, b) => a.localeCompare(b));
-  };
+  }, [analysis]);
 
   // Get available dates for use in effects
   const availableDates = getAvailableDates();
 
   // Check if analysis data is empty
-  const isAnalysisEmpty = () => {
+  const isAnalysisEmpty = useCallback(() => {
     if (!analysis) return true;
 
     // Check if any of the main data categories have content
@@ -90,16 +90,269 @@ export default function ClassCharts({
       (!dailyModuleUsage || dailyModuleUsage.length === 0) &&
       (!dailyClassificationCounts || dailyClassificationCounts.length === 0)
     );
-  };
+  }, [analysis]);
 
   // Get students data for filtering
-  const getStudents = () => {
+  const getStudents = useCallback(() => {
     if (!analysis || !analysis.students) return [];
 
     return Object.entries(
       analysis.students as Record<string, Record<string, unknown>>
     );
-  };
+  }, [analysis]);
+
+  // Helper function to truncate long labels
+  const truncateLabel = useCallback((label: string, maxLength: number = 15) => {
+    if (label.length <= maxLength) return label;
+    return label.substring(0, maxLength - 3) + "...";
+  }, []);
+
+  // Helper functions for stacked charts
+  const getStudentName = useCallback((student: Record<string, unknown>) => {
+    const info = student.info as Record<string, unknown> | undefined;
+    return info
+      ? `${info.name as string} ${info.family_name as string}`
+      : "Unknown";
+  }, []);
+
+  const getStackedDailyData = useCallback(
+    (students: Record<string, unknown>[]) => {
+      const counts: Array<{ date: Date; value: number; studentName: string }> =
+        [];
+      const lengths: Array<{ date: Date; value: number; studentName: string }> =
+        [];
+
+      students.forEach((student) => {
+        const studentName = getStudentName(student);
+        const dailyConvoCounts = student.dailyConvoCounts as
+          | Array<Record<string, unknown>>
+          | undefined;
+        if (dailyConvoCounts) {
+          dailyConvoCounts.forEach((d) => {
+            counts.push({
+              date: new Date(d.date as string),
+              value: d.num_convos as number,
+              studentName,
+            });
+          });
+        }
+        const dailyConvoLengths = student.dailyConvoLengths as
+          | Array<Record<string, unknown>>
+          | undefined;
+        if (dailyConvoLengths) {
+          dailyConvoLengths.forEach((d) => {
+            lengths.push({
+              date: new Date(d.date as string),
+              value: d.avg_convo_length as number,
+              studentName,
+            });
+          });
+        }
+      });
+      return { counts, lengths };
+    },
+    [getStudentName]
+  );
+
+  const getStackedClassificationData = useCallback(
+    (students: Record<string, unknown>[]) => {
+      const classificationData: Array<{
+        classification: string;
+        count: number;
+        studentName: string;
+        fullClassification: string;
+      }> = [];
+
+      students.forEach((student) => {
+        const studentName = getStudentName(student);
+        const classificationCounts = student.classificationCounts as
+          | Array<Record<string, unknown>>
+          | undefined;
+        if (classificationCounts) {
+          classificationCounts.forEach((c) => {
+            classificationData.push({
+              classification: truncateLabel(c.classification as string),
+              count: c.count as number,
+              studentName,
+              fullClassification: c.classification as string, // Keep original for tooltips
+            });
+          });
+        }
+      });
+      return classificationData;
+    },
+    [getStudentName, truncateLabel]
+  );
+
+  const getStackedModuleUsageData = useCallback(
+    (students: Record<string, unknown>[]) => {
+      const moduleData: Array<{
+        moduleName: string;
+        count: number;
+        studentName: string;
+        fullModuleName: string;
+      }> = [];
+
+      students.forEach((student) => {
+        const studentName = getStudentName(student);
+        const moduleUsage = student.moduleUsage as
+          | Array<Record<string, unknown>>
+          | undefined;
+        if (moduleUsage) {
+          moduleUsage.forEach((m) => {
+            moduleData.push({
+              moduleName: truncateLabel(m.moduleName as string),
+              count: m.count as number,
+              studentName,
+              fullModuleName: m.moduleName as string, // Keep original for tooltips
+            });
+          });
+        }
+      });
+      return moduleData;
+    },
+    [getStudentName, truncateLabel]
+  );
+
+  // Render stacked charts for collective stats
+  const renderStackedCharts = useCallback(
+    (students: Record<string, unknown>[]) => {
+      const { counts, lengths } = getStackedDailyData(students);
+      const classificationData = getStackedClassificationData(students);
+      const moduleData = getStackedModuleUsageData(students);
+
+      // Render stacked daily conversation counts
+      if (counts.length > 0) {
+        const plot = Plot.plot({
+          x: {
+            type: "time",
+            label: "Date",
+          },
+          y: { label: "Number of Conversations" },
+          color: { legend: true, label: "Student", scheme: "category10" },
+          marks: [
+            Plot.rectY(counts, {
+              x: "date",
+              y: "value",
+              fill: "studentName",
+              tip: { fill: "white" },
+              interval: "1 day",
+            }),
+          ],
+          width: 500,
+          height: 300,
+        });
+        const countsContainer = document.getElementById("stacked-counts");
+        if (countsContainer) {
+          countsContainer.innerHTML = "";
+          countsContainer.appendChild(plot);
+        }
+      }
+
+      // Render stacked daily conversation lengths
+      if (lengths.length > 0) {
+        const plot = Plot.plot({
+          x: {
+            type: "time",
+            label: "Date",
+          },
+          y: { label: "Avg Conversation Length" },
+          color: { legend: true, label: "Student", scheme: "category10" },
+          marks: [
+            Plot.rectY(lengths, {
+              x: "date",
+              y: "value",
+              fill: "studentName",
+              tip: { fill: "white" },
+              interval: "1 day",
+            }),
+          ],
+          width: 500,
+          height: 300,
+        });
+        const lengthsContainer = document.getElementById("stacked-lengths");
+        if (lengthsContainer) {
+          lengthsContainer.innerHTML = "";
+          lengthsContainer.appendChild(plot);
+        }
+      }
+
+      // Render stacked classification data
+      if (classificationData.length > 0) {
+        const plot = Plot.plot({
+          x: { label: "Classification" },
+          y: { label: "Count" },
+          color: { legend: true, label: "Student", scheme: "category10" },
+          marks: [
+            Plot.barY(classificationData, {
+              x: "classification",
+              y: "count",
+              fill: "studentName",
+              title: (d: any) =>
+                `Classification: ${
+                  d.fullClassification || d.classification
+                }\nStudent: ${d.studentName}\nCount: ${d.count}`,
+              tip: {
+                format: {
+                  x: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
+                },
+                fill: "white",
+              },
+              order: "stack",
+            }),
+          ],
+          width: 500,
+          height: 300,
+        });
+        const classificationContainer = document.getElementById(
+          "stacked-classification"
+        );
+        if (classificationContainer) {
+          classificationContainer.innerHTML = "";
+          classificationContainer.appendChild(plot);
+        }
+      }
+
+      // Render stacked module usage data
+      if (moduleData.length > 0) {
+        const plot = Plot.plot({
+          x: { label: "Module" },
+          y: { label: "Count" },
+          color: { legend: true, label: "Student", scheme: "category10" },
+          marks: [
+            Plot.barY(moduleData, {
+              x: "moduleName",
+              y: "count",
+              fill: "studentName",
+              title: (d: any) =>
+                `Module: ${d.fullModuleName || d.moduleName}\nStudent: ${
+                  d.studentName
+                }\nCount: ${d.count}`,
+              tip: {
+                format: {
+                  x: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
+                },
+                fill: "white",
+              },
+              order: "stack",
+            }),
+          ],
+          width: 500,
+          height: 300,
+        });
+        const moduleContainer = document.getElementById("stacked-module");
+        if (moduleContainer) {
+          moduleContainer.innerHTML = "";
+          moduleContainer.appendChild(plot);
+        }
+      }
+    },
+    [
+      getStackedDailyData,
+      getStackedClassificationData,
+      getStackedModuleUsageData,
+    ]
+  );
 
   // Set initial selected date range when analysis first loads
   useEffect(() => {
@@ -117,7 +370,7 @@ export default function ClassCharts({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [analysis]);
+  }, [analysis, getAvailableDates]);
 
   // Also set default dates when availableDates changes
   useEffect(() => {
@@ -128,7 +381,7 @@ export default function ClassCharts({
       setStartDate(firstDate);
       setEndDate(lastDate);
     }
-  }, [availableDates, startDate, endDate]);
+  }, [availableDates, startDate, endDate, getAvailableDates]);
 
   // Final fallback to ensure dates are set
   useEffect(() => {
@@ -157,7 +410,7 @@ export default function ClassCharts({
       // Charts will be rendered by the individual useEffect hooks
       // No need to manually call renderCharts()
     }
-  }, [selectedStudentIds.length, analysis]);
+  }, [selectedStudentIds.length, analysis, isAnalysisEmpty]);
 
   // Render stacked charts when selected students change
   useEffect(() => {
@@ -172,7 +425,7 @@ export default function ClassCharts({
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [selectedStudentIds, analysis]);
+  }, [selectedStudentIds, analysis, getStudents, renderStackedCharts]);
 
   // Force chart re-rendering when switching back to class view
   useEffect(() => {
@@ -187,231 +440,23 @@ export default function ClassCharts({
     }
   }, [selectedStudentIds.length, analysis, startDate, endDate]);
 
-  // Helper functions for stacked charts
-  const getStudentName = (student: Record<string, unknown>) => {
-    const info = student.info as Record<string, unknown> | undefined;
-    return info
-      ? `${info.name as string} ${info.family_name as string}`
-      : "Unknown";
-  };
-
-  const getStackedDailyData = (students: Record<string, unknown>[]) => {
-    const counts: Array<{ date: Date; value: number; studentName: string }> =
-      [];
-    const lengths: Array<{ date: Date; value: number; studentName: string }> =
-      [];
-
-    students.forEach((student) => {
-      const studentName = getStudentName(student);
-      const dailyConvoCounts = student.dailyConvoCounts as
-        | Array<Record<string, unknown>>
-        | undefined;
-      if (dailyConvoCounts) {
-        dailyConvoCounts.forEach((d) => {
-          counts.push({
-            date: new Date(d.date as string),
-            value: d.num_convos as number,
-            studentName,
-          });
-        });
-      }
-      const dailyConvoLengths = student.dailyConvoLengths as
-        | Array<Record<string, unknown>>
-        | undefined;
-      if (dailyConvoLengths) {
-        dailyConvoLengths.forEach((d) => {
-          lengths.push({
-            date: new Date(d.date as string),
-            value: d.avg_convo_length as number,
-            studentName,
-          });
-        });
-      }
-    });
-    return { counts, lengths };
-  };
-
-  const getStackedClassificationData = (
-    students: Record<string, unknown>[]
-  ) => {
-    const classificationData: Array<{
-      classification: string;
-      count: number;
-      studentName: string;
-    }> = [];
-
-    students.forEach((student) => {
-      const studentName = getStudentName(student);
-      const classificationCounts = student.classificationCounts as
-        | Array<Record<string, unknown>>
-        | undefined;
-      if (classificationCounts) {
-        classificationCounts.forEach((c) => {
-          classificationData.push({
-            classification: c.classification as string,
-            count: c.count as number,
-            studentName,
-          });
-        });
-      }
-    });
-    return classificationData;
-  };
-
-  const getStackedModuleUsageData = (students: Record<string, unknown>[]) => {
-    const moduleData: Array<{
-      moduleName: string;
-      count: number;
-      studentName: string;
-    }> = [];
-
-    students.forEach((student) => {
-      const studentName = getStudentName(student);
-      const moduleUsage = student.moduleUsage as
-        | Array<Record<string, unknown>>
-        | undefined;
-      if (moduleUsage) {
-        moduleUsage.forEach((m) => {
-          moduleData.push({
-            moduleName: m.moduleName as string,
-            count: m.count as number,
-            studentName,
-          });
-        });
-      }
-    });
-    return moduleData;
-  };
-
-  // Render stacked charts for collective stats
-  const renderStackedCharts = (students: Record<string, unknown>[]) => {
-    const { counts, lengths } = getStackedDailyData(students);
-    const classificationData = getStackedClassificationData(students);
-    const moduleData = getStackedModuleUsageData(students);
-
-    // Render stacked daily conversation counts
-    if (counts.length > 0) {
-      const plot = Plot.plot({
-        x: {
-          type: "time",
-          label: "Date",
-        },
-        y: { label: "Number of Conversations" },
-        color: { legend: true, label: "Student", scheme: "category10" },
-        marks: [
-          Plot.rectY(counts, {
-            x: "date",
-            y: "value",
-            fill: "studentName",
-            tip: { fill: "black" },
-            interval: "1 day",
-          }),
-        ],
-        width: 500,
-        height: 300,
-      });
-      const countsContainer = document.getElementById("stacked-counts");
-      if (countsContainer) {
-        countsContainer.innerHTML = "";
-        countsContainer.appendChild(plot);
-      }
-    }
-
-    // Render stacked daily conversation lengths
-    if (lengths.length > 0) {
-      const plot = Plot.plot({
-        x: {
-          type: "time",
-          label: "Date",
-        },
-        y: { label: "Avg Conversation Length" },
-        color: { legend: true, label: "Student", scheme: "category10" },
-        marks: [
-          Plot.rectY(lengths, {
-            x: "date",
-            y: "value",
-            fill: "studentName",
-            tip: { fill: "black" },
-            interval: "1 day",
-          }),
-        ],
-        width: 500,
-        height: 300,
-      });
-      const lengthsContainer = document.getElementById("stacked-lengths");
-      if (lengthsContainer) {
-        lengthsContainer.innerHTML = "";
-        lengthsContainer.appendChild(plot);
-      }
-    }
-
-    // Render stacked classification data
-    if (classificationData.length > 0) {
-      const plot = Plot.plot({
-        x: { label: "Classification" },
-        y: { label: "Count" },
-        color: { legend: true, label: "Student", scheme: "category10" },
-        marks: [
-          Plot.barY(classificationData, {
-            x: "classification",
-            y: "count",
-            fill: "studentName",
-            tip: { fill: "black" },
-            order: "stack",
-          }),
-        ],
-        width: 500,
-        height: 300,
-      });
-      const classificationContainer = document.getElementById(
-        "stacked-classification"
-      );
-      if (classificationContainer) {
-        classificationContainer.innerHTML = "";
-        classificationContainer.appendChild(plot);
-      }
-    }
-
-    // Render stacked module usage data
-    if (moduleData.length > 0) {
-      const plot = Plot.plot({
-        x: { label: "Module" },
-        y: { label: "Count" },
-        color: { legend: true, label: "Student", scheme: "category10" },
-        marks: [
-          Plot.barY(moduleData, {
-            x: "moduleName",
-            y: "count",
-            fill: "studentName",
-            tip: { fill: "black" },
-            order: "stack",
-          }),
-        ],
-        width: 500,
-        height: 300,
-      });
-      const moduleContainer = document.getElementById("stacked-module");
-      if (moduleContainer) {
-        moduleContainer.innerHTML = "";
-        moduleContainer.appendChild(plot);
-      }
-    }
-  };
-
   // Helper function to check if a date is within the selected range
-  const isDateInRange = (dateStr: string) => {
-    if (!startDate || !endDate) return false;
+  const isDateInRange = useCallback(
+    (dateStr: string) => {
+      if (!startDate || !endDate) return false;
 
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
 
-    const dateObj = new Date(dateStr);
+      const dateObj = new Date(dateStr);
 
-    return dateObj >= startDateObj && dateObj <= endDateObj;
-  };
+      return dateObj >= startDateObj && dateObj <= endDateObj;
+    },
+    [startDate, endDate]
+  );
 
   // Aggregate data for selected date range
-  const getAggregatedModuleData = () => {
+  const getAggregatedModuleData = useCallback(() => {
     if (!analysis || !startDate || !endDate) return [];
 
     const dailyModuleUsage = analysis.dailyModuleUsage as
@@ -433,12 +478,13 @@ export default function ClassCharts({
     });
 
     return Object.entries(moduleMap).map(([moduleName, count]) => ({
-      moduleName,
+      moduleName: truncateLabel(moduleName),
       count,
+      fullModuleName: moduleName, // Keep original name for tooltips
     }));
-  };
+  }, [analysis, startDate, endDate, isDateInRange, truncateLabel]);
 
-  const getAggregatedClassificationData = () => {
+  const getAggregatedClassificationData = useCallback(() => {
     if (!analysis || !startDate || !endDate) return [];
 
     const chatClassificationData = analysis.dailyClassificationCounts as
@@ -460,10 +506,11 @@ export default function ClassCharts({
     });
 
     return Object.entries(classificationMap).map(([classification, count]) => ({
-      classification,
+      classification: truncateLabel(classification),
       count,
+      fullClassification: classification, // Keep original name for tooltips
     }));
-  };
+  }, [analysis, startDate, endDate, isDateInRange, truncateLabel]);
 
   // Get responsive chart dimensions based on container size
   const getChartDimensions = () => {
@@ -474,43 +521,69 @@ export default function ClassCharts({
     return { width: maxWidth, height: maxHeight };
   };
 
+  // Get chart dimensions specifically for module usage (taller to accommodate rotated labels)
+  const getModuleChartDimensions = () => {
+    const containerWidth =
+      moduleUsageRef.current?.parentElement?.offsetWidth || 700;
+    const maxWidth = Math.min(containerWidth - 40, 700);
+    // Make it taller to accommodate rotated labels
+    const maxHeight = Math.min(maxWidth * 0.8, 500);
+    return { width: maxWidth, height: maxHeight };
+  };
+
   useEffect(() => {
     if (!analysis || !startDate || !endDate) return;
 
     const aggregatedData = getAggregatedModuleData();
-    const { width, height } = getChartDimensions();
+    const { width, height } = getModuleChartDimensions();
 
     const plot = Plot.plot({
-      x: { label: "Module" },
+      x: {
+        label: "Module",
+        tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
+        tickSize: 6,
+        padding: 0.1,
+      },
       y: { label: "Count", grid: true },
       color: {
         legend: true,
         label: "Module",
-        scheme: "tableau10",
+        scheme: "cividis",
+        domain: aggregatedData.map((d) => d.fullModuleName || d.moduleName), // Use full names in legend
       },
       marks: [
         Plot.barY(aggregatedData, {
           x: "moduleName",
           y: "count",
-          fill: "moduleName",
+          fill: (d: any) => d.fullModuleName || d.moduleName, // Use full names for color mapping
+          title: (d: any) =>
+            `Module: ${d.fullModuleName || d.moduleName}\nCount: ${d.count}`,
           tip: {
             format: {
-              x: true,
-              fill: true,
+              x: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
+              fill: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
               count: true,
             },
-            fill: "black",
+            fill: "white",
           },
         }),
       ],
       width,
       height,
+      marginLeft: aggregatedData.length > 5 ? 60 : 40, // More margin for rotated labels
+      marginBottom: aggregatedData.length > 5 ? 80 : 40, // More margin for rotated labels
     });
     if (moduleUsageRef.current) {
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate, chartRefreshTrigger]);
+  }, [
+    analysis,
+    startDate,
+    endDate,
+    chartRefreshTrigger,
+    getAggregatedModuleData,
+  ]);
 
   useEffect(() => {
     if (!analysis) return;
@@ -550,7 +623,7 @@ export default function ClassCharts({
         Plot.dot(parsedData, { x: "date", y: "avg_convo_length" }),
         Plot.tip(
           parsedData,
-          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "black" })
+          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "white" })
         ),
       ],
       width,
@@ -599,7 +672,7 @@ export default function ClassCharts({
         Plot.dot(parsedData, { x: "date", y: "num_convos" }),
         Plot.tip(
           parsedData,
-          Plot.pointerX({ x: "date", y: "num_convos", fill: "black" })
+          Plot.pointerX({ x: "date", y: "num_convos", fill: "white" })
         ),
       ],
       width,
@@ -615,32 +688,46 @@ export default function ClassCharts({
     if (!analysis || !startDate || !endDate || !showClassificationChart) return;
 
     const aggregatedData = getAggregatedClassificationData();
-    const { width, height } = getChartDimensions();
+    const { width, height } = getModuleChartDimensions();
     const plot = Plot.plot({
-      x: { label: "Classification" },
+      x: {
+        label: "Classification",
+        tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
+        tickSize: 6,
+        padding: 0.1,
+      },
       y: { label: "Count", grid: true },
       color: {
         legend: true,
         label: "Classification",
-        scheme: "tableau10",
+        scheme: "cividis",
+        domain: aggregatedData.map(
+          (d) => d.fullClassification || d.classification
+        ), // Use full names in legend
       },
       marks: [
         Plot.barY(aggregatedData, {
           x: "classification",
           y: "count",
-          fill: "classification",
+          fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
+          title: (d: any) =>
+            `Classification: ${
+              d.fullClassification || d.classification
+            }\nCount: ${d.count}`,
           tip: {
             format: {
-              x: true,
-              fill: true,
+              x: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
+              fill: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
               count: true,
             },
-            fill: "black",
+            fill: "white",
           },
         }),
       ],
       width,
       height,
+      marginLeft: aggregatedData.length > 5 ? 60 : 40, // More margin for rotated labels
+      marginBottom: aggregatedData.length > 5 ? 80 : 40, // More margin for rotated labels
     });
     if (chatClassificationRef.current) {
       chatClassificationRef.current.innerHTML = "";
@@ -652,6 +739,7 @@ export default function ClassCharts({
     endDate,
     showClassificationChart,
     chartRefreshTrigger,
+    getAggregatedClassificationData,
   ]);
 
   // Placeholder component for empty charts
@@ -1017,7 +1105,7 @@ export default function ClassCharts({
               </div>
 
               <div style={{ marginBottom: "1rem" }}>
-                <h3>Chat Classification</h3>
+                <h3>Student Chat Classification</h3>
                 {startDate && endDate ? (
                   showClassificationChart ? (
                     <div ref={chatClassificationRef} />
@@ -1029,14 +1117,14 @@ export default function ClassCharts({
                         alignItems: "center",
                         justifyContent: "center",
                         height: "300px",
-                        border: "2px dashed #ccc",
+                        // border: "2px dashed #ccc",
                         borderRadius: "8px",
-                        backgroundColor: "#f9f9f9",
+                        // backgroundColor: "#f9f9f9",
                         textAlign: "center",
                         padding: "2rem",
                       }}
                     >
-                      <div
+                      {/* Comment out until implemented <div
                         style={{
                           fontWeight: 600,
                           marginBottom: "1rem",
@@ -1067,7 +1155,7 @@ export default function ClassCharts({
                         }}
                       >
                         View Classification Chart
-                      </button>
+                      </button> */}
                     </div>
                   )
                 ) : (

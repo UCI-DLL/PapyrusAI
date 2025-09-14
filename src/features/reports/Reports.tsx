@@ -998,7 +998,7 @@ export default function Reports(): JSX.Element {
                         fontStyle: "italic",
                       }}
                     >
-                      Click to view course details and fetch conversation data
+                      Click to view course details
                     </div>
                   </div>
                 </ListItem>

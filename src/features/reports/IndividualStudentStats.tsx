@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Plot from "@observablehq/plot";
 
@@ -28,6 +28,22 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
   const classificationRef = useRef<HTMLDivElement>(null);
   const moduleUsageRef = useRef<HTMLDivElement>(null);
 
+  // Helper function to truncate long labels
+  const truncateLabel = useCallback((label: string, maxLength: number = 15) => {
+    if (label.length <= maxLength) return label;
+    return label.substring(0, maxLength - 3) + "...";
+  }, []);
+
+  // Get chart dimensions specifically for module usage (taller to accommodate rotated labels)
+  const getModuleChartDimensions = () => {
+    const containerWidth =
+      moduleUsageRef.current?.parentElement?.offsetWidth || 500;
+    const maxWidth = Math.min(containerWidth - 40, 500);
+    // Make it taller to accommodate rotated labels
+    const maxHeight = Math.min(maxWidth * 0.8, 400);
+    return { width: maxWidth, height: maxHeight };
+  };
+
   useEffect(() => {
     if (!dailyConvoLengths || dailyConvoLengths.length === 0) return;
 
@@ -45,7 +61,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         Plot.dot(processedData, { x: "date", y: "avg_convo_length" }),
         Plot.tip(
           processedData,
-          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "black" })
+          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "white" })
         ),
       ],
       width: 500,
@@ -74,7 +90,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         Plot.dot(processedData, { x: "date", y: "num_convos" }),
         Plot.tip(
           processedData,
-          Plot.pointerX({ x: "date", y: "num_convos", fill: "black" })
+          Plot.pointerX({ x: "date", y: "num_convos", fill: "white" })
         ),
       ],
       width: 500,
@@ -88,49 +104,115 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
 
   useEffect(() => {
     if (!classificationCounts || classificationCounts.length === 0) return;
+
+    // Process classification data to truncate long names
+    const processedClassificationData = classificationCounts.map((item) => ({
+      ...item,
+      classification: truncateLabel(item.classification as string),
+      fullClassification: item.classification as string, // Keep original for tooltips
+    }));
+
+    const { width, height } = getModuleChartDimensions(); // Use same dimensions
+
     const plot = Plot.plot({
-      x: { label: "Classification" },
+      x: {
+        label: "Classification",
+        tickRotate: processedClassificationData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
+        tickSize: 6,
+        padding: 0.1,
+      },
       y: { label: "Count" },
-      color: { legend: true, scheme: "tableau10" },
+      color: {
+        legend: true,
+        scheme: "cividis",
+        domain: processedClassificationData.map(
+          (d) => d.fullClassification || d.classification
+        ), // Use full names in legend
+      },
       marks: [
-        Plot.barY(classificationCounts, {
+        Plot.barY(processedClassificationData, {
           x: "classification",
           y: "count",
-          fill: "classification",
-          tip: { fill: "black" },
+          fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
+          title: (d: any) =>
+            `Classification: ${
+              d.fullClassification || d.classification
+            }\nCount: ${d.count}`,
+          tip: {
+            format: {
+              x: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
+              fill: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
+              count: true,
+            },
+            fill: "white",
+          },
         }),
       ],
-      width: 500,
-      height: 300,
+      width,
+      height,
+      marginLeft: processedClassificationData.length > 5 ? 60 : 40, // More margin for rotated labels
+      marginBottom: processedClassificationData.length > 5 ? 80 : 40, // More margin for rotated labels
     });
     if (classificationRef.current) {
       classificationRef.current.innerHTML = "";
       classificationRef.current.appendChild(plot);
     }
-  }, [classificationCounts]);
+  }, [classificationCounts, truncateLabel]);
 
   useEffect(() => {
     if (!moduleUsage || moduleUsage.length === 0) return;
+
+    // Process module data to truncate long names
+    const processedModuleData = moduleUsage.map((item) => ({
+      ...item,
+      moduleName: truncateLabel(item.moduleName as string),
+      fullModuleName: item.moduleName as string, // Keep original for tooltips
+    }));
+
+    const { width, height } = getModuleChartDimensions();
+
     const plot = Plot.plot({
-      x: { label: "Module" },
+      x: {
+        label: "Module",
+        tickRotate: processedModuleData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
+        tickSize: 6,
+        padding: 0.1,
+      },
       y: { label: "Count" },
-      color: { legend: true, scheme: "tableau10" },
+      color: {
+        legend: true,
+        scheme: "cividis",
+        domain: processedModuleData.map(
+          (d) => d.fullModuleName || d.moduleName
+        ), // Use full names in legend
+      },
       marks: [
-        Plot.barY(moduleUsage, {
+        Plot.barY(processedModuleData, {
           x: "moduleName",
           y: "count",
-          fill: "moduleName",
-          tip: { fill: "black" },
+          fill: (d: any) => d.fullModuleName || d.moduleName, // Use full names for color mapping
+          title: (d: any) =>
+            `Module: ${d.fullModuleName || d.moduleName}\nCount: ${d.count}`,
+          tip: {
+            format: {
+              x: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
+              fill: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
+              count: true,
+            },
+            fill: "white",
+          },
         }),
       ],
-      width: 500,
-      height: 300,
+      width,
+      height,
+      marginLeft: processedModuleData.length > 5 ? 60 : 40, // More margin for rotated labels
+      marginBottom: processedModuleData.length > 5 ? 80 : 40, // More margin for rotated labels
     });
     if (moduleUsageRef.current) {
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
     }
-  }, [moduleUsage]);
+  }, [moduleUsage, truncateLabel]);
 
   if (!student) return null;
   return (
@@ -141,9 +223,13 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       <p>Email: {info?.email as string}</p>
       <p>Total Messages: {totalMessages}</p>
       <button
-        onClick={() =>
-          navigate(`/reports/${info?.sub || info?.username || "unknown"}`)
-        }
+        onClick={() => {
+          const userId = info?.sub || info?.username || student.id || "unknown";
+          console.log("Navigating to reports for user:", userId);
+          console.log("Student object:", student);
+          console.log("Student info:", info);
+          navigate(`/reports/${userId}`);
+        }}
         style={{
           padding: "0.5rem 1rem",
           backgroundColor: "#1976d2",

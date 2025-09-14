@@ -1,12 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "../../components/ui/dropdown-menu";
 import { Button } from "../../components/ui/button";
 import { ChevronDown, Users } from "lucide-react";
 

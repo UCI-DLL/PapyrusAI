@@ -13,39 +13,64 @@ function getStudentName(student: Record<string, unknown>) {
     : "Unknown";
 }
 
-function getStackedWeeklyData(students: Record<string, unknown>[]) {
-  const counts: Array<{ week: string; value: number; studentName: string }> =
-    [];
-  const lengths: Array<{ week: string; value: number; studentName: string }> =
-    [];
+// Helper function to truncate labels
+const truncateLabel = (label: string, maxLength: number = 15) => {
+  if (label.length <= maxLength) return label;
+  return label.substring(0, maxLength - 3) + "...";
+};
+
+function getStackedDailyData(students: Record<string, unknown>[]) {
+  const countsMap = new Map<
+    string,
+    { date: Date; value: number; studentName: string }
+  >();
+  const lengthsMap = new Map<
+    string,
+    { date: Date; value: number; studentName: string; count: number }
+  >();
+
   students.forEach((student) => {
     const studentName = getStudentName(student);
-    const weeklyConvoCounts = student.weeklyConvoCounts as
+    const dailyConvoCounts = student.dailyConvoCounts as
       | Array<Record<string, unknown>>
       | undefined;
-    if (weeklyConvoCounts) {
-      weeklyConvoCounts.forEach((w) => {
-        counts.push({
-          week: w.week as string,
-          value: w.num_convos as number,
+    if (dailyConvoCounts) {
+      dailyConvoCounts.forEach((d) => {
+        const date = new Date(d.date as string);
+        const dateKey = `${studentName}-${date.toISOString().split("T")[0]}`;
+        const currentValue = countsMap.get(dateKey)?.value || 0;
+        countsMap.set(dateKey, {
+          date,
+          value: currentValue + (d.num_convos as number),
           studentName,
         });
       });
     }
-    const weeklyConvoLengths = student.weeklyConvoLengths as
+    const dailyConvoLengths = student.dailyConvoLengths as
       | Array<Record<string, unknown>>
       | undefined;
-    if (weeklyConvoLengths) {
-      weeklyConvoLengths.forEach((w) => {
-        lengths.push({
-          week: w.week as string,
-          value: w.avg_convo_length as number,
+    if (dailyConvoLengths) {
+      dailyConvoLengths.forEach((d) => {
+        const date = new Date(d.date as string);
+        const dateKey = `${studentName}-${date.toISOString().split("T")[0]}`;
+        const currentValue = lengthsMap.get(dateKey)?.value || 0;
+        const currentCount = lengthsMap.get(dateKey)?.count || 0;
+        lengthsMap.set(dateKey, {
+          date,
+          value:
+            (currentValue * currentCount + (d.avg_convo_length as number)) /
+            (currentCount + 1),
           studentName,
+          count: currentCount + 1,
         });
       });
     }
   });
-  return { counts, lengths };
+
+  return {
+    counts: Array.from(countsMap.values()),
+    lengths: Array.from(lengthsMap.values()).map(({ count, ...rest }) => rest),
+  };
 }
 
 function getStackedClassificationData(students: Record<string, unknown>[]) {
@@ -53,6 +78,7 @@ function getStackedClassificationData(students: Record<string, unknown>[]) {
     classification: string;
     count: number;
     studentName: string;
+    fullClassification: string;
   }> = [];
 
   students.forEach((student) => {
@@ -63,9 +89,10 @@ function getStackedClassificationData(students: Record<string, unknown>[]) {
     if (classificationCounts) {
       classificationCounts.forEach((c) => {
         classificationData.push({
-          classification: c.classification as string,
+          classification: truncateLabel(c.classification as string),
           count: c.count as number,
           studentName,
+          fullClassification: c.classification as string, // Keep original for tooltips
         });
       });
     }
@@ -78,6 +105,7 @@ function getStackedModuleUsageData(students: Record<string, unknown>[]) {
     moduleName: string;
     count: number;
     studentName: string;
+    fullModuleName: string;
   }> = [];
 
   students.forEach((student) => {
@@ -88,9 +116,10 @@ function getStackedModuleUsageData(students: Record<string, unknown>[]) {
     if (moduleUsage) {
       moduleUsage.forEach((m) => {
         moduleData.push({
-          moduleName: m.moduleName as string,
+          moduleName: truncateLabel(m.moduleName as string),
           count: m.count as number,
           studentName,
+          fullModuleName: m.moduleName as string, // Keep original for tooltips
         });
       });
     }
@@ -99,7 +128,7 @@ function getStackedModuleUsageData(students: Record<string, unknown>[]) {
 }
 
 export default function StudentStats({ students }: StudentStatsProps) {
-  const { counts, lengths } = getStackedWeeklyData(students);
+  const { counts, lengths } = getStackedDailyData(students);
   const classificationData = getStackedClassificationData(students);
   const moduleData = getStackedModuleUsageData(students);
 
@@ -111,16 +140,30 @@ export default function StudentStats({ students }: StudentStatsProps) {
   useEffect(() => {
     if (!counts.length) return;
     const plot = Plot.plot({
-      x: { label: "Week" },
+      x: {
+        type: "time",
+        label: "Date",
+      },
       y: { label: "Number of Conversations" },
-      color: { legend: true, label: "Student", scheme: "category10" },
+      color: { legend: true, label: "Student", scheme: "cividis" },
       marks: [
-        Plot.barY(counts, {
-          x: "week",
+        Plot.rectY(counts, {
+          x: "date",
           y: "value",
           fill: "studentName",
-          tip: { fill: "black" },
-          order: "stack",
+          title: (d: any) =>
+            `Date: ${d.date.toLocaleDateString()}\nStudent: ${
+              d.studentName
+            }\nConversations: ${d.value}`,
+          tip: {
+            format: {
+              x: (d: any) => d.date.toLocaleDateString(),
+              fill: (d: any) => d.studentName,
+              value: true,
+            },
+            fill: "white",
+          },
+          interval: "1 day",
         }),
       ],
       width: 500,
@@ -135,16 +178,30 @@ export default function StudentStats({ students }: StudentStatsProps) {
   useEffect(() => {
     if (!lengths.length) return;
     const plot = Plot.plot({
-      x: { label: "Week" },
+      x: {
+        type: "time",
+        label: "Date",
+      },
       y: { label: "Avg Conversation Length" },
-      color: { legend: true, label: "Student", scheme: "category10" },
+      color: { legend: true, label: "Student", scheme: "cividis" },
       marks: [
-        Plot.barY(lengths, {
-          x: "week",
+        Plot.rectY(lengths, {
+          x: "date",
           y: "value",
           fill: "studentName",
-          tip: { fill: "black" },
-          order: "stack",
+          title: (d: any) =>
+            `Date: ${d.date.toLocaleDateString()}\nStudent: ${
+              d.studentName
+            }\nAvg Length: ${d.value.toFixed(1)}`,
+          tip: {
+            format: {
+              x: (d: any) => d.date.toLocaleDateString(),
+              fill: (d: any) => d.studentName,
+              value: true,
+            },
+            fill: "white",
+          },
+          interval: "1 day",
         }),
       ],
       width: 500,
@@ -161,13 +218,24 @@ export default function StudentStats({ students }: StudentStatsProps) {
     const plot = Plot.plot({
       x: { label: "Classification" },
       y: { label: "Count" },
-      color: { legend: true, label: "Student", scheme: "category10" },
+      color: { legend: true, label: "Student", scheme: "cividis" },
       marks: [
         Plot.barY(classificationData, {
           x: "classification",
           y: "count",
           fill: "studentName",
-          tip: { fill: "black" },
+          title: (d: any) =>
+            `Classification: ${
+              d.fullClassification || d.classification
+            }\nStudent: ${d.studentName}\nCount: ${d.count}`,
+          tip: {
+            format: {
+              x: (d: any) => d.fullClassification || d.classification,
+              fill: (d: any) => d.fullClassification || d.classification,
+              count: true,
+            },
+            fill: "white",
+          },
           order: "stack",
         }),
       ],
@@ -185,13 +253,24 @@ export default function StudentStats({ students }: StudentStatsProps) {
     const plot = Plot.plot({
       x: { label: "Module" },
       y: { label: "Count" },
-      color: { legend: true, label: "Student", scheme: "category10" },
+      color: { legend: true, label: "Student", scheme: "cividis" },
       marks: [
         Plot.barY(moduleData, {
           x: "moduleName",
           y: "count",
           fill: "studentName",
-          tip: { fill: "black" },
+          title: (d: any) =>
+            `Module: ${d.fullModuleName || d.moduleName}\nStudent: ${
+              d.studentName
+            }\nCount: ${d.count}`,
+          tip: {
+            format: {
+              x: (d: any) => d.fullModuleName || d.moduleName,
+              fill: (d: any) => d.fullModuleName || d.moduleName,
+              count: true,
+            },
+            fill: "white",
+          },
           order: "stack",
         }),
       ],
@@ -206,8 +285,6 @@ export default function StudentStats({ students }: StudentStatsProps) {
 
   return (
     <div>
-      <h2>Selected Students: {students.length}</h2>
-      <h3>Combined Stats</h3>
       <div
         style={{
           display: "grid",
@@ -226,11 +303,11 @@ export default function StudentStats({ students }: StudentStatsProps) {
           <div ref={classificationRef} />
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h4>Weekly Conversation Lengths (Stacked by Student)</h4>
+          <h4>Daily Conversation Lengths (Stacked by Student)</h4>
           <div ref={lengthsRef} />
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h4>Weekly Conversation Counts (Stacked by Student)</h4>
+          <h4>Daily Conversation Counts (Stacked by Student)</h4>
           <div ref={countsRef} />
         </div>
       </div>

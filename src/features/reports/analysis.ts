@@ -415,6 +415,7 @@ export function getStudentClassificationCounts(
 
 // Analyze a single course for all metrics, including per-student analysis
 export function analyzeCourse(course: Course): {
+  courseName: string | undefined;
   moduleUsageFrequency: { moduleName: string; count: number }[];
   dailyConvoLengths: { date: string; avg_convo_length: number }[];
   dailyConvoCounts: { date: string; num_convos: number }[];
@@ -474,6 +475,7 @@ export function analyzeCourse(course: Course): {
     };
   }
   const returnObj = {
+    courseName: course.name,
     moduleUsageFrequency,
     dailyConvoLengths,
     dailyConvoCounts,
@@ -482,17 +484,4 @@ export function analyzeCourse(course: Course): {
     students,
   };
   return returnObj;
-}
-
-// Main function for analyzing all courses from json
-// TODO: Adapt to lambda function
-export default function analyzeAllCourses(
-  data: Course[]
-): Record<string, ReturnType<typeof analyzeCourse>> {
-  const result: Record<string, ReturnType<typeof analyzeCourse>> = {};
-  for (const course of data) {
-    const key = course.name || course.id || "Unknown Course";
-    result[key] = analyzeCourse(course);
-  }
-  return result;
 }

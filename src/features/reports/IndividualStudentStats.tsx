@@ -224,7 +224,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       <p>Total Messages: {totalMessages}</p>
       <button
         onClick={() => {
-          const userId = info?.sub || info?.username || student.id || "unknown";
+          const userId = info?.username || info?.sub || student.id || "unknown";
           console.log("Navigating to reports for user:", userId);
           console.log("Student object:", student);
           console.log("Student info:", info);
@@ -258,6 +258,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           gridTemplateColumns: "1fr 1fr",
           gap: "1.5rem",
           marginTop: "2rem",
+          padding: "0 2rem",
         }}
         className="chart-grid"
       >

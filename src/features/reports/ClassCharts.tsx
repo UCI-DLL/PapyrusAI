@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import IndividualStudentStats from "./IndividualStudentStats";
 import StudentStats from "./StudentStats";
 import StudentMenu from "./StudentMenu";
 
@@ -265,7 +264,6 @@ export default function ClassCharts({
     const containerWidth =
       moduleUsageRef.current?.parentElement?.offsetWidth || 700;
     const maxWidth = Math.min(containerWidth - 40, 700);
-    // Make it taller to accommodate rotated labels
     const maxHeight = Math.min(maxWidth * 0.8, 500);
     return { width: maxWidth, height: maxHeight };
   };
@@ -570,8 +568,10 @@ export default function ClassCharts({
         </div>
 
         <div style={{ marginBottom: "2rem" }}>
-          <h2>Individual Student Statistics</h2>
-          <p style={{ color: "#666", marginBottom: "1rem" }}>
+          <h3 style={{ textAlign: "center" }}>
+            Student Statistics for {analysis?.courseName as string}
+          </h3>
+          <p style={{ textAlign: "center" }}>
             Showing data for {selectedStudentIds.length} selected student
             {selectedStudentIds.length !== 1 ? "s" : ""}
           </p>
@@ -582,21 +582,6 @@ export default function ClassCharts({
           <h3>Combined Statistics</h3>
           <StudentStats students={selectedStudents} />
         </div>
-
-        {selectedStudents.map((student, index) => (
-          <div
-            key={student.id}
-            style={{
-              marginBottom:
-                index < selectedStudents.length - 1 ? "3rem" : "1rem",
-              borderBottom:
-                index < selectedStudents.length - 1 ? "1px solid #eee" : "none",
-              paddingBottom: index < selectedStudents.length - 1 ? "2rem" : "0",
-            }}
-          >
-            <IndividualStudentStats student={student} />
-          </div>
-        ))}
       </div>
     );
   }
@@ -660,8 +645,16 @@ export default function ClassCharts({
           {availableDates.length > 0 && (
             <div style={{ marginBottom: "2rem" }}>
               <h3 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                Select Date Range
+                {(analysis?.courseName as string) || "Course Reports"}
               </h3>
+              <p
+                style={{
+                  textAlign: "center",
+                  fontWeight: 500,
+                }}
+              >
+                Select a date range to filter data
+              </p>
               <div
                 style={{
                   display: "flex",
@@ -781,6 +774,7 @@ export default function ClassCharts({
                 gridTemplateColumns: "1fr 1fr",
                 gap: "1.5rem",
                 alignItems: "start",
+                padding: "0 2rem",
               }}
               className="chart-grid"
             >
@@ -805,6 +799,7 @@ export default function ClassCharts({
                 gridTemplateColumns: "1fr 1fr",
                 gap: "1.5rem",
                 alignItems: "start",
+                padding: "0 2rem",
               }}
               className="chart-grid"
             >

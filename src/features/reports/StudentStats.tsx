@@ -291,6 +291,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
           gridTemplateColumns: "1fr 1fr",
           gap: "1.5rem",
           marginBottom: "3rem",
+          padding: "0 2rem",
         }}
         className="chart-grid"
       >

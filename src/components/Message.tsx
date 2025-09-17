@@ -29,7 +29,6 @@ import {
   DialogFooter,
 } from "./ui/dialog";
 import { cn } from "../lib/utils";
-import { Modal } from "./Modal";
 import RaterEssay from "./RaterEssay";
 // Using native browser clipboard notification
 
@@ -89,27 +88,28 @@ export const MessageLeft = (props: MessageProps) => {
   return props.visible === undefined || props.visible || props.isInstructor ? (
     <div className="flex flex-col mb-3">
       {props.expandableMessage && expandableMessage ? (
-        <Modal
-          isOpen={showExpandableMessage}
-          title={"Essay Feedback"}
-          onRequestClose={() => setShowExpandableMessage(false)}
-          actions={
-            <>
+        <Dialog open={showExpandableMessage} onOpenChange={setShowExpandableMessage}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Essay Feedback</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <RaterEssay
+                message={expandableMessage.message}
+                raterArray={expandableMessage.rater}
+                essay={expandableMessage.essay}
+              />
+            </div>
+            <DialogFooter>
               <Button
                 variant="secondary"
                 onClick={() => setShowExpandableMessage(false)}
               >
                 Back to Conversation
               </Button>
-            </>
-          }
-        >
-          <RaterEssay
-            message={expandableMessage.message}
-            raterArray={expandableMessage.rater}
-            essay={expandableMessage.essay}
-          />
-        </Modal>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : null}
 
       <div className="flex items-center gap-2 mb-1 pl-2 text-xs text-muted-foreground">

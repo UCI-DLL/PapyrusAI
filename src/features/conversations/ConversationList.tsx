@@ -598,9 +598,9 @@ export default function ConversationList(): JSX.Element {
                                   className="flex-1 min-w-0 no-underline hover:no-underline group"
                                 >
                                   <div className="space-y-1">
-                                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors truncate no-underline">
+                                    <p className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors truncate no-underline">
                                       {conversation.name}
-                                    </h3>
+                                    </p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1 no-underline">
                                       <Clock className="h-3 w-3" />
                                       Created: {time}

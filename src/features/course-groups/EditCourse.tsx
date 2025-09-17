@@ -1,41 +1,53 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Badge } from "../../components/ui/badge";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Separator } from "../../components/ui/separator";
+import { Trash2, ChevronDown, Info, Plus, Loader2, Users, GraduationCap, Save, CheckCircle, XCircle, UserPlus } from "lucide-react";
+import Get from "../../utility/Get";
+import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoints";
+import Put from "../../utility/Put";
+import { CourseType } from "../../utility/types/CourseTypes";
+import { AlertContext } from "../../utility/context/AlertContext";
+import { CustomUserType } from "../../utility/types/UserTypes";
+import { UserContext } from "../../utility/context/UserContext";
+import { getUserList } from "../../utility/endpoints/UserEndpoints";
+import { cn } from "../../lib/utils";
+// Temporary Material-UI imports during conversion
 import {
-  Button,
-  Box,
   TextField,
   FormLabel,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-  FormControl,
-  Autocomplete,
-  Chip,
-  IconButton,
-  Tooltip,
+  Box,
+  LinearProgress,
   ButtonGroup,
   Popper,
   Grow,
   Paper,
   ClickAwayListener,
-  MenuList
+  MenuList,
+  MenuItem,
+  Tooltip,
+  IconButton,
+  Chip,
+  Autocomplete,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+  Select as MuiSelect
 } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import Get from "../../utility/Get";
-import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoints";
-import Put from "../../utility/Put";
-import { CourseType } from "../../utility/types/CourseTypes";
-import LinearProgress from '@mui/material/LinearProgress';
-import { AlertContext } from "../../utility/context/AlertContext";
-import { CustomUserType } from "../../utility/types/UserTypes";
-import { UserContext } from "../../utility/context/UserContext";
-import { getUserList } from "../../utility/endpoints/UserEndpoints";
-import { Modal } from "../../components/Modal";
 import InfoIcon from '@mui/icons-material/Info';
+import { Modal } from "../../components/Modal";
 
 type EditCourseType = {
   name: string,
@@ -318,7 +330,7 @@ export default function EditCourse(): JSX.Element {
         onRequestClose={() => setShowSavePublishTooltip(false)}
         actions={
           <>
-            <Button variant="contained" onClick={() => setShowSavePublishTooltip(false)}>
+            <Button variant="default" onClick={() => setShowSavePublishTooltip(false)}>
               Close
             </Button>
           </>
@@ -336,10 +348,10 @@ export default function EditCourse(): JSX.Element {
         onRequestClose={() => setOpenDeleteModal(false)}
         actions={
           <>
-            <Button variant="contained" color="error" onClick={(e) => handleSubmit(e, false, true)}>
+            <Button variant="default" color="error" onClick={(e) => handleSubmit(e, false, true)}>
               Delete
             </Button>
-            <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(false)}>
+            <Button variant="default" color="secondary" onClick={() => setOpenDeleteModal(false)}>
               Cancel
             </Button>
           </>
@@ -353,10 +365,10 @@ export default function EditCourse(): JSX.Element {
         onRequestClose={() => setOpenDiscardModal(false)}
         actions={
           <>
-            <Button variant="contained" color="primary" onClick={() => navigator(-1)}>
+            <Button variant="default" color="primary" onClick={() => navigator(-1)}>
               Discard
             </Button>
-            <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>
+            <Button variant="default" color="secondary" onClick={() => setOpenDiscardModal(false)}>
               Cancel
             </Button>
           </>
@@ -370,10 +382,10 @@ export default function EditCourse(): JSX.Element {
         onRequestClose={() => setOpenActiveModal(false)}
         actions={
           <>
-            <Button variant="contained" color="primary" onClick={(e) => handleSubmit(e, false, false)}>
+            <Button variant="default" color="primary" onClick={(e) => handleSubmit(e, false, false)}>
               Continue
             </Button>
-            <Button variant="contained" color="secondary" onClick={() => setOpenActiveModal(false)}>
+            <Button variant="default" color="secondary" onClick={() => setOpenActiveModal(false)}>
               Cancel
             </Button>
           </>
@@ -420,7 +432,7 @@ export default function EditCourse(): JSX.Element {
                 >
                   <Button onClick={handleClick}>{options[selectedIndexSave]}</Button>
                   <Button
-                    size="small"
+                    size="sm"
                     aria-controls={openSave ? 'split-button-menu' : undefined}
                     aria-expanded={openSave ? 'true' : undefined}
                     aria-label="select save and ativation strategy"
@@ -560,7 +572,7 @@ export default function EditCourse(): JSX.Element {
               <div className="form-tooltips">
                 <FormControl fullWidth>
                   <InputLabel id="select-term">Term</InputLabel>
-                  <Select
+                  <MuiSelect
                     labelId="select-term"
                     id="course-select-term"
                     value={session.term}
@@ -575,7 +587,7 @@ export default function EditCourse(): JSX.Element {
                     <MenuItem value={"summer"}>Summer</MenuItem>
                     <MenuItem value={"fall"}>Fall</MenuItem>
                     <MenuItem value={"winter"}>Winter</MenuItem>
-                  </Select>
+                  </MuiSelect>
                 </FormControl>
                 <Tooltip title="The term in which your course is taking place." enterTouchDelay={0}>
                   <InfoIcon />

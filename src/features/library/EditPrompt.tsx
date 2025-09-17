@@ -29,7 +29,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { getOrgPrompt, getUserPrompt, postUpdateOrgPrompt, postUpdateUserPrompt } from "../../utility/endpoints/FolderEndpoints";
 import { cn } from "../../lib/utils";
-import { Trash2, ChevronDown, Loader2, Info } from "lucide-react";
+import { Trash2, ChevronDown, Loader2, Info, MessageSquare } from "lucide-react";
 
 const options = ['Save & Publish', 'Discard Changes'];
 
@@ -293,7 +293,7 @@ export default function EditPrompt(): JSX.Element {
   }
 
   return (
-    <div className="space-y-6">
+    <main className="bg-background text-foreground p-4 space-y-6">
       <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -332,59 +332,91 @@ export default function EditPrompt(): JSX.Element {
         </DialogContent>
       </Dialog>
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Edit {prompt?.name}</h1>
-        <div className="flex items-center gap-3">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => setOpenDeleteModal(true)}
-                  aria-label="Delete Prompt"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Delete prompt</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button>
-                {options[selectedOption]}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {options.map((option, index) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={() => handleMenuItemClick(index)}
-                  className={index === selectedOption ? "bg-accent" : ""}
-                >
-                  {option}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
+          >
+            <MessageSquare size={192} className="text-primary" />
+          </div>
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              Edit <span className="text-primary">{prompt?.name}</span>
+            </h1>
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
+              Update your AI prompt instructions and configuration.
+            </p>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <Separator />
+      <section aria-labelledby="prompt-edit-heading">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2 id="prompt-edit-heading" className="text-2xl font-bold text-foreground mb-1">
+              Prompt Management
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Update prompt content, settings, and metadata as needed.
+            </p>
+          </div>
+          <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Prompt editing actions">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setOpenDeleteModal(true)}
+                    aria-label="Delete prompt permanently"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Delete prompt</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-      <div className="text-sm text-muted-foreground mb-4">
-        * indicates a required field
-      </div>
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button aria-label="Select save and publish strategy">
+                  {options[selectedOption]}
+                  <ChevronDown className="ml-2 h-4 w-4" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {options.map((option, index) => (
+                  <DropdownMenuItem
+                    key={option}
+                    onClick={() => handleMenuItemClick(index)}
+                    className={index === selectedOption ? "bg-accent" : ""}
+                  >
+                    {option}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
+        </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Enter Prompt Information</CardTitle>
-        </CardHeader>
+        <div className="border-primary/20 bg-primary/5 rounded-lg p-4 mb-6">
+          <p className="text-sm text-primary/70">
+            * indicates a required field
+          </p>
+        </div>
+
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              Prompt Information
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Update the essential details for your prompt. Fields marked with * are required.
+            </p>
+          </CardHeader>
         <CardContent>
           <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
             <div className="space-y-2">
@@ -479,6 +511,7 @@ export default function EditPrompt(): JSX.Element {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </section>
+    </main>
   )
 }

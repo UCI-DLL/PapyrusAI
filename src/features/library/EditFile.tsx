@@ -699,7 +699,7 @@ export default function EditFile(): JSX.Element {
   }
 
   return fileInfo && !isLoading ? (
-    <div className="min-h-screen p-6">
+    <main className="bg-background text-foreground p-4 space-y-6">
       {newFile.name ? (
         <>
           <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
@@ -738,73 +738,106 @@ export default function EditFile(): JSX.Element {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Edit {file?.name}
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setOpenDeleteModal(true)}
-                      disabled={isLoading}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Delete File</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <Button
-                size="sm"
-                disabled={isLoading}
-                onClick={() => {
-                  if (selectedIndexSave === 0) {
-                    handleUpload(undefined, false);
-                  } else {
-                    setOpenDiscardModal(true);
-                  }
-                }}
+
+          <header className="animate-in slide-in-from-bottom-4 duration-700">
+            <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+              <div
+                className="absolute top-0 right-0 w-48 h-48 opacity-10"
+                aria-hidden="true"
               >
-                {options[selectedIndexSave]}
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={isLoading}>
-                    <ChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {options.map((option, index) => (
-                    <DropdownMenuItem
-                      key={option}
-                      onClick={() => handleMenuItemClick(index)}
-                    >
-                      {option}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                <Upload size={192} className="text-primary" />
+              </div>
+              <div className="relative z-10">
+                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                  Edit <span className="text-primary">{file?.name}</span>
+                </h1>
+                <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                  Update your file information and content as needed.
+                </p>
+              </div>
             </div>
-          </div>
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">
-                * indicates a required field
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Enter File Information</CardTitle>
-            </CardHeader>
+          </header>
+
+          <section aria-labelledby="file-edit-heading">
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div>
+                <h2 id="file-edit-heading" className="text-2xl font-bold text-foreground mb-1">
+                  File Management
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Update file details, replace content, or manage metadata.
+                </p>
+              </div>
+              <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="File editing actions">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setOpenDeleteModal(true)}
+                        disabled={isLoading}
+                        aria-label="Delete file permanently"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Delete File</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Button
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={() => {
+                    if (selectedIndexSave === 0) {
+                      handleUpload(undefined, false);
+                    } else {
+                      setOpenDiscardModal(true);
+                    }
+                  }}
+                  aria-label={isLoading ? "Saving file..." : `${options[selectedIndexSave]} file`}
+                >
+                  {options[selectedIndexSave]}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" disabled={isLoading} aria-label="Select save and update strategy">
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {options.map((option, index) => (
+                      <DropdownMenuItem
+                        key={option}
+                        onClick={() => handleMenuItemClick(index)}
+                      >
+                        {option}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </nav>
+            </header>
+
+            <Card className="mb-6 transition-all duration-300 hover:shadow-md">
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">
+                  * indicates a required field
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="transition-all duration-300 hover:shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  File Information
+                </CardTitle>
+                <p className="text-muted-foreground text-sm">
+                  Update the essential details for your file. Fields marked with * are required.
+                </p>
+              </CardHeader>
             <CardContent>
               <form
                 onSubmit={(e) => handleUpload(e, false)}
@@ -829,14 +862,18 @@ export default function EditFile(): JSX.Element {
                   <Input
                     id="name"
                     name="name"
+                    placeholder="Enter file name"
                     value={newFile.name}
                     onChange={handleChange}
                     disabled={isLoading}
                     required
-                    className={errors.name ? "border-destructive" : ""}
+                    className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
+                    aria-describedby={errors.name ? "name-error" : undefined}
                   />
                   {errors.name && (
-                    <p className="text-sm text-destructive">{errors.name}</p>
+                    <p id="name-error" className="text-sm text-destructive" role="alert">
+                      {errors.name}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -972,22 +1009,35 @@ export default function EditFile(): JSX.Element {
             </CardContent>
           </Card>
 
-          {/* File preview section */}
-          {newFile && newFile.url && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Current File Preview</CardTitle>
-              </CardHeader>
-              <CardContent>{renderFile()}</CardContent>
-            </Card>
-          )}
+            {/* File preview section */}
+            {newFile && newFile.url && (
+              <Card className="mt-6 transition-all duration-300 hover:shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-foreground">
+                    Current File Preview
+                  </CardTitle>
+                  <p className="text-muted-foreground text-sm">
+                    Preview of your current file content.
+                  </p>
+                </CardHeader>
+                <CardContent>{renderFile()}</CardContent>
+              </Card>
+            )}
+          </section>
         </>
       ) : (
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-lg text-muted-foreground">File does not exist</p>
+        <div
+          className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+          role="status"
+        >
+          <Upload className="mx-auto h-12 w-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium mb-2">File not found</p>
+          <p className="text-sm">
+            The file you're looking for doesn't exist or has been deleted.
+          </p>
         </div>
       )}
-    </div>
+    </main>
   ) : (
     <div
       className="min-h-screen flex items-center justify-center"

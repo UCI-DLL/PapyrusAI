@@ -4,7 +4,7 @@ import { Button, Box, TextField, FormLabel } from "@mui/material";
 import Get from "../../utility/Get";
 import Put from "../../utility/Put";
 import { PromptType } from "../../utility/types/CourseTypes";
-import { Checkbox } from "../../components/Checkbox";
+import { Checkbox } from "../../components/ui/checkbox";
 import LinearProgress from '@mui/material/LinearProgress';
 import { getPrompt, updatePrompt } from "../../utility/endpoints/PromptEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -162,20 +162,25 @@ export default function OldEditPrompt(): JSX.Element {
                 helperText={errors.prompt}
                 disabled={isLoading}
               />
-              <Checkbox
-                onClick={() => {
-                  setSession((prev) => ({
-                    ...prev,
-                    isDeleted: !session.isDeleted
-                  }))
-                }}
-                checked={session ? session.isDeleted : false}
-                isDisabled={isLoading}
-              >
-                <span>
+              <div className="flex items-center space-x-2" style={{margin: ".5rem 0"}}>
+                <Checkbox
+                  id="delete-prompt"
+                  checked={session ? session.isDeleted : false}
+                  onCheckedChange={(checked) => {
+                    setSession((prev) => ({
+                      ...prev,
+                      isDeleted: checked === true
+                    }))
+                  }}
+                  disabled={isLoading}
+                />
+                <label
+                  htmlFor="delete-prompt"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
                   Delete
-                </span>
-              </Checkbox>
+                </label>
+              </div>
             </form>
           </Box>
         </>

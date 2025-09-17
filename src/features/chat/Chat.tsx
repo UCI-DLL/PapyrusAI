@@ -103,6 +103,7 @@ export default function Chat(): JSX.Element {
   const [chatError, setChatError] = useState<string | undefined>();
   const [conversationList, setConversationList] = useState<ConversationListType>();
   const [creatingConvo, setCreatingConvo] = useState<boolean>(false);
+  const [messageNote, setMessageNote] = useState<string>(); //Note to users when using a tool
   const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
     open: boolean;
     deleteOpen: boolean;
@@ -411,276 +412,230 @@ export default function Chat(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname, user, viewUser]);
 
-  const onSocketMessage = useCallback(
-    (dataStr: string) => {
-      const returnData = JSON.parse(dataStr);
-      //turn off typing indicator for chatgpt
-      setShowTypingIndicator(false);
-      if (returnData.essay && returnData.status < 300 && returnData.rater) {
-        //if we get the essay response back, then we need to update the list of messages
-        //since the essay has a expandable message
-        const tempTimestamp = Date.now();
-        const essayTempId =
-          tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-        const messageTempId = (Number(essayTempId) + 1).toString();
-        var essayMessage: MessageType = {
-          id: essayTempId,
-          content: "View your essay feedback by clicking on this message.",
-          messageType: "text",
-          role: "assistant",
-          sender: "ChatGPT",
-          timestamp: tempTimestamp.toString(),
-          promptId: null,
-          userVisible: true,
-          raterReference: "",
-          expandableMessage: JSON.stringify(returnData.rater),
-        };
-        var essayResponseMessage: MessageType = {
-          id: messageTempId,
-          content: returnData.data,
-          messageType: "text",
-          role: "assistant",
-          sender: "ChatGPT",
-          timestamp: tempTimestamp.toString(),
-          promptId: null,
-          userVisible: true,
-          raterReference: "",
-          expandableMessage: "",
-        };
-        if (messages) {
-          setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
-        }
-        setShowWizard(false);
-      } else if (returnData.status < 300) {
-        const returnMessage: StreamMessageType = JSON.parse(returnData.data);
-        //if we are still streaming and not finished
-        if (
-          returnMessage.messageType === "streamMessage" &&
-          !returnMessage.finished
-        ) {
-          //if the current message id matches incoming message,
-          // then add new message stream to it
-          // else create a new message in list
-          //Note: use message ref to get current state of messages
-          // https://stackoverflow.com/questions/57847594/accessing-up-to-date-state-from-within-a-callback
-          if (
-            messagesRef.current &&
-            messagesRef.current.length > 0 &&
-            messagesRef.current[messagesRef.current.length - 1].stream &&
-            messagesRef.current[messagesRef.current.length - 1].stream?.[0]
-              .id === returnMessage.id
-          ) {
-            setMessages((prev) => {
-              if (prev && messagesRef.current) {
-                var temp = [...messagesRef.current];
-                if (temp[temp.length - 1].stream) {
-                  //add new stream message to list
-                  temp[temp.length - 1].stream?.push(returnMessage);
-                  const stream = temp[temp.length - 1].stream || [];
-                  //update message based on stream array (timestamps) and index
-                  //remove duplicates
-                  const filteredArray: StreamMessageType[] = Object.values(
-                    stream.reduce((unique: any, o) => {
-                      if (
-                        !unique[o.message] ||
-                        +o.timestamp > +unique[o.message].timestamp
-                      )
-                        unique[o.message] = o;
-                      return unique;
-                    }, {})
-                  );
-                  const reconstructed = filteredArray
-                    .sort((a, b) => a.timestamp - b.timestamp)
-                    .map((m) => m.message)
-                    .join("");
-                  temp[temp.length - 1].content =
-                    reconstructed || temp[temp.length - 1].content;
-                }
-                return temp;
-              } else return prev;
-            });
-          } else {
-            // make some temp stuff for the message
-            const tempTimestamp = Date.now();
-            const messageTempId =
-              tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-            var responseMessage: MessageType = {
-              id: messageTempId,
-              content: returnMessage.message,
-              messageType: "text",
-              role: "assistant",
-              sender: "ChatGPT",
-              timestamp: tempTimestamp.toString(),
-              promptId: null,
-              userVisible: true,
-              raterReference: "",
-              expandableMessage: "",
-              stream: [returnMessage],
-            };
-            if (messages) {
-              setMessages((prev) => [...prev, responseMessage]);
-            }
-          }
-        } else if (
-          returnMessage.finished &&
-          returnMessage.messageType === "finalMessage"
-        ) {
-          //if final message, update the message matching the id so that we know the words/stream is in order
-          // Note: this section is overkill but always nice to have just in case since we take out duplcates
-          // if stream id matches id it messages list
-          if (
-            messagesRef.current &&
-            messagesRef.current.length > 0 &&
-            messagesRef.current[messagesRef.current.length - 1].stream &&
-            messagesRef.current[messagesRef.current.length - 1].stream?.[0]
-              .id === returnMessage.id
-          ) {
-            setMessages((prev) => {
-              if (prev && messagesRef.current) {
-                var temp = [...messagesRef.current];
-                temp[temp.length - 1].content = returnMessage.message;
-                return temp;
-              } else return prev;
-            });
-          }
-        }
-      } else {
-        //update conversation data and handle errors
-        setOpenErrorModal({ open: true, message: returnData.data });
-        if (returnData.status === 400) {
-          setOpenUpdateConvoModal((prev) => ({ ...prev, completed: true }));
-        }
+  const onSocketMessage = useCallback((dataStr: string) => {
+    const returnData = JSON.parse(dataStr);
+    //turn off typing indicator for chatgpt
+    setShowTypingIndicator(false);
+    if (returnData.essay && returnData.status < 300 && returnData.rater) {
+      //if we get the essay response back, then we need to update the list of messages
+      //since the essay has a expandable message
+      const tempTimestamp = Date.now();
+      const essayTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId = (Number(essayTempId) + 1).toString();
+      var essayMessage: MessageType = {
+        id: essayTempId,
+        content: "View your essay feedback by clicking on this message.",
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: tempTimestamp.toString(),
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: JSON.stringify(returnData.rater),
+      };
+      var essayResponseMessage: MessageType = {
+        id: messageTempId,
+        content: returnData.data,
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: tempTimestamp.toString(),
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: "",
+      };
+      if (messages) {
+        setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
       }
-    },
-    [messages]
-  );
-
-  const onConnect = useCallback(
-    (courseId: string, moduleId: string, conversationIndex: string) => {
-      if (
-        socket.current?.readyState !== WebSocket.OPEN &&
-        process.env.REACT_APP_WEBSOCKET_URL
-      ) {
-        var URL = process.env.REACT_APP_WEBSOCKET_URL;
-        URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
-        URL =
-          URL +
-          `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}&organization=${process.env.REACT_APP_ORGANIZATION}`;
-        socket.current = new WebSocket(URL);
-        socket.current.addEventListener("open", onSocketOpen);
-        socket.current.addEventListener("close", onSocketClose);
-        socket.current.addEventListener("message", (event) => {
-          onSocketMessage(event.data);
-        });
-      }
-    },
-    [onSocketClose, onSocketMessage, onSocketOpen]
-  );
-
-  const onSendMessage = useCallback(
-    (messageList: Array<MessageType>, autoCreateConvoName: any) => {
-      //save message in message array
-      setChatError(undefined);
-      if (messages && isConnected) {
-        //check that message length is less that 100000
-        var messagesToSend: Array<{ role: string; content: string }> = [];
-        messageList.map((message) => {
-          if (message.content.length > 100000) {
-            setChatError("Message Too Long");
-            return "";
-          } else {
-            //temp convert message to message type
-            const tempTimestamp = Date.now();
-            const messageTempId =
-              tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-            var responseMessage: MessageType = {
-              id: tempTimestamp.toString(),
-              content: message.content
-                .replace(/\n\n/g, " ")
-                .replace(/\n/g, " "), //replace new lines
-              messageType: message.content.length < 1000 ? "text" : "file",
-              role: "user",
-              sender: "username",
-              timestamp: messageTempId,
-              promptId: message.promptId,
-            };
-            setMessages((prev) => [...prev, responseMessage]);
-            messagesToSend.push({
-              role: "user",
-              content: message.content,
-            });
-            return "";
-          }
-        });
-
-        socket.current?.send(
-          JSON.stringify({
-            action: "sendMessage",
-            messages: messagesToSend,
-            organization: process.env.REACT_APP_ORGANIZATION
-              ? process.env.REACT_APP_ORGANIZATION
-              : "UCI",
-          })
-        );
-        //Set the typing indicator for chatgpt while we wait for a response
+      setShowWizard(false);
+    } else if (returnData.status < 300) {
+      const returnMessage: StreamMessageType = JSON.parse(returnData.data);
+      //if there is a note, then display to user
+      if (returnMessage.message === null && returnMessage.note) {
+        setMessageNote(returnMessage.note);
         setShowTypingIndicator(true);
-        //one first user message, auto create a name for the conversation
-        if (
-          messages
-            .concat(messageList)
-            .filter(
-              (m) =>
-                (m.promptId === null || m.promptId === "") && m.role === "user"
-            ).length === 1
-        ) {
-          autoCreateConvoName(messagesToSend);
-        }
-      } else {
-        setOpenErrorModal({
-          open: true,
-          message: "Something went wrong. Please try again",
-        });
       }
-    },
-    [messages, isConnected]
-  );
-
-  const onSendEssay = useCallback(
-    (essay: string, message?: string) => {
-      //save message in message array
-      setChatError(undefined);
-      if (isConnected) {
-        //check that essay/message length is less that 100000
-        if (essay.length > 100000) {
-          setChatError("Essay Too Long to Evaluate");
-        } else if (essay.length < 750) {
-          //~5 characters in a word * 150 words
-          setChatError("Essay Too Short to Evaluate");
+      //if we are still streaming and not finished
+      if (returnMessage.messageType === "streamMessage" && !returnMessage.finished) {
+        //if the current message id matches incoming message,
+        // then add new message stream to it
+        // else create a new message in list
+        //Note: use message ref to get current state of messages
+        // https://stackoverflow.com/questions/57847594/accessing-up-to-date-state-from-within-a-callback
+        if (returnMessage.message !== null && !returnMessage.note) {
+          setMessageNote(undefined);
+        }
+        if (
+          messagesRef.current &&
+          messagesRef.current.length > 0 &&
+          messagesRef.current[messagesRef.current.length - 1].stream &&
+          messagesRef.current[messagesRef.current.length - 1].stream?.[0]
+            .id === returnMessage.id
+        ) {
+          setMessages((prev) => {
+            if (prev && messagesRef.current) {
+              var temp = [...messagesRef.current];
+              if (temp[temp.length - 1].stream) {
+                //add new stream message to list
+                temp[temp.length - 1].stream?.push(returnMessage);
+                const stream = temp[temp.length - 1].stream || [];
+                //update message based on stream array (timestamps) and index
+                //remove duplicates (by timestamp AND message) and then sort by timestamp
+                const filteredArray: StreamMessageType[] = stream.filter((obj, index, self) =>
+                  index === self.findIndex((t) => t.timestamp === obj.timestamp && t.message === obj.message)
+                );
+                const reconstructed = filteredArray.sort((a, b) => a.timestamp - b.timestamp)
+                  .map(m => m.message)
+                  .join('');
+                temp[temp.length - 1].content = reconstructed || temp[temp.length - 1].content;
+              }
+              return temp;
+            } else return prev;
+          });
         } else {
-          var sendEssay: any = {
-            action: "raterEssay",
-            essay: essay,
-            organization: process.env.REACT_APP_ORGANIZATION
-              ? process.env.REACT_APP_ORGANIZATION
-              : "UCI",
-          };
-          //add optional message/prompt
-          if (message) {
-            sendEssay["message"] = message;
+          if (returnMessage.message !== null && !returnMessage.note) {
+            setMessageNote(undefined);
           }
-          socket.current?.send(JSON.stringify(sendEssay));
+          // make some temp stuff for the message
+          const tempTimestamp = Date.now();
+          const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+          var responseMessage: MessageType = {
+            id: messageTempId,
+            content: returnMessage.message,
+            messageType: "text",
+            role: "assistant",
+            sender: "ChatGPT",
+            timestamp: tempTimestamp.toString(),
+            promptId: null,
+            userVisible: true,
+            raterReference: "",
+            expandableMessage: "",
+            stream: [returnMessage]
+          };
+          if (messages) {
+            setMessages((prev) => [...prev, responseMessage]);
+          }
         }
-        //Set the typing indicator for chatgpt while we wait for a response
-        setShowTypingIndicator(true);
-      } else {
-        setOpenErrorModal({
-          open: true,
-          message: "Something went wrong. Please try again",
+      } else if (
+        returnMessage.finished &&
+        returnMessage.messageType === "finalMessage"
+      ) {
+        console.log("final message", returnMessage);
+        setMessages((prev) => {
+          if (prev && messagesRef.current) {
+            var temp = [...messagesRef.current];
+            temp[temp.length - 1].content = returnMessage.message;
+            //handle web search sources
+            if (returnMessage.sources && returnMessage.sources.sources) {
+              console.log("search query: ", returnMessage.sources.searchQuery);
+              console.log("final summary: ", returnMessage.sources.content);
+              temp[temp.length - 1].sources = returnMessage.sources.sources;
+            }
+            return temp;
+          } else return prev;
         });
       }
-    },
-    [isConnected]
-  );
+    } else {
+      //update conversation data and handle errors
+      setOpenErrorModal({ open: true, message: returnData.data });
+      if (returnData.status === 400) {
+        setOpenUpdateConvoModal(prev => ({ ...prev, completed: true }));
+      }
+    }
+  }, [messages]);
+
+  const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
+    if (socket.current?.readyState !== WebSocket.OPEN && process.env.REACT_APP_WEBSOCKET_URL) {
+      var URL = process.env.REACT_APP_WEBSOCKET_URL;
+      URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
+      URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+      socket.current = new WebSocket(URL);
+      socket.current.addEventListener('open', onSocketOpen);
+      socket.current.addEventListener('close', onSocketClose);
+      socket.current.addEventListener('message', (event) => {
+        onSocketMessage(event.data);
+      });
+    }
+  }, [onSocketClose, onSocketMessage, onSocketOpen]);
+
+  const onSendMessage = useCallback((messageList: Array<MessageType>, autoCreateConvoName: any) => {
+    //save message in message array
+    setChatError(undefined);
+    if (messages && isConnected) {
+      //check that message length is less that 100000
+      var messagesToSend: Array<{ role: string, content: string }> = [];
+      messageList.map(message => {
+        if (message.content.length > 100000) {
+          setChatError("Message Too Long");
+          return "";
+        } else {
+          //temp convert message to message type
+          const tempTimestamp = Date.now();
+          const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+          var responseMessage: MessageType = {
+            id: tempTimestamp.toString(),
+            content: message.content.replace(/\n\n/g, " ").replace(/\n/g, " "), //replace new lines
+            messageType: message.content.length < 1000 ? "text" : "file",
+            role: "user",
+            sender: "username",
+            timestamp: messageTempId,
+            promptId: message.promptId,
+          };
+          setMessages((prev) => [...prev, responseMessage]);
+          messagesToSend.push({
+            role: "user",
+            content: message.content,
+          });
+          return "";
+        }
+      });
+
+      socket.current?.send(JSON.stringify({
+        "action": "sendMessage",
+        "messages": messagesToSend,
+        "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
+      }));
+      //Set the typing indicator for chatgpt while we wait for a response
+      setShowTypingIndicator(true);
+      //one first user message, auto create a name for the conversation
+      if (messages.concat(messageList).filter(m => (m.promptId === null || m.promptId === "") && m.role === "user").length === 1) {
+        autoCreateConvoName(messagesToSend);
+      }
+
+    } else {
+      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
+    }
+  }, [messages, isConnected]);
+
+  const onSendEssay = useCallback((essay: string, message?: string) => {
+    //save message in message array
+    setChatError(undefined);
+    if (isConnected) {
+      //check that essay/message length is less that 100000
+      if (essay.length > 100000) {
+        setChatError("Essay Too Long to Evaluate");
+      } else if (essay.length < 750) { //~5 characters in a word * 150 words
+        setChatError("Essay Too Short to Evaluate");
+      } else {
+        var sendEssay: any = {
+          "action": "raterEssay",
+          "essay": essay,
+          "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
+        };
+        //add optional message/prompt
+        if (message) {
+          sendEssay["message"] = message;
+        }
+        socket.current?.send(JSON.stringify(sendEssay));
+      }
+      //Set the typing indicator for chatgpt while we wait for a response
+      setShowTypingIndicator(true);
+    } else {
+      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
+    }
+  }, [isConnected]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1515,6 +1470,7 @@ export default function Chat(): JSX.Element {
                               ? true
                               : false
                           }
+                          sources={message.sources ? (typeof message.sources === 'string' ? JSON.parse(message.sources) : message.sources) : []}
                         />
                       ) : !moduleInfo.showInitialPrompt &&
                         message.promptId ? null : (
@@ -1543,6 +1499,12 @@ export default function Chat(): JSX.Element {
 
                 {showTypingIndicator && (
                   <MessageLeft message={""} displayName={"Papyrus"} typing />
+                )}
+
+                {messageNote && (
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-primary/80">{messageNote}</p>
+                  </div>
                 )}
 
                 {openUpdateConvoModal.completed && (

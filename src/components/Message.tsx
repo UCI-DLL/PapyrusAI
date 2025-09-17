@@ -1,61 +1,98 @@
-//reference: https://codesandbox.io/s/material-ui-chat-drh4l?file=/src/Message.js:0-4329
-//reference: https://edvins.io/react-text-to-speech
-
 import React, { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
 import { MessageTypeType } from "../utility/types/ConversationTypes";
-import {
-  ChevronUp,
-  ChevronDown,
-  Expand,
-  Volume2,
-  VolumeX,
-  Copy,
-} from "lucide-react";
 import { Button } from "./ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "./ui/dialog";
-import { cn } from "../lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { 
+  ChevronUp, 
+  ChevronDown, 
+  Maximize2, 
+  Volume2, 
+  VolumeX, 
+  Copy, 
+  X,
+  ExternalLink
+} from "lucide-react";
 import RaterEssay from "./RaterEssay";
-// Using native browser clipboard notification
+import { truncateString } from "../utility/Helpers";
+import removeMarkdown from "markdown-to-text";
+import { toast } from "sonner";
 
 interface MessageProps {
   message: string;
   displayName?: string;
   typing?: boolean;
-  messageType?: MessageTypeType;
-  outOfContext?: boolean;
-  visible?: boolean; // visible to user?
-  expandableMessage?: string; //message is clickable and shows extra text in modal
-  isInstructor?: boolean; //show the message if not user visible and is an instructor
+  messageType?: MessageTypeType,
+  outOfContext?: boolean,
+  visible?: boolean, // visible to user?
+  expandableMessage?: string, //message is clickable and shows extra text in modal
+  isInstructor?: boolean, //show the message if not user visible and is an instructor
+  sources?: Array<any> //web access sources
 }
 
+interface ViewSourcesProps {
+  sources: Array<{ url: string, title: string, summary?: string }>; // An array of Source objects
+}
+
+const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
+  return (
+    <div className="space-y-3 mt-4">
+      {sources.map((source: { url: string, title: string, summary?: string }, index: number) => (
+        <Card key={index} className="transition-all duration-200 hover:shadow-md border-l-4 border-l-primary/20">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm text-muted-foreground">
+                Source {index + 1}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="h-8 w-8 p-0"
+              >
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Visit source: ${source.title}`}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <h4 className="font-semibold text-sm mb-2 line-clamp-2">
+              {truncateString(source.title, 50)}
+            </h4>
+            {source.summary && (
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {truncateString(source.summary, 200)}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
 export const MessageLeft = (props: MessageProps) => {
-  const displayName = props.displayName ? props.displayName : "Displayname";
+  const displayName = props.displayName ? props.displayName : "Assistant";
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState<any>(null);
-  const [showExpandableMessage, setShowExpandableMessage] =
-    useState<boolean>(false);
-  const [expandableMessage] = useState(
-    props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined
-  );
+  const [showExpandableMessage, setShowExpandableMessage] = useState<boolean>(false);
+  const [expandableMessage] = useState(props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined);
 
   useEffect(() => {
     const synth = window.speechSynthesis;
-    const u = new SpeechSynthesisUtterance(props.message);
+    const u = new SpeechSynthesisUtterance(removeMarkdown(props.message));
+    u.rate = 0.9;
+    u.pitch = 1;
     setUtterance(u);
     return () => {
       synth.cancel();
@@ -64,8 +101,11 @@ export const MessageLeft = (props: MessageProps) => {
 
   const handlePlay = () => {
     const synth = window.speechSynthesis;
-    synth.speak(utterance);
-    setIsPlaying(true);
+    if (utterance) {
+      synth.speak(utterance);
+      setIsPlaying(true);
+      utterance.onend = () => setIsPlaying(false);
+    }
   };
 
   const handleStop = () => {
@@ -75,136 +115,135 @@ export const MessageLeft = (props: MessageProps) => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(props.message);
-    // Simple feedback without external toast library
-    // Could implement a temporary state change here if needed
+    navigator.clipboard.writeText(removeMarkdown(props.message));
+    toast.success("Message copied to clipboard");
   };
 
   //if empty message
-  if (props.message === "" && !props.typing) {
+  if ((props.message === "" || props.message === null) && !props.typing) {
     return <></>;
   }
 
-  return props.visible === undefined || props.visible || props.isInstructor ? (
-    <div className="flex flex-col mb-3">
-      {props.expandableMessage && expandableMessage ? (
+  return (props.visible === undefined || props.visible || props.isInstructor) ? (
+    <div className="flex flex-col gap-2 mb-6">
+      {props.expandableMessage && expandableMessage && (
         <Dialog open={showExpandableMessage} onOpenChange={setShowExpandableMessage}>
-          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Essay Feedback</DialogTitle>
             </DialogHeader>
-            <div className="space-y-6">
-              <RaterEssay
-                message={expandableMessage.message}
-                raterArray={expandableMessage.rater}
-                essay={expandableMessage.essay}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                variant="secondary"
-                onClick={() => setShowExpandableMessage(false)}
-              >
-                Back to Conversation
-              </Button>
-            </DialogFooter>
+            <RaterEssay 
+              message={expandableMessage.message} 
+              raterArray={expandableMessage.rater} 
+              essay={expandableMessage.essay} 
+            />
           </DialogContent>
         </Dialog>
-      ) : null}
-
-      <div className="flex items-center gap-2 mb-1 pl-2 text-xs text-muted-foreground">
-        {props.isInstructor && !props.visible && (
-          <span className="text-orange font-medium">Hidden - </span>
-        )}
-        <span className="font-medium">{displayName}</span>
-
-        <TooltipProvider>
-          <div className="flex items-center gap-0.5 ml-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 transition-colors"
-                  onClick={isPlaying ? handleStop : handlePlay}
-                >
-                  {isPlaying ? (
-                    <VolumeX className="h-2.5 w-2.5" />
-                  ) : (
-                    <Volume2 className="h-2.5 w-2.5" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isPlaying ? "Stop" : "Play"}</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 transition-colors"
-                  onClick={handleCopy}
-                >
-                  <Copy className="h-2.5 w-2.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Copy</p>
-              </TooltipContent>
-            </Tooltip>
+      )}
+      
+      <div className="flex items-start gap-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              {props.isInstructor && !props.visible && (
+                <span className="text-destructive">Hidden Message - </span>
+              )}
+              {displayName}
+            </span>
+            <div className="flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={isPlaying ? handleStop : handlePlay}
+                      aria-label={isPlaying ? "Stop reading" : "Read message aloud"}
+                    >
+                      {isPlaying ? (
+                        <VolumeX className="h-4 w-4" />
+                      ) : (
+                        <Volume2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isPlaying ? "Stop" : "Read aloud"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={handleCopy}
+                      aria-label="Copy message"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copy message</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
-        </TooltipProvider>
-      </div>
-
-      {props.expandableMessage ? (
-        <Button
-          variant="outline"
-          onClick={() => setShowExpandableMessage(true)}
-          className={cn(
-            "ml-2 mr-auto max-w-[85%] sm:max-w-[80%] md:max-w-[75%] min-h-[2rem] h-auto p-3 text-left justify-start whitespace-pre-wrap",
-            "bg-card hover:bg-muted/60 border border-border rounded-lg rounded-bl-none transition-colors",
-            (props.outOfContext || (!props.visible && props.isInstructor)) &&
-              "opacity-60 bg-muted/30"
-          )}
-        >
-          {props.typing ? (
-            <CustomTypingIndicator />
-          ) : (
-            <Markdown
-              remarkPlugins={[remarkGfm]}
-              className="prose prose-xs max-w-none dark:prose-invert"
+          
+          {props.expandableMessage ? (
+            <Button
+              variant="outline"
+              onClick={() => setShowExpandableMessage(true)}
+              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${
+                (props.outOfContext || (!props.visible && props.isInstructor)) 
+                  ? "opacity-60 border-dashed" 
+                  : ""
+              }`}
             >
-              {props.message}
-            </Markdown>
-          )}
-        </Button>
-      ) : (
-        <div
-          className={cn(
-            "ml-2 mr-auto max-w-[85%] sm:max-w-[80%] md:max-w-[75%] p-3",
-            "bg-card border border-border rounded-lg rounded-bl-none shadow-sm",
-            (props.outOfContext || (!props.visible && props.isInstructor)) &&
-              "opacity-60 bg-muted/30"
-          )}
-        >
-          {props.typing ? (
-            <CustomTypingIndicator />
+              {props.typing ? (
+                <CustomTypingIndicator />
+              ) : (
+                <Markdown 
+                  remarkPlugins={[remarkGfm]} 
+                  className="prose prose-sm max-w-none dark:prose-invert"
+                >
+                  {props.message}
+                </Markdown>
+              )}
+            </Button>
           ) : (
-            <Markdown
-              remarkPlugins={[remarkGfm]}
-              className="prose prose-xs max-w-none dark:prose-invert text-card-foreground"
-            >
-              {props.message}
-            </Markdown>
+            <div className={`bg-muted/50 rounded-lg p-4 ${
+              (props.outOfContext || (!props.visible && props.isInstructor)) 
+                ? "opacity-60 border border-dashed" 
+                : ""
+            }`}>
+              {props.typing ? (
+                <CustomTypingIndicator />
+              ) : (
+                <Markdown 
+                  remarkPlugins={[remarkGfm]} 
+                  className="prose prose-sm max-w-none dark:prose-invert"
+                >
+                  {props.message}
+                </Markdown>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
+      
+      {props.sources && <ViewSources sources={props.sources} />}
     </div>
+  ) : props.sources ? (
+    <ViewSources sources={props.sources} />
   ) : null;
 };
+
 
 export const MessageRight = (props: MessageProps) => {
   const [openFileModal, setOpenFileModal] = useState<boolean>(false);
@@ -214,7 +253,9 @@ export const MessageRight = (props: MessageProps) => {
 
   useEffect(() => {
     const synth = window.speechSynthesis;
-    const u = new SpeechSynthesisUtterance(props.message);
+    const u = new SpeechSynthesisUtterance(removeMarkdown(props.message));
+    u.rate = 0.9;
+    u.pitch = 1;
     setUtterance(u);
     return () => {
       synth.cancel();
@@ -223,8 +264,11 @@ export const MessageRight = (props: MessageProps) => {
 
   const handlePlay = () => {
     const synth = window.speechSynthesis;
-    synth.speak(utterance);
-    setIsPlaying(true);
+    if (utterance) {
+      synth.speak(utterance);
+      setIsPlaying(true);
+      utterance.onend = () => setIsPlaying(false);
+    }
   };
 
   const handleStop = () => {
@@ -234,161 +278,149 @@ export const MessageRight = (props: MessageProps) => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(props.message);
-    // Simple feedback without external toast library
-    // Could implement a temporary state change here if needed
+    navigator.clipboard.writeText(removeMarkdown(props.message));
+    toast.success("Message copied to clipboard");
   };
 
   function LinkRenderer(props: any) {
     return (
-      <a
-        href={props.href}
-        target="_blank"
+      <a 
+        href={props.href} 
+        target="_blank" 
         rel="noreferrer"
-        className="text-primary-foreground underline hover:no-underline"
+        className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
       >
         {props.children}
       </a>
     );
   }
 
-  return props.visible === undefined || props.visible || props.isInstructor ? (
-    <div className="flex flex-col mb-3">
-      <div className="flex items-center gap-2 mb-1 pr-2 justify-end text-xs text-muted-foreground">
-        <TooltipProvider>
-          <div className="flex items-center gap-0.5 mr-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 transition-colors"
-                  onClick={handleCopy}
-                >
-                  <Copy className="h-2.5 w-2.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Copy</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 transition-colors"
-                  onClick={isPlaying ? handleStop : handlePlay}
-                >
-                  {isPlaying ? (
-                    <VolumeX className="h-2.5 w-2.5" />
-                  ) : (
-                    <Volume2 className="h-2.5 w-2.5" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isPlaying ? "Stop" : "Play"}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </TooltipProvider>
-
-        {props.isInstructor && !props.visible && (
-          <span className="text-orange font-medium">Hidden - </span>
-        )}
-        <span className="font-medium">
-          {props.displayName ? props.displayName : "You"}
-        </span>
-      </div>
-
-      {props.messageType && props.messageType === "file" ? (
-        <div
-          className={cn(
-            "mr-2 ml-auto max-w-[85%] sm:max-w-[80%] md:max-w-[75%] p-3",
-            "bg-primary text-primary-foreground rounded-lg rounded-br-none shadow-sm",
-            (props.outOfContext || (!props.visible && props.isInstructor)) &&
-              "opacity-60 bg-primary/50"
-          )}
-        >
-          <Dialog open={openFileModal} onOpenChange={setOpenFileModal}>
-            <DialogContent className="max-w-4xl max-h-[80vh]">
-              <DialogHeader>
-                <DialogTitle>Full Document</DialogTitle>
-              </DialogHeader>
-              <div className="overflow-auto max-h-[60vh] p-4 bg-muted rounded-md">
-                <pre className="whitespace-pre-wrap text-sm">
-                  {props.message}
-                </pre>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenFileModal(false)}
-                >
-                  Close
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          <div className="bg-primary-foreground/10 rounded-md p-2 mb-2">
-            <div className="text-xs whitespace-pre-wrap">
-              {expandFile
-                ? props.message
-                : props.message.substring(0, 150) + "..."}
+  return (props.visible === undefined || props.visible || props.isInstructor) ? (
+    <div className="flex flex-col gap-2 mb-6">
+      <div className="flex items-start gap-3 justify-end">
+        <div className="flex-1 flex flex-col items-end">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={isPlaying ? handleStop : handlePlay}
+                      aria-label={isPlaying ? "Stop reading" : "Read message aloud"}
+                    >
+                      {isPlaying ? (
+                        <VolumeX className="h-4 w-4" />
+                      ) : (
+                        <Volume2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isPlaying ? "Stop" : "Read aloud"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={handleCopy}
+                      aria-label="Copy message"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copy message</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-          </div>
-
-          <div className="flex items-center gap-1 pt-1 border-t border-primary-foreground/20">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setExpandFile(!expandFile)}
-              className="h-auto p-1 text-primary-foreground hover:bg-primary-foreground/20 transition-colors text-xs"
-            >
-              {expandFile ? (
-                <>
-                  <ChevronUp className="h-3 w-3 mr-1" />
-                  Collapse
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-3 w-3 mr-1" />
-                  Expand
-                </>
+            <span className="text-sm font-medium text-muted-foreground">
+              {props.isInstructor && !props.visible && (
+                <span className="text-destructive">Hidden Message - </span>
               )}
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setOpenFileModal(true)}
-              className="h-auto p-1 text-primary-foreground hover:bg-primary-foreground/20 transition-colors text-xs"
-            >
-              <Expand className="h-3 w-3 mr-1" />
-              Fullscreen
-            </Button>
+              {props.displayName ? props.displayName : "You"}
+            </span>
           </div>
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "mr-2 ml-auto max-w-[85%] sm:max-w-[80%] md:max-w-[75%] p-3",
-            "bg-primary text-primary-foreground rounded-lg rounded-br-none shadow-sm",
-            (props.outOfContext || (!props.visible && props.isInstructor)) &&
-              "opacity-60 bg-primary/50"
+          
+          {props.messageType && props.messageType === "file" ? (
+            <div className={`max-w-md ${
+              (props.outOfContext || (!props.visible && props.isInstructor)) 
+                ? "opacity-60 border border-dashed" 
+                : ""
+            }`}>
+              <Dialog open={openFileModal} onOpenChange={setOpenFileModal}>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>File Content</DialogTitle>
+                  </DialogHeader>
+                  <div className="whitespace-pre-wrap font-mono text-sm bg-muted p-4 rounded-lg">
+                    {props.message}
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Card className="transition-all duration-200">
+                <CardContent className="p-4">
+                  <div className="whitespace-pre-wrap font-mono text-sm mb-4 max-h-32 overflow-hidden">
+                    {expandFile ? props.message : props.message.substring(0, 200) + "..."}
+                  </div>
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandFile(!expandFile)}
+                      className="flex items-center gap-2"
+                    >
+                      {expandFile ? (
+                        <>
+                          <ChevronUp className="h-4 w-4" />
+                          Collapse
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4" />
+                          Expand
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOpenFileModal(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                      Fullscreen
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className={`bg-primary/10 rounded-lg p-4 max-w-md ${
+              (props.outOfContext || (!props.visible && props.isInstructor)) 
+                ? "opacity-60 border border-dashed" 
+                : ""
+            }`}>
+              <Markdown 
+                className="prose prose-sm max-w-none dark:prose-invert" 
+                components={{ a: LinkRenderer }}
+              >
+                {props.message}
+              </Markdown>
+            </div>
           )}
-        >
-          <Markdown
-            className="prose prose-xs max-w-none prose-invert"
-            components={{ a: LinkRenderer }}
-          >
-            {props.message}
-          </Markdown>
         </div>
-      )}
+      </div>
     </div>
   ) : null;
 };

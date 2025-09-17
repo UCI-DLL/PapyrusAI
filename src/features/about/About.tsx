@@ -14,56 +14,69 @@ If you want to learn more about what we're doing or want to get involved, email 
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <header className="slide-in-up">
+      {/* Standard Page Header Pattern */}
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
           <div
             className="absolute top-0 right-0 w-48 h-48 opacity-10"
             aria-hidden="true"
           >
-            <Info size={192} className="floating-animation text-primary" />
+            <Info size={192} className="text-primary" />
           </div>
 
           <div className="relative z-10">
-            <h1 className="text-2xl font-bold mb-1 text-foreground">
-              About <span className="text-primary text-2xl">PapyrusAI</span>
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              About <span className="text-primary">PapyrusAI</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl text-sm">
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Learn about our mission and the team behind PapyrusAI
             </p>
           </div>
         </div>
       </header>
 
-      <Card className="border shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-foreground">
-            <Info className="h-5 w-5 text-primary" />
-            Our Story
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="prose prose-sm max-w-none text-foreground">
-            <Markdown 
-              className="space-y-4"
-              components={{
-                p: ({ children }) => <p className="text-muted-foreground leading-relaxed">{children}</p>,
-                a: ({ href, children }) => (
-                  <a 
-                    href={href} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="text-primary underline underline-offset-2 hover:no-underline font-medium"
-                  >
-                    {children}
-                  </a>
-                ),
-              }}
-            >
-              {text}
-            </Markdown>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Content Section */}
+      <section aria-labelledby="about-content">
+        <div className="w-full">
+          <Card className="border shadow-sm transition-all duration-300 hover:shadow-md">
+            <CardHeader>
+              <CardTitle 
+                id="about-content"
+                className="flex items-center gap-2 text-2xl font-bold text-foreground"
+              >
+                <Info className="h-6 w-6 text-primary" aria-hidden="true" />
+                Our Story
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none">
+                <Markdown 
+                  className="space-y-4"
+                  components={{
+                    p: ({ children }) => (
+                      <p className="text-muted-foreground leading-6 text-base mb-4">
+                        {children}
+                      </p>
+                    ),
+                    a: ({ href, children }) => (
+                      <a 
+                        href={href} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-primary underline underline-offset-2 hover:no-underline font-medium transition-colors duration-200"
+                      >
+                        {children}
+                      </a>
+                    ),
+                  }}
+                >
+                  {text}
+                </Markdown>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     </main>
   );
 }

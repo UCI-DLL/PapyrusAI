@@ -349,11 +349,9 @@ export default function OrgSettings(): JSX.Element {
   return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
       {error ? (
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center text-destructive">{error}</div>
-          </CardContent>
-        </Card>
+        <div className="bg-destructive/15 border border-destructive rounded-lg p-4" role="alert">
+          <p className="text-destructive font-medium text-center">{error}</p>
+        </div>
       ) : (
         <>
           {/* Add Permission Modal */}
@@ -574,124 +572,114 @@ export default function OrgSettings(): JSX.Element {
             </DialogContent>
           </Dialog>
 
-          {/* Header Section */}
-          <header className="slide-in-up">
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <Settings className="h-6 w-6" />
-                      Organization Settings
-                    </CardTitle>
-                    <p className="text-muted-foreground text-sm mt-2">
-                      Manage user permissions and access levels for your
-                      organization.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() =>
-                      setShowAddOrgPermissionModal((prev) => ({
-                        ...prev,
-                        open: true,
-                      }))
-                    }
-                    className="flex items-center gap-2"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Add Permission
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
+          {/* Standard Page Header Pattern */}
+          <header className="animate-in slide-in-from-bottom-4 duration-700">
+            <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+              <div
+                className="absolute top-0 right-0 w-48 h-48 opacity-10"
+                aria-hidden="true"
+              >
+                <Settings size={192} className="text-primary" />
+              </div>
+
+              <div className="relative z-10">
+                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                  Organization Settings
+                </h1>
+                <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                  Manage user permissions and access levels for your organization.
+                </p>
+              </div>
+            </div>
           </header>
 
-          {/* Permissions List */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-4">
-                <Users className="h-5 w-5" />
-                User Permissions ({filteredOrgPermissionList.length})
-              </CardTitle>
-              <CardDescription>
+          {/* Content Section */}
+          <section aria-labelledby="permissions-content">
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div>
+                <h2 
+                  id="permissions-content"
+                  className="text-2xl font-bold text-foreground mb-1"
+                >
+                  User Permissions
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Manage access levels for {filteredOrgPermissionList.length} users in your organization.
+                </p>
+              </div>
+              <nav
+                className="flex flex-col md:flex-row gap-2"
+                role="toolbar"
+                aria-label="Permission actions"
+              >
+                <Button
+                  onClick={() =>
+                    setShowAddOrgPermissionModal((prev) => ({
+                      ...prev,
+                      open: true,
+                    }))
+                  }
+                  className="flex items-center gap-2"
+                  aria-label="Add new user permission"
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden="true" />
+                  Add Permission
+                </Button>
+              </nav>
+            </header>
+
+            <Card className="transition-all duration-300 hover:shadow-md">
+              <CardHeader>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     <Input
                       placeholder="Search by email address..."
                       value={filter.search}
                       onChange={handleSearchOrgPermissionList}
                       className="pl-10"
+                      aria-label="Search users by email"
                     />
                   </div>
                   <Button variant="outline" onClick={clearFilters}>
                     Clear Filters
                   </Button>
                 </div>
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email Address</TableHead>
-                      <TableHead className="text-right">Access Level</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredOrgPermissionList.map((permission, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">
-                          {permission.isAdmin ? (
-                            <span className="flex items-center gap-2">
-                              <ShieldCheck className="h-4 w-4 text-primary" />
-                              {permission.id}
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                setShowUpdateOrgPermissionModal({
-                                  id: permission.id,
-                                  permission: permission.isAdmin
-                                    ? "Admin"
-                                    : permission.isInstructor
-                                    ? "Instructor"
-                                    : "None",
-                                })
-                              }
-                              className="flex items-center gap-2 hover:text-primary transition-colors"
-                            >
-                              <Shield className="h-4 w-4" />
-                              {permission.id}
-                            </button>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {permission.isAdmin ? (
-                            <Badge variant="default" className="bg-primary">
-                              Admin
-                            </Badge>
-                          ) : permission.isInstructor ? (
-                            <Badge variant="secondary">Instructor</Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="text-muted-foreground"
-                            >
-                              <ShieldX className="mr-1 h-3 w-3" />
-                              No Access
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {!permission.isAdmin && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Email Address</TableHead>
+                        <TableHead className="text-right">Access Level</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrgPermissionList.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-8">
+                            <div className="flex flex-col items-center gap-2">
+                              <Users className="h-8 w-8 text-muted-foreground opacity-50" />
+                              <p className="text-muted-foreground">No users found</p>
+                              <p className="text-sm text-muted-foreground">
+                                {filter.search ? "Try adjusting your search" : "Add permissions to get started"}
+                              </p>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredOrgPermissionList.map((permission, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              {permission.isAdmin ? (
+                                <span className="flex items-center gap-2">
+                                  <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+                                  {permission.id}
+                                </span>
+                              ) : (
+                                <button
                                   onClick={() =>
                                     setShowUpdateOrgPermissionModal({
                                       id: permission.id,
@@ -702,28 +690,74 @@ export default function OrgSettings(): JSX.Element {
                                         : "None",
                                     })
                                   }
+                                  className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
+                                  aria-label={`Update permissions for ${permission.id}`}
                                 >
-                                  <Shield className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setOpenDeleteModal(permission)}
-                                  className="text-destructive hover:text-destructive"
+                                  <Shield className="h-4 w-4" aria-hidden="true" />
+                                  {permission.id}
+                                </button>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {permission.isAdmin ? (
+                                <Badge variant="default" className="bg-primary">
+                                  Admin
+                                </Badge>
+                              ) : permission.isInstructor ? (
+                                <Badge variant="secondary">Instructor</Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="text-muted-foreground"
                                 >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                                  <ShieldX className="mr-1 h-3 w-3" aria-hidden="true" />
+                                  No Access
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {!permission.isAdmin && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        setShowUpdateOrgPermissionModal({
+                                          id: permission.id,
+                                          permission: permission.isAdmin
+                                            ? "Admin"
+                                            : permission.isInstructor
+                                            ? "Instructor"
+                                            : "None",
+                                        })
+                                      }
+                                      aria-label={`Edit permissions for ${permission.id}`}
+                                    >
+                                      <Shield className="h-4 w-4" aria-hidden="true" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setOpenDeleteModal(permission)}
+                                      className="text-destructive hover:text-destructive"
+                                      aria-label={`Remove permissions for ${permission.id}`}
+                                    >
+                                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
         </>
       )}
     </main>

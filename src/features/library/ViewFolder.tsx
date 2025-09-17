@@ -14,7 +14,7 @@ import {
   getUserFolder,
 } from "../../utility/endpoints/FolderEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { Plus, MessageSquare, FileText, Folder } from "lucide-react";
+import { Plus, MessageSquare, FileText, Folder, Loader2 } from "lucide-react";
 import ListFolderContents from "./ListFolderContents";
 
 export enum SortOptions {
@@ -131,21 +131,39 @@ export default function ViewFolder(): JSX.Element {
   };
 
   return !isLoading && folder ? (
-    <div className="min-h-screen">
+    <main className="bg-background text-foreground min-h-screen">
       <div className="mx-auto px-6 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+        <header className="animate-in slide-in-from-bottom-4 duration-700">
+          <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg mb-8">
+            <div
+              className="absolute top-0 right-0 w-48 h-48 opacity-10"
+              aria-hidden="true"
+            >
+              <Folder size={192} className="text-primary" />
+            </div>
+            <div className="relative z-10">
+              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                 {folder?.name}
               </h1>
-              <p className="text-mutedforeground text-lg">
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
                 To create a custom prompt or upload a document, click "Add
-                Content" at the top right.
+                Content" below.
               </p>
             </div>
-            <div className="flex items-center gap-3">
+          </div>
+        </header>
+
+        <section aria-labelledby="folder-management-heading">
+          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 id="folder-management-heading" className="text-2xl font-bold text-foreground mb-1">
+                Content Management
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Manage prompts and files within this folder.
+              </p>
+            </div>
+            <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Content management actions">
               {user?.groups.includes(
                 process.env.REACT_APP_INSTRUCTOR
                   ? process.env.REACT_APP_INSTRUCTOR
@@ -156,8 +174,10 @@ export default function ViewFolder(): JSX.Element {
                     <Button
                       variant="default"
                       className="flex items-center gap-2"
+                      aria-label="Add new content to folder"
                     >
-                      <Plus className="h-4 w-4" /> Add Content
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      Add Content
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-48 p-2" align="end">
@@ -172,8 +192,9 @@ export default function ViewFolder(): JSX.Element {
                               : `/library/org/${folder.id}/createprompt`;
                           navigator(basePath);
                         }}
+                        aria-label="Create new prompt"
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare className="h-4 w-4" aria-hidden="true" />
                         <div className="text-left">
                           <div className="font-medium">Add Prompt</div>
                         </div>
@@ -188,8 +209,9 @@ export default function ViewFolder(): JSX.Element {
                               : `/library/org/${folder.id}/createfile`;
                           navigator(basePath);
                         }}
+                        aria-label="Upload new file"
                       >
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-4 w-4" aria-hidden="true" />
                         <div className="text-left">
                           <div className="font-medium">Add File</div>
                         </div>
@@ -198,54 +220,70 @@ export default function ViewFolder(): JSX.Element {
                   </PopoverContent>
                 </Popover>
               )}
-            </div>
+            </nav>
+          </header>
+
+          <div className="flex gap-2 mb-6" role="tablist" aria-label="Content filter tabs">
+            <Button
+              variant={activeTab === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab("all")}
+              className="flex items-center gap-2"
+              role="tab"
+              aria-selected={activeTab === "all"}
+              aria-controls="folder-content"
+            >
+              <Folder className="h-4 w-4" aria-hidden="true" />
+              All Items ({getTotalItems()})
+            </Button>
+            <Button
+              variant={activeTab === "prompts" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab("prompts")}
+              className="flex items-center gap-2"
+              role="tab"
+              aria-selected={activeTab === "prompts"}
+              aria-controls="folder-content"
+            >
+              <MessageSquare className="h-4 w-4" aria-hidden="true" />
+              Prompts ({getPromptCount()})
+            </Button>
+            <Button
+              variant={activeTab === "files" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveTab("files")}
+              className="flex items-center gap-2"
+              role="tab"
+              aria-selected={activeTab === "files"}
+              aria-controls="folder-content"
+            >
+              <FileText className="h-4 w-4" aria-hidden="true" />
+              Files ({getFileCount()})
+            </Button>
           </div>
-        </div>
 
-        {/* Category Tabs */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={activeTab === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveTab("all")}
-            className="flex items-center gap-2"
-          >
-            <Folder className="h-4 w-4" />
-            All Items {getTotalItems()}
-          </Button>
-          <Button
-            variant={activeTab === "prompts" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveTab("prompts")}
-            className="flex items-center gap-2"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Prompts {getPromptCount()}
-          </Button>
-          <Button
-            variant={activeTab === "files" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveTab("files")}
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4" />
-            Files {getFileCount()}
-          </Button>
-        </div>
-
-        {/* Content */}
-        <ListFolderContents
-          folderId={folder.id}
-          isOrgFolder={location.pathname.split("/")[2] === "org"}
-          activeTab={activeTab}
-        />
+          <div id="folder-content" role="tabpanel">
+            <ListFolderContents
+              folderId={folder.id}
+              isOrgFolder={location.pathname.split("/")[2] === "org"}
+              activeTab={activeTab}
+            />
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   ) : (
-    <div className="min-h-screen flex items-center justify-center">
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
       <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p className="text-gray-600">Loading folder...</p>
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading folder...</p>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { ChevronDown, Info } from "lucide-react";
+import { ChevronDown, Info, Loader2, MessageSquare } from "lucide-react";
 import Get from "../../utility/Get";
 import { TagType } from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -242,7 +242,7 @@ export default function CreatePrompt(): JSX.Element {
   };
 
   return promptInfo && !isLoading ? (
-    <div className="min-h-screen p-6">
+    <main className="bg-background text-foreground p-4 space-y-6">
       <AlertDialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -259,45 +259,72 @@ export default function CreatePrompt(): JSX.Element {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Create Prompt</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            onClick={() => {
-              if (selectedIndexSave === 0) {
-                handleSubmit();
-              } else {
-                setOpenDiscardModal(true);
-              }
-            }}
+
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
           >
-            {options[selectedIndexSave]}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <ChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {options.map((option, index) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={() => handleMenuItemClick(index)}
-                >
-                  {option}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <MessageSquare size={192} className="text-primary" />
+          </div>
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              Create Prompt
+            </h1>
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
+              Create AI instructions that will guide student interactions with the system.
+            </p>
+          </div>
         </div>
-      </div>
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground mb-4">
+      </header>
+
+      <section aria-labelledby="prompt-setup-heading">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2 id="prompt-setup-heading" className="text-2xl font-bold text-foreground mb-1">
+              Prompt Setup
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Configure your prompt content and metadata settings.
+            </p>
+          </div>
+          <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Prompt creation actions">
+            <Button
+              size="sm"
+              onClick={() => {
+                if (selectedIndexSave === 0) {
+                  handleSubmit();
+                } else {
+                  setOpenDiscardModal(true);
+                }
+              }}
+              aria-label={isLoading ? "Saving prompt..." : `${options[selectedIndexSave]} prompt`}
+            >
+              {options[selectedIndexSave]}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" aria-label="Select save and publish strategy">
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {options.map((option, index) => (
+                  <DropdownMenuItem
+                    key={option}
+                    onClick={() => handleMenuItemClick(index)}
+                  >
+                    {option}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
+        </header>
+
+        <div className="border-primary/20 bg-primary/5 rounded-lg p-4 mb-6">
+          <p className="text-primary/80 mb-4">
             Prompts function in PapyrusAI as the first set of instructions sent
             to the AI that will guide students' interactions with the AI. For
             more information on creating a prompt, please see the{" "}
@@ -305,21 +332,26 @@ export default function CreatePrompt(): JSX.Element {
               href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
               target="_blank"
               rel="noreferrer"
-              className="text-primary hover:underline"
+              className="underline underline-offset-2 hover:no-underline font-medium"
             >
               "Creating a Prompt" section of our instructor guide
             </a>
             .
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-primary/70">
             * indicates a required field
           </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Enter Prompt Information</CardTitle>
-        </CardHeader>
+        </div>
+
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              Prompt Information
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Enter the essential details for your prompt. Fields marked with * are required.
+            </p>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
@@ -346,14 +378,18 @@ export default function CreatePrompt(): JSX.Element {
               <Input
                 id="name"
                 name="name"
+                placeholder="Enter prompt name"
                 value={newPrompt.name}
                 onChange={handleChange}
                 disabled={isLoading}
                 required
-                className={errors.name ? "border-destructive" : ""}
+                className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
+                aria-describedby={errors.name ? "name-error" : undefined}
               />
               {errors.name && (
-                <p className="text-sm text-destructive">{errors.name}</p>
+                <p id="name-error" className="text-sm text-destructive" role="alert">
+                  {errors.name}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -379,15 +415,19 @@ export default function CreatePrompt(): JSX.Element {
               <Textarea
                 id="prompt"
                 name="prompt"
+                placeholder="Enter your prompt instructions here..."
                 value={newPrompt.prompt}
                 onChange={handleChange}
                 disabled={isLoading}
                 required
                 rows={5}
-                className={errors.prompt ? "border-destructive" : ""}
+                className={errors.prompt ? "border-destructive focus-visible:ring-destructive" : ""}
+                aria-describedby={errors.prompt ? "prompt-error" : undefined}
               />
               {errors.prompt && (
-                <p className="text-sm text-destructive">{errors.prompt}</p>
+                <p id="prompt-error" className="text-sm text-destructive" role="alert">
+                  {errors.prompt}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -441,12 +481,20 @@ export default function CreatePrompt(): JSX.Element {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </section>
+    </main>
   ) : (
-    <div className="min-h-screen flex items-center justify-center">
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
       <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p className="text-muted-foreground">Loading...</p>
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading prompt creation form...</p>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 // TypeScript interfaces for data structures
 export interface User {
-  sub: string;
+  username: string;
   name?: string;
   family_name?: string;
   email?: string;
@@ -154,9 +154,9 @@ export function getStudentList(data: Course[]): User[] {
       if (!module.conversations) continue;
       for (const convo of module.conversations) {
         if (!convo.user) continue;
-        const { sub, name, family_name, email } = convo.user;
-        if (sub && !students[sub]) {
-          students[sub] = { sub, name, family_name, email };
+        const { username, name, family_name, email } = convo.user;
+        if (username && !students[username]) {
+          students[username] = { username, name, family_name, email };
         }
       }
     }
@@ -166,7 +166,7 @@ export function getStudentList(data: Course[]): User[] {
 
 export function getStudentConversations(
   data: Course[],
-  studentSub: string
+  studentUsername: string
 ): Conversation[] {
   const conversations: Conversation[] = [];
   for (const course of data) {
@@ -174,7 +174,7 @@ export function getStudentConversations(
     for (const module of course.modules) {
       if (!module.conversations) continue;
       for (const convo of module.conversations) {
-        if (convo.user && convo.user.sub === studentSub) {
+        if (convo.user && convo.user.username === studentUsername) {
           conversations.push(convo);
         }
       }
@@ -185,9 +185,9 @@ export function getStudentConversations(
 
 export function getStudentWeeklyConvoLengths(
   data: Course[],
-  studentSub: string
+  studentUsername: string
 ): { week: string; avg_convo_length: number }[] {
-  const convos = getStudentConversations(data, studentSub);
+  const convos = getStudentConversations(data, studentUsername);
   const weekMap: Record<string, { total: number; count: number }> = {};
   for (const convo of convos) {
     if (!convo.messages || convo.messages.length === 0) continue;
@@ -208,9 +208,9 @@ export function getStudentWeeklyConvoLengths(
 
 export function getStudentWeeklyConvoCounts(
   data: Course[],
-  studentSub: string
+  studentUsername: string
 ): { week: string; num_convos: number }[] {
-  const convos = getStudentConversations(data, studentSub);
+  const convos = getStudentConversations(data, studentUsername);
   const weekMap: Record<string, number> = {};
   for (const convo of convos) {
     if (!convo.messages || convo.messages.length === 0) continue;
@@ -226,9 +226,9 @@ export function getStudentWeeklyConvoCounts(
 
 export function getStudentDailyConvoLengths(
   data: Course[],
-  studentSub: string
+  studentUsername: string
 ): { date: string; avg_convo_length: number }[] {
-  const convos = getStudentConversations(data, studentSub);
+  const convos = getStudentConversations(data, studentUsername);
   const dateMap: Record<string, { total: number; count: number }> = {};
   for (const convo of convos) {
     if (!convo.messages || convo.messages.length === 0) continue;
@@ -249,9 +249,9 @@ export function getStudentDailyConvoLengths(
 
 export function getStudentDailyConvoCounts(
   data: Course[],
-  studentSub: string
+  studentUsername: string
 ): { date: string; num_convos: number }[] {
-  const convos = getStudentConversations(data, studentSub);
+  const convos = getStudentConversations(data, studentUsername);
   const dateMap: Record<string, number> = {};
   for (const convo of convos) {
     if (!convo.messages || convo.messages.length === 0) continue;
@@ -370,7 +370,7 @@ export function getDailyModuleUsage(
 
 export function getStudentModuleUsage(
   data: Course[],
-  studentSub: string
+  studentUsername: string
 ): { moduleName: string; count: number }[] {
   const moduleMap: Record<string, number> = {};
   for (const course of data) {
@@ -379,7 +379,7 @@ export function getStudentModuleUsage(
       const moduleName = module.name || "(No Name)";
       if (!module.conversations) continue;
       for (const convo of module.conversations) {
-        if (convo.user && convo.user.sub === studentSub) {
+        if (convo.user && convo.user.username === studentUsername) {
           moduleMap[moduleName] = (moduleMap[moduleName] || 0) + 1;
         }
       }
@@ -392,7 +392,7 @@ export function getStudentModuleUsage(
 
 export function getStudentClassificationCounts(
   data: Course[],
-  studentSub: string
+  studentUsername: string
 ): { classification: string; count: number }[] {
   const classificationMap: Record<string, number> = {};
   for (const course of data) {
@@ -400,7 +400,7 @@ export function getStudentClassificationCounts(
     for (const module of course.modules) {
       if (!module.conversations) continue;
       for (const convo of module.conversations) {
-        if (convo.user && convo.user.sub === studentSub) {
+        if (convo.user && convo.user.username === studentUsername) {
           const classification = convo.classification || "(Unclassified)";
           classificationMap[classification] =
             (classificationMap[classification] || 0) + 1;
@@ -457,23 +457,29 @@ export function analyzeCourse(course: Course): {
   > = {};
   const studentList = getStudentList([course]);
   for (const student of studentList) {
-    const convos = getStudentConversations([course], student.sub);
+    const convos = getStudentConversations([course], student.username);
     const totalMessages = convos.reduce(
       (sum, c) => sum + (c.messages?.length || 0),
       0
     );
-    students[student.sub] = {
+    students[student.username] = {
       info: student,
-      dailyConvoLengths: getStudentDailyConvoLengths([course], student.sub),
-      dailyConvoCounts: getStudentDailyConvoCounts([course], student.sub),
+      dailyConvoLengths: getStudentDailyConvoLengths(
+        [course],
+        student.username
+      ),
+      dailyConvoCounts: getStudentDailyConvoCounts([course], student.username),
       totalMessages,
-      moduleUsage: getStudentModuleUsage([course], student.sub),
+      moduleUsage: getStudentModuleUsage([course], student.username),
       classificationCounts: getStudentClassificationCounts(
         [course],
-        student.sub
+        student.username
       ),
     };
   }
+  // check if all students are in the students object
+  console.log("students", students);
+  console.log("studentList", studentList);
   const returnObj = {
     courseName: course.name,
     moduleUsageFrequency,

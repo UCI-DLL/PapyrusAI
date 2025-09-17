@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
     DialogContent,
     DialogHeader,
@@ -63,36 +64,48 @@ export default function AddCourseForm({
     }
 
     return (
-        <DialogContent className="sm:max-w-md bg-white">
+        <DialogContent className="sm:max-w-md">
             <DialogHeader>
-                <DialogTitle>Join Course by Sign Up Code</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-foreground">
+                    Join Course by Sign Up Code
+                </DialogTitle>
                 <DialogDescription>
                     Enter the unique course sign up code associated with the
                     course you want to join. Not sure what the sign up code is?
                     Ask the instructor of the course!
                 </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
+                    <Label htmlFor="signUpCode" className="text-sm font-medium">
+                        Course Sign Up Code
+                    </Label>
                     <Input
+                        id="signUpCode"
                         name="signUpCode"
                         placeholder="ENG190WFall2023"
                         value={session.signUpCode}
                         onChange={handleChange}
                         disabled={isLoading}
+                        required
                         className={
-                            errors.signUpCode !== "" ? "border-destructive" : ""
+                            errors.signUpCode !== "" ? "border-destructive focus-visible:ring-destructive" : ""
                         }
+                        aria-describedby={errors.signUpCode ? "signup-error" : undefined}
                     />
                     {errors.signUpCode && (
-                        <p className="text-sm text-destructive">
+                        <p id="signup-error" className="text-sm text-destructive" role="alert">
                             {errors.signUpCode}
                         </p>
                     )}
                 </div>
                 <div className="flex gap-2 justify-end">
-                    <Button type="submit" disabled={isLoading}>
-                        Join Course
+                    <Button 
+                        type="submit" 
+                        disabled={isLoading}
+                        aria-label={isLoading ? "Joining course..." : "Join course"}
+                    >
+                        {isLoading ? "Joining..." : "Join Course"}
                     </Button>
                 </div>
             </form>

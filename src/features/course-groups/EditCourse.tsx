@@ -277,15 +277,24 @@ export default function EditCourse(): JSX.Element {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading course...</span>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <Loader2
+            className="h-8 w-8 animate-spin text-primary"
+            aria-hidden="true"
+          />
+          <p className="text-muted-foreground">Loading course...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <main className="bg-background text-foreground p-4 space-y-6">
       <Dialog open={showSavePublishTooltip} onOpenChange={setShowSavePublishTooltip}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -705,14 +714,17 @@ export default function EditCourse(): JSX.Element {
           </Card>
         </>
       ) : (
-        <Card>
-          <CardContent className="text-center py-12">
-            <XCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">Course Not Found</h3>
-            <p className="text-muted-foreground">The course you're looking for doesn't exist or has been deleted.</p>
-          </CardContent>
-        </Card>
+        <div
+          className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+          role="status"
+        >
+          <XCircle className="mx-auto h-12 w-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium mb-2">Course Not Found</p>
+          <p className="text-sm">
+            The course you're looking for doesn't exist or has been deleted.
+          </p>
+        </div>
       )}
-    </div>
+    </main>
   )
 }

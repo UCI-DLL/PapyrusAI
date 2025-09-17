@@ -4,6 +4,7 @@ import { UserContext } from "../../utility/context/UserContext";
 import { UserType } from "../../utility/types/UserTypes";
 import Get from "../../utility/Get";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { User } from "lucide-react";
 
 
 export default function Account(): JSX.Element {
@@ -27,20 +28,41 @@ export default function Account(): JSX.Element {
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <header className="slide-in-up">
+      {/* Standard Page Header Pattern */}
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
+          >
+            <User size={192} className="text-primary" />
+          </div>
+
           <div className="relative z-10">
-            <h1 className="text-2xl font-bold mb-1 text-foreground">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
               Account Settings
             </h1>
-            <p className="text-muted-foreground max-w-2xl text-sm">
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Manage your profile information and preferences.
             </p>
           </div>
         </div>
       </header>
 
-      <section aria-labelledby="account-heading">
+      {/* Content Section */}
+      <section aria-labelledby="account-content">
+        <header className="mb-6">
+          <h2 
+            id="account-content"
+            className="text-2xl font-bold text-foreground mb-1"
+          >
+            Profile Information
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Update your personal details and account preferences.
+          </p>
+        </header>
+
         <div className="w-full">
           <MissingUserInfoForm
             user={user ? user : undefined}
@@ -54,5 +76,5 @@ export default function Account(): JSX.Element {
         </div>
       </section>
     </main>
-  )
+  );
 }

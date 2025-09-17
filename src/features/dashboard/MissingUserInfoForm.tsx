@@ -134,44 +134,64 @@ export default function MissingUserInfoForm({
   }
 
   return (
-    <Card>
+    <Card className="transition-all duration-300 hover:shadow-md">
       <CardHeader>
-        <CardTitle>Enter User Information</CardTitle>
+        <CardTitle className="text-2xl font-bold text-foreground">
+          Profile Information
+        </CardTitle>
+        <p className="text-muted-foreground text-sm">
+          Complete your profile to get started with PapyrusAI.
+        </p>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name" className="text-sm font-medium">
+              First Name *
+            </Label>
             <Input
               id="name"
               name="name"
+              placeholder="Enter your first name"
               value={session.name}
               onChange={handleChange}
               disabled={isLoading}
-              className={errors.name ? "border-red-500" : ""}
+              required
+              className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-describedby={errors.name ? "name-error" : undefined}
             />
             {errors.name && (
-              <p className="text-sm text-red-500">{errors.name}</p>
+              <p id="name-error" className="text-sm text-destructive" role="alert">
+                {errors.name}
+              </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="family_name">Family Name</Label>
+            <Label htmlFor="family_name" className="text-sm font-medium">
+              Last Name
+            </Label>
             <Input
               id="family_name"
               name="family_name"
+              placeholder="Enter your last name"
               value={session.family_name}
               onChange={handleChange}
               disabled={isLoading}
-              className={errors.family_name ? "border-red-500" : ""}
+              className={errors.family_name ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-describedby={errors.family_name ? "family-name-error" : undefined}
             />
             {errors.family_name && (
-              <p className="text-sm text-red-500">{errors.family_name}</p>
+              <p id="family-name-error" className="text-sm text-destructive" role="alert">
+                {errors.family_name}
+              </p>
             )}
           </div>
 
           <div className="space-y-3">
-            <Label>Theme</Label>
+            <Label className="text-sm font-medium">
+              Theme Preference
+            </Label>
             <RadioGroup
               value={session.theme}
               onValueChange={(value) => {
@@ -180,24 +200,36 @@ export default function MissingUserInfoForm({
                 } as React.ChangeEvent<HTMLInputElement>;
                 handleThemeChange(event);
               }}
-              className="flex flex-col space-y-2"
+              className="flex flex-col space-y-3"
+              aria-describedby={errors.theme ? "theme-error" : undefined}
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <RadioGroupItem value="light" id="light" />
-                <Label htmlFor="light">Light</Label>
+                <Label htmlFor="light" className="text-sm font-normal cursor-pointer">
+                  Light theme
+                </Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <RadioGroupItem value="dark" id="dark" />
-                <Label htmlFor="dark">Dark</Label>
+                <Label htmlFor="dark" className="text-sm font-normal cursor-pointer">
+                  Dark theme
+                </Label>
               </div>
             </RadioGroup>
             {errors.theme && (
-              <p className="text-sm text-red-500">{errors.theme}</p>
+              <p id="theme-error" className="text-sm text-destructive" role="alert">
+                {errors.theme}
+              </p>
             )}
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            Save
+          <Button 
+            type="submit" 
+            disabled={isLoading} 
+            className="w-full"
+            aria-label={isLoading ? "Saving profile information" : "Save profile information"}
+          >
+            {isLoading ? "Saving..." : "Save Profile"}
           </Button>
         </form>
       </CardContent>

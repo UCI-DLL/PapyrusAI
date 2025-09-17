@@ -1,16 +1,16 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Badge } from "../../components/ui/badge";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Separator } from "../../components/ui/separator";
-import { Trash2, ChevronDown, Info, Plus, Loader2, Users, GraduationCap, Save, CheckCircle, XCircle, UserPlus } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip";
+import { Trash2, ChevronDown, Info, Loader2, Users, CheckCircle, XCircle, X } from "lucide-react";
 import Get from "../../utility/Get";
 import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoints";
 import Put from "../../utility/Put";
@@ -19,35 +19,6 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserList } from "../../utility/endpoints/UserEndpoints";
-import { cn } from "../../lib/utils";
-// Temporary Material-UI imports during conversion
-import {
-  TextField,
-  FormLabel,
-  Box,
-  LinearProgress,
-  ButtonGroup,
-  Popper,
-  Grow,
-  Paper,
-  ClickAwayListener,
-  MenuList,
-  MenuItem,
-  Tooltip,
-  IconButton,
-  Chip,
-  Autocomplete,
-  FormControl,
-  InputLabel,
-  SelectChangeEvent,
-  Select as MuiSelect
-} from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import InfoIcon from '@mui/icons-material/Info';
-import { Modal } from "../../components/Modal";
 
 type EditCourseType = {
   name: string,
@@ -92,7 +63,6 @@ export default function EditCourse(): JSX.Element {
   const [userList, setUserList] = useState<Array<CustomUserType>>([]);
   const { user } = useContext(UserContext);
   const [openSave, setOpenSave] = useState(false);
-  const anchorRefSave = useRef<HTMLDivElement>(null);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
@@ -176,7 +146,7 @@ export default function EditCourse(): JSX.Element {
   };
 
   const handleMenuItemClick = (
-    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     index: number,
   ) => {
     if (index === 0) { //Save and publish
@@ -194,20 +164,6 @@ export default function EditCourse(): JSX.Element {
     setOpenSave(false);
   };
 
-  const handleToggle = () => {
-    setOpenSave((prevOpen) => !prevOpen);
-  };
-
-  const handleClose = (event: Event) => {
-    if (
-      anchorRefSave.current &&
-      anchorRefSave.current.contains(event.target as HTMLElement)
-    ) {
-      return;
-    }
-
-    setOpenSave(false);
-  };
 
   function getUsers(PaginationToken: string, signal: AbortSignal) {
     var limit = 50;
@@ -318,352 +274,445 @@ export default function EditCourse(): JSX.Element {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleTermChange(e: SelectChangeEvent) {
-    setSession((prev) => ({ ...prev, term: e.target.value as string }))
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading course...</span>
+      </div>
+    );
   }
 
-  return !isLoading ? (
-    <div className="courses">
-      <Modal
-        isOpen={showSavePublishTooltip}
-        title={"What is Save & Publish?"}
-        onRequestClose={() => setShowSavePublishTooltip(false)}
-        actions={
-          <>
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <Dialog open={showSavePublishTooltip} onOpenChange={setShowSavePublishTooltip}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>What is Save & Publish?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>
+              To save and publish (i.e., make visible to students) your course, select "Save & Publish".
+              If you want to save your course without publishing the course, select "Save without Publishing".
+            </p>
+            <p className="italic text-muted-foreground">
+              Note: Choosing this option after the course has already been published will unpublish the course.
+            </p>
+          </div>
+          <DialogFooter>
             <Button variant="default" onClick={() => setShowSavePublishTooltip(false)}>
               Close
             </Button>
-          </>
-        }
-      >
-        <div>
-          To save and publish (i.e., make visible to students) your course, select “Save & Publish”.
-          If you want to save your course without publishing the course, select “Save without Publishing”.
-          <span style={{ fontStyle: "italic" }}> Note: Choosing this option after the course has already been published will unpublish the course.</span>
-        </div>
-      </Modal>
-      <Modal
-        isOpen={openDeleteModal}
-        title={"Delete Course?"}
-        onRequestClose={() => setOpenDeleteModal(false)}
-        actions={
-          <>
-            <Button variant="default" color="error" onClick={(e) => handleSubmit(e, false, true)}>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Delete Course?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you would like to permanently delete this course?</p>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={(e) => handleSubmit(e, false, true)}>
               Delete
             </Button>
-            <Button variant="default" color="secondary" onClick={() => setOpenDeleteModal(false)}>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Discard Changes?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you would like to discard the changes to this course?</p>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setOpenDiscardModal(false)}>
               Cancel
             </Button>
-          </>
-        }
-      >
-        <div>Are you sure you would like to permanently delete this course?</div>
-      </Modal>
-      <Modal
-        isOpen={openDiscardModal}
-        title={"Discard Changes?"}
-        onRequestClose={() => setOpenDiscardModal(false)}
-        actions={
-          <>
-            <Button variant="default" color="primary" onClick={() => navigator(-1)}>
+            <Button variant="default" onClick={() => navigator(-1)}>
               Discard
             </Button>
-            <Button variant="default" color="secondary" onClick={() => setOpenDiscardModal(false)}>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={openActiveModal} onOpenChange={setOpenActiveModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Unpublish Course?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>This course is current published and available to the public. Continuing will make the course unavailable to students.</p>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setOpenActiveModal(false)}>
               Cancel
             </Button>
-          </>
-        }
-      >
-        <div>Are you sure you would like to discard the changes to this course?</div>
-      </Modal>
-      <Modal
-        isOpen={openActiveModal}
-        title={"Unpublish Course?"}
-        onRequestClose={() => setOpenActiveModal(false)}
-        actions={
-          <>
-            <Button variant="default" color="primary" onClick={(e) => handleSubmit(e, false, false)}>
+            <Button variant="default" onClick={(e) => handleSubmit(e, false, false)}>
               Continue
             </Button>
-            <Button variant="default" color="secondary" onClick={() => setOpenActiveModal(false)}>
-              Cancel
-            </Button>
-          </>
-        }
-      >
-        <div>This course is current published and available to the public. Continuing will make the course unavailable to students.</div>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {!error && prevSession ? (
         <>
-          <div className="courses__section-header">
-            <h3>Edit {prevSession.name}</h3>
-            <div>
-              <Tooltip
-                title={"Delete"}
-                arrow
-                componentsProps={{
-                  tooltip: {
-                    sx: {
-                      bgcolor: '#da0222', //error color
-                      '& .MuiTooltip-arrow': {
-                        color: '#da0222',
-                      },
-                    },
-                  },
-                }}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl">Edit {prevSession.name}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowSavePublishTooltip(true)}
+                        >
+                          <Info className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>What is Save & Publish?</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setOpenDeleteModal(true)}
+                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete Course</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="default" className="flex items-center gap-2">
+                        {options[selectedIndexSave]}
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {options.map((option, index) => (
+                        <DropdownMenuItem
+                          key={option}
+                          onClick={(event) => handleMenuItemClick(event, index)}
+                          className={index === 2 ? "text-muted-foreground" : ""}
+                        >
+                          {option}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Courses are spaces in which instructors can create and organize modules that customize how students can interact with the AI.
+              For more information on editing a course, please see the{" "}
+              <a
+                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1pkdik3iscqd"
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary underline hover:no-underline"
               >
-                <IconButton
-                  onClick={() => setOpenDeleteModal(true)}
-                  aria-label="Delete Course"
-                  className="courses__delete_background"
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-              &nbsp;&nbsp;&nbsp;
-              <div className="form-tooltips">
-                <button onClick={() => setShowSavePublishTooltip(true)}>
-                  <InfoIcon />
-                </button>
-                <ButtonGroup
-                  variant="contained"
-                  ref={anchorRefSave}
-                  aria-label="Button group with a nested menu"
-                >
-                  <Button onClick={handleClick}>{options[selectedIndexSave]}</Button>
-                  <Button
-                    size="sm"
-                    aria-controls={openSave ? 'split-button-menu' : undefined}
-                    aria-expanded={openSave ? 'true' : undefined}
-                    aria-label="select save and ativation strategy"
-                    aria-haspopup="menu"
-                    onClick={handleToggle}
-                  >
-                    <ArrowDropDownIcon />
-                  </Button>
-                </ButtonGroup>
-                <Popper
-                  sx={{
-                    zIndex: 1,
-                  }}
-                  open={openSave}
-                  anchorEl={anchorRefSave.current}
-                  role={undefined}
-                  transition
-                  disablePortal
-                >
-                  {({ TransitionProps, placement }) => (
-                    <Grow
-                      {...TransitionProps}
-                      style={{
-                        transformOrigin:
-                          placement === 'bottom' ? 'center top' : 'center bottom',
-                      }}
-                    >
-                      <Paper>
-                        <ClickAwayListener onClickAway={handleClose}>
-                          <MenuList id="split-button-menu" autoFocusItem>
-                            {options.map((option, index) => (
-                              <MenuItem
-                                key={option}
-                                selected={index === selectedIndexSave}
-                                onClick={(event) => handleMenuItemClick(event, index)}
-                                className={index === 2 ? "courses__discard_background" : ""}
-                              >
-                                {option}
-                              </MenuItem>
-                            ))}
-                          </MenuList>
-                        </ClickAwayListener>
-                      </Paper>
-                    </Grow>
+                "Editing a Course" section of our instructor guide
+              </a>
+              .
+            </AlertDescription>
+          </Alert>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  * indicates a required field
+                </div>
+                <div className="flex items-center gap-2">
+                  {session.isActive ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <Badge variant="default" className="bg-green-100 text-green-800">
+                        Published
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-4 w-4 text-gray-500" />
+                      <Badge variant="secondary">
+                        Unpublished
+                      </Badge>
+                    </>
                   )}
-                </Popper>
+                </div>
               </div>
-            </div>
-          </div>
-          <div>
-            Courses are spaces in which instructors can create and organize modules that customize how students can interact with the AI.
-            For more information on editing a course, please see the <a
-              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1pkdik3iscqd"
-              target="_blank" rel="noreferrer">“Editing a Course” section of our instructor guide
-            </a>.
-          </div>
-          <hr />
-          <div className="courses__section-header">
-            <span>* indicates a required field</span>
-            <div>
-              {session.isActive ? (
-                <>
-                  <TaskAltIcon color="success" />
-                  &nbsp;Published
-                </>
-              ) : (
-                <>
-                  <DoNotDisturbIcon />
-                  &nbsp;Unpublished
-                </>
-              )}
+            </CardHeader>
 
-            </div>
-          </div>
+            <CardContent className="space-y-6">
+              <form onSubmit={(e) => handleSubmit(e, true, false)} className="space-y-6">
+                <div>
+                  <Label className="text-base font-semibold">Enter Course Information</Label>
+                </div>
 
-          <Box className="courses__add">
-            <form onSubmit={(e) => handleSubmit(e, true, false)}>
-              <FormLabel>Enter Course Information</FormLabel>
-              <div className="form-tooltips">
-                <TextField
-                  name="name"
-                  label="Course Name"
-                  placeholder="Eng190W Communications in the Professional World"
-                  fullWidth
-                  sx={{ margin: ".5rem 0" }}
-                  value={session.name}
-                  onChange={handleChange}
-                  error={errors.name !== ""}
-                  helperText={errors.name}
-                  disabled={isLoading}
-                  required
-                />
-                <Tooltip title="The name for your course that users will see upon joining." enterTouchDelay={0}>
-                  <InfoIcon />
-                </Tooltip>
-              </div>
-              <div className="form-tooltips">
-                <TextField
-                  name="signUpCode"
-                  label="Course Sign Up Code"
-                  fullWidth
-                  sx={{ margin: ".5rem 0" }}
-                  placeholder="FALLCSE100ISCOOL"
-                  value={session.signUpCode}
-                  onChange={handleChange}
-                  error={errors.signUpCode !== ""}
-                  helperText={errors.signUpCode}
-                  disabled={isLoading}
-                  required
-                />
-                <Tooltip
-                  title="The unique sign up code that users will use to join your course. You can use any combination of letters and numbers. This is case sensitive."
-                  enterTouchDelay={0}
-                >
-                  <InfoIcon />
-                </Tooltip>
-              </div>
-              <div className="form-tooltips">
-                <TextField
-                  name="year"
-                  label="Year"
-                  fullWidth
-                  placeholder="2023"
-                  sx={{ margin: ".5rem 0" }}
-                  value={session.year}
-                  onChange={handleChange}
-                  error={errors.year !== ""}
-                  helperText={errors.year}
-                  disabled={isLoading}
-                  inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]' }}
-                  type="number"
-                />
-                <Tooltip title="The year in which your course is taking place." enterTouchDelay={0}>
-                  <InfoIcon />
-                </Tooltip>
-              </div>
-              <div className="form-tooltips">
-                <FormControl fullWidth>
-                  <InputLabel id="select-term">Term</InputLabel>
-                  <MuiSelect
-                    labelId="select-term"
-                    id="course-select-term"
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="course-name" className="text-sm font-medium">
+                      Course Name *
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>The name for your course that users will see upon joining.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Input
+                    id="course-name"
+                    name="name"
+                    placeholder="Eng190W Communications in the Professional World"
+                    value={session.name}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    required
+                    className={errors.name !== "" ? "border-destructive" : ""}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="signup-code" className="text-sm font-medium">
+                      Course Sign Up Code *
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>The unique sign up code that users will use to join your course. You can use any combination of letters and numbers. This is case sensitive.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Input
+                    id="signup-code"
+                    name="signUpCode"
+                    placeholder="FALLCSE100ISCOOL"
+                    value={session.signUpCode}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    required
+                    className={errors.signUpCode !== "" ? "border-destructive" : ""}
+                  />
+                  {errors.signUpCode && (
+                    <p className="text-sm text-destructive">{errors.signUpCode}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="course-year" className="text-sm font-medium">
+                      Year
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>The year in which your course is taking place.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Input
+                    id="course-year"
+                    name="year"
+                    type="number"
+                    placeholder="2023"
+                    value={session.year}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    min="0"
+                    className={errors.year !== "" ? "border-destructive" : ""}
+                  />
+                  {errors.year && (
+                    <p className="text-sm text-destructive">{errors.year}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="course-term" className="text-sm font-medium">
+                      Term
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>The term in which your course is taking place.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Select
                     value={session.term}
-                    fullWidth
-                    name="term"
-                    label="Term"
-                    onChange={handleTermChange}
-                    error={errors.term !== ""}
+                    onValueChange={(value) => setSession((prev) => ({ ...prev, term: value }))}
                     disabled={isLoading}
                   >
-                    <MenuItem value={"spring"}>Spring</MenuItem>
-                    <MenuItem value={"summer"}>Summer</MenuItem>
-                    <MenuItem value={"fall"}>Fall</MenuItem>
-                    <MenuItem value={"winter"}>Winter</MenuItem>
-                  </MuiSelect>
-                </FormControl>
-                <Tooltip title="The term in which your course is taking place." enterTouchDelay={0}>
-                  <InfoIcon />
-                </Tooltip>
-              </div>
-              <div className="form-tooltips">
-                <TextField
-                  name="section"
-                  label="Section / Period"
-                  placeholder="Section 02"
-                  fullWidth
-                  sx={{ margin: ".5rem 0" }}
-                  value={session.section}
-                  onChange={handleChange}
-                  error={errors.section !== ""}
-                  helperText={errors.section}
-                  disabled={isLoading}
-                />
-                <Tooltip title="The section number or period for your course." enterTouchDelay={0}>
-                  <InfoIcon />
-                </Tooltip>
-              </div>
-              <Autocomplete
-                value={session.taList}
-                onChange={(event, newValue) => {
-                  if (newValue.length >= 10) {
-                    setErrors((prev) => ({ ...prev, taList: "Max 10 Teaching Assistants" }))
-                  } else {
-                    setSession(prev => {
-                      return { ...prev, taList: newValue }
-                    })
-                    setErrors((prev) => ({ ...prev, taList: "" }))
-                  }
-                }}
-                multiple
-                id="tags-filled"
-                options={userList ? userList : []}
-                getOptionLabel={(option) => option.name + " " + option.family_name + " - " + option.email}
-                freeSolo
-                renderTags={(value: CustomUserType[], getTagProps) =>
-                  value.map((option: CustomUserType, index: number) => {
-                    return (
-                      <Chip
-                        variant="outlined"
-                        label={option.name + " " + option.family_name + " - " + option.email}
-                        {...getTagProps({ index })}
-                      />
-                    )
-                  })
-                }
-                renderInput={(params) => {
-                  return (
-                    <TextField
-                      {...params}
-                      label="Teaching Assistant"
-                    />
-                  )
-                }}
-              />
-              {errors.taList !== "" && (
-                <span className="error">{errors.taList}</span>
-              )}
-              <span>
-                The name and email address of the teaching assistant(s) assigned to your course. Teaching assistants can
-                create and edit modules for you, but not delete or unpublish the course. You can assign multiple people to this role.
-                <span style={{ fontStyle: "italic" }}> In order to add someone as a teaching assistant, they must already have a PapyrusAI account.</span>
-              </span>
-            </form>
-          </Box>
+                    <SelectTrigger className={errors.term !== "" ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Select term" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="spring">Spring</SelectItem>
+                      <SelectItem value="summer">Summer</SelectItem>
+                      <SelectItem value="fall">Fall</SelectItem>
+                      <SelectItem value="winter">Winter</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.term && (
+                    <p className="text-sm text-destructive">{errors.term}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="course-section" className="text-sm font-medium">
+                      Section / Period
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>The section number or period for your course.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Input
+                    id="course-section"
+                    name="section"
+                    placeholder="Section 02"
+                    value={session.section}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className={errors.section !== "" ? "border-destructive" : ""}
+                  />
+                  {errors.section && (
+                    <p className="text-sm text-destructive">{errors.section}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Teaching Assistants</Label>
+                  <div className="space-y-3">
+                    {session.taList.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {session.taList.map((ta: CustomUserType, index: number) => (
+                          <Badge key={index} variant="secondary" className="flex items-center gap-2 px-3 py-1">
+                            <Users className="h-3 w-3" />
+                            <span>{ta.name} {ta.family_name} - {ta.email}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto p-0 hover:bg-transparent"
+                              onClick={() => {
+                                const newTaList = session.taList.filter((_: CustomUserType, i: number) => i !== index);
+                                setSession(prev => ({ ...prev, taList: newTaList }));
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <Select
+                      value=""
+                      onValueChange={(value) => {
+                        const selectedUser = userList.find(user => user.username === value);
+                        if (selectedUser && !session.taList.find((ta: CustomUserType) => ta.username === selectedUser.username)) {
+                          if (session.taList.length >= 10) {
+                            setErrors((prev) => ({ ...prev, taList: "Max 10 Teaching Assistants" }));
+                          } else {
+                            setSession(prev => ({ ...prev, taList: [...prev.taList, selectedUser] }));
+                            setErrors((prev) => ({ ...prev, taList: "" }));
+                          }
+                        }
+                      }}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a teaching assistant to add" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userList
+                          .filter(user => !session.taList.find((ta: CustomUserType) => ta.username === user.username))
+                          .map((user) => (
+                            <SelectItem key={user.username} value={user.username}>
+                              {user.name} {user.family_name} - {user.email}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {errors.taList && (
+                      <p className="text-sm text-destructive">{errors.taList}</p>
+                    )}
+                    
+                    <p className="text-sm text-muted-foreground">
+                      The name and email address of the teaching assistant(s) assigned to your course. Teaching assistants can
+                      create and edit modules for you, but not delete or unpublish the course. You can assign multiple people to this role.
+                      <span className="italic"> In order to add someone as a teaching assistant, they must already have a PapyrusAI account.</span>
+                    </p>
+                  </div>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </>
       ) : (
-        <div>Course Not Found</div>
+        <Card>
+          <CardContent className="text-center py-12">
+            <XCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Course Not Found</h3>
+            <p className="text-muted-foreground">The course you're looking for doesn't exist or has been deleted.</p>
+          </CardContent>
+        </Card>
       )}
-
     </div>
-  ) : (
-    <LinearProgress />
   )
 }

@@ -743,12 +743,16 @@ export default function ModuleList({
       </div>
     </section>
   ) : (
-    <div className="text-center py-8 text-muted-foreground" role="status">
-      <p className="mb-2">No modules are currently available to you.</p>
+    <div 
+      className="text-center py-12 text-muted-foreground bg-card border rounded-lg" 
+      role="status"
+    >
+      <Play className="mx-auto h-12 w-12 mb-4 opacity-50" />
+      <p className="text-lg font-medium mb-2">No modules are currently available to you.</p>
       {user?.groups.includes(
         process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
       ) && (
-        <p>
+        <p className="text-sm">
           To create a module, go to the course in which you would like to create
           the module.
         </p>

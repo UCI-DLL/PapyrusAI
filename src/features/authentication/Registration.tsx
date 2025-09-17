@@ -1,5 +1,11 @@
-import { Box, Button, FormLabel, Link, TextField } from "@mui/material";
 import React, { useState } from "react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Loader2, UserPlus, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 // import { useNavigate } from "react-router";
 
 
@@ -76,65 +82,114 @@ export default function Registration(props: RegistrationProps): JSX.Element {
   }
 
   return (
-    <div className="authentication">
-      <div className="authentication__logo">
-        <img src="/dll-logo-nobackground.png" alt="PapyrusAI logo" />
-        <h1 className="">PapyrusAI</h1>
-      </div>
-      <Box className="login">
-        <form onSubmit={handleSubmit}>
-          <FormLabel sx={{ margin: ".5rem 0" }}>Sign In</FormLabel>
-          <TextField
-            name="username"
-            label="Email"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.username}
-            onChange={handleChange}
-            error={usernameError !== ""}
-            helperText={usernameError}
-            disabled={isLoading}
-          />
-          <TextField
-            label="Password"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            type="password"
-            value={session.password}
-            onChange={handleChange}
-            name="password"
-            error={passwordError !== ""}
-            helperText={passwordError}
-            disabled={isLoading}
-          />
-          <TextField
-            label="Class Code"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.classCode}
-            onChange={handleChange}
-            name="password"
-            error={classCodeError !== ""}
-            helperText={classCodeError}
-            disabled={isLoading}
-          />
-          <Button
-            sx={{ width: "100%" }}
-            variant="contained"
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isLoading}
-          >
-            Create Account
-          </Button>
-          <hr />
-          <div>
-            <span>Already a user?&nbsp;</span>
-            <Link href={"/login"}>Log In</Link>
+    <main className="bg-background text-foreground min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <header className="text-center space-y-4">
+          <div className="flex items-center justify-center">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-primary/10 rounded-full blur-xl" />
+              <BookOpen className="relative h-16 w-16 text-primary" />
+            </div>
           </div>
-        </form>
-      </Box>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">PapyrusAI</h1>
+            <p className="text-muted-foreground">Create your account to get started</p>
+          </div>
+        </header>
 
-    </div>
+        <Card className="border shadow-lg">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-semibold flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Create Account
+            </CardTitle>
+            <CardDescription>
+              Enter your details to create your PapyrusAI account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Email</Label>
+                <Input
+                  id="username"
+                  name="username"
+                  type="email"
+                  placeholder="your.email@school.edu"
+                  value={session.username}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className={usernameError ? "border-destructive" : ""}
+                />
+                {usernameError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{usernameError}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Create a secure password"
+                  value={session.password}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className={passwordError ? "border-destructive" : ""}
+                />
+                {passwordError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{passwordError}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="classCode">Class Code</Label>
+                <Input
+                  id="classCode"
+                  name="classCode"
+                  placeholder="Enter your class code"
+                  value={session.classCode}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className={classCodeError ? "border-destructive" : ""}
+                />
+                {classCodeError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{classCodeError}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+                onClick={handleSubmit}
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Account
+              </Button>
+
+              <div className="border-t pt-4">
+                <p className="text-center text-sm text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link 
+                    to="/login" 
+                    className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+                  >
+                    Sign In
+                  </Link>
+                </p>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   )
 }

@@ -100,20 +100,20 @@ export default function AllModules(): JSX.Element {
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <header className="slide-in-up">
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
           <div
             className="absolute top-0 right-0 w-48 h-48 opacity-10"
             aria-hidden="true"
           >
-            <BookOpen size={192} className="floating-animation text-primary" />
+            <BookOpen size={192} className="text-primary" />
           </div>
 
           <div className="relative z-10">
-            <h1 className="text-2xl font-bold mb-1 text-foreground">
-              All Available <span className="text-primary text-2xl">Modules</span>
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              All Available <span className="text-primary">Modules</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl text-sm">
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Modules provide users access to conversations with the AI.
               {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
                 " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)." :
@@ -124,41 +124,49 @@ export default function AllModules(): JSX.Element {
       </header>
 
       {error ? (
-        <div className="text-center py-12 text-muted-foreground">
+        <div 
+          className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+          role="alert"
+        >
           <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
-          <p className="text-lg mb-2">{error}</p>
+          <p className="text-lg font-medium mb-2">{error}</p>
         </div>
       ) : (
         <>
           {courseList.length > 0 ? (
-            <section aria-labelledby="modules-heading">
-              <div className="bg-card border rounded-lg p-4 space-y-3 mb-6">
-                <p className="text-sm text-muted-foreground">
-                  To access a module, click the "Begin Module" button for the desired module.
-                  {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
-                    <span>
-                      {" "}For information on creating, editing, copying, or viewing activity for a module, please see the{" "}
-                      <a
-                        href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="underline underline-offset-2 hover:no-underline text-primary"
-                      >
-                        "Modules" section of our instructor guide
-                      </a>.
-                    </span>
-                  ) : ("")}
-                </p>
-              </div>
+            <section aria-labelledby="modules-content">
+              <header className="mb-6">
+                <h2 id="modules-content" className="text-2xl font-bold text-foreground mb-1">
+                  Module Collection
+                </h2>
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                  <p className="text-primary/80 text-sm leading-relaxed">
+                    To access a module, click the "Begin Module" button for the desired module.
+                    {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
+                      <span>
+                        {" "}For information on creating, editing, copying, or viewing activity for a module, please see the{" "}
+                        <a
+                          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                        >
+                          "Modules" section of our instructor guide
+                        </a>.
+                      </span>
+                    ) : ("")}
+                  </p>
+                </div>
+              </header>
               
               <div className="space-y-6">
                 {orderCourseRecentlyCreated(courseList).map((course, index) => {
                   return course.modules.length > 0 ? (
                     <div key={index} className="w-full">
                       <div className="mb-4">
-                        <h2 className="text-xl font-semibold text-foreground mb-1">
+                        <h3 className="text-xl font-semibold text-foreground mb-1">
                           {course.name}
-                        </h2>
+                        </h3>
                         <p className="text-sm text-muted-foreground">
                           {course.section
                             ? `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}`
@@ -177,9 +185,12 @@ export default function AllModules(): JSX.Element {
               </div>
             </section>
           ) : (
-            <div className="text-center py-12 text-muted-foreground" role="status">
+            <div 
+              className="text-center py-12 text-muted-foreground bg-card border rounded-lg" 
+              role="status"
+            >
               <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg mb-2">No modules are currently available to you.</p>
+              <p className="text-lg font-medium mb-2">No modules are currently available to you.</p>
               {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
                 <p className="text-sm">
                   To create a module, go to the course in which you would like to create the module.

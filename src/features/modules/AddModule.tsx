@@ -356,17 +356,17 @@ export default function AddModule(): JSX.Element {
   }
 
   return !isLoading ? (
-    <div className="space-y-6 p-6">
+    <main className="bg-background text-foreground p-4 space-y-6">
       <Dialog open={showSavePublishTooltip} onOpenChange={setShowSavePublishTooltip}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5" />
+            <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Info className="h-5 w-5" aria-hidden="true" />
               What is Save & Publish?
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p>
+            <p className="text-sm leading-6">
               To save and publish (i.e., make visible to students) your module,
               select "Save & Publish". If you want to save your module without
               publishing it, select "Save without Publishing".
@@ -378,7 +378,7 @@ export default function AddModule(): JSX.Element {
           </div>
           <DialogFooter>
             <Button onClick={() => setShowSavePublishTooltip(false)}>
-              Close
+              Got it
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -492,162 +492,189 @@ export default function AddModule(): JSX.Element {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <header className="flex items-center justify-between pb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Create Module</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSavePublishTooltip(true)}
+      {/* Standard Page Header Pattern */}
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
           >
-            <Info className="h-4 w-4" />
-          </Button>
-          <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
-            <DropdownMenuTrigger asChild>
-              <Button className="gap-2">
-                <Save className="h-4 w-4" />
-                {options[selectedIndexSave]}
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {options.map((option, index) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={() => handleMenuItemClick(index)}
-                  className={cn(
-                    index === selectedIndexSave && "bg-accent",
-                    index === 2 && "text-destructive focus:text-destructive"
-                  )}
-                >
-                  {option}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <MessageSquare size={192} className="text-primary" />
+          </div>
+
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              Create Module
+            </h1>
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
+              Build a customized learning module with AI conversation prompts and documents.
+            </p>
+          </div>
         </div>
       </header>
-      
-      <Alert className="mb-6">
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Modules provide users access to conversations with the AI. Modules can
-          be customized to allow or restrict access to specific assets, including
-          conversation prompts (AI instructions) and documents. For more
-          information on creating a module, please see the{" "}
-          <a
-            href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
-            target="_blank"
-            rel="noreferrer"
-            className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+
+      {/* Actions Section */}
+      <section aria-labelledby="actions-heading">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2 id="actions-heading" className="text-2xl font-bold text-foreground mb-1">
+              Module Setup
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Configure your module settings and publish options.
+            </p>
+          </div>
+          <nav
+            className="flex flex-col md:flex-row gap-2"
+            role="toolbar"
+            aria-label="Module creation actions"
           >
-            "Creating a Module" section of our instructor guide
-          </a>
-          .
-        </AlertDescription>
-      </Alert>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSavePublishTooltip(true)}
+              aria-label="Get help with Save & Publish options"
+            >
+              <Info className="h-4 w-4" aria-hidden="true" />
+              Help
+            </Button>
+            <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+              <DropdownMenuTrigger asChild>
+                <Button className="gap-2" aria-label={`${options[selectedIndexSave]} module`}>
+                  <Save className="h-4 w-4" aria-hidden="true" />
+                  {options[selectedIndexSave]}
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {options.map((option, index) => (
+                  <DropdownMenuItem
+                    key={option}
+                    onClick={() => handleMenuItemClick(index)}
+                    className={cn(
+                      index === selectedIndexSave && "bg-accent",
+                      index === 2 && "text-destructive focus:text-destructive"
+                    )}
+                  >
+                    {option}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
+        </header>
+        
+        {/* Info Section */}
+        <Card className="border-primary/20 bg-primary/5 transition-all duration-300 hover:shadow-md">
+          <CardContent className="pt-6">
+            <p className="text-primary/80 text-sm leading-relaxed">
+              Modules provide users access to conversations with the AI. Modules can
+              be customized to allow or restrict access to specific assets, including
+              conversation prompts (AI instructions) and documents. For more
+              information on creating a module, please see the{" "}
+              <a
+                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+              >
+                "Creating a Module" section of our instructor guide
+              </a>
+              .
+            </p>
+          </CardContent>
+        </Card>
+      </section>
       
-      <Separator className="my-6" />
-      <p className="text-sm text-muted-foreground mb-6">* indicates a required field</p>
+      <div className="text-sm text-muted-foreground">* indicates a required field</div>
       
-      <Card className="border shadow-sm">
+      <Card className="transition-all duration-300 hover:shadow-md">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Enter Module Information
+          <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" aria-hidden="true" />
+            Module Information
           </CardTitle>
+          <p className="text-muted-foreground text-sm">
+            Enter the essential details for your module. Fields marked with * are required.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
-            <div className="flex items-start gap-2">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="name">Module Name *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={session.name}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  required
-                  className={cn(errors.name && "border-destructive")}
-                />
-                {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name}</p>
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Module Name *
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="e.g., Argumentative Essay Writing Module"
+                value={session.name}
+                onChange={handleChange}
+                disabled={isLoading}
+                required
+                className={cn(
+                  errors.name && "border-destructive focus-visible:ring-destructive"
                 )}
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-6"
-                title="The name for your module that users will see."
-              >
-                <Info className="h-4 w-4" />
-              </Button>
+                aria-describedby={errors.name ? "name-error" : undefined}
+              />
+              {errors.name && (
+                <p id="name-error" className="text-sm text-destructive" role="alert">
+                  {errors.name}
+                </p>
+              )}
             </div>
-            <div className="flex items-start gap-2">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="moduleDescription">Module Description *</Label>
-                <Textarea
-                  id="moduleDescription"
-                  name="moduleDescription"
-                  value={session.moduleDescription}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  required
-                  className={cn(errors.moduleDescription && "border-destructive", "min-h-[100px]")}
-                />
-                {errors.moduleDescription && (
-                  <p className="text-sm text-destructive">{errors.moduleDescription}</p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="moduleDescription" className="text-sm font-medium">
+                Module Description *
+              </Label>
+              <Textarea
+                id="moduleDescription"
+                name="moduleDescription"
+                placeholder="Describe the purpose and instructional goals for this module..."
+                value={session.moduleDescription}
+                onChange={handleChange}
+                disabled={isLoading}
+                required
+                className={cn(
+                  errors.moduleDescription && "border-destructive focus-visible:ring-destructive",
+                  "min-h-[100px]"
                 )}
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-6"
-                title="The description for your module to help users understand the purpose or instructional goals for the module."
-              >
-                <Info className="h-4 w-4" />
-              </Button>
+                aria-describedby={errors.moduleDescription ? "description-error" : undefined}
+              />
+              {errors.moduleDescription && (
+                <p id="description-error" className="text-sm text-destructive" role="alert">
+                  {errors.moduleDescription}
+                </p>
+              )}
             </div>
             
             <Separator />
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label className="text-base font-medium">Module Assets</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  title="You can customize your module to allow or restrict certain functions."
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
-              </div>
+              <Label className="text-base font-medium">Module Assets</Label>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setOpenSelectFolderModal(true)}
                 className="gap-2"
+                aria-label="Add asset to module"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4" aria-hidden="true" />
                 Add Asset
               </Button>
             </div>
 
             {session.prompts.length < 1 && session.files.length < 1 ? (
-              <div className="text-center py-8 text-muted-foreground border border-dashed border-muted-foreground/25 rounded-lg">
-                <div className="flex flex-col items-center gap-2">
-                  <FileText className="h-8 w-8 opacity-50" />
-                  <p>No assets added</p>
-                  <p className="text-sm">
-                    To add an asset (including prompts and documents), click "Add Asset" above.
-                  </p>
-                </div>
+              <div 
+                className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+                role="status"
+              >
+                <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <p className="text-lg font-medium mb-2">No assets added</p>
+                <p className="text-sm">
+                  To add an asset (including prompts and documents), click "Add Asset" above.
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -726,17 +753,7 @@ export default function AddModule(): JSX.Element {
 
             <Separator />
 
-            <div className="flex items-center gap-2">
-              <Label className="text-base font-medium">Module Settings</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                title="You can customize your module to allow or restrict certain functions."
-              >
-                <Info className="h-4 w-4" />
-              </Button>
-            </div>
+            <Label className="text-base font-medium">Module Settings</Label>
 
           {/* <Checkbox
             onClick={() => {
@@ -816,10 +833,20 @@ export default function AddModule(): JSX.Element {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </main>
   ) : (
-    <div className="flex items-center justify-center min-h-screen">
-      <Loader2 className="h-8 w-8 animate-spin" />
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading module creation form...</p>
+      </div>
     </div>
   );
 }

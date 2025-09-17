@@ -210,10 +210,8 @@ export default function OrgSettings(): JSX.Element {
       const dataToSend = {
         //if admin, then admin and instructor permissions
         isAdmin: false,
-        isInstructor:
-          showAddOrgPermissionModal.permission ===
-          PermissionsOptions.Instructor,
-        id: showAddOrgPermissionModal.email,
+        isInstructor: showAddOrgPermissionModal.permission === PermissionsOptions.Instructor,
+        id: showAddOrgPermissionModal.email.toLowerCase(),
       };
       // post data back
       Post(postCreateOrgPermission(), dataToSend).then((res) => {
@@ -261,24 +259,17 @@ export default function OrgSettings(): JSX.Element {
       const dataToSend = {
         //if admin, then admin and instructor permissions
         isAdmin: false,
-        isInstructor:
-          showUpdateOrgPermissionModal.permission ===
-          PermissionsOptions.Instructor,
-        id: showUpdateOrgPermissionModal.id,
+        isInstructor: showUpdateOrgPermissionModal.permission === PermissionsOptions.Instructor,
+        id: showUpdateOrgPermissionModal.id.toLowerCase(),
         isDeleted: false,
       };
       // post data back
-      Put(
-        updateOrgPermission(showUpdateOrgPermissionModal.id),
-        dataToSend
-      ).then((res) => {
+      Put(updateOrgPermission(showUpdateOrgPermissionModal.id.toLowerCase()), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             // update list
             setOrgPermissionsList((prev) => {
-              const index = prev.findIndex(
-                (x) => x.id === showUpdateOrgPermissionModal.id
-              );
+              const index = prev.findIndex((x) => x.id === showUpdateOrgPermissionModal.id.toLowerCase());
               const newList = prev;
               newList[index] = res.data;
               return newList;
@@ -312,16 +303,16 @@ export default function OrgSettings(): JSX.Element {
         //if admin, then admin and instructor permissions
         isAdmin: openDeleteModal.isAdmin,
         isInstructor: openDeleteModal.isInstructor,
-        id: openDeleteModal.id,
+        id: openDeleteModal.id.toLowerCase(),
         isDeleted: true,
       };
       // post data back
-      Put(updateOrgPermission(openDeleteModal.id), dataToSend).then((res) => {
+      Put(updateOrgPermission(openDeleteModal.id.toLowerCase()), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             // update list
             setOrgPermissionsList((prev) => {
-              const newList = prev.filter((x) => x.id !== openDeleteModal.id);
+              const newList = prev.filter((x) => x.id !== openDeleteModal.id.toLowerCase());
               return newList;
             });
             //pop up notifying user of creation

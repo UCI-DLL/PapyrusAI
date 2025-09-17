@@ -29,8 +29,9 @@ export type ModuleType = {
   prompts: Array<PromptType>,
   showInitialPrompt: boolean,
   showWizard: boolean,
-  raterEnabled?: boolean,
+  raterEnabled?: boolean, //deprecated
   files?: Array<FileType>,
+  webSearch?: boolean,
 }
 //Note: the difference between this folder/prompt and the old prompt type is 
 //old one has organization

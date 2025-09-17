@@ -44,6 +44,7 @@ type EditModuleType = {
   showInitialPrompt: boolean;
   showWizard: boolean;
   raterEnabled: boolean;
+  webSearch: boolean;
 };
 
 export enum SortOptions {
@@ -75,6 +76,7 @@ export default function EditModule(): JSX.Element {
     isTemplate: false,
     id: "",
     raterEnabled: false,
+    webSearch: false,
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -217,6 +219,7 @@ export default function EditModule(): JSX.Element {
           isTemplate: session.isTemplate,
           id: session.id,
           raterEnabled: session.raterEnabled ? true : false,
+          webSearch: session.webSearch ? true : false,
         };
         // post data back
         Put(
@@ -903,8 +906,8 @@ export default function EditModule(): JSX.Element {
             </span>
           </Checkbox> */}
 
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
                 <Checkbox
                   id="showInitialPrompt"
                   checked={session.showInitialPrompt}
@@ -916,29 +919,30 @@ export default function EditModule(): JSX.Element {
                   }}
                   disabled={isLoading}
                 />
-                <Label htmlFor="showInitialPrompt" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Show Embedded Prompt
-                </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="showInitialPrompt" className="font-medium">
+                    Show Embedded Prompt
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Allows users to see the full text of the embedded prompt with which
+                    they begin their chat with the AI. Unchecking this will mean that
+                    the user will not be able to see the initial text of the prompt sent
+                    initially to the AI. For more information on why you might choose
+                    one or the other, see the{" "}
+                    <a
+                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+                    >
+                      "Creating a Module" section of our instructor guide
+                    </a>
+                    .
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground ml-6">
-                Allows users to see the full text of the embedded prompt with which
-                they begin their chat with the AI. Unchecking this will mean that
-                the user will not be able to see the initial text of the prompt sent
-                initially to the AI. For more information on why you might choose
-                one or the other, see the{" "}
-                <a
-                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-2 hover:no-underline text-primary font-medium"
-                >
-                  "Creating a Module" section of our instructor guide
-                </a>
-                .
-              </p>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+              
+              <div className="flex items-start space-x-3">
                 <Checkbox
                   id="raterEnabled"
                   checked={session.raterEnabled}
@@ -950,16 +954,43 @@ export default function EditModule(): JSX.Element {
                   }}
                   disabled={isLoading}
                 />
-                <Label htmlFor="raterEnabled" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  RATER Enabled
-                </Label>
+                <div className="space-y-2">
+                  <Label htmlFor="raterEnabled" className="font-medium">
+                    RATER Enabled
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Provide students with more tailored feedback on their argumentative
+                    essays. Should only be used with essay drafts longer than 150 words.
+                    Checking this will also provide analytics on students' essays with
+                    the "View" button.
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground ml-6">
-                Provide students with more tailored feedback on their argumentative
-                essays. Should only be used with essay drafts longer than 150 words.
-                Checking this will also provide analytics on students' essays with
-                the "View" button.
-              </p>
+              
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="webSearch"
+                  checked={session.webSearch}
+                  onCheckedChange={(checked) => {
+                    setSession((prev) => ({
+                      ...prev,
+                      webSearch: checked as boolean,
+                    }));
+                  }}
+                  disabled={isLoading}
+                />
+                <div className="space-y-2">
+                  <Label htmlFor="webSearch" className="font-medium">
+                    Allow Web Search
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Allow PapyrusAI to search the internet in response to a query or question from students.
+                    Have the students prompt the AI with things like "Look up this topic", and it will get some
+                    sources from the internet, give a list of the links to the student, and read them to use
+                    those sources in conversation with the student.
+                  </p>
+                </div>
+              </div>
             </div>
           </form>
         </CardContent>

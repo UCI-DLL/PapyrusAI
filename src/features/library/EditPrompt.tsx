@@ -28,7 +28,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Get from "../../utility/Get";
 import Put from "../../utility/Put";
 import { PromptType, TagType } from "../../utility/types/CourseTypes";
-import { Checkbox } from "../../components/Checkbox";
+import { Checkbox } from "../../components/ui/checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { Modal } from "../../components/Modal";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";

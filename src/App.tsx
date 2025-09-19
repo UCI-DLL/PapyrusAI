@@ -28,6 +28,7 @@ import {
 } from "./components/ui/dialog";
 import { Button } from "./components/ui/button";
 import { Loader2 } from "lucide-react";
+import { Toaster } from "sonner";
 import MissingUserInfoForm from "./features/dashboard/MissingUserInfoForm";
 import Modules from "./features/modules/Modules";
 import AddModule from "./features/modules/AddModule";
@@ -176,34 +177,26 @@ function App(): JSX.Element {
                           else return null;
                         });
 
-                        //Handle new user tutorial
-                        introJs()
-                          .setOptions({
-                            steps: [
-                              {
-                                intro:
-                                  "Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.",
-                              },
-                              {
-                                intro:
-                                  "For help with navigating PapyrusAI and other resources, see 'Resources' in the left sidebar.",
-                              },
-                              {
-                                intro:
-                                  "If you encounter any bugs or issues while using PapyrusAI, click 'Report Issue' on the bottom left of the navigation to report to the development team.",
-                              },
-                              {
-                                intro: user.groups.includes(
-                                  process.env.REACT_APP_INSTRUCTOR
-                                    ? process.env.REACT_APP_INSTRUCTOR
-                                    : "PapyrusAIInstructors"
-                                )
-                                  ? "To join a course, click 'Join Course' at the top right. To create a course, click 'Create Course' at the top right."
-                                  : "To join a course, click 'Join Course' at the top right. Your instructor will give you the course code.",
-                              },
-                            ],
-                          })
-                          .start();
+                        setShowUpdateUserInfoModal(false);
+
+                        //Handle new user tutorial 
+                        introJs().setOptions({
+                          steps: [
+                            {
+                              intro: 'Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.',
+                            },
+                            {
+                              intro: 'For help with navigating PapyrusAI and other resources, see "Resources" in the left sidebar.',
+                            },
+                            {
+                              intro: 'If you encounter any bugs or issues while using PapyrusAI, click "Report Issue" on the bottom left of the navigation to report to the development team.',
+                            },
+                            {
+                              intro: user.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
+                                "To join a course, click \"Join Course\" at the top right. To create a course, click \"Create Course\" at the top right." :
+                                "To join a course, click \"Join Course\" at the top right. Your instructor will give you the course code.",
+                            }]
+                        }).start();
                       }
                       if (
                         localStorage.getItem("papyrusai_user") &&
@@ -545,6 +538,12 @@ function App(): JSX.Element {
             </Router>
           </AlertContext.Provider>
         </UserContext.Provider>
+        <Toaster 
+          position="top-right"
+          richColors
+          closeButton
+          duration={4000}
+        />
       </div>
     </CacheBuster>
   );

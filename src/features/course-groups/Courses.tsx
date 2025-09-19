@@ -111,26 +111,47 @@ export default function Courses(): JSX.Element {
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
+      {/* Standard Page Header Pattern */}
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
+          >
+            <BookOpen size={192} className="text-primary" />
+          </div>
+
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              My Courses
+            </h1>
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
+              Courses are spaces in which instructors can create and organize
+              modules that customize how students can interact with the AI.
+            </p>
+          </div>
+        </div>
+      </header>
+
       {error ? (
-        <div className="bg-destructive/15 border border-destructive rounded-lg p-4">
+        <div className="bg-destructive/15 border border-destructive rounded-lg p-4" role="alert">
           <p className="text-destructive font-medium">{error}</p>
         </div>
       ) : (
         <section aria-labelledby="courses-content">
           <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl font-bold mb-1 text-foreground">
-                My Courses
-              </h1>
-              <p className="text-muted-foreground max-w-2xl text-sm">
-                Courses are spaces in which instructors can create and organize
-                modules that customize how students can interact with the AI.
-              </p>
+              <h2
+                id="courses-content"
+                className="text-2xl font-bold text-foreground mb-1"
+              >
+                Course Collection
+              </h2>
               <p className="text-muted-foreground text-sm">
                 {courseList.length > 0
-                  ? `To access a course, click the "Modules" button for your desired course and choose from the available modules.${
+                  ? `To access a course, click the "View Modules" button for your desired course and choose from the available modules.${
                       isInstructor
-                        ? " To edit or duplicate a course, click on the options button (three dots in a column) for the course you wish to use."
+                        ? " To edit or duplicate a course, click on the options menu for the course you wish to use."
                         : ""
                     }`
                   : "Join a course to get started with your learning journey."}
@@ -159,16 +180,11 @@ export default function Courses(): JSX.Element {
                     Join Course
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Join course by sign up code</DialogTitle>
-                  </DialogHeader>
-                  <AddCourseForm
-                    closeForm={() => {
-                      setShowAddCourseModal(false);
-                    }}
-                  />
-                </DialogContent>
+                <AddCourseForm
+                  closeForm={() => {
+                    setShowAddCourseModal(false);
+                  }}
+                />
               </Dialog>
             </nav>
           </header>

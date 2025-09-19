@@ -40,6 +40,7 @@
     "intro.js": "^7.2.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.525.0",
+    "markdown-to-text": "^0.1.1",
     "pdfjs-dist": "^3.11.174",
     "pizzip": "^3.1.4",
     "react": "^18.2.0",
@@ -56,6 +57,7 @@
     "react-scripts": "5.0.1",
     "remark-gfm": "^4.0.0",
     "sass": "^1.64.2",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"

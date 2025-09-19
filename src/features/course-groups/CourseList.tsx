@@ -3,6 +3,7 @@ import type { CourseType } from "../../utility/types/CourseTypes";
 import CourseCard from "../../components/CourseCard";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
+import { BookOpen } from "lucide-react";
 
 interface CourseListProps {
     list: Array<CourseType>;
@@ -40,8 +41,13 @@ export default function CourseList({
             )}
         </section>
     ) : (
-        <div className="text-center py-8 text-muted-foreground" role="status">
-            <p className="mb-2">
+        <div 
+            className="text-center py-12 text-muted-foreground bg-card border rounded-lg" 
+            role="status"
+        >
+            <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">No courses found</p>
+            <p className="text-sm mb-2">
                 No courses added yet. To join a course, click "Join Course" above.
             </p>
             {user?.groups.includes(
@@ -49,11 +55,11 @@ export default function CourseList({
                     ? process.env.REACT_APP_INSTRUCTOR
                     : "PapyrusAIInstructors"
             ) ? (
-                <p>
+                <p className="text-sm">
                     To create a course, click "Create Course" above.
                 </p>
             ) : (
-                <p>
+                <p className="text-sm">
                     Then, use the code your instructor gave you to join their course.
                 </p>
             )}

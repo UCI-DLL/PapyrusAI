@@ -131,33 +131,35 @@ export default function Dashboard(): JSX.Element {
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <header className="slide-in-up">
+      {/* Standard Page Header Pattern */}
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
           <div
             className="absolute top-0 right-0 w-48 h-48 opacity-10"
             aria-hidden="true"
           >
-            <Target size={192} className="floating-animation text-primary" />
+            <Target size={192} className="text-primary" />
           </div>
 
           <div className="relative z-10">
-            <h1 className="text-2xl font-bold mb-1 text-foreground">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
               Welcome back,{" "}
-              <span className="text-primary text-2xl">{user?.name}!</span>
+              <span className="text-primary">{user?.name}!</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl text-sm">
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Continue your learning journey and unlock your potential.
             </p>
           </div>
         </div>
       </header>
 
+      {/* Courses Section */}
       <section aria-labelledby="courses-heading">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h2
               id="courses-heading"
-              className="text-2xl font-extrabold text-foreground"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               My Courses
             </h2>
@@ -215,24 +217,26 @@ export default function Dashboard(): JSX.Element {
             />
           ) : (
             <div
-              className="text-center py-8 text-muted-foreground"
+              className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
               role="status"
             >
-              <p className="mb-2">
-                No courses added yet. To join a course, click "Join Course"
-                above.
+              <Target className="mx-auto h-12 w-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">No courses found</p>
+              <p className="text-sm">
+                No courses added yet. To join a course, click "Join Course" above.
               </p>
             </div>
           )}
         </div>
       </section>
 
+      {/* Recent Modules Section */}
       <section aria-labelledby="modules-heading">
-        <header className="flex flex-row items-center justify-between gap-4 mb-4">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h2
               id="modules-heading"
-              className="text-2xl font-extrabold text-foreground"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               Recent Modules
             </h2>
@@ -252,24 +256,41 @@ export default function Dashboard(): JSX.Element {
           </Button>
         </header>
 
-        <div className="space-y-4">
-          {courseList.length > 0 &&
-            coursesWithRecentModules.map((course, index) => {
-              return course.modules.length > 0 ? (
-                <div className="w-full" key={course.id || index}>
-                  <ModuleList
-                    course={{
-                      ...course,
-                      modules: course.mostRecentItem
-                        ? [course.mostRecentItem]
-                        : [],
-                    }}
-                    refreshList={refreshList}
-                    starredList={starred}
-                  />
-                </div>
-              ) : null;
-            })}
+        <div className="w-full">
+          {courseList.length > 0 && coursesWithRecentModules.some(course => course.modules.length > 0) ? (
+            <div className="space-y-4">
+              {coursesWithRecentModules.map((course, index) => {
+                return course.modules.length > 0 ? (
+                  <div className="w-full" key={course.id || index}>
+                    <ModuleList
+                      course={{
+                        ...course,
+                        modules: course.mostRecentItem
+                          ? [course.mostRecentItem]
+                          : [],
+                      }}
+                      refreshList={refreshList}
+                      starredList={starred}
+                    />
+                  </div>
+                ) : null;
+              })}
+            </div>
+          ) : (
+            <div
+              className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+              role="status"
+            >
+              <Target className="mx-auto h-12 w-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">No recent modules</p>
+              <p className="text-sm">
+                {courseList.length === 0 
+                  ? "Join a course to access modules and start learning."
+                  : "No modules available in your courses yet."
+                }
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </main>

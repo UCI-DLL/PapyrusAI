@@ -296,14 +296,6 @@ export default function StudentStats({ students }: StudentStatsProps) {
         className="chart-grid"
       >
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h4>Module Usage (Stacked by Student)</h4>
-          <div ref={moduleUsageRef} />
-        </div>
-        <div className="card" style={{ marginBottom: "1rem" }}>
-          <h4>Classification Counts (Stacked by Student)</h4>
-          <div ref={classificationRef} />
-        </div>
-        <div className="card" style={{ marginBottom: "1rem" }}>
           <h4>Daily Conversation Lengths (Stacked by Student)</h4>
           <div ref={lengthsRef} />
         </div>
@@ -311,6 +303,14 @@ export default function StudentStats({ students }: StudentStatsProps) {
           <h4>Daily Conversation Counts (Stacked by Student)</h4>
           <div ref={countsRef} />
         </div>
+        <div className="card" style={{ marginBottom: "1rem" }}>
+          <h4>Module Usage (Stacked by Student)</h4>
+          <div ref={moduleUsageRef} />
+        </div>
+        {/* <div className="card" style={{ marginBottom: "1rem" }}>
+          <h4>Classification Counts (Stacked by Student)</h4>
+          <div ref={classificationRef} />
+        </div> */}
       </div>
       <h3>Individual Stats</h3>
       {students.map((student, i) => (

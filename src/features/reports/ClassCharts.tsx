@@ -578,7 +578,7 @@ export default function ClassCharts({
         </div>
 
         {/* Collective Stats Section */}
-        <div style={{ marginBottom: "3rem" }}>
+        <div style={{ marginBottom: "3rem", padding: "0 2rem" }}>
           <h3>Combined Statistics</h3>
           <StudentStats students={selectedStudents} />
         </div>
@@ -812,7 +812,7 @@ export default function ClassCharts({
                 )}
               </div>
 
-              <div style={{ marginBottom: "1rem" }}>
+              {/* <div style={{ marginBottom: "1rem" }}>
                 <h3>Student Chat Classification</h3>
                 {startDate && endDate ? (
                   showClassificationChart ? (
@@ -832,7 +832,7 @@ export default function ClassCharts({
                         padding: "2rem",
                       }}
                     >
-                      {/* Comment out until implemented <div
+                      Comment out until implemented <div
                         style={{
                           fontWeight: 600,
                           marginBottom: "1rem",
@@ -863,13 +863,13 @@ export default function ClassCharts({
                         }}
                       >
                         View Classification Chart
-                      </button> */}
+                      </button>
                     </div>
                   )
                 ) : (
                   <EmptyChartPlaceholder title="Classification Data" />
                 )}
-              </div>
+              </div> */}
             </div>
           </div>
         </>

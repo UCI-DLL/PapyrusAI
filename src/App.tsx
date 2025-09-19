@@ -190,6 +190,8 @@ function App(): JSX.Element {
                           else return null
                         })
 
+                        setShowUpdateUserInfoModal(false);
+
                         //Handle new user tutorial 
                         introJs().setOptions({
                           steps: [

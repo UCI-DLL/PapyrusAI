@@ -48,7 +48,7 @@ type EditModuleType = {
   files: Array<FileType>,
   showInitialPrompt: boolean,
   showWizard: boolean,
-  raterEnabled: boolean,
+  webSearch: boolean,
 }
 
 export enum SortOptions {
@@ -75,7 +75,7 @@ export default function EditModule(): JSX.Element {
     isDeleted: false, //prev
     isTemplate: false,
     id: "",
-    raterEnabled: false
+    webSearch: false
   });
   const [errors, setErrors] = useState<any>({
     name: "",
@@ -233,7 +233,7 @@ export default function EditModule(): JSX.Element {
           isDeleted: isDeleted,
           isTemplate: session.isTemplate,
           id: session.id,
-          raterEnabled: session.raterEnabled ? true : false,
+          webSearch: session.webSearch ? true : false,
         }
         // post data back
         Put(putUpdateModule(moduleIds.courseId, moduleIds.moduleId), dataToSend).then((res) => {
@@ -815,19 +815,21 @@ export default function EditModule(): JSX.Element {
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
-                raterEnabled: !session.raterEnabled
+                webSearch: !session.webSearch
               }))
             }}
-            checked={session.raterEnabled}
+            checked={session.webSearch}
             isDisabled={isLoading}
           >
             <span>
-              RATER Enabled
+              Allow Web Search
             </span>
           </Checkbox>
           <div>
-            Provide students with more tailored feedback on their argumentative essays. Should only
-            be used with essay drafts longer than 150 words. Checking this will also provide analytics on students’ essays with the “View” button.
+            Allow PapyrusAI to search the internet in response to a query or question from students.
+            Have the students prompt the AI with things like "Look up this topic", and it will get some
+            sources from the internet, give a list of the links to the student, and read them to use
+            those sources in conversation with the student.
           </div>
         </form>
       </Box>

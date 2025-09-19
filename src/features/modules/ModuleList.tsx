@@ -27,7 +27,7 @@ import {
 } from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import Put from "../../utility/Put";
-import { Checkbox } from "../../components/Checkbox";
+import { Checkbox } from "../../components/ui/checkbox";
 import CourseCard from "../../components/CourseCard";
 import {
   orderCourseRecentlyCreatedAndStarred,
@@ -315,18 +315,25 @@ export default function ModuleList({
                 disabled={isLoading}
               />
             </div>
-            <Checkbox
-              onClick={() => {
-                setDuplicateModuleData((prev) => ({
-                  ...prev,
-                  isPublished: !duplicateModuleData.isPublished,
-                }));
-              }}
-              checked={duplicateModuleData.isPublished}
-              isDisabled={isLoading}
-            >
-              <span>Publish Module</span>
-            </Checkbox>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="publish-module"
+                checked={duplicateModuleData.isPublished}
+                onCheckedChange={(checked) => {
+                  setDuplicateModuleData((prev) => ({
+                    ...prev,
+                    isPublished: checked === true,
+                  }));
+                }}
+                disabled={isLoading}
+              />
+              <label
+                htmlFor="publish-module"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Publish Module
+              </label>
+            </div>
             <DialogFooter className="flex-col gap-2 sm:flex-row">
               <Button
                 type="button"
@@ -736,12 +743,16 @@ export default function ModuleList({
       </div>
     </section>
   ) : (
-    <div className="text-center py-8 text-muted-foreground" role="status">
-      <p className="mb-2">No modules are currently available to you.</p>
+    <div 
+      className="text-center py-12 text-muted-foreground bg-card border rounded-lg" 
+      role="status"
+    >
+      <Play className="mx-auto h-12 w-12 mb-4 opacity-50" />
+      <p className="text-lg font-medium mb-2">No modules are currently available to you.</p>
       {user?.groups.includes(
         process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
       ) && (
-        <p>
+        <p className="text-sm">
           To create a module, go to the course in which you would like to create
           the module.
         </p>

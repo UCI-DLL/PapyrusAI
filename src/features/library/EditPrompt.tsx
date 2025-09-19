@@ -1,49 +1,35 @@
 
 
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Separator } from "../../components/ui/separator";
 import {
-  Button,
-  Box,
-  TextField,
-  FormLabel,
-  Select,
-  MenuItem,
-  ListItemText,
-  SelectChangeEvent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import {
   Tooltip,
-  IconButton,
-  LinearProgress,
-  FormControl,
-  InputLabel,
-  ButtonGroup,
-  Popper,
-  Grow,
-  Paper,
-  ClickAwayListener,
-  MenuList
-} from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
+import { Checkbox } from "../../components/ui/checkbox";
 import Get from "../../utility/Get";
 import Put from "../../utility/Put";
 import { PromptType, TagType } from "../../utility/types/CourseTypes";
-import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { Modal } from "../../components/Modal";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { getOrgPrompt, getUserPrompt, postUpdateOrgPrompt, postUpdateUserPrompt } from "../../utility/endpoints/FolderEndpoints";
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-    },
-  },
-};
-
+import { cn } from "../../lib/utils";
+import { Trash2, ChevronDown, Loader2, Info, MessageSquare } from "lucide-react";
 
 const options = ['Save & Publish', 'Discard Changes'];
 
@@ -68,9 +54,8 @@ export default function EditPrompt(): JSX.Element {
   }>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
-  const [openSave, setOpenSave] = useState(false);
-  const anchorRefSave = useRef<HTMLDivElement>(null);
-  const [selectedIndexSave, setSelectedIndexSave] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(0);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
@@ -202,39 +187,21 @@ export default function EditPrompt(): JSX.Element {
   }
 
   function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and publish
+    if (selectedOption === 0) { //Save and publish
       handleSubmit(e, false);
-    } else if (selectedIndexSave === 1) { //discard changes
+    } else if (selectedOption === 1) { //discard changes
       setOpenDiscardModal(true);
     }
   };
 
-  const handleMenuItemClick = (
-    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
-    index: number,
-  ) => {
+  const handleMenuItemClick = (index: number) => {
     if (index === 0) { //Save and publish
-      handleSubmit(e, false);
+      handleSubmit(null, false);
     } else if (index === 1) { //discard changes
       setOpenDiscardModal(true);
     }
-    setSelectedIndexSave(index);
-    setOpenSave(false);
-  };
-
-  const handleToggle = () => {
-    setOpenSave((prevOpen) => !prevOpen);
-  };
-
-  const handleSaveClose = (event: Event) => {
-    if (
-      anchorRefSave.current &&
-      anchorRefSave.current.contains(event.target as HTMLElement)
-    ) {
-      return;
-    }
-
-    setOpenSave(false);
+    setSelectedOption(index);
+    setDropdownOpen(false);
   };
 
   function handleSubmit(e: any, isDeleted = false) {
@@ -295,209 +262,256 @@ export default function EditPrompt(): JSX.Element {
     }
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setNewPrompt((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  const handleSelectChange = (event: SelectChangeEvent<typeof newPrompt.tags>) => {
-    const {
-      target: { value },
-    } = event;
+  const handleTagToggle = (tagId: string) => {
     setNewPrompt((prev) => ({
       ...prev,
-      tags: typeof value === 'string' ? value.split(',') : value
-    }))
+      tags: prev.tags.includes(tagId)
+        ? prev.tags.filter(id => id !== tagId)
+        : [...prev.tags, tagId]
+    }));
   };
 
-  return promptInfo && !isLoading ? (
-    <div className="prompt">
-      {newPrompt.name ? (
-        <>
-          <Modal
-            isOpen={openDeleteModal}
-            title={"Delete Prompt?"}
-            onRequestClose={() => setOpenDeleteModal(false)}
-            actions={
-              <>
-                <Button variant="contained" color="error" onClick={(e) => handleSubmit(e, true)}>
-                  Delete
-                </Button>
-                <Button variant="contained" color="secondary" onClick={() => setOpenDeleteModal(false)}>
-                  Cancel
-                </Button>
-              </>
-            }
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">Loading prompt...</span>
+      </div>
+    );
+  }
+
+  if (!promptInfo || !newPrompt.name) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Prompt does not exist</p>
+      </div>
+    );
+  }
+
+  return (
+    <main className="bg-background text-foreground p-4 space-y-6">
+      <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Delete Prompt?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you would like to permanently delete this prompt?</p>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={(e) => handleSubmit(e, true)}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Discard Changes?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>Are you sure you would like to discard the changes to this prompt?</p>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => setOpenDiscardModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="default" onClick={() => navigator(-1)}>
+              Discard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
           >
-            <div>Are you sure you would like to permanently delete this prompt?</div>
-          </Modal>
-          <Modal
-            isOpen={openDiscardModal}
-            title={"Discard Changes?"}
-            onRequestClose={() => setOpenDiscardModal(false)}
-            actions={
-              <>
-                <Button variant="contained" color="primary" onClick={() => navigator(-1)}>
-                  Discard
-                </Button>
-                <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>
-                  Cancel
-                </Button>
-              </>
-            }
-          >
-            <div>Are you sure you would like to discard the changes to this prompt?</div>
-          </Modal>
-          <div className="prompt__section-header">
-            <div>
-              <h3>Edit {prompt?.name}</h3>
-            </div>
-            <div>
-              <Tooltip
-                title={"Delete"}
-                arrow
-                componentsProps={{
-                  tooltip: {
-                    sx: {
-                      bgcolor: '#da0222', //error color
-                      '& .MuiTooltip-arrow': {
-                        color: '#da0222',
-                      },
-                    },
-                  },
-                }}
-              >
-                <IconButton
-                  onClick={() => setOpenDeleteModal(true)}
-                  aria-label="Delete Prompt"
-                  className="prompt__delete_background"
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-              &nbsp;&nbsp;&nbsp;
-              <ButtonGroup
-                variant="contained"
-                ref={anchorRefSave}
-                aria-label="Button group with a nested menu"
-              >
-                <Button onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
-                <Button
-                  size="small"
-                  aria-controls={openSave ? 'split-button-menu' : undefined}
-                  aria-expanded={openSave ? 'true' : undefined}
-                  aria-label="select save and activation strategy"
-                  aria-haspopup="menu"
-                  onClick={handleToggle}
-                >
-                  <ArrowDropDownIcon />
-                </Button>
-              </ButtonGroup>
-              <Popper
-                sx={{
-                  zIndex: 1,
-                }}
-                open={openSave}
-                anchorEl={anchorRefSave.current}
-                role={undefined}
-                transition
-                disablePortal
-              >
-                {({ TransitionProps, placement }) => (
-                  <Grow
-                    {...TransitionProps}
-                    style={{
-                      transformOrigin:
-                        placement === 'bottom' ? 'center top' : 'center bottom',
-                    }}
+            <MessageSquare size={192} className="text-primary" />
+          </div>
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              Edit <span className="text-primary">{prompt?.name}</span>
+            </h1>
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
+              Update your AI prompt instructions and configuration.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section aria-labelledby="prompt-edit-heading">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2 id="prompt-edit-heading" className="text-2xl font-bold text-foreground mb-1">
+              Prompt Management
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Update prompt content, settings, and metadata as needed.
+            </p>
+          </div>
+          <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Prompt editing actions">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setOpenDeleteModal(true)}
+                    aria-label="Delete prompt permanently"
                   >
-                    <Paper>
-                      <ClickAwayListener onClickAway={handleSaveClose}>
-                        <MenuList id="split-button-menu" autoFocusItem>
-                          {options.map((option, index) => (
-                            <MenuItem
-                              key={option}
-                              selected={index === selectedIndexSave}
-                              onClick={(event) => handleMenuItemClick(event, index)}
-                              className={index === 2 ? "prompt__discard_background" : ""}
-                            >
-                              {option}
-                            </MenuItem>
-                          ))}
-                        </MenuList>
-                      </ClickAwayListener>
-                    </Paper>
-                  </Grow>
-                )}
-              </Popper>
-            </div>
-          </div>
-          <hr />
-          <div className="prompt__section-header">
-            <span>* indicates a required field</span>
-          </div>
-          <Box className="prompt__add">
-            <form onSubmit={(e) => handleSubmit(e, false)}>
-              <FormLabel>Enter Prompt Information</FormLabel>
-              <TextField
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Delete prompt</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button aria-label="Select save and publish strategy">
+                  {options[selectedOption]}
+                  <ChevronDown className="ml-2 h-4 w-4" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {options.map((option, index) => (
+                  <DropdownMenuItem
+                    key={option}
+                    onClick={() => handleMenuItemClick(index)}
+                    className={index === selectedOption ? "bg-accent" : ""}
+                  >
+                    {option}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
+        </header>
+
+        <div className="border-primary/20 bg-primary/5 rounded-lg p-4 mb-6">
+          <p className="text-sm text-primary/70">
+            * indicates a required field
+          </p>
+        </div>
+
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              Prompt Information
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Update the essential details for your prompt. Fields marked with * are required.
+            </p>
+          </CardHeader>
+        <CardContent>
+          <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="name" className="text-sm font-medium">
+                  Prompt Name *
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        The name for the prompt that users will see.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input
+                id="name"
                 name="name"
-                label="Prompt Name"
-                fullWidth
-                sx={{ margin: ".5rem 0" }}
+                placeholder="Enter prompt name"
                 value={newPrompt.name}
                 onChange={handleChange}
-                error={errors.name !== ""}
-                helperText={errors.name}
                 disabled={isLoading}
                 required
+                className={cn(
+                  "transition-colors",
+                  errors.name && "border-destructive focus-visible:ring-destructive"
+                )}
               />
-              <TextField
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="prompt" className="text-sm font-medium">
+                Prompt *
+              </Label>
+              <Textarea
+                id="prompt"
                 name="prompt"
-                label="Prompt"
-                fullWidth
-                sx={{ margin: ".5rem 0" }}
+                placeholder="Enter your prompt text here..."
                 value={newPrompt.prompt}
                 onChange={handleChange}
-                error={errors.prompt !== ""}
-                helperText={errors.prompt}
                 disabled={isLoading}
-                multiline
-                maxRows={5}
                 required
+                rows={5}
+                className={cn(
+                  "transition-colors resize-none",
+                  errors.prompt && "border-destructive focus-visible:ring-destructive"
+                )}
               />
+              {errors.prompt && (
+                <p className="text-sm text-destructive">{errors.prompt}</p>
+              )}
+            </div>
 
-              {/* add dropdown to handle tags  */}
-              <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
-                <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
-                <Select
-                  labelId="multiple-tag-checkbox-select"
-                  id="multiple-tag-checkbox-select"
-                  multiple
-                  value={newPrompt.tags}
-                  onChange={handleSelectChange}
-                  renderValue={(selected) => {//find the name for the prompt id
-                    return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
-                  }}
-                  label="Tags"
-                  MenuProps={MenuProps}
-                  fullWidth
-                  disabled={isLoading}
-                >
-                  {tagList.map((tag, index) => (
-                    <MenuItem key={index} value={tag.id}>
-                      <Checkbox checked={newPrompt.tags.indexOf(tag.id) > -1} />
-                      <ListItemText primary={tag.id} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </form>
-          </Box>
-        </>
-      ) : (
-        <div>Prompt does not exist</div>
-      )}
-    </div>
-  ) : (
-    <LinearProgress />
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Tags</Label>
+              <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+                {tagList.length > 0 ? (
+                  tagList.map((tag, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`tag-${tag.id}`}
+                        checked={newPrompt.tags.includes(tag.id)}
+                        onCheckedChange={() => handleTagToggle(tag.id)}
+                        disabled={isLoading}
+                      />
+                      <Label
+                        htmlFor={`tag-${tag.id}`}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {tag.id}
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No tags available</p>
+                )}
+              </div>
+              {newPrompt.tags.length > 0 && (
+                <div className="text-xs text-muted-foreground">
+                  Selected: {newPrompt.tags.join(', ')}
+                </div>
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      </section>
+    </main>
   )
 }

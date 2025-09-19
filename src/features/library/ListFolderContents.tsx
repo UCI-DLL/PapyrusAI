@@ -770,14 +770,13 @@ export default function ListFolderContents(
       {filteredFolder &&
         (!filteredFolder.prompts || filteredFolder.prompts.length === 0) &&
         (!filteredFolder.files || filteredFolder.files.length === 0) && (
-          <div className="text-center py-12">
-            <div className="mx-auto h-12 w-12 text-gray-400">
-              <FileText className="h-12 w-12" />
-            </div>
-            <h3 className="mt-2 text-sm font-semibold text-gray-900">
-              No content found
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
+          <div
+            className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+            role="status"
+          >
+            <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">No content found</p>
+            <p className="text-sm">
               Get started by creating your first prompt or uploading a file.
             </p>
           </div>

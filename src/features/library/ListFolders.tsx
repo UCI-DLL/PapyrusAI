@@ -24,6 +24,7 @@ import {
   SlidersHorizontal,
   Calendar as CalendarIcon,
   Loader2,
+  Folder,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "../../lib/utils";
@@ -780,6 +781,22 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
           );
         })}
       </div>
+
+      {/* Empty State */}
+      {orgFilteredFolderList.length === 0 && userFilteredFolderList.length === 0 && (
+        <div
+          className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+          role="status"
+        >
+          <Folder className="mx-auto h-12 w-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium mb-2">No folders found</p>
+          <p className="text-sm">
+            {searchTerm || filters.tags !== "none" || filters.starred !== StarredOptions.All
+              ? "Try adjusting your search or filters"
+              : "Create your first folder to get started organizing your content"}
+          </p>
+        </div>
+      )}
     </div>
   ) : (
     <div className="flex items-center justify-center py-8">

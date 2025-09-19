@@ -111,17 +111,24 @@ export default function Modules(): JSX.Element {
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <header className="slide-in-up">
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
+          >
+            <GraduationCap size={192} className="text-primary" />
+          </div>
+
           <div className="relative z-10">
-            <h1 className="text-2xl font-bold mb-1 text-foreground">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
               {course?.name
-                ? `${course.name}'s Available Modules`
+                ? `${course.name} Modules`
                 : "Available Modules"}
             </h1>
             {course && (
               <div className="space-y-1 mb-2">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground font-medium">
                   {course.section
                     ? `${course.term ?? ""}${course.year ?? ""} - ${
                         course.section
@@ -134,7 +141,7 @@ export default function Modules(): JSX.Element {
                 </p>
               </div>
             )}
-            <p className="text-muted-foreground max-w-2xl text-sm">
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Modules provide users access to conversations with the AI.
               {isInstructor
                 ? " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)."
@@ -145,7 +152,7 @@ export default function Modules(): JSX.Element {
       </header>
 
       {error ? (
-        <div className="bg-destructive/15 border border-destructive rounded-lg p-4">
+        <div className="bg-destructive/15 border border-destructive rounded-lg p-4" role="alert">
           <p className="text-destructive font-medium">{error}</p>
         </div>
       ) : (
@@ -154,7 +161,7 @@ export default function Modules(): JSX.Element {
             <div>
               <h2
                 id="modules-content"
-                className="text-2xl font-extrabold text-foreground"
+                className="text-2xl font-bold text-foreground mb-1"
               >
                 Course Modules
               </h2>
@@ -172,10 +179,10 @@ export default function Modules(): JSX.Element {
                           href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
                           target="_blank"
                           rel="noreferrer"
-                          className="text-primary hover:underline inline-flex items-center gap-1"
+                          className="text-primary underline underline-offset-2 hover:no-underline font-medium transition-colors duration-200 inline-flex items-center gap-1"
                         >
                           "Modules" section of our instructor guide
-                          <ExternalLink className="w-3 h-3" />
+                          <ExternalLink className="w-3 h-3" aria-hidden="true" />
                         </a>
                         .
                       </>

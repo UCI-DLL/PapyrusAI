@@ -369,20 +369,25 @@ export default function Library(): JSX.Element {
       </Dialog>
 
       <div className="mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Header Section */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+        <header className="animate-in slide-in-from-bottom-4 duration-700">
+          <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg mb-8">
+            <div
+              className="absolute top-0 right-0 w-48 h-48 opacity-10"
+              aria-hidden="true"
+            >
+              <Folder size={192} className="text-primary" />
+            </div>
+            <div className="relative z-10">
+              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                 Library
               </h1>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground max-w-2xl text-base leading-6 mb-4">
                 The library contains all of the conversation prompts and
                 documents hosted within PapyrusAI. By default, you have access
                 to all prompts designed and tested by the PapyrusAI research
                 team.
               </p>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
                 You can click through the folders to browse our
                 researcher-created prompts. If you would like to use your own
                 assets (including your own prompts and documents) in your
@@ -392,13 +397,26 @@ export default function Library(): JSX.Element {
                   href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.i0aofs3p0aio"
                   target="_blank"
                   rel="noreferrer"
-                  className="underline underline-offset-2 hover:no-underline text-primary"
+                  className="underline underline-offset-2 hover:no-underline text-primary font-medium"
                 >
-                  “Library” section of our instructor guide.
+                  "Library" section of our instructor guide.
                 </a>
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          </div>
+        </header>
+
+        <section aria-labelledby="library-actions-heading">
+          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 id="library-actions-heading" className="text-2xl font-bold text-foreground mb-1">
+                Content Management
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Organize and manage your prompts, documents, and folders.
+              </p>
+            </div>
+            <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Library management actions">
               {user?.groups.includes(
                 process.env.REACT_APP_ADMIN
                   ? process.env.REACT_APP_ADMIN
@@ -408,8 +426,9 @@ export default function Library(): JSX.Element {
                   variant="outline"
                   onClick={() => setOpenManageTagsModal(true)}
                   className="flex items-center gap-2"
+                  aria-label="Manage content tags"
                 >
-                  <Tag className="h-4 w-4" />
+                  <Tag className="h-4 w-4" aria-hidden="true" />
                   Manage Tags
                 </Button>
               )}
@@ -422,16 +441,17 @@ export default function Library(): JSX.Element {
                   variant="default"
                   onClick={() => setOpenCreateFolderModal(true)}
                   className="flex items-center gap-2"
+                  aria-label="Create new folder"
                 >
-                  <Folder className="h-4 w-4" /> New Folder
+                  <Folder className="h-4 w-4" aria-hidden="true" />
+                  New Folder
                 </Button>
               )}
-            </div>
-          </div>
-        </div>
+            </nav>
+          </header>
 
-        {/* Content */}
-        <ListFolders />
+          <ListFolders />
+        </section>
       </div>
     </div>
   ) : (

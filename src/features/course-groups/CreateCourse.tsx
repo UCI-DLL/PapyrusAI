@@ -316,41 +316,61 @@ export default function CreateCourse(): JSX.Element {
       </Dialog>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
-                <BookOpen className="h-8 w-8 " />
+      <div className="bg-background text-foreground p-4 space-y-6">
+        {/* Standard Page Header Pattern */}
+        <header className="animate-in slide-in-from-bottom-4 duration-700">
+          <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+            <div
+              className="absolute top-0 right-0 w-48 h-48 opacity-10"
+              aria-hidden="true"
+            >
+              <BookOpen size={192} className="text-primary" />
+            </div>
+
+            <div className="relative z-10">
+              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                 Create Course
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
                 Set up a new course for your students to interact with
                 AI-powered learning modules.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowSavePublishTooltip(true)}
-                  >
-                    <Info className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Get help with Save & Publish options</p>
-                </TooltipContent>
-              </Tooltip>
+          </div>
+        </header>
+
+        {/* Actions Section */}
+        <section aria-labelledby="actions-heading">
+          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 id="actions-heading" className="text-2xl font-bold text-foreground mb-1">
+                Course Setup
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Configure your course settings and publish options.
+              </p>
+            </div>
+            <nav
+              className="flex flex-col md:flex-row gap-2"
+              role="toolbar"
+              aria-label="Course creation actions"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSavePublishTooltip(true)}
+                aria-label="Get help with Save & Publish options"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                Help
+              </Button>
               <div className="flex rounded-lg border overflow-hidden">
                 <Button
                   size="sm"
                   onClick={handleClick}
                   className="rounded-none border-0"
                   disabled={isLoading}
+                  aria-label={`${options[selectedIndexSave]} course`}
                 >
                   {options[selectedIndexSave]}
                 </Button>
@@ -361,9 +381,9 @@ export default function CreateCourse(): JSX.Element {
                       className="rounded-none border-0 border-l px-2"
                       variant="default"
                       disabled={isLoading}
-                      aria-label="select save and activation strategy"
+                      aria-label="Select save and activation strategy"
                     >
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -383,13 +403,13 @@ export default function CreateCourse(): JSX.Element {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            </div>
-          </div>
+            </nav>
+          </header>
 
           {/* Info Section */}
-          <Card className="mt-6 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50">
+          <Card className="border-primary/20 bg-primary/5 transition-all duration-300 hover:shadow-md">
             <CardContent className="pt-6">
-              <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
+              <p className="text-primary/80 text-sm leading-relaxed">
                 Courses are spaces in which instructors can create and organize
                 modules that allow students to interact with the AI. For more
                 information on creating a course, please see the{" "}
@@ -397,7 +417,7 @@ export default function CreateCourse(): JSX.Element {
                   href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-medium underline underline-offset-2 hover:no-underline"
+                  className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
                 >
                   "Creating a Course" section of our instructor guide
                 </a>
@@ -405,7 +425,7 @@ export default function CreateCourse(): JSX.Element {
               </p>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         {/* Form */}
         <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
@@ -783,10 +803,17 @@ export default function CreateCourse(): JSX.Element {
       </div>
     </div>
   ) : (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-600" />
-        <p className="text-muted-foreground">Loading user data...</p>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading course creation form...</p>
       </div>
     </div>
   );

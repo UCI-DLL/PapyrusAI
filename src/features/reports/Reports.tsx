@@ -58,6 +58,7 @@ export default function Reports(): JSX.Element {
     Array<{ users: Array<CustomUserType>; course: CourseType }>
   >([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(false);
   const [openDownloadCourseModal, setOpenDownloadCourseModal] =
     useState<boolean>(false);
   const [downloadType, setDownloadType] = useState<string>("json");
@@ -261,7 +262,7 @@ export default function Reports(): JSX.Element {
         if (res.data) {
           //get conversation data (with message data)
           if (res.data.conversations && res.data.conversations.length > 0) {
-            res.data.conversations.forEach(
+            const conversationPromises = res.data.conversations.map(
               async (convo: any, convoIndex: number) => {
                 var convoData = await getConvo(
                   courseId,
@@ -283,8 +284,11 @@ export default function Reports(): JSX.Element {
                     );
                   }
                 }
+                return convoData;
               }
             );
+
+            await Promise.all(conversationPromises);
           }
         }
         return res.data;
@@ -719,298 +723,333 @@ export default function Reports(): JSX.Element {
 
   return !analysis ? (
     !isLoading ? (
-      <div className="reports">
-        {user?.groups.includes(
-          process.env.REACT_APP_ADMIN
-            ? process.env.REACT_APP_ADMIN
-            : "PapyrusAIAdmin"
-        ) && (
-          <Modal
-            isOpen={openDownloadCourseModal}
-            title={"Select Courses to Download"}
-            onRequestClose={() => setOpenDownloadCourseModal(false)}
-            actions={
-              <>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => setOpenDownloadCourseModal(false)}
-                >
-                  Close
-                </Button>
-                <Button variant="contained" onClick={downloadCourses}>
-                  Download
-                </Button>
-              </>
-            }
-          >
-            <div>
+      isLoadingAnalysis ? (
+        <div style={{ padding: "2rem", textAlign: "center" }}>
+          <LinearProgress />
+          <p style={{ marginTop: "1rem", fontSize: "1.1rem", color: "#666" }}>
+            Analyzing course data and generating reports...
+          </p>
+        </div>
+      ) : (
+        <div className="reports">
+          {user?.groups.includes(
+            process.env.REACT_APP_ADMIN
+              ? process.env.REACT_APP_ADMIN
+              : "PapyrusAIAdmin"
+          ) && (
+            <Modal
+              isOpen={openDownloadCourseModal}
+              title={"Select Courses to Download"}
+              onRequestClose={() => setOpenDownloadCourseModal(false)}
+              actions={
+                <>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => setOpenDownloadCourseModal(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button variant="contained" onClick={downloadCourses}>
+                    Download
+                  </Button>
+                </>
+              }
+            >
               <div>
-                Note: downloading multiple courses may take several minutes.
-                Please be patient while your courses, modules, and conversations
-                download.
-              </div>
-              <FormControl
-                size="small"
-                sx={{ width: "100%", marginTop: "1rem" }}
-              >
-                <InputLabel id="download-format-label">
-                  Download Format
-                </InputLabel>
-                <Select
-                  labelId="download-format-label"
-                  id="download-format"
-                  value={downloadType}
-                  label="Download Format"
-                  onChange={(e) => setDownloadType(e.target.value)}
-                  fullWidth
+                <div>
+                  Note: downloading multiple courses may take several minutes.
+                  Please be patient while your courses, modules, and
+                  conversations download.
+                </div>
+                <FormControl
+                  size="small"
+                  sx={{ width: "100%", marginTop: "1rem" }}
                 >
-                  <MenuItem value="json">JSON</MenuItem>
-                  <MenuItem value="csv">CSV</MenuItem>
-                  <MenuItem value="txt">TXT</MenuItem>
-                </Select>
-              </FormControl>
-              <List dense sx={{ width: "100%", bgcolor: "background.paper" }}>
-                {sortCourseList(userList).map((x, index) => {
-                  const labelId = `checkbox-list-secondary-label-${index}`;
-                  return (
-                    <ListItem
-                      key={index}
-                      secondaryAction={
-                        <Checkbox
-                          edge="end"
-                          onChange={handleToggle(index)}
-                          checked={checked.includes(index)}
-                          inputProps={{ "aria-labelledby": labelId }}
-                        />
-                      }
-                      disablePadding
-                    >
-                      <ListItemButton onClick={handleToggle(index)}>
-                        <ListItemText
-                          id={labelId}
-                          primary={`${x.course.name} | Instructor: ${x.course.instructor.name} ${x.course.instructor.family_name}`}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })}
-              </List>
-            </div>
-          </Modal>
-        )}
-        {/* Reports UI */}
-        <div className="reports__section-header">
-          <h3>Reports</h3>
-          <div>
-            {user?.groups.includes(
-              process.env.REACT_APP_ADMIN
-                ? process.env.REACT_APP_ADMIN
-                : "PapyrusAIAdmin"
-            ) && (
-              <Button
-                variant="outlined"
-                onClick={() => setOpenDownloadCourseModal(true)}
-              >
-                Download Course
-              </Button>
-            )}
-          </div>
-        </div>
-        <div>
-          Reports summarize users’ activity and interactions with the AI in your
-          courses. For any course of which you are the instructor, you may view
-          specific students’ interactions with AI. For more information on
-          reports please see the{" "}
-          <a
-            href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.bsxols4iy4zg"
-            target="_blank"
-            rel="noreferrer"
-          >
-            “Instructor Reports” section of our instructor guide
-          </a>
-          .
-        </div>
-        <hr />
-        {/* Work within here to update UI */}
-        <List style={style}>
-          {sortCourseList(userList).map((x, index) => {
-            const handleRowClick = async () => {
-              console.log("Course Information:", {
-                course: x.course,
-                students: x.users,
-                studentCount: x.users.length,
-                courseId: x.course.id,
-                courseName: x.course.name,
-                instructor: x.course.instructor,
-                term: x.course.term,
-                year: x.course.year,
-                section: x.course.section,
-                signUpCode: x.course.signUpCode,
-                modules: x.course.modules,
-                organization: x.course.organization,
-                createdTimestamp: x.course.createdTimestamp,
-                isActive: x.course.isActive,
-              });
-
-              // Fetch conversation data to create the same structure as JSON download
-              console.log(
-                "Fetching conversation data (same as JSON download)..."
-              );
-              try {
-                const controller = new AbortController();
-
-                // Create the same structure as coursesToDownload
-                const courseData = {
-                  ...x.course,
-                  users: x.users,
-                  modules: x.course.modules.map((module) => ({
-                    ...module,
-                    conversations: [],
-                  })),
-                };
-
-                // Use the same logic as JSON download
-                const promiseArray: any[] = [];
-
-                courseData.modules.forEach((module, moduleIndex) => {
-                  courseData.users.forEach((user) => {
-                    promiseArray.push(
-                      getConvoListForClick(
-                        x.course.id,
-                        module.id,
-                        user,
-                        controller,
-                        courseData,
-                        0, // courseIndex is always 0 since we're only processing one course
-                        moduleIndex
-                      )
+                  <InputLabel id="download-format-label">
+                    Download Format
+                  </InputLabel>
+                  <Select
+                    labelId="download-format-label"
+                    id="download-format"
+                    value={downloadType}
+                    label="Download Format"
+                    onChange={(e) => setDownloadType(e.target.value)}
+                    fullWidth
+                  >
+                    <MenuItem value="json">JSON</MenuItem>
+                    <MenuItem value="csv">CSV</MenuItem>
+                    <MenuItem value="txt">TXT</MenuItem>
+                  </Select>
+                </FormControl>
+                <List dense sx={{ width: "100%", bgcolor: "background.paper" }}>
+                  {sortCourseList(userList).map((x, index) => {
+                    const labelId = `checkbox-list-secondary-label-${index}`;
+                    return (
+                      <ListItem
+                        key={index}
+                        secondaryAction={
+                          <Checkbox
+                            edge="end"
+                            onChange={handleToggle(index)}
+                            checked={checked.includes(index)}
+                            inputProps={{ "aria-labelledby": labelId }}
+                          />
+                        }
+                        disablePadding
+                      >
+                        <ListItemButton onClick={handleToggle(index)}>
+                          <ListItemText
+                            id={labelId}
+                            primary={`${x.course.name} | Instructor: ${x.course.instructor.name} ${x.course.instructor.family_name}`}
+                          />
+                        </ListItemButton>
+                      </ListItem>
                     );
-                  });
+                  })}
+                </List>
+              </div>
+            </Modal>
+          )}
+          {/* Reports UI */}
+          <div className="reports__section-header">
+            <h3>Reports</h3>
+            <div>
+              {user?.groups.includes(
+                process.env.REACT_APP_ADMIN
+                  ? process.env.REACT_APP_ADMIN
+                  : "PapyrusAIAdmin"
+              ) && (
+                <Button
+                  variant="outlined"
+                  onClick={() => setOpenDownloadCourseModal(true)}
+                >
+                  Download Course
+                </Button>
+              )}
+            </div>
+          </div>
+          <div>
+            Reports summarize users’ activity and interactions with the AI in
+            your courses. For any course of which you are the instructor, you
+            may view specific students’ interactions with AI. For more
+            information on reports please see the{" "}
+            <a
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.bsxols4iy4zg"
+              target="_blank"
+              rel="noreferrer"
+            >
+              “Instructor Reports” section of our instructor guide
+            </a>
+            .
+          </div>
+          <hr />
+          {/* Work within here to update UI */}
+          <List style={style}>
+            {sortCourseList(userList).map((x, index) => {
+              const handleRowClick = async () => {
+                console.log("Course Information:", {
+                  course: x.course,
+                  students: x.users,
+                  studentCount: x.users.length,
+                  courseId: x.course.id,
+                  courseName: x.course.name,
+                  instructor: x.course.instructor,
+                  term: x.course.term,
+                  year: x.course.year,
+                  section: x.course.section,
+                  signUpCode: x.course.signUpCode,
+                  modules: x.course.modules,
+                  organization: x.course.organization,
+                  createdTimestamp: x.course.createdTimestamp,
+                  isActive: x.course.isActive,
                 });
 
-                // Wait for all conversations to be fetched
-                await Promise.allSettled(promiseArray);
-
+                // Fetch conversation data to create the same structure as JSON download
                 console.log(
-                  "Complete Course Data with Conversations:",
-                  courseData
+                  "Fetching conversation data (same as JSON download)..."
                 );
-                const analysis = analyzeCourse(courseData);
-                setAnalysis(analysis);
-                console.log("analysis", analysis);
-              } catch (error) {
-                console.error("Error fetching conversation data:", error);
-              }
-            };
+                setIsLoadingAnalysis(true);
+                try {
+                  const controller = new AbortController();
 
-            return (
-              <div
-                style={{ width: "100%", marginBottom: "0.4rem" }}
-                key={index}
-              >
-                <ListItem
-                  button
-                  onClick={handleRowClick}
-                  sx={{
-                    border: "1px solid rgba(0,0,0,0.2)",
-                    borderRadius: "4px",
-                    backgroundColor: "rgba(0,0,0,0.02)",
-                    cursor: "pointer",
-                    "&:hover": {
-                      backgroundColor: "rgba(0,0,0,0.08)",
-                    },
-                    padding: "1rem",
-                  }}
+                  // Create the same structure as coursesToDownload
+                  const courseData = {
+                    ...x.course,
+                    users: x.users,
+                    modules: x.course.modules.map((module) => ({
+                      ...module,
+                      conversations: [],
+                    })),
+                  };
+
+                  // Use the same logic as JSON download
+                  const promiseArray: any[] = [];
+
+                  courseData.modules.forEach((module, moduleIndex) => {
+                    courseData.users.forEach((user) => {
+                      promiseArray.push(
+                        getConvoListForClick(
+                          x.course.id,
+                          module.id,
+                          user,
+                          controller,
+                          courseData,
+                          0, // courseIndex is always 0 since we're only processing one course
+                          moduleIndex
+                        )
+                      );
+                    });
+                  });
+
+                  // Wait for all conversations to be fetched
+                  await Promise.all(promiseArray);
+
+                  console.log(
+                    "Complete Course Data with Conversations:",
+                    courseData
+                  );
+
+                  // For troubleshooting to validate conversation data exists
+                  const totalConversations =
+                    courseData.modules?.reduce(
+                      (sum, module) =>
+                        sum + (module.conversations?.length || 0),
+                      0
+                    ) || 0;
+
+                  if (totalConversations === 0) {
+                    console.warn(
+                      "No conversations found in course data, analysis may return empty results"
+                    );
+                  }
+
+                  const analysis = analyzeCourse(courseData);
+                  setAnalysis(analysis);
+                  console.log("analysis", analysis);
+                } catch (error) {
+                  console.error("Error fetching conversation data:", error);
+                } finally {
+                  setIsLoadingAnalysis(false);
+                }
+              };
+
+              return (
+                <div
+                  style={{ width: "100%", marginBottom: "0.4rem" }}
+                  key={index}
                 >
-                  <div style={{ width: "100%" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      <div>
-                        <h6
-                          style={{
-                            margin: "0 0 0.5rem 0",
-                            fontSize: "1.1rem",
-                            fontWeight: "600",
-                          }}
-                        >
-                          {x.course.name ? x.course.name : "Unnamed Course"}
-                        </h6>
-                        <div
-                          style={{
-                            fontSize: "0.9rem",
-                            color: "rgba(0,0,0,0.7)",
-                            marginBottom: "0.25rem",
-                          }}
-                        >
-                          Instructor:{" "}
-                          {x.course.instructor.name +
-                            " " +
-                            x.course.instructor.family_name}
+                  <ListItem
+                    button
+                    onClick={handleRowClick}
+                    sx={{
+                      border: "1px solid rgba(0,0,0,0.2)",
+                      borderRadius: "4px",
+                      backgroundColor: "rgba(0,0,0,0.02)",
+                      cursor: "pointer",
+                      "&:hover": {
+                        backgroundColor: "rgba(0,0,0,0.08)",
+                      },
+                      padding: "1rem",
+                    }}
+                  >
+                    <div style={{ width: "100%" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        <div>
+                          <h6
+                            style={{
+                              margin: "0 0 0.5rem 0",
+                              fontSize: "1.1rem",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {x.course.name ? x.course.name : "Unnamed Course"}
+                          </h6>
+                          <div
+                            style={{
+                              fontSize: "0.9rem",
+                              color: "rgba(0,0,0,0.7)",
+                              marginBottom: "0.25rem",
+                            }}
+                          >
+                            Instructor:{" "}
+                            {x.course.instructor.name +
+                              " " +
+                              x.course.instructor.family_name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "0.9rem",
+                              color: "rgba(0,0,0,0.7)",
+                            }}
+                          >
+                            {x.course.section
+                              ? `${x.course.term ? x.course.term : ""} ${
+                                  x.course.year ? x.course.year : ""
+                                } - ${x.course.section}`
+                              : `${x.course.term ? x.course.term : ""} ${
+                                  x.course.year ? x.course.year : ""
+                                }`}
+                          </div>
                         </div>
-                        <div
-                          style={{
-                            fontSize: "0.9rem",
-                            color: "rgba(0,0,0,0.7)",
-                          }}
-                        >
-                          {x.course.section
-                            ? `${x.course.term ? x.course.term : ""} ${
-                                x.course.year ? x.course.year : ""
-                              } - ${x.course.section}`
-                            : `${x.course.term ? x.course.term : ""} ${
-                                x.course.year ? x.course.year : ""
-                              }`}
+                        <div style={{ textAlign: "right" }}>
+                          <div
+                            style={{
+                              fontSize: "0.9rem",
+                              color: "rgba(0,0,0,0.7)",
+                              marginBottom: "0.25rem",
+                            }}
+                          >
+                            Sign up code: {x.course.signUpCode}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "1rem",
+                              fontWeight: "600",
+                              color: "rgba(0,0,0,0.8)",
+                            }}
+                          >
+                            {x.users.length} Students
+                          </div>
                         </div>
                       </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div
-                          style={{
-                            fontSize: "0.9rem",
-                            color: "rgba(0,0,0,0.7)",
-                            marginBottom: "0.25rem",
-                          }}
-                        >
-                          Sign up code: {x.course.signUpCode}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "1rem",
-                            fontWeight: "600",
-                            color: "rgba(0,0,0,0.8)",
-                          }}
-                        >
-                          {x.users.length} Students
-                        </div>
-                      </div>
-                    </div>
 
-                    <div
-                      style={{
-                        fontSize: "0.85rem",
-                        color: "rgba(0,0,0,0.6)",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      Click to view course details
+                      <div
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "rgba(0,0,0,0.6)",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        Click to view course details
+                      </div>
                     </div>
-                  </div>
-                </ListItem>
-              </div>
-            );
-          })}
-        </List>
-      </div>
+                  </ListItem>
+                </div>
+              );
+            })}
+          </List>
+        </div>
+      )
     ) : (
       <LinearProgress />
     )
   ) : (
-    <ClassCharts analysis={analysis} setAnalysis={setAnalysis} />
+    <ClassCharts
+      analysis={analysis}
+      setAnalysis={(newAnalysis: any) => {
+        setAnalysis(newAnalysis);
+        if (newAnalysis === null) {
+          setIsLoadingAnalysis(false);
+        }
+      }}
+    />
   );
 }

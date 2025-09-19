@@ -263,14 +263,6 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         className="chart-grid"
       >
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3>Module Usage</h3>
-          <div ref={moduleUsageRef} />
-        </div>
-        <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3>Classification Counts</h3>
-          <div ref={classificationRef} />
-        </div>
-        <div className="card" style={{ marginBottom: "1rem" }}>
           <h3>Daily Conversation Lengths</h3>
           <div ref={lengthsRef} />
         </div>
@@ -278,6 +270,14 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           <h3>Daily Conversation Counts</h3>
           <div ref={countsRef} />
         </div>
+        <div className="card" style={{ marginBottom: "1rem" }}>
+          <h3>Module Usage</h3>
+          <div ref={moduleUsageRef} />
+        </div>
+        {/* <div className="card" style={{ marginBottom: "1rem" }}>
+          <h3>Classification Counts</h3>
+          <div ref={classificationRef} />
+        </div> */}
       </div>
     </div>
   );

@@ -27,6 +27,7 @@ export type MessageType = {
   raterReference?: string | Array<Array<string>>,
   expandableMessage?: string,
   stream?: Array<StreamMessageType>,
+  sources?: string,
 }
 
 export type MessageTypeType = "text" | "file"
@@ -36,5 +37,7 @@ export type StreamMessageType = {
   id: string,
   timestamp: number,
   finished: boolean,
-  messageType: string
+  messageType: string,
+  note?: string,
+  sources?: any,
 }

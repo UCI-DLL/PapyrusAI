@@ -61,6 +61,7 @@ export default function Chat(): JSX.Element {
   const [showWizard, setShowWizard] = useState(false); //show normal wizard (either under normal conditions or after we get rater essay back)
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [chatError, setChatError] = useState<string | undefined>();
+  const [messageNote, setMessageNote] = useState<string>(); //Note to users when using a tool 
   const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
     open: boolean,
     deleteOpen: boolean,
@@ -361,6 +362,11 @@ export default function Chat(): JSX.Element {
       setShowWizard(false)
     } else if (returnData.status < 300) {
       const returnMessage: StreamMessageType = JSON.parse(returnData.data)
+      //if there is a note, then display to user
+      if (returnMessage.message === null && returnMessage.note) {
+        setMessageNote(returnMessage.note)
+        setShowTypingIndicator(true);
+      }
       //if we are still streaming and not finished
       if (returnMessage.messageType === "streamMessage" && !returnMessage.finished) {
         //if the current message id matches incoming message,
@@ -374,6 +380,9 @@ export default function Chat(): JSX.Element {
           messagesRef.current[messagesRef.current.length - 1].stream &&
           messagesRef.current[messagesRef.current.length - 1].stream?.[0].id === returnMessage.id
         ) {
+          if (returnMessage.message !== null && !returnMessage.note) {
+            setMessageNote(undefined)
+          }
           setMessages((prev) => {
             if (prev && messagesRef.current) {
               var temp = [...messagesRef.current];
@@ -381,6 +390,7 @@ export default function Chat(): JSX.Element {
                 //add new stream message to list
                 temp[temp.length - 1].stream?.push(returnMessage)
                 const stream = temp[temp.length - 1].stream || []
+                //update message based on stream array (timestamps) and index
                 //remove duplicates (by timestamp AND message) and then sort by timestamp
                 const filteredArray: StreamMessageType[] = stream.filter((obj, index, self) =>
                   index === self.findIndex((t) => t.timestamp === obj.timestamp && t.message === obj.message)
@@ -394,6 +404,9 @@ export default function Chat(): JSX.Element {
             } else return prev;
           })
         } else {
+          if (returnMessage.message !== null && !returnMessage.note) {
+            setMessageNote(undefined)
+          }
           // make some temp stuff for the message
           const tempTimestamp = Date.now();
           const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
@@ -429,6 +442,12 @@ export default function Chat(): JSX.Element {
             if (prev && messagesRef.current) {
               var temp = [...messagesRef.current];
               temp[temp.length - 1].content = returnMessage.message;
+              //handle web search sources
+              if (returnMessage.sources && returnMessage.sources.sources) {
+                console.log("search query: ", returnMessage.sources.searchQuery)
+                console.log("final summary: ", returnMessage.sources.content)
+                temp[temp.length - 1].sources = returnMessage.sources.sources;
+              }
               return temp;
             } else return prev;
           })
@@ -508,31 +527,32 @@ export default function Chat(): JSX.Element {
 
   const onSendEssay = useCallback((essay: string, message?: string) => {
     //save message in message array
-    setChatError(undefined);
-    if (isConnected) {
-      //check that essay/message length is less that 100000
-      if (essay.length > 100000) {
-        setChatError("Essay Too Long to Evaluate");
-      } else if (essay.length < 750) { //~5 characters in a word * 150 words
-        setChatError("Essay Too Short to Evaluate");
-      } else {
-        var sendEssay: any = {
-          "action": "raterEssay",
-          "essay": essay,
-          "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
-        }
-        //add optional message/prompt
-        if (message) {
-          sendEssay["message"] = message;
-        }
-        socket.current?.send(JSON.stringify(sendEssay));
-      }
-      //Set the typing indicator for chatgpt while we wait for a response
-      setShowTypingIndicator(true);
-    } else {
-      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
-    }
-  }, [isConnected]);
+    setOpenErrorModal({ open: true, message: "RATER model not available." });
+    // setChatError(undefined);
+    // if (isConnected) {
+    //   //check that essay/message length is less that 100000
+    //   if (essay.length > 100000) {
+    //     setChatError("Essay Too Long to Evaluate");
+    //   } else if (essay.length < 750) { //~5 characters in a word * 150 words
+    //     setChatError("Essay Too Short to Evaluate");
+    //   } else {
+    //     var sendEssay: any = {
+    //       "action": "raterEssay",
+    //       "essay": essay,
+    //       "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
+    //     }
+    //     //add optional message/prompt
+    //     if (message) {
+    //       sendEssay["message"] = message;
+    //     }
+    //     socket.current?.send(JSON.stringify(sendEssay));
+    //   }
+    //   //Set the typing indicator for chatgpt while we wait for a response
+    //   setShowTypingIndicator(true);
+    // } else {
+    //   setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
+    // }
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1112,6 +1132,7 @@ export default function Chat(): JSX.Element {
                     visible={(message.userVisible === undefined || message.userVisible) ? true : false}
                     expandableMessage={message.expandableMessage && message.expandableMessage !== "" ? message.expandableMessage : undefined}
                     isInstructor={(user?.groups.includes(instructor) || user?.groups.includes(admin)) ? true : false}
+                    sources={message.sources ? JSON.parse(message.sources) : []}
                   />
                 </div>
               </div>
@@ -1152,6 +1173,10 @@ export default function Chat(): JSX.Element {
             displayName={"Papyrus"}
             typing
           />
+        )}
+
+        {messageNote && (
+          <span>{messageNote}</span>
         )}
 
         {/* handles scrolling to the bottom */}

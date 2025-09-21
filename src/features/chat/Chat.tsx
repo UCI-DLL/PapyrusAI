@@ -493,7 +493,7 @@ export default function Chat(): JSX.Element {
           const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
           var responseMessage: MessageType = {
             id: tempTimestamp.toString(),
-            content: message.content,
+            content: message.content.replace(/\n/g, "\n\n"), //replace new line with double new line
             messageType: message.content.length < 1000 ? "text" : "file",
             role: "user",
             sender: "username",

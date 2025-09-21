@@ -295,7 +295,7 @@ export const MessageRight = (props: MessageProps) => {
       </a>
     );
   }
-
+  //Note: replace new lines with double new line for markdown
   return (props.visible === undefined || props.visible || props.isInstructor) ? (
     <div
       className={"message__row-right"}
@@ -341,10 +341,10 @@ export const MessageRight = (props: MessageProps) => {
             isOpen={openFileModal}
             onRequestClose={() => setOpenFileModal(false)}
           >
-            <div>{props.message}</div>
+            <Markdown>{props.message.replace(/\n/g, "\n\n")}</Markdown>
           </Modal>
           <div className="message__file">
-            <div>{expandFile ? props.message : props.message.substring(0, 200) + "..."}</div>
+            <Markdown>{expandFile ? props.message.replace(/\n/g, "\n\n") : props.message.substring(0, 200) + "..."}</Markdown>
             <hr />
             <div style={{ display: "flex" }}>
               <button
@@ -373,7 +373,7 @@ export const MessageRight = (props: MessageProps) => {
         </div>
       ) : (
         <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__right-message message__out-context" : "message__right-message"}>
-          <Markdown className={""} components={{ a: LinkRenderer }}>{props.message}</Markdown>
+          <Markdown className={""} components={{ a: LinkRenderer }}>{props.message.replace(/\n/g, "\n\n")}</Markdown>
         </div>
       )}
       <Snackbar

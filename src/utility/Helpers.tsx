@@ -104,5 +104,5 @@ export function orderModuleRecentlyCreatedAndStarred(list: Array<ModuleType>, st
 }
 
 export function removeSpecialCharacters(str: string) {
-  return str.replace(/[^a-zA-Z0-9!@#$%^ÁáÉéÍíÓóÚúÑñäöü¡¿()"'.?\-_+=*~<>,;:&|\s]/g, "");
+  return str.replace(/[^a-zA-Z0-9!@#$%^ÁáÉéÍíÓóÚúÑñäöü¡¿()"'.?\-_+=*~<>{},;:&|\s]/g, "");
 }

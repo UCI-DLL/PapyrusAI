@@ -103,6 +103,6 @@ export function orderModuleRecentlyCreatedAndStarred(list: Array<ModuleType>, st
   });
 }
 
-export function removeSpecialCharacters(str: string) {
+export function removeSpecialCharacters(str: string) { //note: keep new lines
   return str.replace(/[^a-zA-Z0-9!@#$%^ÁáÉéÍíÓóÚúÑñäöü¡¿()"'.?\-_+=*~<>{},;:&|\s]/g, "");
 }

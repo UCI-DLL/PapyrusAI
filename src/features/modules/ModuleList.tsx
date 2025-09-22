@@ -54,7 +54,7 @@ export default function ModuleList({
 }: ModuleListProps): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [starredCourses, setStarredCourses] = useState<
     Array<{ courseId: string }>
@@ -193,14 +193,15 @@ export default function ModuleList({
           setStarredModules(res.data.modules);
           setAlert({
             message: "Module added to favorites.",
-            type: "info",
+            type: "success",
           });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: res.data, type: "error" });
+        setAlert({ message: "Failed to star module", type: "error" });
       }
+      setIsLoading(false);
     });
   }
 
@@ -215,14 +216,15 @@ export default function ModuleList({
           setStarredModules(res.data.modules);
           setAlert({
             message: "Module removed from favorites.",
-            type: "info",
+            type: "success",
           });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: res.data, type: "error" });
+        setAlert({ message: "Failed to unstar module", type: "error" });
       }
+      setIsLoading(false);
     });
   }
 
@@ -389,23 +391,23 @@ export default function ModuleList({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <button
-                            onClick={(e: any) => {
-                              e.stopPropagation();
-                              isStarred
-                                ? removeStarredModule(course.id, module.id)
-                                : createStarredModule(course.id, module.id);
-                            }}
-                            disabled={isLoading}
-                            className={cn(
-                              "p-1.5 rounded-full ml-2 flex-shrink-0",
-                              isStarred
-                                ? "text-gold hover:text-muted"
-                                : "text-muted hover:text-gold"
-                            )}
+                            <button
+                              onClick={(e: any) => {
+                                e.stopPropagation();
+                                isStarred
+                                  ? removeStarredModule(course.id, module.id)
+                                  : createStarredModule(course.id, module.id);
+                              }}
+                              disabled={isLoading}
+                              className={cn(
+                                "p-1.5 rounded-full ml-2 flex-shrink-0",
+                                isStarred
+                                  ? "text-gold hover:text-muted"
+                                  : "text-muted hover:text-gold"
+                              )}
                           >
                             <Star
-                              size={14}
+                              size={12}
                               fill={isStarred ? "currentColor" : "none"}
                               className={cn(
                                 isStarred

@@ -290,8 +290,9 @@ export default function StudentStats({ students }: StudentStatsProps) {
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: "1.5rem",
-          marginBottom: "3rem",
+          marginBottom: "2rem",
           padding: "0 2rem",
+          borderBottom: "1px solid #eee",
         }}
         className="chart-grid"
       >

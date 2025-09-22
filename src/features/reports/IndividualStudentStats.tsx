@@ -216,10 +216,11 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
 
   if (!student) return null;
   return (
-    <div style={{ padding: 32 }}>
-      <h2>
+    <div style={{ padding: "0 2rem", marginBottom: "3rem" }}>
+      <h2 className="text-2xl font-bold text-foreground mb-1">Student:</h2>
+      <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
         {info?.name as string} {info?.family_name as string}
-      </h2>
+      </h1>
       <p>Email: {info?.email as string}</p>
       <p>Total Messages: {totalMessages}</p>
       <button
@@ -263,15 +264,21 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         className="chart-grid"
       >
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3>Daily Conversation Lengths</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-2">
+            Daily Conversation Lengths
+          </h3>
           <div ref={lengthsRef} />
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3>Daily Conversation Counts</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-2">
+            Daily Conversation Counts
+          </h3>
           <div ref={countsRef} />
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3>Module Usage</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-2">
+            Module Usage
+          </h3>
           <div ref={moduleUsageRef} />
         </div>
         {/* <div className="card" style={{ marginBottom: "1rem" }}>

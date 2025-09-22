@@ -1105,7 +1105,7 @@ export default function Chat(): JSX.Element {
   // Filter conversations based on search term
   const filteredConversations = conversationList?.conversations?.filter((conv) =>
     conv.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ).sort((a, b) => parseInt(b.id) - parseInt(a.id)) || [];
+  ) || [];
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="h-screen flex bg-background text-foreground relative overflow-hidden">
@@ -1691,12 +1691,11 @@ export default function Chat(): JSX.Element {
             {filteredConversations.length > 0 ? (
               <div className="space-y-1 p-2">
                 {filteredConversations.map((conversation) => {
-                  // Find the index in the original unsorted conversation list for the URL
-                  const originalConversationIndex = conversationList?.conversations
-                    ? conversationList.conversations.length - conversationList.conversations.findIndex(c => c.id === conversation.id) - 1
+                  const conversationIndex = conversationList?.conversations
+                    ? conversationList.conversations.findIndex(c => c.id === conversation.id)
                     : 0;
-                  const isCurrentConversation = originalConversationIndex.toString() === conversationIds?.conversationIndex;
-                  const conversationLink = `/chat/${user?.username}/${conversationIds?.courseId}/${conversationIds?.moduleId}/${originalConversationIndex}`;
+                  const isCurrentConversation = conversationIndex.toString() === conversationIds?.conversationIndex;
+                  const conversationLink = `/chat/${user?.username}/${conversationIds?.courseId}/${conversationIds?.moduleId}/${conversationIndex}`;
                   
                   return (
                     <div
@@ -1827,12 +1826,11 @@ export default function Chat(): JSX.Element {
                 {filteredConversations.length > 0 ? (
                   <div className="space-y-1 p-2">
                     {filteredConversations.map((conversation) => {
-                      // Find the index in the original unsorted conversation list for the URL
-                      const originalConversationIndex = conversationList?.conversations
+                      const conversationIndex = conversationList?.conversations
                         ? conversationList.conversations.length - conversationList.conversations.findIndex(c => c.id === conversation.id) - 1
                         : 0;
-                      const isCurrentConversation = originalConversationIndex.toString() === conversationIds?.conversationIndex;
-                      const conversationLink = `/chat/${user?.username}/${conversationIds?.courseId}/${conversationIds?.moduleId}/${originalConversationIndex}`;
+                      const isCurrentConversation = conversationIndex.toString() === conversationIds?.conversationIndex;
+                      const conversationLink = `/chat/${user?.username}/${conversationIds?.courseId}/${conversationIds?.moduleId}/${conversationIndex}`;
                       
                       return (
                         <div

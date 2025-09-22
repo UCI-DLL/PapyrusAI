@@ -31,7 +31,7 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../utility/endpoints/UserEndpoints";
-import { Star, FileText, MoreHorizontal, Eye } from "lucide-react";
+import { Star, FileText, MoreHorizontal, Eye, Plus, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -692,14 +692,76 @@ export const File = (props: FileProps) => {
                 </DropdownMenu>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1 text-xs font-medium text-primary"
-            >
-              <Eye className="h-3 w-3" />
-              View
-            </Button>
+            {props.noShowMenu ? (
+              props.showRemove ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (props.onClick) {
+                            props.onClick(
+                              props.folder.id,
+                              props.file.id,
+                              props.file.isOrganizationFile ?? false,
+                              "file"
+                            );
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Remove
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      Remove file from module
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (props.onClick) {
+                            props.onClick(
+                              props.folder.id,
+                              props.file.id,
+                              props.file.isOrganizationFile ?? false,
+                              "file"
+                            );
+                          }
+                        }}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      Add file to module
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1 text-xs font-medium text-primary"
+              >
+                <Eye className="h-3 w-3" />
+                View
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

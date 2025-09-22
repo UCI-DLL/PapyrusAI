@@ -1691,11 +1691,12 @@ export default function Chat(): JSX.Element {
             {filteredConversations.length > 0 ? (
               <div className="space-y-1 p-2">
                 {filteredConversations.map((conversation) => {
-                  const conversationIndex = conversationList?.conversations
+                  // Find the index in the original unsorted conversation list for the URL
+                  const originalConversationIndex = conversationList?.conversations
                     ? conversationList.conversations.length - conversationList.conversations.findIndex(c => c.id === conversation.id) - 1
                     : 0;
-                  const isCurrentConversation = conversationIndex.toString() === conversationIds?.conversationIndex;
-                  const conversationLink = `/chat/${user?.username}/${conversationIds?.courseId}/${conversationIds?.moduleId}/${conversationIndex}`;
+                  const isCurrentConversation = originalConversationIndex.toString() === conversationIds?.conversationIndex;
+                  const conversationLink = `/chat/${user?.username}/${conversationIds?.courseId}/${conversationIds?.moduleId}/${originalConversationIndex}`;
                   
                   return (
                     <div
@@ -1826,11 +1827,12 @@ export default function Chat(): JSX.Element {
                 {filteredConversations.length > 0 ? (
                   <div className="space-y-1 p-2">
                     {filteredConversations.map((conversation) => {
-                      const conversationIndex = conversationList?.conversations
+                      // Find the index in the original unsorted conversation list for the URL
+                      const originalConversationIndex = conversationList?.conversations
                         ? conversationList.conversations.length - conversationList.conversations.findIndex(c => c.id === conversation.id) - 1
                         : 0;
-                      const isCurrentConversation = conversationIndex.toString() === conversationIds?.conversationIndex;
-                      const conversationLink = `/chat/${user?.username}/${conversationIds?.courseId}/${conversationIds?.moduleId}/${conversationIndex}`;
+                      const isCurrentConversation = originalConversationIndex.toString() === conversationIds?.conversationIndex;
+                      const conversationLink = `/chat/${user?.username}/${conversationIds?.courseId}/${conversationIds?.moduleId}/${originalConversationIndex}`;
                       
                       return (
                         <div

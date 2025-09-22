@@ -37,9 +37,10 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../../utility/endpoints/UserEndpoints";
-import { Star, Play, Eye, Copy, Edit } from "lucide-react";
+import { Star, Play, Eye, Copy, Edit, Loader2 } from "lucide-react";
 import Post from "../../utility/Post";
 import { cn } from "../../lib/utils";
+import { getConversationList, postCreateConversation } from "../../utility/endpoints/ConversationEndpoints";
 
 interface ModuleListProps {
   course: CourseType;
@@ -54,7 +55,9 @@ export default function ModuleList({
 }: ModuleListProps): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
+  const { setAlert } = useContext(AlertContext);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isNavigatingToModule, setIsNavigatingToModule] = useState<string | null>(null);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [starredCourses, setStarredCourses] = useState<
     Array<{ courseId: string }>
@@ -80,7 +83,6 @@ export default function ModuleList({
     name: "",
     isPublished: false,
   });
-  const { setAlert } = useContext(AlertContext);
 
   useEffect(() => {
     if (starredList) {
@@ -180,6 +182,62 @@ export default function ModuleList({
       ...duplicateModuleData,
       [e.target.name]: e.target.value,
     });
+  }
+
+  async function handleBeginModule(courseId: string, moduleId: string) {
+    if (!user) return;
+    
+    const moduleKey = `${courseId}-${moduleId}`;
+    setIsNavigatingToModule(moduleKey);
+    
+    try {
+      // First, get the conversation list for this module
+      const conversationRes = await Get(getConversationList(courseId, moduleId));
+      
+      if (conversationRes && conversationRes.status && conversationRes.status < 300) {
+        if (conversationRes.data && conversationRes.data.conversations && conversationRes.data.conversations.length > 0) {
+          // Sort conversations by ID (latest first) and get the latest one
+          const sortedConversations = conversationRes.data.conversations.sort((a: any, b: any) => 
+            parseInt(b.id) - parseInt(a.id)
+          );
+          const latestConversationIndex = conversationRes.data.conversations.length - conversationRes.data.conversations.findIndex((conv: any) => conv.id === sortedConversations[0].id) - 1;
+          
+          // Navigate to the latest conversation
+          navigator(`/chat/${user.username}/${courseId}/${moduleId}/${latestConversationIndex}`);
+        } else {
+          // No conversations exist, create a new one
+          const createRes = await Post(postCreateConversation(courseId, moduleId), {});
+          
+          if (createRes && createRes.status && createRes.status < 300) {
+            if (createRes.data && createRes.data.conversations) {
+              // Navigate to the newly created conversation
+              navigator(`/chat/${user.username}/${courseId}/${moduleId}/${createRes.data.conversations.length - 1}`);
+            }
+          } else if (createRes && createRes.status === 401) {
+            navigator("/login");
+          } else {
+            setAlert({
+              message: "Something went wrong creating a new conversation. Try again later",
+              type: "error",
+            });
+          }
+        }
+      } else if (conversationRes && conversationRes.status === 401) {
+        navigator("/login");
+      } else {
+        setAlert({
+          message: "Something went wrong loading conversations. Try again later",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      setAlert({
+        message: "Something went wrong. Try again later",
+        type: "error",
+      });
+    } finally {
+      setIsNavigatingToModule(null);
+    }
   }
 
   function createStarredModule(courseId: string, moduleId: string) {
@@ -723,16 +781,17 @@ export default function ModuleList({
                         )}
 
                       <Button
-                        onClick={() =>
-                          navigator(
-                            `/courses/${course.id}/modules/${module.id}`
-                          )
-                        }
+                        onClick={() => handleBeginModule(course.id, module.id)}
                         variant="default"
                         size="sm"
                         className="flex items-center gap-2 ml-2"
+                        disabled={isNavigatingToModule === `${course.id}-${module.id}`}
                       >
-                        <Play size={14} />
+                        {isNavigatingToModule === `${course.id}-${module.id}` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Play size={14} />
+                        )}
                         Begin Module
                       </Button>
                     </div>

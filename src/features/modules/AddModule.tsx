@@ -809,7 +809,7 @@ export default function AddModule(): JSX.Element {
                 </div>
               </div>
               
-              <div className="flex items-start space-x-3">
+              {/* <div className="flex items-start space-x-3">
                 <Checkbox
                   id="raterEnabled"
                   checked={session.raterEnabled}
@@ -832,7 +832,7 @@ export default function AddModule(): JSX.Element {
                     the "View" button.
                   </p>
                 </div>
-              </div>
+              </div> */}
               
               <div className="flex items-start space-x-3">
                 <Checkbox

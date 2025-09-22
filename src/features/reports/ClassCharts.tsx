@@ -3,6 +3,7 @@ import * as Plot from "@observablehq/plot";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StudentStats from "./StudentStats";
 import StudentMenu from "./StudentMenu";
+import { Card, CardContent } from "../../components/ui/card";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
@@ -538,12 +539,68 @@ export default function ClassCharts({
       .map(([id, student]) => ({ id, ...student }));
 
     return (
-      <div>
+      <Card className="w-[99%] mx-auto my-2 shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <div style={{ cursor: "pointer" }}>
+              <ArrowBackIcon
+                onClick={() => setAnalysis(null)}
+                style={{
+                  fontSize: "3rem",
+                  padding: "0.5rem",
+                  margin: "0.5rem",
+                  color: "#666",
+                  transition: "color 0.2s ease-in-out",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "#1976d2";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "#666";
+                }}
+              />
+            </div>
+            <StudentFilter />
+          </div>
+
+          <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
+            <h2 className="text-2xl font-bold text-foreground mb-1">Course:</h2>
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              {(analysis?.courseName as string) || "Course Reports"}
+            </h1>
+            <p>
+              Showing data for {selectedStudentIds.length} selected student
+              {selectedStudentIds.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+
+          {/* Collective Stats Section */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h2
+              className="text-2xl font-bold text-foreground mb-1"
+              style={{ padding: "0 2rem" }}
+            >
+              Combined Statistics
+            </h2>
+            <StudentStats students={selectedStudents} />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="w-[99%] mx-auto my-2 shadow-md transition-shadow">
+      <CardContent className="p-4">
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            marginBottom: "2rem",
           }}
         >
           <div style={{ cursor: "pointer" }}>
@@ -567,252 +624,214 @@ export default function ClassCharts({
           <StudentFilter />
         </div>
 
-        <div style={{ marginBottom: "2rem" }}>
-          <h3 style={{ textAlign: "center" }}>
-            Student Statistics for {analysis?.courseName as string}
-          </h3>
-          <p style={{ textAlign: "center" }}>
-            Showing data for {selectedStudentIds.length} selected student
-            {selectedStudentIds.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-
-        {/* Collective Stats Section */}
-        <div style={{ marginBottom: "3rem", padding: "0 2rem" }}>
-          <h3>Combined Statistics</h3>
-          <StudentStats students={selectedStudents} />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div
-        style={{ display: "flex", alignItems: "center", marginBottom: "2rem" }}
-      >
-        <div style={{ cursor: "pointer" }}>
-          <ArrowBackIcon
-            onClick={() => setAnalysis(null)}
+        {isAnalysisEmpty() ? (
+          <div
             style={{
-              fontSize: "3rem",
-              padding: "0.5rem",
-              margin: "0.5rem",
+              textAlign: "center",
+              padding: "4rem 2rem",
               color: "#666",
-              transition: "color 0.2s ease-in-out",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#1976d2";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#666";
-            }}
-          />
-        </div>
-        <StudentFilter />
-      </div>
-
-      {isAnalysisEmpty() ? (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "4rem 2rem",
-            color: "#666",
-          }}
-        >
-          <h2 style={{ marginBottom: "1rem", color: "#333" }}>
-            No Data Available
-          </h2>
-          <p style={{ fontSize: "1.1rem" }}>
-            No data available for this course. This could mean:
-          </p>
-          <ul
-            style={{
-              textAlign: "left",
-              display: "inline-block",
-              marginTop: "1rem",
-              fontSize: "1rem",
             }}
           >
-            <li>No conversations have been recorded yet</li>
-            <li>No modules have been created</li>
-            <li>No students have interacted with the course</li>
-          </ul>
-        </div>
-      ) : (
-        <>
-          {/* Date Range Selector */}
-          {availableDates.length > 0 && (
-            <div style={{ marginBottom: "2rem" }}>
-              <h3 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                {(analysis?.courseName as string) || "Course Reports"}
-              </h3>
-              <p
-                style={{
-                  textAlign: "center",
-                  fontWeight: 500,
-                }}
-              >
-                Select a date range to filter data
-              </p>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "1rem",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                  }}
-                >
-                  <label
-                    htmlFor="startDate"
-                    style={{ marginBottom: "0.5rem", fontWeight: 500 }}
-                  >
-                    Start Date:
-                  </label>
-                  <input
-                    type="date"
-                    id="startDate"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    style={{
-                      padding: "0.5rem",
-                      borderRadius: 4,
-                      border: "1px solid #ccc",
-                      fontSize: "0.9rem",
-                    }}
-                  />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                  }}
-                >
-                  <label
-                    htmlFor="endDate"
-                    style={{ marginBottom: "0.5rem", fontWeight: 500 }}
-                  >
-                    End Date:
-                  </label>
-                  <input
-                    type="date"
-                    id="endDate"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    style={{
-                      padding: "0.5rem",
-                      borderRadius: 4,
-                      border: "1px solid #ccc",
-                      fontSize: "0.9rem",
-                    }}
-                  />
-                </div>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  marginBottom: "1rem",
-                }}
-              >
-                <button
-                  onClick={() => {
-                    if (availableDates.length > 0) {
-                      const firstDate = availableDates[0];
-                      const lastDate =
-                        availableDates[availableDates.length - 1];
-                      setStartDate(firstDate);
-                      setEndDate(lastDate);
-                    }
-                  }}
-                  style={{
-                    marginRight: "0.5rem",
-                    padding: "0.3rem 0.8rem",
-                    borderRadius: 4,
-                    border: "1px solid #1976d2",
-                    background: "#fff",
-                    color: "#1976d2",
-                    cursor: "pointer",
-                  }}
-                >
-                  Select All Dates
-                </button>
-                <button
-                  onClick={() => {
-                    setStartDate("");
-                    setEndDate("");
-                  }}
-                  style={{
-                    padding: "0.3rem 0.8rem",
-                    borderRadius: 4,
-                    border: "1px solid #e53935",
-                    background: "#fff",
-                    color: "#e53935",
-                    cursor: "pointer",
-                  }}
-                >
-                  Clear Selection
-                </button>
-              </div>
-            </div>
-          )}
-          {/* Daily Charts Section */}
-          <div style={{ marginBottom: "3rem" }}>
-            <div
+            <h2 className="text-2xl font-bold text-foreground mb-1">
+              No Data Available
+            </h2>
+            <p style={{ fontSize: "1.1rem" }}>
+              No data available for this course. This could mean:
+            </p>
+            <ul
               style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "1.5rem",
-                alignItems: "start",
-                padding: "0 2rem",
+                textAlign: "left",
+                display: "inline-block",
+                marginTop: "1rem",
+                fontSize: "1rem",
               }}
-              className="chart-grid"
             >
-              <div style={{ marginBottom: "1rem" }}>
-                <h3>Daily Conversation Lengths</h3>
-                <div ref={lengthsRef} />
-              </div>
-
-              <div style={{ marginBottom: "1rem" }}>
-                <h3>Daily Conversation Counts</h3>
-                <div ref={countsRef} />
-              </div>
-            </div>
+              <li>No conversations have been recorded yet</li>
+              <li>No modules have been created</li>
+              <li>No students have interacted with the course</li>
+            </ul>
           </div>
-
-          {/* Module Usage & Classification Charts Section */}
-          <div style={{ marginBottom: "3rem" }}>
-            {/* Daily Charts Grid */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "1.5rem",
-                alignItems: "start",
-                padding: "0 2rem",
-              }}
-              className="chart-grid"
-            >
-              <div style={{ marginBottom: "1rem" }}>
-                <h3>Module Usage</h3>
-                {startDate && endDate ? (
-                  <div ref={moduleUsageRef} />
-                ) : (
-                  <EmptyChartPlaceholder title="Module Usage Data" />
-                )}
+        ) : (
+          <>
+            {/* Date Range Selector */}
+            {availableDates.length > 0 && (
+              <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
+                <h2 className="text-2xl font-bold text-foreground mb-1">
+                  Course:
+                </h2>
+                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                  {(analysis?.courseName as string) || "Course Reports"}
+                </h1>
+                <p
+                  style={{
+                    fontWeight: 500,
+                    marginBottom: "1rem",
+                  }}
+                >
+                  Select a date range to filter data
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    marginBottom: "1rem",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <label
+                      htmlFor="startDate"
+                      style={{ marginBottom: "0.5rem", fontWeight: 500 }}
+                    >
+                      Start Date:
+                    </label>
+                    <input
+                      type="date"
+                      id="startDate"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      style={{
+                        padding: "0.5rem",
+                        borderRadius: 4,
+                        border: "1px solid #ccc",
+                        fontSize: "0.9rem",
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <label
+                      htmlFor="endDate"
+                      style={{ marginBottom: "0.5rem", fontWeight: 500 }}
+                    >
+                      End Date:
+                    </label>
+                    <input
+                      type="date"
+                      id="endDate"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      style={{
+                        padding: "0.5rem",
+                        borderRadius: 4,
+                        border: "1px solid #ccc",
+                        fontSize: "0.9rem",
+                      }}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      if (availableDates.length > 0) {
+                        const firstDate = availableDates[0];
+                        const lastDate =
+                          availableDates[availableDates.length - 1];
+                        setStartDate(firstDate);
+                        setEndDate(lastDate);
+                      }
+                    }}
+                    style={{
+                      marginRight: "0.5rem",
+                      padding: "0.3rem 0.8rem",
+                      borderRadius: 4,
+                      border: "1px solid #1976d2",
+                      background: "#fff",
+                      color: "#1976d2",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Select All Dates
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStartDate("");
+                      setEndDate("");
+                    }}
+                    style={{
+                      padding: "0.3rem 0.8rem",
+                      borderRadius: 4,
+                      border: "1px solid #e53935",
+                      background: "#fff",
+                      color: "#e53935",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Clear Selection
+                  </button>
+                </div>
               </div>
+            )}
+            {/* Daily Charts Section */}
+            <div style={{ marginBottom: "3rem" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "1.5rem",
+                  alignItems: "start",
+                  padding: "0 2rem",
+                }}
+                className="chart-grid"
+              >
+                <div style={{ marginBottom: "1rem" }}>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    Daily Conversation Lengths
+                  </h3>
+                  <div ref={lengthsRef} />
+                </div>
 
-              {/* <div style={{ marginBottom: "1rem" }}>
+                <div style={{ marginBottom: "1rem" }}>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    Daily Conversation Counts
+                  </h3>
+                  <div ref={countsRef} />
+                </div>
+              </div>
+            </div>
+
+            {/* Module Usage & Classification Charts Section */}
+            <div style={{ marginBottom: "3rem" }}>
+              {/* Daily Charts Grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "1.5rem",
+                  alignItems: "start",
+                  padding: "0 2rem",
+                }}
+                className="chart-grid"
+              >
+                <div style={{ marginBottom: "1rem" }}>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    Module Usage
+                  </h3>
+                  {startDate && endDate ? (
+                    <div ref={moduleUsageRef} />
+                  ) : (
+                    <EmptyChartPlaceholder title="Module Usage Data" />
+                  )}
+                </div>
+
+                {/* <div style={{ marginBottom: "1rem" }}>
                 <h3>Student Chat Classification</h3>
                 {startDate && endDate ? (
                   showClassificationChart ? (
@@ -870,10 +889,11 @@ export default function ClassCharts({
                   <EmptyChartPlaceholder title="Classification Data" />
                 )}
               </div> */}
+              </div>
             </div>
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

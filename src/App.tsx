@@ -117,11 +117,11 @@ function App(): JSX.Element {
           localStorage.removeItem("papyrusai_access_token");
           localStorage.removeItem("papyrusai_user");
           setUser(null);
-          // window.location.replace(
-          //   process.env.REACT_APP_LOGIN_URL
-          //     ? process.env.REACT_APP_LOGIN_URL
-          //     : ""
-          // );
+          window.location.replace(
+            process.env.REACT_APP_LOGIN_URL
+              ? process.env.REACT_APP_LOGIN_URL
+              : ""
+          );
         }
       });
     } else if (user && (!user.name || !user.family_name || user.name === "")) {

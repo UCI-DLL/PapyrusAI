@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import {
-  Button,
-  TextField,
-} from "@mui/material";
+import { Button } from "../../components/ui/button";
+import { Textarea } from "../../components/ui/textarea";
+import { Label } from "../../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Alert, AlertDescription } from "../../components/ui/alert";
 import useSpeechRecognition from "../../utility/useSpeechRecognitionHook";
-import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
-import StopIcon from '@mui/icons-material/Stop';
-
+import { Mic, MicOff, Send, MessageSquare } from 'lucide-react';
 
 interface ChatWizardProps {
   returnSpeechText: (text: string) => void;
@@ -15,7 +14,6 @@ interface ChatWizardProps {
 export default function SpeechToTextModal({
   returnSpeechText,
 }: ChatWizardProps): JSX.Element {
-  //Need to save the index of the document just in case some documents are the same name
   const [text, setText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { transcript, startListening, stopListening, hasRecognitionSupport, isListening } = useSpeechRecognition();
@@ -25,77 +23,95 @@ export default function SpeechToTextModal({
   }, []);
 
   useEffect(() => {
-    //add to the new transcript to the end of the current text
     setText(prev => (prev + transcript))
   }, [transcript]);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setText(e.target.value);
   }
 
   return (
-    <div className="chat__wizard">
-      <div style={{ marginBottom: "0.4rem" }}>
-        When you are ready to record your message, click “Start Listening”.
-        When you are done recording your message, click “Stop Listening”,
-        then wait for your message to be transcribed. You can edit the transcribed message.
-        Once you are satisfied with your message, click “Send Message” to send your message to the AI.
-      </div>
-      <div className="chat__wizard__modal">
-        {hasRecognitionSupport ? (
-          <>
-            <div>
-              {isListening ? (
-                <Button
-                  onClick={() => {
-                    stopListening()
-                  }}
-                  variant="outlined"
-                  sx={{ width: "100%" }}
-                >
-                  <StopIcon />
-                  Stop Listening
-                </Button>
-              ) : (
-                <Button variant="outlined" sx={{ width: "100%" }} onClick={startListening}>
-                  <KeyboardVoiceIcon />
-                  Start Listening
-                </Button>
-              )}
-            </div>
-          </>
-        ) : (
-          <div>Your browser has no speech recognition support.</div>
-        )}
+    <div className="p-4 space-y-4">
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            Voice to Text
+          </CardTitle>
+          <CardDescription>
+            Record your message using voice recognition, then edit and send it to the AI
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertDescription className="text-sm">
+              When you are ready to record your message, click "Start Listening". 
+              When you are done recording, click "Stop Listening", then wait for your message to be transcribed. 
+              You can edit the transcribed message before sending it to the AI.
+            </AlertDescription>
+          </Alert>
 
-        <TextField
-          name="text"
-          label={"Message"}
-          autoFocus
-          fullWidth
-          sx={{ margin: ".5rem 0" }}
-          multiline
-          minRows={3}
-          maxRows={6}
-          value={text}
-          onChange={handleChange}
-          InputLabelProps={{ shrink: true }}
-          disabled={isLoading}
-        />
-        <div>
-          <Button
-            sx={{ width: "100%" }}
-            variant="contained"
-            onClick={() => {
-              setIsLoading(true);
-              returnSpeechText(text);
-              setText("");
-            }}
-          >
-            Send Message
-          </Button>
-        </div>
-      </div>
+          {hasRecognitionSupport ? (
+            <div className="space-y-4">
+              <div>
+                {isListening ? (
+                  <Button
+                    onClick={stopListening}
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                  >
+                    <MicOff className="mr-2 h-4 w-4" />
+                    Stop Listening
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    size="lg"
+                    onClick={startListening}
+                  >
+                    <Mic className="mr-2 h-4 w-4" />
+                    Start Listening
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="message">Message</Label>
+                <Textarea
+                  id="message"
+                  name="text"
+                  placeholder="Your transcribed message will appear here..."
+                  className="min-h-[120px] resize-none"
+                  value={text}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setIsLoading(true);
+                  returnSpeechText(text);
+                  setText("");
+                }}
+                disabled={isLoading || !text.trim()}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                Send Message
+              </Button>
+            </div>
+          ) : (
+            <Alert variant="destructive">
+              <AlertDescription>
+                Your browser does not support speech recognition. Please type your message manually or try using a different browser.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

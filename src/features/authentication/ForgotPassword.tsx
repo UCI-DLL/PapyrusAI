@@ -1,5 +1,11 @@
-import { Box, Button, FormLabel, Link, TextField } from "@mui/material";
 import React, { useState } from "react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Loader2, KeyRound, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 // import { useNavigate } from "react-router";
 
 
@@ -64,42 +70,77 @@ export default function ForgotPassword(props: ForgotPasswordProps): JSX.Element 
   }
 
   return (
-    <div className="authentication">
-      <div className="authentication__logo">
-        <img src="/dll-logo-nobackground.png" alt="PapyrusAI logo" />
-        <h1 className="">PapyrusAI</h1>
-      </div>
-      <Box className="login">
-        <form onSubmit={handleSubmit}>
-          <FormLabel sx={{ margin: ".5rem 0" }}>Forgot Password?</FormLabel>
-          <TextField
-            name="username"
-            label="Email"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.username}
-            onChange={handleChange}
-            error={usernameError !== ""}
-            helperText={usernameError}
-            disabled={isLoading}
-          />
-          <Button
-            sx={{ width: "100%" }}
-            variant="contained"
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isLoading}
-          >
-            Send Verification Code
-          </Button>
-          <hr />
-          <div>
-            <span>Not a user yet?&nbsp;</span>
-            <Link href={"/register"}>Create Account</Link>
+    <main className="bg-background text-foreground min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <header className="text-center space-y-4">
+          <div className="flex items-center justify-center">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-primary/10 rounded-full blur-xl" />
+              <BookOpen className="relative h-16 w-16 text-primary" />
+            </div>
           </div>
-        </form>
-      </Box>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">PapyrusAI</h1>
+            <p className="text-muted-foreground">Reset your password to continue</p>
+          </div>
+        </header>
 
-    </div>
+        <Card className="border shadow-lg">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-semibold flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              Forgot Password?
+            </CardTitle>
+            <CardDescription>
+              Enter your email address and we'll send you a verification code to reset your password
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Email</Label>
+                <Input
+                  id="username"
+                  name="username"
+                  type="email"
+                  placeholder="your.email@school.edu"
+                  value={session.username}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className={usernameError ? "border-destructive" : ""}
+                />
+                {usernameError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{usernameError}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+                onClick={handleSubmit}
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send Verification Code
+              </Button>
+
+              <div className="border-t pt-4">
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <Link 
+                    to="/register" 
+                    className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+                  >
+                    Create Account
+                  </Link>
+                </p>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
   )
 }

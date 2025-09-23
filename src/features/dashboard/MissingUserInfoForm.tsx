@@ -1,6 +1,15 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserType } from "../../utility/types/UserTypes";
-import { Button, Box, TextField, FormLabel, FormControl, RadioGroup, FormControlLabel, Radio, FormHelperText } from "@mui/material";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import Post from "../../utility/Post";
 import { postUserData } from "../../utility/endpoints/UserEndpoints";
 import { changeTheme } from "../../utility/Themes";
@@ -9,35 +18,35 @@ import { AlertContext } from "../../utility/context/AlertContext";
 
 /**
  * This form is to update user's missing data
- * Note: This is hard coded with only name and family_name 
+ * Note: This is hard coded with only name and family_name
  */
 
 interface MissingUserInfoFormProps {
-  user: UserType | undefined,
-  closeForm: (user: UserType) => void,
-  requireUpdate?: boolean,
+  user: UserType | undefined;
+  closeForm: (user: UserType) => void;
+  requireUpdate?: boolean;
 }
 
 export default function MissingUserInfoForm({
   user,
   closeForm,
-  requireUpdate = true
+  requireUpdate = true,
 }: MissingUserInfoFormProps): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   //New user information
   const [session, setSession] = useState<{
-    name: string,
-    family_name: string,
-    theme: string, //"light" | "dark" | "colorful-light" | "colorful-dark",
+    name: string;
+    family_name: string;
+    theme: string; //"light" | "dark",
   }>({
     name: "",
     family_name: "",
     theme: "light",
   });
   const [errors, setErrors] = useState<{
-    name: string,
-    family_name: string,
-    theme: string,
+    name: string;
+    family_name: string;
+    theme: string;
   }>({
     name: "",
     family_name: "",
@@ -48,20 +57,29 @@ export default function MissingUserInfoForm({
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close
-    if (user && user.name && user.name !== "" && requireUpdate && user.family_name) {
+    if (
+      user &&
+      user.name &&
+      user.name !== "" &&
+      requireUpdate &&
+      user.family_name
+    ) {
       //if the user has both name, then close modal
       //NOTE: family name optional
       closeForm(user);
     } else {
       //set new user data based on old data
       if (user && user.name && user.name !== "") {
-        setSession((prev) => ({ ...prev, name: user.name }))
+        setSession((prev) => ({ ...prev, name: user.name }));
       }
       if (user && user.family_name && user.family_name !== "") {
-        setSession((prev) => ({ ...prev, family_name: user.family_name }))
+        setSession((prev) => ({ ...prev, family_name: user.family_name }));
       }
       if (user && user["custom:theme"] && user["custom:theme"] !== "") {
-        setSession((prev) => ({ ...prev, theme: user["custom:theme"] }))
+        // Map colorful themes to light theme
+        const normalizedTheme =
+          user["custom:theme"] === "dark" ? "dark" : "light";
+        setSession((prev) => ({ ...prev, theme: normalizedTheme }));
       }
       setIsLoading(false);
     }
@@ -70,11 +88,11 @@ export default function MissingUserInfoForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (session.name === "") {
-      setErrors((prev) => ({ ...prev, name: "Name missing" }))
+      setErrors((prev) => ({ ...prev, name: "Name missing" }));
     }
     // else if(session.family_name === "") {
     //   setErrors((prev) => ({...prev, family_name: "Family name missing"}))
-    // } 
+    // }
     else {
       // set is loading
       setIsLoading(true);
@@ -85,15 +103,15 @@ export default function MissingUserInfoForm({
             //close modal if user data was updated
             closeForm(res.data);
             // localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-            setAlert({ message: "Account Updated!", type: "success" })
+            setAlert({ message: "Account Updated!", type: "success" });
           }
         } else {
           // set errors
-          setErrors({ name: res.data, family_name: res.data, theme: res.data })
+          setErrors({ name: res.data, family_name: res.data, theme: res.data });
         }
-        // set is loading back 
+        // set is loading back
         setIsLoading(false);
-      })
+      });
     }
   }
 
@@ -106,73 +124,115 @@ export default function MissingUserInfoForm({
     const root = document.documentElement;
     if (user) {
       setUser({ ...user, "custom:theme": e.target.value });
-      localStorage.setItem("papyrusai_user", JSON.stringify({ ...user, "custom:theme": e.target.value }));
+      localStorage.setItem(
+        "papyrusai_user",
+        JSON.stringify({ ...user, "custom:theme": e.target.value })
+      );
     }
-    if (e.target.value === "dark") {
-      changeTheme(root, "dark");
-    } else if (e.target.value === "light") {
-      changeTheme(root, "light");
-    } else if (e.target.value === "colorful-light") {
-      changeTheme(root, "colorful-light");
-    } else if (e.target.value === "colorful-dark") {
-      changeTheme(root, "colorful-dark");
-    } else { //default is light
-      changeTheme(root, "light");
-    }
+    // Apply theme change - colorful themes will fallback to light in changeTheme function
+    changeTheme(root, e.target.value);
   }
 
   return (
-    <div className="missinguserinfo">
-      <Box className="missinguserinfo__add">
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
-          <FormLabel>Enter User Information</FormLabel>
-          <TextField
-            name="name"
-            label="Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.name}
-            onChange={handleChange}
-            error={errors.name !== ""}
-            helperText={errors.name}
-            disabled={isLoading}
-          />
-          <TextField
-            name="family_name"
-            label="Family Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.family_name}
-            onChange={handleChange}
-            error={errors.family_name !== ""}
-            helperText={errors.family_name}
-            disabled={isLoading}
-          />
-          <FormControl error={errors.theme !== ""}>
-            <FormLabel id="theme-radio">Theme</FormLabel>
+    <Card className="transition-all duration-300 hover:shadow-md">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-foreground">
+          Profile Information
+        </CardTitle>
+        <p className="text-muted-foreground text-sm">
+          Complete your profile to get started with PapyrusAI.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-medium">
+              First Name *
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              placeholder="Enter your first name"
+              value={session.name}
+              onChange={handleChange}
+              disabled={isLoading}
+              required
+              className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-describedby={errors.name ? "name-error" : undefined}
+            />
+            {errors.name && (
+              <p id="name-error" className="text-sm text-destructive" role="alert">
+                {errors.name}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="family_name" className="text-sm font-medium">
+              Last Name
+            </Label>
+            <Input
+              id="family_name"
+              name="family_name"
+              placeholder="Enter your last name"
+              value={session.family_name}
+              onChange={handleChange}
+              disabled={isLoading}
+              className={errors.family_name ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-describedby={errors.family_name ? "family-name-error" : undefined}
+            />
+            {errors.family_name && (
+              <p id="family-name-error" className="text-sm text-destructive" role="alert">
+                {errors.family_name}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">
+              Theme Preference
+            </Label>
             <RadioGroup
-              aria-labelledby="theme-radio"
-              name="theme"
               value={session.theme}
-              onChange={handleThemeChange}
+              onValueChange={(value) => {
+                const event = {
+                  target: { name: "theme", value },
+                } as React.ChangeEvent<HTMLInputElement>;
+                handleThemeChange(event);
+              }}
+              className="flex flex-col space-y-3"
+              aria-describedby={errors.theme ? "theme-error" : undefined}
             >
-              <FormControlLabel value="light" control={<Radio />} label="Light" />
-              <FormControlLabel value="dark" control={<Radio />} label="Dark" />
-              <FormControlLabel value="colorful-light" control={<Radio />} label="Colorful Light" />
-              <FormControlLabel value="colorful-dark" control={<Radio />} label="Colorful Dark" />
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="light" id="light" />
+                <Label htmlFor="light" className="text-sm font-normal cursor-pointer">
+                  Light theme
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="dark" id="dark" />
+                <Label htmlFor="dark" className="text-sm font-normal cursor-pointer">
+                  Dark theme
+                </Label>
+              </div>
             </RadioGroup>
-            <FormHelperText>{errors.theme}</FormHelperText>
-          </FormControl>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            type="submit"
-            disabled={isLoading}
+            {errors.theme && (
+              <p id="theme-error" className="text-sm text-destructive" role="alert">
+                {errors.theme}
+              </p>
+            )}
+          </div>
+
+          <Button 
+            type="submit" 
+            disabled={isLoading} 
+            className="w-full"
+            aria-label={isLoading ? "Saving profile information" : "Save profile information"}
           >
-            Save
+            {isLoading ? "Saving..." : "Save Profile"}
           </Button>
         </form>
-      </Box>
-    </div>
-  )
+      </CardContent>
+    </Card>
+  );
 }

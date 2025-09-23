@@ -1,20 +1,25 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useMemo,
+  useCallback,
+} from "react";
 import CourseList from "../course-groups/CourseList";
 import ModuleList from "../modules/ModuleList";
-import { Button, Divider } from "@mui/material";
+import { Button } from "../../components/ui/button";
 import { useNavigate } from "react-router";
 import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import { CourseType } from "../../utility/types/CourseTypes";
-import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
 import AddCourseForm from "../course-groups/AddCourseForm";
-import { Modal } from "../../components/Modal";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
-
+import { ExternalLink, EyeIcon, Loader2, PlusIcon, Target } from "lucide-react";
+import { Dialog, DialogTrigger } from "../../components/ui/dialog";
 
 export default function Dashboard(): JSX.Element {
   let navigator = useNavigate();
@@ -22,30 +27,26 @@ export default function Dashboard(): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  //open the modal for a user to add a course
   const [showAddCourseModal, setShowAddCourseModal] = useState<boolean>(false);
   const [starred, setStarred] = useState<UserStarred | undefined>();
 
   useEffect(() => {
     const controller = new AbortController();
     if (!showAddCourseModal) {
-      getCourses(controller.signal)
-      getStarred(controller.signal)
+      getCourses(controller.signal);
+      getStarred(controller.signal);
     }
 
     return () => {
       controller.abort();
     };
-
-    // eslint-disable-next-line
   }, []);
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
-    Get(getCourseList(), signal).then(res => {
+    Get(getCourseList(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
-          //get the list of all courses for this user
           setCourseList(res.data);
           setIsLoading(false);
         }
@@ -54,20 +55,21 @@ export default function Dashboard(): JSX.Element {
       } else {
         if (res === undefined) {
         } else {
-          // handle error
           setCourseList([]);
           setIsLoading(false);
-          setAlert({ message: "Encountered an error. Please try again later.", type: "error" });
+          setAlert({
+            message: "Encountered an error. Please try again later.",
+            type: "error",
+          });
         }
       }
     });
   }
 
   function getStarred(signal: AbortSignal) {
-    Get(getUserFavoritingData(), signal).then(res => {
+    Get(getUserFavoritingData(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
-          //get the list of all favorited for this specific user
           setStarred(res.data);
         }
       } else if (res && res.status === 401) {
@@ -75,97 +77,236 @@ export default function Dashboard(): JSX.Element {
       } else {
         if (res === undefined) {
         } else {
-          // handle error
         }
       }
     });
   }
 
-  function refreshList() {
+  const refreshList = useCallback(() => {
     const controller = new AbortController();
-    getCourses(controller.signal)
-    getStarred(controller.signal)
+    getCourses(controller.signal);
+    getStarred(controller.signal);
+  }, []);
+
+  const starredCourses = useMemo(
+    () => starred?.courses ?? [],
+    [starred?.courses]
+  );
+
+  const orderedCourses = useMemo(
+    () => orderCourseRecentlyCreatedAndStarred(courseList, starredCourses),
+    [courseList, starredCourses]
+  );
+
+  const coursesWithRecentModules = useMemo(
+    () => mostRecentModules(orderedCourses),
+    [orderedCourses]
+  );
+
+  const isInstructor = useMemo(
+    () =>
+      user?.groups.includes(
+        process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
+      ),
+    [user?.groups]
+  );
+
+  if (isLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <Loader2
+            className="h-8 w-8 animate-spin text-primary"
+            aria-hidden="true"
+          />
+          <p className="text-muted-foreground">Loading Dashboard</p>
+        </div>
+      </div>
+    );
   }
 
-  return !isLoading ? (
-    <div className="dashboard">
-      <Modal
-        isOpen={showAddCourseModal}
-        title={"Join course by sign up code"}
-        onRequestClose={() => setShowAddCourseModal(false)}
-        actions={
-          <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setShowAddCourseModal(false)}>
-            Cancel
-          </Button>
-        }
-      >
-        <AddCourseForm
-          closeForm={() => {
-            //then close modal
-            setShowAddCourseModal(false);
-          }}
-        />
-      </Modal>
-
-      <div className="dashboard__section-header">
-        <h3>My Courses</h3>
-        <div>
-          <Button onClick={() => navigator("/courses")}>View All Courses</Button>
-          &nbsp;&nbsp;&nbsp;
-          {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
-            <Button variant="outlined" onClick={() => navigator("/createcourse")}>Create Course</Button>
-          )}
-          &nbsp;&nbsp;&nbsp;
-          <Button variant="contained" onClick={() => setShowAddCourseModal(true)}>Join Course</Button>
-        </div>
-      </div>
-      <hr />
-      {courseList.length > 0 ? (
-        <CourseList
-          list={orderCourseRecentlyCreatedAndStarred(courseList, starred && starred.courses ? starred.courses : []).slice(0, 6)}
-          refreshList={refreshList}
-          starredList={starred && starred.courses ? starred.courses : []}
-        />
-      ) : <></>}
-
-      &nbsp;&nbsp;&nbsp;
-
-      <div className="dashboard__section-header">
-        <h3>Recent Modules</h3>
-        <div>
-          <Button onClick={() => navigator("/modules")}>View All Modules</Button>
-        </div>
-      </div>
-      <hr />
-      {courseList.length > 0 && mostRecentModules(orderCourseRecentlyCreatedAndStarred(courseList, starred && starred.courses ? starred.courses : [])).map((course, index) => {
-        return course.modules.length > 0 ? (
-          <div style={{ width: "100%" }} key={index}>
-            <ModuleList
-              course={({ ...course, modules: course.mostRecentItem ? [course.mostRecentItem] : [] })}
-              refreshList={refreshList}
-              starredList={starred ? starred : undefined}
-            />
-            <Divider />
+  return (
+    <main className="bg-background text-foreground p-4 space-y-6">
+      {/* Standard Page Header Pattern */}
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
+          >
+            <Target size={192} className="text-primary" />
           </div>
-        ) : null
-      })}
-    </div>
-  ) : (
-    <LinearProgress />
-  )
+
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+              Welcome back,{" "}
+              <span className="text-primary">{user?.name}!</span>
+            </h1>
+            <p className="text-muted-foreground max-w-2xl text-base leading-6">
+              Continue your learning journey and unlock your potential.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      {/* Courses Section */}
+      <section aria-labelledby="courses-heading">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2
+              id="courses-heading"
+              className="text-2xl font-bold text-foreground mb-1"
+            >
+              My Courses
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Continue your learning journey
+            </p>
+          </div>
+          <nav
+            className="flex flex-col md:flex-row gap-2"
+            role="toolbar"
+            aria-label="Course actions"
+          >
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigator("/courses")}
+              aria-label="View all courses"
+            >
+              <EyeIcon className="w-4 h-4" aria-hidden="true" />
+              View All
+            </Button>
+            {isInstructor && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigator("/createcourse")}
+                aria-label="Create new course"
+              >
+                <PlusIcon className="w-4 h-4" aria-hidden="true" />
+                Create Course
+              </Button>
+            )}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" aria-label="Join existing course">
+                  <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                  Join Course
+                </Button>
+              </DialogTrigger>
+              <AddCourseForm
+                closeForm={() => {
+                  setShowAddCourseModal(false);
+                }}
+              />
+            </Dialog>
+          </nav>
+        </header>
+
+        <div className="w-full">
+          {courseList.length > 0 ? (
+            <CourseList
+              list={orderedCourses.slice(0, 6)}
+              refreshList={refreshList}
+              starredList={starredCourses}
+            />
+          ) : (
+            <div
+              className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+              role="status"
+            >
+              <Target className="mx-auto h-12 w-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">No courses found</p>
+              <p className="text-sm">
+                No courses added yet. To join a course, click "Join Course" above.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Recent Modules Section */}
+      <section aria-labelledby="modules-heading">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2
+              id="modules-heading"
+              className="text-2xl font-bold text-foreground mb-1"
+            >
+              Recent Modules
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Pick up where you left off
+            </p>
+          </div>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigator("/modules")}
+            aria-label="View all modules"
+          >
+            <EyeIcon className="w-4 h-4" aria-hidden="true" />
+            View All
+          </Button>
+        </header>
+
+        <div className="w-full">
+          {courseList.length > 0 && coursesWithRecentModules.some(course => course.modules.length > 0) ? (
+            <div className="space-y-4">
+              {coursesWithRecentModules.map((course, index) => {
+                return course.modules.length > 0 ? (
+                  <div className="w-full" key={course.id || index}>
+                    <ModuleList
+                      course={{
+                        ...course,
+                        modules: course.mostRecentItem
+                          ? [course.mostRecentItem]
+                          : [],
+                      }}
+                      refreshList={refreshList}
+                      starredList={starred}
+                    />
+                  </div>
+                ) : null;
+              })}
+            </div>
+          ) : (
+            <div
+              className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+              role="status"
+            >
+              <Target className="mx-auto h-12 w-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">No recent modules</p>
+              <p className="text-sm">
+                {courseList.length === 0 
+                  ? "Join a course to access modules and start learning."
+                  : "No modules available in your courses yet."
+                }
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
+  );
 }
 
-//get the most recently created module within each course to display on dashboard
 function mostRecentModules(courses: Array<CourseType>) {
-  // Get the most recently created object in each subarray
-  const categoriesWithRecentItems = courses.map(course => {
-    const mostRecentItem = course.modules.length > 0
-      ? course.modules.reduce((latest, item) =>
-        item.id > latest.id ? item : latest
-      )
-      : null; // Handle empty items array
+  const categoriesWithRecentItems = courses.map((course) => {
+    const mostRecentItem =
+      course.modules.length > 0
+        ? course.modules.reduce((latest, item) =>
+            item.id > latest.id ? item : latest
+          )
+        : null;
 
     return { ...course, mostRecentItem };
   });
-  return categoriesWithRecentItems
+  return categoriesWithRecentItems;
 }

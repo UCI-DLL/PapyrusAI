@@ -1,27 +1,31 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
-  Button,
-  TextField,
-} from "@mui/material";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../../components/ui/dialog";
 import { TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import LinearProgress from '@mui/material/LinearProgress';
-import { Modal } from "../../components/Modal";
 import { UserContext } from "../../utility/context/UserContext";
-import {
-  postCreateUserFolder
-} from "../../utility/endpoints/FolderEndpoints";
+import { postCreateUserFolder } from "../../utility/endpoints/FolderEndpoints";
 import {
   getTagList,
   postCreateTag,
-  updateTag
+  updateTag,
 } from "../../utility/endpoints/TagsEndpoints";
 import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
 import Put from "../../utility/Put";
 import { onlyLettersAndNumbers } from "../../utility/Helpers";
 import ListFolders from "./ListFolders";
+import { Loader2, Tag, Folder, Trash2, Edit3 } from "lucide-react";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -33,20 +37,21 @@ export enum SortOptions {
 export enum OwnerTypeOptions {
   Any = "Any",
   "Me" = "Me",
-  "Organization" = "Organization"
+  "Organization" = "Organization",
 }
 
 export default function Library(): JSX.Element {
   let navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [openCreateFolderModal, setOpenCreateFolderModal] = useState<boolean>(false);
+  const [openCreateFolderModal, setOpenCreateFolderModal] =
+    useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>("");
-  const [openManageTagsModal, setOpenManageTagsModal] = useState<boolean>(false);
+  const [openManageTagsModal, setOpenManageTagsModal] =
+    useState<boolean>(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
   const [newTag, setNewTag] = useState<string>("");
   const { user } = useContext(UserContext);
-
 
   useEffect(() => {
     setAlert({ message: "", type: "info" });
@@ -55,7 +60,7 @@ export default function Library(): JSX.Element {
     setIsLoading(true);
 
     if (tagList.length === 0) {
-      getTags("", controller.signal)
+      getTags("", controller.signal);
     }
 
     return () => {
@@ -66,7 +71,7 @@ export default function Library(): JSX.Element {
 
   function getTags(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getTagList(limit, startKey), signal).then(res => {
+    Get(getTagList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
@@ -110,13 +115,16 @@ export default function Library(): JSX.Element {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
           //pop up notifying user of folder
-          setAlert({ message: "Folder Created", type: "success" })
+          setAlert({ message: "Folder Created", type: "success" });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
         // set errors
-        setAlert({ message: "Folder could not be created. Try again later.", type: "error" })
+        setAlert({
+          message: "Folder could not be created. Try again later.",
+          type: "error",
+        });
       }
       setOpenCreateFolderModal(false);
       setNewFolderName("");
@@ -130,37 +138,55 @@ export default function Library(): JSX.Element {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
           //pop up notifying user of tag
-          setAlert({ message: "Tag Created", type: "success" })
+          setAlert({ message: "Tag Created", type: "success" });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
         // set errors
-        setAlert({ message: "Tag could not be created. Try again later.", type: "error" })
+        setAlert({
+          message: "Tag could not be created. Try again later.",
+          type: "error",
+        });
       }
       setOpenManageTagsModal(false);
       refreshList();
     });
   }
 
-  function handleUpdateTag(oldTag: string, isDeleted: boolean, newTag?: string) {
+  function handleUpdateTag(
+    oldTag: string,
+    isDeleted: boolean,
+    newTag?: string
+  ) {
     setIsLoading(true);
-    const dataToSend = newTag ? {
-      name: newTag, id: oldTag, isDeleted: isDeleted
-    } : {
-      id: oldTag, isDeleted: isDeleted
-    }
+    const dataToSend = newTag
+      ? {
+          name: newTag,
+          id: oldTag,
+          isDeleted: isDeleted,
+        }
+      : {
+          id: oldTag,
+          isDeleted: isDeleted,
+        };
     Put(updateTag(oldTag), dataToSend).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
           //pop up notifying user of tag update
-          setAlert({ message: isDeleted ? "Tag Deleted" : "Tag Updated", type: "success" })
+          setAlert({
+            message: isDeleted ? "Tag Deleted" : "Tag Updated",
+            type: "success",
+          });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
         // set errors
-        setAlert({ message: "Tag could not be updated. Try again later.", type: "error" })
+        setAlert({
+          message: "Tag could not be updated. Try again later.",
+          type: "error",
+        });
       }
       setOpenManageTagsModal(false);
       refreshList();
@@ -168,177 +194,279 @@ export default function Library(): JSX.Element {
   }
 
   return !isLoading ? (
-    <div className="library">
-      {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
-        <Modal
-          isOpen={openManageTagsModal}
-          title={"Manage Tags"}
-          onRequestClose={() => setOpenManageTagsModal(false)}
-          actions={
-            <>
+    <div className="min-h-screen">
+      {user?.groups.includes(
+        process.env.REACT_APP_ADMIN
+          ? process.env.REACT_APP_ADMIN
+          : "PapyrusAIAdmin"
+      ) && (
+        <Dialog
+          open={openManageTagsModal}
+          onOpenChange={setOpenManageTagsModal}
+        >
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                Manage Tags
+              </DialogTitle>
+              <DialogDescription>
+                Create, edit, and delete tags for organizing content.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Existing Tags */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Existing Tags</h3>
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {tagList.length === 0 ? (
+                    <p className="text-muted-foreground text-sm text-center py-8">
+                      No tags found. Create your first tag below.
+                    </p>
+                  ) : (
+                    tagList.map((tag, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 p-3 rounded-md border"
+                      >
+                        <Input
+                          name={`${i}_tag`}
+                          className="flex-1"
+                          value={tag.name ? tag.name : tag.id}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLInputElement>
+                          ) => {
+                            setTagList((prev) => {
+                              if (onlyLettersAndNumbers(e.target.value)) {
+                                var list = [...prev];
+                                list[i].name = e.target.value;
+                                return list;
+                              } else {
+                                return prev;
+                              }
+                            });
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            handleUpdateTag(
+                              tag.id,
+                              false,
+                              tagList[i].name ?? ""
+                            )
+                          }
+                          size="sm"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleUpdateTag(tag.id, true)}
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Create New Tag */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Create New Tag</h3>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter tag name"
+                    value={newTag}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      if (onlyLettersAndNumbers(e.target.value)) {
+                        setNewTag(e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newTag.trim()) {
+                        handleCreateTag();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleCreateTag}
+                    disabled={!newTag.trim()}
+                  >
+                    <Tag className="h-4 w-4 mr-2" />
+                    Create
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
               <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => setOpenManageTagsModal(false)}>
+                variant="outline"
+                onClick={() => setOpenManageTagsModal(false)}
+              >
                 Close
               </Button>
-            </>
-          }
-        >
-          <div>
-            <div style={{ maxHeight: "20rem", overflowY: "scroll" }}>
-              &nbsp;
-              {tagList.map((tag, i) => {
-                return (
-                  <div key={i}>
-                    <div style={{ display: "flex", flexDirection: "row", width: "100%" }}>
-                      <TextField
-                        name={`${i}_tag`}
-                        fullWidth
-                        size={"small"}
-                        value={tag.name ? tag.name : tag.id}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-                          setTagList((prev) => {
-                            if (onlyLettersAndNumbers(e.target.value)) {
-                              var list = [...prev];
-                              list[i].name = e.target.value;
-                              return list;
-                            } else {
-                              return prev
-                            }
-                          })
-                        }}
-                      />
-                      &nbsp;
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        type="submit"
-                        onClick={() => handleUpdateTag(tag.id, false, tagList[i].name ?? "")}
-                        size="small"
-                        sx={{ whiteSpace: "nowrap" }}
-                      >
-                        Update
-                      </Button>
-                      &nbsp;
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={() => handleUpdateTag(tag.id, true)}
-                        size="small"
-                        sx={{ whiteSpace: "nowrap" }}
-                      >
-                        Delete
-                      </Button>
-
-                    </div>
-                    &nbsp;
-                  </div>
-                )
-              })}
-            </div>
-            &nbsp;
-            <hr />
-            &nbsp;
-            <form onSubmit={handleCreateTag} style={{ display: "flex", flexDirection: "row", width: "100%" }}>
-              <TextField
-                name="tag"
-                label="Create New Tag"
-                fullWidth
-                size={"small"}
-                value={newTag}
-                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-                  if (onlyLettersAndNumbers(e.target.value)) {
-                    setNewTag(e.target.value)
-                  }
-                }}
-              />
-              &nbsp;
-              <Button
-                variant="contained"
-                color="primary"
-                type="submit"
-                onClick={handleCreateTag}
-                size="small"
-                sx={{ whiteSpace: "nowrap" }}
-              >
-                Create Tag
-              </Button>
-            </form>
-          </div>
-        </Modal>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
-      <Modal
-        isOpen={openCreateFolderModal}
-        title={"New Folder"}
-        onRequestClose={() => setOpenCreateFolderModal(false)}
-        actions={
-          <>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => setOpenCreateFolderModal(false)}>
-              Close
-            </Button>
-          </>
-        }
+      <Dialog
+        open={openCreateFolderModal}
+        onOpenChange={setOpenCreateFolderModal}
       >
-        <div>
-          &nbsp;
-          <div>Enter a name for your personal folder, then click “Create Folder”. Your folder and its contents will only be visible to you.</div>
-          <form onSubmit={handleCreateFolder} style={{ display: "flex", flexDirection: "row", width: "100%" }}>
-            <TextField
-              name="foldername"
-              label="New Folder Name"
-              fullWidth
-              size={"small"}
-              value={newFolderName}
-              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-                setNewFolderName(e.target.value)
-              }}
-            />
-            &nbsp;
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              onClick={handleCreateFolder}
-              size="small"
-              sx={{ whiteSpace: "nowrap" }}
-            >
-              Create Folder
-            </Button>
-          </form>
-        </div>
-      </Modal>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Folder className="h-5 w-5" />
+              New Folder
+            </DialogTitle>
+            <DialogDescription>
+              Enter a name for your personal folder, then click "Create Folder".
+              Your folder and its contents will only be visible to you.
+            </DialogDescription>
+          </DialogHeader>
 
-      <div className="library__section-header">
-        <h3>My Library</h3>
-        <div>
-          {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
-            <Button variant="outlined" onClick={() => setOpenManageTagsModal(true)}>Manage Tags</Button>
-          )}
-          &nbsp;&nbsp;&nbsp;
-          {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
-            <Button variant="contained" onClick={() => setOpenCreateFolderModal(true)}>Create Folder</Button>
-          )}
-        </div>
+          <form onSubmit={handleCreateFolder} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="folder-name">Folder Name</Label>
+              <Input
+                id="folder-name"
+                name="foldername"
+                placeholder="Enter folder name"
+                value={newFolderName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setNewFolderName(e.target.value);
+                }}
+                required
+              />
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setOpenCreateFolderModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                type="submit"
+                onClick={handleCreateFolder}
+                className="flex items-center gap-2"
+                disabled={!newFolderName.trim()}
+              >
+                <Folder className="h-4 w-4" />
+                Create Folder
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <header className="animate-in slide-in-from-bottom-4 duration-700">
+          <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg mb-8">
+            <div
+              className="absolute top-0 right-0 w-48 h-48 opacity-10"
+              aria-hidden="true"
+            >
+              <Folder size={192} className="text-primary" />
+            </div>
+            <div className="relative z-10">
+              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                Library
+              </h1>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6 mb-4">
+                The library contains all of the conversation prompts and
+                documents hosted within PapyrusAI. By default, you have access
+                to all prompts designed and tested by the PapyrusAI research
+                team.
+              </p>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                You can click through the folders to browse our
+                researcher-created prompts. If you would like to use your own
+                assets (including your own prompts and documents) in your
+                course, you will need to host these within your own folder. For
+                more information on navigating the library, please see the&nbsp;
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.i0aofs3p0aio"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+                >
+                  "Library" section of our instructor guide.
+                </a>
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <section aria-labelledby="library-actions-heading">
+          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 id="library-actions-heading" className="text-2xl font-bold text-foreground mb-1">
+                Content Management
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Organize and manage your prompts, documents, and folders.
+              </p>
+            </div>
+            <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Library management actions">
+              {user?.groups.includes(
+                process.env.REACT_APP_ADMIN
+                  ? process.env.REACT_APP_ADMIN
+                  : "PapyrusAIAdmin"
+              ) && (
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenManageTagsModal(true)}
+                  className="flex items-center gap-2"
+                  aria-label="Manage content tags"
+                >
+                  <Tag className="h-4 w-4" aria-hidden="true" />
+                  Manage Tags
+                </Button>
+              )}
+              {user?.groups.includes(
+                process.env.REACT_APP_INSTRUCTOR
+                  ? process.env.REACT_APP_INSTRUCTOR
+                  : "PapyrusAIInstructors"
+              ) && (
+                <Button
+                  variant="default"
+                  onClick={() => setOpenCreateFolderModal(true)}
+                  className="flex items-center gap-2"
+                  aria-label="Create new folder"
+                >
+                  <Folder className="h-4 w-4" aria-hidden="true" />
+                  New Folder
+                </Button>
+              )}
+            </nav>
+          </header>
+
+          <ListFolders />
+        </section>
       </div>
-      <div>
-        The library contains all of the conversation prompts and documents hosted within PapyrusAI.
-        By default, you have access to all prompts designed and tested by the PapyrusAI research team.
-      </div>
-      <div style={{ margin: "0.4rem 0" }}>
-        You can click through the folders to browse our researcher-created prompts. If you would like to use
-        your own assets (including your own prompts and documents) in your course, you will need to host these
-        within your own folder. For more information on navigating the library, please see the <a
-          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.i0aofs3p0aio"
-          target="_blank" rel="noreferrer">“Library” section of our instructor guide
-        </a>.
-      </div>
-      <ListFolders />
     </div>
   ) : (
-    <LinearProgress />
-  )
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading Library</p>
+      </div>
+    </div>
+  );
 }

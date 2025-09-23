@@ -1,37 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
-  Button,
-  FormControl,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  Menu,
-  MenuItem,
-  OutlinedInput,
   Select,
-  SelectChangeEvent,
-  TextField,
-  Tooltip,
-} from "@mui/material";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../components/ui/popover";
+import { Calendar } from "../../components/ui/calendar";
 import { FolderType, TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import LinearProgress from '@mui/material/LinearProgress';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import TuneIcon from '@mui/icons-material/Tune';
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs';
-import { Folder } from "../../components/Folder";
+import {
+  Search,
+  Filter,
+  SlidersHorizontal,
+  Calendar as CalendarIcon,
+  Loader2,
+  Folder,
+} from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "../../lib/utils";
+import { FolderComponent } from "../../components/Folder";
 import {
   getOrgFolderList,
-  getUserFolderList
+  getUserFolderList,
 } from "../../utility/endpoints/FolderEndpoints";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
-
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -43,19 +47,20 @@ export enum SortOptions {
 export enum OwnerTypeOptions {
   Any = "Any",
   "Me" = "Me",
-  "Organization" = "Organization"
+  "Organization" = "Organization",
 }
 
 export enum StarredOptions {
   All = "All",
   Starred = "Starred",
-  "Not Starred" = "Not Starred"
+  "Not Starred" = "Not Starred",
 }
 
 interface ListFoldersProps {
   noShowMenu?: boolean;
   onClick?: (folderId: string, isOrgFolder: boolean) => void;
   disableFolderId?: string;
+  compactGrid?: boolean;
 }
 
 export default function ListFolders(props: ListFoldersProps): JSX.Element {
@@ -63,50 +68,48 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [orgFolderList, setOrgFolderList] = useState<Array<FolderType>>([]);
   const [userFolderList, setUserFolderList] = useState<Array<FolderType>>([]);
-  const [orgFilteredFolderList, setOrgFilteredFolderList] = useState<Array<FolderType>>([]);
-  const [userFilteredFolderList, setUserFilteredFolderList] = useState<Array<FolderType>>([]);
+  const [orgFilteredFolderList, setOrgFilteredFolderList] = useState<
+    Array<FolderType>
+  >([]);
+  const [userFilteredFolderList, setUserFilteredFolderList] = useState<
+    Array<FolderType>
+  >([]);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
   const [starred, setStarred] = useState<UserStarred | undefined>();
   const [filters, setFilters] = useState<{
-    search: string,
-    sort: SortOptions,
-    starred: StarredOptions,
-    owner: OwnerTypeOptions,
-    startDate: Dayjs | null,
-    endDate: Dayjs | null,
-    tags: string
+    sort: SortOptions;
+    starred: StarredOptions;
+    owner: OwnerTypeOptions;
+    startDate: Date | undefined;
+    endDate: Date | undefined;
+    tags: string;
   }>({
-    search: "", //title of folder or title or contents of prompts
     sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
     starred: StarredOptions.All,
     owner: OwnerTypeOptions.Any,
-    startDate: null,
-    endDate: null,
-    tags: ""
+    startDate: undefined,
+    endDate: undefined,
+    tags: "none",
   });
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
     setIsLoading(true);
     if (orgFolderList.length === 0) {
-      getOrgFolders("", controller.signal)
+      getOrgFolders("", controller.signal);
     }
     if (userFolderList.length === 0) {
-      getUserFolders("", controller.signal)
+      getUserFolders("", controller.signal);
     }
     if (tagList.length === 0) {
-      getTags("", controller.signal)
+      getTags("", controller.signal);
     }
 
-    getStarred(controller.signal)
+    getStarred(controller.signal);
 
     return () => {
       controller.abort();
@@ -118,27 +121,50 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     if (starred && starred.folders) {
       //Default Sort by newest and starred
       setOrgFolderList((prev) => {
-        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : [])
+        return orderFolderNewestCreatedAndStarred(
+          prev,
+          starred && starred.folders ? starred.folders : []
+        );
       });
       setOrgFilteredFolderList((prev) => {
-        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : [])
+        return orderFolderNewestCreatedAndStarred(
+          prev,
+          starred && starred.folders ? starred.folders : []
+        );
       });
       setUserFolderList((prev) => {
-        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : [])
+        return orderFolderNewestCreatedAndStarred(
+          prev,
+          starred && starred.folders ? starred.folders : []
+        );
       });
       setUserFilteredFolderList((prev) => {
-        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : [])
+        return orderFolderNewestCreatedAndStarred(
+          prev,
+          starred && starred.folders ? starred.folders : []
+        );
       });
     }
     //Note: only these ones cause they don't change that often
     // eslint-disable-next-line
-  }, [starred, orgFolderList, userFolderList])
+  }, [starred, orgFolderList, userFolderList]);
+
+  // Handle search filtering
+  useEffect(() => {
+    const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+    handleFilter(syntheticEvent);
+    // eslint-disable-next-line
+  }, [searchTerm]);
 
   function getOrgFolders(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getOrgFolderList(limit, startKey), signal).then(res => {
+    Get(getOrgFolderList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.folders && res.data.ScannedCount !== undefined) {
+        if (
+          res.data &&
+          res.data.folders &&
+          res.data.ScannedCount !== undefined
+        ) {
           //Get the list of all folders
           setOrgFolderList((prev) => [...prev, ...res.data.folders]);
           setOrgFilteredFolderList((prev) => [...prev, ...res.data.folders]);
@@ -169,9 +195,13 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
 
   function getUserFolders(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getUserFolderList(limit, startKey), signal).then(res => {
+    Get(getUserFolderList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.folders && res.data.ScannedCount !== undefined) {
+        if (
+          res.data &&
+          res.data.folders &&
+          res.data.ScannedCount !== undefined
+        ) {
           //Get the list of all folders
           setUserFolderList((prev) => [...prev, ...res.data.folders]);
           setUserFilteredFolderList((prev) => [...prev, ...res.data.folders]);
@@ -202,7 +232,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
 
   function getTags(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getTagList(limit, startKey), signal).then(res => {
+    Get(getTagList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
@@ -233,7 +263,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   }
 
   function getStarred(signal: AbortSignal) {
-    Get(getUserFavoritingData(), signal).then(res => {
+    Get(getUserFavoritingData(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //get the list of all favorited for this specific user
@@ -282,109 +312,143 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     }
 
     //handle starred filter
-    if (filters.starred as string === StarredOptions.All) {
+    if ((filters.starred as string) === StarredOptions.All) {
       //Do nothing
-    } else if (filters.starred as string === StarredOptions.Starred && starred && starred.folders) {
-      orgFilteredFolderList = orgFilteredFolderList.filter((x: FolderType) => starred.folders && starred.folders.some(y => y.folderId === x.id))
-      userFilteredFolderList = userFilteredFolderList.filter((x: FolderType) => starred.folders && starred.folders.some(y => y.folderId === x.id))
-    } else if (filters.starred as string === StarredOptions["Not Starred"] && starred && starred.folders) {
-      orgFilteredFolderList = orgFilteredFolderList.filter((x: FolderType) => starred.folders && !starred.folders.some(y => y.folderId === x.id))
-      userFilteredFolderList = userFilteredFolderList.filter((x: FolderType) => starred.folders && !starred.folders.some(y => y.folderId === x.id))
+    } else if (
+      (filters.starred as string) === StarredOptions.Starred &&
+      starred &&
+      starred.folders
+    ) {
+      orgFilteredFolderList = orgFilteredFolderList.filter(
+        (x: FolderType) =>
+          starred.folders && starred.folders.some((y) => y.folderId === x.id)
+      );
+      userFilteredFolderList = userFilteredFolderList.filter(
+        (x: FolderType) =>
+          starred.folders && starred.folders.some((y) => y.folderId === x.id)
+      );
+    } else if (
+      (filters.starred as string) === StarredOptions["Not Starred"] &&
+      starred &&
+      starred.folders
+    ) {
+      orgFilteredFolderList = orgFilteredFolderList.filter(
+        (x: FolderType) =>
+          starred.folders && !starred.folders.some((y) => y.folderId === x.id)
+      );
+      userFilteredFolderList = userFilteredFolderList.filter(
+        (x: FolderType) =>
+          starred.folders && !starred.folders.some((y) => y.folderId === x.id)
+      );
     }
 
     //handle searching
-    if (filters.search !== "") {
+    if (searchTerm !== "") {
       orgFilteredFolderList = orgFilteredFolderList.filter(
-        (folder: FolderType) => folder.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          folder.prompts.some((prompt) => prompt.prompt.toLowerCase().includes(filters.search.toLowerCase()))
+        (folder: FolderType) =>
+          folder.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          folder.prompts.some((prompt) =>
+            prompt.prompt.toLowerCase().includes(searchTerm.toLowerCase())
+          )
       );
       userFilteredFolderList = userFilteredFolderList.filter(
-        (folder: FolderType) => folder.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          folder.prompts.some((prompt) => prompt.prompt.toLowerCase().includes(filters.search.toLowerCase()))
+        (folder: FolderType) =>
+          folder.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          folder.prompts.some((prompt) =>
+            prompt.prompt.toLowerCase().includes(searchTerm.toLowerCase())
+          )
       );
     }
 
-    //handle tag 
-    if (filters.tags) {
+    //handle tag
+    if (filters.tags && filters.tags !== "none") {
       orgFilteredFolderList = orgFilteredFolderList.filter(
-        (folder: FolderType) => folder.prompts.some(p => p.tags.includes(filters.tags))
-      )
+        (folder: FolderType) =>
+          folder.prompts.some((p) => p.tags.includes(filters.tags))
+      );
       userFilteredFolderList = userFilteredFolderList.filter(
-        (folder: FolderType) => folder.prompts.some(p => p.tags.includes(filters.tags))
-      )
+        (folder: FolderType) =>
+          folder.prompts.some((p) => p.tags.includes(filters.tags))
+      );
     }
 
     // handle date filtering
-    //Note: have to do a lot of date converting
-    if (filters.startDate !== null) {
-      orgFilteredFolderList = orgFilteredFolderList.filter((folder: FolderType) => {
-        if (filters.startDate !== null) {
+    if (filters.startDate) {
+      orgFilteredFolderList = orgFilteredFolderList.filter(
+        (folder: FolderType) => {
           var date = new Date(parseInt(folder.id.substring(0, 13), 10));
-          if (dayjs(date.toISOString()) > filters.startDate) {
-            return folder
-          } else {
-            return false
-          }
-        } else {
-          return folder
+          return filters.startDate ? date > filters.startDate : true;
         }
-      });
-      userFilteredFolderList = userFilteredFolderList.filter((folder: FolderType) => {
-        if (filters.startDate !== null) {
+      );
+      userFilteredFolderList = userFilteredFolderList.filter(
+        (folder: FolderType) => {
           var date = new Date(parseInt(folder.id.substring(0, 13), 10));
-          if (dayjs(date.toISOString()) > filters.startDate) {
-            return folder
-          } else {
-            return false
-          }
-        } else {
-          return folder
+          return filters.startDate ? date > filters.startDate : true;
         }
-      });
+      );
     }
-    if (filters.endDate !== null) {
-      orgFilteredFolderList = orgFilteredFolderList.filter((folder: FolderType) => {
-        if (filters.endDate !== null) {
+    if (filters.endDate) {
+      orgFilteredFolderList = orgFilteredFolderList.filter(
+        (folder: FolderType) => {
           var date = new Date(parseInt(folder.id.substring(0, 13), 10));
-          if (dayjs(date.toISOString()) < filters.endDate) {
-            return folder
-          } else {
-            return false
-          }
-        } else {
-          return folder
+          return filters.endDate ? date < filters.endDate : true;
         }
-      });
-      userFilteredFolderList = userFilteredFolderList.filter((folder: FolderType) => {
-        if (filters.endDate !== null) {
+      );
+      userFilteredFolderList = userFilteredFolderList.filter(
+        (folder: FolderType) => {
           var date = new Date(parseInt(folder.id.substring(0, 13), 10));
-          if (dayjs(date.toISOString()) < filters.endDate) {
-            return folder
-          } else {
-            return false
-          }
-        } else {
-          return folder
+          return filters.endDate ? date < filters.endDate : true;
         }
-      });
+      );
     }
 
     // handle sorting
-    if (filters.sort as string === SortOptions.Ascending) {
-      orgFilteredFolderList = orderFolderAscendingNameAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
-      userFilteredFolderList = orderFolderAscendingNameAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
-    } else if (filters.sort as string === SortOptions.Descending) {
-      orgFilteredFolderList = orderFolderDescendingNameAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
-      userFilteredFolderList = orderFolderDescendingNameAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
-    } else if (filters.sort as string === SortOptions.Oldest) {
-      orgFilteredFolderList = orderFolderOldestCreatedAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
-      userFilteredFolderList = orderFolderOldestCreatedAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
-    } else if (filters.sort as string === SortOptions.Newest) {
-      orgFilteredFolderList = orderFolderNewestCreatedAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
-      userFilteredFolderList = orderFolderNewestCreatedAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
-    } else { //newest
-      orgFilteredFolderList = orderFolderNewestCreatedAndStarred(orgFilteredFolderList, starred && starred.folders ? starred.folders : [])
-      userFilteredFolderList = orderFolderNewestCreatedAndStarred(userFilteredFolderList, starred && starred.folders ? starred.folders : [])
+    if ((filters.sort as string) === SortOptions.Ascending) {
+      orgFilteredFolderList = orderFolderAscendingNameAndStarred(
+        orgFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+      userFilteredFolderList = orderFolderAscendingNameAndStarred(
+        userFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+    } else if ((filters.sort as string) === SortOptions.Descending) {
+      orgFilteredFolderList = orderFolderDescendingNameAndStarred(
+        orgFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+      userFilteredFolderList = orderFolderDescendingNameAndStarred(
+        userFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+    } else if ((filters.sort as string) === SortOptions.Oldest) {
+      orgFilteredFolderList = orderFolderOldestCreatedAndStarred(
+        orgFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+      userFilteredFolderList = orderFolderOldestCreatedAndStarred(
+        userFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+    } else if ((filters.sort as string) === SortOptions.Newest) {
+      orgFilteredFolderList = orderFolderNewestCreatedAndStarred(
+        orgFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+      userFilteredFolderList = orderFolderNewestCreatedAndStarred(
+        userFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+    } else {
+      //newest
+      orgFilteredFolderList = orderFolderNewestCreatedAndStarred(
+        orgFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
+      userFilteredFolderList = orderFolderNewestCreatedAndStarred(
+        userFilteredFolderList,
+        starred && starred.folders ? starred.folders : []
+      );
     }
 
     //Finally set the filtered lists
@@ -393,281 +457,362 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   }
 
   function handleResetFilters() {
+    setSearchTerm("");
     setFilters({
-      search: "", //title of folder or title or contents of prompts
       sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
       starred: StarredOptions.All,
       owner: OwnerTypeOptions.Any,
-      startDate: null,
-      endDate: null,
-      tags: ""
+      startDate: undefined,
+      endDate: undefined,
+      tags: "none",
     });
     setOrgFilteredFolderList(orgFolderList);
     setUserFilteredFolderList(userFolderList);
   }
 
-
   return !isLoading ? (
-    <div className="library">
-      {props.noShowMenu ? (
-        <div>
-          To add an asset (including prompts and documents) to your module, navigate to the folder in which the asset is hosted.
-          <span style={{ fontStyle: "italic" }}> Note: Assets must be created or uploaded in the Library before they can be added to a module.</span>
+    <div className="space-y-6">
+      {props.noShowMenu && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+          To add an asset (including prompts and documents) to your module,
+          navigate to the folder in which the asset is hosted.
+          <span className="italic">
+            {" "}
+            Note: Assets must be created or uploaded in the Library before they
+            can be added to a module.
+          </span>
         </div>
-      ) : ""}
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{
-          'aria-labelledby': 'basic-button',
-        }}
-      >
-        <div className="library__filter" key={"menu"}>
-          <div className="library__filter__title">
-            <div>
-              Filters
-            </div>
-            <IconButton
-              aria-label="close filter options"
-              sx={{ padding: "0" }}
-              id="close-filter-button"
-              onClick={handleClose}
-            >
-              <CloseIcon />
-            </IconButton>
+      )}
+
+      {/* Search and Filter Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search library..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <hr />
-          <TextField
-            name="search"
-            label="Has the words"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={filters.search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-              setFilters((prev) => ({ ...prev, search: e.target.value }))
-            }}
-          />
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="sort-select-label">Sort</InputLabel>
-            <Select
-              value={filters.sort}
-              onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, sort: SortOptions[e.target.value as keyof typeof SortOptions] }));
-              }}
-              label="Sort"
-              labelId="sort-select-label"
-              id="sort-select"
-              sx={{ width: 320, maxWidth: '100%' }}
-              notched={true}
-            >
-              {Object.keys(SortOptions).map(key => {
-                return (
-                  <MenuItem value={key} key={key}>{key}</MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="sort-select-label">Starred</InputLabel>
-            <Select
-              value={filters.starred}
-              onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, starred: StarredOptions[e.target.value as keyof typeof StarredOptions] }));
-              }}
-              label="Starred"
-              labelId="starred-select-label"
-              id="starred-select"
-              sx={{ width: 320, maxWidth: '100%' }}
-              notched={true}
-            >
-              {Object.keys(StarredOptions).map(key => {
-                return (
-                  <MenuItem value={key} key={key}>{key}</MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="creator-select-label">Owner</InputLabel>
-            <Select
-              value={filters.owner}
-              onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, owner: OwnerTypeOptions[e.target.value as keyof typeof OwnerTypeOptions] }));
-              }}
-              label="Owner"
-              labelId="creator-select-label"
-              id="creator-select"
-              sx={{ width: 320, maxWidth: '100%' }}
-            >
-              {Object.keys(OwnerTypeOptions).map((key) => {
-                return (
-                  <MenuItem value={key} key={key}>{key}</MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="tag-select-label">Tag</InputLabel>
-            <Select
-              value={filters.tags}
-              onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, tags: e.target.value }));
-              }}
-              label="Tags"
-              labelId="tag-select-label"
-              id="tag-select"
-              sx={{ width: 320, maxWidth: '100%' }}
-              notched={true}
-            >
-              {Object.values(tagList).map((tag, i) => {
-                return (
-                  <MenuItem value={tag.id} key={i}>{tag.id}</MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <span style={{ marginTop: "1rem" }}>Date Created</span>
-          <LocalizationProvider dateAdapter={AdapterDayjs} >
-            <DatePicker
-              label="Start Date"
-              value={filters.startDate}
-              onChange={(value) => {
-                setFilters(prev => ({ ...prev, startDate: value }))
-              }}
-              disabled={isLoading}
-            />
-          </LocalizationProvider>
-          <LocalizationProvider dateAdapter={AdapterDayjs} >
-            <DatePicker
-              label="End Date"
-              value={filters.endDate}
-              onChange={(value) => {
-                setFilters(prev => ({ ...prev, endDate: value }))
-              }}
-              disabled={isLoading}
-              sx={{ marginTop: "1rem" }}
-            />
-          </LocalizationProvider>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-around" }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={(e) => {
-              handleClose()
-              handleFilter(e)
-            }}
+          <Popover
+            open={isFilterPopoverOpen}
+            onOpenChange={setIsFilterPopoverOpen}
           >
-            Search
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={handleResetFilters}>
-            Clear
-          </Button>
-        </div>
-      </Menu>
-      {/* search bar */}
-      <form className="library__searchbar" onSubmit={handleFilter}>
-        <FormControl fullWidth>
-          <OutlinedInput
-            id="outlined-adornment-message"
-            placeholder="Search"
-            size="small"
-            value={filters.search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-              setFilters((prev) => ({ ...prev, search: e.target.value }))
-            }}
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="more filter options"
-                  edge="end"
-                  id="basic-button"
-                  aria-controls={open ? 'basic-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={open ? 'true' : undefined}
-                  onClick={handleClick}
-                >
-                  {
-                    <Tooltip
-                      title={"Advanced Search"}
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Filters
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96 p-0" align="start">
+              <div className="border-b px-4 py-3">
+                <div className="flex items-center gap-2 font-medium">
+                  <SlidersHorizontal className="h-5 w-5" />
+                  Filters
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Filter folders by date, tags, owner, and more.
+                </p>
+              </div>
+              <div className="space-y-6 p-4 max-h-96 overflow-y-auto">
+                <div className="space-y-2">
+                  <Label htmlFor="sort-select">Sort</Label>
+                  <Select
+                    value={filters.sort}
+                    onValueChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        sort: SortOptions[value as keyof typeof SortOptions],
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select sort order" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(SortOptions).map((key) => (
+                        <SelectItem value={key} key={key}>
+                          {key}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="starred-select">Starred</Label>
+                  <Select
+                    value={filters.starred}
+                    onValueChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        starred:
+                          StarredOptions[value as keyof typeof StarredOptions],
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by starred status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(StarredOptions).map((key) => (
+                        <SelectItem value={key} key={key}>
+                          {key}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="owner-select">Owner</Label>
+                  <Select
+                    value={filters.owner}
+                    onValueChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        owner:
+                          OwnerTypeOptions[
+                            value as keyof typeof OwnerTypeOptions
+                          ],
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by owner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(OwnerTypeOptions).map((key) => (
+                        <SelectItem value={key} key={key}>
+                          {key}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tag-select">Tag</Label>
+                  <Select
+                    value={filters.tags}
+                    onValueChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        tags: value,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by tag" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none" key="none">
+                        No filter
+                      </SelectItem>
+                      {tagList.map((tag, i) => (
+                        <SelectItem value={tag.id} key={i}>
+                          {tag.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Date Created</Label>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="start-date">Start Date</Label>
+                    <Popover
+                      open={startDateOpen}
+                      onOpenChange={setStartDateOpen}
                     >
-                      <TuneIcon />
-                    </Tooltip>
-                  }
-                </IconButton>
-              </InputAdornment>
-            }
-            startAdornment={
-              <InputAdornment position="start">
-                <IconButton
-                  aria-label="search"
-                  edge="start"
-                  type="submit"
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !filters.startDate && "text-muted-foreground"
+                          )}
+                          disabled={isLoading}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.startDate
+                            ? format(filters.startDate, "PPP")
+                            : "Pick a start date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={filters.startDate}
+                          onSelect={(date) => {
+                            setFilters((prev) => ({
+                              ...prev,
+                              startDate: date,
+                            }));
+                            setStartDateOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="end-date">End Date</Label>
+                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !filters.endDate && "text-muted-foreground"
+                          )}
+                          disabled={isLoading}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.endDate
+                            ? format(filters.endDate, "PPP")
+                            : "Pick an end date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={filters.endDate}
+                          onSelect={(date) => {
+                            setFilters((prev) => ({
+                              ...prev,
+                              endDate: date,
+                            }));
+                            setEndDateOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t p-4 flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleResetFilters}
+                  className="flex-1"
                 >
-                  {<SearchIcon />}
-                </IconButton>
-              </InputAdornment>
-            }
-          />
-        </FormControl>
-      </form>
-      <hr />
-      <div className="library__folder-list">
+                  Clear Filters
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    setIsFilterPopoverOpen(false);
+                    handleFilter(e);
+                  }}
+                  className="flex-1"
+                >
+                  Apply Filters
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      {/* Folder Grid */}
+      <div
+        className={cn(
+          "grid gap-6",
+          props.compactGrid
+            ? "grid-cols-1 sm:grid-cols-1 md:grid-cols-2"
+            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        )}
+      >
         {orgFilteredFolderList.map((folder: FolderType, i) => {
           if (props.disableFolderId && props.disableFolderId === folder.id) {
-            return <></>
+            return null;
           }
           return (
-            <div key={i}>
-              <Folder
-                isOrganizationFolder
-                displayName={folder.name}
-                onClick={() => props.onClick ? props.onClick(folder.id, true) : navigator(`/library/org/${folder.id}`)}
-                folder={folder}
-                keyy={`${i}org`}
-                refreshList={refreshList}
-                loading={loading}
-                isStarred={starred && starred.folders && starred.folders.some(c => c.folderId === folder.id)}
-                noShowMenu={props.noShowMenu}
-              />
-            </div>
-          )
+            <FolderComponent
+              key={`${i}org`}
+              isOrganizationFolder
+              displayName={folder.name}
+              onClick={() =>
+                props.onClick
+                  ? props.onClick(folder.id, true)
+                  : navigator(`/library/org/${folder.id}`)
+              }
+              folder={folder}
+              keyy={`${i}org`}
+              refreshList={refreshList}
+              loading={loading}
+              isStarred={
+                starred &&
+                starred.folders &&
+                starred.folders.some((c) => c.folderId === folder.id)
+              }
+              noShowMenu={props.noShowMenu}
+            />
+          );
         })}
         {userFilteredFolderList.map((folder: FolderType, i) => {
           if (props.disableFolderId && props.disableFolderId === folder.id) {
-            return <></>
+            return null;
           }
           return (
-            <div key={i}>
-              <Folder
-                displayName={folder.name}
-                onClick={() => props.onClick ? props.onClick(folder.id, false) : navigator(`/library/${folder.id}`)}
-                folder={folder}
-                keyy={`${i}`}
-                refreshList={refreshList}
-                loading={loading}
-                isStarred={starred && starred.folders && starred.folders.some(c => c.folderId === folder.id)}
-                noShowMenu={props.noShowMenu}
-              />
-            </div>
-          )
+            <FolderComponent
+              key={`${i}user`}
+              displayName={folder.name}
+              onClick={() =>
+                props.onClick
+                  ? props.onClick(folder.id, false)
+                  : navigator(`/library/${folder.id}`)
+              }
+              folder={folder}
+              keyy={`${i}`}
+              refreshList={refreshList}
+              loading={loading}
+              isStarred={
+                starred &&
+                starred.folders &&
+                starred.folders.some((c) => c.folderId === folder.id)
+              }
+              noShowMenu={props.noShowMenu}
+            />
+          );
         })}
       </div>
+
+      {/* Empty State */}
+      {orgFilteredFolderList.length === 0 && userFilteredFolderList.length === 0 && (
+        <div
+          className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+          role="status"
+        >
+          <Folder className="mx-auto h-12 w-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium mb-2">No folders found</p>
+          <p className="text-sm">
+            {searchTerm || filters.tags !== "none" || filters.starred !== StarredOptions.All
+              ? "Try adjusting your search or filters"
+              : "Create your first folder to get started organizing your content"}
+          </p>
+        </div>
+      )}
     </div>
   ) : (
-    <LinearProgress />
-  )
+    <div className="flex items-center justify-center py-8">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="text-muted-foreground">Loading Folders</p>
+    </div>
+  );
 }
 
-export function orderFolderAscendingNameAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
+export function orderFolderAscendingNameAndStarred(
+  list: Array<FolderType>,
+  starred: Array<{ folderId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.folderId === a.id);
-    const bIsFavorite = starred.some(m => m.folderId === b.id);
+    const aIsFavorite = starred.some((m) => m.folderId === a.id);
+    const bIsFavorite = starred.some((m) => m.folderId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -678,10 +823,13 @@ export function orderFolderAscendingNameAndStarred(list: Array<FolderType>, star
   });
 }
 
-export function orderFolderDescendingNameAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
+export function orderFolderDescendingNameAndStarred(
+  list: Array<FolderType>,
+  starred: Array<{ folderId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.folderId === a.id);
-    const bIsFavorite = starred.some(m => m.folderId === b.id);
+    const aIsFavorite = starred.some((m) => m.folderId === a.id);
+    const bIsFavorite = starred.some((m) => m.folderId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -692,10 +840,13 @@ export function orderFolderDescendingNameAndStarred(list: Array<FolderType>, sta
   });
 }
 
-export function orderFolderOldestCreatedAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
+export function orderFolderOldestCreatedAndStarred(
+  list: Array<FolderType>,
+  starred: Array<{ folderId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.folderId === a.id);
-    const bIsFavorite = starred.some(m => m.folderId === b.id);
+    const aIsFavorite = starred.some((m) => m.folderId === a.id);
+    const bIsFavorite = starred.some((m) => m.folderId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -706,10 +857,13 @@ export function orderFolderOldestCreatedAndStarred(list: Array<FolderType>, star
   });
 }
 
-export function orderFolderNewestCreatedAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
+export function orderFolderNewestCreatedAndStarred(
+  list: Array<FolderType>,
+  starred: Array<{ folderId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.folderId === a.id);
-    const bIsFavorite = starred.some(m => m.folderId === b.id);
+    const aIsFavorite = starred.some((m) => m.folderId === a.id);
+    const bIsFavorite = starred.some((m) => m.folderId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;

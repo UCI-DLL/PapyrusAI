@@ -1,15 +1,16 @@
 import { ChangeEvent, useContext, useState } from "react";
-import {
-  Button,
-  TextField,
-} from "@mui/material";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import { Button } from "../../components/ui/button";
+import { Textarea } from "../../components/ui/textarea";
+import { Label } from "../../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Input } from "../../components/ui/input";
+import { Upload, FileText, Loader2, Send } from "lucide-react";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { pdfjs } from 'react-pdf';
 import { removeSpecialCharacters } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
-
 
 interface ChatWizardProps {
   returnDocText: (docText: string) => void;
@@ -19,11 +20,11 @@ export default function DocumentModal({
   returnDocText,
 }: ChatWizardProps): JSX.Element {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-  //Need to save the index of the document just in case some documents are the same name
+  
   const [docText, setDocText] = useState<string>("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { user } = useContext(UserContext); //current user signed in
+  const { user } = useContext(UserContext);
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) {
@@ -31,119 +32,175 @@ export default function DocumentModal({
       return;
     }
     setDocText("");
+    setError("");
     setIsLoading(true);
     const file = e.target.files[0];
-    //Get text based of the file type
-    if (file.type === "text/plain") {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        if (!evt?.target?.result) {
-          return;
+    
+    try {
+      if (file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          if (!evt?.target?.result) {
+            return;
+          }
+          const { result } = evt.target;
+          setDocText(removeSpecialCharacters(result as string));
+          setIsLoading(false);
+        };
+        reader.readAsBinaryString(file);
+      } else if (file.type === "application/pdf") {
+        const temp = URL.createObjectURL(file);
+        const doc = pdfjs.getDocument(temp);
+        const pdfDocument = await doc.promise;
+        var numPages = pdfDocument.numPages;
+        var currentPage = 1;
+        while (currentPage <= numPages) {
+          const page = await pdfDocument.getPage(currentPage);
+          const textContent = await page.getTextContent();
+          const text = textContent["items"].reduce((result: any, item: any) => {
+            return `${result} ${item["str"]}`
+          }, "")
+          setDocText(prev => prev + removeSpecialCharacters(text as string));
+          currentPage++
         }
-        const { result } = evt.target;
-        setDocText(removeSpecialCharacters(result as string));
         setIsLoading(false);
-      };
-      reader.readAsBinaryString(file);
-    } else if (file.type === "application/pdf") {
-      const temp = URL.createObjectURL(file);
-      const doc = pdfjs.getDocument(temp);
-      const pdfDocument = await doc.promise;
-      //handle multiple pages
-      var numPages = pdfDocument.numPages;
-      var currentPage = 1;
-      while (currentPage <= numPages) {
-        const page = await pdfDocument.getPage(currentPage);
-        const textContent = await page.getTextContent();
-        const text = textContent["items"].reduce((result: any, item: any) => {
-          return `${result} ${item["str"]}`
-        }, "")
-        setDocText(prev => prev + removeSpecialCharacters(text as string));
-        currentPage++
-      }
-      setIsLoading(false);
-    } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-      const reader = new FileReader();
-      reader.readAsBinaryString(file);
-      reader.onload = function (evt) {
-        if (!evt?.target?.result) {
-          return;
-        }
-        const content = evt.target.result;
-        const zip = new PizZip(content);
-        const doc = new Docxtemplater(zip, {
-          paragraphLoop: true,
-          linebreaks: true,
-        });
+      } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        const reader = new FileReader();
+        reader.readAsBinaryString(file);
+        reader.onload = function (evt) {
+          if (!evt?.target?.result) {
+            return;
+          }
+          const content = evt.target.result;
+          const zip = new PizZip(content);
+          const doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+          });
 
-        var text = doc.getFullText();
-        setDocText(removeSpecialCharacters(text as string));
+          var text = doc.getFullText();
+          setDocText(removeSpecialCharacters(text as string));
+          setIsLoading(false);
+        };
+      } else {
+        setError("File is unsupported. Please upload TXT, PDF, or DOCX files only.");
         setIsLoading(false);
-      };
-    } else {
-      setError("File is unsupported");
+      }
+    } catch (err) {
+      setError("Error processing file. Please try again.");
       setIsLoading(false);
     }
   };
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setDocText(removeSpecialCharacters(e.target.value));
   }
 
   return (
-    <div className="chat__wizard">
-      <div>
-        Upload the document or copy and paste the text (e.g., a rubric) that you would like to send to the AI as part of the conversation. See the&nbsp;
-        {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? <a
-          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
-          target="_blank" rel="noreferrer">“Starting a Conversation” section of our user guide
-        </a> : (
-          <a
-            href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
-            target="_blank" rel="noreferrer">“Starting a Conversation” section of our user guide
-          </a>
-        )}
-        &nbsp;for more information on when and why you might want to use documents.
-      </div>
-      <div className="chat__wizard__modal">
-        <Button
-          component="label"
-          variant="outlined"
-          fullWidth
-          startIcon={<UploadFileIcon />}
-        >
-          Upload Txt, Docx, PDF
-          <input type="file" accept=".docx, .txt, .pdf" hidden onChange={handleFileUpload} />
-        </Button>
-        <TextField
-          name="doctext"
-          label={"Document"}
-          autoFocus
-          fullWidth
-          sx={{ margin: ".5rem 0" }}
-          multiline
-          minRows={3}
-          maxRows={6}
-          value={docText}
-          onChange={handleChange}
-          InputLabelProps={{ shrink: true }}
-          error={error !== ""}
-          helperText={error}
-          disabled={isLoading}
-        />
-        <div>
-          <Button
-            sx={{ width: "100%" }}
-            variant="contained"
-            onClick={() => {
-              returnDocText(docText);
-              setDocText("");
-            }}
-          >
-            Submit Document
-          </Button>
-        </div>
-      </div>
+    <div className="p-4 space-y-4">
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            Upload Document
+          </CardTitle>
+          <CardDescription>
+            Upload a document or paste text that you would like to send to the AI as part of the conversation
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <AlertDescription className="text-sm">
+              Upload the document or copy and paste the text (e.g., a rubric) that you would like to send to the AI. See the{" "}
+              {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+                >
+                  "Starting a Conversation" section of our user guide
+                </a>
+              ) : (
+                <a
+                  href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+                >
+                  "Starting a Conversation" section of our user guide
+                </a>
+              )}
+              {" "}for more information on when and why you might want to use documents.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="file-upload" className="sr-only">Upload File</Label>
+              <Button
+                variant="outline"
+                className="w-full h-20 border-dashed"
+                disabled={isLoading}
+                asChild
+              >
+                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                  {isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {isLoading ? "Processing..." : "Upload TXT, DOCX, PDF"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Click to browse files
+                  </span>
+                </label>
+              </Button>
+              <Input
+                id="file-upload"
+                type="file"
+                accept=".docx,.txt,.pdf"
+                className="hidden"
+                onChange={handleFileUpload}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="document-text">Document Text</Label>
+              <Textarea
+                id="document-text"
+                name="doctext"
+                placeholder="Document content will appear here, or you can paste text directly..."
+                className="min-h-[120px] resize-none"
+                value={docText}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={() => {
+                returnDocText(docText);
+                setDocText("");
+                setError("");
+              }}
+              disabled={isLoading || !docText.trim()}
+            >
+              <Send className="mr-2 h-4 w-4" />
+              Submit Document
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

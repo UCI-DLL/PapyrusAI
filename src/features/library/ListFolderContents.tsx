@@ -1,36 +1,47 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
-  Button,
-  FormControl,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  Menu,
-  MenuItem,
-  OutlinedInput,
   Select,
-  SelectChangeEvent,
-  TextField,
-  Tooltip,
-} from "@mui/material";
-import { FileType, FolderType, PromptType, TagType } from "../../utility/types/CourseTypes";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../components/ui/popover";
+import { Badge } from "../../components/ui/badge";
+import { cn } from "../../lib/utils";
+import { format } from "date-fns";
+import {
+  SlidersHorizontal,
+  Calendar as CalendarIcon,
+  Loader2,
+} from "lucide-react";
+import {
+  FileType,
+  FolderType,
+  PromptType,
+  TagType,
+} from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import LinearProgress from '@mui/material/LinearProgress';
-import CloseIcon from '@mui/icons-material/Close';
-import TuneIcon from '@mui/icons-material/Tune';
-import SearchIcon from '@mui/icons-material/Search';
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs';
-import { getOrgFolder, getUserFolder } from "../../utility/endpoints/FolderEndpoints";
+import { Calendar } from "../../components/ui/calendar";
+import {
+  getOrgFolder,
+  getUserFolder,
+} from "../../utility/endpoints/FolderEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { Prompt } from "../../components/Prompt";
 import { File } from "../../components/File";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
-
+import { Search, Filter, FileText } from "lucide-react";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -42,23 +53,32 @@ export enum SortOptions {
 export enum TypeOptions {
   All = "All",
   Prompt = "Prompt",
-  File = "File"
+  File = "File",
 }
 
 export enum StarredOptions {
   All = "All",
   Starred = "Starred",
-  "Not Starred" = "Not Starred"
+  "Not Starred" = "Not Starred",
 }
 
 interface ListPromptsProps {
   folderId: string;
   isOrgFolder: boolean;
   noShowMenu?: boolean;
-  onClick?: (folderId: string, id: string, isOrgFolder: boolean, type: string) => void; //type is "prompt" or "file"
+  onClick?: (
+    folderId: string,
+    id: string,
+    isOrgFolder: boolean,
+    type: string
+  ) => void; //type is "prompt" or "file"
+  activeTab?: string;
+  compactGrid?: boolean;
 }
 
-export default function ListFolderContents(props: ListPromptsProps): JSX.Element {
+export default function ListFolderContents(
+  props: ListPromptsProps
+): JSX.Element {
   let navigator = useNavigate();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [folder, setFolder] = useState<FolderType>();
@@ -66,42 +86,46 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
   const { setAlert } = useContext(AlertContext);
   const [starred, setStarred] = useState<UserStarred | undefined>();
   const [filters, setFilters] = useState<{
-    search: string,
-    sort: SortOptions,
-    starred: StarredOptions,
-    startDate: Dayjs | null,
-    endDate: Dayjs | null,
-    tags: string,
-    type: TypeOptions,
+    search: string;
+    sort: SortOptions;
+    starred: StarredOptions;
+    startDate: Date | undefined;
+    endDate: Date | undefined;
+    tags: string;
+    type: TypeOptions;
   }>({
     search: "", //title of folder or title or contents of prompts
     sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
     starred: StarredOptions.All,
-    startDate: null,
-    endDate: null,
-    tags: "",
+    startDate: undefined,
+    endDate: undefined,
+    tags: "none",
     type: TypeOptions.All,
   });
   const [tagList, setTagList] = useState<Array<TagType>>([]);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const [isFilterPopoverOpen, setIsFilterPopoverOpen] =
+    useState<boolean>(false);
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Handle search filtering
+  useEffect(() => {
+    const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+    handleFilter(syntheticEvent);
+    // eslint-disable-next-line
+  }, [searchTerm]);
 
   useEffect(() => {
     const controller = new AbortController();
     //get user folder data
-    getFolder(props.isOrgFolder, props.folderId, controller.signal)
+    getFolder(props.isOrgFolder, props.folderId, controller.signal);
 
     if (tagList.length === 0) {
-      getTags("", controller.signal)
+      getTags("", controller.signal);
     }
 
-    getStarred(controller.signal)
+    getStarred(controller.signal);
 
     return () => {
       controller.abort();
@@ -117,18 +141,48 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
       setFilteredFolder((prev) => {
         if (prev) {
           const orderedPrev = { ...prev };
-          orderedPrev.prompts = orderPromptNewestCreatedAndStarred(prev.prompts, starred && starred.prompts ? starred.prompts : []);
-          orderedPrev.files = orderFileNewestCreatedAndStarred(prev.files, starred && starred.files ? starred.files : []);
-          return orderedPrev
-        } else return prev
+          orderedPrev.prompts = orderPromptNewestCreatedAndStarred(
+            prev.prompts,
+            starred && starred.prompts ? starred.prompts : []
+          );
+          orderedPrev.files = orderFileNewestCreatedAndStarred(
+            prev.files,
+            starred && starred.files ? starred.files : []
+          );
+          return orderedPrev;
+        } else return prev;
       });
     }
     // eslint-disable-next-line
-  }, [starred, folder])
+  }, [starred, folder]);
+
+  // Filter based on activeTab
+  useEffect(() => {
+    if (folder && props.activeTab) {
+      let filteredPrompts = folder.prompts;
+      let filteredFiles = folder.files;
+
+      if (props.activeTab === "prompts") {
+        filteredFiles = [];
+      } else if (props.activeTab === "files") {
+        filteredPrompts = [];
+      }
+
+      setFilteredFolder((prev) =>
+        prev
+          ? {
+              ...prev,
+              prompts: filteredPrompts,
+              files: filteredFiles,
+            }
+          : prev
+      );
+    }
+  }, [props.activeTab, folder]);
 
   function getFolder(isOrg: boolean, folderId: string, signal: AbortSignal) {
     if (!isOrg) {
-      Get(getUserFolder(folderId), signal).then(res => {
+      Get(getUserFolder(folderId), signal).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //also set session
@@ -144,13 +198,16 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
             //handle error
             //redirect to prompt list
             navigator("/library");
-            setAlert({ message: "Folder Does Not Exist", type: "error" });
+            setAlert({
+              message: "Folder Does Not Exist",
+              type: "error",
+            });
             setIsLoading(false);
           }
         }
       });
     } else {
-      Get(getOrgFolder(folderId), signal).then(res => {
+      Get(getOrgFolder(folderId), signal).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //also set session
@@ -166,7 +223,10 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
             //handle error
             //redirect to prompt list
             // navigator("/library");
-            setAlert({ message: "Folder Does Not Exist", type: "error" });
+            setAlert({
+              message: "Folder Does Not Exist",
+              type: "error",
+            });
             setIsLoading(false);
           }
         }
@@ -176,7 +236,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
 
   function getTags(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getTagList(limit, startKey), signal).then(res => {
+    Get(getTagList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
@@ -207,7 +267,7 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
   }
 
   function getStarred(signal: AbortSignal) {
-    Get(getUserFavoritingData(), signal).then(res => {
+    Get(getUserFavoritingData(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //get the list of all favorited for this specific user
@@ -224,141 +284,167 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     });
   }
 
-
   function handleFilter(e: React.FormEvent) {
-    e.preventDefault()
-    if (!folder) return //return if no folder
-    if (!filteredFolder) return
+    e.preventDefault();
+    if (!folder) return; //return if no folder
+    if (!filteredFolder) return;
 
-    var filteredPrompts = folder.prompts
-    var filteredFiles = folder.files
+    var filteredPrompts = folder.prompts;
+    var filteredFiles = folder.files;
 
     //handle asset type
     if (filters.type === TypeOptions.Prompt) {
-      filteredFiles = []
+      filteredFiles = [];
     }
     if (filters.type === TypeOptions.File) {
-      filteredPrompts = []
+      filteredPrompts = [];
     }
 
     //handle starred filter
-    if (filters.starred as string === StarredOptions.All) {
+    if ((filters.starred as string) === StarredOptions.All) {
       //Do nothing
-    } else if (filters.starred as string === StarredOptions.Starred && starred && (starred.files || starred.prompts)) {
-      filteredFiles = filteredFiles.filter((x: FileType) => starred.files && starred.files.some(y => y.fileId === x.id && y.folderId === folder.id))
-      filteredPrompts = filteredPrompts.filter((x: PromptType) => starred.prompts && starred.prompts.some(y => y.promptId === x.id && y.folderId === folder.id))
-    } else if (filters.starred as string === StarredOptions["Not Starred"] && starred && (starred.files || starred.prompts)) {
-      filteredFiles = filteredFiles.filter((x: FileType) => starred.files && !starred.files.some(y => y.fileId === x.id))
-      filteredPrompts = filteredPrompts.filter((x: PromptType) => starred.prompts && !starred.prompts.some(y => y.promptId === x.id))
+    } else if (
+      (filters.starred as string) === StarredOptions.Starred &&
+      starred &&
+      (starred.files || starred.prompts)
+    ) {
+      filteredFiles = filteredFiles.filter(
+        (x: FileType) =>
+          starred.files &&
+          starred.files.some(
+            (y) => y.fileId === x.id && y.folderId === folder.id
+          )
+      );
+      filteredPrompts = filteredPrompts.filter(
+        (x: PromptType) =>
+          starred.prompts &&
+          starred.prompts.some(
+            (y) => y.promptId === x.id && y.folderId === folder.id
+          )
+      );
+    } else if (
+      (filters.starred as string) === StarredOptions["Not Starred"] &&
+      starred &&
+      (starred.files || starred.prompts)
+    ) {
+      filteredFiles = filteredFiles.filter(
+        (x: FileType) =>
+          starred.files && !starred.files.some((y) => y.fileId === x.id)
+      );
+      filteredPrompts = filteredPrompts.filter(
+        (x: PromptType) =>
+          starred.prompts && !starred.prompts.some((y) => y.promptId === x.id)
+      );
     }
 
     //handle searching
-    if (filters.search !== "") {
+    if (searchTerm !== "") {
       filteredPrompts = filteredPrompts.filter(
-        (prompt: PromptType) => prompt.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          prompt.prompt.toLowerCase().includes(filters.search.toLowerCase())
+        (prompt: PromptType) =>
+          prompt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          prompt.prompt.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      filteredFiles = filteredFiles.filter(
-        (file: FileType) => file.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          file.name.toLowerCase().includes(filters.search.toLowerCase())
+      filteredFiles = filteredFiles.filter((file: FileType) =>
+        file.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     //handle tag
-    if (filters.tags) {
-      filteredPrompts = filteredPrompts.filter(
-        (prompt: PromptType) => prompt.tags ? prompt.tags.includes(filters.tags) : prompt
-      )
-      filteredFiles = filteredFiles.filter(
-        (file: FileType) => file.tags ? file.tags.includes(filters.tags) : file
-      )
+    if (filters.tags && filters.tags !== "none") {
+      filteredPrompts = filteredPrompts.filter((prompt: PromptType) =>
+        prompt.tags ? prompt.tags.includes(filters.tags) : prompt
+      );
+      filteredFiles = filteredFiles.filter((file: FileType) =>
+        file.tags ? file.tags.includes(filters.tags) : file
+      );
     }
 
     //handle date
-    //Note: have to do a lot of date converting
-    if (filters.startDate !== null) {
+    if (filters.startDate) {
       filteredPrompts = filteredPrompts.filter((prompt: PromptType) => {
-        if (filters.startDate !== null) {
-          var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
-          if (dayjs(date.toISOString()) > filters.startDate) {
-            return prompt
-          } else {
-            return false
-          }
-        } else {
-          return prompt
-        }
+        var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
+        return filters.startDate ? date > filters.startDate : true;
       });
       filteredFiles = filteredFiles.filter((file: FileType) => {
-        if (filters.startDate !== null) {
-          var date = new Date(parseInt(file.id.substring(0, 13), 10));
-          if (dayjs(date.toISOString()) > filters.startDate) {
-            return file
-          } else {
-            return false
-          }
-        } else {
-          return file
-        }
+        var date = new Date(parseInt(file.id.substring(0, 13), 10));
+        return filters.startDate ? date > filters.startDate : true;
       });
     }
-    if (filters.endDate !== null) {
+    if (filters.endDate) {
       filteredPrompts = filteredPrompts.filter((prompt: PromptType) => {
-        if (filters.endDate !== null) {
-          var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
-          if (dayjs(date.toISOString()) < filters.endDate) {
-            return prompt
-          } else {
-            return false
-          }
-        } else {
-          return prompt
-        }
+        var date = new Date(parseInt(prompt.id.substring(0, 13), 10));
+        return filters.endDate ? date < filters.endDate : true;
       });
       filteredFiles = filteredFiles.filter((file: FileType) => {
-        if (filters.endDate !== null) {
-          var date = new Date(parseInt(file.id.substring(0, 13), 10));
-          if (dayjs(date.toISOString()) < filters.endDate) {
-            return file
-          } else {
-            return false
-          }
-        } else {
-          return file
-        }
+        var date = new Date(parseInt(file.id.substring(0, 13), 10));
+        return filters.endDate ? date < filters.endDate : true;
       });
     }
 
     // handle sorting
-    if (filters.sort as string === SortOptions.Ascending) {
-      filteredPrompts = orderPromptAscendingNameAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
-      filteredFiles = orderFileAscendingNameAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
-    } else if (filters.sort as string === SortOptions.Descending) {
-      filteredPrompts = orderPromptDescendingNameAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
-      filteredFiles = orderFileDescendingNameAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
-    } else if (filters.sort as string === SortOptions.Oldest) {
-      filteredPrompts = orderPromptOldestCreatedAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
-      filteredFiles = orderFileOldestCreatedAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
-    } else if (filters.sort as string === SortOptions.Newest) {
-      filteredPrompts = orderPromptNewestCreatedAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
-      filteredFiles = orderFileNewestCreatedAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
-    } else { //newest
-      filteredPrompts = orderPromptNewestCreatedAndStarred(filteredPrompts, starred && starred.prompts ? starred.prompts : []);
-      filteredFiles = orderFileNewestCreatedAndStarred(filteredFiles, starred && starred.files ? starred.files : []);
+    if ((filters.sort as string) === SortOptions.Ascending) {
+      filteredPrompts = orderPromptAscendingNameAndStarred(
+        filteredPrompts,
+        starred && starred.prompts ? starred.prompts : []
+      );
+      filteredFiles = orderFileAscendingNameAndStarred(
+        filteredFiles,
+        starred && starred.files ? starred.files : []
+      );
+    } else if ((filters.sort as string) === SortOptions.Descending) {
+      filteredPrompts = orderPromptDescendingNameAndStarred(
+        filteredPrompts,
+        starred && starred.prompts ? starred.prompts : []
+      );
+      filteredFiles = orderFileDescendingNameAndStarred(
+        filteredFiles,
+        starred && starred.files ? starred.files : []
+      );
+    } else if ((filters.sort as string) === SortOptions.Oldest) {
+      filteredPrompts = orderPromptOldestCreatedAndStarred(
+        filteredPrompts,
+        starred && starred.prompts ? starred.prompts : []
+      );
+      filteredFiles = orderFileOldestCreatedAndStarred(
+        filteredFiles,
+        starred && starred.files ? starred.files : []
+      );
+    } else if ((filters.sort as string) === SortOptions.Newest) {
+      filteredPrompts = orderPromptNewestCreatedAndStarred(
+        filteredPrompts,
+        starred && starred.prompts ? starred.prompts : []
+      );
+      filteredFiles = orderFileNewestCreatedAndStarred(
+        filteredFiles,
+        starred && starred.files ? starred.files : []
+      );
+    } else {
+      //newest
+      filteredPrompts = orderPromptNewestCreatedAndStarred(
+        filteredPrompts,
+        starred && starred.prompts ? starred.prompts : []
+      );
+      filteredFiles = orderFileNewestCreatedAndStarred(
+        filteredFiles,
+        starred && starred.files ? starred.files : []
+      );
     }
 
     //finally set the filtered lists
-    setFilteredFolder(prev => prev ? ({ ...prev, prompts: filteredPrompts, files: filteredFiles }) : prev)
+    setFilteredFolder((prev) =>
+      prev ? { ...prev, prompts: filteredPrompts, files: filteredFiles } : prev
+    );
   }
 
   function handleResetFilters() {
+    setSearchTerm("");
     setFilters({
       search: "", //title of folder or title or contents of prompts
       sort: SortOptions.Newest, //ascending alphabetical, descending alphabetical, date created (newest, oldest)
       starred: StarredOptions.All,
-      startDate: null,
-      endDate: null,
-      tags: "",
-      type: TypeOptions.All
+      startDate: undefined,
+      endDate: undefined,
+      tags: "none",
+      type: TypeOptions.All,
     });
     setFilteredFolder(folder);
   }
@@ -368,262 +454,358 @@ export default function ListFolderContents(props: ListPromptsProps): JSX.Element
     setTagList([]);
     const controller = new AbortController();
     //get user folder data
-    getFolder(props.isOrgFolder, props.folderId, controller.signal)
+    getFolder(props.isOrgFolder, props.folderId, controller.signal);
     getTags("", controller.signal);
     getStarred(controller.signal);
   }
 
+  // Count active filters
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (searchTerm !== "") count++;
+    if (filters.type !== TypeOptions.All) count++;
+    if (filters.starred !== StarredOptions.All) count++;
+    if (filters.sort !== SortOptions.Newest) count++;
+    if (filters.tags !== "none") count++;
+    if (filters.startDate || filters.endDate) count++;
+    return count;
+  };
+
   return !isLoading && filteredFolder ? (
-    <div className="library">
-      <Menu
-        id="basic-menu"
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        MenuListProps={{
-          'aria-labelledby': 'basic-button',
-        }}
-      >
-        <div className="library__filter" key={"menu"}>
-          <div className="library__filter__title">
-            <div>
-              Filters
-            </div>
-            <IconButton
-              aria-label="close filter options"
-              sx={{ padding: "0" }}
-              id="close-filter-button"
-              onClick={handleClose}
-            >
-              <CloseIcon />
-            </IconButton>
+    <div>
+      {/* Search and Filter Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search content..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <hr />
-          <TextField
-            name="search"
-            label="Has the words"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={filters.search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-              setFilters((prev) => ({ ...prev, search: e.target.value }))
-            }}
-          />
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="type-select-label">Type</InputLabel>
-            <Select
-              value={filters.type}
-              onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, type: TypeOptions[e.target.value as keyof typeof TypeOptions] }));
-              }}
-              label="Type"
-              labelId="type-select-label"
-              id="type-select"
-              sx={{ width: 320, maxWidth: '100%' }}
-              notched={true}
-            >
-              {Object.keys(TypeOptions).map(key => {
-                return (
-                  <MenuItem value={key} key={key}>{key}</MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="sort-select-label">Sort</InputLabel>
-            <Select
-              value={filters.sort}
-              onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, sort: SortOptions[e.target.value as keyof typeof SortOptions] }));
-              }}
-              label="Sort"
-              labelId="sort-select-label"
-              id="sort-select"
-              sx={{ width: 320, maxWidth: '100%' }}
-              notched={true}
-            >
-              {Object.keys(SortOptions).map(key => {
-                return (
-                  <MenuItem value={key} key={key}>{key}</MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="sort-select-label">Starred</InputLabel>
-            <Select
-              value={filters.starred}
-              onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, starred: StarredOptions[e.target.value as keyof typeof StarredOptions] }));
-              }}
-              label="Starred"
-              labelId="starred-select-label"
-              id="starred-select"
-              sx={{ width: 320, maxWidth: '100%' }}
-              notched={true}
-            >
-              {Object.keys(StarredOptions).map(key => {
-                return (
-                  <MenuItem value={key} key={key}>{key}</MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ width: "100%", marginBottom: "1rem" }}>
-            <InputLabel shrink={true} id="tag-select-label">Tag</InputLabel>
-            <Select
-              value={filters.tags}
-              onChange={(e: SelectChangeEvent) => {
-                setFilters((prev) => ({ ...prev, tags: e.target.value }));
-              }}
-              label="Tags"
-              labelId="tag-select-label"
-              id="tag-select"
-              sx={{ width: 320, maxWidth: '100%' }}
-              notched={true}
-            >
-              {Object.values(tagList).map((tag, i) => {
-                return (
-                  <MenuItem value={tag.id} key={i}>{tag.id}</MenuItem>
-                )
-              })}
-            </Select>
-          </FormControl>
-          <span style={{ marginTop: "1rem" }}>Date Created</span>
-          <LocalizationProvider dateAdapter={AdapterDayjs} >
-            <DatePicker
-              label="Start Date"
-              value={filters.startDate}
-              onChange={(value) => {
-                setFilters(prev => ({ ...prev, startDate: value }))
-              }}
-              disabled={isLoading}
-            />
-          </LocalizationProvider>
-          <LocalizationProvider dateAdapter={AdapterDayjs} >
-            <DatePicker
-              label="End Date"
-              value={filters.endDate}
-              onChange={(value) => {
-                setFilters(prev => ({ ...prev, endDate: value }))
-              }}
-              disabled={isLoading}
-              sx={{ marginTop: "1rem" }}
-            />
-          </LocalizationProvider>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-around" }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={(e) => {
-              handleClose()
-              handleFilter(e)
-            }}
+          <Popover
+            open={isFilterPopoverOpen}
+            onOpenChange={setIsFilterPopoverOpen}
           >
-            Search
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={handleResetFilters}>
-            Clear
-          </Button>
-        </div>
-      </Menu>
-      {/* search bar */}
-      <form className="library__searchbar" onSubmit={handleFilter}>
-        <FormControl fullWidth>
-          <OutlinedInput
-            id="outlined-adornment-message"
-            placeholder="Search"
-            size="small"
-            value={filters.search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-              setFilters((prev) => ({ ...prev, search: e.target.value }))
-            }}
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="more filter options"
-                  edge="end"
-                  id="basic-button"
-                  aria-controls={open ? 'basic-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={open ? 'true' : undefined}
-                  onClick={handleClick}
-                >
-                  {
-                    <Tooltip
-                      title={"Advanced Search"}
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Filters
+                {getActiveFilterCount() > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="ml-1 px-1.5 py-0.5 text-xs"
+                  >
+                    {getActiveFilterCount()}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96 p-0" align="start">
+              <div className="border-b px-4 py-3">
+                <div className="flex items-center gap-2 font-medium">
+                  <SlidersHorizontal className="h-5 w-5" />
+                  Filters
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Filter content by various criteria
+                </p>
+              </div>
+              <div className="space-y-6 p-4 max-h-96 overflow-y-auto">
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <Select
+                    value={filters.type}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        type: value as TypeOptions,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(TypeOptions).map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Sort</Label>
+                  <Select
+                    value={filters.sort}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        sort: value as SortOptions,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(SortOptions).map((sort) => (
+                        <SelectItem key={sort} value={sort}>
+                          {sort}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Starred</Label>
+                  <Select
+                    value={filters.starred}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        starred: value as StarredOptions,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(StarredOptions).map((starred) => (
+                        <SelectItem key={starred} value={starred}>
+                          {starred}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Tags</Label>
+                  <Select
+                    value={filters.tags}
+                    onValueChange={(value) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        tags: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a tag" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none" key="none">
+                        No filter
+                      </SelectItem>
+                      {tagList.map((tag) => (
+                        <SelectItem key={tag.id} value={tag.id}>
+                          {tag.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Date Created</Label>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="start-date">Start Date</Label>
+                    <Popover
+                      open={startDateOpen}
+                      onOpenChange={setStartDateOpen}
                     >
-                      <TuneIcon />
-                    </Tooltip>
-                  }
-                </IconButton>
-              </InputAdornment>
-            }
-            startAdornment={
-              <InputAdornment position="start">
-                <IconButton
-                  aria-label="search"
-                  edge="start"
-                  type="submit"
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !filters.startDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.startDate
+                            ? format(filters.startDate, "PPP")
+                            : "Pick a start date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={filters.startDate}
+                          onSelect={(date) => {
+                            setFilters((prev) => ({
+                              ...prev,
+                              startDate: date,
+                            }));
+                            setStartDateOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="end-date">End Date</Label>
+                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !filters.endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.endDate
+                            ? format(filters.endDate, "PPP")
+                            : "Pick an end date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={filters.endDate}
+                          onSelect={(date) => {
+                            setFilters((prev) => ({
+                              ...prev,
+                              endDate: date,
+                            }));
+                            setEndDateOpen(false);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t p-4 flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleResetFilters}
+                  className="flex-1"
                 >
-                  {<SearchIcon />}
-                </IconButton>
-              </InputAdornment>
-            }
-          />
-        </FormControl>
-      </form>
-      <hr />
-      <div className="library__prompt-list">
-        {filteredFolder && filteredFolder.prompts && filteredFolder.prompts.map((prompt: PromptType, i) => {
-          return (
-            <div key={i}>
-              <Prompt
-                prompt={prompt}
-                folder={filteredFolder}
-                keyy={`${i}`}
-                refreshList={() => refreshList()}
-                loading={() => setIsLoading(true)}
-                noShowMenu={props.noShowMenu}
-                onClick={props.onClick}
-                isStarred={starred && starred.prompts && starred.prompts.some(p => p.promptId === prompt.id) && starred.prompts.some(c => c.folderId === props.folderId)}
-              />
-            </div>
-          )
-        })}
+                  Clear Filters
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    setIsFilterPopoverOpen(false);
+                    handleFilter(e);
+                  }}
+                  className="flex-1"
+                >
+                  Apply Filters
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
-      <div className="library__file-list">
-        {filteredFolder && filteredFolder.files && filteredFolder.files.map((file: FileType, i) => {
-          return (
-            <div key={i}>
-              <File
-                file={file}
-                folder={filteredFolder}
-                keyy={`${i}`}
-                refreshList={() => refreshList()}
-                loading={() => setIsLoading(true)}
-                noShowMenu={props.noShowMenu}
-                onClick={props.onClick}
-                isStarred={starred && starred.files && starred.files.some(p => p.fileId === file.id) && starred.files.some(c => c.folderId === props.folderId)}
-              />
-            </div>
-          )
-        })}
+
+      {/* Content Grid */}
+      <div
+        className={cn(
+          "grid gap-6",
+          props.compactGrid
+            ? "grid-cols-1 sm:grid-cols-1 md:grid-cols-2"
+            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+        )}
+      >
+        {/* Prompts */}
+        {filteredFolder &&
+          filteredFolder.prompts &&
+          filteredFolder.prompts.map((prompt: PromptType, i) => (
+            <Prompt
+              key={`prompt-${i}`}
+              prompt={prompt}
+              folder={filteredFolder}
+              keyy={`${i}`}
+              refreshList={() => refreshList()}
+              loading={() => setIsLoading(true)}
+              noShowMenu={props.noShowMenu}
+              onClick={props.onClick}
+              isStarred={
+                starred &&
+                starred.prompts &&
+                starred.prompts.some((p) => p.promptId === prompt.id) &&
+                starred.prompts.some((c) => c.folderId === props.folderId)
+              }
+            />
+          ))}
+
+        {/* Files */}
+        {filteredFolder &&
+          filteredFolder.files &&
+          filteredFolder.files.map((file: FileType, i) => (
+            <File
+              key={`file-${i}`}
+              file={file}
+              folder={filteredFolder}
+              keyy={`${i}`}
+              refreshList={() => refreshList()}
+              loading={() => setIsLoading(true)}
+              noShowMenu={props.noShowMenu}
+              onClick={props.onClick}
+              isStarred={
+                starred &&
+                starred.files &&
+                starred.files.some((p) => p.fileId === file.id) &&
+                starred.files.some((c) => c.folderId === props.folderId)
+              }
+            />
+          ))}
       </div>
+
+      {/* Empty State */}
+      {filteredFolder &&
+        (!filteredFolder.prompts || filteredFolder.prompts.length === 0) &&
+        (!filteredFolder.files || filteredFolder.files.length === 0) && (
+          <div
+            className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+            role="status"
+          >
+            <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">No content found</p>
+            <p className="text-sm">
+              Get started by creating your first prompt or uploading a file.
+            </p>
+          </div>
+        )}
     </div>
   ) : (
-    <LinearProgress />
-  )
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">Loading Content</p>
+      </div>
+    </div>
+  );
 }
 
-export function orderFileAscendingNameAndStarred(list: Array<FileType>, starred: Array<{ fileId: string }>) {
+export function orderFileAscendingNameAndStarred(
+  list: Array<FileType>,
+  starred: Array<{ fileId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.fileId === a.id);
-    const bIsFavorite = starred.some(m => m.fileId === b.id);
+    const aIsFavorite = starred.some((m) => m.fileId === a.id);
+    const bIsFavorite = starred.some((m) => m.fileId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -634,10 +816,13 @@ export function orderFileAscendingNameAndStarred(list: Array<FileType>, starred:
   });
 }
 
-export function orderFileDescendingNameAndStarred(list: Array<FileType>, starred: Array<{ fileId: string }>) {
+export function orderFileDescendingNameAndStarred(
+  list: Array<FileType>,
+  starred: Array<{ fileId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.fileId === a.id);
-    const bIsFavorite = starred.some(m => m.fileId === b.id);
+    const aIsFavorite = starred.some((m) => m.fileId === a.id);
+    const bIsFavorite = starred.some((m) => m.fileId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -648,10 +833,13 @@ export function orderFileDescendingNameAndStarred(list: Array<FileType>, starred
   });
 }
 
-export function orderFileOldestCreatedAndStarred(list: Array<FileType>, starred: Array<{ fileId: string }>) {
+export function orderFileOldestCreatedAndStarred(
+  list: Array<FileType>,
+  starred: Array<{ fileId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.fileId === a.id);
-    const bIsFavorite = starred.some(m => m.fileId === b.id);
+    const aIsFavorite = starred.some((m) => m.fileId === a.id);
+    const bIsFavorite = starred.some((m) => m.fileId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -662,24 +850,30 @@ export function orderFileOldestCreatedAndStarred(list: Array<FileType>, starred:
   });
 }
 
-export function orderFileNewestCreatedAndStarred(list: Array<FileType>, starred: Array<{ fileId: string }>) {
+export function orderFileNewestCreatedAndStarred(
+  list: Array<FileType>,
+  starred: Array<{ fileId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.fileId === a.id);
-    const bIsFavorite = starred.some(m => m.fileId === b.id);
+    const aIsFavorite = starred.some((m) => m.fileId === a.id);
+    const bIsFavorite = starred.some((m) => m.fileId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
     if (!aIsFavorite && bIsFavorite) return 1;
 
-    // Step 2: Sort by most recent 
+    // Step 2: Sort by most recent
     return a.id < b.id ? 1 : -1;
   });
 }
 
-export function orderPromptAscendingNameAndStarred(list: Array<PromptType>, starred: Array<{ promptId: string }>) {
+export function orderPromptAscendingNameAndStarred(
+  list: Array<PromptType>,
+  starred: Array<{ promptId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.promptId === a.id);
-    const bIsFavorite = starred.some(m => m.promptId === b.id);
+    const aIsFavorite = starred.some((m) => m.promptId === a.id);
+    const bIsFavorite = starred.some((m) => m.promptId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -690,10 +884,13 @@ export function orderPromptAscendingNameAndStarred(list: Array<PromptType>, star
   });
 }
 
-export function orderPromptDescendingNameAndStarred(list: Array<PromptType>, starred: Array<{ promptId: string }>) {
+export function orderPromptDescendingNameAndStarred(
+  list: Array<PromptType>,
+  starred: Array<{ promptId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.promptId === a.id);
-    const bIsFavorite = starred.some(m => m.promptId === b.id);
+    const aIsFavorite = starred.some((m) => m.promptId === a.id);
+    const bIsFavorite = starred.some((m) => m.promptId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -704,10 +901,13 @@ export function orderPromptDescendingNameAndStarred(list: Array<PromptType>, sta
   });
 }
 
-export function orderPromptOldestCreatedAndStarred(list: Array<PromptType>, starred: Array<{ promptId: string }>) {
+export function orderPromptOldestCreatedAndStarred(
+  list: Array<PromptType>,
+  starred: Array<{ promptId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.promptId === a.id);
-    const bIsFavorite = starred.some(m => m.promptId === b.id);
+    const aIsFavorite = starred.some((m) => m.promptId === a.id);
+    const bIsFavorite = starred.some((m) => m.promptId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
@@ -718,16 +918,19 @@ export function orderPromptOldestCreatedAndStarred(list: Array<PromptType>, star
   });
 }
 
-export function orderPromptNewestCreatedAndStarred(list: Array<PromptType>, starred: Array<{ promptId: string }>) {
+export function orderPromptNewestCreatedAndStarred(
+  list: Array<PromptType>,
+  starred: Array<{ promptId: string }>
+) {
   return list.sort((a, b) => {
-    const aIsFavorite = starred.some(m => m.promptId === a.id);
-    const bIsFavorite = starred.some(m => m.promptId === b.id);
+    const aIsFavorite = starred.some((m) => m.promptId === a.id);
+    const bIsFavorite = starred.some((m) => m.promptId === b.id);
 
     // Step 1: Put favorites first
     if (aIsFavorite && !bIsFavorite) return -1;
     if (!aIsFavorite && bIsFavorite) return 1;
 
-    // Step 2: Sort by most recent 
+    // Step 2: Sort by most recent
     return a.id < b.id ? 1 : -1;
   });
 }

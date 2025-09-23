@@ -37,8 +37,9 @@ import {
   Star,
   MessageSquare,
   MoreHorizontal,
-  ExternalLink,
   Eye,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -858,15 +859,77 @@ export const Prompt = (props: PromptProps) => {
                 </DropdownMenu>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1 text-primary text-xs font-medium"
-              onClick={() => setOpenPreviewDialog(true)}
-            >
-              <Eye className="h-3 w-3" />
-              View
-            </Button>
+            {props.noShowMenu ? (
+              props.showRemove ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (props.onClick) {
+                            props.onClick(
+                              props.folder.id,
+                              props.prompt.id,
+                              props.prompt.isOrganizationPrompt ?? false,
+                              "prompt"
+                            );
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Remove
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      Remove prompt from module
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (props.onClick) {
+                            props.onClick(
+                              props.folder.id,
+                              props.prompt.id,
+                              props.prompt.isOrganizationPrompt ?? false,
+                              "prompt"
+                            );
+                          }
+                        }}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      Add prompt to module
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1 text-primary text-xs font-medium"
+                onClick={() => setOpenPreviewDialog(true)}
+              >
+                <Eye className="h-3 w-3" />
+                View
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

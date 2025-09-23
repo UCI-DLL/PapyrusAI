@@ -64,24 +64,24 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
   // For the side drawer main nav menu
   // base this list off instructor, admin, student access, and TAs
   // tas dont have access to library
-  const [mainMenuList, setMainMenuList] = useState(["Dashboard", "Courses", "Modules", "Account", "About"]);
-  const [mainMenuLinks, setMainMenuLinks] = useState(["/", "/courses", "/modules", "/account", "/about"]);
+  const [mainMenuList, setMainMenuList] = useState(["Dashboard", "Courses", "Account", "About"]);
+  const [mainMenuLinks, setMainMenuLinks] = useState(["/", "/courses", "/account", "/about"]);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""]);
 
   // decide nav bar based on user permissions
   useEffect(() => {
     if (user) {
       if (user.groups.find(a => a.includes("-TA"))) {
-        setMainMenuList(["Dashboard", "Courses", "Modules", "Reports", "Account", "About"]);
-        setMainMenuLinks(["/", "/courses", "/modules", "/reports", "/account", "/about"])
+        setMainMenuList(["Dashboard", "Courses", "Reports", "Account", "About"]);
+        setMainMenuLinks(["/", "/courses", "/reports", "/account", "/about"])
       }
       if (user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors")) {
-        setMainMenuList(["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About"])
-        setMainMenuLinks(["/", "/courses", "/modules", "/reports", "/library", "/account", "/about"])
+        setMainMenuList(["Dashboard", "Courses",  "Reports", "Library", "Account", "About"])
+        setMainMenuLinks(["/", "/courses", "/reports", "/library", "/account", "/about"])
       }
       if (user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin")) {
-        setMainMenuList(["Dashboard", "Courses", "Modules", "Reports", "Library", "Account", "About", "Settings"])
-        setMainMenuLinks(["/", "/courses", "/modules", "/reports", "/library", "/account", "/about", "/org-settings"])
+        setMainMenuList(["Dashboard", "Courses", "Reports", "Library", "Account", "About", "Settings"])
+        setMainMenuLinks(["/", "/courses", "/reports", "/library", "/account", "/about", "/org-settings"])
       }
     }
   }, [user])

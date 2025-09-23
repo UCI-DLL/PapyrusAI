@@ -263,8 +263,7 @@ export default function Chat(): JSX.Element {
           if (res && res.status === 400) {
             setAlert({ message: "Conversation not found", type: "error" });
             navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${
-                location.pathname.split("/")[4]
+              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
               }`
             );
           }
@@ -489,7 +488,7 @@ export default function Chat(): JSX.Element {
           const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
           var responseMessage: MessageType = {
             id: tempTimestamp.toString(),
-            content: message.content.replace(/\n\n/g, " ").replace(/\n/g, " "),
+            content: message.content,
             messageType: message.content.length < 1000 ? "text" : "file",
             role: "user",
             sender: "username",
@@ -703,8 +702,7 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
             if (res.data.conversations) {
               navigator(
-                `/chat/${user?.username}/${conversationIds.courseId}/${
-                  conversationIds.moduleId
+                `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId
                 }/${res.data.conversations.length - 1}`
               );
             }
@@ -848,8 +846,7 @@ export default function Chat(): JSX.Element {
               error: "",
             });
             navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${
-                location.pathname.split("/")[4]
+              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
               }`
             );
           }

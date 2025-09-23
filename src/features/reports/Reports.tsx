@@ -230,7 +230,7 @@ export default function Reports(): JSX.Element {
           navigator("/login");
         } else {
           // handle error
-          if (res.name && res.name === "AxiosError") {
+          if (res && res.name === "AxiosError") {
             //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
             setTimeout(async () => {
               var some = await getUsersInCourseList(course, signal, nextToken);
@@ -296,7 +296,7 @@ export default function Reports(): JSX.Element {
         navigator("/login");
       } else {
         //Do nothing and skip. The user doesnt have any conversations within the course/module
-        if (res.name && res.name === "AxiosError") {
+        if (res && res.name === "AxiosError") {
           const delay = 2000 + Math.random() * 1000;
           setTimeout(async () => {
             var some = await getConvoListForClick(
@@ -556,7 +556,7 @@ export default function Reports(): JSX.Element {
         navigator("/login");
       } else {
         //Do nothing and skip. The user doesnt have any conversations within the course/module
-        if (res.name && res.name === "AxiosError") {
+        if (res && res.name && res.name === "AxiosError") {
           //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
           const delay = 2000 + Math.random() * 1000;
           setTimeout(async () => {

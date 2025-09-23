@@ -7,14 +7,13 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { 
-  ChevronUp, 
-  ChevronDown, 
-  Maximize2, 
-  Volume2, 
-  VolumeX, 
-  Copy, 
-  X,
+import {
+  ChevronUp,
+  ChevronDown,
+  Maximize2,
+  Volume2,
+  VolumeX,
+  Copy,
   ExternalLink
 } from "lucide-react";
 import RaterEssay from "./RaterEssay";
@@ -119,6 +118,19 @@ export const MessageLeft = (props: MessageProps) => {
     toast.success("Message copied to clipboard");
   };
 
+  function LinkRenderer(props: any) {
+    return (
+      <a
+        href={props.href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+      >
+        {props.children}
+      </a>
+    );
+  }
+
   //if empty message
   if ((props.message === "" || props.message === null) && !props.typing) {
     return <></>;
@@ -132,21 +144,21 @@ export const MessageLeft = (props: MessageProps) => {
             <DialogHeader>
               <DialogTitle>Essay Feedback</DialogTitle>
             </DialogHeader>
-            <RaterEssay 
-              message={expandableMessage.message} 
-              raterArray={expandableMessage.rater} 
-              essay={expandableMessage.essay} 
+            <RaterEssay
+              message={expandableMessage.message}
+              raterArray={expandableMessage.rater}
+              essay={expandableMessage.essay}
             />
           </DialogContent>
         </Dialog>
       )}
-      
+
       <div className="flex items-start gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm font-medium text-muted-foreground">
               {props.isInstructor && !props.visible && (
-                <span className="text-destructive">Hidden Message - </span>
+                <span className="text-sm">Sources - </span>
               )}
               {displayName}
             </span>
@@ -173,7 +185,7 @@ export const MessageLeft = (props: MessageProps) => {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -194,40 +206,40 @@ export const MessageLeft = (props: MessageProps) => {
               </TooltipProvider>
             </div>
           </div>
-          
+
           {props.expandableMessage ? (
             <Button
               variant="outline"
               onClick={() => setShowExpandableMessage(true)}
-              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${
-                (props.outOfContext || (!props.visible && props.isInstructor)) 
-                  ? "opacity-60 border-dashed" 
-                  : ""
-              }`}
+              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${(props.outOfContext || (!props.visible && props.isInstructor))
+                ? "opacity-60 border-dashed"
+                : ""
+                }`}
             >
               {props.typing ? (
                 <CustomTypingIndicator />
               ) : (
-                <Markdown 
-                  remarkPlugins={[remarkGfm]} 
-                  className="prose prose-sm max-w-none dark:prose-invert"
+                <Markdown
+                  remarkPlugins={[remarkGfm]}
+                  className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
+                  components={{ a: LinkRenderer }}
                 >
                   {props.message}
                 </Markdown>
               )}
             </Button>
           ) : (
-            <div className={`bg-muted/50 rounded-lg p-4 ${
-              (props.outOfContext || (!props.visible && props.isInstructor)) 
-                ? "opacity-60 border border-dashed" 
-                : ""
-            }`}>
+            <div className={`bg-muted/50 rounded-lg p-4 ${(props.outOfContext || (!props.visible && props.isInstructor))
+              ? "opacity-60 border border-dashed"
+              : ""
+              }`}>
               {props.typing ? (
                 <CustomTypingIndicator />
               ) : (
-                <Markdown 
-                  remarkPlugins={[remarkGfm]} 
-                  className="prose prose-sm max-w-none dark:prose-invert"
+                <Markdown
+                  remarkPlugins={[remarkGfm]}
+                  className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
+                  components={{ a: LinkRenderer }}
                 >
                   {props.message}
                 </Markdown>
@@ -236,7 +248,7 @@ export const MessageLeft = (props: MessageProps) => {
           )}
         </div>
       </div>
-      
+
       {props.sources && <ViewSources sources={props.sources} />}
     </div>
   ) : props.sources ? (
@@ -284,9 +296,9 @@ export const MessageRight = (props: MessageProps) => {
 
   function LinkRenderer(props: any) {
     return (
-      <a 
-        href={props.href} 
-        target="_blank" 
+      <a
+        href={props.href}
+        target="_blank"
         rel="noreferrer"
         className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
       >
@@ -294,7 +306,7 @@ export const MessageRight = (props: MessageProps) => {
       </a>
     );
   }
-
+  //Note: replace new lines with double new line for markdown
   return (props.visible === undefined || props.visible || props.isInstructor) ? (
     <div className="flex flex-col gap-2 mb-6">
       <div className="flex items-start gap-3 justify-end">
@@ -323,7 +335,7 @@ export const MessageRight = (props: MessageProps) => {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -350,29 +362,28 @@ export const MessageRight = (props: MessageProps) => {
               {props.displayName ? props.displayName : "You"}
             </span>
           </div>
-          
+
           {props.messageType && props.messageType === "file" ? (
-            <div className={`max-w-md ${
-              (props.outOfContext || (!props.visible && props.isInstructor)) 
-                ? "opacity-60 border border-dashed" 
-                : ""
-            }`}>
+            <div className={`max-w-md ${(props.outOfContext || (!props.visible && props.isInstructor))
+              ? "opacity-60 border border-dashed"
+              : ""
+              }`}>
               <Dialog open={openFileModal} onOpenChange={setOpenFileModal}>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>File Content</DialogTitle>
                   </DialogHeader>
-                  <div className="whitespace-pre-wrap font-mono text-sm bg-muted p-4 rounded-lg">
-                    {props.message}
-                  </div>
+                  <Markdown className="whitespace-pre-wrap font-mono text-sm p-4 rounded-lg">
+                    {props.message.replace(/\n/g, "\n\n")}
+                  </Markdown>
                 </DialogContent>
               </Dialog>
-              
+
               <Card className="transition-all duration-200">
                 <CardContent className="p-4">
-                  <div className="whitespace-pre-wrap font-mono text-sm mb-4 max-h-32 overflow-hidden">
-                    {expandFile ? props.message : props.message.substring(0, 200) + "..."}
-                  </div>
+                  <Markdown className="whitespace-pre-wrap font-mono text-sm mb-4 max-h-32 overflow-hidden">
+                    {expandFile ? props.message.replace(/\n/g, "\n\n") : props.message.substring(0, 200) + "..."}
+                  </Markdown>
                   <div className="flex items-center gap-2 pt-2 border-t">
                     <Button
                       variant="ghost"
@@ -406,16 +417,15 @@ export const MessageRight = (props: MessageProps) => {
               </Card>
             </div>
           ) : (
-            <div className={`bg-primary/10 rounded-lg p-4 max-w-md ${
-              (props.outOfContext || (!props.visible && props.isInstructor)) 
-                ? "opacity-60 border border-dashed" 
-                : ""
-            }`}>
-              <Markdown 
-                className="prose prose-sm max-w-none dark:prose-invert" 
+            <div className={`bg-primary/10 rounded-lg p-4 max-w-md ${(props.outOfContext || (!props.visible && props.isInstructor))
+              ? "opacity-60 border border-dashed"
+              : ""
+              }`}>
+              <Markdown
+                className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground"
                 components={{ a: LinkRenderer }}
               >
-                {props.message}
+                {props.message.replace(/\n/g, "\n\n")}
               </Markdown>
             </div>
           )}

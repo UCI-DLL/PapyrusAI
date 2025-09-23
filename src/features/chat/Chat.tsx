@@ -1105,7 +1105,7 @@ export default function Chat(): JSX.Element {
   // Filter conversations based on search term
   const filteredConversations = conversationList?.conversations?.filter((conv) =>
     conv.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  ).reverse() || [];
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="h-screen flex bg-background text-foreground relative overflow-hidden">

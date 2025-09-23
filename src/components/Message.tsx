@@ -119,6 +119,19 @@ export const MessageLeft = (props: MessageProps) => {
     toast.success("Message copied to clipboard");
   };
 
+  function LinkRenderer(props: any) {
+    return (
+      <a 
+        href={props.href} 
+        target="_blank" 
+        rel="noreferrer"
+        className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+      >
+        {props.children}
+      </a>
+    );
+  }
+
   //if empty message
   if ((props.message === "" || props.message === null) && !props.typing) {
     return <></>;
@@ -146,7 +159,7 @@ export const MessageLeft = (props: MessageProps) => {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm font-medium text-muted-foreground">
               {props.isInstructor && !props.visible && (
-                <span className="text-destructive">Hidden Message - </span>
+                <span className="text-sm">Sources - </span>
               )}
               {displayName}
             </span>
@@ -210,7 +223,8 @@ export const MessageLeft = (props: MessageProps) => {
               ) : (
                 <Markdown 
                   remarkPlugins={[remarkGfm]} 
-                  className="prose prose-sm max-w-none dark:prose-invert"
+                  className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
+                  components={{ a: LinkRenderer }}
                 >
                   {props.message}
                 </Markdown>
@@ -227,7 +241,8 @@ export const MessageLeft = (props: MessageProps) => {
               ) : (
                 <Markdown 
                   remarkPlugins={[remarkGfm]} 
-                  className="prose prose-sm max-w-none dark:prose-invert"
+                  className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
+                  components={{ a: LinkRenderer }}
                 >
                   {props.message}
                 </Markdown>
@@ -362,7 +377,7 @@ export const MessageRight = (props: MessageProps) => {
                   <DialogHeader>
                     <DialogTitle>File Content</DialogTitle>
                   </DialogHeader>
-                  <div className="whitespace-pre-wrap font-mono text-sm bg-muted p-4 rounded-lg">
+                  <div className="whitespace-pre-wrap font-mono text-sm p-4 rounded-lg">
                     {props.message}
                   </div>
                 </DialogContent>
@@ -412,7 +427,7 @@ export const MessageRight = (props: MessageProps) => {
                 : ""
             }`}>
               <Markdown 
-                className="prose prose-sm max-w-none dark:prose-invert" 
+                className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground" 
                 components={{ a: LinkRenderer }}
               >
                 {props.message}

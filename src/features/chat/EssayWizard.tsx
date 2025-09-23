@@ -19,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
-import { PenTool, Paperclip, Send, MessageSquare } from "lucide-react";
+import { PenTool, Paperclip, Send } from "lucide-react";
 import DocumentModal from "./DocumentModal";
 import { PromptType } from "../../utility/types/CourseTypes";
 

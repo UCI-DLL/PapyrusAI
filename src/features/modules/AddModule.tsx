@@ -1,14 +1,13 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Separator } from "../../components/ui/separator";
 import { ChevronDown, Info, Plus, Loader2, FileText, MessageSquare, Save, Folder } from "lucide-react";
 import Put from "../../utility/Put";
@@ -98,18 +97,18 @@ export default function AddModule(): JSX.Element {
     type: "",
   });
 
-  function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) {
-      //Save and publish
-      handleSubmit(e, true);
-    } else if (selectedIndexSave === 1) {
-      //save and not publish
-      handleSubmit(e, false);
-    } else if (selectedIndexSave === 2) {
-      //discard changes
-      setOpenDiscardModal(true);
-    }
-  }
+  // function handleSaveClick(e: any) {
+  //   if (selectedIndexSave === 0) {
+  //     //Save and publish
+  //     handleSubmit(e, true);
+  //   } else if (selectedIndexSave === 1) {
+  //     //save and not publish
+  //     handleSubmit(e, false);
+  //   } else if (selectedIndexSave === 2) {
+  //     //discard changes
+  //     setOpenDiscardModal(true);
+  //   }
+  // }
 
   const handleMenuItemClick = (index: number) => {
     if (index === 0) {
@@ -126,10 +125,6 @@ export default function AddModule(): JSX.Element {
     }
     setSelectedIndexSave(index);
     setOpenSave(false);
-  };
-
-  const handleToggle = () => {
-    setOpenSave((prevOpen) => !prevOpen);
   };
 
   function handleSubmit(e: any, isPublished = false) {

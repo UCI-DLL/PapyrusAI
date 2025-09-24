@@ -38,11 +38,6 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../components/ui/popover";
-import {
   ChevronDown,
   Info,
   Loader2,

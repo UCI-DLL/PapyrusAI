@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardFooter } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import {
   Dialog,

@@ -116,7 +116,7 @@ export default function ModuleList({
     return () => {
       controller.abort();
     };
-  }, [user, course, openCourseListModal]);
+  }, [user, course, openCourseListModal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);

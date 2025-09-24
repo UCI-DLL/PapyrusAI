@@ -8,9 +8,6 @@ import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import { UserContext } from "../../utility/context/UserContext";
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "../../components/ui/dialog";
 import AddCourseForm from "./AddCourseForm";

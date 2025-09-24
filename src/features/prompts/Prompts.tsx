@@ -15,7 +15,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
@@ -25,7 +24,6 @@ import { getPromptList } from "../../utility/endpoints/PromptEndpoints";
 import CreatePromptForm from "./CreatePromptForm";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { Search, Filter, Plus, Loader2, User, Calendar } from "lucide-react";
-import { cn } from "../../lib/utils";
 
 export enum SortOptions {
   Ascending = "Ascending",

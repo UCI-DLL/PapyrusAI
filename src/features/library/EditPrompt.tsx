@@ -7,7 +7,6 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Separator } from "../../components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -186,13 +185,13 @@ export default function EditPrompt(): JSX.Element {
     });
   }
 
-  function handleSaveClick(e: any) {
-    if (selectedOption === 0) { //Save and publish
-      handleSubmit(e, false);
-    } else if (selectedOption === 1) { //discard changes
-      setOpenDiscardModal(true);
-    }
-  };
+  // function handleSaveClick(e: any) {
+  //   if (selectedOption === 0) { //Save and publish
+  //     handleSubmit(e, false);
+  //   } else if (selectedOption === 1) { //discard changes
+  //     setOpenDiscardModal(true);
+  //   }
+  // };
 
   const handleMenuItemClick = (index: number) => {
     if (index === 0) { //Save and publish

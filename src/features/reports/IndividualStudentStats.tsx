@@ -217,10 +217,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
   if (!student) return null;
   return (
     <div style={{ padding: "0 2rem", marginBottom: "3rem" }}>
-      <h2 className="text-2xl font-bold text-foreground mb-1">Student:</h2>
-      <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-        {info?.name as string} {info?.family_name as string}
-      </h1>
+      <h2 className="text-2xl font-bold text-foreground mb-1">
+        Student: {info?.name as string} {info?.family_name as string}
+      </h2>
       <p>Email: {info?.email as string}</p>
       <p>Total Messages: {totalMessages}</p>
       <button

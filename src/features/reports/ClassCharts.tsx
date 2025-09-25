@@ -276,6 +276,10 @@ export default function ClassCharts({
     const { width, height } = getModuleChartDimensions();
 
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: "hsl(var(--foreground))",
+      },
       x: {
         label: "Module",
         tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
@@ -302,7 +306,7 @@ export default function ClassCharts({
               fill: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
               count: true,
             },
-            fill: "white",
+            fill: "hsl(var(--card))",
           },
         }),
       ],
@@ -350,7 +354,10 @@ export default function ClassCharts({
     const { width, height } = getChartDimensions();
 
     const plot = Plot.plot({
-      style: {},
+      style: {
+        background: "transparent",
+        color: "hsl(var(--foreground))",
+      },
       x: {
         type: "time",
         label: "Date",
@@ -361,7 +368,11 @@ export default function ClassCharts({
         Plot.dot(parsedData, { x: "date", y: "avg_convo_length" }),
         Plot.tip(
           parsedData,
-          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "white" })
+          Plot.pointerX({
+            x: "date",
+            y: "avg_convo_length",
+            fill: "hsl(var(--card))",
+          })
         ),
       ],
       width,
@@ -400,6 +411,10 @@ export default function ClassCharts({
     const { width, height } = getChartDimensions();
 
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: "hsl(var(--foreground))",
+      },
       x: {
         type: "time",
         label: "Date",
@@ -410,7 +425,11 @@ export default function ClassCharts({
         Plot.dot(parsedData, { x: "date", y: "num_convos" }),
         Plot.tip(
           parsedData,
-          Plot.pointerX({ x: "date", y: "num_convos", fill: "white" })
+          Plot.pointerX({
+            x: "date",
+            y: "num_convos",
+            fill: "hsl(var(--card))",
+          })
         ),
       ],
       width,
@@ -428,6 +447,10 @@ export default function ClassCharts({
     const aggregatedData = getAggregatedClassificationData();
     const { width, height } = getModuleChartDimensions();
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: "hsl(var(--foreground))",
+      },
       x: {
         label: "Classification",
         tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
@@ -458,7 +481,7 @@ export default function ClassCharts({
               fill: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
               count: true,
             },
-            fill: "white",
+            fill: "hsl(var(--card))",
           },
         }),
       ],
@@ -679,16 +702,10 @@ export default function ClassCharts({
                     flexWrap: "wrap",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                    }}
-                  >
+                  <div className="flex flex-col items-start">
                     <label
                       htmlFor="startDate"
-                      style={{ marginBottom: "0.5rem", fontWeight: 500 }}
+                      className="mb-2 font-medium text-foreground"
                     >
                       Start Date:
                     </label>
@@ -697,24 +714,13 @@ export default function ClassCharts({
                       id="startDate"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      style={{
-                        padding: "0.5rem",
-                        borderRadius: 4,
-                        border: "1px solid #ccc",
-                        fontSize: "0.9rem",
-                      }}
+                      className="px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                    }}
-                  >
+                  <div className="flex flex-col items-start">
                     <label
                       htmlFor="endDate"
-                      style={{ marginBottom: "0.5rem", fontWeight: 500 }}
+                      className="mb-2 font-medium text-foreground"
                     >
                       End Date:
                     </label>
@@ -723,12 +729,7 @@ export default function ClassCharts({
                       id="endDate"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      style={{
-                        padding: "0.5rem",
-                        borderRadius: 4,
-                        border: "1px solid #ccc",
-                        fontSize: "0.9rem",
-                      }}
+                      className="px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
                 </div>

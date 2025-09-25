@@ -140,6 +140,10 @@ export default function StudentStats({ students }: StudentStatsProps) {
   useEffect(() => {
     if (!counts.length) return;
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: "hsl(var(--foreground))",
+      },
       x: {
         type: "time",
         label: "Date",
@@ -161,7 +165,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.studentName,
               value: true,
             },
-            fill: "white",
+            fill: "hsl(var(--card))",
           },
           interval: "1 day",
         }),
@@ -178,6 +182,10 @@ export default function StudentStats({ students }: StudentStatsProps) {
   useEffect(() => {
     if (!lengths.length) return;
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: "hsl(var(--foreground))",
+      },
       x: {
         type: "time",
         label: "Date",
@@ -199,7 +207,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.studentName,
               value: true,
             },
-            fill: "white",
+            fill: "hsl(var(--card))",
           },
           interval: "1 day",
         }),
@@ -216,6 +224,10 @@ export default function StudentStats({ students }: StudentStatsProps) {
   useEffect(() => {
     if (!classificationData.length) return;
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: "hsl(var(--foreground))",
+      },
       x: { label: "Classification" },
       y: { label: "Count" },
       color: { legend: true, label: "Student", scheme: "cividis" },
@@ -234,7 +246,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.fullClassification || d.classification,
               count: true,
             },
-            fill: "white",
+            fill: "hsl(var(--card))",
           },
           order: "stack",
         }),
@@ -251,6 +263,10 @@ export default function StudentStats({ students }: StudentStatsProps) {
   useEffect(() => {
     if (!moduleData.length) return;
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: "hsl(var(--foreground))",
+      },
       x: { label: "Module" },
       y: { label: "Count" },
       color: { legend: true, label: "Student", scheme: "cividis" },
@@ -269,7 +285,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.fullModuleName || d.moduleName,
               count: true,
             },
-            fill: "white",
+            fill: "hsl(var(--card))",
           },
           order: "stack",
         }),

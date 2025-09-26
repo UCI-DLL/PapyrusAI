@@ -4,6 +4,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StudentStats from "./StudentStats";
 import StudentMenu from "./StudentMenu";
 import { Card, CardContent } from "../../components/ui/card";
+import { colorToHex } from "./color";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
@@ -25,6 +26,12 @@ export default function ClassCharts({
   const chatClassificationRef = useRef<HTMLDivElement>(null);
   const countsRef = useRef<HTMLDivElement>(null);
   const moduleUsageRef = useRef<HTMLDivElement>(null);
+  const backgroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--background")
+  );
+  const foregroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--foreground")
+  );
 
   // Get available dates from the data and convert to proper date format
   const getAvailableDates = useCallback(() => {
@@ -278,7 +285,7 @@ export default function ClassCharts({
     const plot = Plot.plot({
       style: {
         background: "transparent",
-        color: "hsl(var(--foreground))",
+        color: foregroundColor,
       },
       x: {
         label: "Module",
@@ -306,7 +313,7 @@ export default function ClassCharts({
               fill: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
               count: true,
             },
-            fill: "hsl(var(--card))",
+            fill: backgroundColor,
           },
         }),
       ],
@@ -325,6 +332,8 @@ export default function ClassCharts({
     endDate,
     chartRefreshTrigger,
     getAggregatedModuleData,
+    backgroundColor,
+    foregroundColor,
   ]);
 
   useEffect(() => {
@@ -356,7 +365,7 @@ export default function ClassCharts({
     const plot = Plot.plot({
       style: {
         background: "transparent",
-        color: "hsl(var(--foreground))",
+        color: foregroundColor,
       },
       x: {
         type: "time",
@@ -371,7 +380,7 @@ export default function ClassCharts({
           Plot.pointerX({
             x: "date",
             y: "avg_convo_length",
-            fill: "hsl(var(--card))",
+            fill: backgroundColor,
           })
         ),
       ],
@@ -382,7 +391,14 @@ export default function ClassCharts({
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate, chartRefreshTrigger]);
+  }, [
+    analysis,
+    startDate,
+    endDate,
+    chartRefreshTrigger,
+    backgroundColor,
+    foregroundColor,
+  ]);
 
   useEffect(() => {
     if (!analysis) return;
@@ -413,7 +429,7 @@ export default function ClassCharts({
     const plot = Plot.plot({
       style: {
         background: "transparent",
-        color: "hsl(var(--foreground))",
+        color: foregroundColor,
       },
       x: {
         type: "time",
@@ -428,7 +444,7 @@ export default function ClassCharts({
           Plot.pointerX({
             x: "date",
             y: "num_convos",
-            fill: "hsl(var(--card))",
+            fill: backgroundColor,
           })
         ),
       ],
@@ -439,7 +455,14 @@ export default function ClassCharts({
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate, chartRefreshTrigger]);
+  }, [
+    analysis,
+    startDate,
+    endDate,
+    chartRefreshTrigger,
+    backgroundColor,
+    foregroundColor,
+  ]);
 
   useEffect(() => {
     if (!analysis || !startDate || !endDate || !showClassificationChart) return;
@@ -449,7 +472,7 @@ export default function ClassCharts({
     const plot = Plot.plot({
       style: {
         background: "transparent",
-        color: "hsl(var(--foreground))",
+        color: foregroundColor,
       },
       x: {
         label: "Classification",
@@ -481,7 +504,7 @@ export default function ClassCharts({
               fill: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
               count: true,
             },
-            fill: "hsl(var(--card))",
+            fill: backgroundColor,
           },
         }),
       ],
@@ -501,6 +524,8 @@ export default function ClassCharts({
     showClassificationChart,
     chartRefreshTrigger,
     getAggregatedClassificationData,
+    backgroundColor,
+    foregroundColor,
   ]);
 
   // Placeholder component for empty charts

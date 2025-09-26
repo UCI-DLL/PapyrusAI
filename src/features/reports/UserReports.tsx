@@ -1,22 +1,14 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-} from "@mui/material";
 import React, { useEffect, useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import Get from "../../utility/Get";
 import { getUserConversationList } from "../../utility/endpoints/ConversationEndpoints";
 import { ConversationType } from "../../utility/types/ConversationTypes";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { CustomUserType, UserType } from "../../utility/types/UserTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
-import LinearProgress from "@mui/material/LinearProgress";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -130,33 +122,80 @@ export default function UserReports(): JSX.Element {
   }
 
   return !isLoading ? (
-    <div className="reports">
-      <h3>{`Reports ${
-        viewUser ? `for ${viewUser.name} ${viewUser.family_name}` : ""
-      }`}</h3>
-      <div>
-        The user report page summarizes a specific user’s interactions with AI
-        in all of the courses of which you are an instructor. To view a user’s
-        conversations within a given module, click “List Conversations” on the
-        row for your desired module. You will then be able to select a specific
-        conversation to see both the student and AI output.
-      </div>
-      <hr />
+    <Card className="w-[99%] mx-auto my-2 shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ cursor: "pointer" }}>
+            <ArrowBackIcon
+              onClick={() => navigator("/reports")}
+              style={{
+                fontSize: "3rem",
+                padding: "0.5rem",
+                margin: "0.5rem",
+                color: "#666",
+                transition: "color 0.2s ease-in-out",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "#1976d2";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "#666";
+              }}
+            />
+          </div>
+        </div>
 
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Course</TableCell>
-              <TableCell align="right">Module</TableCell>
-              <TableCell align="right"># of Conversations</TableCell>
-              <TableCell align="right">Last Accessed</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {conversationList.length > 0 &&
-              conversationList.map((row, index) => {
+        <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
+          <h2 className="text-2xl font-bold text-foreground mb-1">User:</h2>
+          <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+            {viewUser
+              ? `${viewUser.name} ${viewUser.family_name}`
+              : "User Reports"}
+          </h1>
+          <p style={{ fontSize: "1.1rem", color: "#666" }}>
+            The user report page summarizes a specific user's interactions with
+            AI in all of the courses of which you are an instructor. To view a
+            user's conversations within a given module, click "List
+            Conversations" on the row for your desired module.
+          </p>
+        </div>
+
+        {conversationList.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "4rem 2rem",
+              color: "#666",
+            }}
+          >
+            <h2 className="text-2xl font-bold text-foreground mb-1">
+              No Data Available
+            </h2>
+            <p style={{ fontSize: "1.1rem" }}>
+              No conversation data available for this user. This could mean:
+            </p>
+            <ul
+              style={{
+                textAlign: "left",
+                display: "inline-block",
+                marginTop: "1rem",
+                fontSize: "1rem",
+              }}
+            >
+              <li>The user hasn't had any conversations yet</li>
+              <li>You don't have access to this user's data</li>
+              <li>The user hasn't been enrolled in any courses</li>
+            </ul>
+          </div>
+        ) : (
+          <div style={{ padding: "0 2rem" }}>
+            <div className="space-y-4">
+              {conversationList.map((row, index) => {
                 //Get the time of last accessed
                 var tempTime =
                   row.conversations && row.conversations.length > 0
@@ -198,44 +237,91 @@ export default function UserReports(): JSX.Element {
                 } else {
                   tempTime = "N/A";
                 }
+
                 return (
-                  <TableRow
+                  <Card
                     key={index}
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                    className="group bg-card border rounded-xl hover-lift shadow-sm transition-all duration-200 hover:shadow-md"
                   >
-                    <TableCell component="th" scope="row">
-                      {row.course.name}
-                    </TableCell>
-                    <TableCell align="right">
-                      {
-                        row.course.modules.find((x) => x.id === row.moduleId)
-                          ?.name
-                      }
-                    </TableCell>
-                    <TableCell align="right">
-                      {row.conversations.length}
-                    </TableCell>
-                    <TableCell align="right">{tempTime}</TableCell>
-                    <TableCell align="right">
-                      <Button
-                        variant="contained"
-                        onClick={() =>
-                          navigator(
-                            `/courses/${row.courseId}/modules/${row.moduleId}/username/${viewUser?.username}`
-                          )
-                        }
-                      >
-                        List Conversations
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                            {row.course.name}
+                          </h3>
+                          <div className="space-y-1">
+                            <div className="text-sm text-muted-foreground">
+                              Module:{" "}
+                              {
+                                row.course.modules.find(
+                                  (x) => x.id === row.moduleId
+                                )?.name
+                              }
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Last Accessed: {tempTime}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right ml-4">
+                          <div className="text-base font-semibold text-foreground mb-2">
+                            {row.conversations.length} Conversations
+                          </div>
+                          <Button
+                            onClick={() =>
+                              navigator(
+                                `/courses/${row.courseId}/modules/${row.moduleId}/username/${viewUser?.username}`
+                              )
+                            }
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            List Conversations
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground italic">
+                        Click "List Conversations" to view detailed interactions
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   ) : (
-    <LinearProgress />
+    <Card className="w-[99%] mx-auto my-2 shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "200px",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "4px",
+              backgroundColor: "#e5e7eb",
+              borderRadius: "2px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: "#3b82f6",
+                animation: "loading 1.5s ease-in-out infinite",
+              }}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

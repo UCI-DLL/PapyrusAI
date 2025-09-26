@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import IndividualStudentStats from "./IndividualStudentStats";
 import * as Plot from "@observablehq/plot";
+import { colorToHex } from "./color";
 
 interface StudentStatsProps {
   students: Record<string, unknown>[];
@@ -136,13 +137,19 @@ export default function StudentStats({ students }: StudentStatsProps) {
   const lengthsRef = useRef<HTMLDivElement>(null);
   const classificationRef = useRef<HTMLDivElement>(null);
   const moduleUsageRef = useRef<HTMLDivElement>(null);
+  const backgroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--background")
+  );
+  const foregroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--foreground")
+  );
 
   useEffect(() => {
     if (!counts.length) return;
     const plot = Plot.plot({
       style: {
         background: "transparent",
-        color: "hsl(var(--foreground))",
+        color: foregroundColor,
       },
       x: {
         type: "time",
@@ -165,7 +172,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.studentName,
               value: true,
             },
-            fill: "hsl(var(--card))",
+            fill: backgroundColor,
           },
           interval: "1 day",
         }),
@@ -177,14 +184,14 @@ export default function StudentStats({ students }: StudentStatsProps) {
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
     }
-  }, [counts]);
+  }, [counts, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!lengths.length) return;
     const plot = Plot.plot({
       style: {
         background: "transparent",
-        color: "hsl(var(--foreground))",
+        color: foregroundColor,
       },
       x: {
         type: "time",
@@ -207,7 +214,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.studentName,
               value: true,
             },
-            fill: "hsl(var(--card))",
+            fill: backgroundColor,
           },
           interval: "1 day",
         }),
@@ -219,14 +226,14 @@ export default function StudentStats({ students }: StudentStatsProps) {
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
     }
-  }, [lengths]);
+  }, [lengths, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!classificationData.length) return;
     const plot = Plot.plot({
       style: {
         background: "transparent",
-        color: "hsl(var(--foreground))",
+        color: foregroundColor,
       },
       x: { label: "Classification" },
       y: { label: "Count" },
@@ -246,7 +253,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.fullClassification || d.classification,
               count: true,
             },
-            fill: "hsl(var(--card))",
+            fill: backgroundColor,
           },
           order: "stack",
         }),
@@ -258,14 +265,14 @@ export default function StudentStats({ students }: StudentStatsProps) {
       classificationRef.current.innerHTML = "";
       classificationRef.current.appendChild(plot);
     }
-  }, [classificationData]);
+  }, [classificationData, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!moduleData.length) return;
     const plot = Plot.plot({
       style: {
         background: "transparent",
-        color: "hsl(var(--foreground))",
+        color: foregroundColor,
       },
       x: { label: "Module" },
       y: { label: "Count" },
@@ -285,7 +292,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.fullModuleName || d.moduleName,
               count: true,
             },
-            fill: "hsl(var(--card))",
+            fill: backgroundColor,
           },
           order: "stack",
         }),
@@ -297,7 +304,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
     }
-  }, [moduleData]);
+  }, [moduleData, backgroundColor, foregroundColor]);
 
   return (
     <div>

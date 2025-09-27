@@ -18,8 +18,8 @@ export default function ClassCharts({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
-  const [showClassificationChart, setShowClassificationChart] =
-    useState<boolean>(false);
+  // const [showClassificationChart, setShowClassificationChart] =
+  //   useState<boolean>(false); // Unused state variable
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState<number>(0);
   const [studentMenuOpen, setStudentMenuOpen] = useState<boolean>(false);
   const lengthsRef = useRef<HTMLDivElement>(null);
@@ -168,8 +168,6 @@ export default function ClassCharts({
   // Ensure charts are rendered when class view is displayed
   useEffect(() => {
     if (selectedStudentIds.length === 0 && analysis && !isAnalysisEmpty()) {
-      // Charts will be rendered by the individual useEffect hooks
-      // No need to manually call renderCharts()
     }
   }, [selectedStudentIds.length, analysis, isAnalysisEmpty]);
 
@@ -521,7 +519,7 @@ export default function ClassCharts({
     analysis,
     startDate,
     endDate,
-    showClassificationChart,
+    // showClassificationChart, // Removed unused dependency
     chartRefreshTrigger,
     getAggregatedClassificationData,
     backgroundColor,

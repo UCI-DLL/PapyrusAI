@@ -151,16 +151,16 @@ export default function UserReports(): JSX.Element {
         </div>
 
         <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
-          <h2 className="text-2xl font-bold text-foreground mb-1">User:</h2>
-          <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+          <h2 className="text-2xl font-bold text-foreground mb-1">
+            Student:{" "}
             {viewUser
               ? `${viewUser.name} ${viewUser.family_name}`
               : "User Reports"}
-          </h1>
+          </h2>
           <p style={{ fontSize: "1.1rem", color: "#666" }}>
-            The user report page summarizes a specific user's interactions with
-            AI in all of the courses of which you are an instructor. To view a
-            user's conversations within a given module, click "List
+            The student report page summarizes a specific student's interactions
+            with AI in all of the courses of which you are an instructor. To
+            view a student's conversations within a given module, click "List
             Conversations" on the row for your desired module.
           </p>
         </div>
@@ -177,7 +177,7 @@ export default function UserReports(): JSX.Element {
               No Data Available
             </h2>
             <p style={{ fontSize: "1.1rem" }}>
-              No conversation data available for this user. This could mean:
+              No conversation data available for this student. This could mean:
             </p>
             <ul
               style={{
@@ -187,9 +187,9 @@ export default function UserReports(): JSX.Element {
                 fontSize: "1rem",
               }}
             >
-              <li>The user hasn't had any conversations yet</li>
-              <li>You don't have access to this user's data</li>
-              <li>The user hasn't been enrolled in any courses</li>
+              <li>The student hasn't had any conversations yet</li>
+              <li>You don't have access to this student's data</li>
+              <li>The student hasn't been enrolled in any courses</li>
             </ul>
           </div>
         ) : (

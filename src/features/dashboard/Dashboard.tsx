@@ -40,7 +40,7 @@ export default function Dashboard(): JSX.Element {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
@@ -86,7 +86,7 @@ export default function Dashboard(): JSX.Element {
     const controller = new AbortController();
     getCourses(controller.signal);
     getStarred(controller.signal);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const starredCourses = useMemo(
     () => starred?.courses ?? [],

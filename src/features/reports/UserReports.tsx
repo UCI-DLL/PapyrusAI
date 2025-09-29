@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Card, CardContent } from "../../components/ui/card";
@@ -12,6 +12,7 @@ import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { Loader2 } from "lucide-react";
 
 export default function UserReports(): JSX.Element {
   let navigator = useNavigate();
@@ -25,6 +26,12 @@ export default function UserReports(): JSX.Element {
     }>
   >([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const retryCountRef = useRef<number>(0);
+
+  // Console log loading status changes
+  useEffect(() => {
+    console.log("UserReports: isLoading changed to:", isLoading);
+  }, [isLoading]);
   const [viewUser, setViewUser] = useState<UserType>();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
@@ -42,57 +49,128 @@ export default function UserReports(): JSX.Element {
 
       //get list of conversation
       //TODO handle pagination of conversation lists later when reports is more defined
-      Get(getUserConversationList(username), controller.signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //Get the list of all conversations
-            //for each courseid, get the course data
-            res.data.map((conversation: any) => {
-              Get(getCourse(conversation.courseId), controller.signal).then(
-                (res1) => {
-                  if (res1 && res1.status && res1.status < 300) {
-                    if (
-                      res1.data &&
-                      res1.data.instructor &&
-                      (res1.data.instructor.username === user.username ||
-                        (res1.data.taList &&
-                          res1.data.taList.find(
-                            (a: CustomUserType) => a.username === user.username
-                          )) || //handle tas too
-                        user.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
-                        )) //or if an admin
-                    ) {
-                      //set conversation data
-                      setConversationList((prev) => [
-                        ...prev,
-                        {
-                          conversations: conversation.conversations,
-                          course: res1.data,
-                          courseId: conversation.courseId,
-                          moduleId: conversation.moduleId,
-                        },
-                      ]);
+      const fetchConversations = () => {
+        Get(getUserConversationList(username), controller.signal, true).then(
+          (res) => {
+            console.log("UserReports: getUserConversationList response:", res);
+            console.log("UserReports: Response status:", res?.status);
+            console.log("UserReports: Response data:", res?.data);
+
+            if (res === undefined) {
+              if (retryCountRef.current < 3) {
+                retryCountRef.current += 1;
+                console.log(
+                  `UserReports: Request returned undefined, retrying in 2 seconds... (attempt ${retryCountRef.current}/3)`
+                );
+                setTimeout(() => {
+                  fetchConversations();
+                }, 2000);
+                return;
+              } else {
+                console.log("UserReports: Max retries reached, giving up");
+                setIsLoading(false);
+                return;
+              }
+            }
+
+            // Reset retry count on successful response
+            retryCountRef.current = 0;
+
+            if (res && res.status && res.status < 300) {
+              if (res.data) {
+                console.log(
+                  "UserReports: Got conversation list, processing",
+                  res.data.length,
+                  "conversations"
+                );
+
+                // Track how many course fetches we need to complete
+                let completedFetches = 0;
+                const totalFetches = res.data.length;
+
+                //Get the list of all conversations
+                //for each courseid, get the course data
+                res.data.map((conversation: any) => {
+                  Get(getCourse(conversation.courseId), controller.signal).then(
+                    (res1) => {
+                      completedFetches++;
+                      console.log(
+                        `UserReports: Completed fetch ${completedFetches}/${totalFetches}`
+                      );
+
+                      if (res1 && res1.status && res1.status < 300) {
+                        if (
+                          res1.data &&
+                          res1.data.instructor &&
+                          (res1.data.instructor.username === user.username ||
+                            (res1.data.taList &&
+                              res1.data.taList.find(
+                                (a: CustomUserType) =>
+                                  a.username === user.username
+                              )) || //handle tas too
+                            user.groups.includes(
+                              process.env.REACT_APP_ADMIN
+                                ? process.env.REACT_APP_ADMIN
+                                : "PapyrusAIAdmin"
+                            )) //or if an admin
+                        ) {
+                          //set conversation data
+                          setConversationList((prev) => [
+                            ...prev,
+                            {
+                              conversations: conversation.conversations,
+                              course: res1.data,
+                              courseId: conversation.courseId,
+                              moduleId: conversation.moduleId,
+                            },
+                          ]);
+                        }
+                      } else if (res1 && res1.status === 401) {
+                        navigator("/login");
+                      } else {
+                        //handle errors
+                      }
+
+                      // Only set loading to false when all course fetches are complete
+                      if (completedFetches === totalFetches) {
+                        console.log(
+                          "UserReports: All course fetches completed, setting loading to false"
+                        );
+                        setIsLoading(false);
+                      }
                     }
-                  } else if (res1 && res1.status === 401) {
-                    navigator("/login");
-                  } else {
-                    //handle errors
-                  }
+                  );
+                  return "";
+                });
+
+                // If no conversations to process, set loading to false immediately
+                if (totalFetches === 0) {
+                  console.log(
+                    "UserReports: No conversations to process, setting loading to false"
+                  );
+                  setIsLoading(false);
                 }
+              } else {
+                console.log(
+                  "UserReports: No conversation data, setting loading to false"
+                );
+                setIsLoading(false);
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              // handle error
+              console.log(
+                "UserReports: Error getting conversation list, setting loading to false"
               );
-              return "";
-            });
+              console.log("UserReports: Error response details:", res);
+              setIsLoading(false);
+            }
           }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          // handle error
-        }
-        setIsLoading(false);
-      });
+        );
+      };
+
+      fetchConversations();
     }
 
     return () => {
@@ -132,7 +210,7 @@ export default function UserReports(): JSX.Element {
         >
           <div style={{ cursor: "pointer" }}>
             <ArrowBackIcon
-              onClick={() => navigator("/reports")}
+              onClick={() => navigator(-1)}
               style={{
                 fontSize: "3rem",
                 padding: "0.5rem",
@@ -292,36 +370,13 @@ export default function UserReports(): JSX.Element {
       </CardContent>
     </Card>
   ) : (
-    <Card className="w-[99%] mx-auto my-2 shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "200px",
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              height: "4px",
-              backgroundColor: "#e5e7eb",
-              borderRadius: "2px",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                backgroundColor: "#3b82f6",
-                animation: "loading 1.5s ease-in-out infinite",
-              }}
-            />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground text-lg">
+          Loading user data and conversations...
+        </p>
+      </div>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StudentStats from "./StudentStats";
 import StudentMenu from "./StudentMenu";
 import { Card, CardContent } from "../../components/ui/card";
+import { colorToHex } from "./color";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
@@ -17,14 +18,20 @@ export default function ClassCharts({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
-  const [showClassificationChart, setShowClassificationChart] =
-    useState<boolean>(false);
+  // const [showClassificationChart, setShowClassificationChart] =
+  //   useState<boolean>(false); // Unused state variable
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState<number>(0);
   const [studentMenuOpen, setStudentMenuOpen] = useState<boolean>(false);
   const lengthsRef = useRef<HTMLDivElement>(null);
   const chatClassificationRef = useRef<HTMLDivElement>(null);
   const countsRef = useRef<HTMLDivElement>(null);
   const moduleUsageRef = useRef<HTMLDivElement>(null);
+  const backgroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--background")
+  );
+  const foregroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--foreground")
+  );
 
   // Get available dates from the data and convert to proper date format
   const getAvailableDates = useCallback(() => {
@@ -161,8 +168,6 @@ export default function ClassCharts({
   // Ensure charts are rendered when class view is displayed
   useEffect(() => {
     if (selectedStudentIds.length === 0 && analysis && !isAnalysisEmpty()) {
-      // Charts will be rendered by the individual useEffect hooks
-      // No need to manually call renderCharts()
     }
   }, [selectedStudentIds.length, analysis, isAnalysisEmpty]);
 
@@ -276,6 +281,10 @@ export default function ClassCharts({
     const { width, height } = getModuleChartDimensions();
 
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
       x: {
         label: "Module",
         tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
@@ -302,7 +311,7 @@ export default function ClassCharts({
               fill: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
               count: true,
             },
-            fill: "white",
+            fill: backgroundColor,
           },
         }),
       ],
@@ -321,6 +330,8 @@ export default function ClassCharts({
     endDate,
     chartRefreshTrigger,
     getAggregatedModuleData,
+    backgroundColor,
+    foregroundColor,
   ]);
 
   useEffect(() => {
@@ -350,7 +361,10 @@ export default function ClassCharts({
     const { width, height } = getChartDimensions();
 
     const plot = Plot.plot({
-      style: {},
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
       x: {
         type: "time",
         label: "Date",
@@ -361,7 +375,11 @@ export default function ClassCharts({
         Plot.dot(parsedData, { x: "date", y: "avg_convo_length" }),
         Plot.tip(
           parsedData,
-          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "white" })
+          Plot.pointerX({
+            x: "date",
+            y: "avg_convo_length",
+            fill: backgroundColor,
+          })
         ),
       ],
       width,
@@ -371,7 +389,14 @@ export default function ClassCharts({
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate, chartRefreshTrigger]);
+  }, [
+    analysis,
+    startDate,
+    endDate,
+    chartRefreshTrigger,
+    backgroundColor,
+    foregroundColor,
+  ]);
 
   useEffect(() => {
     if (!analysis) return;
@@ -400,6 +425,10 @@ export default function ClassCharts({
     const { width, height } = getChartDimensions();
 
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
       x: {
         type: "time",
         label: "Date",
@@ -410,7 +439,11 @@ export default function ClassCharts({
         Plot.dot(parsedData, { x: "date", y: "num_convos" }),
         Plot.tip(
           parsedData,
-          Plot.pointerX({ x: "date", y: "num_convos", fill: "white" })
+          Plot.pointerX({
+            x: "date",
+            y: "num_convos",
+            fill: backgroundColor,
+          })
         ),
       ],
       width,
@@ -420,14 +453,31 @@ export default function ClassCharts({
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
     }
-  }, [analysis, startDate, endDate, chartRefreshTrigger]);
+  }, [
+    analysis,
+    startDate,
+    endDate,
+    chartRefreshTrigger,
+    backgroundColor,
+    foregroundColor,
+  ]);
 
   useEffect(() => {
-    if (!analysis || !startDate || !endDate || !showClassificationChart) return;
+    if (
+      !analysis ||
+      !startDate ||
+      !endDate ||
+      /*!showClassificationChart*/ false
+    )
+      return;
 
     const aggregatedData = getAggregatedClassificationData();
     const { width, height } = getModuleChartDimensions();
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
       x: {
         label: "Classification",
         tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
@@ -458,7 +508,7 @@ export default function ClassCharts({
               fill: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
               count: true,
             },
-            fill: "white",
+            fill: backgroundColor,
           },
         }),
       ],
@@ -475,9 +525,11 @@ export default function ClassCharts({
     analysis,
     startDate,
     endDate,
-    showClassificationChart,
+    /* showClassificationChart, */ // Removed unused dependency
     chartRefreshTrigger,
     getAggregatedClassificationData,
+    backgroundColor,
+    foregroundColor,
   ]);
 
   // Placeholder component for empty charts
@@ -679,16 +731,10 @@ export default function ClassCharts({
                     flexWrap: "wrap",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                    }}
-                  >
+                  <div className="flex flex-col items-start">
                     <label
                       htmlFor="startDate"
-                      style={{ marginBottom: "0.5rem", fontWeight: 500 }}
+                      className="mb-2 font-medium text-foreground"
                     >
                       Start Date:
                     </label>
@@ -697,24 +743,13 @@ export default function ClassCharts({
                       id="startDate"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      style={{
-                        padding: "0.5rem",
-                        borderRadius: 4,
-                        border: "1px solid #ccc",
-                        fontSize: "0.9rem",
-                      }}
+                      className="px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                    }}
-                  >
+                  <div className="flex flex-col items-start">
                     <label
                       htmlFor="endDate"
-                      style={{ marginBottom: "0.5rem", fontWeight: 500 }}
+                      className="mb-2 font-medium text-foreground"
                     >
                       End Date:
                     </label>
@@ -723,12 +758,7 @@ export default function ClassCharts({
                       id="endDate"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      style={{
-                        padding: "0.5rem",
-                        borderRadius: 4,
-                        border: "1px solid #ccc",
-                        fontSize: "0.9rem",
-                      }}
+                      className="px-3 py-2 rounded border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
                 </div>

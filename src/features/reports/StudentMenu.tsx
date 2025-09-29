@@ -52,7 +52,7 @@ export default function StudentMenu({
     return () => {
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen]);
+  }, [isOpen, setIsOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function StudentMenu({
   }, [isOpen, setIsOpen]);
 
   if (loading) {
-    return <div style={{ padding: 20 }}>Loading students...</div>;
+    return <div className="p-5 text-muted-foreground">Loading students...</div>;
   }
 
   const toggleStudent = (id: string) => {
@@ -117,21 +117,17 @@ export default function StudentMenu({
   };
 
   return (
-    <div
-      style={{ paddingTop: 0, marginTop: 0, position: "relative" }}
-      ref={dropdownRef}
-    >
+    <div className="relative" ref={dropdownRef}>
       <Button
         variant="outline"
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          padding: smallButtons ? "0.3rem 0.8rem" : "0.5rem 1rem",
-          fontSize: smallButtons ? "0.9rem" : "1rem",
-          minWidth: smallButtons ? "120px" : "150px",
-          justifyContent: "space-between",
-        }}
+        className={`flex items-center justify-between gap-2 ${
+          smallButtons
+            ? "px-3 py-1.5 text-sm min-w-[120px]"
+            : "px-4 py-2 text-base min-w-[150px]"
+        }`}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div className="flex items-center gap-2">
           <Users size={16} />
           <span>{getSelectedStudentsText()}</span>
         </div>
@@ -139,55 +135,21 @@ export default function StudentMenu({
       </Button>
 
       {isOpen && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            minWidth: "200px",
-            maxHeight: "300px",
-            overflowY: "auto",
-            backgroundColor: "white",
-            border: "1px solid #e5e7eb",
-            borderRadius: "6px",
-            boxShadow:
-              "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-            zIndex: 1000,
-            marginTop: "4px",
-          }}
-        >
+        <div className="absolute top-full left-0 min-w-[200px] max-h-[300px] overflow-y-auto bg-card border border-border rounded-md shadow-lg z-[1000] mt-1">
           {/* Header */}
-          <div
-            style={{
-              padding: "0.5rem 0.75rem",
-              borderBottom: "1px solid #e5e7eb",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: "600",
-                color: "#374151",
-              }}
-            >
+          <div className="px-3 py-2 border-b border-border">
+            <div className="text-sm font-semibold text-foreground">
               Students ({students.length})
             </div>
           </div>
 
           {/* Select All / Clear All buttons */}
-          <div
-            style={{
-              padding: "0.5rem",
-              display: "flex",
-              gap: "0.5rem",
-              borderBottom: "1px solid #e5e7eb",
-            }}
-          >
+          <div className="p-2 flex gap-2 border-b border-border">
             <Button
               variant="outline"
               size="sm"
               onClick={selectAllStudents}
-              style={{ flex: 1, fontSize: "0.8rem" }}
+              className="flex-1 text-xs"
             >
               Select All
             </Button>
@@ -195,7 +157,7 @@ export default function StudentMenu({
               variant="outline"
               size="sm"
               onClick={clearAllStudents}
-              style={{ flex: 1, fontSize: "0.8rem" }}
+              className="flex-1 text-xs"
             >
               Clear All
             </Button>
@@ -216,36 +178,14 @@ export default function StudentMenu({
               <div
                 key={id}
                 onClick={() => toggleStudent(id)}
-                style={{
-                  padding: "0.5rem 0.75rem",
-                  fontSize: "0.9rem",
-                  minHeight: "2rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  cursor: "pointer",
-                  backgroundColor: "transparent",
-                  transition: "background-color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#f3f4f6";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
+                className="px-3 py-2 text-sm min-h-8 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors"
               >
                 <div
-                  style={{
-                    width: "16px",
-                    height: "16px",
-                    border: "2px solid #ccc",
-                    borderRadius: "3px",
-                    backgroundColor: selected ? "#1976d2" : "transparent",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
+                  className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${
+                    selected
+                      ? "bg-primary border-primary"
+                      : "border-muted-foreground"
+                  }`}
                 >
                   {selected && (
                     <svg
@@ -262,7 +202,7 @@ export default function StudentMenu({
                     </svg>
                   )}
                 </div>
-                <span>{studentName}</span>
+                <span className="text-foreground">{studentName}</span>
               </div>
             );
           })}

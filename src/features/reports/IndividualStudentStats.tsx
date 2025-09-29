@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Plot from "@observablehq/plot";
-import { colorToHex } from "./color";
+import { colorToHex, PLOT_COLOR_PALETTE } from "./color";
 
 type StudentStatsProps = {
   student: Record<string, unknown>;
@@ -147,7 +147,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       y: { label: "Count" },
       color: {
         legend: true,
-        scheme: "cividis",
+        range: PLOT_COLOR_PALETTE,
         domain: processedClassificationData.map(
           (d) => d.fullClassification || d.classification
         ), // Use full names in legend
@@ -208,7 +208,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       y: { label: "Count" },
       color: {
         legend: true,
-        scheme: "cividis",
+        range: PLOT_COLOR_PALETTE,
         domain: processedModuleData.map(
           (d) => d.fullModuleName || d.moduleName
         ), // Use full names in legend

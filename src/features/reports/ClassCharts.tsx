@@ -4,7 +4,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StudentStats from "./StudentStats";
 import StudentMenu from "./StudentMenu";
 import { Card, CardContent } from "../../components/ui/card";
-import { colorToHex } from "./color";
+import { colorToHex, PLOT_COLOR_PALETTE } from "./color";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
@@ -295,7 +295,7 @@ export default function ClassCharts({
       color: {
         legend: true,
         label: "Module",
-        scheme: "cividis",
+        range: PLOT_COLOR_PALETTE,
         domain: aggregatedData.map((d) => d.fullModuleName || d.moduleName), // Use full names in legend
       },
       marks: [
@@ -488,7 +488,7 @@ export default function ClassCharts({
       color: {
         legend: true,
         label: "Classification",
-        scheme: "cividis",
+        range: PLOT_COLOR_PALETTE,
         domain: aggregatedData.map(
           (d) => d.fullClassification || d.classification
         ), // Use full names in legend

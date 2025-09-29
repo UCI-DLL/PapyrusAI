@@ -36,3 +36,15 @@ export function colorToHex(input: string): string {
     return rgbToHex(r, g, b);
   }
 }
+
+// Color palette for plots and charts, using UCI accent colors as requested
+export const PLOT_COLOR_PALETTE = [
+  "#6aa2b8", // accent
+  "#f8cf56", // athletics-gold
+  "#3f9c35", // green
+  "#00639e", // royal-blue
+  "#7c109a", // bright-purple
+  "#f7eb5f", // light-yellow
+  "#7ab800", // lime-green
+  "#d462ad", // magenta
+] as const;

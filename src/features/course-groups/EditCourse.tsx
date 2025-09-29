@@ -131,19 +131,19 @@ export default function EditCourse(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname]);
 
-  function handleClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and publish
-      handleSubmit(e, true, false);
-    } else if (selectedIndexSave === 1) { //save and not publish
-      if (session.isActive) { //handle case that course is already active and they are switching it
-        setOpenActiveModal(true);
-      } else {
-        handleSubmit(e, false, false);
-      }
-    } else if (selectedIndexSave === 2) { //discard changes
-      setOpenDiscardModal(true);
-    }
-  };
+  // function handleClick(e: any) {
+  //   if (selectedIndexSave === 0) { //Save and publish
+  //     handleSubmit(e, true, false);
+  //   } else if (selectedIndexSave === 1) { //save and not publish
+  //     if (session.isActive) { //handle case that course is already active and they are switching it
+  //       setOpenActiveModal(true);
+  //     } else {
+  //       handleSubmit(e, false, false);
+  //     }
+  //   } else if (selectedIndexSave === 2) { //discard changes
+  //     setOpenDiscardModal(true);
+  //   }
+  // };
 
   const handleMenuItemClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,

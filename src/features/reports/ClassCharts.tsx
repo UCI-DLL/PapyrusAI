@@ -463,7 +463,13 @@ export default function ClassCharts({
   ]);
 
   useEffect(() => {
-    if (!analysis || !startDate || !endDate || !showClassificationChart) return;
+    if (
+      !analysis ||
+      !startDate ||
+      !endDate ||
+      /*!showClassificationChart*/ false
+    )
+      return;
 
     const aggregatedData = getAggregatedClassificationData();
     const { width, height } = getModuleChartDimensions();
@@ -519,7 +525,7 @@ export default function ClassCharts({
     analysis,
     startDate,
     endDate,
-    // showClassificationChart, // Removed unused dependency
+    /* showClassificationChart, */ // Removed unused dependency
     chartRefreshTrigger,
     getAggregatedClassificationData,
     backgroundColor,

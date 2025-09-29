@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import IndividualStudentStats from "./IndividualStudentStats";
 import * as Plot from "@observablehq/plot";
-import { colorToHex } from "./color";
+import { colorToHex, PLOT_COLOR_PALETTE } from "./color";
 
 interface StudentStatsProps {
   students: Record<string, unknown>[];
@@ -156,7 +156,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
         label: "Date",
       },
       y: { label: "Number of Conversations" },
-      color: { legend: true, label: "Student", scheme: "cividis" },
+      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.rectY(counts, {
           x: "date",
@@ -198,7 +198,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
         label: "Date",
       },
       y: { label: "Avg Conversation Length" },
-      color: { legend: true, label: "Student", scheme: "cividis" },
+      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.rectY(lengths, {
           x: "date",
@@ -237,7 +237,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
       },
       x: { label: "Classification" },
       y: { label: "Count" },
-      color: { legend: true, label: "Student", scheme: "cividis" },
+      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.barY(classificationData, {
           x: "classification",
@@ -276,7 +276,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
       },
       x: { label: "Module" },
       y: { label: "Count" },
-      color: { legend: true, label: "Student", scheme: "cividis" },
+      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.barY(moduleData, {
           x: "moduleName",

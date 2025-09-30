@@ -3,8 +3,11 @@ import * as Plot from "@observablehq/plot";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import StudentStats from "./StudentStats";
 import StudentMenu from "./StudentMenu";
+import StudentListPopup from "./StudentListPopup";
 import { Card, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 import { colorToHex, PLOT_COLOR_PALETTE } from "./color";
+import { Users } from "lucide-react";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
@@ -22,6 +25,8 @@ export default function ClassCharts({
   //   useState<boolean>(false); // Unused state variable
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState<number>(0);
   const [studentMenuOpen, setStudentMenuOpen] = useState<boolean>(false);
+  const [studentListPopupOpen, setStudentListPopupOpen] =
+    useState<boolean>(false);
   const lengthsRef = useRef<HTMLDivElement>(null);
   const chatClassificationRef = useRef<HTMLDivElement>(null);
   const countsRef = useRef<HTMLDivElement>(null);
@@ -597,27 +602,38 @@ export default function ClassCharts({
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            <div style={{ cursor: "pointer" }}>
-              <ArrowBackIcon
-                onClick={() => setAnalysis(null)}
-                style={{
-                  fontSize: "3rem",
-                  padding: "0.5rem",
-                  margin: "0.5rem",
-                  color: "#666",
-                  transition: "color 0.2s ease-in-out",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#1976d2";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#666";
-                }}
-              />
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div style={{ cursor: "pointer" }}>
+                <ArrowBackIcon
+                  onClick={() => setAnalysis(null)}
+                  style={{
+                    fontSize: "3rem",
+                    padding: "0.5rem",
+                    margin: "0.5rem",
+                    color: "#666",
+                    transition: "color 0.2s ease-in-out",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "#1976d2";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = "#666";
+                  }}
+                />
+              </div>
+              <StudentFilter />
             </div>
-            <StudentFilter />
+            <Button
+              variant="outline"
+              onClick={() => setStudentListPopupOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              View All Students
+            </Button>
           </div>
 
           <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
@@ -642,6 +658,13 @@ export default function ClassCharts({
             <StudentStats students={selectedStudents} />
           </div>
         </CardContent>
+
+        {/* Student List Popup */}
+        <StudentListPopup
+          isOpen={studentListPopupOpen}
+          onClose={() => setStudentListPopupOpen(false)}
+          analysis={analysis}
+        />
       </Card>
     );
   }
@@ -653,27 +676,38 @@ export default function ClassCharts({
           style={{
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          <div style={{ cursor: "pointer" }}>
-            <ArrowBackIcon
-              onClick={() => setAnalysis(null)}
-              style={{
-                fontSize: "3rem",
-                padding: "0.5rem",
-                margin: "0.5rem",
-                color: "#666",
-                transition: "color 0.2s ease-in-out",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#1976d2";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "#666";
-              }}
-            />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ cursor: "pointer" }}>
+              <ArrowBackIcon
+                onClick={() => setAnalysis(null)}
+                style={{
+                  fontSize: "3rem",
+                  padding: "0.5rem",
+                  margin: "0.5rem",
+                  color: "#666",
+                  transition: "color 0.2s ease-in-out",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "#1976d2";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "#666";
+                }}
+              />
+            </div>
+            <StudentFilter />
           </div>
-          <StudentFilter />
+          <Button
+            variant="outline"
+            onClick={() => setStudentListPopupOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Users className="h-4 w-4" />
+            View All Students
+          </Button>
         </div>
 
         {isAnalysisEmpty() ? (
@@ -924,6 +958,13 @@ export default function ClassCharts({
           </>
         )}
       </CardContent>
+
+      {/* Student List Popup */}
+      <StudentListPopup
+        isOpen={studentListPopupOpen}
+        onClose={() => setStudentListPopupOpen(false)}
+        analysis={analysis}
+      />
     </Card>
   );
 }

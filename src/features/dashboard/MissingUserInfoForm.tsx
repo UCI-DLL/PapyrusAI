@@ -76,9 +76,10 @@ export default function MissingUserInfoForm({
         setSession((prev) => ({ ...prev, family_name: user.family_name }));
       }
       if (user && user["custom:theme"] && user["custom:theme"] !== "") {
-        // Map colorful themes to light theme
-        const normalizedTheme =
-          user["custom:theme"] === "dark" ? "dark" : "light";
+        // Keep all theme options including both colorful variants
+        const normalizedTheme = ["dark", "colorful-light", "colorful-dark"].includes(user["custom:theme"])
+          ? user["custom:theme"]
+          : "light";
         setSession((prev) => ({ ...prev, theme: normalizedTheme }));
       }
       setIsLoading(false);
@@ -129,7 +130,7 @@ export default function MissingUserInfoForm({
         JSON.stringify({ ...user, "custom:theme": e.target.value })
       );
     }
-    // Apply theme change - colorful themes will fallback to light in changeTheme function
+    // Apply theme change - supports light, dark, colorful-light, and colorful-dark themes
     changeTheme(root, e.target.value);
   }
 
@@ -213,6 +214,18 @@ export default function MissingUserInfoForm({
                 <RadioGroupItem value="dark" id="dark" />
                 <Label htmlFor="dark" className="text-sm font-normal cursor-pointer">
                   Dark theme
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="colorful-light" id="colorful-light" />
+                <Label htmlFor="colorful-light" className="text-sm font-normal cursor-pointer">
+                  Colorful light theme
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="colorful-dark" id="colorful-dark" />
+                <Label htmlFor="colorful-dark" className="text-sm font-normal cursor-pointer">
+                  Colorful dark theme
                 </Label>
               </div>
             </RadioGroup>

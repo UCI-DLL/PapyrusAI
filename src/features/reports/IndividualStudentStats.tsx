@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Plot from "@observablehq/plot";
-import { colorToHex, PLOT_COLOR_PALETTE } from "./color";
+import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 
 type StudentStatsProps = {
   student: Record<string, unknown>;
@@ -65,6 +65,8 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         background: "transparent",
         color: foregroundColor,
       },
+      ariaLabel:
+        "Individual student daily conversation lengths chart showing average conversation length over time",
       x: { label: "Date", type: "time" },
       y: { label: "Avg Conversation Length" },
       marks: [
@@ -102,6 +104,8 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         background: "transparent",
         color: foregroundColor,
       },
+      ariaLabel:
+        "Individual student daily conversation counts chart showing number of conversations over time",
       x: { label: "Date", type: "time" },
       y: { label: "Number of Conversations" },
       marks: [
@@ -138,6 +142,8 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         background: "transparent",
         color: foregroundColor,
       },
+      ariaLabel:
+        "Individual student classification counts chart showing conversation classifications",
       x: {
         label: "Classification",
         tickRotate: processedClassificationData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
@@ -170,6 +176,15 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             fill: backgroundColor,
           },
         }),
+        Plot.text(processedClassificationData, {
+          x: "classification",
+          y: "count",
+          text: "count",
+          dy: -8,
+          fontSize: 12,
+          fill: foregroundColor,
+          fontWeight: "bold",
+        }),
       ],
       width,
       height,
@@ -199,6 +214,8 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         background: "transparent",
         color: foregroundColor,
       },
+      ariaLabel:
+        "Individual student module usage chart showing module usage counts",
       x: {
         label: "Module",
         tickRotate: processedModuleData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
@@ -228,6 +245,15 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             },
             fill: backgroundColor,
           },
+        }),
+        Plot.text(processedModuleData, {
+          x: "moduleName",
+          y: "count",
+          text: "count",
+          dy: -8,
+          fontSize: 12,
+          fill: foregroundColor,
+          fontWeight: "bold",
         }),
       ],
       width,

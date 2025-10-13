@@ -37,14 +37,31 @@ export function colorToHex(input: string): string {
   }
 }
 
-// Color palette for plots and charts, using UCI accent colors as requested
-export const PLOT_COLOR_PALETTE = [
-  "#6aa2b8", // accent
-  "#f8cf56", // athletics-gold
-  "#3f9c35", // green
-  "#00639e", // royal-blue
-  "#7c109a", // bright-purple
-  "#f7eb5f", // light-yellow
-  "#7ab800", // lime-green
-  "#d462ad", // magenta
-] as const;
+// Color palette options for different accessibility needs
+export const COLOR_PALETTES = {
+  // Original UCI accent colors
+  default: [
+    "#6aa2b8", // accent
+    "#f8cf56", // athletics-gold
+    "#3f9c35", // green
+    "#00639e", // royal-blue
+    "#7c109a", // bright-purple
+    "#f7eb5f", // light-yellow
+    "#7ab800", // lime-green
+    "#d462ad", // magenta
+  ] as const,
+
+  // Colorblind-friendly palette (ColorBrewer Set1 inspired)
+  colorblind: [
+    "#e41a1c", // red
+    "#377eb8", // blue
+    "#4daf4a", // green
+    "#984ea3", // purple
+    "#ff7f00", // orange
+    "#ffff33", // yellow
+    "#a65628", // brown
+    "#f781bf", // pink
+  ] as const,
+} as const;
+
+export const PLOT_COLOR_PALETTE = COLOR_PALETTES.colorblind;

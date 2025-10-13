@@ -5,7 +5,7 @@ import Get from "../../utility/Get";
 import { CourseType } from "../../utility/types/CourseTypes";
 import ClassCharts from "./ClassCharts";
 import { CustomUserType } from "../../utility/types/UserTypes";
-import { analyzeCourse } from "./analysis";
+import { analyzeCourse } from "../../utility/reports/analysis";
 import {
   getContentModMessage,
   getConversation,

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import StudentStats from "./StudentStats";
+import StudentPage from "./StudentPage";
 import StudentMenu from "./StudentMenu";
 import StudentListPopup from "./StudentListPopup";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { colorToHex, PLOT_COLOR_PALETTE } from "./color";
+import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 import { Users } from "lucide-react";
 
 interface ClassChartsProps {
@@ -290,6 +290,7 @@ export default function ClassCharts({
         background: "transparent",
         color: foregroundColor,
       },
+      ariaLabel: "Module usage chart showing count of conversations per module",
       x: {
         label: "Module",
         tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
@@ -318,6 +319,15 @@ export default function ClassCharts({
             },
             fill: backgroundColor,
           },
+        }),
+        Plot.text(aggregatedData, {
+          x: "moduleName",
+          y: "count",
+          text: "count",
+          dy: -8,
+          fontSize: 12,
+          fill: foregroundColor,
+          fontWeight: "bold",
         }),
       ],
       width,
@@ -370,6 +380,8 @@ export default function ClassCharts({
         background: "transparent",
         color: foregroundColor,
       },
+      ariaLabel:
+        "Daily conversation lengths chart showing average conversation length over time",
       x: {
         type: "time",
         label: "Date",
@@ -434,6 +446,8 @@ export default function ClassCharts({
         background: "transparent",
         color: foregroundColor,
       },
+      ariaLabel:
+        "Daily conversation counts chart showing number of conversations over time",
       x: {
         type: "time",
         label: "Date",
@@ -483,6 +497,8 @@ export default function ClassCharts({
         background: "transparent",
         color: foregroundColor,
       },
+      ariaLabel:
+        "Chat classification chart showing count of conversations by classification type",
       x: {
         label: "Classification",
         tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
@@ -515,6 +531,15 @@ export default function ClassCharts({
             },
             fill: backgroundColor,
           },
+        }),
+        Plot.text(aggregatedData, {
+          x: "classification",
+          y: "count",
+          text: "count",
+          dy: -8,
+          fontSize: 12,
+          fill: foregroundColor,
+          fontWeight: "bold",
         }),
       ],
       width,
@@ -655,7 +680,7 @@ export default function ClassCharts({
             >
               Combined Statistics
             </h2>
-            <StudentStats students={selectedStudents} />
+            <StudentPage students={selectedStudents} />
           </div>
         </CardContent>
 
@@ -754,7 +779,7 @@ export default function ClassCharts({
                     marginBottom: "1rem",
                   }}
                 >
-                  Select a date range to filter data
+                  Showing overall course data from:
                 </p>
                 <div
                   style={{

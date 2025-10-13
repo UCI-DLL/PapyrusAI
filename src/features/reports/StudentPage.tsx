@@ -3,7 +3,7 @@ import IndividualStudentStats from "./IndividualStudentStats";
 import * as Plot from "@observablehq/plot";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 
-interface StudentStatsProps {
+interface StudentPageProps {
   students: Record<string, unknown>[];
 }
 
@@ -128,7 +128,7 @@ function getStackedModuleUsageData(students: Record<string, unknown>[]) {
   return moduleData;
 }
 
-export default function StudentStats({ students }: StudentStatsProps) {
+export default function StudentPage({ students }: StudentPageProps) {
   const { counts, lengths } = getStackedDailyData(students);
   const classificationData = getStackedClassificationData(students);
   const moduleData = getStackedModuleUsageData(students);

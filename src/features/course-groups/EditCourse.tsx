@@ -3,35 +3,83 @@ import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import { Badge } from "../../components/ui/badge";
-import { Alert, AlertDescription } from "../../components/ui/alert";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip";
-import { Trash2, ChevronDown, Info, Loader2, Users, CheckCircle, XCircle, X } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
+import {
+  Trash2,
+  ChevronDown,
+  Info,
+  Loader2,
+  Users,
+  CheckCircle,
+  XCircle,
+  X,
+  BookOpen,
+  Calendar,
+  Clock,
+} from "lucide-react";
 import Get from "../../utility/Get";
-import { getCourse, putUpdateCourse } from "../../utility/endpoints/CourseEndpoints";
+import {
+  getCourse,
+  putUpdateCourse,
+} from "../../utility/endpoints/CourseEndpoints";
 import Put from "../../utility/Put";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserList } from "../../utility/endpoints/UserEndpoints";
+import { cn } from "../../lib/utils";
 
 type EditCourseType = {
-  name: string,
-  signUpCode: string,
-  isDeleted: boolean,
-  isActive: boolean,
-  year: string,
-  section: string,
-  term: string,
-  taList: any,
-}
+  name: string;
+  signUpCode: string;
+  isDeleted: boolean;
+  isActive: boolean;
+  year: string;
+  section: string;
+  term: string;
+  taList: any;
+};
 
-const options = ['Save & Publish', 'Save without Publishing', 'Discard Changes'];
+const options = [
+  "Save & Publish",
+  "Save without Publishing",
+  "Discard Changes",
+];
 
 export default function EditCourse(): JSX.Element {
   let location = useLocation();
@@ -67,7 +115,8 @@ export default function EditCourse(): JSX.Element {
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
-  const [showSavePublishTooltip, setShowSavePublishTooltip] = useState<boolean>(false);
+  const [showSavePublishTooltip, setShowSavePublishTooltip] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,7 +133,7 @@ export default function EditCourse(): JSX.Element {
 
   useEffect(() => {
     const controller = new AbortController();
-    //get pathname to figure out if we are editing 
+    //get pathname to figure out if we are editing
     if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -94,7 +143,7 @@ export default function EditCourse(): JSX.Element {
     ) {
       //get prev course data
       const courseId = location.pathname.split("/")[2];
-      Get(getCourse(courseId), controller.signal).then(res => {
+      Get(getCourse(courseId), controller.signal).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //set prev course data
@@ -147,48 +196,56 @@ export default function EditCourse(): JSX.Element {
 
   const handleMenuItemClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    index: number,
+    index: number
   ) => {
-    if (index === 0) { //Save and publish
+    if (index === 0) {
+      //Save and publish
       handleSubmit(e, true, false);
-    } else if (index === 1) { //save and not publish
-      if (session.isActive) { //handle case that course is already active and they are switching it
+    } else if (index === 1) {
+      //save and not publish
+      if (session.isActive) {
+        //handle case that course is already active and they are switching it
         setOpenActiveModal(true);
       } else {
         handleSubmit(e, false, false);
       }
-    } else if (index === 2) { //discard changes
+    } else if (index === 2) {
+      //discard changes
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
     setOpenSave(false);
   };
 
-
   function getUsers(PaginationToken: string, signal: AbortSignal) {
     var limit = 50;
 
-    Get(getUserList(limit, PaginationToken), signal).then(res => {
+    Get(getUserList(limit, PaginationToken), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data["Users"]) {
-          //filter out current user and email_verified 
+          //filter out current user and email_verified
           var tempUserList = res.data["Users"].map((u: CustomUserType) => {
             return {
               name: u.name,
               family_name: u.family_name,
               email: u.email,
               sub: u.sub,
-              username: u.username
-            }
+              username: u.username,
+            };
           });
           if (user) {
-            tempUserList = tempUserList.filter((x: CustomUserType) => x.username !== user.username);
+            tempUserList = tempUserList.filter(
+              (x: CustomUserType) => x.username !== user.username
+            );
           }
           setUserList((prev) => [...prev, ...tempUserList]);
 
           //handle pages
           //note: PaginationToken will also come back as "undefined" if there are no more pages
-          if (res.data["Users"].length >= limit && res.data["PaginationToken"]) {
+          if (
+            res.data["Users"].length >= limit &&
+            res.data["PaginationToken"]
+          ) {
             getUsers(res.data["PaginationToken"], signal);
           }
         }
@@ -203,14 +260,12 @@ export default function EditCourse(): JSX.Element {
     });
   }
 
-
   function handleSubmit(e: any, isActive = false, isDeleted = false) {
     e.preventDefault();
     if (session.name === "") {
-      setErrors((prev) => ({ ...prev, name: "Name missing" }))
-    }
-    else if (session.signUpCode === "") {
-      setErrors((prev) => ({ ...prev, signUpCode: "Sign up code missing" }))
+      setErrors((prev) => ({ ...prev, name: "Name missing" }));
+    } else if (session.signUpCode === "") {
+      setErrors((prev) => ({ ...prev, signUpCode: "Sign up code missing" }));
     } else {
       //Update course
       if (prevSession) {
@@ -226,7 +281,7 @@ export default function EditCourse(): JSX.Element {
             section: session.section,
             term: session.term,
             taList: session.taList,
-          }
+          };
           // post data back
           Put(putUpdateCourse(prevSession.id), dataToSend).then((res) => {
             if (res && res.status && res.status < 300) {
@@ -234,15 +289,15 @@ export default function EditCourse(): JSX.Element {
                 //redirect to course list
                 navigator("/courses");
                 //pop up notifying user of creation
-                setAlert({ message: "Course Updated", type: "success" })
+                setAlert({ message: "Course Updated", type: "success" });
               }
             } else if (res && res.status === 401) {
               navigator("/login");
             } else {
               // set errors
-              setAlert({ message: res.data, type: "error" })
+              setAlert({ message: res.data, type: "error" });
             }
-            // set is loading back 
+            // set is loading back
             setIsLoading(false);
           });
         } else {
@@ -253,19 +308,18 @@ export default function EditCourse(): JSX.Element {
                 //redirect to course list
                 navigator("/courses");
                 //pop up notifying user of creation
-                setAlert({ message: "Course Updated", type: "success" })
+                setAlert({ message: "Course Updated", type: "success" });
               }
             } else if (res && res.status === 401) {
               navigator("/login");
             } else {
               // set errors
-              setAlert({ message: res.data, type: "error" })
+              setAlert({ message: res.data, type: "error" });
             }
-            // set is loading back 
+            // set is loading back
             setIsLoading(false);
           });
         }
-
       }
     }
   }
@@ -273,7 +327,6 @@ export default function EditCourse(): JSX.Element {
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
-
 
   if (isLoading) {
     return (
@@ -294,77 +347,105 @@ export default function EditCourse(): JSX.Element {
   }
 
   return (
-    <main className="bg-background text-foreground p-4 space-y-6">
-      <Dialog open={showSavePublishTooltip} onOpenChange={setShowSavePublishTooltip}>
-        <DialogContent className="sm:max-w-lg">
+    <div className="min-h-screen">
+      {/* Dialogs */}
+      <Dialog
+        open={showSavePublishTooltip}
+        onOpenChange={setShowSavePublishTooltip}
+      >
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>What is Save & Publish?</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              What is Save & Publish?
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <DialogDescription className="space-y-3">
             <p>
-              To save and publish (i.e., make visible to students) your course, select "Save & Publish".
-              If you want to save your course without publishing the course, select "Save without Publishing".
+              To save and publish (i.e., make visible to students) your course,
+              select <strong>"Save & Publish"</strong>.
             </p>
-            <p className="italic text-muted-foreground">
-              Note: Choosing this option after the course has already been published will unpublish the course.
+            <p>
+              If you want to save your course without publishing the course,
+              select <strong>"Save without Publishing"</strong>.
             </p>
-          </div>
+            <p className="text-amber-600 dark:text-amber-500 text-xs">
+              <strong>Note:</strong> Choosing this option after the course has
+              already been published will unpublish the course.
+            </p>
+          </DialogDescription>
           <DialogFooter>
-            <Button variant="default" onClick={() => setShowSavePublishTooltip(false)}>
-              Close
+            <Button onClick={() => setShowSavePublishTooltip(false)}>
+              Got it
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Course?</DialogTitle>
+            <DialogTitle className="text-destructive">
+              Delete Course?
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p>Are you sure you would like to permanently delete this course?</p>
-          </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
+          <DialogDescription>
+            Are you sure you would like to permanently delete this course? This
+            action cannot be undone.
+          </DialogDescription>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={(e) => handleSubmit(e, false, true)}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={(e) => handleSubmit(e, false, true)}
+            >
+              Delete Course
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Discard Changes?</DialogTitle>
+            <DialogTitle className="text-destructive">
+              Discard Changes?
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p>Are you sure you would like to discard the changes to this course?</p>
-          </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => setOpenDiscardModal(false)}>
+          <DialogDescription>
+            Are you sure you would like to discard the changes to this course?
+            This action cannot be undone.
+          </DialogDescription>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setOpenDiscardModal(false)}
+            >
               Cancel
             </Button>
-            <Button variant="default" onClick={() => navigator(-1)}>
-              Discard
+            <Button variant="destructive" onClick={() => navigator(-1)}>
+              Discard Changes
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={openActiveModal} onOpenChange={setOpenActiveModal}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Unpublish Course?</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p>This course is current published and available to the public. Continuing will make the course unavailable to students.</p>
-          </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
+          <DialogDescription>
+            This course is currently published and available to the public.
+            Continuing will make the course unavailable to students.
+          </DialogDescription>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpenActiveModal(false)}>
               Cancel
             </Button>
-            <Button variant="default" onClick={(e) => handleSubmit(e, false, false)}>
+            <Button
+              variant="default"
+              onClick={(e) => handleSubmit(e, false, false)}
+            >
               Continue
             </Button>
           </DialogFooter>
@@ -372,28 +453,88 @@ export default function EditCourse(): JSX.Element {
       </Dialog>
       {!error && prevSession ? (
         <>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl">Edit {prevSession.name}</CardTitle>
-                <div className="flex items-center gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowSavePublishTooltip(true)}
-                        >
-                          <Info className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>What is Save & Publish?</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
+          {/* Main Content */}
+          <div className="bg-background text-foreground p-4 space-y-6">
+            {/* Standard Page Header Pattern */}
+            <header className="animate-in slide-in-from-bottom-4 duration-700">
+              <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+                <div
+                  className="absolute top-0 right-0 w-48 h-48 opacity-10"
+                  aria-hidden="true"
+                >
+                  <BookOpen size={192} className="text-primary" />
+                </div>
+
+                <div className="relative z-10">
+                  <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                    Edit {prevSession.name}
+                  </h1>
+                  <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                    Courses are spaces in which instructors can create and
+                    organize modules that allow students to interact with the
+                    AI. For more information on editing a course, please see{" "}
+                    <a
+                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1pkdik3iscqd"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                    >
+                      the "Editing a Course" section of our instructor guide
+                    </a>
+                    .
+                  </p>
+                </div>
+              </div>
+            </header>
+
+            {/* Actions Section */}
+            <section aria-labelledby="actions-heading">
+              <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h2
+                      id="actions-heading"
+                      className="text-2xl font-bold text-foreground"
+                    >
+                      Course Setup
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      {session.isActive ? (
+                        <>
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <Badge
+                            variant="default"
+                            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          >
+                            Published
+                          </Badge>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-5 w-5 text-gray-500" />
+                          <Badge variant="secondary">Unpublished</Badge>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    Configure your course settings and publish options.
+                  </p>
+                </div>
+                <nav
+                  className="flex flex-col md:flex-row gap-2"
+                  role="toolbar"
+                  aria-label="Course editing actions"
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSavePublishTooltip(true)}
+                    aria-label="Get help with Save & Publish options"
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                    Info
+                  </Button>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -402,8 +543,10 @@ export default function EditCourse(): JSX.Element {
                           size="sm"
                           onClick={() => setOpenDeleteModal(true)}
                           className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          aria-label="Delete course"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          Delete
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -411,320 +554,468 @@ export default function EditCourse(): JSX.Element {
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-
-                  <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="default" className="flex items-center gap-2">
-                        {options[selectedIndexSave]}
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {options.map((option, index) => (
-                        <DropdownMenuItem
-                          key={option}
-                          onClick={(event) => handleMenuItemClick(event, index)}
-                          className={index === 2 ? "text-muted-foreground" : ""}
+                  <div className="flex rounded-lg border overflow-hidden">
+                    <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          className="rounded-none border-0 border-r px-2"
+                          variant="default"
+                          disabled={isLoading}
+                          aria-label="Select save and activation strategy"
                         >
-                          {option}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              Courses are spaces in which instructors can create and organize modules that customize how students can interact with the AI.
-              For more information on editing a course, please see the{" "}
-              <a
-                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1pkdik3iscqd"
-                target="_blank"
-                rel="noreferrer"
-                className="text-primary underline hover:no-underline"
-              >
-                "Editing a Course" section of our instructor guide
-              </a>
-              .
-            </AlertDescription>
-          </Alert>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  * indicates a required field
-                </div>
-                <div className="flex items-center gap-2">
-                  {session.isActive ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <Badge variant="default" className="bg-green-100 text-green-800">
-                        Published
-                      </Badge>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-4 w-4 text-gray-500" />
-                      <Badge variant="secondary">
-                        Unpublished
-                      </Badge>
-                    </>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <form onSubmit={(e) => handleSubmit(e, true, false)} className="space-y-6">
-                <div>
-                  <Label className="text-base font-semibold">Enter Course Information</Label>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="course-name" className="text-sm font-medium">
-                      Course Name *
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>The name for your course that users will see upon joining.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Input
-                    id="course-name"
-                    name="name"
-                    placeholder="Eng190W Communications in the Professional World"
-                    value={session.name}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    required
-                    className={errors.name !== "" ? "border-destructive" : ""}
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-destructive">{errors.name}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="signup-code" className="text-sm font-medium">
-                      Course Sign Up Code *
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>The unique sign up code that users will use to join your course. You can use any combination of letters and numbers. This is case sensitive.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Input
-                    id="signup-code"
-                    name="signUpCode"
-                    placeholder="FALLCSE100ISCOOL"
-                    value={session.signUpCode}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    required
-                    className={errors.signUpCode !== "" ? "border-destructive" : ""}
-                  />
-                  {errors.signUpCode && (
-                    <p className="text-sm text-destructive">{errors.signUpCode}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="course-year" className="text-sm font-medium">
-                      Year
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>The year in which your course is taking place.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Input
-                    id="course-year"
-                    name="year"
-                    type="number"
-                    placeholder="2023"
-                    value={session.year}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    min="0"
-                    className={errors.year !== "" ? "border-destructive" : ""}
-                  />
-                  {errors.year && (
-                    <p className="text-sm text-destructive">{errors.year}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="course-term" className="text-sm font-medium">
-                      Term
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>The term in which your course is taking place.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Select
-                    value={session.term}
-                    onValueChange={(value) => setSession((prev) => ({ ...prev, term: value }))}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger className={errors.term !== "" ? "border-destructive" : ""}>
-                      <SelectValue placeholder="Select term" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="spring">Spring</SelectItem>
-                      <SelectItem value="summer">Summer</SelectItem>
-                      <SelectItem value="fall">Fall</SelectItem>
-                      <SelectItem value="winter">Winter</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.term && (
-                    <p className="text-sm text-destructive">{errors.term}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="course-section" className="text-sm font-medium">
-                      Section / Period
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>The section number or period for your course.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Input
-                    id="course-section"
-                    name="section"
-                    placeholder="Section 02"
-                    value={session.section}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    className={errors.section !== "" ? "border-destructive" : ""}
-                  />
-                  {errors.section && (
-                    <p className="text-sm text-destructive">{errors.section}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Teaching Assistants</Label>
-                  <div className="space-y-3">
-                    {session.taList.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {session.taList.map((ta: CustomUserType, index: number) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-2 px-3 py-1">
-                            <Users className="h-3 w-3" />
-                            <span>{ta.name} {ta.family_name} - {ta.email}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-auto p-0 hover:bg-transparent"
-                              onClick={() => {
-                                const newTaList = session.taList.filter((_: CustomUserType, i: number) => i !== index);
-                                setSession(prev => ({ ...prev, taList: newTaList }));
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
+                          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {options.map((option, index) => (
+                          <DropdownMenuItem
+                            key={option}
+                            onClick={(event) =>
+                              handleMenuItemClick(event, index)
+                            }
+                            className={cn(
+                              index === selectedIndexSave && "bg-accent",
+                              index === 2 &&
+                                "text-destructive focus:text-destructive"
+                            )}
+                          >
+                            {option}
+                          </DropdownMenuItem>
                         ))}
-                      </div>
-                    )}
-                    
-                    <Select
-                      value=""
-                      onValueChange={(value) => {
-                        const selectedUser = userList.find(user => user.username === value);
-                        if (selectedUser && !session.taList.find((ta: CustomUserType) => ta.username === selectedUser.username)) {
-                          if (session.taList.length >= 10) {
-                            setErrors((prev) => ({ ...prev, taList: "Max 10 Teaching Assistants" }));
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        if (selectedIndexSave === 0) {
+                          handleSubmit(e, true, false);
+                        } else if (selectedIndexSave === 1) {
+                          if (session.isActive) {
+                            setOpenActiveModal(true);
                           } else {
-                            setSession(prev => ({ ...prev, taList: [...prev.taList, selectedUser] }));
+                            handleSubmit(e, false, false);
+                          }
+                        } else if (selectedIndexSave === 2) {
+                          setOpenDiscardModal(true);
+                        }
+                      }}
+                      className="rounded-none border-0"
+                      disabled={isLoading}
+                      aria-label={`${options[selectedIndexSave]} course`}
+                    >
+                      {options[selectedIndexSave]}
+                    </Button>
+                  </div>
+                </nav>
+              </header>
+            </section>
+
+            {/* Form */}
+            <form
+              onSubmit={(e) => handleSubmit(e, true, false)}
+              className="space-y-6"
+            >
+              {/* Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                    Basic Information
+                  </CardTitle>
+                  <CardDescription>
+                    Enter the essential details for your course. Fields marked
+                    with * are required.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="name" className="text-sm font-medium">
+                        Course Name *
+                      </Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            The name for your course that users will see upon
+                            joining.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="name"
+                      name="name"
+                      placeholder="e.g., English 190W: Communications in the Professional World"
+                      value={session.name}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      required
+                      className={cn(
+                        "transition-colors",
+                        errors.name &&
+                          "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                    {errors.name && (
+                      <p className="text-sm text-destructive flex items-center gap-1">
+                        <X className="h-3 w-3" />
+                        {errors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label
+                        htmlFor="signUpCode"
+                        className="text-sm font-medium"
+                      >
+                        Course Sign Up Code *
+                      </Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            The unique sign up code that users will use to join
+                            your course. You can use any combination of letters
+                            and numbers. This is case sensitive.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="signUpCode"
+                      name="signUpCode"
+                      placeholder="e.g., FALL2024ENG190W"
+                      value={session.signUpCode}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      required
+                      className={cn(
+                        "transition-colors",
+                        errors.signUpCode &&
+                          "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                    {errors.signUpCode && (
+                      <p className="text-sm text-destructive flex items-center gap-1">
+                        <X className="h-3 w-3" />
+                        {errors.signUpCode}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Schedule Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-green-600" />
+                    Schedule Information
+                  </CardTitle>
+                  <CardDescription>
+                    Specify when this course takes place to help organize your
+                    curriculum.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="year" className="text-sm font-medium">
+                          Year
+                        </Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              The year in which your course is taking place.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Input
+                        id="year"
+                        name="year"
+                        type="number"
+                        placeholder="2024"
+                        value={session.year}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        min={2020}
+                        max={2030}
+                        inputMode="numeric"
+                        className={cn(
+                          "transition-colors",
+                          errors.year &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                      {errors.year && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <X className="h-3 w-3" />
+                          {errors.year}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="term" className="text-sm font-medium">
+                          Term
+                        </Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              The term in which your course is taking place.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Select
+                        value={session.term}
+                        onValueChange={(value) =>
+                          setSession((prev) => ({ ...prev, term: value }))
+                        }
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger
+                          className={cn(
+                            "transition-colors",
+                            errors.term &&
+                              "border-destructive focus-visible:ring-destructive"
+                          )}
+                        >
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <SelectValue placeholder="Select term" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="spring">Spring</SelectItem>
+                          <SelectItem value="summer">Summer</SelectItem>
+                          <SelectItem value="fall">Fall</SelectItem>
+                          <SelectItem value="winter">Winter</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.term && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <X className="h-3 w-3" />
+                          {errors.term}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor="section"
+                          className="text-sm font-medium"
+                        >
+                          Section / Period
+                        </Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>The section number or period for your course.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Input
+                        id="section"
+                        name="section"
+                        placeholder="Section 02"
+                        value={session.section}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        className={cn(
+                          "transition-colors",
+                          errors.section &&
+                            "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                      {errors.section && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <X className="h-3 w-3" />
+                          {errors.section}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* Teaching Assistants */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-purple-600" />
+                    Teaching Assistants
+                  </CardTitle>
+                  <CardDescription>
+                    Add teaching assistants who can help manage your course.
+                    They can create and edit modules but cannot delete or
+                    unpublish the course.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {session.taList.length > 0 && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">
+                        Selected Teaching Assistants
+                      </Label>
+                      <div className="flex flex-wrap gap-2">
+                        {session.taList.map(
+                          (ta: CustomUserType, index: number) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                            >
+                              {ta.name} {ta.family_name}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 ml-1 hover:bg-red-500 hover:text-white rounded-full"
+                                onClick={() => {
+                                  const newTaList = session.taList.filter(
+                                    (_: CustomUserType, i: number) =>
+                                      i !== index
+                                  );
+                                  setSession((prev) => ({
+                                    ...prev,
+                                    taList: newTaList,
+                                  }));
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="taSelect" className="text-sm font-medium">
+                      Add Teaching Assistant
+                    </Label>
+                    <Select
+                      onValueChange={(value) => {
+                        const selectedUser = userList.find(
+                          (user) => user.username === value
+                        );
+                        if (selectedUser) {
+                          if (session.taList.length >= 10) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              taList: "Max 10 Teaching Assistants",
+                            }));
+                          } else if (
+                            !session.taList.find(
+                              (ta: CustomUserType) =>
+                                ta.username === selectedUser.username
+                            )
+                          ) {
+                            setSession((prev) => ({
+                              ...prev,
+                              taList: [...prev.taList, selectedUser],
+                            }));
                             setErrors((prev) => ({ ...prev, taList: "" }));
                           }
                         }
                       }}
-                      disabled={isLoading}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a teaching assistant to add" />
+                      <SelectTrigger id="taSelect">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Select a teaching assistant to add..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {userList
-                          .filter(user => !session.taList.find((ta: CustomUserType) => ta.username === user.username))
-                          .map((user) => (
-                            <SelectItem key={user.username} value={user.username}>
-                              {user.name} {user.family_name} - {user.email}
-                            </SelectItem>
-                          ))}
+                        {userList.filter(
+                          (user) =>
+                            !session.taList.find(
+                              (ta: CustomUserType) =>
+                                ta.username === user.username
+                            )
+                        ).length === 0 ? (
+                          <div className="p-3 text-sm text-muted-foreground text-center">
+                            No more users available to add
+                          </div>
+                        ) : (
+                          userList
+                            .filter(
+                              (user) =>
+                                !session.taList.find(
+                                  (ta: CustomUserType) =>
+                                    ta.username === user.username
+                                )
+                            )
+                            .map((user) => (
+                              <SelectItem
+                                key={user.username}
+                                value={user.username}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span>
+                                    {user.name} {user.family_name}
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    ({user.email})
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                        )}
                       </SelectContent>
                     </Select>
-                    
-                    {errors.taList && (
-                      <p className="text-sm text-destructive">{errors.taList}</p>
-                    )}
-                    
-                    <p className="text-sm text-muted-foreground">
-                      The name and email address of the teaching assistant(s) assigned to your course. Teaching assistants can
-                      create and edit modules for you, but not delete or unpublish the course. You can assign multiple people to this role.
-                      <span className="italic"> In order to add someone as a teaching assistant, they must already have a PapyrusAI account.</span>
-                    </p>
                   </div>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+
+                  {errors.taList !== "" && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <X className="h-3 w-3" />
+                      {errors.taList}
+                    </p>
+                  )}
+
+                  <div className="text-sm text-muted-foreground bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                    <strong>Note:</strong> Teaching assistants can create and
+                    edit modules for you, but not delete or unpublish the
+                    course. You can assign multiple people to this role. To add
+                    someone as a teaching assistant, they must already have a
+                    PapyrusAI account.
+                  </div>
+                </CardContent>
+              </Card>
+            </form>
+          </div>
         </>
       ) : (
-        <div
-          className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
-          role="status"
-        >
-          <XCircle className="mx-auto h-12 w-12 mb-4 opacity-50" />
-          <p className="text-lg font-medium mb-2">Course Not Found</p>
-          <p className="text-sm">
-            The course you're looking for doesn't exist or has been deleted.
-          </p>
+        <div className="bg-background text-foreground p-4">
+          <div
+            className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+            role="status"
+          >
+            <XCircle className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">Course Not Found</p>
+            <p className="text-sm">
+              The course you're looking for doesn't exist or has been deleted.
+            </p>
+          </div>
         </div>
       )}
-    </main>
-  )
+    </div>
+  );
 }

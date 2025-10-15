@@ -45,7 +45,6 @@ import {
   BookOpen,
   Users,
   Calendar,
-  Hash,
   Clock,
 } from "lucide-react";
 import { postCreateCourse } from "../../utility/endpoints/CourseEndpoints";
@@ -327,8 +326,18 @@ export default function CreateCourse(): JSX.Element {
                 Create Course
               </h1>
               <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                Set up a new course for your students to interact with
-                AI-powered learning modules.
+                Courses are spaces in which instructors can create and organize
+                modules that allow students to interact with the AI. For more
+                information on creating a course, please see
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                >
+                  "Creating a Course" section of our instructor guide
+                </a>
+                .
               </p>
             </div>
           </div>
@@ -338,7 +347,10 @@ export default function CreateCourse(): JSX.Element {
         <section aria-labelledby="actions-heading">
           <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h2 id="actions-heading" className="text-2xl font-bold text-foreground mb-1">
+              <h2
+                id="actions-heading"
+                className="text-2xl font-bold text-foreground mb-1"
+              >
                 Course Setup
               </h2>
               <p className="text-muted-foreground text-sm">
@@ -357,7 +369,7 @@ export default function CreateCourse(): JSX.Element {
                 aria-label="Get help with Save & Publish options"
               >
                 <Info className="h-4 w-4" aria-hidden="true" />
-                Help
+                Info
               </Button>
               <div className="flex rounded-lg border overflow-hidden">
                 <Button
@@ -400,26 +412,6 @@ export default function CreateCourse(): JSX.Element {
               </div>
             </nav>
           </header>
-
-          {/* Info Section */}
-          <Card className="border-primary/20 bg-primary/5 transition-all duration-300 hover:shadow-md">
-            <CardContent className="pt-6">
-              <p className="text-primary/80 text-sm leading-relaxed">
-                Courses are spaces in which instructors can create and organize
-                modules that allow students to interact with the AI. For more
-                information on creating a course, please see the{" "}
-                <a
-                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
-                >
-                  "Creating a Course" section of our instructor guide
-                </a>
-                .
-              </p>
-            </CardContent>
-          </Card>
         </section>
 
         {/* Form */}
@@ -494,23 +486,20 @@ export default function CreateCourse(): JSX.Element {
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className="relative">
-                  <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signUpCode"
-                    name="signUpCode"
-                    placeholder="e.g., FALL2024ENG190W"
-                    value={session.signUpCode}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    required
-                    className={cn(
-                      "pl-10 transition-colors",
-                      errors.signUpCode &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </div>
+                <Input
+                  id="signUpCode"
+                  name="signUpCode"
+                  placeholder="e.g., FALL2024ENG190W"
+                  value={session.signUpCode}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                  className={cn(
+                    "transition-colors",
+                    errors.signUpCode &&
+                      "border-destructive focus-visible:ring-destructive"
+                  )}
+                />
                 {errors.signUpCode && (
                   <p className="text-sm text-destructive flex items-center gap-1">
                     <X className="h-3 w-3" />
@@ -783,8 +772,8 @@ export default function CreateCourse(): JSX.Element {
                 </p>
               )}
 
-              <div className="text-sm text-muted-foreground bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                <p>
+              <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                <p className="text-xs">
                   <strong>Note:</strong> Teaching assistants can create and edit
                   modules for you, but not delete or unpublish the course. You
                   can assign multiple people to this role. To add someone as a

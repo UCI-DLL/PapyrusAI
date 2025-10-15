@@ -4,12 +4,38 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Separator } from "../../components/ui/separator";
-import { ChevronDown, Info, Plus, Loader2, FileText, MessageSquare, Save, Folder } from "lucide-react";
+import {
+  ChevronDown,
+  Info,
+  Plus,
+  Loader2,
+  FileText,
+  MessageSquare,
+  Save,
+  Folder,
+} from "lucide-react";
 import Put from "../../utility/Put";
 import { putCreateModule } from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -35,7 +61,6 @@ type AddModuleType = {
   showInitialPrompt: boolean;
   prompts: Array<PromptType>;
   files: Array<FileType>;
-  raterEnabled: boolean;
   webSearch: boolean;
 };
 //Note: ^ missing showWizard. Need to add later
@@ -64,7 +89,6 @@ export default function AddModule(): JSX.Element {
     showInitialPrompt: true,
     prompts: [],
     files: [],
-    raterEnabled: false,
     webSearch: false,
   });
   const [errors, setErrors] = useState<any>({
@@ -150,7 +174,6 @@ export default function AddModule(): JSX.Element {
         prompts: session.prompts, //Send prompts with all information + folderId
         files: session.files, //send files with all information + folderid
         isDeleted: false,
-        raterEnabled: session.raterEnabled,
         webSearch: session.webSearch,
       };
       // post data back
@@ -174,7 +197,9 @@ export default function AddModule(): JSX.Element {
     }
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
@@ -355,7 +380,10 @@ export default function AddModule(): JSX.Element {
 
   return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <Dialog open={showSavePublishTooltip} onOpenChange={setShowSavePublishTooltip}>
+      <Dialog
+        open={showSavePublishTooltip}
+        onOpenChange={setShowSavePublishTooltip}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -390,7 +418,10 @@ export default function AddModule(): JSX.Element {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setOpenDiscardModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setOpenDiscardModal(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={() => navigator(-1)}>
@@ -399,7 +430,10 @@ export default function AddModule(): JSX.Element {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={openSelectFolderModal} onOpenChange={setOpenSelectFolderModal}>
+      <Dialog
+        open={openSelectFolderModal}
+        onOpenChange={setOpenSelectFolderModal}
+      >
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -411,15 +445,21 @@ export default function AddModule(): JSX.Element {
             <ListFolders noShowMenu onClick={selectFolder} compactGrid />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenSelectFolderModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setOpenSelectFolderModal(false)}
+            >
               Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog 
-        open={openSelectPromptModal.folderId !== ""} 
-        onOpenChange={(open) => !open && setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })}
+      <Dialog
+        open={openSelectPromptModal.folderId !== ""}
+        onOpenChange={(open) =>
+          !open &&
+          setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })
+        }
       >
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -458,9 +498,11 @@ export default function AddModule(): JSX.Element {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog 
-        open={openConfirmationModal.id !== ""} 
-        onOpenChange={(open) => !open && setOpenConfirmationModal({ id: "", type: "" })}
+      <Dialog
+        open={openConfirmationModal.id !== ""}
+        onOpenChange={(open) =>
+          !open && setOpenConfirmationModal({ id: "", type: "" })
+        }
       >
         <DialogContent>
           <DialogHeader>
@@ -505,7 +547,19 @@ export default function AddModule(): JSX.Element {
               Create Module
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Build a customized learning module with AI conversation prompts and documents.
+              Modules provide users access to conversations with the AI. Modules
+              can be customized to allow or restrict access to specific assets,
+              including conversation prompts (AI instructions) and documents.
+              For more information on creating a module, please see the{" "}
+              <a
+                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+              >
+                "Creating a Module" section of our instructor guide
+              </a>
+              .
             </p>
           </div>
         </div>
@@ -515,7 +569,10 @@ export default function AddModule(): JSX.Element {
       <section aria-labelledby="actions-heading">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h2 id="actions-heading" className="text-2xl font-bold text-foreground mb-1">
+            <h2
+              id="actions-heading"
+              className="text-2xl font-bold text-foreground mb-1"
+            >
               Module Setup
             </h2>
             <p className="text-muted-foreground text-sm">
@@ -534,11 +591,14 @@ export default function AddModule(): JSX.Element {
               aria-label="Get help with Save & Publish options"
             >
               <Info className="h-4 w-4" aria-hidden="true" />
-              Help
+              Info
             </Button>
             <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
               <DropdownMenuTrigger asChild>
-                <Button className="gap-2" aria-label={`${options[selectedIndexSave]} module`}>
+                <Button
+                  className="gap-2"
+                  aria-label={`${options[selectedIndexSave]} module`}
+                >
                   <Save className="h-4 w-4" aria-hidden="true" />
                   {options[selectedIndexSave]}
                   <ChevronDown className="h-4 w-4" aria-hidden="true" />
@@ -561,39 +621,20 @@ export default function AddModule(): JSX.Element {
             </DropdownMenu>
           </nav>
         </header>
-        
-        {/* Info Section */}
-        <Card className="border-primary/20 bg-primary/5 transition-all duration-300 hover:shadow-md">
-          <CardContent className="pt-6">
-            <p className="text-primary/80 text-sm leading-relaxed">
-              Modules provide users access to conversations with the AI. Modules can
-              be customized to allow or restrict access to specific assets, including
-              conversation prompts (AI instructions) and documents. For more
-              information on creating a module, please see the{" "}
-              <a
-                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
-              >
-                "Creating a Module" section of our instructor guide
-              </a>
-              .
-            </p>
-          </CardContent>
-        </Card>
       </section>
-      
-      <div className="text-sm text-muted-foreground">* indicates a required field</div>
-      
+
       <Card className="transition-all duration-300 hover:shadow-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" aria-hidden="true" />
+            <MessageSquare
+              className="h-5 w-5 text-primary"
+              aria-hidden="true"
+            />
             Module Information
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Enter the essential details for your module. Fields marked with * are required.
+            Enter the essential details for your module. Fields marked with *
+            are required.
           </p>
         </CardHeader>
         <CardContent>
@@ -611,19 +652,27 @@ export default function AddModule(): JSX.Element {
                 disabled={isLoading}
                 required
                 className={cn(
-                  errors.name && "border-destructive focus-visible:ring-destructive"
+                  errors.name &&
+                    "border-destructive focus-visible:ring-destructive"
                 )}
                 aria-describedby={errors.name ? "name-error" : undefined}
               />
               {errors.name && (
-                <p id="name-error" className="text-sm text-destructive" role="alert">
+                <p
+                  id="name-error"
+                  className="text-sm text-destructive"
+                  role="alert"
+                >
                   {errors.name}
                 </p>
               )}
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="moduleDescription" className="text-sm font-medium">
+              <Label
+                htmlFor="moduleDescription"
+                className="text-sm font-medium"
+              >
                 Module Description *
               </Label>
               <Textarea
@@ -635,18 +684,25 @@ export default function AddModule(): JSX.Element {
                 disabled={isLoading}
                 required
                 className={cn(
-                  errors.moduleDescription && "border-destructive focus-visible:ring-destructive",
+                  errors.moduleDescription &&
+                    "border-destructive focus-visible:ring-destructive",
                   "min-h-[100px]"
                 )}
-                aria-describedby={errors.moduleDescription ? "description-error" : undefined}
+                aria-describedby={
+                  errors.moduleDescription ? "description-error" : undefined
+                }
               />
               {errors.moduleDescription && (
-                <p id="description-error" className="text-sm text-destructive" role="alert">
+                <p
+                  id="description-error"
+                  className="text-sm text-destructive"
+                  role="alert"
+                >
                   {errors.moduleDescription}
                 </p>
               )}
             </div>
-            
+
             <Separator />
 
             <div className="flex items-center justify-between">
@@ -664,63 +720,28 @@ export default function AddModule(): JSX.Element {
             </div>
 
             {session.prompts.length < 1 && session.files.length < 1 ? (
-              <div 
+              <div
                 className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
                 role="status"
               >
                 <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">No assets added</p>
                 <p className="text-sm">
-                  To add an asset (including prompts and documents), click "Add Asset" above.
+                  To add an asset (including prompts and documents), click "Add
+                  Asset" above.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="space-y-3">
-                {session.prompts.map((prompt: PromptType, i) => {
-                  return (
-                    <div key={i}>
-                      <Prompt
-                        prompt={prompt}
-                        folder={{
-                          //pass in temp folder
-                          id: prompt.folderId ? prompt.folderId : "",
-                          creator: {
-                            email: "",
-                            sub: "",
-                            name: "",
-                            family_name: "",
-                            username: "",
-                          },
-                          isDeleted: false,
-                          name: "",
-                          prompts: [],
-                          organization: "",
-                          timestamp: "",
-                          files: [],
-                        }}
-                        keyy={`${i}`}
-                        refreshList={() => refreshList()}
-                        loading={() => setIsLoading(true)}
-                        noShowMenu={true}
-                        showRemove
-                        onClick={setConfirmationModal}
-                      />
-                    </div>
-                  );
-                })}
-                </div>
-
-                <div className="space-y-3">
-                {session.files &&
-                  session.files.map((file: FileType, i) => {
+                  {session.prompts.map((prompt: PromptType, i) => {
                     return (
                       <div key={i}>
-                        <File
-                          file={file}
+                        <Prompt
+                          prompt={prompt}
                           folder={{
                             //pass in temp folder
-                            id: file.folderId ? file.folderId : "",
+                            id: prompt.folderId ? prompt.folderId : "",
                             creator: {
                               email: "",
                               sub: "",
@@ -746,51 +767,78 @@ export default function AddModule(): JSX.Element {
                     );
                   })}
                 </div>
+
+                <div className="space-y-3">
+                  {session.files &&
+                    session.files.map((file: FileType, i) => {
+                      return (
+                        <div key={i}>
+                          <File
+                            file={file}
+                            folder={{
+                              //pass in temp folder
+                              id: file.folderId ? file.folderId : "",
+                              creator: {
+                                email: "",
+                                sub: "",
+                                name: "",
+                                family_name: "",
+                                username: "",
+                              },
+                              isDeleted: false,
+                              name: "",
+                              prompts: [],
+                              organization: "",
+                              timestamp: "",
+                              files: [],
+                            }}
+                            keyy={`${i}`}
+                            refreshList={() => refreshList()}
+                            loading={() => setIsLoading(true)}
+                            noShowMenu={true}
+                            showRemove
+                            onClick={setConfirmationModal}
+                          />
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             )}
 
             <Separator />
 
-            <Label className="text-base font-medium">Module Settings</Label>
+            <div className="space-y-2">
+              <Label className="text-lg font-medium">Module Settings</Label>
 
-          {/* <Checkbox
-            onClick={() => {
-              setSession((prev) => ({
-                ...prev,
-                isRepeating: !session.isRepeating
-              }))
-            }}
-            checked={session.isRepeating}
-            isDisabled={isLoading}
-          >
-            <span>
-              Allow starter prompts to be re-selected during the conversation
-            </span>
-          </Checkbox> */}
-
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="showInitialPrompt"
-                  checked={session.showInitialPrompt}
-                  onCheckedChange={(checked) => {
-                    setSession((prev) => ({
-                      ...prev,
-                      showInitialPrompt: checked as boolean,
-                    }));
-                  }}
-                  disabled={isLoading}
-                />
-                <div className="space-y-2">
-                  <Label htmlFor="showInitialPrompt" className="font-medium">
-                    Show Embedded Prompt
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Allows users to see the full text of the embedded prompt with which
-                    they begin their chat with the AI. Unchecking this will mean that
-                    the user will not be able to see the initial text of the prompt sent
-                    initially to the AI. For more information on why you might choose
-                    one or the other, see the{" "}
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="showInitialPrompt"
+                      checked={session.showInitialPrompt}
+                      onCheckedChange={(checked) => {
+                        setSession((prev) => ({
+                          ...prev,
+                          showInitialPrompt: checked as boolean,
+                        }));
+                      }}
+                      disabled={isLoading}
+                    />
+                    <Label
+                      htmlFor="showInitialPrompt"
+                      className="text-md font-bold"
+                    >
+                      Show Embedded Prompt
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground ml-6">
+                    Allows users to see the full text of the embedded prompt
+                    with which they begin their chat with the AI. Unchecking
+                    this will mean that the user will not be able to see the
+                    initial text of the prompt sent initially to the AI. For
+                    more information on why you might choose one or the other,
+                    see the{" "}
                     <a
                       href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
                       target="_blank"
@@ -802,54 +850,31 @@ export default function AddModule(): JSX.Element {
                     .
                   </p>
                 </div>
-              </div>
-              
-              {/* <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="raterEnabled"
-                  checked={session.raterEnabled}
-                  onCheckedChange={(checked) => {
-                    setSession((prev) => ({
-                      ...prev,
-                      raterEnabled: checked as boolean,
-                    }));
-                  }}
-                  disabled={isLoading}
-                />
-                <div className="space-y-2">
-                  <Label htmlFor="raterEnabled" className="font-medium">
-                    RATER Enabled
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Provide students with more tailored feedback on their argumentative
-                    essays. Should only be used with essay drafts longer than 150 words.
-                    Checking this will also provide analytics on students' essays with
-                    the "View" button.
-                  </p>
-                </div>
-              </div> */}
-              
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="webSearch"
-                  checked={session.webSearch}
-                  onCheckedChange={(checked) => {
-                    setSession((prev) => ({
-                      ...prev,
-                      webSearch: checked as boolean,
-                    }));
-                  }}
-                  disabled={isLoading}
-                />
-                <div className="space-y-2">
-                  <Label htmlFor="webSearch" className="font-medium">
-                    Allow Web Search
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Allow PapyrusAI to search the internet in response to a query or question from students.
-                    Have the students prompt the AI with things like "Look up this topic", and it will get some
-                    sources from the internet, give a list of the links to the student, and read them to use
-                    those sources in conversation with the student.
+
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="webSearch"
+                      checked={session.webSearch}
+                      onCheckedChange={(checked) => {
+                        setSession((prev) => ({
+                          ...prev,
+                          webSearch: checked as boolean,
+                        }));
+                      }}
+                      disabled={isLoading}
+                    />
+                    <Label htmlFor="webSearch" className="text-md font-bold">
+                      Allow Web Search
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground ml-6">
+                    Allow PapyrusAI to search the internet in response to a
+                    query or question from students. Have the students prompt
+                    the AI with things like "Look up this topic", and it will
+                    get some sources from the internet, give a list of the links
+                    to the student, and read them to use those sources in
+                    conversation with the student.
                   </p>
                 </div>
               </div>

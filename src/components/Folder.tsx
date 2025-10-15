@@ -30,7 +30,7 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../utility/endpoints/UserEndpoints";
-import { Star, Folder, MoreHorizontal, ExternalLink } from "lucide-react";
+import { Star, Folder, MoreHorizontal, ExternalLink, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -329,9 +329,24 @@ export const FolderComponent = (props: FolderProps) => {
   const getFolderDescription = () => {
     // Generate a description based on the folder content
     const promptCount = props.folder.prompts.length;
-    if (promptCount === 0) return "Empty folder";
-    if (promptCount === 1) return "Contains 1 prompt";
-    return `Contains ${promptCount} prompts and resources`;
+    const fileCount = props.folder.files.length;
+
+    if (promptCount === 0 && fileCount === 0) return "Empty Folder";
+
+    if (promptCount > 0 && fileCount > 0) {
+      const promptText =
+        promptCount === 1 ? "1 prompt" : `${promptCount} prompts`;
+      const fileText = fileCount === 1 ? "1 file" : `${fileCount} files`;
+      return `Contains ${promptText} and ${fileText}`;
+    }
+
+    if (promptCount > 0) {
+      return promptCount === 1
+        ? "Contains 1 prompt"
+        : `Contains ${promptCount} prompts`;
+    }
+
+    return fileCount === 1 ? "Contains 1 file" : `Contains ${fileCount} files`;
   };
 
   const adminOrgMenu = [
@@ -664,10 +679,9 @@ export const FolderComponent = (props: FolderProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex items-center gap-1 text-primary text-xs font-medium"
+                className="flex items-center gap-1 text-primary text-xs font-medium w-full p-2"
               >
-                <ExternalLink className="h-3 w-3" />
-                View
+                {props.noShowMenu ? "Select" : "View"}
               </Button>
             </div>
           </div>

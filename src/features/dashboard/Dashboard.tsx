@@ -144,7 +144,7 @@ export default function Dashboard(): JSX.Element {
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
               Welcome back,{" "}
-              <span className="text-primary">{user?.name}!</span>
+              {user?.name}!  
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Continue your learning journey and unlock your potential.

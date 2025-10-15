@@ -1,3 +1,7 @@
+/**
+ * IndividualStudentStats.tsx, component for displaying a single student's report
+ * Handles individual charts for a student's data
+ */
 import React, { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Plot from "@observablehq/plot";

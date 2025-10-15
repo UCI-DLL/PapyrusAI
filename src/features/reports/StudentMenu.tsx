@@ -1,3 +1,7 @@
+/**
+ * StudentMenu.tsx, component for displaying a dropdown menu of students
+ * Allows for selecting multiple students
+ */
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { ChevronDown, Users } from "lucide-react";

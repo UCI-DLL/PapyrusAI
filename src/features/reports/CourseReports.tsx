@@ -1,3 +1,7 @@
+/**
+ * CourseReports.tsx, parent component for an individual course's report
+ * Handles fetching and analyzing course data, then rendering through ClassCharts.tsx
+ */
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../../utility/context/UserContext";

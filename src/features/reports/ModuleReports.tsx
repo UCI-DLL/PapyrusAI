@@ -1,3 +1,7 @@
+/**
+ * ModuleReports.tsx, component for displaying reports for a specific module
+ */
+
 import {
   Paper,
   TableContainer,

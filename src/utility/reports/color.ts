@@ -51,7 +51,7 @@ export const COLOR_PALETTES = {
     "#d462ad", // magenta
   ] as const,
 
-  // Colorblind-friendly palette (ColorBrewer Set1 inspired)
+  // Colorblind-friendly palette (ColorBrewer Set1)
   colorblind: [
     "#e41a1c", // red
     "#377eb8", // blue

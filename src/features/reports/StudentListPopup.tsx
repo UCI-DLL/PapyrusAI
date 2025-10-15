@@ -1,3 +1,7 @@
+/**
+ * StudentListPopup.tsx, component for displaying a list of all students in a course
+ * Allows for navigating to a student's individual reports
+ */
 import React, { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, User } from "lucide-react";

@@ -1,3 +1,11 @@
+/**
+ * Reports.tsx, parent component for all reports pages
+ * Structure: Reports -(route)> CourseReports -> ClassCharts
+ * From ClassCharts, can navigate to StudentPage( & IndividualStudentStats)
+ * ClassCharts also renders StudentMenu (select students) &
+ * StudentListPopup (view all students, views user's conversations -> UserReports)
+ */
+
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
 import { UserContext } from "../../utility/context/UserContext";

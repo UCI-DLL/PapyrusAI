@@ -1,3 +1,9 @@
+/**
+ * ClassCharts.tsx, parent component for a course's report
+ * Displays charts for a course's data
+ * Individual student reports (StudentPage.tsx) are displayed when students are selected through StudentMenu.tsx
+ * StudentListPopup.tsx is displayed when the "View All Students" button is clicked
+ */
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -22,7 +28,7 @@ export default function ClassCharts({
   const [endDate, setEndDate] = useState<string>("");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   // const [showClassificationChart, setShowClassificationChart] =
-  //   useState<boolean>(false); // Unused state variable
+  //   useState<boolean>(false); // Unused state variable, for when classification is implemented
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState<number>(0);
   const [studentMenuOpen, setStudentMenuOpen] = useState<boolean>(false);
   const [studentListPopupOpen, setStudentListPopupOpen] =

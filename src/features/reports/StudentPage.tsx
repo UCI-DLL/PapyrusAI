@@ -1,3 +1,8 @@
+/**
+ * StudentPage.tsx, component for displaying a page of student reports
+ * Handles stacked charts for a set of selected students
+ * Renders IndividualStudentStats.tsx for each student selected
+ */
 import React, { useEffect, useRef } from "react";
 import IndividualStudentStats from "./IndividualStudentStats";
 import * as Plot from "@observablehq/plot";

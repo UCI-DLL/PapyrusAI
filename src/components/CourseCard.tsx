@@ -257,7 +257,7 @@ export default function CourseCard({
         </DialogContent>
       </Dialog>
 
-      <article className="group bg-card border rounded-xl hover-lift shadow-sm relative h-40 flex flex-col">
+      <article className="group bg-card border rounded-xl hover-lift shadow-sm relative h-50 flex flex-col">
         <div
           className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl"
           aria-hidden="true"
@@ -268,13 +268,13 @@ export default function CourseCard({
         <div className="p-4 flex flex-col flex-1 relative z-10">
           <header className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+              <h3 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-300">
                 {course.name}
               </h3>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex flex-col my-2 gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Calendar size={10} aria-hidden="true" />
-                  <span className="font-medium">
+                  <span className="font-medium text-sm capitalize">
                     {course.section
                       ? `${course.term || ""} ${course.year || ""} - ${
                           course.section
@@ -284,9 +284,14 @@ export default function CourseCard({
                 </div>
                 <div className="flex items-center gap-1">
                   <User size={10} aria-hidden="true" />
-                  <span className="font-medium truncate">
+                  <span className="font-medium text-sm truncate">
+                    Instructor:{" "}
                     {`${course.instructor.name} ${course.instructor.family_name}`}
                   </span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  {course.modules.length}{" "}
+                  {course.modules.length === 1 ? "Module" : "Modules"}
                 </div>
               </div>
             </div>
@@ -297,34 +302,32 @@ export default function CourseCard({
             >
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        starred
-                          ? removeStarredCourse(course.id)
-                          : createStarredCourse(course.id);
-                      }}
-                      disabled={isLoading}
+                  <TooltipTrigger
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      starred
+                        ? removeStarredCourse(course.id)
+                        : createStarredCourse(course.id);
+                    }}
+                    disabled={isLoading}
+                    className={cn(
+                      "p-1 rounded-full transition-all duration-300",
+                      starred
+                        ? "text-gold hover:text-muted"
+                        : "text-muted hover:text-gold"
+                    )}
+                    aria-label={
+                      starred ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    <Star
+                      size={12}
+                      fill={starred ? "currentColor" : "none"}
                       className={cn(
-                        "p-1 rounded-full transition-all duration-300",
-                        starred
-                          ? "text-gold hover:text-muted"
-                          : "text-muted hover:text-gold"
+                        starred ? "hover:fill-none" : "hover:fill-current"
                       )}
-                      aria-label={
-                        starred ? "Remove from favorites" : "Add to favorites"
-                      }
-                    >
-                      <Star
-                        size={12}
-                        fill={starred ? "currentColor" : "none"}
-                        className={cn(
-                          starred ? "hover:fill-none" : "hover:fill-current"
-                        )}
-                        aria-hidden="true"
-                      />
-                    </button>
+                      aria-hidden="true"
+                    />
                   </TooltipTrigger>
                   <TooltipContent side="top">
                     {starred ? "Unstar Course" : "Star Course"}
@@ -345,16 +348,14 @@ export default function CourseCard({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="p-1 text-muted hover:text-muted-foreground hover:bg-muted rounded-full transition-all duration-300"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                              }}
-                              aria-label="Course options menu"
-                            >
-                              <MoreHorizontal size={12} aria-hidden="true" />
-                            </button>
+                          <DropdownMenuTrigger
+                            className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            aria-label="Course options menu"
+                          >
+                            <MoreHorizontal size={12} aria-hidden="true" />
                           </DropdownMenuTrigger>
                         </TooltipTrigger>
                         <TooltipContent side="top">

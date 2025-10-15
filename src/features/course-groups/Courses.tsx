@@ -1,18 +1,22 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import CourseList from "./CourseList";
 import { CourseType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import { UserContext } from "../../utility/context/UserContext";
-import {
-  Dialog,
-  DialogTrigger,
-} from "../../components/ui/dialog";
+import { Dialog, DialogTrigger } from "../../components/ui/dialog";
 import AddCourseForm from "./AddCourseForm";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
-import { Loader2, PlusIcon, ExternalLink, BookOpen } from "lucide-react";
+import {
+  Loader2,
+  PlusIcon,
+  ExternalLink,
+  BookOpen,
+  Search,
+} from "lucide-react";
 
 export default function Courses(): JSX.Element {
   let navigator = useNavigate();
@@ -24,6 +28,7 @@ export default function Courses(): JSX.Element {
   const [starredCourses, setStarredCourses] = useState<
     Array<{ courseId: string }>
   >([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -88,6 +93,11 @@ export default function Courses(): JSX.Element {
     process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
   );
 
+  // Filter courses based on search query
+  const filteredCourses = courseList.filter((course) =>
+    course.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (isLoading) {
     return (
       <div
@@ -118,81 +128,120 @@ export default function Courses(): JSX.Element {
             <BookOpen size={192} className="text-primary" />
           </div>
 
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              My Courses
-            </h1>
-            <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Courses are spaces in which instructors can create and organize
-              modules that customize how students can interact with the AI.
-            </p>
+          <div className="relative z-10 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                  My Courses
+                </h1>
+                <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                  Courses are spaces in which instructors can create and
+                  organize modules that customize how students can interact with
+                  the AI. For more information on creating a course, please see
+                  the{" "}
+                  <a
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                  >
+                    "Creating a Course" section of our instructor guide
+                  </a>
+                  .
+                </p>
+              </div>
+
+              <nav
+                className="flex flex-col md:flex-row gap-2 md:shrink-0"
+                role="toolbar"
+                aria-label="Course actions"
+              >
+                {isInstructor && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigator("/createcourse")}
+                    aria-label="Create new course"
+                  >
+                    <PlusIcon className="w-4 h-4" aria-hidden="true" />
+                    Create Course
+                  </Button>
+                )}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" aria-label="Join existing course">
+                      <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                      Join Course
+                    </Button>
+                  </DialogTrigger>
+                  <AddCourseForm
+                    closeForm={() => {
+                      setShowAddCourseModal(false);
+                    }}
+                  />
+                </Dialog>
+              </nav>
+            </div>
+
+            {courseList.length > 0 && (
+              <p className="text-muted-foreground text-sm max-w-3xl">
+                To access a course, click the "View Modules" button for your
+                desired course and choose from the available modules.
+                {isInstructor &&
+                  " To edit or duplicate a course, click on the options menu for the course you wish to use."}
+              </p>
+            )}
           </div>
         </div>
       </header>
 
       {error ? (
-        <div className="bg-destructive/15 border border-destructive rounded-lg p-4" role="alert">
+        <div
+          className="bg-destructive/15 border border-destructive rounded-lg p-4"
+          role="alert"
+        >
           <p className="text-destructive font-medium">{error}</p>
         </div>
       ) : (
         <section aria-labelledby="courses-content">
-          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h2
+          <div className="mb-6 w-full bg-card p-4 rounded-lg shadow-md">
+            <div className="relative w-full">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
                 id="courses-content"
-                className="text-2xl font-bold text-foreground mb-1"
-              >
-                Course Collection
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                {courseList.length > 0
-                  ? `To access a course, click the "View Modules" button for your desired course and choose from the available modules.${
-                      isInstructor
-                        ? " To edit or duplicate a course, click on the options menu for the course you wish to use."
-                        : ""
-                    }`
-                  : "Join a course to get started with your learning journey."}
-              </p>
+                type="text"
+                placeholder="Search courses..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                aria-label="Search courses"
+              />
             </div>
-            <nav
-              className="flex flex-col md:flex-row gap-2"
-              role="toolbar"
-              aria-label="Course actions"
-            >
-              {isInstructor && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigator("/createcourse")}
-                  aria-label="Create new course"
-                >
-                  <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                  Create Course
-                </Button>
-              )}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm" aria-label="Join existing course">
-                    <ExternalLink className="w-4 h-4" aria-hidden="true" />
-                    Join Course
-                  </Button>
-                </DialogTrigger>
-                <AddCourseForm
-                  closeForm={() => {
-                    setShowAddCourseModal(false);
-                  }}
-                />
-              </Dialog>
-            </nav>
-          </header>
+          </div>
 
           <div className="w-full">
             {courseList.length > 0 ? (
-              <CourseList
-                list={courseList}
-                refreshList={refreshList}
-                starredList={starredCourses}
-              />
+              filteredCourses.length > 0 ? (
+                <CourseList
+                  list={filteredCourses}
+                  refreshList={refreshList}
+                  starredList={starredCourses}
+                />
+              ) : (
+                <div
+                  className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+                  role="status"
+                >
+                  <Search className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                  <p className="text-lg font-medium mb-2">No courses found</p>
+                  <p className="text-sm">
+                    No courses match your search. Try a different search term.
+                  </p>
+                </div>
+              )
             ) : (
               <div
                 className="text-center py-12 text-muted-foreground bg-card border rounded-lg"

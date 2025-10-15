@@ -1,18 +1,18 @@
 import React, { useContext, useState, useEffect } from "react";
 import { UserContext } from "../../utility/context/UserContext";
 import { useLocation, useNavigate } from "react-router";
-import { 
-  Home, 
-  BookOpen, 
-  Layers, 
-  BarChart3, 
-  Library, 
-  User, 
-  Info, 
-  Settings, 
+import {
+  Home,
+  BookOpen,
+  Layers,
+  BarChart3,
+  Library,
+  User,
+  Info,
+  Settings,
   ExternalLink,
-  LogOut, 
-  HelpCircle
+  LogOut,
+  HelpCircle,
 } from "lucide-react";
 
 import {
@@ -41,14 +41,14 @@ import { Button } from "../../components/ui/button";
 
 // Icon mapping for menu items
 const menuIcons: Record<string, React.ComponentType<any>> = {
-  "Dashboard": Home,
-  "Courses": BookOpen,
-  "Modules": Layers,
-  "Reports": BarChart3,
-  "Library": Library,
-  "Account": User,
-  "About": Info,
-  "Settings": Settings,
+  Dashboard: Home,
+  Courses: BookOpen,
+  Modules: Layers,
+  Reports: BarChart3,
+  Library: Library,
+  Account: User,
+  About: Info,
+  Settings: Settings,
 };
 
 // NavigationContent component to be used inside SidebarProvider
@@ -64,79 +64,140 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
   // For the side drawer main nav menu
   // base this list off instructor, admin, student access, and TAs
   // tas dont have access to library
-  const [mainMenuList, setMainMenuList] = useState(["Dashboard", "Courses", "Account", "About"]);
-  const [mainMenuLinks, setMainMenuLinks] = useState(["/", "/courses", "/account", "/about"]);
+  const [mainMenuList, setMainMenuList] = useState([
+    "Dashboard",
+    "Courses",
+    "Account",
+    "About",
+  ]);
+  const [mainMenuLinks, setMainMenuLinks] = useState([
+    "/",
+    "/courses",
+    "/account",
+    "/about",
+  ]);
   const [breadcrumbText, setBreadcrumbText] = useState(["", ""]);
 
   // decide nav bar based on user permissions
   useEffect(() => {
     if (user) {
-      if (user.groups.find(a => a.includes("-TA"))) {
-        setMainMenuList(["Dashboard", "Courses", "Reports", "Account", "About"]);
-        setMainMenuLinks(["/", "/courses", "/reports", "/account", "/about"])
+      if (user.groups.find((a) => a.includes("-TA"))) {
+        setMainMenuList([
+          "Dashboard",
+          "Courses",
+          "Reports",
+          "Account",
+          "About",
+        ]);
+        setMainMenuLinks(["/", "/courses", "/reports", "/account", "/about"]);
       }
-      if (user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors")) {
-        setMainMenuList(["Dashboard", "Courses",  "Reports", "Library", "Account", "About"])
-        setMainMenuLinks(["/", "/courses", "/reports", "/library", "/account", "/about"])
+      if (
+        user?.groups.includes(
+          process.env.REACT_APP_INSTRUCTOR
+            ? process.env.REACT_APP_INSTRUCTOR
+            : "PapyrusAIInstructors"
+        )
+      ) {
+        setMainMenuList([
+          "Dashboard",
+          "Courses",
+          "Reports",
+          "Library",
+          "Account",
+          "About",
+        ]);
+        setMainMenuLinks([
+          "/",
+          "/courses",
+          "/reports",
+          "/library",
+          "/account",
+          "/about",
+        ]);
       }
-      if (user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin")) {
-        setMainMenuList(["Dashboard", "Courses", "Reports", "Library", "Account", "About", "Settings"])
-        setMainMenuLinks(["/", "/courses", "/reports", "/library", "/account", "/about", "/org-settings"])
+      if (
+        user?.groups.includes(
+          process.env.REACT_APP_ADMIN
+            ? process.env.REACT_APP_ADMIN
+            : "PapyrusAIAdmin"
+        )
+      ) {
+        setMainMenuList([
+          "Dashboard",
+          "Courses",
+          "Reports",
+          "Library",
+          "Account",
+          "About",
+          "Settings",
+        ]);
+        setMainMenuLinks([
+          "/",
+          "/courses",
+          "/reports",
+          "/library",
+          "/account",
+          "/about",
+          "/org-settings",
+        ]);
       }
     }
-  }, [user])
+  }, [user]);
 
   useEffect(() => {
     //set breadcrumb text based on the url location
     const pathnameSplit = location.pathname.split("/");
     if (location.pathname === "/") {
-      setBreadcrumbText(["Dashboard", "Overview"])
+      setBreadcrumbText(["Dashboard", "Overview"]);
     } else if (location.pathname === "/courses") {
-      setBreadcrumbText(["Courses", ""])
+      setBreadcrumbText(["Courses", ""]);
     } else if (location.pathname === "/modules") {
-      setBreadcrumbText(["All Modules", ""])
+      setBreadcrumbText(["All Modules", ""]);
     } else if (
       pathnameSplit.length === 4 &&
       pathnameSplit[1] === "courses" &&
       pathnameSplit[3] === "modules"
     ) {
-      setBreadcrumbText(["Modules", ""])
+      setBreadcrumbText(["Modules", ""]);
     } else if (
       pathnameSplit.length === 5 &&
       pathnameSplit[1] === "courses" &&
       pathnameSplit[3] === "editmodule"
     ) {
-      setBreadcrumbText(["Edit Module", ""])
+      setBreadcrumbText(["Edit Module", ""]);
     } else if (
       pathnameSplit.length === 5 &&
       pathnameSplit[1] === "courses" &&
       pathnameSplit[3] === "modules"
     ) {
-      setBreadcrumbText(["Conversations", ""])
+      setBreadcrumbText(["Conversations", ""]);
     } else if (pathnameSplit[1] === "chat") {
-      setBreadcrumbText(["Chat", ""])
+      setBreadcrumbText(["Chat", ""]);
     } else if (pathnameSplit[1] === "reports") {
-      setBreadcrumbText(["Reports", ""])
+      setBreadcrumbText(["Reports", ""]);
     } else if (location.pathname === "/account") {
-      setBreadcrumbText(["Account", ""])
+      setBreadcrumbText(["Account", ""]);
     } else if (location.pathname === "/about") {
-      setBreadcrumbText(["About", ""])
+      setBreadcrumbText(["About", ""]);
     } else if (pathnameSplit[1] === "editcourse") {
-      setBreadcrumbText(["Edit Course", ""])
-    } else if (pathnameSplit[1] === "prompts") { //hidden
-      setBreadcrumbText(["Prompts", ""])
+      setBreadcrumbText(["Edit Course", ""]);
+    } else if (pathnameSplit[1] === "prompts") {
+      //hidden
+      setBreadcrumbText(["Prompts", ""]);
     } else if (pathnameSplit[1] === "library") {
-      setBreadcrumbText(["Library", ""])
+      setBreadcrumbText(["Library", ""]);
     } else if (pathnameSplit[1] === "org-settings") {
-      setBreadcrumbText(["Organization Settings", ""])
+      setBreadcrumbText(["Organization Settings", ""]);
     }
-  }, [location.pathname])
+  }, [location.pathname]);
 
   function handleLogOut() {
     setUser(null);
     localStorage.clear();
     navigator("/login");
-    window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+    window.location.replace(
+      process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : ""
+    );
   }
 
   return (
@@ -144,8 +205,14 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
       <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader className="border-b border-sidebar-border">
           <div className="flex items-center gap-3 px-4 py-2">
-            <img src="/dll-logo-noname.png" alt="PapyrusAI logo" className="h-8 w-8 shrink-0" />
-            <h6 className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">PapyrusAI</h6>
+            <img
+              src="/dll-logo-noname.png"
+              alt="PapyrusAI logo"
+              className="h-8 w-8 shrink-0"
+            />
+            <h6 className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+              PapyrusAI
+            </h6>
           </div>
         </SidebarHeader>
 
@@ -156,16 +223,18 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                 {mainMenuList.map((text, index) => {
                   const IconComponent = menuIcons[text];
                   const isActive = location.pathname === mainMenuLinks[index];
-                  
+
                   return (
                     <SidebarMenuItem key={text}>
-                      <SidebarMenuButton 
-                        isActive={isActive} 
+                      <SidebarMenuButton
+                        isActive={isActive}
                         onClick={() => navigator(mainMenuLinks[index])}
                         className="h-10 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground cursor-pointer"
                       >
                         <div className="flex items-center gap-3">
-                          {IconComponent && <IconComponent className="h-4 w-4 shrink-0" />}
+                          {IconComponent && (
+                            <IconComponent className="h-4 w-4 shrink-0" />
+                          )}
                           <span className="text-sm font-medium">{text}</span>
                         </div>
                       </SidebarMenuButton>
@@ -182,8 +251,13 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={() => window.open("https://www.genaied.org/resources.html", "_blank")}
+                  <SidebarMenuButton
+                    onClick={() =>
+                      window.open(
+                        "https://www.genaied.org/resources.html",
+                        "_blank"
+                      )
+                    }
                     className="h-10 rounded-lg px-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     tooltip="Resources"
                   >
@@ -199,7 +273,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
         <SidebarFooter className="border-t border-sidebar-border px-2 py-4">
           <SidebarMenu className="space-y-1">
             <SidebarMenuItem>
-              <SidebarMenuButton 
+              <SidebarMenuButton
                 onClick={handleLogOut}
                 className="h-10 rounded-lg px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 tooltip="Log Out"
@@ -209,16 +283,23 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          
+
           <div className="mt-2 px-1 group-data-[collapsible=icon]:px-0">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="h-9 w-full justify-start rounded-lg border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
-              onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform", "_blank")}
+              onClick={() =>
+                window.open(
+                  "https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform",
+                  "_blank"
+                )
+              }
               title="Report Issue"
             >
-              <span className="text-xs font-medium group-data-[collapsible=icon]:hidden">Report Issue</span>
+              <span className="text-xs font-medium group-data-[collapsible=icon]:hidden">
+                Report Issue
+              </span>
               <HelpCircle className="h-4 w-4 hidden group-data-[collapsible=icon]:inline" />
             </Button>
           </div>
@@ -229,19 +310,22 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
         {/* Top Navigation Bar */}
         <header className="flex h-16 items-center gap-4 border-b border-sidebar-border bg-sidebar px-6 shrink-0">
           <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent" />
-          
+
           <Breadcrumb>
-            <BreadcrumbList className="text-sidebar-foreground">
+            <BreadcrumbList className="text-sidebar-foreground font-medium">
               {breadcrumbText[0] !== "" && breadcrumbText[1] !== "" ? (
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
                       <button
-                        onClick={() => navigator(
-                          breadcrumbText[0] === "Dashboard" ? "/" :
-                            `/courses/${breadcrumbText[0]}/modules`
-                        )}
-                        className="cursor-pointer hover:underline text-sidebar-foreground hover:text-sidebar-accent-foreground"
+                        onClick={() =>
+                          navigator(
+                            breadcrumbText[0] === "Dashboard"
+                              ? "/"
+                              : `/courses/${breadcrumbText[0]}/modules`
+                          )
+                        }
+                        className="cursor-pointer hover:underline text-sidebar-foreground hover:text-sidebar-accent-foreground font-medium"
                       >
                         {breadcrumbText[0]}
                       </button>
@@ -249,22 +333,24 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="text-sidebar-foreground" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage className="text-sidebar-foreground font-medium">{breadcrumbText[1]}</BreadcrumbPage>
+                    <BreadcrumbPage className="text-sidebar-foreground font-medium">
+                      {breadcrumbText[1]}
+                    </BreadcrumbPage>
                   </BreadcrumbItem>
                 </>
               ) : (
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="text-sidebar-foreground font-medium">{breadcrumbText[0]}</BreadcrumbPage>
+                  <BreadcrumbPage className="text-sidebar-foreground font-medium">
+                    {breadcrumbText[0]}
+                  </BreadcrumbPage>
                 </BreadcrumbItem>
               )}
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-        
+
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </SidebarInset>
     </div>
   );
@@ -281,4 +367,3 @@ export default function Navigation({ children }: NavigationProps): JSX.Element {
     </SidebarProvider>
   );
 }
-

@@ -79,7 +79,12 @@ export default function StudentListPopup({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="student-list-title"
+    >
       <div
         ref={popupRef}
         className="bg-card border border-border rounded-lg shadow-lg max-w-2xl w-full max-h-[80vh] flex flex-col"
@@ -87,7 +92,10 @@ export default function StudentListPopup({
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2
+              id="student-list-title"
+              className="text-xl font-semibold text-foreground"
+            >
               Students in Class
             </h2>
           </div>
@@ -95,6 +103,7 @@ export default function StudentListPopup({
             variant="ghost"
             size="sm"
             onClick={onClose}
+            aria-label="Close student list"
             className="h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />
@@ -122,8 +131,17 @@ export default function StudentListPopup({
                 return (
                   <div
                     key={id}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View reports for ${studentName}`}
                     onClick={() => handleStudentClick(id, student)}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent cursor-pointer transition-colors group"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleStudentClick(id, student);
+                      }
+                    }}
+                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent cursor-pointer transition-colors group focus:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">

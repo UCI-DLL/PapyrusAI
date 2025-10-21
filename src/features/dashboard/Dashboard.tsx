@@ -20,6 +20,7 @@ import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { ExternalLink, EyeIcon, Loader2, PlusIcon, Target } from "lucide-react";
 import { Dialog, DialogTrigger } from "../../components/ui/dialog";
+import { Link } from "react-router-dom";
 
 export default function Dashboard(): JSX.Element {
   let navigator = useNavigate();
@@ -143,8 +144,7 @@ export default function Dashboard(): JSX.Element {
 
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              Welcome back,{" "}
-              {user?.name}!  
+              Welcome back, {user?.name}!
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Continue your learning journey and unlock your potential.
@@ -175,21 +175,25 @@ export default function Dashboard(): JSX.Element {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => navigator("/courses")}
+              asChild
               aria-label="View all courses"
             >
-              <EyeIcon className="w-4 h-4" aria-hidden="true" />
-              View All
+              <Link to="/courses" className="no-underline">
+                <EyeIcon className="w-4 h-4" aria-hidden="true" />
+                View All
+              </Link>
             </Button>
             {isInstructor && (
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => navigator("/createcourse")}
+                asChild
                 aria-label="Create new course"
               >
-                <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                Create Course
+                <Link to="/createcourse" className="no-underline">
+                  <PlusIcon className="w-4 h-4" aria-hidden="true" />
+                  Create Course
+                </Link>
               </Button>
             )}
             <Dialog>
@@ -223,7 +227,8 @@ export default function Dashboard(): JSX.Element {
               <Target className="mx-auto h-12 w-12 mb-4 opacity-50" />
               <p className="text-lg font-medium mb-2">No courses found</p>
               <p className="text-sm">
-                No courses added yet. To join a course, click "Join Course" above.
+                No courses added yet. To join a course, click "Join Course"
+                above.
               </p>
             </div>
           )}
@@ -248,16 +253,21 @@ export default function Dashboard(): JSX.Element {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => navigator("/modules")}
+            asChild
             aria-label="View all modules"
           >
-            <EyeIcon className="w-4 h-4" aria-hidden="true" />
-            View All
+            <Link to="/modules" className="no-underline">
+              <EyeIcon className="w-4 h-4" aria-hidden="true" />
+              View All
+            </Link>
           </Button>
         </header>
 
         <div className="w-full">
-          {courseList.length > 0 && coursesWithRecentModules.some(course => course.modules.length > 0) ? (
+          {courseList.length > 0 &&
+          coursesWithRecentModules.some(
+            (course) => course.modules.length > 0
+          ) ? (
             <div className="space-y-4">
               {coursesWithRecentModules.map((course, index) => {
                 return course.modules.length > 0 ? (
@@ -284,10 +294,9 @@ export default function Dashboard(): JSX.Element {
               <Target className="mx-auto h-12 w-12 mb-4 opacity-50" />
               <p className="text-lg font-medium mb-2">No recent modules</p>
               <p className="text-sm">
-                {courseList.length === 0 
+                {courseList.length === 0
                   ? "Join a course to access modules and start learning."
-                  : "No modules available in your courses yet."
-                }
+                  : "No modules available in your courses yet."}
               </p>
             </div>
           )}

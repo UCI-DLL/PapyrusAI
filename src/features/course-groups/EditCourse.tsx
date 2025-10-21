@@ -883,7 +883,12 @@ export default function EditCourse(): JSX.Element {
                               variant="secondary"
                               className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
                             >
-                              {ta.name} {ta.family_name}
+                              {ta.name && ta.family_name
+                                ? `${ta.name} ${ta.family_name}`
+                                : ta.name ||
+                                  ta.family_name ||
+                                  ta.email ||
+                                  ta.username}
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -970,11 +975,19 @@ export default function EditCourse(): JSX.Element {
                               >
                                 <div className="flex items-center gap-2">
                                   <span>
-                                    {user.name} {user.family_name}
+                                    {user.name && user.family_name
+                                      ? `${user.name} ${user.family_name}`
+                                      : user.name ||
+                                        user.family_name ||
+                                        user.email ||
+                                        user.username}
                                   </span>
-                                  <span className="text-muted-foreground">
-                                    ({user.email})
-                                  </span>
+                                  {user.email &&
+                                    (user.name || user.family_name) && (
+                                      <span className="text-muted-foreground">
+                                        ({user.email})
+                                      </span>
+                                    )}
                                 </div>
                               </SelectItem>
                             ))
@@ -999,6 +1012,100 @@ export default function EditCourse(): JSX.Element {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Bottom Actions */}
+              <section
+                aria-labelledby="bottom-actions-heading"
+                className="pt-4"
+              >
+                <nav
+                  className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+                  role="toolbar"
+                  aria-label="Course editing actions"
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSavePublishTooltip(true)}
+                    aria-label="Get help with Save & Publish options"
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                    Info
+                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setOpenDeleteModal(true)}
+                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          aria-label="Delete course"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          Delete
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete Course</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <div className="flex rounded-lg border overflow-hidden">
+                    <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          className="rounded-none border-0 border-r px-2"
+                          variant="default"
+                          disabled={isLoading}
+                          aria-label="Select save and activation strategy"
+                        >
+                          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {options.map((option, index) => (
+                          <DropdownMenuItem
+                            key={option}
+                            onClick={(event) =>
+                              handleMenuItemClick(event, index)
+                            }
+                            className={cn(
+                              index === selectedIndexSave && "bg-accent",
+                              index === 2 &&
+                                "text-destructive focus:text-destructive"
+                            )}
+                          >
+                            {option}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        if (selectedIndexSave === 0) {
+                          handleSubmit(e, true, false);
+                        } else if (selectedIndexSave === 1) {
+                          if (session.isActive) {
+                            setOpenActiveModal(true);
+                          } else {
+                            handleSubmit(e, false, false);
+                          }
+                        } else if (selectedIndexSave === 2) {
+                          setOpenDiscardModal(true);
+                        }
+                      }}
+                      className="rounded-none border-0"
+                      disabled={isLoading}
+                      aria-label={`${options[selectedIndexSave]} course`}
+                    >
+                      {options[selectedIndexSave]}
+                    </Button>
+                  </div>
+                </nav>
+              </section>
             </form>
           </div>
         </>

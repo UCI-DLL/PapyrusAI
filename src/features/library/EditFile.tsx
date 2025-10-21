@@ -698,9 +698,9 @@ export default function EditFile(): JSX.Element {
     }
   }
 
-  return fileInfo && !isLoading ? (
+  return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
-      {newFile.name ? (
+      {newFile.name && fileInfo ? (
         <>
           <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
             <AlertDialogContent>
@@ -748,9 +748,77 @@ export default function EditFile(): JSX.Element {
                 <Upload size={192} className="text-primary" />
               </div>
               <div className="relative z-10">
-                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                  Edit <span className="text-primary">{file?.name}</span>
-                </h1>
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                      Edit <span className="text-primary">{file?.name}</span>
+                    </h1>
+                  </div>
+                  <nav
+                    className="flex flex-col sm:flex-row gap-2"
+                    role="toolbar"
+                    aria-label="File editing actions"
+                  >
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setOpenDeleteModal(true)}
+                            disabled={isLoading}
+                            aria-label="Delete file permanently"
+                          >
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete File</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <Button
+                      size="sm"
+                      disabled={isLoading}
+                      onClick={() => {
+                        if (selectedIndexSave === 0) {
+                          handleUpload(undefined, false);
+                        } else {
+                          setOpenDiscardModal(true);
+                        }
+                      }}
+                      aria-label={
+                        isLoading
+                          ? "Saving file..."
+                          : `${options[selectedIndexSave]} file`
+                      }
+                    >
+                      {options[selectedIndexSave]}
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isLoading}
+                          aria-label="Select save and update strategy"
+                        >
+                          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {options.map((option, index) => (
+                          <DropdownMenuItem
+                            key={option}
+                            onClick={() => handleMenuItemClick(index)}
+                          >
+                            {option}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </nav>
+                </div>
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
                   Update your file information and content as needed.
                 </p>
@@ -758,272 +826,213 @@ export default function EditFile(): JSX.Element {
             </div>
           </header>
 
-          <section aria-labelledby="file-edit-heading">
-            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div>
-                <h2 id="file-edit-heading" className="text-2xl font-bold text-foreground mb-1">
-                  File Management
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Update file details, replace content, or manage metadata.
-                </p>
-              </div>
-              <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="File editing actions">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setOpenDeleteModal(true)}
-                        disabled={isLoading}
-                        aria-label="Delete file permanently"
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Delete File</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <Button
-                  size="sm"
-                  disabled={isLoading}
-                  onClick={() => {
-                    if (selectedIndexSave === 0) {
-                      handleUpload(undefined, false);
-                    } else {
-                      setOpenDiscardModal(true);
-                    }
-                  }}
-                  aria-label={isLoading ? "Saving file..." : `${options[selectedIndexSave]} file`}
-                >
-                  {options[selectedIndexSave]}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" disabled={isLoading} aria-label="Select save and update strategy">
-                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {options.map((option, index) => (
-                      <DropdownMenuItem
-                        key={option}
-                        onClick={() => handleMenuItemClick(index)}
-                      >
-                        {option}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </nav>
-            </header>
-
-            <Card className="mb-6 transition-all duration-300 hover:shadow-md">
-              <CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">
-                  * indicates a required field
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="transition-all duration-300 hover:shadow-md">
+          <Card className="transition-all duration-300 hover:shadow-md">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-foreground">
                   File Information
                 </CardTitle>
                 <p className="text-muted-foreground text-sm">
-                  Update the essential details for your file. Fields marked with * are required.
+                  Update the essential details for your file. Fields marked with
+                  * are required.
                 </p>
               </CardHeader>
-            <CardContent>
-              <form
-                onSubmit={(e) => handleUpload(e, false)}
-                className="space-y-6"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="name" className="text-sm font-medium">
-                      File Name *
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">The name for the document.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Input
-                    id="name"
-                    name="name"
-                    placeholder="Enter file name"
-                    value={newFile.name}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    required
-                    className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
-                    aria-describedby={errors.name ? "name-error" : undefined}
-                  />
-                  {errors.name && (
-                    <p id="name-error" className="text-sm text-destructive" role="alert">
-                      {errors.name}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm font-medium">File Upload</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">
-                            Select a JPEG, PNG, PDF, TXT, DOCX file to replace
-                            the current file.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    disabled={isLoading}
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    accept=".jpg,.jpeg,.png,.pdf,.docx,.txt"
-                  />
-                  {!selectedFiles?.name ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => fileRef.current?.click()}
-                      disabled={isLoading}
-                      className="w-full h-32 border-dashed border-2 hover:border-primary hover:bg-primary/10 transition-colors"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Upload className="h-8 w-8 text-muted-foreground" />
-                        <span className="text-sm font-medium">
-                          Choose new file to upload
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          JPEG, PNG, PDF, TXT, DOCX (max 1GB)
-                        </span>
-                      </div>
-                    </Button>
-                  ) : (
-                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <Upload className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm font-medium truncate">
-                          {selectedFiles?.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onUpdate("change")}
-                          disabled={isLoading}
-                        >
-                          Change
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onUpdate("clear")}
-                          disabled={isLoading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
+              <CardContent>
+                <form
+                  onSubmit={(e) => handleUpload(e, false)}
+                  className="space-y-6"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="name" className="text-sm font-medium">
+                        File Name *
+                      </Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">
+                              The name for the document.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
-                  )}
-                  {errors.file && (
-                    <p className="text-sm text-destructive">{errors.file}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm font-medium">Tags</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">
-                            Tags describe a feature of the files and will be
-                            used to allow for sorting files by type.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
-                    {tagList.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-2">
-                        {tagList.map((tag) => (
-                          <div
-                            key={tag.id}
-                            className="flex items-center space-x-2"
-                          >
-                            <Checkbox
-                              id={`tag-${tag.id}`}
-                              checked={newFile.tags.includes(tag.id)}
-                              onCheckedChange={() => handleTagToggle(tag.id)}
-                              disabled={isLoading}
-                            />
-                            <Label
-                              htmlFor={`tag-${tag.id}`}
-                              className="text-sm font-normal cursor-pointer"
-                            >
-                              {tag.id}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        No tags available
+                    <Input
+                      id="name"
+                      name="name"
+                      placeholder="Enter file name"
+                      value={newFile.name}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      required
+                      className={
+                        errors.name
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
+                      }
+                      aria-describedby={errors.name ? "name-error" : undefined}
+                    />
+                    {errors.name && (
+                      <p
+                        id="name-error"
+                        className="text-sm text-destructive"
+                        role="alert"
+                      >
+                        {errors.name}
                       </p>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Selected:{" "}
-                    {newFile.tags.length > 0 ? newFile.tags.join(", ") : "None"}
-                  </p>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm font-medium">File Upload</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">
+                              Select a JPEG, PNG, PDF, TXT, DOCX file to replace
+                              the current file.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      disabled={isLoading}
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      accept=".jpg,.jpeg,.png,.pdf,.docx,.txt"
+                    />
+                    {!selectedFiles?.name ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileRef.current?.click()}
+                        disabled={isLoading}
+                        className="w-full h-32 border-dashed border-2 hover:border-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <Upload className="h-8 w-8 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            Choose new file to upload
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            JPEG, PNG, PDF, TXT, DOCX (max 1GB)
+                          </span>
+                        </div>
+                      </Button>
+                    ) : (
+                      <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Upload className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm font-medium truncate">
+                            {selectedFiles?.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onUpdate("change")}
+                            disabled={isLoading}
+                          >
+                            Change
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onUpdate("clear")}
+                            disabled={isLoading}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {errors.file && (
+                      <p className="text-sm text-destructive">{errors.file}</p>
+                    )}
+                  </div>
 
-            {/* File preview section */}
-            {newFile && newFile.url && (
-              <Card className="mt-6 transition-all duration-300 hover:shadow-md">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-foreground">
-                    Current File Preview
-                  </CardTitle>
-                  <p className="text-muted-foreground text-sm">
-                    Preview of your current file content.
-                  </p>
-                </CardHeader>
-                <CardContent>{renderFile()}</CardContent>
-              </Card>
-            )}
-          </section>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm font-medium">Tags</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">
+                              Tags describe a feature of the files and will be
+                              used to allow for sorting files by type.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
+                      {tagList.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-2">
+                          {tagList.map((tag) => (
+                            <div
+                              key={tag.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`tag-${tag.id}`}
+                                checked={newFile.tags.includes(tag.id)}
+                                onCheckedChange={() => handleTagToggle(tag.id)}
+                                disabled={isLoading}
+                              />
+                              <Label
+                                htmlFor={`tag-${tag.id}`}
+                                className="text-sm font-normal cursor-pointer"
+                              >
+                                {tag.id}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          No tags available
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Selected:{" "}
+                      {newFile.tags.length > 0
+                        ? newFile.tags.join(", ")
+                        : "None"}
+                    </p>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+          {/* File preview section */}
+          {newFile && newFile.url && (
+            <Card className="mt-6 transition-all duration-300 hover:shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  Current File Preview
+                </CardTitle>
+                <p className="text-muted-foreground text-sm">
+                  Preview of your current file content.
+                </p>
+              </CardHeader>
+              <CardContent>{renderFile()}</CardContent>
+            </Card>
+          )}
         </>
       ) : (
         <div

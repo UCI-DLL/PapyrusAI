@@ -14,6 +14,7 @@ import {
   LogOut,
   HelpCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import {
   Sidebar,
@@ -227,16 +228,21 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                   return (
                     <SidebarMenuItem key={text}>
                       <SidebarMenuButton
+                        asChild
                         isActive={isActive}
-                        onClick={() => navigator(mainMenuLinks[index])}
                         className="h-10 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground cursor-pointer"
                       >
-                        <div className="flex items-center gap-3">
-                          {IconComponent && (
-                            <IconComponent className="h-4 w-4 shrink-0" />
-                          )}
-                          <span className="text-sm font-medium">{text}</span>
-                        </div>
+                        <Link
+                          to={mainMenuLinks[index]}
+                          className="no-underline"
+                        >
+                          <div className="flex items-center gap-3">
+                            {IconComponent && (
+                              <IconComponent className="h-4 w-4 shrink-0" />
+                            )}
+                            <span className="text-sm font-medium">{text}</span>
+                          </div>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );

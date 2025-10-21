@@ -25,7 +25,12 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import Put from "../../utility/Put";
 import { onlyLettersAndNumbers } from "../../utility/Helpers";
 import ListFolders from "./ListFolders";
-import { Loader2, Tag, Folder, Trash2, Edit3 } from "lucide-react";
+import { Loader2, Tag, Folder, Trash2, Save } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -248,27 +253,45 @@ export default function Library(): JSX.Element {
                             });
                           }}
                         />
-                        <Button
-                          variant="ghost"
-                          onClick={() =>
-                            handleUpdateTag(
-                              tag.id,
-                              false,
-                              tagList[i].name ?? ""
-                            )
-                          }
-                          size="sm"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleUpdateTag(tag.id, true)}
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              onClick={() =>
+                                handleUpdateTag(
+                                  tag.id,
+                                  false,
+                                  tagList[i].name ?? ""
+                                )
+                              }
+                              size="sm"
+                              aria-label="Save tag changes"
+                            >
+                              <Save className="h-4 w-4 mr-1.5" />
+                              Save
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Save changes to this tag</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              onClick={() => handleUpdateTag(tag.id, true)}
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              aria-label="Delete tag"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1.5" />
+                              Delete
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Permanently delete this tag</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     ))
                   )}
@@ -288,15 +311,12 @@ export default function Library(): JSX.Element {
                       }
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newTag.trim()) {
+                      if (e.key === "Enter" && newTag.trim()) {
                         handleCreateTag();
                       }
                     }}
                   />
-                  <Button
-                    onClick={handleCreateTag}
-                    disabled={!newTag.trim()}
-                  >
+                  <Button onClick={handleCreateTag} disabled={!newTag.trim()}>
                     <Tag className="h-4 w-4 mr-2" />
                     Create
                   </Button>
@@ -378,9 +398,49 @@ export default function Library(): JSX.Element {
               <Folder size={192} className="text-primary" />
             </div>
             <div className="relative z-10">
-              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                Library
-              </h1>
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                    Library
+                  </h1>
+                </div>
+                <nav
+                  className="flex flex-col sm:flex-row gap-2"
+                  role="toolbar"
+                  aria-label="Library management actions"
+                >
+                  {user?.groups.includes(
+                    process.env.REACT_APP_ADMIN
+                      ? process.env.REACT_APP_ADMIN
+                      : "PapyrusAIAdmin"
+                  ) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpenManageTagsModal(true)}
+                      className="flex items-center gap-2"
+                      aria-label="Manage content tags"
+                    >
+                      <Tag className="h-4 w-4" aria-hidden="true" />
+                      Manage Tags
+                    </Button>
+                  )}
+                  {user?.groups.includes(
+                    process.env.REACT_APP_INSTRUCTOR
+                      ? process.env.REACT_APP_INSTRUCTOR
+                      : "PapyrusAIInstructors"
+                  ) && (
+                    <Button
+                      variant="default"
+                      onClick={() => setOpenCreateFolderModal(true)}
+                      className="flex items-center gap-2"
+                      aria-label="Create new folder"
+                    >
+                      <Folder className="h-4 w-4" aria-hidden="true" />
+                      New Folder
+                    </Button>
+                  )}
+                </nav>
+              </div>
               <p className="text-muted-foreground max-w-2xl text-base leading-6 mb-4">
                 The library contains all of the conversation prompts and
                 documents hosted within PapyrusAI. By default, you have access
@@ -406,52 +466,7 @@ export default function Library(): JSX.Element {
           </div>
         </header>
 
-        <section aria-labelledby="library-actions-heading">
-          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h2 id="library-actions-heading" className="text-2xl font-bold text-foreground mb-1">
-                Content Management
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Organize and manage your prompts, documents, and folders.
-              </p>
-            </div>
-            <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Library management actions">
-              {user?.groups.includes(
-                process.env.REACT_APP_ADMIN
-                  ? process.env.REACT_APP_ADMIN
-                  : "PapyrusAIAdmin"
-              ) && (
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenManageTagsModal(true)}
-                  className="flex items-center gap-2"
-                  aria-label="Manage content tags"
-                >
-                  <Tag className="h-4 w-4" aria-hidden="true" />
-                  Manage Tags
-                </Button>
-              )}
-              {user?.groups.includes(
-                process.env.REACT_APP_INSTRUCTOR
-                  ? process.env.REACT_APP_INSTRUCTOR
-                  : "PapyrusAIInstructors"
-              ) && (
-                <Button
-                  variant="default"
-                  onClick={() => setOpenCreateFolderModal(true)}
-                  className="flex items-center gap-2"
-                  aria-label="Create new folder"
-                >
-                  <Folder className="h-4 w-4" aria-hidden="true" />
-                  New Folder
-                </Button>
-              )}
-            </nav>
-          </header>
-
-          <ListFolders />
-        </section>
+        <ListFolders />
       </div>
     </div>
   ) : (

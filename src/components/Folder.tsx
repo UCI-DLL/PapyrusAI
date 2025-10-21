@@ -13,7 +13,7 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { FolderType } from "../utility/types/CourseTypes";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
 import { AlertContext } from "../utility/context/AlertContext";
@@ -30,7 +30,7 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../utility/endpoints/UserEndpoints";
-import { Star, Folder, MoreHorizontal, ExternalLink, Plus } from "lucide-react";
+import { Star, Folder, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,13 +77,13 @@ export const FolderComponent = (props: FolderProps) => {
     setStarred(props.isStarred ? props.isStarred : false);
   }, [props.isStarred]);
 
-  function view() {
+  const getViewUrl = () => {
     if (props.isOrganizationFolder) {
-      navigator(`/library/org/${props.folder.id}`);
+      return `/library/org/${props.folder.id}`;
     } else {
-      navigator(`/library/${props.folder.id}`);
+      return `/library/${props.folder.id}`;
     }
-  }
+  };
 
   const openRename = () => {
     setOpenRenameDialog(true);
@@ -350,56 +350,47 @@ export const FolderComponent = (props: FolderProps) => {
   };
 
   const adminOrgMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Rename",
-    "Duplicate",
-    "Demote",
-    "Delete",
+    { label: "View", type: "link" as const, action: getViewUrl() },
+    {
+      label: starred ? "Unstar" : "Star",
+      type: "function" as const,
+      action: starred ? removeStarredFolder : createStarredFolder,
+    },
+    { label: "Rename", type: "function" as const, action: openRename },
+    { label: "Duplicate", type: "function" as const, action: duplicate },
+    { label: "Demote", type: "function" as const, action: openDemote },
+    { label: "Delete", type: "function" as const, action: openDelete },
   ];
-  const instructorOrgMenu = ["View", starred ? "Unstar" : "Star"];
+  const instructorOrgMenu = [
+    { label: "View", type: "link" as const, action: getViewUrl() },
+    {
+      label: starred ? "Unstar" : "Star",
+      type: "function" as const,
+      action: starred ? removeStarredFolder : createStarredFolder,
+    },
+  ];
   const adminUserMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Rename",
-    "Duplicate",
-    "Promote",
-    "Delete",
+    { label: "View", type: "link" as const, action: getViewUrl() },
+    {
+      label: starred ? "Unstar" : "Star",
+      type: "function" as const,
+      action: starred ? removeStarredFolder : createStarredFolder,
+    },
+    { label: "Rename", type: "function" as const, action: openRename },
+    { label: "Duplicate", type: "function" as const, action: duplicate },
+    { label: "Promote", type: "function" as const, action: openPromote },
+    { label: "Delete", type: "function" as const, action: openDelete },
   ];
   const instructorUserMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Rename",
-    "Duplicate",
-    "Delete",
-  ];
-
-  const adminOrgMenuFunctions = [
-    view,
-    starred ? removeStarredFolder : createStarredFolder,
-    openRename,
-    duplicate,
-    openDemote,
-    openDelete,
-  ];
-  const instructorOrgMenuFunctions = [
-    view,
-    starred ? removeStarredFolder : createStarredFolder,
-  ];
-  const adminUserMenuFunctions = [
-    view,
-    starred ? removeStarredFolder : createStarredFolder,
-    openRename,
-    duplicate,
-    openPromote,
-    openDelete,
-  ];
-  const instructorUserMenuFunctions = [
-    view,
-    starred ? removeStarredFolder : createStarredFolder,
-    openRename,
-    duplicate,
-    openDelete,
+    { label: "View", type: "link" as const, action: getViewUrl() },
+    {
+      label: starred ? "Unstar" : "Star",
+      type: "function" as const,
+      action: starred ? removeStarredFolder : createStarredFolder,
+    },
+    { label: "Rename", type: "function" as const, action: openRename },
+    { label: "Duplicate", type: "function" as const, action: duplicate },
+    { label: "Delete", type: "function" as const, action: openDelete },
   ];
 
   return (
@@ -614,65 +605,45 @@ export const FolderComponent = (props: FolderProps) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {props.isOrganizationFolder
+                    {(props.isOrganizationFolder
                       ? user?.groups.includes(
                           process.env.REACT_APP_ADMIN
                             ? process.env.REACT_APP_ADMIN
                             : "PapyrusAIAdmin"
                         )
-                        ? adminOrgMenu.map((item: string, index: number) => (
-                            <DropdownMenuItem
-                              key={index}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                adminOrgMenuFunctions[index]();
-                              }}
-                            >
-                              {item}
-                            </DropdownMenuItem>
-                          ))
-                        : instructorOrgMenu.map(
-                            (item: string, index: number) => (
-                              <DropdownMenuItem
-                                key={index}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  instructorOrgMenuFunctions[index]();
-                                }}
-                              >
-                                {item}
-                              </DropdownMenuItem>
-                            )
-                          )
+                        ? adminOrgMenu
+                        : instructorOrgMenu
                       : user?.groups.includes(
                           process.env.REACT_APP_ADMIN
                             ? process.env.REACT_APP_ADMIN
                             : "PapyrusAIAdmin"
                         )
-                      ? adminUserMenu.map((item: string, index: number) => (
-                          <DropdownMenuItem
-                            key={index}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              adminUserMenuFunctions[index]();
-                            }}
-                          >
-                            {item}
-                          </DropdownMenuItem>
-                        ))
-                      : instructorUserMenu.map(
-                          (item: string, index: number) => (
-                            <DropdownMenuItem
-                              key={index}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                instructorUserMenuFunctions[index]();
-                              }}
-                            >
-                              {item}
-                            </DropdownMenuItem>
-                          )
-                        )}
+                      ? adminUserMenu
+                      : instructorUserMenu
+                    ).map((item) =>
+                      item.type === "link" ? (
+                        <DropdownMenuItem
+                          key={item.label}
+                          asChild
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            props.loading();
+                          }}
+                        >
+                          <Link to={item.action}>{item.label}</Link>
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          key={item.label}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            item.action();
+                          }}
+                        >
+                          {item.label}
+                        </DropdownMenuItem>
+                      )
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}

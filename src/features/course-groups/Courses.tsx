@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import CourseList from "./CourseList";
@@ -160,11 +160,13 @@ export default function Courses(): JSX.Element {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => navigator("/createcourse")}
+                    asChild
                     aria-label="Create new course"
                   >
-                    <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                    Create Course
+                    <Link to="/createcourse">
+                      <PlusIcon className="w-4 h-4" aria-hidden="true" />
+                      Create Course
+                    </Link>
                   </Button>
                 )}
                 <Dialog>

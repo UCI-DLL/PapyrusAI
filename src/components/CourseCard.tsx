@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "./ui/dialog";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { Star, BookOpen, Calendar, User, MoreHorizontal } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
@@ -72,10 +72,6 @@ export default function CourseCard({
     setStarred(isStarred ? isStarred : false);
   }, [isStarred]);
 
-  function editCourse(courseId: string) {
-    navigator(`/editcourse/${courseId}`);
-  }
-
   function duplicateCourse(courseId: string) {
     setMenuOpen(false);
     setOpenDuplicateModal(true);
@@ -113,10 +109,17 @@ export default function CourseCard({
     });
   }
 
-  const ownerMenu = ["Edit Course", "Duplicate"];
-  const ownerMenuFunctions = [editCourse, duplicateCourse];
-  const nonOwnerMenu = ["Duplicate"];
-  const nonOwnerMenuFunctions = [duplicateCourse];
+  const ownerMenu = [
+    {
+      label: "Edit Course",
+      type: "link" as const,
+      action: `/editcourse/${course.id}`,
+    },
+    { label: "Duplicate", type: "function" as const, action: duplicateCourse },
+  ];
+  const nonOwnerMenu = [
+    { label: "Duplicate", type: "function" as const, action: duplicateCourse },
+  ];
 
   function createStarredCourse(courseId: string) {
     setIsLoading(true);
@@ -364,29 +367,31 @@ export default function CourseCard({
                       </Tooltip>
                     </TooltipProvider>
                     <DropdownMenuContent align="end">
-                      {course.instructor.username === user.username
-                        ? ownerMenu.map((item, index) => (
-                            <DropdownMenuItem
-                              key={item}
-                              onClick={() => {
-                                ownerMenuFunctions[index](course.id);
-                              }}
+                      {(course.instructor.username === user.username
+                        ? ownerMenu
+                        : nonOwnerMenu
+                      ).map((item) =>
+                        item.type === "link" ? (
+                          <DropdownMenuItem key={item.label} asChild>
+                            <Link
+                              to={item.action}
                               className="cursor-pointer text-primary"
                             >
-                              {item}
-                            </DropdownMenuItem>
-                          ))
-                        : nonOwnerMenu.map((item, index) => (
-                            <DropdownMenuItem
-                              key={item}
-                              onClick={() => {
-                                nonOwnerMenuFunctions[index](course.id);
-                              }}
-                              className="cursor-pointer text-primary"
-                            >
-                              {item}
-                            </DropdownMenuItem>
-                          ))}
+                              {item.label}
+                            </Link>
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            key={item.label}
+                            onClick={() => {
+                              item.action(course.id);
+                            }}
+                            className="cursor-pointer text-primary"
+                          >
+                            {item.label}
+                          </DropdownMenuItem>
+                        )
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -395,24 +400,34 @@ export default function CourseCard({
 
           <div className="flex-1" aria-hidden="true"></div>
 
-          <Button
-            onClick={
-              onClick
-                ? () => onClick(course.id)
-                : () => navigator(`/courses/${course.id}/modules`)
-            }
-            variant="default"
-            size="sm"
-            className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2"
-            aria-label={
-              onClick
-                ? `Select ${course.name}`
-                : `View modules for ${course.name}`
-            }
-          >
-            <BookOpen size={14} aria-hidden="true" />
-            {onClick ? "Select" : "View Modules"}
-          </Button>
+          {onClick ? (
+            <Button
+              onClick={() => onClick(course.id)}
+              variant="default"
+              size="sm"
+              className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2"
+              aria-label={`Select ${course.name}`}
+            >
+              <BookOpen size={14} aria-hidden="true" />
+              Select
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="default"
+              asChild
+              className="relative z-10 flex-shrink-0 w-full"
+              aria-label={`View modules for ${course.name}`}
+            >
+              <Link
+                to={`/courses/${course.id}/modules`}
+                className="flex items-center justify-center gap-2 no-underline"
+              >
+                <BookOpen size={14} aria-hidden="true" />
+                View Modules
+              </Link>
+            </Button>
+          )}
         </div>
       </article>
     </>

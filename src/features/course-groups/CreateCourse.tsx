@@ -671,7 +671,12 @@ export default function CreateCourse(): JSX.Element {
                         variant="secondary"
                         className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
                       >
-                        {ta.name} {ta.family_name}
+                        {ta.name && ta.family_name
+                          ? `${ta.name} ${ta.family_name}`
+                          : ta.name ||
+                            ta.family_name ||
+                            ta.email ||
+                            ta.username}
                         <Button
                           type="button"
                           variant="ghost"
@@ -752,11 +757,19 @@ export default function CreateCourse(): JSX.Element {
                           <SelectItem key={user.username} value={user.username}>
                             <div className="flex items-center gap-2">
                               <span>
-                                {user.name} {user.family_name}
+                                {user.name && user.family_name
+                                  ? `${user.name} ${user.family_name}`
+                                  : user.name ||
+                                    user.family_name ||
+                                    user.email ||
+                                    user.username}
                               </span>
-                              <span className="text-muted-foreground">
-                                ({user.email})
-                              </span>
+                              {user.email &&
+                                (user.name || user.family_name) && (
+                                  <span className="text-muted-foreground">
+                                    ({user.email})
+                                  </span>
+                                )}
                             </div>
                           </SelectItem>
                         ))
@@ -783,6 +796,64 @@ export default function CreateCourse(): JSX.Element {
               </div>
             </CardContent>
           </Card>
+
+          {/* Bottom Actions */}
+          <section aria-labelledby="bottom-actions-heading" className="pt-4">
+            <nav
+              className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+              role="toolbar"
+              aria-label="Course creation actions"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSavePublishTooltip(true)}
+                aria-label="Get help with Save & Publish options"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                Info
+              </Button>
+              <div className="flex rounded-lg border overflow-hidden">
+                <Button
+                  size="sm"
+                  onClick={handleClick}
+                  className="rounded-none border-0"
+                  disabled={isLoading}
+                  aria-label={`${options[selectedIndexSave]} course`}
+                >
+                  {options[selectedIndexSave]}
+                </Button>
+                <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="rounded-none border-0 border-l px-2"
+                      variant="default"
+                      disabled={isLoading}
+                      aria-label="Select save and activation strategy"
+                    >
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {options.map((option, index) => (
+                      <DropdownMenuItem
+                        key={option}
+                        onClick={() => handleMenuItemClick(index)}
+                        className={cn(
+                          index === selectedIndexSave && "bg-accent",
+                          index === 2 &&
+                            "text-destructive focus:text-destructive"
+                        )}
+                      >
+                        {option}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </nav>
+          </section>
         </form>
       </div>
     </div>

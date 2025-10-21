@@ -1,6 +1,11 @@
+/**
+ * IndividualStudentStats.tsx, component for displaying a single student's report
+ * Handles individual charts for a student's data
+ */
 import React, { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Plot from "@observablehq/plot";
+import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 
 type StudentStatsProps = {
   student: Record<string, unknown>;
@@ -27,6 +32,12 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
   const countsRef = useRef<HTMLDivElement>(null);
   const classificationRef = useRef<HTMLDivElement>(null);
   const moduleUsageRef = useRef<HTMLDivElement>(null);
+  const backgroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--background")
+  );
+  const foregroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--foreground")
+  );
 
   // Helper function to truncate long labels
   const truncateLabel = useCallback((label: string, maxLength: number = 15) => {
@@ -54,6 +65,12 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     }));
 
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
+      ariaLabel:
+        "Individual student daily conversation lengths chart showing average conversation length over time",
       x: { label: "Date", type: "time" },
       y: { label: "Avg Conversation Length" },
       marks: [
@@ -61,7 +78,11 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         Plot.dot(processedData, { x: "date", y: "avg_convo_length" }),
         Plot.tip(
           processedData,
-          Plot.pointerX({ x: "date", y: "avg_convo_length", fill: "white" })
+          Plot.pointerX({
+            x: "date",
+            y: "avg_convo_length",
+            fill: backgroundColor,
+          })
         ),
       ],
       width: 500,
@@ -71,7 +92,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
     }
-  }, [dailyConvoLengths]);
+  }, [dailyConvoLengths, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!dailyConvoCounts || dailyConvoCounts.length === 0) return;
@@ -83,6 +104,12 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     }));
 
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
+      ariaLabel:
+        "Individual student daily conversation counts chart showing number of conversations over time",
       x: { label: "Date", type: "time" },
       y: { label: "Number of Conversations" },
       marks: [
@@ -90,7 +117,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         Plot.dot(processedData, { x: "date", y: "num_convos" }),
         Plot.tip(
           processedData,
-          Plot.pointerX({ x: "date", y: "num_convos", fill: "white" })
+          Plot.pointerX({ x: "date", y: "num_convos", fill: backgroundColor })
         ),
       ],
       width: 500,
@@ -100,7 +127,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
     }
-  }, [dailyConvoCounts]);
+  }, [dailyConvoCounts, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!classificationCounts || classificationCounts.length === 0) return;
@@ -115,6 +142,12 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     const { width, height } = getModuleChartDimensions(); // Use same dimensions
 
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
+      ariaLabel:
+        "Individual student classification counts chart showing conversation classifications",
       x: {
         label: "Classification",
         tickRotate: processedClassificationData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
@@ -124,7 +157,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       y: { label: "Count" },
       color: {
         legend: true,
-        scheme: "cividis",
+        range: PLOT_COLOR_PALETTE,
         domain: processedClassificationData.map(
           (d) => d.fullClassification || d.classification
         ), // Use full names in legend
@@ -144,8 +177,17 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
               fill: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
               count: true,
             },
-            fill: "white",
+            fill: backgroundColor,
           },
+        }),
+        Plot.text(processedClassificationData, {
+          x: "classification",
+          y: "count",
+          text: "count",
+          dy: -8,
+          fontSize: 12,
+          fill: foregroundColor,
+          fontWeight: "bold",
         }),
       ],
       width,
@@ -157,7 +199,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       classificationRef.current.innerHTML = "";
       classificationRef.current.appendChild(plot);
     }
-  }, [classificationCounts, truncateLabel]);
+  }, [classificationCounts, truncateLabel, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!moduleUsage || moduleUsage.length === 0) return;
@@ -172,6 +214,12 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     const { width, height } = getModuleChartDimensions();
 
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
+      ariaLabel:
+        "Individual student module usage chart showing module usage counts",
       x: {
         label: "Module",
         tickRotate: processedModuleData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
@@ -181,7 +229,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       y: { label: "Count" },
       color: {
         legend: true,
-        scheme: "cividis",
+        range: PLOT_COLOR_PALETTE,
         domain: processedModuleData.map(
           (d) => d.fullModuleName || d.moduleName
         ), // Use full names in legend
@@ -199,8 +247,17 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
               fill: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
               count: true,
             },
-            fill: "white",
+            fill: backgroundColor,
           },
+        }),
+        Plot.text(processedModuleData, {
+          x: "moduleName",
+          y: "count",
+          text: "count",
+          dy: -8,
+          fontSize: 12,
+          fill: foregroundColor,
+          fontWeight: "bold",
         }),
       ],
       width,
@@ -212,15 +269,14 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
     }
-  }, [moduleUsage, truncateLabel]);
+  }, [moduleUsage, truncateLabel, backgroundColor, foregroundColor]);
 
   if (!student) return null;
   return (
     <div style={{ padding: "0 2rem", marginBottom: "3rem" }}>
-      <h2 className="text-2xl font-bold text-foreground mb-1">Student:</h2>
-      <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-        {info?.name as string} {info?.family_name as string}
-      </h1>
+      <h2 className="text-2xl font-bold text-foreground mb-1">
+        Student: {info?.name as string} {info?.family_name as string}
+      </h2>
       <p>Email: {info?.email as string}</p>
       <p>Total Messages: {totalMessages}</p>
       <button

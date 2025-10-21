@@ -1,8 +1,14 @@
+/**
+ * StudentPage.tsx, component for displaying a page of student reports
+ * Handles stacked charts for a set of selected students
+ * Renders IndividualStudentStats.tsx for each student selected
+ */
 import React, { useEffect, useRef } from "react";
 import IndividualStudentStats from "./IndividualStudentStats";
 import * as Plot from "@observablehq/plot";
+import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 
-interface StudentStatsProps {
+interface StudentPageProps {
   students: Record<string, unknown>[];
 }
 
@@ -127,7 +133,7 @@ function getStackedModuleUsageData(students: Record<string, unknown>[]) {
   return moduleData;
 }
 
-export default function StudentStats({ students }: StudentStatsProps) {
+export default function StudentPage({ students }: StudentPageProps) {
   const { counts, lengths } = getStackedDailyData(students);
   const classificationData = getStackedClassificationData(students);
   const moduleData = getStackedModuleUsageData(students);
@@ -136,16 +142,28 @@ export default function StudentStats({ students }: StudentStatsProps) {
   const lengthsRef = useRef<HTMLDivElement>(null);
   const classificationRef = useRef<HTMLDivElement>(null);
   const moduleUsageRef = useRef<HTMLDivElement>(null);
+  const backgroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--background")
+  );
+  const foregroundColor = colorToHex(
+    getComputedStyle(document.documentElement).getPropertyValue("--foreground")
+  );
 
   useEffect(() => {
     if (!counts.length) return;
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
+      ariaLabel:
+        "Stacked daily conversation counts chart showing number of conversations by student over time",
       x: {
         type: "time",
         label: "Date",
       },
       y: { label: "Number of Conversations" },
-      color: { legend: true, label: "Student", scheme: "cividis" },
+      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.rectY(counts, {
           x: "date",
@@ -161,7 +179,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.studentName,
               value: true,
             },
-            fill: "white",
+            fill: backgroundColor,
           },
           interval: "1 day",
         }),
@@ -173,17 +191,23 @@ export default function StudentStats({ students }: StudentStatsProps) {
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
     }
-  }, [counts]);
+  }, [counts, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!lengths.length) return;
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
+      ariaLabel:
+        "Stacked daily conversation lengths chart showing average conversation length by student over time",
       x: {
         type: "time",
         label: "Date",
       },
       y: { label: "Avg Conversation Length" },
-      color: { legend: true, label: "Student", scheme: "cividis" },
+      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.rectY(lengths, {
           x: "date",
@@ -199,7 +223,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.studentName,
               value: true,
             },
-            fill: "white",
+            fill: backgroundColor,
           },
           interval: "1 day",
         }),
@@ -211,14 +235,20 @@ export default function StudentStats({ students }: StudentStatsProps) {
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
     }
-  }, [lengths]);
+  }, [lengths, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!classificationData.length) return;
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
+      ariaLabel:
+        "Stacked classification counts chart showing conversation classifications by student",
       x: { label: "Classification" },
       y: { label: "Count" },
-      color: { legend: true, label: "Student", scheme: "cividis" },
+      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.barY(classificationData, {
           x: "classification",
@@ -234,9 +264,18 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.fullClassification || d.classification,
               count: true,
             },
-            fill: "white",
+            fill: backgroundColor,
           },
           order: "stack",
+        }),
+        Plot.text(classificationData, {
+          x: "classification",
+          y: "count",
+          text: "count",
+          dy: -8,
+          fontSize: 12,
+          fill: foregroundColor,
+          fontWeight: "bold",
         }),
       ],
       width: 500,
@@ -246,14 +285,20 @@ export default function StudentStats({ students }: StudentStatsProps) {
       classificationRef.current.innerHTML = "";
       classificationRef.current.appendChild(plot);
     }
-  }, [classificationData]);
+  }, [classificationData, backgroundColor, foregroundColor]);
 
   useEffect(() => {
     if (!moduleData.length) return;
     const plot = Plot.plot({
+      style: {
+        background: "transparent",
+        color: foregroundColor,
+      },
+      ariaLabel:
+        "Stacked module usage chart showing module usage counts by student",
       x: { label: "Module" },
       y: { label: "Count" },
-      color: { legend: true, label: "Student", scheme: "cividis" },
+      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.barY(moduleData, {
           x: "moduleName",
@@ -269,7 +314,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
               fill: (d: any) => d.fullModuleName || d.moduleName,
               count: true,
             },
-            fill: "white",
+            fill: backgroundColor,
           },
           order: "stack",
         }),
@@ -281,7 +326,7 @@ export default function StudentStats({ students }: StudentStatsProps) {
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
     }
-  }, [moduleData]);
+  }, [moduleData, backgroundColor, foregroundColor]);
 
   return (
     <div>

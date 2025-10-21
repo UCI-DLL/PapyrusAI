@@ -51,7 +51,8 @@ import LoginError from "./features/authentication/LoginError";
 import CreateFile from "./features/library/CreateFile";
 import EditFile from "./features/library/EditFile";
 import OrgSettings from "./features/org-settings/OrgSettings";
-import CourseReports from "./features/reports/ModuleReports";
+import ModuleReports from "./features/reports/ModuleReports";
+import CourseReports from "./features/reports/CourseReports";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
 
@@ -179,24 +180,34 @@ function App(): JSX.Element {
 
                         setShowUpdateUserInfoModal(false);
 
-                        //Handle new user tutorial 
-                        introJs().setOptions({
-                          steps: [
-                            {
-                              intro: 'Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.',
-                            },
-                            {
-                              intro: 'For help with navigating PapyrusAI and other resources, see "Resources" in the left sidebar.',
-                            },
-                            {
-                              intro: 'If you encounter any bugs or issues while using PapyrusAI, click "Report Issue" on the bottom left of the navigation to report to the development team.',
-                            },
-                            {
-                              intro: user.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
-                                "To join a course, click \"Join Course\" at the top right. To create a course, click \"Create Course\" at the top right." :
-                                "To join a course, click \"Join Course\" at the top right. Your instructor will give you the course code.",
-                            }]
-                        }).start();
+                        //Handle new user tutorial
+                        introJs()
+                          .setOptions({
+                            steps: [
+                              {
+                                intro:
+                                  "Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.",
+                              },
+                              {
+                                intro:
+                                  'For help with navigating PapyrusAI and other resources, see "Resources" in the left sidebar.',
+                              },
+                              {
+                                intro:
+                                  'If you encounter any bugs or issues while using PapyrusAI, click "Report Issue" on the bottom left of the navigation to report to the development team.',
+                              },
+                              {
+                                intro: user.groups.includes(
+                                  process.env.REACT_APP_INSTRUCTOR
+                                    ? process.env.REACT_APP_INSTRUCTOR
+                                    : "PapyrusAIInstructors"
+                                )
+                                  ? 'To join a course, click "Join Course" at the top right. To create a course, click "Create Course" at the top right.'
+                                  : 'To join a course, click "Join Course" at the top right. Your instructor will give you the course code.',
+                              },
+                            ],
+                          })
+                          .start();
                       }
                       if (
                         localStorage.getItem("papyrusai_user") &&
@@ -345,12 +356,22 @@ function App(): JSX.Element {
                       </Route>
 
                       <Route
+                        path="/reports/course/:courseId"
+                        element={<PrivateRoute user={user} />}
+                      >
+                        <Route
+                          path="/reports/course/:courseId"
+                          element={<CourseReports />}
+                        />
+                      </Route>
+
+                      <Route
                         path="/dashboard/:id/:id"
                         element={<PrivateRoute user={user} />}
                       >
                         <Route
                           path="/dashboard/:id/:id"
-                          element={<CourseReports />}
+                          element={<ModuleReports />}
                         />
                       </Route>
 

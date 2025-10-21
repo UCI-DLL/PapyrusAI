@@ -6,7 +6,6 @@ import Get from "../../utility/Get";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { User } from "lucide-react";
 
-
 export default function Account(): JSX.Element {
   const { user, setUser } = useContext(UserContext);
 
@@ -24,7 +23,7 @@ export default function Account(): JSX.Element {
         setUser(null);
       }
     });
-  }, [setUser])
+  }, [setUser]);
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
@@ -51,18 +50,6 @@ export default function Account(): JSX.Element {
 
       {/* Content Section */}
       <section aria-labelledby="account-content">
-        <header className="mb-6">
-          <h2 
-            id="account-content"
-            className="text-2xl font-bold text-foreground mb-1"
-          >
-            Profile Information
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Update your personal details and account preferences.
-          </p>
-        </header>
-
         <div className="w-full">
           <MissingUserInfoForm
             user={user ? user : undefined}

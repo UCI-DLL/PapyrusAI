@@ -111,6 +111,52 @@
     --sidebar-ring: 212 59% 37%;
   }
 
+  .colorful-light {
+    /* Calm, accessible light theme – Emerald & Mint */
+    --color-background: #f4fcf7;
+    --color-card: #fbfefc;
+    --color-border: #cde9db;
+    --color-muted: #64748b;
+    --color-muted-foreground: #1f2937;
+
+    /* Brand accents */
+    --color-primary: #059669; /* Emerald 600 */
+    --color-secondary: #16a34a; /* Green 600 */
+    --color-accent: #ea580c; /* Orange 600 (muted warmth) */
+    --color-gold: #f59e0b;
+    --color-orange: #ea580c; /* Orange 600 */
+    --color-light-yellow: #fdf5e6; /* Warmer soft surface */
+
+    /* Shadcn tokens (HSL) – tuned for WCAG contrast */
+    --background: 150 45% 95%; /* deeper mint backdrop */
+    --foreground: 210 34% 14%;
+    --card: 150 20% 98%; /* light mint surface */
+    --card-foreground: 210 34% 14%;
+    --popover: 0 0% 100%;
+    --primary: 160 84% 39%;   /* Emerald 600 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 69% 36%; /* Green 600 */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 150 22% 88%;
+    --muted-foreground: 210 22% 30%;
+    --accent: 28 75% 45%;     /* Orange 600 balanced */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 18% 76%;
+    --input: 150 18% 76%;
+    --ring: 160 84% 39%;
+    --radius: 0.5rem;
+    --sidebar-background: 150 42% 95%;
+    --sidebar-foreground: 210 34% 14%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 142 69% 36%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 150 18% 76%;
+    --sidebar-ring: 160 84% 39%;
+  }
+
   * {
     border-color: hsl(var(--border));
   }
@@ -128,6 +174,59 @@
 
   .dark body {
     background: linear-gradient(135deg, #0a0a0b 0%, #111113 50%, #0a0a0b 100%);
+  }
+
+  .colorful-light body {
+    background: linear-gradient(135deg, #f0fbf5 0%, #e4f7ea 50%, #f0fbf5 100%);
+  }
+
+  .colorful-dark {
+    /* Soothing, accessible dark theme – Emerald & Deep Mint */
+    --color-background: #0a1412; /* deep green-tinted */
+    --color-card: #0e1a17;      /* slightly lighter surface */
+    --color-border: #12332a;    /* greenish border */
+    --color-muted: #99b0a8;     /* desaturated greenish gray */
+    --color-muted-foreground: #e2f0eb;
+
+    /* Brand accents */
+    --color-primary: #059669;   /* Emerald 600 */
+    --color-secondary: #16a34a; /* Green 600 */
+    --color-accent: #f59e0b;    /* Amber 500 */
+    --color-gold: #f59e0b;
+    --color-orange: #fb923c;
+    --color-light-yellow: #0f2a22; /* subtle green tint for surfaces */
+
+    /* Shadcn tokens (HSL) – balanced for dark mode readability */
+    --background: 160 20% 7%;
+    --foreground: 160 20% 92%;
+    --card: 160 20% 10%;
+    --card-foreground: 160 20% 92%;
+    --popover: 160 20% 10%;
+    --primary: 160 84% 39%;     /* Emerald 600 */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 142 69% 36%;   /* Green 600 */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 160 14% 18%;
+    --muted-foreground: 160 12% 75%;
+    --accent: 38 92% 50%;       /* Amber 500 */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 160 16% 20%;
+    --input: 160 16% 20%;
+    --ring: 160 84% 39%;
+    --sidebar-background: 160 20% 7%;
+    --sidebar-foreground: 160 20% 92%;
+    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 142 69% 36%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 160 16% 20%;
+    --sidebar-ring: 160 84% 39%;
+  }
+
+  .colorful-dark body {
+    background: linear-gradient(135deg, #091713 0%, #0e1f1a 50%, #091713 100%);
   }
 }
 

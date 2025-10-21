@@ -142,88 +142,80 @@ export default function ViewFolder(): JSX.Element {
               <Folder size={192} className="text-primary" />
             </div>
             <div className="relative z-10">
-              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                {folder?.name}
-              </h1>
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                    {folder?.name}
+                  </h1>
+                </div>
+                <nav className="flex flex-col sm:flex-row gap-2" role="toolbar" aria-label="Content management actions">
+                  {user?.groups.includes(
+                    process.env.REACT_APP_INSTRUCTOR
+                      ? process.env.REACT_APP_INSTRUCTOR
+                      : "PapyrusAIInstructors"
+                  ) && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="default"
+                          className="flex items-center gap-2"
+                          aria-label="Add new content to folder"
+                        >
+                          <Plus className="h-4 w-4" aria-hidden="true" />
+                          Add Content
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 p-2" align="end">
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            variant="ghost"
+                            className="justify-start flex items-center gap-2 h-auto p-3"
+                            onClick={() => {
+                              const basePath =
+                                location.pathname.split("/")[2] !== "org"
+                                  ? `/library/${folder.id}/createprompt`
+                                  : `/library/org/${folder.id}/createprompt`;
+                              navigator(basePath);
+                            }}
+                            aria-label="Create new prompt"
+                          >
+                            <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                            <div className="text-left">
+                              <div className="font-medium">Add Prompt</div>
+                            </div>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="justify-start flex items-center gap-2 h-auto p-3"
+                            onClick={() => {
+                              const basePath =
+                                location.pathname.split("/")[2] !== "org"
+                                  ? `/library/${folder.id}/createfile`
+                                  : `/library/org/${folder.id}/createfile`;
+                              navigator(basePath);
+                            }}
+                            aria-label="Upload new file"
+                          >
+                            <FileText className="h-4 w-4" aria-hidden="true" />
+                            <div className="text-left">
+                              <div className="font-medium">Add File</div>
+                            </div>
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                </nav>
+              </div>
               <p className="text-muted-foreground max-w-2xl text-base leading-6">
                 To create a custom prompt or upload a document, click "Add
-                Content" below.
+                Content" above.
               </p>
             </div>
           </div>
         </header>
 
-        <section aria-labelledby="folder-management-heading">
-          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h2 id="folder-management-heading" className="text-2xl font-bold text-foreground mb-1">
-                Content Management
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Manage prompts and files within this folder.
-              </p>
-            </div>
-            <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Content management actions">
-              {user?.groups.includes(
-                process.env.REACT_APP_INSTRUCTOR
-                  ? process.env.REACT_APP_INSTRUCTOR
-                  : "PapyrusAIInstructors"
-              ) && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="default"
-                      className="flex items-center gap-2"
-                      aria-label="Add new content to folder"
-                    >
-                      <Plus className="h-4 w-4" aria-hidden="true" />
-                      Add Content
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2" align="end">
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        variant="ghost"
-                        className="justify-start flex items-center gap-2 h-auto p-3"
-                        onClick={() => {
-                          const basePath =
-                            location.pathname.split("/")[2] !== "org"
-                              ? `/library/${folder.id}/createprompt`
-                              : `/library/org/${folder.id}/createprompt`;
-                          navigator(basePath);
-                        }}
-                        aria-label="Create new prompt"
-                      >
-                        <MessageSquare className="h-4 w-4" aria-hidden="true" />
-                        <div className="text-left">
-                          <div className="font-medium">Add Prompt</div>
-                        </div>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="justify-start flex items-center gap-2 h-auto p-3"
-                        onClick={() => {
-                          const basePath =
-                            location.pathname.split("/")[2] !== "org"
-                              ? `/library/${folder.id}/createfile`
-                              : `/library/org/${folder.id}/createfile`;
-                          navigator(basePath);
-                        }}
-                        aria-label="Upload new file"
-                      >
-                        <FileText className="h-4 w-4" aria-hidden="true" />
-                        <div className="text-left">
-                          <div className="font-medium">Add File</div>
-                        </div>
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </nav>
-          </header>
-
-          <div className="flex gap-2 mb-6" role="tablist" aria-label="Content filter tabs">
+        <div className="flex gap-2 mb-6" role="tablist" aria-label="Content filter tabs">
             <Button
               variant={activeTab === "all" ? "default" : "outline"}
               size="sm"
@@ -262,14 +254,13 @@ export default function ViewFolder(): JSX.Element {
             </Button>
           </div>
 
-          <div id="folder-content" role="tabpanel">
-            <ListFolderContents
-              folderId={folder.id}
-              isOrgFolder={location.pathname.split("/")[2] === "org"}
-              activeTab={activeTab}
-            />
-          </div>
-        </section>
+        <div id="folder-content" role="tabpanel">
+          <ListFolderContents
+            folderId={folder.id}
+            isOrgFolder={location.pathname.split("/")[2] === "org"}
+            activeTab={activeTab}
+          />
+        </div>
       </div>
     </main>
   ) : (

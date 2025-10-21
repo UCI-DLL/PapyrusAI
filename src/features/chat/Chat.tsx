@@ -17,7 +17,7 @@ import {
   DialogFooter,
 } from "../../components/ui/dialog";
 import { AlertCircle } from "lucide-react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import Get from "../../utility/Get";
 import {
   getConversation,
@@ -68,10 +68,12 @@ export default function Chat(): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const { user } = useContext(UserContext);
   const [viewUser, setViewUser] = useState<UserType>();
-  const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
+  const [showTypingIndicator, setShowTypingIndicator] =
+    useState<boolean>(false);
   const [showWizard, setShowWizard] = useState(false);
   const [chatError, setChatError] = useState<string | undefined>();
-  const [conversationList, setConversationList] = useState<ConversationListType>();
+  const [conversationList, setConversationList] =
+    useState<ConversationListType>();
   const [creatingConvo, setCreatingConvo] = useState<boolean>(false);
   const [messageNote, setMessageNote] = useState<string>();
   const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
@@ -96,7 +98,8 @@ export default function Chat(): JSX.Element {
     error: "",
   });
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
-  const [openSpeechToTextModal, setOpenSpeechToTextModal] = useState<boolean>(false);
+  const [openSpeechToTextModal, setOpenSpeechToTextModal] =
+    useState<boolean>(false);
   const [openErrorModal, setOpenErrorModal] = useState<{
     open: boolean;
     message: string;
@@ -126,12 +129,12 @@ export default function Chat(): JSX.Element {
     };
 
     handleResize();
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
       socket.current?.close();
       setShowTypingIndicator(false);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
     // eslint-disable-next-line
   }, []);
@@ -153,50 +156,54 @@ export default function Chat(): JSX.Element {
       setIsLoading(true);
 
       // Load user data
-      Get(getUserData(location.pathname.split("/")[2]), controller.signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            setViewUser(res.data);
-            if (user && user.username === res.data.username) {
-              onConnect(
-                location.pathname.split("/")[3],
-                location.pathname.split("/")[4],
-                location.pathname.split("/")[5]
-              );
+      Get(getUserData(location.pathname.split("/")[2]), controller.signal).then(
+        (res) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              setViewUser(res.data);
+              if (user && user.username === res.data.username) {
+                onConnect(
+                  location.pathname.split("/")[3],
+                  location.pathname.split("/")[4],
+                  location.pathname.split("/")[5]
+                );
+              }
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res === undefined) {
+            } else {
+              setAlert({ message: "Could not find user", type: "error" });
+              navigator("/");
             }
           }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            setAlert({ message: "Could not find user", type: "error" });
-            navigator("/");
-          }
         }
-      });
+      );
 
       // Load course data
-      Get(getCourse(location.pathname.split("/")[3]), controller.signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            setCourseInfo(res.data);
-            setModuleInfo(
-              res.data.modules.find(
-                (module: ModuleType) =>
-                  module.id === location.pathname.split("/")[4]
-              )
-            );
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res) {
-            setAlert({ message: "Course not found", type: "error" });
-            navigator("/");
+      Get(getCourse(location.pathname.split("/")[3]), controller.signal).then(
+        (res) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              setCourseInfo(res.data);
+              setModuleInfo(
+                res.data.modules.find(
+                  (module: ModuleType) =>
+                    module.id === location.pathname.split("/")[4]
+                )
+              );
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res) {
+              setAlert({ message: "Course not found", type: "error" });
+              navigator("/");
+            }
           }
         }
-      });
+      );
 
       // Load conversation list
       Get(
@@ -263,7 +270,8 @@ export default function Chat(): JSX.Element {
           if (res && res.status === 400) {
             setAlert({ message: "Conversation not found", type: "error" });
             navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
+              `/courses/${location.pathname.split("/")[3]}/modules/${
+                location.pathname.split("/")[4]
               }`
             );
           }
@@ -346,201 +354,251 @@ export default function Chat(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname, user, viewUser]);
 
-  const onSocketMessage = useCallback((dataStr: string) => {
-    const returnData = JSON.parse(dataStr);
-    setShowTypingIndicator(false);
-    if (returnData.essay && returnData.status < 300 && returnData.rater) {
-      const tempTimestamp = Date.now();
-      const essayTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-      const messageTempId = (Number(essayTempId) + 1).toString();
-      var essayMessage: MessageType = {
-        id: essayTempId,
-        content: "View your essay feedback by clicking on this message.",
-        messageType: "text",
-        role: "assistant",
-        sender: "ChatGPT",
-        timestamp: tempTimestamp.toString(),
-        promptId: null,
-        userVisible: true,
-        raterReference: "",
-        expandableMessage: JSON.stringify(returnData.rater),
-      };
-      var essayResponseMessage: MessageType = {
-        id: messageTempId,
-        content: returnData.data,
-        messageType: "text",
-        role: "assistant",
-        sender: "ChatGPT",
-        timestamp: tempTimestamp.toString(),
-        promptId: null,
-        userVisible: true,
-        raterReference: "",
-        expandableMessage: "",
-      };
-      if (messages) {
-        setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
-      }
-      setShowWizard(false);
-    } else if (returnData.status < 300) {
-      const returnMessage: StreamMessageType = JSON.parse(returnData.data);
-      if (returnMessage.message === null && returnMessage.note) {
-        setMessageNote(returnMessage.note);
-        setShowTypingIndicator(true);
-      }
-      if (returnMessage.messageType === "streamMessage" && !returnMessage.finished) {
-        if (returnMessage.message !== null && !returnMessage.note) {
-          setMessageNote(undefined);
+  const onSocketMessage = useCallback(
+    (dataStr: string) => {
+      const returnData = JSON.parse(dataStr);
+      setShowTypingIndicator(false);
+      if (returnData.essay && returnData.status < 300 && returnData.rater) {
+        const tempTimestamp = Date.now();
+        const essayTempId =
+          tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        const messageTempId = (Number(essayTempId) + 1).toString();
+        var essayMessage: MessageType = {
+          id: essayTempId,
+          content: "View your essay feedback by clicking on this message.",
+          messageType: "text",
+          role: "assistant",
+          sender: "ChatGPT",
+          timestamp: tempTimestamp.toString(),
+          promptId: null,
+          userVisible: true,
+          raterReference: "",
+          expandableMessage: JSON.stringify(returnData.rater),
+        };
+        var essayResponseMessage: MessageType = {
+          id: messageTempId,
+          content: returnData.data,
+          messageType: "text",
+          role: "assistant",
+          sender: "ChatGPT",
+          timestamp: tempTimestamp.toString(),
+          promptId: null,
+          userVisible: true,
+          raterReference: "",
+          expandableMessage: "",
+        };
+        if (messages) {
+          setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
+        }
+        setShowWizard(false);
+      } else if (returnData.status < 300) {
+        const returnMessage: StreamMessageType = JSON.parse(returnData.data);
+        if (returnMessage.message === null && returnMessage.note) {
+          setMessageNote(returnMessage.note);
+          setShowTypingIndicator(true);
         }
         if (
-          messagesRef.current &&
-          messagesRef.current.length > 0 &&
-          messagesRef.current[messagesRef.current.length - 1].stream &&
-          messagesRef.current[messagesRef.current.length - 1].stream?.[0]
-            .id === returnMessage.id
+          returnMessage.messageType === "streamMessage" &&
+          !returnMessage.finished
+        ) {
+          if (returnMessage.message !== null && !returnMessage.note) {
+            setMessageNote(undefined);
+          }
+          if (
+            messagesRef.current &&
+            messagesRef.current.length > 0 &&
+            messagesRef.current[messagesRef.current.length - 1].stream &&
+            messagesRef.current[messagesRef.current.length - 1].stream?.[0]
+              .id === returnMessage.id
+          ) {
+            setMessages((prev) => {
+              if (prev && messagesRef.current) {
+                var temp = [...messagesRef.current];
+                if (temp[temp.length - 1].stream) {
+                  temp[temp.length - 1].stream?.push(returnMessage);
+                  const stream = temp[temp.length - 1].stream || [];
+                  const filteredArray: StreamMessageType[] = stream.filter(
+                    (obj, index, self) =>
+                      index ===
+                      self.findIndex(
+                        (t) =>
+                          t.timestamp === obj.timestamp &&
+                          t.message === obj.message
+                      )
+                  );
+                  const reconstructed = filteredArray
+                    .sort((a, b) => a.timestamp - b.timestamp)
+                    .map((m) => m.message)
+                    .join("");
+                  temp[temp.length - 1].content =
+                    reconstructed || temp[temp.length - 1].content;
+                }
+                return temp;
+              } else return prev;
+            });
+          } else {
+            if (returnMessage.message !== null && !returnMessage.note) {
+              setMessageNote(undefined);
+            }
+            const tempTimestamp = Date.now();
+            const messageTempId =
+              tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+            var responseMessage: MessageType = {
+              id: messageTempId,
+              content: returnMessage.message,
+              messageType: "text",
+              role: "assistant",
+              sender: "ChatGPT",
+              timestamp: tempTimestamp.toString(),
+              promptId: null,
+              userVisible: true,
+              raterReference: "",
+              expandableMessage: "",
+              stream: [returnMessage],
+            };
+            if (messages) {
+              setMessages((prev) => [...prev, responseMessage]);
+            }
+          }
+        } else if (
+          returnMessage.finished &&
+          returnMessage.messageType === "finalMessage"
         ) {
           setMessages((prev) => {
             if (prev && messagesRef.current) {
               var temp = [...messagesRef.current];
-              if (temp[temp.length - 1].stream) {
-                temp[temp.length - 1].stream?.push(returnMessage);
-                const stream = temp[temp.length - 1].stream || [];
-                const filteredArray: StreamMessageType[] = stream.filter((obj, index, self) =>
-                  index === self.findIndex((t) => t.timestamp === obj.timestamp && t.message === obj.message)
-                );
-                const reconstructed = filteredArray.sort((a, b) => a.timestamp - b.timestamp)
-                  .map(m => m.message)
-                  .join('');
-                temp[temp.length - 1].content = reconstructed || temp[temp.length - 1].content;
+              temp[temp.length - 1].content = returnMessage.message;
+              if (returnMessage.sources && returnMessage.sources.sources) {
+                temp[temp.length - 1].sources = returnMessage.sources.sources;
               }
               return temp;
             } else return prev;
           });
-        } else {
-          if (returnMessage.message !== null && !returnMessage.note) {
-            setMessageNote(undefined);
-          }
-          const tempTimestamp = Date.now();
-          const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-          var responseMessage: MessageType = {
-            id: messageTempId,
-            content: returnMessage.message,
-            messageType: "text",
-            role: "assistant",
-            sender: "ChatGPT",
-            timestamp: tempTimestamp.toString(),
-            promptId: null,
-            userVisible: true,
-            raterReference: "",
-            expandableMessage: "",
-            stream: [returnMessage]
-          };
-          if (messages) {
-            setMessages((prev) => [...prev, responseMessage]);
-          }
         }
-      } else if (
-        returnMessage.finished &&
-        returnMessage.messageType === "finalMessage"
+      } else {
+        setOpenErrorModal({ open: true, message: returnData.data });
+        if (returnData.status === 400) {
+          setOpenUpdateConvoModal((prev) => ({ ...prev, completed: true }));
+        }
+      }
+    },
+    [messages]
+  );
+
+  const onConnect = useCallback(
+    (courseId: string, moduleId: string, conversationIndex: string) => {
+      if (
+        socket.current?.readyState !== WebSocket.OPEN &&
+        process.env.REACT_APP_WEBSOCKET_URL
       ) {
-        setMessages((prev) => {
-          if (prev && messagesRef.current) {
-            var temp = [...messagesRef.current];
-            temp[temp.length - 1].content = returnMessage.message;
-            if (returnMessage.sources && returnMessage.sources.sources) {
-              temp[temp.length - 1].sources = returnMessage.sources.sources;
-            }
-            return temp;
-          } else return prev;
+        var URL = process.env.REACT_APP_WEBSOCKET_URL;
+        URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
+        URL =
+          URL +
+          `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+        socket.current = new WebSocket(URL);
+        socket.current.addEventListener("open", onSocketOpen);
+        socket.current.addEventListener("close", onSocketClose);
+        socket.current.addEventListener("message", (event) => {
+          onSocketMessage(event.data);
         });
       }
-    } else {
-      setOpenErrorModal({ open: true, message: returnData.data });
-      if (returnData.status === 400) {
-        setOpenUpdateConvoModal(prev => ({ ...prev, completed: true }));
-      }
-    }
-  }, [messages]);
+    },
+    [onSocketClose, onSocketMessage, onSocketOpen]
+  );
 
-  const onConnect = useCallback((courseId: string, moduleId: string, conversationIndex: string) => {
-    if (socket.current?.readyState !== WebSocket.OPEN && process.env.REACT_APP_WEBSOCKET_URL) {
-      var URL = process.env.REACT_APP_WEBSOCKET_URL;
-      URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
-      URL = URL + `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}&organization=${process.env.REACT_APP_ORGANIZATION}`;
-      socket.current = new WebSocket(URL);
-      socket.current.addEventListener('open', onSocketOpen);
-      socket.current.addEventListener('close', onSocketClose);
-      socket.current.addEventListener('message', (event) => {
-        onSocketMessage(event.data);
-      });
-    }
-  }, [onSocketClose, onSocketMessage, onSocketOpen]);
+  const onSendMessage = useCallback(
+    (messageList: Array<MessageType>, autoCreateConvoName: any) => {
+      setChatError(undefined);
+      if (messages && isConnected) {
+        var messagesToSend: Array<{ role: string; content: string }> = [];
+        messageList.map((message) => {
+          if (message.content.length > 100000) {
+            setChatError("Message Too Long");
+            return "";
+          } else {
+            const tempTimestamp = Date.now();
+            const messageTempId =
+              tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+            var responseMessage: MessageType = {
+              id: tempTimestamp.toString(),
+              content: message.content,
+              messageType: message.content.length < 1000 ? "text" : "file",
+              role: "user",
+              sender: "username",
+              timestamp: messageTempId,
+              promptId: message.promptId,
+            };
+            setMessages((prev) => [...prev, responseMessage]);
+            messagesToSend.push({
+              role: "user",
+              content: message.content,
+            });
+            return "";
+          }
+        });
 
-  const onSendMessage = useCallback((messageList: Array<MessageType>, autoCreateConvoName: any) => {
-    setChatError(undefined);
-    if (messages && isConnected) {
-      var messagesToSend: Array<{ role: string, content: string }> = [];
-      messageList.map(message => {
-        if (message.content.length > 100000) {
-          setChatError("Message Too Long");
-          return "";
-        } else {
-          const tempTimestamp = Date.now();
-          const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-          var responseMessage: MessageType = {
-            id: tempTimestamp.toString(),
-            content: message.content,
-            messageType: message.content.length < 1000 ? "text" : "file",
-            role: "user",
-            sender: "username",
-            timestamp: messageTempId,
-            promptId: message.promptId,
-          };
-          setMessages((prev) => [...prev, responseMessage]);
-          messagesToSend.push({
-            role: "user",
-            content: message.content,
-          });
-          return "";
+        socket.current?.send(
+          JSON.stringify({
+            action: "sendMessage",
+            messages: messagesToSend,
+            organization: process.env.REACT_APP_ORGANIZATION
+              ? process.env.REACT_APP_ORGANIZATION
+              : "UCI",
+          })
+        );
+        setShowTypingIndicator(true);
+        if (
+          messages
+            .concat(messageList)
+            .filter(
+              (m) =>
+                (m.promptId === null || m.promptId === "") && m.role === "user"
+            ).length === 1
+        ) {
+          autoCreateConvoName(messagesToSend);
         }
-      });
-
-      socket.current?.send(JSON.stringify({
-        "action": "sendMessage",
-        "messages": messagesToSend,
-        "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
-      }));
-      setShowTypingIndicator(true);
-      if (messages.concat(messageList).filter(m => (m.promptId === null || m.promptId === "") && m.role === "user").length === 1) {
-        autoCreateConvoName(messagesToSend);
-      }
-    } else {
-      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
-    }
-  }, [messages, isConnected]);
-
-  const onSendEssay = useCallback((essay: string, message?: string) => {
-    setChatError(undefined);
-    if (isConnected) {
-      if (essay.length > 100000) {
-        setChatError("Essay Too Long to Evaluate");
-      } else if (essay.length < 750) {
-        setChatError("Essay Too Short to Evaluate");
       } else {
-        var sendEssay: any = {
-          "action": "raterEssay",
-          "essay": essay,
-          "organization": process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI"
-        };
-        if (message) {
-          sendEssay["message"] = message;
-        }
-        socket.current?.send(JSON.stringify(sendEssay));
+        setOpenErrorModal({
+          open: true,
+          message: "Something went wrong. Please try again",
+        });
       }
-      setShowTypingIndicator(true);
-    } else {
-      setOpenErrorModal({ open: true, message: "Something went wrong. Please try again" });
-    }
-  }, [isConnected]);
+    },
+    [messages, isConnected]
+  );
+
+  const onSendEssay = useCallback(
+    (essay: string, message?: string) => {
+      setChatError(undefined);
+      if (isConnected) {
+        if (essay.length > 100000) {
+          setChatError("Essay Too Long to Evaluate");
+        } else if (essay.length < 750) {
+          setChatError("Essay Too Short to Evaluate");
+        } else {
+          var sendEssay: any = {
+            action: "raterEssay",
+            essay: essay,
+            organization: process.env.REACT_APP_ORGANIZATION
+              ? process.env.REACT_APP_ORGANIZATION
+              : "UCI",
+          };
+          if (message) {
+            sendEssay["message"] = message;
+          }
+          socket.current?.send(JSON.stringify(sendEssay));
+        }
+        setShowTypingIndicator(true);
+      } else {
+        setOpenErrorModal({
+          open: true,
+          message: "Something went wrong. Please try again",
+        });
+      }
+    },
+    [isConnected]
+  );
 
   function num_tokens_from_messages(messages: Array<any>) {
     var num_tokens = 0;
@@ -556,7 +614,8 @@ export default function Chat(): JSX.Element {
     setChatError(undefined);
     if (message.length < 100000 && message.length > 0) {
       const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId =
+        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
         id: tempTimestamp.toString(),
         content: message,
@@ -575,7 +634,9 @@ export default function Chat(): JSX.Element {
     setIsLoading(false);
   }
 
-  function autoCreateConvoName(messages: Array<{ role: string; content: string }>) {
+  function autoCreateConvoName(
+    messages: Array<{ role: string; content: string }>
+  ) {
     if (user) {
       Post(
         postAutoCreateConvoName(
@@ -594,10 +655,15 @@ export default function Chat(): JSX.Element {
               courseId: location.pathname.split("/")[3],
               moduleId: location.pathname.split("/")[4],
               index: location.pathname.split("/")[5],
-              name: res.data.conversations[location.pathname.split("/")[5]].name,
-              isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
-              completed: res.data.conversations[location.pathname.split("/")[5]].completed
-                ? res.data.conversations[location.pathname.split("/")[5]].completed
+              name: res.data.conversations[location.pathname.split("/")[5]]
+                .name,
+              isDeleted:
+                res.data.conversations[location.pathname.split("/")[5]]
+                  .isDeleted,
+              completed: res.data.conversations[location.pathname.split("/")[5]]
+                .completed
+                ? res.data.conversations[location.pathname.split("/")[5]]
+                    .completed
                 : false,
               error: "",
             });
@@ -620,13 +686,25 @@ export default function Chat(): JSX.Element {
     if (courseInfo && moduleInfo) {
       var messagesToSend = [];
       if (moduleInfo.prompts.length !== 0) {
-        const actualPrompt = moduleInfo.prompts.filter((x) => x.id === selectedPrompt);
+        const actualPrompt = moduleInfo.prompts.filter(
+          (x) => x.id === selectedPrompt
+        );
         const tempTimestamp = Date.now();
-        const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        const messageTempId =
+          tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
         var responseMessage: MessageType = {
           id: tempTimestamp.toString(),
-          content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
-          messageType: (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
+          content:
+            actualPrompt && actualPrompt.length > 0
+              ? actualPrompt[0].prompt
+              : "",
+          messageType:
+            (actualPrompt && actualPrompt.length > 0
+              ? actualPrompt[0].prompt
+              : ""
+            ).length < 1000
+              ? "text"
+              : "file",
           role: "user",
           sender: "username",
           timestamp: messageTempId,
@@ -646,9 +724,13 @@ export default function Chat(): JSX.Element {
       actualPrompt = moduleInfo.prompts.filter((x) => x.id === message);
     }
     if (essay.length < 100000 && essay.length > 150) {
-      onSendEssay(essay, actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "");
+      onSendEssay(
+        essay,
+        actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : ""
+      );
       const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId =
+        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
         id: tempTimestamp.toString(),
         content: essay,
@@ -663,11 +745,21 @@ export default function Chat(): JSX.Element {
       };
       if (messages && message && moduleInfo && moduleInfo.showInitialPrompt) {
         const tempTimestamp2 = Date.now();
-        const messageTempId2 = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        const messageTempId2 =
+          tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
         var responseMessage2: MessageType = {
           id: tempTimestamp2.toString(),
-          content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
-          messageType: (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
+          content:
+            actualPrompt && actualPrompt.length > 0
+              ? actualPrompt[0].prompt
+              : "",
+          messageType:
+            (actualPrompt && actualPrompt.length > 0
+              ? actualPrompt[0].prompt
+              : ""
+            ).length < 1000
+              ? "text"
+              : "file",
           role: "user",
           sender: user ? user.name : "You",
           timestamp: messageTempId2,
@@ -693,7 +785,10 @@ export default function Chat(): JSX.Element {
     if (conversationIds) {
       setCreatingConvo(true);
       Post(
-        postCreateConversation(conversationIds.courseId, conversationIds.moduleId),
+        postCreateConversation(
+          conversationIds.courseId,
+          conversationIds.moduleId
+        ),
         {}
       ).then((res) => {
         if (res && res.status && res.status < 300) {
@@ -702,7 +797,8 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
             if (res.data.conversations) {
               navigator(
-                `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId
+                `/chat/${user?.username}/${conversationIds.courseId}/${
+                  conversationIds.moduleId
                 }/${res.data.conversations.length - 1}`
               );
             }
@@ -771,7 +867,8 @@ export default function Chat(): JSX.Element {
     setOpenDocumentModal(false);
     if (docText.length < 100000 && docText.length > 0) {
       const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId =
+        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
         id: tempTimestamp.toString(),
         content: docText,
@@ -793,7 +890,8 @@ export default function Chat(): JSX.Element {
     setOpenSpeechToTextModal(false);
     if (text.length < 100000 && text.length > 0) {
       const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId =
+        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
         id: tempTimestamp.toString(),
         content: text,
@@ -838,15 +936,21 @@ export default function Chat(): JSX.Element {
               courseId: location.pathname.split("/")[3],
               moduleId: location.pathname.split("/")[4],
               index: location.pathname.split("/")[5],
-              name: res.data.conversations[location.pathname.split("/")[5]].name,
-              isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
-              completed: res.data.conversations[location.pathname.split("/")[5]].completed
-                ? res.data.conversations[location.pathname.split("/")[5]].completed
+              name: res.data.conversations[location.pathname.split("/")[5]]
+                .name,
+              isDeleted:
+                res.data.conversations[location.pathname.split("/")[5]]
+                  .isDeleted,
+              completed: res.data.conversations[location.pathname.split("/")[5]]
+                .completed
+                ? res.data.conversations[location.pathname.split("/")[5]]
+                    .completed
                 : false,
               error: "",
             });
             navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
+              `/courses/${location.pathname.split("/")[3]}/modules/${
+                location.pathname.split("/")[4]
               }`
             );
           }
@@ -889,10 +993,16 @@ export default function Chat(): JSX.Element {
                 courseId: location.pathname.split("/")[3],
                 moduleId: location.pathname.split("/")[4],
                 index: location.pathname.split("/")[5],
-                name: res.data.conversations[location.pathname.split("/")[5]].name,
-                isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
-                completed: res.data.conversations[location.pathname.split("/")[5]].completed
-                  ? res.data.conversations[location.pathname.split("/")[5]].completed
+                name: res.data.conversations[location.pathname.split("/")[5]]
+                  .name,
+                isDeleted:
+                  res.data.conversations[location.pathname.split("/")[5]]
+                    .isDeleted,
+                completed: res.data.conversations[
+                  location.pathname.split("/")[5]
+                ].completed
+                  ? res.data.conversations[location.pathname.split("/")[5]]
+                      .completed
                   : false,
                 error: "",
               });
@@ -911,7 +1021,8 @@ export default function Chat(): JSX.Element {
     }
   }
 
-  const isChatInputVisible = isConnected &&
+  const isChatInputVisible =
+    isConnected &&
     user &&
     viewUser &&
     user.username === viewUser.username &&
@@ -948,12 +1059,15 @@ export default function Chat(): JSX.Element {
               Close
             </Button>
             <Button
-              onClick={() => {
-                setOpenErrorModal({ open: false, message: "" });
-                navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`);
-              }}
+              asChild
+              onClick={() => setOpenErrorModal({ open: false, message: "" })}
             >
-              Back to Conversation List
+              <Link
+                to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`}
+                className="no-underline"
+              >
+                Back to Conversation List
+              </Link>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -980,7 +1094,10 @@ export default function Chat(): JSX.Element {
       </Dialog>
 
       {/* Speech to Text Modal */}
-      <Dialog open={openSpeechToTextModal} onOpenChange={setOpenSpeechToTextModal}>
+      <Dialog
+        open={openSpeechToTextModal}
+        onOpenChange={setOpenSpeechToTextModal}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

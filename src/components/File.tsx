@@ -31,7 +31,14 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../utility/endpoints/UserEndpoints";
-import { Star, FileText, MoreHorizontal, Eye, Plus, Trash2 } from "lucide-react";
+import {
+  Star,
+  FileText,
+  MoreHorizontal,
+  Eye,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +52,7 @@ import {
   TooltipProvider,
 } from "./ui/tooltip";
 import { cn } from "../lib/utils";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import ListFolders from "../features/library/ListFolders";
 
 interface FileProps {
@@ -80,16 +87,13 @@ export const File = (props: FileProps) => {
     setStarred(props.isStarred ? props.isStarred : false);
   }, [props.isStarred]);
 
-  function edit() {
-    if (props.folder) {
-      props.loading();
-      if (props.file.isOrganizationFile) {
-        navigator(`/library/org/${props.folder.id}/files/${props.file.id}`);
-      } else {
-        navigator(`/library/${props.folder.id}/files/${props.file.id}`);
-      }
+  const getEditUrl = () => {
+    if (props.file.isOrganizationFile) {
+      return `/library/org/${props.folder.id}/files/${props.file.id}`;
+    } else {
+      return `/library/${props.folder.id}/files/${props.file.id}`;
     }
-  }
+  };
 
   function openCopyTo() {
     setOpenCopyToDialog(true);
@@ -419,59 +423,61 @@ export const File = (props: FileProps) => {
   };
 
   const adminOrgMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Edit",
-    "Copy To",
-    "Move To",
-    "Delete",
+    { label: "View", type: "link" as const, action: getEditUrl() },
+    {
+      label: starred ? "Unstar" : "Star",
+      type: "function" as const,
+      action: starred ? removeStarredFile : createStarredFile,
+    },
+    { label: "Edit", type: "link" as const, action: getEditUrl() },
+    { label: "Copy To", type: "function" as const, action: openCopyTo },
+    { label: "Move To", type: "function" as const, action: openMoveFile },
+    {
+      label: "Delete",
+      type: "function" as const,
+      action: () => setOpenDeleteDialog(true),
+    },
   ];
-  const instructorOrgMenu = ["View", starred ? "Unstar" : "Star", "Copy To"];
+  const instructorOrgMenu = [
+    { label: "View", type: "link" as const, action: getEditUrl() },
+    {
+      label: starred ? "Unstar" : "Star",
+      type: "function" as const,
+      action: starred ? removeStarredFile : createStarredFile,
+    },
+    { label: "Copy To", type: "function" as const, action: openCopyTo },
+  ];
   const adminUserMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Edit",
-    "Copy To",
-    "Move To",
-    "Delete",
+    { label: "View", type: "link" as const, action: getEditUrl() },
+    {
+      label: starred ? "Unstar" : "Star",
+      type: "function" as const,
+      action: starred ? removeStarredFile : createStarredFile,
+    },
+    { label: "Edit", type: "link" as const, action: getEditUrl() },
+    { label: "Copy To", type: "function" as const, action: openCopyTo },
+    { label: "Move To", type: "function" as const, action: openMoveFile },
+    {
+      label: "Delete",
+      type: "function" as const,
+      action: () => setOpenDeleteDialog(true),
+    },
   ];
   const instructorUserMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Edit",
-    "Copy To",
-    "Move To",
-    "Delete",
-  ];
-
-  const adminOrgMenuFunctions = [
-    () => {},
-    starred ? removeStarredFile : createStarredFile,
-    edit,
-    openCopyTo,
-    openMoveFile,
-    () => setOpenDeleteDialog(true),
-  ];
-  const instructorOrgMenuFunctions = [
-    () => {},
-    starred ? removeStarredFile : createStarredFile,
-    openCopyTo,
-  ];
-  const adminUserMenuFunctions = [
-    () => {},
-    starred ? removeStarredFile : createStarredFile,
-    edit,
-    openCopyTo,
-    openMoveFile,
-    () => setOpenDeleteDialog(true),
-  ];
-  const instructorUserMenuFunctions = [
-    () => {},
-    starred ? removeStarredFile : createStarredFile,
-    edit,
-    openCopyTo,
-    openMoveFile,
-    () => setOpenDeleteDialog(true),
+    { label: "View", type: "link" as const, action: getEditUrl() },
+    {
+      label: starred ? "Unstar" : "Star",
+      type: "function" as const,
+      action: starred ? removeStarredFile : createStarredFile,
+    },
+    { label: "Edit", type: "link" as const, action: getEditUrl() },
+    { label: "Copy To", type: "function" as const, action: openCopyTo },
+    { label: "Move To", type: "function" as const, action: openMoveFile },
+    {
+      label: "Delete",
+      type: "function" as const,
+      action: () => setOpenDeleteDialog(true),
+    },
   ];
 
   return (
@@ -547,7 +553,7 @@ export const File = (props: FileProps) => {
         </DialogContent>
       </Dialog>
 
-      <Card className="h-full cursor-pointer" onClick={edit}>
+      <Card className="h-full">
         <CardContent className="p-4 h-full flex flex-col">
           {/* Header with icon, file type, and star */}
           <div className="flex items-start justify-between mb-3">
@@ -629,65 +635,47 @@ export const File = (props: FileProps) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {props.file.isOrganizationFile
+                    {(props.file.isOrganizationFile
                       ? user?.groups.includes(
                           process.env.REACT_APP_ADMIN
                             ? process.env.REACT_APP_ADMIN
                             : "PapyrusAIAdmin"
                         )
-                        ? adminOrgMenu.map((item: string, index: number) => (
-                            <DropdownMenuItem
-                              key={index}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                adminOrgMenuFunctions[index]();
-                              }}
-                            >
-                              {item}
-                            </DropdownMenuItem>
-                          ))
-                        : instructorOrgMenu.map(
-                            (item: string, index: number) => (
-                              <DropdownMenuItem
-                                key={index}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  instructorOrgMenuFunctions[index]();
-                                }}
-                              >
-                                {item}
-                              </DropdownMenuItem>
-                            )
-                          )
+                        ? adminOrgMenu
+                        : instructorOrgMenu
                       : user?.groups.includes(
                           process.env.REACT_APP_ADMIN
                             ? process.env.REACT_APP_ADMIN
                             : "PapyrusAIAdmin"
                         )
-                      ? adminUserMenu.map((item: string, index: number) => (
-                          <DropdownMenuItem
-                            key={index}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              adminUserMenuFunctions[index]();
-                            }}
-                          >
-                            {item}
-                          </DropdownMenuItem>
-                        ))
-                      : instructorUserMenu.map(
-                          (item: string, index: number) => (
-                            <DropdownMenuItem
-                              key={index}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                instructorUserMenuFunctions[index]();
-                              }}
-                            >
-                              {item}
-                            </DropdownMenuItem>
-                          )
-                        )}
+                      ? adminUserMenu
+                      : instructorUserMenu
+                    ).map((item) =>
+                      item.type === "link" ? (
+                        <DropdownMenuItem
+                          key={item.label}
+                          asChild
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            props.loading();
+                          }}
+                        >
+                          <Link to={item.action} className="no-underline">
+                            {item.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          key={item.label}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            item.action();
+                          }}
+                        >
+                          {item.label}
+                        </DropdownMenuItem>
+                      )
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -756,10 +744,17 @@ export const File = (props: FileProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center gap-1 text-xs font-medium text-primary"
+                className="text-xs font-medium text-primary"
+                asChild
+                onClick={() => props.loading()}
               >
-                <Eye className="h-3 w-3" />
-                View
+                <Link
+                  to={getEditUrl()}
+                  className="flex items-center gap-1 no-underline"
+                >
+                  <Eye className="h-3 w-3" />
+                  View
+                </Link>
               </Button>
             )}
           </div>

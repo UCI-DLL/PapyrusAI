@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
@@ -37,7 +37,6 @@ import {
 } from "../../utility/endpoints/ConversationEndpoints";
 import Post from "../../utility/Post";
 import { ConversationListType } from "../../utility/types/ConversationTypes";
-import { Link } from "react-router-dom";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
@@ -595,7 +594,7 @@ export default function ConversationList(): JSX.Element {
                                 {/* Conversation Info */}
                                 <Link
                                   to={link}
-                                  className="flex-1 min-w-0 no-underline hover:no-underline group"
+                                  className="flex-1 min-w-0 no-underline group"
                                 >
                                   <div className="space-y-1">
                                     <p className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors truncate no-underline">
@@ -623,11 +622,16 @@ export default function ConversationList(): JSX.Element {
                                       )}
                                       <Button
                                         size="sm"
-                                        onClick={() => navigator(link)}
-                                        className="flex items-center gap-1 text-xs font-medium"
+                                        asChild
+                                        className="text-xs font-medium"
                                       >
-                                        <Eye className="h-3 w-3" />
-                                        View
+                                        <Link
+                                          to={link}
+                                          className="flex items-center gap-1 no-underline"
+                                        >
+                                          <Eye className="h-3 w-3" />
+                                          View
+                                        </Link>
                                       </Button>
                                     </>
                                   ) : (
@@ -699,11 +703,16 @@ export default function ConversationList(): JSX.Element {
                                       </Tooltip>
                                       <Button
                                         size="sm"
-                                        onClick={() => navigator(link)}
-                                        className="flex items-center gap-1 text-xs font-medium"
+                                        asChild
+                                        className="text-xs font-medium"
                                       >
-                                        <MessageSquare className="h-3 w-3" />
-                                        Chat
+                                        <Link
+                                          to={link}
+                                          className="flex items-center gap-1 no-underline"
+                                        >
+                                          <MessageSquare className="h-3 w-3" />
+                                          Chat
+                                        </Link>
                                       </Button>
                                     </>
                                   )}

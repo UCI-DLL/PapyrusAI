@@ -96,7 +96,8 @@ export default function CreateCourse(): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<CustomUserType>>([]);
   const { user, setUser } = useContext(UserContext);
-  const [openSave, setOpenSave] = useState(false);
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [showSavePublishTooltip, setShowSavePublishTooltip] =
@@ -143,7 +144,8 @@ export default function CreateCourse(): JSX.Element {
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
-    setOpenSave(false);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
 
   function getUsers(PaginationToken: string, signal: AbortSignal) {
@@ -381,7 +383,7 @@ export default function CreateCourse(): JSX.Element {
                 >
                   {options[selectedIndexSave]}
                 </Button>
-                <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+                <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       size="sm"
@@ -823,7 +825,10 @@ export default function CreateCourse(): JSX.Element {
                 >
                   {options[selectedIndexSave]}
                 </Button>
-                <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+                <DropdownMenu
+                  open={openSaveBottom}
+                  onOpenChange={setOpenSaveBottom}
+                >
                   <DropdownMenuTrigger asChild>
                     <Button
                       size="sm"

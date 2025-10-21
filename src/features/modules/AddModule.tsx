@@ -108,7 +108,8 @@ export default function AddModule(): JSX.Element {
     folderId: string;
     isOrgFolder: boolean;
   }>({ folderId: "", isOrgFolder: false });
-  const [openSave, setOpenSave] = useState(false);
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [showSavePublishTooltip, setShowSavePublishTooltip] =
@@ -148,7 +149,8 @@ export default function AddModule(): JSX.Element {
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
-    setOpenSave(false);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
 
   function handleSubmit(e: any, isPublished = false) {
@@ -593,7 +595,7 @@ export default function AddModule(): JSX.Element {
               <Info className="h-4 w-4" aria-hidden="true" />
               Info
             </Button>
-            <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+            <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
               <DropdownMenuTrigger asChild>
                 <Button
                   className="gap-2"
@@ -882,6 +884,51 @@ export default function AddModule(): JSX.Element {
           </form>
         </CardContent>
       </Card>
+
+      {/* Bottom Actions */}
+      <section aria-labelledby="bottom-actions-heading" className="pt-4">
+        <nav
+          className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+          role="toolbar"
+          aria-label="Module creation actions"
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSavePublishTooltip(true)}
+            aria-label="Get help with Save & Publish options"
+          >
+            <Info className="h-4 w-4" aria-hidden="true" />
+            Info
+          </Button>
+          <DropdownMenu open={openSaveBottom} onOpenChange={setOpenSaveBottom}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="gap-2"
+                aria-label={`${options[selectedIndexSave]} module`}
+              >
+                <Save className="h-4 w-4" aria-hidden="true" />
+                {options[selectedIndexSave]}
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {options.map((option, index) => (
+                <DropdownMenuItem
+                  key={option}
+                  onClick={() => handleMenuItemClick(index)}
+                  className={cn(
+                    index === selectedIndexSave && "bg-accent",
+                    index === 2 && "text-destructive focus:text-destructive"
+                  )}
+                >
+                  {option}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </nav>
+      </section>
     </main>
   ) : (
     <div

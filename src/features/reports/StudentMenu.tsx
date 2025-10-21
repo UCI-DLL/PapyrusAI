@@ -125,6 +125,9 @@ export default function StudentMenu({
       <Button
         variant="outline"
         onClick={() => setIsOpen(!isOpen)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={`Student selection menu. ${getSelectedStudentsText()}`}
         className={`flex items-center justify-between gap-2 ${
           smallButtons
             ? "px-3 py-1.5 text-sm min-w-[120px]"
@@ -139,7 +142,11 @@ export default function StudentMenu({
       </Button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 min-w-[200px] max-h-[300px] overflow-y-auto bg-card border border-border rounded-md shadow-lg z-[1000] mt-1">
+        <div
+          role="listbox"
+          aria-label="Student selection list"
+          className="absolute top-full left-0 min-w-[200px] max-h-[300px] overflow-y-auto bg-card border border-border rounded-md shadow-lg z-[1000] mt-1"
+        >
           {/* Header */}
           <div className="px-3 py-2 border-b border-border">
             <div className="text-sm font-semibold text-foreground">
@@ -181,8 +188,18 @@ export default function StudentMenu({
             return (
               <div
                 key={id}
+                tabIndex={0}
+                role="checkbox"
+                aria-checked={selected}
+                aria-label={`Select ${studentName}`}
                 onClick={() => toggleStudent(id)}
-                className="px-3 py-2 text-sm min-h-8 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleStudent(id);
+                  }
+                }}
+                className="px-3 py-2 text-sm min-h-8 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors focus:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 <div
                   className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${

@@ -660,7 +660,9 @@ export const File = (props: FileProps) => {
                             props.loading();
                           }}
                         >
-                          <Link to={item.action}>{item.label}</Link>
+                          <Link to={item.action} className="no-underline">
+                            {item.label}
+                          </Link>
                         </DropdownMenuItem>
                       ) : (
                         <DropdownMenuItem
@@ -746,7 +748,10 @@ export const File = (props: FileProps) => {
                 asChild
                 onClick={() => props.loading()}
               >
-                <Link to={getEditUrl()} className="flex items-center gap-1">
+                <Link
+                  to={getEditUrl()}
+                  className="flex items-center gap-1 no-underline"
+                >
                   <Eye className="h-3 w-3" />
                   View
                 </Link>

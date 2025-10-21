@@ -5,15 +5,12 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Checkbox } from "../../components/ui/checkbox";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../../components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +35,7 @@ import {
   ChevronRight,
   Info,
   Loader2,
+  Save,
   Trash2,
   Upload,
   X,
@@ -60,6 +58,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import Put from "../../utility/Put";
 import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
 import CustomFileRender from "../../components/CustomFileRender";
+import { cn } from "../../lib/utils";
 
 const options = ["Save & Publish", "Discard Changes"];
 
@@ -94,6 +93,9 @@ export default function EditFile(): JSX.Element {
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
+  const [showInfoTooltip, setShowInfoTooltip] = useState<boolean>(false);
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
 
   const [numPages, setNumPages] = useState<number>(0);
@@ -412,7 +414,19 @@ export default function EditFile(): JSX.Element {
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
+
+  function handleClick(e: any) {
+    if (selectedIndexSave === 0) {
+      //Save and upload
+      handleUpload(e, false);
+    } else if (selectedIndexSave === 1) {
+      //discard changes
+      setOpenDiscardModal(true);
+    }
+  }
 
   function handleSubmit(id: string, isDeleted = false) {
     setIsLoading(true);
@@ -702,43 +716,90 @@ export default function EditFile(): JSX.Element {
     <main className="bg-background text-foreground p-4 space-y-6">
       {newFile.name && fileInfo ? (
         <>
-          <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete File?</AlertDialogTitle>
-                <AlertDialogDescription>
+          {/* Dialogs */}
+          <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-destructive">
+                  Delete File?
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p>
                   Are you sure you would like to permanently delete this file?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={(e) => handleUpload(e, true)}>
+                  This action cannot be undone.
+                </p>
+              </div>
+              <DialogFooter className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenDeleteModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={(e) => handleUpload(e, true)}
+                >
                   Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <AlertDialog
-            open={openDiscardModal}
-            onOpenChange={setOpenDiscardModal}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Discard Changes?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you would like to discard the changes to this
-                  file?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => navigator(-1)}>
-                  Discard
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
+          <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-destructive">
+                  Discard Changes?
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p>
+                  Are you sure you would like to discard the changes to this
+                  file? This action cannot be undone.
+                </p>
+              </div>
+              <DialogFooter className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenDiscardModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button variant="destructive" onClick={() => navigator(-1)}>
+                  Discard Changes
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={showInfoTooltip} onOpenChange={setShowInfoTooltip}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  <Info className="h-5 w-5" aria-hidden="true" />
+                  Editing Files
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <p className="text-sm leading-6">
+                  Update your file name, replace the file content, or modify
+                  tags as needed. Click "Save & Publish" to save your changes.
+                </p>
+                <p className="text-sm text-muted-foreground italic">
+                  Note: Choosing "Discard Changes" will return you to the
+                  previous page without saving any modifications.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setShowInfoTooltip(false)}>
+                  Got it
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Standard Page Header Pattern */}
           <header className="animate-in slide-in-from-bottom-4 duration-700">
             <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
               <div
@@ -747,78 +808,11 @@ export default function EditFile(): JSX.Element {
               >
                 <Upload size={192} className="text-primary" />
               </div>
+
               <div className="relative z-10">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                  <div>
-                    <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                      Edit <span className="text-primary">{file?.name}</span>
-                    </h1>
-                  </div>
-                  <nav
-                    className="flex flex-col sm:flex-row gap-2"
-                    role="toolbar"
-                    aria-label="File editing actions"
-                  >
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setOpenDeleteModal(true)}
-                            disabled={isLoading}
-                            aria-label="Delete file permanently"
-                          >
-                            <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delete File</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <Button
-                      size="sm"
-                      disabled={isLoading}
-                      onClick={() => {
-                        if (selectedIndexSave === 0) {
-                          handleUpload(undefined, false);
-                        } else {
-                          setOpenDiscardModal(true);
-                        }
-                      }}
-                      aria-label={
-                        isLoading
-                          ? "Saving file..."
-                          : `${options[selectedIndexSave]} file`
-                      }
-                    >
-                      {options[selectedIndexSave]}
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={isLoading}
-                          aria-label="Select save and update strategy"
-                        >
-                          <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {options.map((option, index) => (
-                          <DropdownMenuItem
-                            key={option}
-                            onClick={() => handleMenuItemClick(index)}
-                          >
-                            {option}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </nav>
-                </div>
+                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                  Edit <span className="text-primary">{file?.name}</span>
+                </h1>
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
                   Update your file information and content as needed.
                 </p>
@@ -826,198 +820,279 @@ export default function EditFile(): JSX.Element {
             </div>
           </header>
 
-          <Card className="transition-all duration-300 hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-foreground">
-                  File Information
-                </CardTitle>
-                <p className="text-muted-foreground text-sm">
-                  Update the essential details for your file. Fields marked with
-                  * are required.
-                </p>
-              </CardHeader>
-              <CardContent>
-                <form
-                  onSubmit={(e) => handleUpload(e, false)}
-                  className="space-y-6"
+          {/* Actions Section */}
+          <section aria-labelledby="actions-heading">
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div>
+                <h2
+                  id="actions-heading"
+                  className="text-2xl font-bold text-foreground mb-1"
                 >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="name" className="text-sm font-medium">
-                        File Name *
-                      </Label>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-xs">
-                              The name for the document.
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <Input
-                      id="name"
-                      name="name"
-                      placeholder="Enter file name"
-                      value={newFile.name}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      required
-                      className={
-                        errors.name
-                          ? "border-destructive focus-visible:ring-destructive"
-                          : ""
-                      }
-                      aria-describedby={errors.name ? "name-error" : undefined}
-                    />
-                    {errors.name && (
-                      <p
-                        id="name-error"
-                        className="text-sm text-destructive"
-                        role="alert"
+                  File Actions
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Manage and update your file settings. Fields marked with * are
+                  required.
+                </p>
+              </div>
+              <nav
+                className="flex flex-col md:flex-row gap-2"
+                role="toolbar"
+                aria-label="File editing actions"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowInfoTooltip(true)}
+                  aria-label="Get help with file editing"
+                >
+                  <Info className="h-4 w-4" aria-hidden="true" />
+                  Info
+                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setOpenDeleteModal(true)}
+                        disabled={isLoading}
+                        aria-label="Delete file permanently"
                       >
-                        {errors.name}
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        Delete
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Delete File</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="flex rounded-lg border overflow-hidden">
+                  <Button
+                    size="sm"
+                    onClick={handleClick}
+                    className="rounded-none border-0"
+                    disabled={isLoading}
+                    aria-label={`${options[selectedIndexSave]} file`}
+                  >
+                    {options[selectedIndexSave]}
+                  </Button>
+                  <DropdownMenu
+                    open={openSaveTop}
+                    onOpenChange={setOpenSaveTop}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="sm"
+                        className="rounded-none border-0 border-l px-2"
+                        variant="default"
+                        disabled={isLoading}
+                        aria-label="Select file save strategy"
+                      >
+                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {options.map((option, index) => (
+                        <DropdownMenuItem
+                          key={option}
+                          onClick={() => handleMenuItemClick(index)}
+                          className={cn(
+                            index === selectedIndexSave && "bg-accent",
+                            index === 1 &&
+                              "text-destructive focus:text-destructive"
+                          )}
+                        >
+                          {option}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </nav>
+            </header>
+          </section>
+
+          <Card className="transition-all duration-300 hover:shadow-md pt-4">
+            <CardContent>
+              <form
+                onSubmit={(e) => handleUpload(e, false)}
+                className="space-y-6"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="name" className="text-sm font-medium">
+                      File Name *
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">The name for the document.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="Enter file name"
+                    value={newFile.name}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    required
+                    className={
+                      errors.name
+                        ? "border-destructive focus-visible:ring-destructive"
+                        : ""
+                    }
+                    aria-describedby={errors.name ? "name-error" : undefined}
+                  />
+                  {errors.name && (
+                    <p
+                      id="name-error"
+                      className="text-sm text-destructive"
+                      role="alert"
+                    >
+                      {errors.name}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm font-medium">File Upload</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">
+                            Select a JPEG, PNG, PDF, TXT, DOCX file to replace
+                            the current file.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    disabled={isLoading}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    accept=".jpg,.jpeg,.png,.pdf,.docx,.txt"
+                  />
+                  {!selectedFiles?.name ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={isLoading}
+                      className="w-full h-32 border-dashed border-2 hover:border-primary hover:bg-primary/10 transition-colors"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                        <span className="text-sm font-medium">
+                          Choose new file to upload
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          JPEG, PNG, PDF, TXT, DOCX (max 1GB)
+                        </span>
+                      </div>
+                    </Button>
+                  ) : (
+                    <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Upload className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-medium truncate">
+                          {selectedFiles?.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onUpdate("change")}
+                          disabled={isLoading}
+                        >
+                          Change
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onUpdate("clear")}
+                          disabled={isLoading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {errors.file && (
+                    <p className="text-sm text-destructive">{errors.file}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm font-medium">Tags</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">
+                            Tags describe a feature of the files and will be
+                            used to allow for sorting files by type.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
+                    {tagList.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-2">
+                        {tagList.map((tag) => (
+                          <div
+                            key={tag.id}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`tag-${tag.id}`}
+                              checked={newFile.tags.includes(tag.id)}
+                              onCheckedChange={() => handleTagToggle(tag.id)}
+                              disabled={isLoading}
+                            />
+                            <Label
+                              htmlFor={`tag-${tag.id}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {tag.id}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No tags available
                       </p>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm font-medium">File Upload</Label>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-xs">
-                              Select a JPEG, PNG, PDF, TXT, DOCX file to replace
-                              the current file.
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      disabled={isLoading}
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      accept=".jpg,.jpeg,.png,.pdf,.docx,.txt"
-                    />
-                    {!selectedFiles?.name ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileRef.current?.click()}
-                        disabled={isLoading}
-                        className="w-full h-32 border-dashed border-2 hover:border-primary hover:bg-primary/10 transition-colors"
-                      >
-                        <div className="flex flex-col items-center gap-2">
-                          <Upload className="h-8 w-8 text-muted-foreground" />
-                          <span className="text-sm font-medium">
-                            Choose new file to upload
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            JPEG, PNG, PDF, TXT, DOCX (max 1GB)
-                          </span>
-                        </div>
-                      </Button>
-                    ) : (
-                      <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <Upload className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="text-sm font-medium truncate">
-                            {selectedFiles?.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onUpdate("change")}
-                            disabled={isLoading}
-                          >
-                            Change
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onUpdate("clear")}
-                            disabled={isLoading}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                    {errors.file && (
-                      <p className="text-sm text-destructive">{errors.file}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm font-medium">Tags</Label>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-xs">
-                              Tags describe a feature of the files and will be
-                              used to allow for sorting files by type.
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
-                      {tagList.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-2">
-                          {tagList.map((tag) => (
-                            <div
-                              key={tag.id}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={`tag-${tag.id}`}
-                                checked={newFile.tags.includes(tag.id)}
-                                onCheckedChange={() => handleTagToggle(tag.id)}
-                                disabled={isLoading}
-                              />
-                              <Label
-                                htmlFor={`tag-${tag.id}`}
-                                className="text-sm font-normal cursor-pointer"
-                              >
-                                {tag.id}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No tags available
-                        </p>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Selected:{" "}
-                      {newFile.tags.length > 0
-                        ? newFile.tags.join(", ")
-                        : "None"}
-                    </p>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
+                  <p className="text-xs text-muted-foreground">
+                    Selected:{" "}
+                    {newFile.tags.length > 0 ? newFile.tags.join(", ") : "None"}
+                  </p>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
 
           {/* File preview section */}
           {newFile && newFile.url && (
@@ -1033,6 +1108,86 @@ export default function EditFile(): JSX.Element {
               <CardContent>{renderFile()}</CardContent>
             </Card>
           )}
+
+          {/* Bottom Actions */}
+          <section aria-labelledby="bottom-actions-heading" className="pt-4">
+            <nav
+              className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+              role="toolbar"
+              aria-label="File editing actions"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowInfoTooltip(true)}
+                aria-label="Get help with file editing"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                Info
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setOpenDeleteModal(true)}
+                      disabled={isLoading}
+                      aria-label="Delete file permanently"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Delete
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Delete File</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <div className="flex rounded-lg border overflow-hidden">
+                <Button
+                  size="sm"
+                  onClick={handleClick}
+                  className="rounded-none border-0"
+                  disabled={isLoading}
+                  aria-label={`${options[selectedIndexSave]} file`}
+                >
+                  {options[selectedIndexSave]}
+                </Button>
+                <DropdownMenu
+                  open={openSaveBottom}
+                  onOpenChange={setOpenSaveBottom}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="rounded-none border-0 border-l px-2"
+                      variant="default"
+                      disabled={isLoading}
+                      aria-label="Select file save strategy"
+                    >
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {options.map((option, index) => (
+                      <DropdownMenuItem
+                        key={option}
+                        onClick={() => handleMenuItemClick(index)}
+                        className={cn(
+                          index === selectedIndexSave && "bg-accent",
+                          index === 1 &&
+                            "text-destructive focus:text-destructive"
+                        )}
+                      >
+                        {option}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </nav>
+          </section>
         </>
       ) : (
         <div

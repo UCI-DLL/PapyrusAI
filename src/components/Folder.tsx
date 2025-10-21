@@ -358,7 +358,7 @@ export const FolderComponent = (props: FolderProps) => {
     },
     { label: "Rename", type: "function" as const, action: openRename },
     { label: "Duplicate", type: "function" as const, action: duplicate },
-    { label: "Demote", type: "function" as const, action: openDemote },
+    { label: "Make Private", type: "function" as const, action: openDemote },
     { label: "Delete", type: "function" as const, action: openDelete },
   ];
   const instructorOrgMenu = [
@@ -378,7 +378,7 @@ export const FolderComponent = (props: FolderProps) => {
     },
     { label: "Rename", type: "function" as const, action: openRename },
     { label: "Duplicate", type: "function" as const, action: duplicate },
-    { label: "Promote", type: "function" as const, action: openPromote },
+    { label: "Make Public", type: "function" as const, action: openPromote },
     { label: "Delete", type: "function" as const, action: openDelete },
   ];
   const instructorUserMenu = [
@@ -416,7 +416,7 @@ export const FolderComponent = (props: FolderProps) => {
             >
               Cancel
             </Button>
-            <Button onClick={promote}>Promote</Button>
+            <Button onClick={promote}>Confirm</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -440,7 +440,7 @@ export const FolderComponent = (props: FolderProps) => {
             >
               Cancel
             </Button>
-            <Button onClick={demote}>Demote</Button>
+            <Button onClick={demote}>Confirm</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -630,7 +630,9 @@ export const FolderComponent = (props: FolderProps) => {
                             props.loading();
                           }}
                         >
-                          <Link to={item.action}>{item.label}</Link>
+                          <Link to={item.action} className="no-underline">
+                            {item.label}
+                          </Link>
                         </DropdownMenuItem>
                       ) : (
                         <DropdownMenuItem

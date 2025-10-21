@@ -594,7 +594,7 @@ export default function ConversationList(): JSX.Element {
                                 {/* Conversation Info */}
                                 <Link
                                   to={link}
-                                  className="flex-1 min-w-0 no-underline hover:no-underline group"
+                                  className="flex-1 min-w-0 no-underline group"
                                 >
                                   <div className="space-y-1">
                                     <p className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors truncate no-underline">
@@ -627,7 +627,7 @@ export default function ConversationList(): JSX.Element {
                                       >
                                         <Link
                                           to={link}
-                                          className="flex items-center gap-1"
+                                          className="flex items-center gap-1 no-underline"
                                         >
                                           <Eye className="h-3 w-3" />
                                           View
@@ -708,7 +708,7 @@ export default function ConversationList(): JSX.Element {
                                       >
                                         <Link
                                           to={link}
-                                          className="flex items-center gap-1"
+                                          className="flex items-center gap-1 no-underline"
                                         >
                                           <MessageSquare className="h-3 w-3" />
                                           Chat

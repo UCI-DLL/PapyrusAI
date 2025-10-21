@@ -46,8 +46,8 @@ export enum SortOptions {
 
 export enum OwnerTypeOptions {
   Any = "Any",
-  "Me" = "Me",
-  "Organization" = "Organization",
+  "Private" = "Private",
+  "Public" = "Public",
 }
 
 export enum StarredOptions {
@@ -303,10 +303,10 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     var userFilteredFolderList = JSON.parse(JSON.stringify(userFolderList));
 
     //handle owner
-    if (filters.owner === OwnerTypeOptions.Me) {
+    if (filters.owner === OwnerTypeOptions.Private) {
       //then remove org folders
       orgFilteredFolderList = [];
-    } else if (filters.owner === OwnerTypeOptions.Organization) {
+    } else if (filters.owner === OwnerTypeOptions.Public) {
       //then remove user folders
       userFilteredFolderList = [];
     }
@@ -476,7 +476,8 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
           To add an asset (including prompts and documents) to your module,
           navigate to the folder in which the asset is hosted.
-          <span className="italic">
+          <br />
+          <span className="italic text-sm">
             {" "}
             Note: Assets must be created or uploaded in the Library before they
             can be added to a module.
@@ -783,20 +784,23 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
       </div>
 
       {/* Empty State */}
-      {orgFilteredFolderList.length === 0 && userFilteredFolderList.length === 0 && (
-        <div
-          className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
-          role="status"
-        >
-          <Folder className="mx-auto h-12 w-12 mb-4 opacity-50" />
-          <p className="text-lg font-medium mb-2">No folders found</p>
-          <p className="text-sm">
-            {searchTerm || filters.tags !== "none" || filters.starred !== StarredOptions.All
-              ? "Try adjusting your search or filters"
-              : "Create your first folder to get started organizing your content"}
-          </p>
-        </div>
-      )}
+      {orgFilteredFolderList.length === 0 &&
+        userFilteredFolderList.length === 0 && (
+          <div
+            className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+            role="status"
+          >
+            <Folder className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">No folders found</p>
+            <p className="text-sm">
+              {searchTerm ||
+              filters.tags !== "none" ||
+              filters.starred !== StarredOptions.All
+                ? "Try adjusting your search or filters"
+                : "Create your first folder to get started organizing your content"}
+            </p>
+          </div>
+        )}
     </div>
   ) : (
     <div className="flex items-center justify-center py-8">

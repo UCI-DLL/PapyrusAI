@@ -2,14 +2,42 @@ import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label"; 
+import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../../components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Separator } from "../../components/ui/separator";
-import { Trash2, ChevronDown, Info, Plus, Loader2, FileText, Folder, CheckCircle, XCircle, Edit } from "lucide-react";
+import {
+  Trash2,
+  ChevronDown,
+  Info,
+  Plus,
+  Loader2,
+  FileText,
+  Folder,
+  CheckCircle,
+  XCircle,
+  Edit,
+} from "lucide-react";
 import Get from "../../utility/Get";
 import {
   getModule,
@@ -95,7 +123,8 @@ export default function EditModule(): JSX.Element {
     folderId: string;
     isOrgFolder: boolean;
   }>({ folderId: "", isOrgFolder: false });
-  const [openSave, setOpenSave] = useState(false);
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
@@ -165,7 +194,6 @@ export default function EditModule(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname]);
 
-
   const handleMenuItemClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     index: number
@@ -186,10 +214,9 @@ export default function EditModule(): JSX.Element {
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
-    setOpenSave(false);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
-
-
 
   function handleSubmit(e: any, isPublished = false, isDeleted = false) {
     e.preventDefault();
@@ -432,7 +459,10 @@ export default function EditModule(): JSX.Element {
 
   return moduleIds && session.name !== "" ? (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <Dialog open={showSavePublishTooltip} onOpenChange={setShowSavePublishTooltip}>
+      <Dialog
+        open={showSavePublishTooltip}
+        onOpenChange={setShowSavePublishTooltip}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -470,7 +500,10 @@ export default function EditModule(): JSX.Element {
             <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={(e) => handleSubmit(e, false, true)}>
+            <Button
+              variant="destructive"
+              onClick={(e) => handleSubmit(e, false, true)}
+            >
               Delete
             </Button>
           </DialogFooter>
@@ -485,7 +518,10 @@ export default function EditModule(): JSX.Element {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setOpenDiscardModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setOpenDiscardModal(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={() => navigator(-1)}>
@@ -513,7 +549,10 @@ export default function EditModule(): JSX.Element {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={openSelectFolderModal} onOpenChange={setOpenSelectFolderModal}>
+      <Dialog
+        open={openSelectFolderModal}
+        onOpenChange={setOpenSelectFolderModal}
+      >
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -525,15 +564,21 @@ export default function EditModule(): JSX.Element {
             <ListFolders noShowMenu onClick={selectFolder} compactGrid />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenSelectFolderModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setOpenSelectFolderModal(false)}
+            >
               Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog 
-        open={openSelectPromptModal.folderId !== ""} 
-        onOpenChange={(open) => !open && setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })}
+      <Dialog
+        open={openSelectPromptModal.folderId !== ""}
+        onOpenChange={(open) =>
+          !open &&
+          setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })
+        }
       >
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -572,9 +617,11 @@ export default function EditModule(): JSX.Element {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog 
-        open={openConfirmationModal.id !== ""} 
-        onOpenChange={(open) => !open && setOpenConfirmationModal({ id: "", type: "" })}
+      <Dialog
+        open={openConfirmationModal.id !== ""}
+        onOpenChange={(open) =>
+          !open && setOpenConfirmationModal({ id: "", type: "" })
+        }
       >
         <DialogContent>
           <DialogHeader>
@@ -629,7 +676,10 @@ export default function EditModule(): JSX.Element {
       <section aria-labelledby="actions-heading">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h2 id="actions-heading" className="text-2xl font-bold text-foreground mb-1">
+            <h2
+              id="actions-heading"
+              className="text-2xl font-bold text-foreground mb-1"
+            >
               Module Management
             </h2>
             <p className="text-muted-foreground text-sm">
@@ -660,9 +710,12 @@ export default function EditModule(): JSX.Element {
               <Info className="h-4 w-4" aria-hidden="true" />
               Help
             </Button>
-            <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+            <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
               <DropdownMenuTrigger asChild>
-                <Button className="gap-2" aria-label={`${options[selectedIndexSave]} module`}>
+                <Button
+                  className="gap-2"
+                  aria-label={`${options[selectedIndexSave]} module`}
+                >
                   {options[selectedIndexSave]}
                   <ChevronDown className="h-4 w-4" aria-hidden="true" />
                 </Button>
@@ -685,15 +738,15 @@ export default function EditModule(): JSX.Element {
           </nav>
         </header>
       </section>
-      
+
       {/* Info Section */}
       <Card className="border-primary/20 bg-primary/5 transition-all duration-300 hover:shadow-md">
         <CardContent className="pt-6">
           <p className="text-primary/80 text-sm leading-relaxed">
-            Modules provide users access to conversations with the AI. Modules can
-            be customized to allow or restrict access to specific assets, including
-            conversation prompts (AI instructions) and documents. For more
-            information on editing a module, please see the{" "}
+            Modules provide users access to conversations with the AI. Modules
+            can be customized to allow or restrict access to specific assets,
+            including conversation prompts (AI instructions) and documents. For
+            more information on editing a module, please see the{" "}
             <a
               href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.cabsr1px9wcb"
               target="_blank"
@@ -706,19 +759,29 @@ export default function EditModule(): JSX.Element {
           </p>
         </CardContent>
       </Card>
-      
+
       <div className="flex items-center justify-between py-4">
-        <span className="text-sm text-muted-foreground">* indicates a required field</span>
+        <span className="text-sm text-muted-foreground">
+          * indicates a required field
+        </span>
         <div className="flex items-center gap-2">
           {session.isPublished ? (
             <>
-              <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
+              <CheckCircle
+                className="h-4 w-4 text-green-600"
+                aria-hidden="true"
+              />
               <span className="text-green-600 font-medium">Published</span>
             </>
           ) : (
             <>
-              <XCircle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <span className="text-muted-foreground font-medium">Unpublished</span>
+              <XCircle
+                className="h-4 w-4 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <span className="text-muted-foreground font-medium">
+                Unpublished
+              </span>
             </>
           )}
         </div>
@@ -729,11 +792,15 @@ export default function EditModule(): JSX.Element {
             Module Information
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Update the essential details for your module. Fields marked with * are required.
+            Update the essential details for your module. Fields marked with *
+            are required.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          <form onSubmit={(e) => handleSubmit(e, true, false)} className="space-y-6">
+          <form
+            onSubmit={(e) => handleSubmit(e, true, false)}
+            className="space-y-6"
+          >
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
                 Module Name *
@@ -747,19 +814,27 @@ export default function EditModule(): JSX.Element {
                 disabled={isLoading}
                 required
                 className={cn(
-                  errors.name && "border-destructive focus-visible:ring-destructive"
+                  errors.name &&
+                    "border-destructive focus-visible:ring-destructive"
                 )}
                 aria-describedby={errors.name ? "name-error" : undefined}
               />
               {errors.name && (
-                <p id="name-error" className="text-sm text-destructive" role="alert">
+                <p
+                  id="name-error"
+                  className="text-sm text-destructive"
+                  role="alert"
+                >
                   {errors.name}
                 </p>
               )}
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="moduleDescription" className="text-sm font-medium">
+              <Label
+                htmlFor="moduleDescription"
+                className="text-sm font-medium"
+              >
                 Module Description *
               </Label>
               <Textarea
@@ -767,17 +842,29 @@ export default function EditModule(): JSX.Element {
                 name="moduleDescription"
                 placeholder="Describe the purpose and instructional goals for this module..."
                 value={session.moduleDescription}
-                onChange={(e) => setSession(prev => ({ ...prev, moduleDescription: e.target.value }))}
+                onChange={(e) =>
+                  setSession((prev) => ({
+                    ...prev,
+                    moduleDescription: e.target.value,
+                  }))
+                }
                 disabled={isLoading}
                 required
                 className={cn(
-                  errors.moduleDescription && "border-destructive focus-visible:ring-destructive",
+                  errors.moduleDescription &&
+                    "border-destructive focus-visible:ring-destructive",
                   "min-h-[100px]"
                 )}
-                aria-describedby={errors.moduleDescription ? "description-error" : undefined}
+                aria-describedby={
+                  errors.moduleDescription ? "description-error" : undefined
+                }
               />
               {errors.moduleDescription && (
-                <p id="description-error" className="text-sm text-destructive" role="alert">
+                <p
+                  id="description-error"
+                  className="text-sm text-destructive"
+                  role="alert"
+                >
                   {errors.moduleDescription}
                 </p>
               )}
@@ -799,13 +886,16 @@ export default function EditModule(): JSX.Element {
               </Button>
             </div>
             {session.prompts.length < 1 && session.files.length < 1 ? (
-              <div 
+              <div
                 className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
                 role="status"
               >
                 <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">No assets added</p>
-                <p className="text-sm">To add an asset (including prompts and documents), click "Add Asset" above.</p>
+                <p className="text-sm">
+                  To add an asset (including prompts and documents), click "Add
+                  Asset" above.
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -850,31 +940,31 @@ export default function EditModule(): JSX.Element {
                       return (
                         <div key={i}>
                           <File
-                          file={file}
-                          folder={{
-                            //pass in temp folder
-                            id: file.folderId ? file.folderId : "",
-                            creator: {
-                              email: "",
-                              sub: "",
+                            file={file}
+                            folder={{
+                              //pass in temp folder
+                              id: file.folderId ? file.folderId : "",
+                              creator: {
+                                email: "",
+                                sub: "",
+                                name: "",
+                                family_name: "",
+                                username: "",
+                              },
+                              isDeleted: false,
                               name: "",
-                              family_name: "",
-                              username: "",
-                            },
-                            isDeleted: false,
-                            name: "",
-                            prompts: [],
-                            organization: "",
-                            timestamp: "",
-                            files: [],
-                          }}
-                          keyy={`${i}`}
-                          refreshList={() => refreshList()}
-                          loading={() => setIsLoading(true)}
-                          noShowMenu={true}
-                          showRemove
-                          onClick={setConfirmationModal}
-                        />
+                              prompts: [],
+                              organization: "",
+                              timestamp: "",
+                              files: [],
+                            }}
+                            keyy={`${i}`}
+                            refreshList={() => refreshList()}
+                            loading={() => setIsLoading(true)}
+                            noShowMenu={true}
+                            showRemove
+                            onClick={setConfirmationModal}
+                          />
                         </div>
                       );
                     })}
@@ -885,12 +975,15 @@ export default function EditModule(): JSX.Element {
             <Separator />
 
             <div className="space-y-2">
-              <Label className="text-base font-medium flex items-center gap-2" title="You can customize your module to allow or restrict certain functions.">
+              <Label
+                className="text-base font-medium flex items-center gap-2"
+                title="You can customize your module to allow or restrict certain functions."
+              >
                 Module Settings
                 <Info className="h-4 w-4 text-muted-foreground" />
               </Label>
             </div>
-          {/* <Checkbox
+            {/* <Checkbox
             onClick={() => {
               setSession((prev) => ({
                 ...prev,
@@ -923,11 +1016,12 @@ export default function EditModule(): JSX.Element {
                     Show Embedded Prompt
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Allows users to see the full text of the embedded prompt with which
-                    they begin their chat with the AI. Unchecking this will mean that
-                    the user will not be able to see the initial text of the prompt sent
-                    initially to the AI. For more information on why you might choose
-                    one or the other, see the{" "}
+                    Allows users to see the full text of the embedded prompt
+                    with which they begin their chat with the AI. Unchecking
+                    this will mean that the user will not be able to see the
+                    initial text of the prompt sent initially to the AI. For
+                    more information on why you might choose one or the other,
+                    see the{" "}
                     <a
                       href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
                       target="_blank"
@@ -940,7 +1034,7 @@ export default function EditModule(): JSX.Element {
                   </p>
                 </div>
               </div>
-              
+
               {/* <div className="flex items-start space-x-3">
                 <Checkbox
                   id="raterEnabled"
@@ -965,7 +1059,7 @@ export default function EditModule(): JSX.Element {
                   </p>
                 </div>
               </div> */}
-              
+
               <div className="flex items-start space-x-3">
                 <Checkbox
                   id="webSearch"
@@ -983,10 +1077,12 @@ export default function EditModule(): JSX.Element {
                     Allow Web Search
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Allow PapyrusAI to search the internet in response to a query or question from students.
-                    Have the students prompt the AI with things like "Look up this topic", and it will get some
-                    sources from the internet, give a list of the links to the student, and read them to use
-                    those sources in conversation with the student.
+                    Allow PapyrusAI to search the internet in response to a
+                    query or question from students. Have the students prompt
+                    the AI with things like "Look up this topic", and it will
+                    get some sources from the internet, give a list of the links
+                    to the student, and read them to use those sources in
+                    conversation with the student.
                   </p>
                 </div>
               </div>
@@ -994,6 +1090,60 @@ export default function EditModule(): JSX.Element {
           </form>
         </CardContent>
       </Card>
+
+      {/* Bottom Actions */}
+      <section aria-labelledby="bottom-actions-heading" className="pt-4">
+        <nav
+          className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+          role="toolbar"
+          aria-label="Module management actions"
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setOpenDeleteModal(true)}
+            className="text-destructive hover:text-destructive"
+            aria-label="Delete module"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Delete
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSavePublishTooltip(true)}
+            aria-label="Get help with Save & Publish options"
+          >
+            <Info className="h-4 w-4" aria-hidden="true" />
+            Help
+          </Button>
+          <DropdownMenu open={openSaveBottom} onOpenChange={setOpenSaveBottom}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="gap-2"
+                aria-label={`${options[selectedIndexSave]} module`}
+              >
+                {options[selectedIndexSave]}
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {options.map((option, index) => (
+                <DropdownMenuItem
+                  key={option}
+                  onClick={(event) => handleMenuItemClick(event, index)}
+                  className={cn(
+                    index === selectedIndexSave && "bg-accent",
+                    index === 2 && "text-destructive hover:text-destructive"
+                  )}
+                >
+                  {option}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </nav>
+      </section>
     </main>
   ) : (
     <div

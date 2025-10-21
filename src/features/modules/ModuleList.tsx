@@ -40,7 +40,10 @@ import {
 import { Star, Play, Eye, Copy, Edit, Loader2 } from "lucide-react";
 import Post from "../../utility/Post";
 import { cn } from "../../lib/utils";
-import { getConversationList, postCreateConversation } from "../../utility/endpoints/ConversationEndpoints";
+import {
+  getConversationList,
+  postCreateConversation,
+} from "../../utility/endpoints/ConversationEndpoints";
 
 interface ModuleListProps {
   course: CourseType;
@@ -57,7 +60,9 @@ export default function ModuleList({
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isNavigatingToModule, setIsNavigatingToModule] = useState<string | null>(null);
+  const [isNavigatingToModule, setIsNavigatingToModule] = useState<
+    string | null
+  >(null);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [starredCourses, setStarredCourses] = useState<
     Array<{ courseId: string }>
@@ -186,38 +191,63 @@ export default function ModuleList({
 
   async function handleBeginModule(courseId: string, moduleId: string) {
     if (!user) return;
-    
+
     const moduleKey = `${courseId}-${moduleId}`;
     setIsNavigatingToModule(moduleKey);
-    
+
     try {
       // First, get the conversation list for this module
-      const conversationRes = await Get(getConversationList(courseId, moduleId));
-      
-      if (conversationRes && conversationRes.status && conversationRes.status < 300) {
-        if (conversationRes.data && conversationRes.data.conversations && conversationRes.data.conversations.length > 0) {
+      const conversationRes = await Get(
+        getConversationList(courseId, moduleId)
+      );
+
+      if (
+        conversationRes &&
+        conversationRes.status &&
+        conversationRes.status < 300
+      ) {
+        if (
+          conversationRes.data &&
+          conversationRes.data.conversations &&
+          conversationRes.data.conversations.length > 0
+        ) {
           // Sort conversations by ID (latest first) and get the latest one
-          const sortedConversations = conversationRes.data.conversations.sort((a: any, b: any) => 
-            parseInt(b.id) - parseInt(a.id)
+          const sortedConversations = conversationRes.data.conversations.sort(
+            (a: any, b: any) => parseInt(b.id) - parseInt(a.id)
           );
-          const latestConversationIndex = conversationRes.data.conversations.length - conversationRes.data.conversations.findIndex((conv: any) => conv.id === sortedConversations[0].id) - 1;
-          
+          const latestConversationIndex =
+            conversationRes.data.conversations.length -
+            conversationRes.data.conversations.findIndex(
+              (conv: any) => conv.id === sortedConversations[0].id
+            ) -
+            1;
+
           // Navigate to the latest conversation
-          navigator(`/chat/${user.username}/${courseId}/${moduleId}/${latestConversationIndex}`);
+          navigator(
+            `/chat/${user.username}/${courseId}/${moduleId}/${latestConversationIndex}`
+          );
         } else {
           // No conversations exist, create a new one
-          const createRes = await Post(postCreateConversation(courseId, moduleId), {});
-          
+          const createRes = await Post(
+            postCreateConversation(courseId, moduleId),
+            {}
+          );
+
           if (createRes && createRes.status && createRes.status < 300) {
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
-              navigator(`/chat/${user.username}/${courseId}/${moduleId}/${createRes.data.conversations.length - 1}`);
+              navigator(
+                `/chat/${user.username}/${courseId}/${moduleId}/${
+                  createRes.data.conversations.length - 1
+                }`
+              );
             }
           } else if (createRes && createRes.status === 401) {
             navigator("/login");
           } else {
             setAlert({
-              message: "Something went wrong creating a new conversation. Try again later",
+              message:
+                "Something went wrong creating a new conversation. Try again later",
               type: "error",
             });
           }
@@ -226,7 +256,8 @@ export default function ModuleList({
         navigator("/login");
       } else {
         setAlert({
-          message: "Something went wrong loading conversations. Try again later",
+          message:
+            "Something went wrong loading conversations. Try again later",
           type: "error",
         });
       }
@@ -442,27 +473,27 @@ export default function ModuleList({
                   {/* Header with title and favorite */}
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors duration-300 leading-tight">
+                      <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 leading-tight">
                         {module.name}
                       </h3>
                     </div>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                            <button
-                              onClick={(e: any) => {
-                                e.stopPropagation();
-                                isStarred
-                                  ? removeStarredModule(course.id, module.id)
-                                  : createStarredModule(course.id, module.id);
-                              }}
-                              disabled={isLoading}
-                              className={cn(
-                                "p-1.5 rounded-full ml-2 flex-shrink-0",
-                                isStarred
-                                  ? "text-gold hover:text-muted"
-                                  : "text-muted hover:text-gold"
-                              )}
+                          <button
+                            onClick={(e: any) => {
+                              e.stopPropagation();
+                              isStarred
+                                ? removeStarredModule(course.id, module.id)
+                                : createStarredModule(course.id, module.id);
+                            }}
+                            disabled={isLoading}
+                            className={cn(
+                              "p-1.5 rounded-full ml-2 flex-shrink-0",
+                              isStarred
+                                ? "text-gold hover:text-muted"
+                                : "text-muted hover:text-gold"
+                            )}
                           >
                             <Star
                               size={12}
@@ -518,7 +549,7 @@ export default function ModuleList({
                                     `/dashboard/${course.id}/${module.id}`
                                   )
                                 }
-                                className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-lg transition-all duration-300"
+                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
                               >
                                 <Eye size={14} />
                               </button>
@@ -553,7 +584,7 @@ export default function ModuleList({
                                   });
                                   setOpenCourseListModal(true);
                                 }}
-                                className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-lg transition-all duration-300"
+                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
                               >
                                 <Copy size={14} />
                               </button>
@@ -587,7 +618,7 @@ export default function ModuleList({
                                       `/courses/${course.id}/editmodule/${module.id}`
                                     )
                                   }
-                                  className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-lg transition-all duration-300"
+                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
                                 >
                                   <Edit size={14} />
                                 </button>
@@ -627,7 +658,7 @@ export default function ModuleList({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors duration-300 truncate">
+                        <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 truncate">
                           {module.name}
                         </h3>
                       </div>
@@ -699,7 +730,7 @@ export default function ModuleList({
                                     `/dashboard/${course.id}/${module.id}`
                                   )
                                 }
-                                className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-full transition-all duration-300"
+                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                               >
                                 <Eye size={12} />
                               </button>
@@ -734,7 +765,7 @@ export default function ModuleList({
                                   });
                                   setOpenCourseListModal(true);
                                 }}
-                                className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-full transition-all duration-300"
+                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                               >
                                 <Copy size={12} />
                               </button>
@@ -768,7 +799,7 @@ export default function ModuleList({
                                       `/courses/${course.id}/editmodule/${module.id}`
                                     )
                                   }
-                                  className="p-1.5 text-muted hover:text-muted-foreground hover:bg-muted rounded-full transition-all duration-300"
+                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                                 >
                                   <Edit size={12} />
                                 </button>
@@ -785,9 +816,12 @@ export default function ModuleList({
                         variant="default"
                         size="sm"
                         className="flex items-center gap-2 ml-2"
-                        disabled={isNavigatingToModule === `${course.id}-${module.id}`}
+                        disabled={
+                          isNavigatingToModule === `${course.id}-${module.id}`
+                        }
                       >
-                        {isNavigatingToModule === `${course.id}-${module.id}` ? (
+                        {isNavigatingToModule ===
+                        `${course.id}-${module.id}` ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : (
                           <Play size={14} />
@@ -804,12 +838,14 @@ export default function ModuleList({
       </div>
     </section>
   ) : (
-    <div 
-      className="text-center py-12 text-muted-foreground bg-card border rounded-lg" 
+    <div
+      className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
       role="status"
     >
       <Play className="mx-auto h-12 w-12 mb-4 opacity-50" />
-      <p className="text-lg font-medium mb-2">No modules are currently available to you.</p>
+      <p className="text-lg font-medium mb-2">
+        No modules are currently available to you.
+      </p>
       {user?.groups.includes(
         process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
       ) && (

@@ -45,7 +45,6 @@ import {
   BookOpen,
   Users,
   Calendar,
-  Hash,
   Clock,
 } from "lucide-react";
 import { postCreateCourse } from "../../utility/endpoints/CourseEndpoints";
@@ -97,7 +96,8 @@ export default function CreateCourse(): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<CustomUserType>>([]);
   const { user, setUser } = useContext(UserContext);
-  const [openSave, setOpenSave] = useState(false);
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [showSavePublishTooltip, setShowSavePublishTooltip] =
@@ -144,7 +144,8 @@ export default function CreateCourse(): JSX.Element {
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
-    setOpenSave(false);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
 
   function getUsers(PaginationToken: string, signal: AbortSignal) {
@@ -327,8 +328,18 @@ export default function CreateCourse(): JSX.Element {
                 Create Course
               </h1>
               <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                Set up a new course for your students to interact with
-                AI-powered learning modules.
+                Courses are spaces in which instructors can create and organize
+                modules that allow students to interact with the AI. For more
+                information on creating a course, please see
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                >
+                  "Creating a Course" section of our instructor guide
+                </a>
+                .
               </p>
             </div>
           </div>
@@ -338,7 +349,10 @@ export default function CreateCourse(): JSX.Element {
         <section aria-labelledby="actions-heading">
           <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h2 id="actions-heading" className="text-2xl font-bold text-foreground mb-1">
+              <h2
+                id="actions-heading"
+                className="text-2xl font-bold text-foreground mb-1"
+              >
                 Course Setup
               </h2>
               <p className="text-muted-foreground text-sm">
@@ -357,7 +371,7 @@ export default function CreateCourse(): JSX.Element {
                 aria-label="Get help with Save & Publish options"
               >
                 <Info className="h-4 w-4" aria-hidden="true" />
-                Help
+                Info
               </Button>
               <div className="flex rounded-lg border overflow-hidden">
                 <Button
@@ -369,7 +383,7 @@ export default function CreateCourse(): JSX.Element {
                 >
                   {options[selectedIndexSave]}
                 </Button>
-                <DropdownMenu open={openSave} onOpenChange={setOpenSave}>
+                <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       size="sm"
@@ -400,26 +414,6 @@ export default function CreateCourse(): JSX.Element {
               </div>
             </nav>
           </header>
-
-          {/* Info Section */}
-          <Card className="border-primary/20 bg-primary/5 transition-all duration-300 hover:shadow-md">
-            <CardContent className="pt-6">
-              <p className="text-primary/80 text-sm leading-relaxed">
-                Courses are spaces in which instructors can create and organize
-                modules that allow students to interact with the AI. For more
-                information on creating a course, please see the{" "}
-                <a
-                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
-                >
-                  "Creating a Course" section of our instructor guide
-                </a>
-                .
-              </p>
-            </CardContent>
-          </Card>
         </section>
 
         {/* Form */}
@@ -494,23 +488,20 @@ export default function CreateCourse(): JSX.Element {
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className="relative">
-                  <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signUpCode"
-                    name="signUpCode"
-                    placeholder="e.g., FALL2024ENG190W"
-                    value={session.signUpCode}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    required
-                    className={cn(
-                      "pl-10 transition-colors",
-                      errors.signUpCode &&
-                        "border-destructive focus-visible:ring-destructive"
-                    )}
-                  />
-                </div>
+                <Input
+                  id="signUpCode"
+                  name="signUpCode"
+                  placeholder="e.g., FALL2024ENG190W"
+                  value={session.signUpCode}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                  className={cn(
+                    "transition-colors",
+                    errors.signUpCode &&
+                      "border-destructive focus-visible:ring-destructive"
+                  )}
+                />
                 {errors.signUpCode && (
                   <p className="text-sm text-destructive flex items-center gap-1">
                     <X className="h-3 w-3" />
@@ -682,7 +673,12 @@ export default function CreateCourse(): JSX.Element {
                         variant="secondary"
                         className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
                       >
-                        {ta.name} {ta.family_name}
+                        {ta.name && ta.family_name
+                          ? `${ta.name} ${ta.family_name}`
+                          : ta.name ||
+                            ta.family_name ||
+                            ta.email ||
+                            ta.username}
                         <Button
                           type="button"
                           variant="ghost"
@@ -763,11 +759,19 @@ export default function CreateCourse(): JSX.Element {
                           <SelectItem key={user.username} value={user.username}>
                             <div className="flex items-center gap-2">
                               <span>
-                                {user.name} {user.family_name}
+                                {user.name && user.family_name
+                                  ? `${user.name} ${user.family_name}`
+                                  : user.name ||
+                                    user.family_name ||
+                                    user.email ||
+                                    user.username}
                               </span>
-                              <span className="text-muted-foreground">
-                                ({user.email})
-                              </span>
+                              {user.email &&
+                                (user.name || user.family_name) && (
+                                  <span className="text-muted-foreground">
+                                    ({user.email})
+                                  </span>
+                                )}
                             </div>
                           </SelectItem>
                         ))
@@ -783,8 +787,8 @@ export default function CreateCourse(): JSX.Element {
                 </p>
               )}
 
-              <div className="text-sm text-muted-foreground bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                <p>
+              <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                <p className="text-xs">
                   <strong>Note:</strong> Teaching assistants can create and edit
                   modules for you, but not delete or unpublish the course. You
                   can assign multiple people to this role. To add someone as a
@@ -794,6 +798,67 @@ export default function CreateCourse(): JSX.Element {
               </div>
             </CardContent>
           </Card>
+
+          {/* Bottom Actions */}
+          <section aria-labelledby="bottom-actions-heading" className="pt-4">
+            <nav
+              className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+              role="toolbar"
+              aria-label="Course creation actions"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSavePublishTooltip(true)}
+                aria-label="Get help with Save & Publish options"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                Info
+              </Button>
+              <div className="flex rounded-lg border overflow-hidden">
+                <Button
+                  size="sm"
+                  onClick={handleClick}
+                  className="rounded-none border-0"
+                  disabled={isLoading}
+                  aria-label={`${options[selectedIndexSave]} course`}
+                >
+                  {options[selectedIndexSave]}
+                </Button>
+                <DropdownMenu
+                  open={openSaveBottom}
+                  onOpenChange={setOpenSaveBottom}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="rounded-none border-0 border-l px-2"
+                      variant="default"
+                      disabled={isLoading}
+                      aria-label="Select save and activation strategy"
+                    >
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {options.map((option, index) => (
+                      <DropdownMenuItem
+                        key={option}
+                        onClick={() => handleMenuItemClick(index)}
+                        className={cn(
+                          index === selectedIndexSave && "bg-accent",
+                          index === 2 &&
+                            "text-destructive focus:text-destructive"
+                        )}
+                      >
+                        {option}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </nav>
+          </section>
         </form>
       </div>
     </div>

@@ -76,9 +76,14 @@ export default function MissingUserInfoForm({
         setSession((prev) => ({ ...prev, family_name: user.family_name }));
       }
       if (user && user["custom:theme"] && user["custom:theme"] !== "") {
-        // Map colorful themes to light theme
-        const normalizedTheme =
-          user["custom:theme"] === "dark" ? "dark" : "light";
+        // Keep all theme options including both colorful variants
+        const normalizedTheme = [
+          "dark",
+          "colorful-light",
+          "colorful-dark",
+        ].includes(user["custom:theme"])
+          ? user["custom:theme"]
+          : "light";
         setSession((prev) => ({ ...prev, theme: normalizedTheme }));
       }
       setIsLoading(false);
@@ -129,7 +134,7 @@ export default function MissingUserInfoForm({
         JSON.stringify({ ...user, "custom:theme": e.target.value })
       );
     }
-    // Apply theme change - colorful themes will fallback to light in changeTheme function
+    // Apply theme change - supports light, dark, colorful-light, and colorful-dark themes
     changeTheme(root, e.target.value);
   }
 
@@ -139,15 +144,12 @@ export default function MissingUserInfoForm({
         <CardTitle className="text-2xl font-bold text-foreground">
           Profile Information
         </CardTitle>
-        <p className="text-muted-foreground text-sm">
-          Complete your profile to get started with PapyrusAI.
-        </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium">
-              First Name *
+              Name *
             </Label>
             <Input
               id="name"
@@ -157,11 +159,19 @@ export default function MissingUserInfoForm({
               onChange={handleChange}
               disabled={isLoading}
               required
-              className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
+              className={
+                errors.name
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : ""
+              }
               aria-describedby={errors.name ? "name-error" : undefined}
             />
             {errors.name && (
-              <p id="name-error" className="text-sm text-destructive" role="alert">
+              <p
+                id="name-error"
+                className="text-sm text-destructive"
+                role="alert"
+              >
                 {errors.name}
               </p>
             )}
@@ -178,20 +188,28 @@ export default function MissingUserInfoForm({
               value={session.family_name}
               onChange={handleChange}
               disabled={isLoading}
-              className={errors.family_name ? "border-destructive focus-visible:ring-destructive" : ""}
-              aria-describedby={errors.family_name ? "family-name-error" : undefined}
+              className={
+                errors.family_name
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : ""
+              }
+              aria-describedby={
+                errors.family_name ? "family-name-error" : undefined
+              }
             />
             {errors.family_name && (
-              <p id="family-name-error" className="text-sm text-destructive" role="alert">
+              <p
+                id="family-name-error"
+                className="text-sm text-destructive"
+                role="alert"
+              >
                 {errors.family_name}
               </p>
             )}
           </div>
 
           <div className="space-y-3">
-            <Label className="text-sm font-medium">
-              Theme Preference
-            </Label>
+            <Label className="text-sm font-medium">Theme Preference</Label>
             <RadioGroup
               value={session.theme}
               onValueChange={(value) => {
@@ -205,29 +223,61 @@ export default function MissingUserInfoForm({
             >
               <div className="flex items-center space-x-3">
                 <RadioGroupItem value="light" id="light" />
-                <Label htmlFor="light" className="text-sm font-normal cursor-pointer">
+                <Label
+                  htmlFor="light"
+                  className="text-sm font-normal cursor-pointer"
+                >
                   Light theme
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
                 <RadioGroupItem value="dark" id="dark" />
-                <Label htmlFor="dark" className="text-sm font-normal cursor-pointer">
+                <Label
+                  htmlFor="dark"
+                  className="text-sm font-normal cursor-pointer"
+                >
                   Dark theme
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="colorful-light" id="colorful-light" />
+                <Label
+                  htmlFor="colorful-light"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Colorful light theme
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="colorful-dark" id="colorful-dark" />
+                <Label
+                  htmlFor="colorful-dark"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Colorful dark theme
                 </Label>
               </div>
             </RadioGroup>
             {errors.theme && (
-              <p id="theme-error" className="text-sm text-destructive" role="alert">
+              <p
+                id="theme-error"
+                className="text-sm text-destructive"
+                role="alert"
+              >
                 {errors.theme}
               </p>
             )}
           </div>
 
-          <Button 
-            type="submit" 
-            disabled={isLoading} 
+          <Button
+            type="submit"
+            disabled={isLoading}
             className="w-full"
-            aria-label={isLoading ? "Saving profile information" : "Save profile information"}
+            aria-label={
+              isLoading
+                ? "Saving profile information"
+                : "Save profile information"
+            }
           >
             {isLoading ? "Saving..." : "Save Profile"}
           </Button>

@@ -163,7 +163,7 @@ export default function Courses(): JSX.Element {
                     asChild
                     aria-label="Create new course"
                   >
-                    <Link to="/createcourse">
+                    <Link to="/createcourse" className="no-underline">
                       <PlusIcon className="w-4 h-4" aria-hidden="true" />
                       Create Course
                     </Link>

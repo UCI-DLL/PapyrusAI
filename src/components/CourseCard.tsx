@@ -375,7 +375,7 @@ export default function CourseCard({
                           <DropdownMenuItem key={item.label} asChild>
                             <Link
                               to={item.action}
-                              className="cursor-pointer text-primary"
+                              className="cursor-pointer text-primary no-underline"
                             >
                               {item.label}
                             </Link>
@@ -416,7 +416,7 @@ export default function CourseCard({
               size="sm"
               variant="default"
               asChild
-              className="relative z-10 flex-shrink-0 w-full"
+              className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
               aria-label={`View modules for ${course.name}`}
             >
               <Link

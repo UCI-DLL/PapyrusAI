@@ -7,15 +7,13 @@ import { Textarea } from "../../components/ui/textarea";
 
 import { Checkbox } from "../../components/ui/checkbox";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../../components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +37,7 @@ import { ChevronDown, Info, Loader2, MessageSquare } from "lucide-react";
 import Get from "../../utility/Get";
 import { TagType } from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { cn } from "../../lib/utils";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import Post from "../../utility/Post";
 import {
@@ -74,7 +73,10 @@ export default function CreatePrompt(): JSX.Element {
 
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
-
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
+  const [showSavePublishTooltip, setShowSavePublishTooltip] =
+    useState<boolean>(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
 
   useEffect(() => {
@@ -156,7 +158,19 @@ export default function CreatePrompt(): JSX.Element {
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
+
+  function handleClick(e: any) {
+    if (selectedIndexSave === 0) {
+      //Save and publish
+      handleSubmit(e);
+    } else if (selectedIndexSave === 1) {
+      //discard changes
+      setOpenDiscardModal(true);
+    }
+  }
 
   function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -243,23 +257,72 @@ export default function CreatePrompt(): JSX.Element {
 
   return promptInfo && !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <AlertDialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Discard Changes?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you would like to discard the changes to this prompt?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => navigator(-1)}>
-              Discard
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Dialogs */}
+      <Dialog
+        open={showSavePublishTooltip}
+        onOpenChange={setShowSavePublishTooltip}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              About Prompts
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="space-y-3">
+            <p>
+              Prompts function in PapyrusAI as the first set of instructions
+              sent to the AI that will guide students' interactions with the AI.
+              When you click <strong>"Save & Publish"</strong>, your prompt will
+              be saved to your library.
+            </p>
+            <p className="text-sm">
+              For more information on creating a prompt, please see the{" "}
+              <a
+                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:no-underline font-medium text-primary"
+              >
+                "Creating a Prompt" section of our instructor guide
+              </a>
+              .
+            </p>
+          </DialogDescription>
+          <DialogFooter>
+            <Button onClick={() => setShowSavePublishTooltip(false)}>
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
+      <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">
+              Discard Changes?
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Are you sure you would like to discard the changes to this prompt?
+            This action cannot be undone.
+          </DialogDescription>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setOpenDiscardModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => navigator(-1)}>
+              Discard Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Standard Page Header Pattern */}
       <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
           <div
@@ -273,75 +336,91 @@ export default function CreatePrompt(): JSX.Element {
               Create Prompt
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Create AI instructions that will guide student interactions with the system.
+              Create AI instructions that will guide student interactions with
+              the system. For more information on creating a prompt, please see
+              the{" "}
+              <a
+                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+              >
+                "Creating a Prompt" section of our instructor guide
+              </a>
+              .
             </p>
           </div>
         </div>
       </header>
 
-      <section aria-labelledby="prompt-setup-heading">
+      {/* Actions Section */}
+      <section aria-labelledby="actions-heading">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h2 id="prompt-setup-heading" className="text-2xl font-bold text-foreground mb-1">
+            <h2
+              id="actions-heading"
+              className="text-2xl font-bold text-foreground mb-1"
+            >
               Prompt Setup
             </h2>
             <p className="text-muted-foreground text-sm">
               Configure your prompt content and metadata settings.
             </p>
           </div>
-          <nav className="flex flex-col md:flex-row gap-2" role="toolbar" aria-label="Prompt creation actions">
+          <nav
+            className="flex flex-col md:flex-row gap-2"
+            role="toolbar"
+            aria-label="Prompt creation actions"
+          >
             <Button
+              variant="outline"
               size="sm"
-              onClick={() => {
-                if (selectedIndexSave === 0) {
-                  handleSubmit();
-                } else {
-                  setOpenDiscardModal(true);
-                }
-              }}
-              aria-label={isLoading ? "Saving prompt..." : `${options[selectedIndexSave]} prompt`}
+              onClick={() => setShowSavePublishTooltip(true)}
+              aria-label="Get help with prompt creation"
             >
-              {options[selectedIndexSave]}
+              <Info className="h-4 w-4" aria-hidden="true" />
+              Info
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" aria-label="Select save and publish strategy">
-                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {options.map((option, index) => (
-                  <DropdownMenuItem
-                    key={option}
-                    onClick={() => handleMenuItemClick(index)}
+            <div className="flex rounded-lg border overflow-hidden">
+              <Button
+                size="sm"
+                onClick={handleClick}
+                className="rounded-none border-0"
+                disabled={isLoading}
+                aria-label={`${options[selectedIndexSave]} prompt`}
+              >
+                {options[selectedIndexSave]}
+              </Button>
+              <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="rounded-none border-0 border-l px-2"
+                    variant="default"
+                    disabled={isLoading}
+                    aria-label="Select prompt save strategy"
                   >
-                    {option}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {options.map((option, index) => (
+                    <DropdownMenuItem
+                      key={option}
+                      onClick={() => handleMenuItemClick(index)}
+                      className={cn(
+                        index === selectedIndexSave && "bg-accent",
+                        index === 1 && "text-destructive focus:text-destructive"
+                      )}
+                    >
+                      {option}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </nav>
         </header>
-
-        <div className="border-primary/20 bg-primary/5 rounded-lg p-4 mb-6">
-          <p className="text-primary/80 mb-4">
-            Prompts function in PapyrusAI as the first set of instructions sent
-            to the AI that will guide students' interactions with the AI. For
-            more information on creating a prompt, please see the{" "}
-            <a
-              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-2 hover:no-underline font-medium"
-            >
-              "Creating a Prompt" section of our instructor guide
-            </a>
-            .
-          </p>
-          <p className="text-sm text-primary/70">
-            * indicates a required field
-          </p>
-        </div>
 
         <Card className="transition-all duration-300 hover:shadow-md">
           <CardHeader>
@@ -349,138 +428,220 @@ export default function CreatePrompt(): JSX.Element {
               Prompt Information
             </CardTitle>
             <p className="text-muted-foreground text-sm">
-              Enter the essential details for your prompt. Fields marked with * are required.
+              Enter the essential details for your prompt. Fields marked with *
+              are required.
             </p>
           </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="name" className="text-sm font-medium">
-                  Prompt Name *
-                </Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        The name for the prompt that users will see. We
-                        recommend choosing a name that makes it easy for
-                        students to understand what the prompt will do or help
-                        them with.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Enter prompt name"
-                value={newPrompt.name}
-                onChange={handleChange}
-                disabled={isLoading}
-                required
-                className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
-                aria-describedby={errors.name ? "name-error" : undefined}
-              />
-              {errors.name && (
-                <p id="name-error" className="text-sm text-destructive" role="alert">
-                  {errors.name}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="prompt" className="text-sm font-medium">
-                  Prompt *
-                </Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        The instructions that will be sent to the AI (i.e., the
-                        first message sent to the AI that will guide the
-                        interaction).
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Textarea
-                id="prompt"
-                name="prompt"
-                placeholder="Enter your prompt instructions here..."
-                value={newPrompt.prompt}
-                onChange={handleChange}
-                disabled={isLoading}
-                required
-                rows={5}
-                className={errors.prompt ? "border-destructive focus-visible:ring-destructive" : ""}
-                aria-describedby={errors.prompt ? "prompt-error" : undefined}
-              />
-              {errors.prompt && (
-                <p id="prompt-error" className="text-sm text-destructive" role="alert">
-                  {errors.prompt}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm font-medium">Tags</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        Tags describe a feature of the prompts and will be used
-                        to allow for sorting prompts by type.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
-                {tagList.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-2">
-                    {tagList.map((tag) => (
-                      <div key={tag.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`tag-${tag.id}`}
-                          checked={newPrompt.tags.includes(tag.id)}
-                          onCheckedChange={() => handleTagToggle(tag.id)}
-                          disabled={isLoading}
-                        />
-                        <Label
-                          htmlFor={`tag-${tag.id}`}
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          {tag.id}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No tags available
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    Prompt Name *
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">
+                          The name for the prompt that users will see. We
+                          recommend choosing a name that makes it easy for
+                          students to understand what the prompt will do or help
+                          them with.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder="Enter prompt name"
+                  value={newPrompt.name}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                  className={
+                    errors.name
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }
+                  aria-describedby={errors.name ? "name-error" : undefined}
+                />
+                {errors.name && (
+                  <p
+                    id="name-error"
+                    className="text-sm text-destructive"
+                    role="alert"
+                  >
+                    {errors.name}
                   </p>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Selected:{" "}
-                {newPrompt.tags.length > 0 ? newPrompt.tags.join(", ") : "None"}
-              </p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="prompt" className="text-sm font-medium">
+                    Prompt *
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">
+                          The instructions that will be sent to the AI (i.e.,
+                          the first message sent to the AI that will guide the
+                          interaction).
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Textarea
+                  id="prompt"
+                  name="prompt"
+                  placeholder="Enter your prompt instructions here..."
+                  value={newPrompt.prompt}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                  rows={5}
+                  className={
+                    errors.prompt
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }
+                  aria-describedby={errors.prompt ? "prompt-error" : undefined}
+                />
+                {errors.prompt && (
+                  <p
+                    id="prompt-error"
+                    className="text-sm text-destructive"
+                    role="alert"
+                  >
+                    {errors.prompt}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">Tags</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">
+                          Tags describe a feature of the prompts and will be
+                          used to allow for sorting prompts by type.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
+                  {tagList.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2">
+                      {tagList.map((tag) => (
+                        <div
+                          key={tag.id}
+                          className="flex items-center space-x-2"
+                        >
+                          <Checkbox
+                            id={`tag-${tag.id}`}
+                            checked={newPrompt.tags.includes(tag.id)}
+                            onCheckedChange={() => handleTagToggle(tag.id)}
+                            disabled={isLoading}
+                          />
+                          <Label
+                            htmlFor={`tag-${tag.id}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {tag.id}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No tags available
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Selected:{" "}
+                  {newPrompt.tags.length > 0
+                    ? newPrompt.tags.join(", ")
+                    : "None"}
+                </p>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Bottom Actions */}
+        <section aria-labelledby="bottom-actions-heading" className="pt-4">
+          <nav
+            className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+            role="toolbar"
+            aria-label="Prompt creation actions"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSavePublishTooltip(true)}
+              aria-label="Get help with prompt creation"
+            >
+              <Info className="h-4 w-4" aria-hidden="true" />
+              Info
+            </Button>
+            <div className="flex rounded-lg border overflow-hidden">
+              <Button
+                size="sm"
+                onClick={handleClick}
+                className="rounded-none border-0"
+                disabled={isLoading}
+                aria-label={`${options[selectedIndexSave]} prompt`}
+              >
+                {options[selectedIndexSave]}
+              </Button>
+              <DropdownMenu
+                open={openSaveBottom}
+                onOpenChange={setOpenSaveBottom}
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="rounded-none border-0 border-l px-2"
+                    variant="default"
+                    disabled={isLoading}
+                    aria-label="Select prompt save strategy"
+                  >
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {options.map((option, index) => (
+                    <DropdownMenuItem
+                      key={option}
+                      onClick={() => handleMenuItemClick(index)}
+                      className={cn(
+                        index === selectedIndexSave && "bg-accent",
+                        index === 1 && "text-destructive focus:text-destructive"
+                      )}
+                    >
+                      {option}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </nav>
+        </section>
       </section>
     </main>
   ) : (

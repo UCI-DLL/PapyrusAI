@@ -1062,7 +1062,10 @@ export default function Chat(): JSX.Element {
               asChild
               onClick={() => setOpenErrorModal({ open: false, message: "" })}
             >
-              <Link to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`}>
+              <Link
+                to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`}
+                className="no-underline"
+              >
                 Back to Conversation List
               </Link>
             </Button>

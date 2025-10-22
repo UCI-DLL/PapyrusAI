@@ -49,7 +49,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "../../components/ui/dialog";
-import { Loader2, Download, BarChart3 } from "lucide-react";
+import { Loader2, Download, BarChart3, Search } from "lucide-react";
+import { Input } from "../../components/ui/input";
 
 type DownloadType = CourseType & { users: Array<CustomUserType> } & {
   modules: Array<
@@ -73,6 +74,7 @@ export default function Reports(): JSX.Element {
   var promiseArray: any[] = [];
 
   const [checked, setChecked] = useState<Array<number>>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const handleToggle = (value: number) => () => {
     const currentIndex = checked.indexOf(value);
@@ -265,6 +267,33 @@ export default function Reports(): JSX.Element {
         const dateB = parseInt(b.course.createdTimestamp);
         return dateB - dateA; // Newest first
       }
+    });
+  }
+
+  function filterCoursesBySearch(
+    courses: Array<{ users: Array<CustomUserType>; course: CourseType }>,
+    searchTerm: string
+  ) {
+    if (!searchTerm.trim()) {
+      return courses;
+    }
+
+    const lowercaseSearch = searchTerm.toLowerCase();
+    return courses.filter(({ course }) => {
+      const courseName = course.name?.toLowerCase() || "";
+      const instructorName =
+        `${course.instructor.name} ${course.instructor.family_name}`.toLowerCase();
+      const section = course.section?.toLowerCase() || "";
+      const term = course.term?.toLowerCase() || "";
+      const year = course.year?.toString() || "";
+
+      return (
+        courseName.includes(lowercaseSearch) ||
+        instructorName.includes(lowercaseSearch) ||
+        section.includes(lowercaseSearch) ||
+        term.includes(lowercaseSearch) ||
+        year.includes(lowercaseSearch)
+      );
     });
   }
 
@@ -744,7 +773,10 @@ export default function Reports(): JSX.Element {
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium">Available Courses</h3>
                   <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
-                    {sortCourseList(userList).map((x, index) => {
+                    {filterCoursesBySearch(
+                      sortCourseList(userList),
+                      searchTerm
+                    ).map((x, index) => {
                       const labelId = `checkbox-list-secondary-label-${index}`;
                       return (
                         <div
@@ -801,65 +833,92 @@ export default function Reports(): JSX.Element {
                 interactions.
               </p>
             </div>
+            <div className="relative max-w-md w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search courses by name, instructor, section..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </header>
 
           <div className="space-y-4">
-            {sortCourseList(userList).map((x, index) => {
-              const handleRowClick = () => {
-                // Navigate to the new course reports route with course data
-                // Pass the course object and users as state
-                navigator(`/reports/course/${x.course.id}`, {
-                  state: {
-                    course: x.course,
-                    users: x.users,
-                  },
-                });
-              };
+            {filterCoursesBySearch(sortCourseList(userList), searchTerm)
+              .length === 0 ? (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  No courses found
+                </h3>
+                <p className="text-muted-foreground">
+                  {searchTerm.trim()
+                    ? `No courses match "${searchTerm}". Try adjusting your search terms.`
+                    : "No courses available."}
+                </p>
+              </div>
+            ) : (
+              filterCoursesBySearch(sortCourseList(userList), searchTerm).map(
+                (x, index) => {
+                  const handleRowClick = () => {
+                    // Navigate to the new course reports route with course data
+                    // Pass the course object and users as state
+                    navigator(`/reports/course/${x.course.id}`, {
+                      state: {
+                        course: x.course,
+                        users: x.users,
+                      },
+                    });
+                  };
 
-              return (
-                <Card
-                  key={index}
-                  className="group bg-card border rounded-xl hover-lift shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md"
-                  onClick={handleRowClick}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-300">
-                          {x.course.name ? x.course.name : "Unnamed Course"}
-                        </h3>
-                        <div className="space-y-1">
-                          <div className="text-sm text-muted-foreground">
-                            Instructor: {x.course.instructor.name}{" "}
-                            {x.course.instructor.family_name}
+                  return (
+                    <Card
+                      key={index}
+                      className="group bg-card border rounded-xl hover-lift shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md"
+                      onClick={handleRowClick}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                              {x.course.name ? x.course.name : "Unnamed Course"}
+                            </h3>
+                            <div className="space-y-1">
+                              <div className="text-sm text-muted-foreground">
+                                Instructor: {x.course.instructor.name}{" "}
+                                {x.course.instructor.family_name}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {x.course.section
+                                  ? `${x.course.term ? x.course.term : ""} ${
+                                      x.course.year ? x.course.year : ""
+                                    } - ${x.course.section}`
+                                  : `${x.course.term ? x.course.term : ""} ${
+                                      x.course.year ? x.course.year : ""
+                                    }`}
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            {x.course.section
-                              ? `${x.course.term ? x.course.term : ""} ${
-                                  x.course.year ? x.course.year : ""
-                                } - ${x.course.section}`
-                              : `${x.course.term ? x.course.term : ""} ${
-                                  x.course.year ? x.course.year : ""
-                                }`}
+                          <div className="text-right ml-4">
+                            <div className="text-sm text-muted-foreground mb-1">
+                              Sign up code: {x.course.signUpCode}
+                            </div>
+                            <div className="text-base font-semibold text-foreground">
+                              {x.users.length} Students
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right ml-4">
-                        <div className="text-sm text-muted-foreground mb-1">
-                          Sign up code: {x.course.signUpCode}
+                        <div className="text-xs text-muted-foreground italic">
+                          Click to view course details
                         </div>
-                        <div className="text-base font-semibold text-foreground">
-                          {x.users.length} Students
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xs text-muted-foreground italic">
-                      Click to view course details
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      </CardContent>
+                    </Card>
+                  );
+                }
+              )
+            )}
           </div>
         </section>
       </div>

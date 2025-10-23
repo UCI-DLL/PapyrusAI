@@ -10,26 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { Badge } from "../../components/ui/badge";
 import {
   Card,
@@ -401,120 +384,96 @@ export default function CreateCourse({
   return (
     <div className="min-h-screen">
       {/* Dialogs */}
-      <Dialog
+      <DialogWrapper
         open={showSavePublishTooltip}
         onOpenChange={setShowSavePublishTooltip}
+        title="What is Save & Publish?"
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Got it",
+            onClick: () => setShowSavePublishTooltip(false),
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5 " />
-              What is Save & Publish?
-            </DialogTitle>
-          </DialogHeader>
-          <DialogDescription className="space-y-3">
-            <p>
-              To save and publish (i.e., make visible to students) your course,
-              select <strong>"Save & Publish"</strong>.
-            </p>
-            <p>
-              If you want to save your course without publishing the course,
-              select <strong>"Save without Publishing"</strong>.
-            </p>
-            <p className="text-amber-600 dark:text-amber-500 text-sm">
-              <strong>Note:</strong> Choosing this option after the course has
-              already been published will unpublish the course.
-            </p>
-          </DialogDescription>
-          <DialogFooter>
-            <Button onClick={() => setShowSavePublishTooltip(false)}>
-              Got it
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <div className="space-y-3">
+          <p>
+            To save and publish (i.e., make visible to students) your course,
+            select <strong>"Save & Publish"</strong>.
+          </p>
+          <p>
+            If you want to save your course without publishing the course,
+            select <strong>"Save without Publishing"</strong>.
+          </p>
+          <p className="text-amber-600 dark:text-amber-500 text-sm">
+            <strong>Note:</strong> Choosing this option after the course has
+            already been published will unpublish the course.
+          </p>
+        </div>
+      </DialogWrapper>
 
-      <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-destructive">
-              Discard Changes?
-            </DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            Are you sure you would like to discard the changes to this course?
-            This action cannot be undone.
-          </DialogDescription>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenDiscardModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={() => navigator(-1)}>
-              Discard Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDiscardModal}
+        onOpenChange={setOpenDiscardModal}
+        title="Discard Changes?"
+        description="Are you sure you would like to discard the changes to this course? This action cannot be undone."
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDiscardModal(false),
+            variant: "outline",
+          },
+          {
+            label: "Discard Changes",
+            onClick: () => navigator(-1),
+            variant: "destructive",
+          },
+        ]}
+      />
 
       {/* Edit-specific dialogs */}
       {isEditMode && (
         <>
-          <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-destructive">
-                  Delete Course?
-                </DialogTitle>
-              </DialogHeader>
-              <DialogDescription>
-                Are you sure you would like to permanently delete this course?
-                This action cannot be undone.
-              </DialogDescription>
-              <DialogFooter className="gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenDeleteModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={(e) => handleSubmit(e, false, true)}
-                >
-                  Delete Course
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <DialogWrapper
+            open={openDeleteModal}
+            onOpenChange={setOpenDeleteModal}
+            title="Delete Course?"
+            description="Are you sure you would like to permanently delete this course? This action cannot be undone."
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () => setOpenDeleteModal(false),
+                variant: "outline",
+              },
+              {
+                label: "Delete Course",
+                onClick: () => handleSubmit(null, false, true),
+                variant: "destructive",
+              },
+            ]}
+          />
 
-          <Dialog open={openActiveModal} onOpenChange={setOpenActiveModal}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Unpublish Course?</DialogTitle>
-              </DialogHeader>
-              <DialogDescription>
-                This course is currently published and available to the public.
-                Continuing will make the course unavailable to students.
-              </DialogDescription>
-              <DialogFooter className="gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenActiveModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={(e) => handleSubmit(e, false, false)}
-                >
-                  Continue
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <DialogWrapper
+            open={openActiveModal}
+            onOpenChange={setOpenActiveModal}
+            title="Unpublish Course?"
+            description="This course is currently published and available to the public. Continuing will make the course unavailable to students."
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () => setOpenActiveModal(false),
+                variant: "outline",
+              },
+              {
+                label: "Continue",
+                onClick: () => handleSubmit(null, false, false),
+                variant: "default",
+              },
+            ]}
+          />
         </>
       )}
 
@@ -616,25 +575,18 @@ export default function CreateCourse({
                   Info
                 </Button>
                 {isEditMode && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setOpenDeleteModal(true)}
-                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          aria-label="Delete course"
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          Delete
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Delete Course</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <TooltipWrapper content="Delete Course">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOpenDeleteModal(true)}
+                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      aria-label="Delete course"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Delete
+                    </Button>
+                  </TooltipWrapper>
                 )}
                 <div className="flex rounded-lg border overflow-hidden">
                   <Button
@@ -658,11 +610,10 @@ export default function CreateCourse({
                   >
                     {options[selectedIndexSave]}
                   </Button>
-                  <DropdownMenu
+                  <DropdownWrapper
                     open={openSaveTop}
                     onOpenChange={setOpenSaveTop}
-                  >
-                    <DropdownMenuTrigger asChild>
+                    trigger={
                       <Button
                         size="sm"
                         className="rounded-none border-0 border-l px-2"
@@ -672,23 +623,23 @@ export default function CreateCourse({
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {options.map((option, index) => (
-                        <DropdownMenuItem
-                          key={option}
-                          onClick={(event) => handleMenuItemClick(event, index)}
-                          className={cn(
-                            index === selectedIndexSave && "bg-accent",
-                            index === 2 &&
-                              "text-destructive focus:text-destructive"
-                          )}
-                        >
-                          {option}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    }
+                    actions={options.map((option, index) => ({
+                      label: option,
+                      onClick: () => {
+                        const fakeEvent = {} as React.MouseEvent<
+                          HTMLDivElement,
+                          MouseEvent
+                        >;
+                        handleMenuItemClick(fakeEvent, index);
+                      },
+                      className: cn(
+                        index === selectedIndexSave && "bg-accent",
+                        index === 2 && "text-destructive focus:text-destructive"
+                      ),
+                    }))}
+                    align="end"
+                  />
                 </div>
               </nav>
             </header>
@@ -714,17 +665,9 @@ export default function CreateCourse({
                     <Label htmlFor="name" className="text-sm font-medium">
                       Course Name *
                     </Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          The name for your course that users will see upon
-                          joining.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <TooltipWrapper content="The name for your course that users will see upon joining.">
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipWrapper>
                   </div>
                   <Input
                     id="name"
@@ -753,18 +696,9 @@ export default function CreateCourse({
                     <Label htmlFor="signUpCode" className="text-sm font-medium">
                       Course Sign Up Code *
                     </Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          The unique sign up code that users will use to join
-                          your course. You can use any combination of letters
-                          and numbers. This is case sensitive.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <TooltipWrapper content="The unique sign up code that users will use to join your course. You can use any combination of letters and numbers. This is case sensitive.">
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipWrapper>
                   </div>
                   <Input
                     id="signUpCode"
@@ -809,14 +743,9 @@ export default function CreateCourse({
                       <Label htmlFor="year" className="text-sm font-medium">
                         Year
                       </Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>The year in which your course is taking place.</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <TooltipWrapper content="The year in which your course is taking place.">
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipWrapper>
                     </div>
                     <Input
                       id="year"
@@ -848,14 +777,9 @@ export default function CreateCourse({
                       <Label htmlFor="term" className="text-sm font-medium">
                         Term
                       </Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>The term in which your course is taking place.</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <TooltipWrapper content="The term in which your course is taking place.">
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipWrapper>
                     </div>
                     <Select
                       value={session.term}
@@ -892,14 +816,9 @@ export default function CreateCourse({
                       <Label htmlFor="section" className="text-sm font-medium">
                         Section / Period
                       </Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>The section number or period for your course.</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <TooltipWrapper content="The section number or period for your course.">
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipWrapper>
                     </div>
                     <Input
                       id="section"
@@ -1104,25 +1023,18 @@ export default function CreateCourse({
                   Info
                 </Button>
                 {isEditMode && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setOpenDeleteModal(true)}
-                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          aria-label="Delete course"
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          Delete
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Delete Course</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <TooltipWrapper content="Delete Course">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOpenDeleteModal(true)}
+                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      aria-label="Delete course"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Delete
+                    </Button>
+                  </TooltipWrapper>
                 )}
                 <div className="flex rounded-lg border overflow-hidden">
                   <Button
@@ -1146,11 +1058,10 @@ export default function CreateCourse({
                   >
                     {options[selectedIndexSave]}
                   </Button>
-                  <DropdownMenu
+                  <DropdownWrapper
                     open={openSaveBottom}
                     onOpenChange={setOpenSaveBottom}
-                  >
-                    <DropdownMenuTrigger asChild>
+                    trigger={
                       <Button
                         size="sm"
                         className="rounded-none border-0 border-l px-2"
@@ -1160,23 +1071,23 @@ export default function CreateCourse({
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {options.map((option, index) => (
-                        <DropdownMenuItem
-                          key={option}
-                          onClick={(event) => handleMenuItemClick(event, index)}
-                          className={cn(
-                            index === selectedIndexSave && "bg-accent",
-                            index === 2 &&
-                              "text-destructive focus:text-destructive"
-                          )}
-                        >
-                          {option}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    }
+                    actions={options.map((option, index) => ({
+                      label: option,
+                      onClick: () => {
+                        const fakeEvent = {} as React.MouseEvent<
+                          HTMLDivElement,
+                          MouseEvent
+                        >;
+                        handleMenuItemClick(fakeEvent, index);
+                      },
+                      className: cn(
+                        index === selectedIndexSave && "bg-accent",
+                        index === 2 && "text-destructive focus:text-destructive"
+                      ),
+                    }))}
+                    align="end"
+                  />
                 </div>
               </nav>
             </section>

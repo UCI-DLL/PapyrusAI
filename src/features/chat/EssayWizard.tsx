@@ -2,7 +2,13 @@ import React, { useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import {
   Select,
@@ -11,14 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../../components/ui/dialog";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { PenTool, Paperclip, Send } from "lucide-react";
 import DocumentModal from "./DocumentModal";
 import { PromptType } from "../../utility/types/CourseTypes";
@@ -76,17 +75,16 @@ export default function EssayWizard({
 
   return (
     <div className="p-4 space-y-4">
-      <Dialog open={openDocumentModal} onOpenChange={setOpenDocumentModal}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Upload Document</DialogTitle>
-            <DialogDescription>
-              Upload a document to use as your essay content
-            </DialogDescription>
-          </DialogHeader>
-          <DocumentModal returnDocText={returnDocText} />
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDocumentModal}
+        onOpenChange={setOpenDocumentModal}
+        title="Upload Document"
+        description="Upload a document to use as your essay content"
+        contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        showFooter={false}
+      >
+        <DocumentModal returnDocText={returnDocText} />
+      </DialogWrapper>
 
       <Card className="border shadow-sm">
         <CardHeader>
@@ -115,7 +113,8 @@ export default function EssayWizard({
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
-                Select the prompt with which you would like to begin your conversation with the AI.
+                Select the prompt with which you would like to begin your
+                conversation with the AI.
               </p>
             </div>
           )}
@@ -123,18 +122,14 @@ export default function EssayWizard({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="essay-content">Essay Content</Label>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setOpenDocumentModal(true)}
-                  >
-                    <Paperclip className="mr-2 h-4 w-4" />
-                    Upload File
-                  </Button>
-                </DialogTrigger>
-              </Dialog>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setOpenDocumentModal(true)}
+              >
+                <Paperclip className="mr-2 h-4 w-4" />
+                Upload File
+              </Button>
             </div>
             <Textarea
               id="essay-content"
@@ -143,17 +138,18 @@ export default function EssayWizard({
               onChange={(e) => handleEssayChange(e.target.value)}
               className="min-h-[200px] resize-none"
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.shiftKey) {
+                if (e.key === "Enter" && e.shiftKey) {
                   e.preventDefault();
-                  setEssay(prev => prev + "\n");
-                } else if (e.key === 'Enter' && !e.shiftKey) {
+                  setEssay((prev) => prev + "\n");
+                } else if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handleSubmit(e);
                 }
               }}
             />
             <p className="text-xs text-muted-foreground">
-              {essay.length.toLocaleString()} / 100,000 characters • Press Shift+Enter for new line, Enter to submit
+              {essay.length.toLocaleString()} / 100,000 characters • Press
+              Shift+Enter for new line, Enter to submit
             </p>
           </div>
 

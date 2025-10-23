@@ -38,19 +38,23 @@ export default function MissingUserInfoForm({
     name: string;
     family_name: string;
     theme: string; //"light" | "dark",
+    textSize: string; //"xs" | "sm" | "md" | "lg" | "xl"
   }>({
     name: "",
     family_name: "",
     theme: "light",
+    textSize: "md",
   });
   const [errors, setErrors] = useState<{
     name: string;
     family_name: string;
     theme: string;
+    textSize: string;
   }>({
     name: "",
     family_name: "",
     theme: "",
+    textSize: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setUser } = useContext(UserContext);
@@ -86,6 +90,20 @@ export default function MissingUserInfoForm({
           : "light";
         setSession((prev) => ({ ...prev, theme: normalizedTheme }));
       }
+      if (user && user["custom:textSize"] && user["custom:textSize"] !== "") {
+        // Keep all text size options
+        const normalizedTextSize = ["xs", "sm", "md", "lg", "xl"].includes(
+          user["custom:textSize"]
+        )
+          ? user["custom:textSize"]
+          : "md";
+        setSession((prev) => ({ ...prev, textSize: normalizedTextSize }));
+        // Apply current text size to document
+        document.documentElement.setAttribute(
+          "data-text-size",
+          normalizedTextSize
+        );
+      }
       setIsLoading(false);
     }
   }, [user, closeForm, requireUpdate]);
@@ -112,7 +130,12 @@ export default function MissingUserInfoForm({
           }
         } else {
           // set errors
-          setErrors({ name: res.data, family_name: res.data, theme: res.data });
+          setErrors({
+            name: res.data,
+            family_name: res.data,
+            theme: res.data,
+            textSize: res.data,
+          });
         }
         // set is loading back
         setIsLoading(false);
@@ -136,6 +159,20 @@ export default function MissingUserInfoForm({
     }
     // Apply theme change - supports light, dark, colorful-light, and colorful-dark themes
     changeTheme(root, e.target.value);
+  }
+
+  function handleTextSizeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const root = document.documentElement;
+    if (user) {
+      setUser({ ...user, "custom:textSize": e.target.value });
+      localStorage.setItem(
+        "papyrusai_user",
+        JSON.stringify({ ...user, "custom:textSize": e.target.value })
+      );
+    }
+    // Apply text size change
+    root.setAttribute("data-text-size", e.target.value);
   }
 
   return (
@@ -265,6 +302,76 @@ export default function MissingUserInfoForm({
                 role="alert"
               >
                 {errors.theme}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Text Size</Label>
+            <RadioGroup
+              value={session.textSize}
+              onValueChange={(value) => {
+                const event = {
+                  target: { name: "textSize", value },
+                } as React.ChangeEvent<HTMLInputElement>;
+                handleTextSizeChange(event);
+              }}
+              className="flex flex-col space-y-3"
+              aria-describedby={errors.textSize ? "text-size-error" : undefined}
+            >
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="xs" id="text-xs" />
+                <Label
+                  htmlFor="text-xs"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Extra Small
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="sm" id="text-sm" />
+                <Label
+                  htmlFor="text-sm"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Small
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="md" id="text-md" />
+                <Label
+                  htmlFor="text-md"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Medium (Default)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="lg" id="text-lg" />
+                <Label
+                  htmlFor="text-lg"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Large
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="xl" id="text-xl" />
+                <Label
+                  htmlFor="text-xl"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Extra Large
+                </Label>
+              </div>
+            </RadioGroup>
+            {errors.textSize && (
+              <p
+                id="text-size-error"
+                className="text-sm text-destructive"
+                role="alert"
+              >
+                {errors.textSize}
               </p>
             )}
           </div>

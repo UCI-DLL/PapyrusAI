@@ -245,7 +245,10 @@ export default function CreateCourse({
           // handle error
         }
       }
-      setIsLoading(false);
+      // Only set loading to false if we're not in edit mode or if course data is already loaded
+      if (!isEditMode || prevSession) {
+        setIsLoading(false);
+      }
     });
   }
 
@@ -478,7 +481,7 @@ export default function CreateCourse({
       )}
 
       {/* Main Content */}
-      {!error && (isEditMode ? prevSession : true) ? (
+      {!error && (isEditMode ? prevSession || isLoading : true) ? (
         <div className="bg-background text-foreground p-4 space-y-6">
           {/* Standard Page Header Pattern */}
           <header className="animate-in slide-in-from-bottom-4 duration-700">
@@ -1001,97 +1004,98 @@ export default function CreateCourse({
                 </div>
               </CardContent>
             </Card>
-
-            {/* Bottom Actions */}
-            <section aria-labelledby="bottom-actions-heading" className="pt-4">
-              <nav
-                className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
-                role="toolbar"
-                aria-label={
-                  isEditMode
-                    ? "Course editing actions"
-                    : "Course creation actions"
-                }
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSavePublishTooltip(true)}
-                  aria-label="Get help with Save & Publish options"
-                >
-                  <Info className="h-4 w-4" aria-hidden="true" />
-                  Info
-                </Button>
-                {isEditMode && (
-                  <TooltipWrapper content="Delete Course">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setOpenDeleteModal(true)}
-                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      aria-label="Delete course"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      Delete
-                    </Button>
-                  </TooltipWrapper>
-                )}
-                <div className="flex rounded-lg border overflow-hidden">
-                  <Button
-                    size="sm"
-                    onClick={(e) => {
-                      if (selectedIndexSave === 0) {
-                        handleSubmit(e, true, false);
-                      } else if (selectedIndexSave === 1) {
-                        if (isEditMode && session.isActive) {
-                          setOpenActiveModal(true);
-                        } else {
-                          handleSubmit(e, false, false);
-                        }
-                      } else if (selectedIndexSave === 2) {
-                        setOpenDiscardModal(true);
-                      }
-                    }}
-                    className="rounded-none border-0"
-                    disabled={isLoading}
-                    aria-label={`${options[selectedIndexSave]} course`}
-                  >
-                    {options[selectedIndexSave]}
-                  </Button>
-                  <DropdownWrapper
-                    open={openSaveBottom}
-                    onOpenChange={setOpenSaveBottom}
-                    trigger={
-                      <Button
-                        size="sm"
-                        className="rounded-none border-0 border-l px-2"
-                        variant="default"
-                        disabled={isLoading}
-                        aria-label="Select save and activation strategy"
-                      >
-                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    }
-                    actions={options.map((option, index) => ({
-                      label: option,
-                      onClick: () => {
-                        const fakeEvent = {} as React.MouseEvent<
-                          HTMLDivElement,
-                          MouseEvent
-                        >;
-                        handleMenuItemClick(fakeEvent, index);
-                      },
-                      className: cn(
-                        index === selectedIndexSave && "bg-accent",
-                        index === 2 && "text-destructive focus:text-destructive"
-                      ),
-                    }))}
-                    align="end"
-                  />
-                </div>
-              </nav>
-            </section>
           </form>
+
+          {/* Bottom Actions */}
+          <section aria-labelledby="bottom-actions-heading" className="pt-4">
+            <nav
+              className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+              role="toolbar"
+              aria-label={
+                isEditMode
+                  ? "Course editing actions"
+                  : "Course creation actions"
+              }
+            >
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSavePublishTooltip(true)}
+                aria-label="Get help with Save & Publish options"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                Info
+              </Button>
+              {isEditMode && (
+                <TooltipWrapper content="Delete Course">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setOpenDeleteModal(true)}
+                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    aria-label="Delete course"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    Delete
+                  </Button>
+                </TooltipWrapper>
+              )}
+              <div className="flex rounded-lg border overflow-hidden">
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    if (selectedIndexSave === 0) {
+                      handleSubmit(e, true, false);
+                    } else if (selectedIndexSave === 1) {
+                      if (isEditMode && session.isActive) {
+                        setOpenActiveModal(true);
+                      } else {
+                        handleSubmit(e, false, false);
+                      }
+                    } else if (selectedIndexSave === 2) {
+                      setOpenDiscardModal(true);
+                    }
+                  }}
+                  className="rounded-none border-0"
+                  disabled={isLoading}
+                  aria-label={`${options[selectedIndexSave]} course`}
+                >
+                  {options[selectedIndexSave]}
+                </Button>
+                <DropdownWrapper
+                  open={openSaveBottom}
+                  onOpenChange={setOpenSaveBottom}
+                  trigger={
+                    <Button
+                      size="sm"
+                      className="rounded-none border-0 border-l px-2"
+                      variant="default"
+                      disabled={isLoading}
+                      aria-label="Select save and activation strategy"
+                    >
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  }
+                  actions={options.map((option, index) => ({
+                    label: option,
+                    onClick: () => {
+                      const fakeEvent = {} as React.MouseEvent<
+                        HTMLDivElement,
+                        MouseEvent
+                      >;
+                      handleMenuItemClick(fakeEvent, index);
+                    },
+                    className: cn(
+                      index === selectedIndexSave && "bg-accent",
+                      index === 2 && "text-destructive focus:text-destructive"
+                    ),
+                  }))}
+                  align="end"
+                />
+              </div>
+            </nav>
+          </section>
         </div>
       ) : (
         <div className="bg-background text-foreground p-4">

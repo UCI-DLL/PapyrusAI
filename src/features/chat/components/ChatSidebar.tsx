@@ -50,7 +50,7 @@ export default function ChatSidebar({
   ).reverse() || [];
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
@@ -115,72 +115,72 @@ export default function ChatSidebar({
       </div>
 
       {/* Conversations List */}
-      <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full">
-        {filteredConversations.length > 0 ? (
-          <div className="space-y-1 p-2">
-            {filteredConversations.map((conversation) => {
-              const conversationIndex = conversationList?.conversations
-                ? conversationList.conversations.findIndex(c => c.id === conversation.id)
-                : 0;
-              const isCurrentConversation = conversationIndex.toString() === currentConversationIndex;
-              const conversationLink = `/chat/${user?.username}/${courseInfo.id}/${moduleInfo.id}/${conversationIndex}`;
+      <div className="flex-1 min-h-0 border-darkest-blue">
+        <ScrollArea className="h-full border-darkest-blue">
+          {filteredConversations.length > 0 ? (
+            <div className="space-y-1 p-2">
+              {filteredConversations.map((conversation) => {
+                const conversationIndex = conversationList?.conversations
+                  ? conversationList.conversations.findIndex(c => c.id === conversation.id)
+                  : 0;
+                const isCurrentConversation = conversationIndex.toString() === currentConversationIndex;
+                const conversationLink = `/chat/${user?.username}/${courseInfo.id}/${moduleInfo.id}/${conversationIndex}`;
 
-              return (
-                <div
-                  key={conversation.id}
-                  className={cn(
-                    "rounded-lg p-3 cursor-pointer transition-colors border",
-                    isCurrentConversation
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "hover:bg-accent border-transparent"
-                  )}
-                  onClick={() => onConversationClick(conversationLink)}
-                >
-                  <div className="space-y-1">
-                    <p className={cn(
-                      "text-sm font-medium truncate",
-                      isCurrentConversation ? "text-primary-foreground" : "text-foreground"
-                    )}>
-                      {conversation.name}
-                    </p>
-                    <p className={cn(
-                      "text-xs truncate",
-                      isCurrentConversation ? "text-primary-foreground/70" : "text-muted-foreground"
-                    )}>
-                      {new Date(parseInt(conversation.id.substring(0, 13))).toLocaleDateString()}
-                    </p>
+                return (
+                  <div
+                    key={conversation.id}
+                    className={cn(
+                      "rounded-lg p-3 cursor-pointer transition-colors border",
+                      isCurrentConversation
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "hover:bg-accent border-transparent"
+                    )}
+                    onClick={() => onConversationClick(conversationLink)}
+                  >
+                    <div className="space-y-1">
+                      <p className={cn(
+                        "text-sm font-medium truncate",
+                        isCurrentConversation ? "text-primary-foreground" : "text-foreground"
+                      )}>
+                        {conversation.name}
+                      </p>
+                      <p className={cn(
+                        "text-xs truncate",
+                        isCurrentConversation ? "text-primary-foreground/70" : "text-muted-foreground"
+                      )}>
+                        {new Date(parseInt(conversation.id.substring(0, 13))).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground p-4">
-            <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">
-              {searchTerm ? "No matching conversations" : "No conversations yet"}
-            </p>
-            {!searchTerm && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  onNewConversation();
-                  if (isMobile && onClose) onClose();
-                }}
-                disabled={creatingConvo}
-                className="mt-3 text-xs"
-              >
-                {creatingConvo ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                  <Plus className="mr-1 h-3 w-3" />
-                )}
-                Start conversation
-              </Button>
-            )}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground p-4">
+              <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">
+                {searchTerm ? "No matching conversations" : "No conversations yet"}
+              </p>
+              {!searchTerm && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    onNewConversation();
+                    if (isMobile && onClose) onClose();
+                  }}
+                  disabled={creatingConvo}
+                  className="mt-3 text-xs"
+                >
+                  {creatingConvo ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <Plus className="mr-1 h-3 w-3" />
+                  )}
+                  Start conversation
+                </Button>
+              )}
+            </div>
+          )}
         </ScrollArea>
       </div>
     </div>
@@ -205,7 +205,7 @@ export default function ChatSidebar({
   }
 
   return (
-    <div className="hidden lg:flex w-80 border-l border-border bg-card h-screen">
+    <div className="hidden lg:flex w-80 border-l border-border bg-card" style={{ height: "calc(100vh - 4rem)" }}>
       {sidebarContent}
     </div>
   );

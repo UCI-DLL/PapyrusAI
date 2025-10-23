@@ -76,7 +76,7 @@ export default function Chat(): JSX.Element {
     useState<ConversationListType>();
   const [creatingConvo, setCreatingConvo] = useState<boolean>(false);
   const [messageNote, setMessageNote] = useState<string>();
-  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
+  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{ //used for autonaming also
     open: boolean;
     deleteOpen: boolean;
     courseId: string;
@@ -270,8 +270,7 @@ export default function Chat(): JSX.Element {
           if (res && res.status === 400) {
             setAlert({ message: "Conversation not found", type: "error" });
             navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${
-                location.pathname.split("/")[4]
+              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
               }`
             );
           }
@@ -553,7 +552,7 @@ export default function Chat(): JSX.Element {
             .concat(messageList)
             .filter(
               (m) =>
-                (m.promptId === null || m.promptId === "") && m.role === "user"
+                (m.promptId === null || m.promptId === "") && m.role === "user" && m.userVisible
             ).length === 1
         ) {
           autoCreateConvoName(messagesToSend);
@@ -624,6 +623,7 @@ export default function Chat(): JSX.Element {
         sender: "username",
         timestamp: messageTempId,
         promptId: null,
+        userVisible: true,
       };
       onSendMessage([responseMessage], autoCreateConvoName);
     } else if (message.length < 1) {
@@ -638,45 +638,58 @@ export default function Chat(): JSX.Element {
     messages: Array<{ role: string; content: string }>
   ) {
     if (user) {
-      Post(
-        postAutoCreateConvoName(
-          openUpdateConvoModal.courseId,
-          openUpdateConvoModal.moduleId,
-          openUpdateConvoModal.index.toString(),
-          user?.username
-        ),
-        { messages: messages }
-      ).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            setOpenUpdateConvoModal({
-              open: false,
-              deleteOpen: false,
-              courseId: location.pathname.split("/")[3],
-              moduleId: location.pathname.split("/")[4],
-              index: location.pathname.split("/")[5],
-              name: res.data.conversations[location.pathname.split("/")[5]]
-                .name,
-              isDeleted:
-                res.data.conversations[location.pathname.split("/")[5]]
-                  .isDeleted,
-              completed: res.data.conversations[location.pathname.split("/")[5]]
-                .completed
-                ? res.data.conversations[location.pathname.split("/")[5]]
+      //set a timeout so that we aren't updating the same conversation 
+      // on the backend at the same time and overwritting
+      setTimeout(() => {
+        Post(
+          postAutoCreateConvoName(
+            openUpdateConvoModal.courseId,
+            openUpdateConvoModal.moduleId,
+            openUpdateConvoModal.index.toString(),
+            user?.username
+          ),
+          { messages: messages }
+        ).then((res) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //update conversation list with new convo name
+              setConversationList((prev) => {
+                if (prev) {
+                  var convos = prev.conversations;
+                  const index = parseInt(conversationIds ? conversationIds.conversationIndex : "")
+                  convos[index].name = res.data.conversations[index].name
+                  return { ...prev, conversations: convos }
+                } else return prev
+              });
+              setOpenUpdateConvoModal({
+                open: false,
+                deleteOpen: false,
+                courseId: location.pathname.split("/")[3],
+                moduleId: location.pathname.split("/")[4],
+                index: location.pathname.split("/")[5],
+                name: res.data.conversations[location.pathname.split("/")[5]]
+                  .name,
+                isDeleted:
+                  res.data.conversations[location.pathname.split("/")[5]]
+                    .isDeleted,
+                completed: res.data.conversations[location.pathname.split("/")[5]]
+                  .completed
+                  ? res.data.conversations[location.pathname.split("/")[5]]
                     .completed
-                : false,
-              error: "",
+                  : false,
+                error: "",
+              })
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            setOpenErrorModal({
+              open: true,
+              message: "Something went wrong. Try again later",
             });
           }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          setOpenErrorModal({
-            open: true,
-            message: "Something went wrong. Try again later",
-          });
-        }
-      });
+        });
+      }, 15000)
     }
   }
 
@@ -797,8 +810,7 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
             if (res.data.conversations) {
               navigator(
-                `/chat/${user?.username}/${conversationIds.courseId}/${
-                  conversationIds.moduleId
+                `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId
                 }/${res.data.conversations.length - 1}`
               );
             }
@@ -944,13 +956,12 @@ export default function Chat(): JSX.Element {
               completed: res.data.conversations[location.pathname.split("/")[5]]
                 .completed
                 ? res.data.conversations[location.pathname.split("/")[5]]
-                    .completed
+                  .completed
                 : false,
               error: "",
             });
             navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${
-                location.pathname.split("/")[4]
+              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
               }`
             );
           }
@@ -1002,7 +1013,7 @@ export default function Chat(): JSX.Element {
                   location.pathname.split("/")[5]
                 ].completed
                   ? res.data.conversations[location.pathname.split("/")[5]]
-                      .completed
+                    .completed
                   : false,
                 error: "",
               });
@@ -1032,7 +1043,7 @@ export default function Chat(): JSX.Element {
     !openUpdateConvoModal.completed;
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
-    <div className="min-h-screen lg:h-screen flex bg-background text-foreground">
+    <div className="flex bg-background text-foreground">
       {/* Error Modal */}
       <Dialog
         open={openErrorModal.open}
@@ -1220,7 +1231,7 @@ export default function Chat(): JSX.Element {
       </Dialog>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:h-full">
+      <div className="flex-1 flex flex-col min-w-0" style={sidebarOpen ? { height: "calc(100vh - 4rem)" } : {}}>
         {/* Chat Header */}
         <ChatHeader
           conversationName={openUpdateConvoModal.name || "Chat Title"}

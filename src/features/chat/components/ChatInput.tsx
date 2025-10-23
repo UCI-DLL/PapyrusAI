@@ -71,7 +71,7 @@ export default function ChatInput({
   }
 
   return (
-    <div className="border-t border-border bg-card flex-shrink-0 lg:sticky lg:bottom-0 z-10">
+    <div className="border-t border-border bg-card flex-shrink-0 sticky bottom-0 z-10 w-full">
       <div className="p-4 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div className="relative flex items-end gap-3 p-3 border rounded-lg bg-background shadow-sm">
@@ -94,7 +94,7 @@ export default function ChatInput({
             </TooltipProvider>
 
             <Textarea
-              placeholder="Ask me anything about your studies..."
+              placeholder="Enter message..."
               value={message}
               disabled={isLoading}
               className="flex-1 min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-6"

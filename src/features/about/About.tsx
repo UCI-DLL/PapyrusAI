@@ -1,6 +1,11 @@
 import React from "react";
 import Markdown from "react-markdown";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Info } from "lucide-react";
 
 export default function About(): JSX.Element {
@@ -40,7 +45,7 @@ If you want to learn more about what we're doing or want to get involved, email 
         <div className="w-full">
           <Card className="border shadow-sm transition-all duration-300 hover:shadow-md">
             <CardHeader>
-              <CardTitle 
+              <CardTitle
                 id="about-content"
                 className="flex items-center gap-2 text-2xl font-bold text-foreground"
               >
@@ -50,7 +55,7 @@ If you want to learn more about what we're doing or want to get involved, email 
             </CardHeader>
             <CardContent>
               <div className="prose prose-sm max-w-none">
-                <Markdown 
+                <Markdown
                   className="space-y-4"
                   components={{
                     p: ({ children }) => (
@@ -59,9 +64,9 @@ If you want to learn more about what we're doing or want to get involved, email 
                       </p>
                     ),
                     a: ({ href, children }) => (
-                      <a 
-                        href={href} 
-                        target="_blank" 
+                      <a
+                        href={href}
+                        target="_blank"
                         rel="noreferrer"
                         className="text-primary underline underline-offset-2 hover:no-underline font-medium transition-colors duration-200"
                       >

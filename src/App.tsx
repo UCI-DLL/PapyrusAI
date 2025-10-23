@@ -80,6 +80,11 @@ function App(): JSX.Element {
     if (user) {
       const userTheme = user["custom:theme"] ? user["custom:theme"] : "light";
       changeTheme(root, userTheme);
+
+      const userTextSize = user["custom:textSize"]
+        ? user["custom:textSize"]
+        : "md";
+      root.setAttribute("data-text-size", userTextSize);
     }
   }, [user]);
 

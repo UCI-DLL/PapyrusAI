@@ -232,6 +232,27 @@
 }
 
 @layer utilities {
+  /* Text Size Variants */
+  :root[data-text-size="xs"] {
+    font-size: 12px;
+  }
+
+  :root[data-text-size="sm"] {
+    font-size: 14px;
+  }
+
+  :root[data-text-size="md"] {
+    font-size: 16px;
+  }
+
+  :root[data-text-size="lg"] {
+    font-size: 18px;
+  }
+
+  :root[data-text-size="xl"] {
+    font-size: 20px;
+  }
+
   /* Text Colors */
   .text-primary {
     color: var(--color-primary);

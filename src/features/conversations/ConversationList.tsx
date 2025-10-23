@@ -4,20 +4,8 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import Get from "../../utility/Get";
 import {
   Loader2,
@@ -310,7 +298,7 @@ export default function ConversationList(): JSX.Element {
         </div>
       ) : (
         <>
-          <Dialog
+          <DialogWrapper
             open={openUpdateConvoModal.deleteOpen}
             onOpenChange={(isOpen) => {
               if (!isOpen) {
@@ -326,53 +314,38 @@ export default function ConversationList(): JSX.Element {
                 });
               }
             }}
-          >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <EyeOff className="h-5 w-5" />
-                  Hide Conversation?
-                </DialogTitle>
-                <DialogDescription>
-                  Are you sure you would like to hide this conversation?
-                  Instructors can still view hidden conversations.
-                </DialogDescription>
-              </DialogHeader>
+            title="Hide Conversation?"
+            description="Are you sure you would like to hide this conversation? Instructors can still view hidden conversations."
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () =>
+                  setOpenUpdateConvoModal({
+                    open: false,
+                    deleteOpen: false,
+                    courseId: "",
+                    moduleId: "",
+                    index: 0,
+                    name: "",
+                    isDeleted: false,
+                    error: "",
+                  }),
+                variant: "outline",
+              },
+              {
+                label: "Hide Conversation",
+                onClick: () =>
+                  handleConverstionNameDeleteUpdate({
+                    ...openUpdateConvoModal,
+                    isDeleted: true,
+                  }),
+                variant: "destructive",
+              },
+            ]}
+          />
 
-              <DialogFooter className="flex-col gap-2 sm:flex-row">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setOpenUpdateConvoModal({
-                      open: false,
-                      deleteOpen: false,
-                      courseId: "",
-                      moduleId: "",
-                      index: 0,
-                      name: "",
-                      isDeleted: false,
-                      error: "",
-                    })
-                  }
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() =>
-                    handleConverstionNameDeleteUpdate({
-                      ...openUpdateConvoModal,
-                      isDeleted: true,
-                    })
-                  }
-                >
-                  Hide Conversation
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog
+          <DialogWrapper
             open={openUpdateConvoModal.open}
             onOpenChange={(isOpen) => {
               if (!isOpen) {
@@ -388,78 +361,68 @@ export default function ConversationList(): JSX.Element {
                 });
               }
             }}
+            title="Rename Conversation"
+            description="Enter a new name for this conversation."
+            contentClassName="sm:max-w-md"
+            showFooter={false}
           >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Edit className="h-5 w-5" />
-                  Rename Conversation
-                </DialogTitle>
-                <DialogDescription>
-                  Enter a new name for this conversation.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    name="name"
-                    placeholder="Conversation Name"
-                    value={openUpdateConvoModal.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setOpenUpdateConvoModal((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                        error: "", // Clear error when user types
-                      }));
-                    }}
-                    disabled={isLoading}
-                    className={cn(
-                      openUpdateConvoModal.error && "border-destructive"
-                    )}
-                  />
-                  {openUpdateConvoModal.error && (
-                    <p className="text-sm text-destructive">
-                      {openUpdateConvoModal.error}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <DialogFooter className="flex-col gap-2 sm:flex-row">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setOpenUpdateConvoModal({
-                      open: false,
-                      deleteOpen: false,
-                      courseId: "",
-                      moduleId: "",
-                      index: 0,
-                      name: "",
-                      isDeleted: false,
-                      error: "",
-                    })
-                  }
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  name="name"
+                  placeholder="Conversation Name"
+                  value={openUpdateConvoModal.name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setOpenUpdateConvoModal((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                      error: "", // Clear error when user types
+                    }));
+                  }}
                   disabled={isLoading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() =>
-                    handleConverstionNameDeleteUpdate(openUpdateConvoModal)
-                  }
-                  disabled={isLoading || !openUpdateConvoModal.name.trim()}
-                  className="w-full sm:w-auto"
-                >
-                  {isLoading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  className={cn(
+                    openUpdateConvoModal.error && "border-destructive"
                   )}
-                  Update Name
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                />
+                {openUpdateConvoModal.error && (
+                  <p className="text-sm text-destructive">
+                    {openUpdateConvoModal.error}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end pt-4">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setOpenUpdateConvoModal({
+                    open: false,
+                    deleteOpen: false,
+                    courseId: "",
+                    moduleId: "",
+                    index: 0,
+                    name: "",
+                    isDeleted: false,
+                    error: "",
+                  })
+                }
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() =>
+                  handleConverstionNameDeleteUpdate(openUpdateConvoModal)
+                }
+                disabled={isLoading || !openUpdateConvoModal.name.trim()}
+                className="w-full sm:w-auto"
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update Name
+              </Button>
+            </div>
+          </DialogWrapper>
 
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -587,140 +550,128 @@ export default function ConversationList(): JSX.Element {
                       return conversation.isDeleted && !viewUser ? (
                         <div key={index}></div>
                       ) : (
-                        <TooltipProvider key={index}>
-                          <Card className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-4">
-                              <div className="flex items-center justify-between gap-4">
-                                {/* Conversation Info */}
-                                <Link
-                                  to={link}
-                                  className="flex-1 min-w-0 no-underline group"
-                                >
-                                  <div className="space-y-1">
-                                    <p className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors truncate no-underline">
-                                      {conversation.name}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground flex items-center gap-1 no-underline">
-                                      <Clock className="h-3 w-3" />
-                                      Created: {time}
-                                    </p>
-                                  </div>
-                                </Link>
-
-                                {/* Actions */}
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  {viewUser ? (
-                                    <>
-                                      {conversation.isDeleted && (
-                                        <Badge
-                                          variant="destructive"
-                                          className="flex items-center gap-1"
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                          Deleted
-                                        </Badge>
-                                      )}
-                                      <Button
-                                        size="sm"
-                                        asChild
-                                        className="text-xs font-medium"
-                                      >
-                                        <Link
-                                          to={link}
-                                          className="flex items-center gap-1 no-underline"
-                                        >
-                                          <Eye className="h-3 w-3" />
-                                          View
-                                        </Link>
-                                      </Button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => {
-                                              setOpenUpdateConvoModal({
-                                                open: false,
-                                                deleteOpen: true,
-                                                courseId: moduleIds.courseId,
-                                                moduleId: moduleIds.moduleId,
-                                                index:
-                                                  conversationList.conversations
-                                                    .length -
-                                                  index -
-                                                  1,
-                                                name: conversation.name,
-                                                isDeleted:
-                                                  conversation.isDeleted,
-                                                error: "",
-                                              });
-                                            }}
-                                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                            aria-label="Hide Conversation"
-                                          >
-                                            <EyeOff className="h-3 w-3" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top">
-                                          Hide conversation (instructors can
-                                          still view)
-                                        </TooltipContent>
-                                      </Tooltip>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => {
-                                              setOpenUpdateConvoModal({
-                                                open: true,
-                                                deleteOpen: false,
-                                                courseId: moduleIds.courseId,
-                                                moduleId: moduleIds.moduleId,
-                                                index:
-                                                  conversationList.conversations
-                                                    .length -
-                                                  index -
-                                                  1,
-                                                name: conversation.name,
-                                                isDeleted:
-                                                  conversation.isDeleted,
-                                                error: "",
-                                              });
-                                            }}
-                                            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-                                            aria-label="Rename Conversation"
-                                          >
-                                            <Edit className="h-3 w-3" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top">
-                                          Rename conversation
-                                        </TooltipContent>
-                                      </Tooltip>
-                                      <Button
-                                        size="sm"
-                                        asChild
-                                        className="text-xs font-medium"
-                                      >
-                                        <Link
-                                          to={link}
-                                          className="flex items-center gap-1 no-underline"
-                                        >
-                                          <MessageSquare className="h-3 w-3" />
-                                          Chat
-                                        </Link>
-                                      </Button>
-                                    </>
-                                  )}
+                        <Card
+                          key={index}
+                          className="hover:shadow-md transition-shadow"
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between gap-4">
+                              {/* Conversation Info */}
+                              <Link
+                                to={link}
+                                className="flex-1 min-w-0 no-underline group"
+                              >
+                                <div className="space-y-1">
+                                  <p className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors truncate no-underline">
+                                    {conversation.name}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground flex items-center gap-1 no-underline">
+                                    <Clock className="h-3 w-3" />
+                                    Created: {time}
+                                  </p>
                                 </div>
+                              </Link>
+
+                              {/* Actions */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {viewUser ? (
+                                  <>
+                                    {conversation.isDeleted && (
+                                      <Badge
+                                        variant="destructive"
+                                        className="flex items-center gap-1"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                        Deleted
+                                      </Badge>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      asChild
+                                      className="text-xs font-medium"
+                                    >
+                                      <Link
+                                        to={link}
+                                        className="flex items-center gap-1 no-underline"
+                                      >
+                                        <Eye className="h-3 w-3" />
+                                        View
+                                      </Link>
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <TooltipWrapper content="Hide conversation (instructors can still view)">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          setOpenUpdateConvoModal({
+                                            open: false,
+                                            deleteOpen: true,
+                                            courseId: moduleIds.courseId,
+                                            moduleId: moduleIds.moduleId,
+                                            index:
+                                              conversationList.conversations
+                                                .length -
+                                              index -
+                                              1,
+                                            name: conversation.name,
+                                            isDeleted: conversation.isDeleted,
+                                            error: "",
+                                          });
+                                        }}
+                                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                        aria-label="Hide Conversation"
+                                      >
+                                        <EyeOff className="h-3 w-3" />
+                                      </Button>
+                                    </TooltipWrapper>
+                                    <TooltipWrapper content="Rename conversation">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          setOpenUpdateConvoModal({
+                                            open: true,
+                                            deleteOpen: false,
+                                            courseId: moduleIds.courseId,
+                                            moduleId: moduleIds.moduleId,
+                                            index:
+                                              conversationList.conversations
+                                                .length -
+                                              index -
+                                              1,
+                                            name: conversation.name,
+                                            isDeleted: conversation.isDeleted,
+                                            error: "",
+                                          });
+                                        }}
+                                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                                        aria-label="Rename Conversation"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                    </TooltipWrapper>
+                                    <Button
+                                      size="sm"
+                                      asChild
+                                      className="text-xs font-medium"
+                                    >
+                                      <Link
+                                        to={link}
+                                        className="flex items-center gap-1 no-underline"
+                                      >
+                                        <MessageSquare className="h-3 w-3" />
+                                        Chat
+                                      </Link>
+                                    </Button>
+                                  </>
+                                )}
                               </div>
-                            </CardContent>
-                          </Card>
-                        </TooltipProvider>
+                            </div>
+                          </CardContent>
+                        </Card>
                       );
                     })
                 ) : (

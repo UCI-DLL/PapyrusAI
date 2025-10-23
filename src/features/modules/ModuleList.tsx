@@ -3,20 +3,8 @@ import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "../../components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../../components/ui/dialog";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { CustomUserType, UserStarred } from "../../utility/types/UserTypes";
@@ -319,26 +307,27 @@ export default function ModuleList({
 
   return course.modules.length > 0 ? (
     <section>
-      <Dialog open={openCourseListModal} onOpenChange={setOpenCourseListModal}>
-        <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Copy Module To?</DialogTitle>
-            <DialogDescription>
-              Please select a course you would like to copy this module to.
-              Copying a module will copy over all module customizations,
-              including the module name, description, added assets, and
-              settings.
-            </DialogDescription>
-          </DialogHeader>
-          <section
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            role="list"
-            aria-label="Available courses"
-          >
-            {orderCourseRecentlyCreatedAndStarred(
-              courseList,
-              starredCourses
-            ).map((course) => (
+      <DialogWrapper
+        open={openCourseListModal}
+        onOpenChange={setOpenCourseListModal}
+        title="Copy Module To?"
+        description="Please select a course you would like to copy this module to. Copying a module will copy over all module customizations, including the module name, description, added assets, and settings."
+        contentClassName="sm:max-w-5xl max-h-[90vh] overflow-y-auto"
+        actions={[
+          {
+            label: "Close",
+            onClick: () => setOpenCourseListModal(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <section
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          role="list"
+          aria-label="Available courses"
+        >
+          {orderCourseRecentlyCreatedAndStarred(courseList, starredCourses).map(
+            (course) => (
               <div key={course.id} role="listitem">
                 <CourseCard
                   course={course}
@@ -355,20 +344,12 @@ export default function ModuleList({
                   )}
                 />
               </div>
-            ))}
-          </section>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenCourseListModal(false)}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            )
+          )}
+        </section>
+      </DialogWrapper>
 
-      <Dialog
+      <DialogWrapper
         open={openDuplicateModal.copyCourseId !== ""}
         onOpenChange={(open) =>
           !open &&
@@ -378,74 +359,69 @@ export default function ModuleList({
             copyCourseId: "",
           })
         }
+        title="Duplicate Module"
+        description="Please enter a unique name for your module. Duplicating the module will also copy over all settings within this module."
+        contentClassName="sm:max-w-md"
+        showFooter={false}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Duplicate Module</DialogTitle>
-            <DialogDescription>
-              Please enter a unique name for your module. Duplicating the module
-              will also copy over all settings within this module.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleCopyModuleTo();
-            }}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="module-name">Module Name</Label>
-              <Input
-                id="module-name"
-                name="name"
-                placeholder="New Module Name"
-                value={duplicateModuleData.name}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="publish-module"
-                checked={duplicateModuleData.isPublished}
-                onCheckedChange={(checked) => {
-                  setDuplicateModuleData((prev) => ({
-                    ...prev,
-                    isPublished: checked === true,
-                  }));
-                }}
-                disabled={isLoading}
-              />
-              <label
-                htmlFor="publish-module"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Publish Module
-              </label>
-            </div>
-            <DialogFooter className="flex-col gap-2 sm:flex-row">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setOpenDuplicateModal({
-                    courseId: "",
-                    moduleId: "",
-                    copyCourseId: "",
-                  })
-                }
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                Duplicate
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleCopyModuleTo();
+          }}
+          className="space-y-4"
+        >
+          <div className="space-y-2">
+            <Label htmlFor="module-name">Module Name</Label>
+            <Input
+              id="module-name"
+              name="name"
+              placeholder="New Module Name"
+              value={duplicateModuleData.name}
+              onChange={handleChange}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="publish-module"
+              checked={duplicateModuleData.isPublished}
+              onCheckedChange={(checked) => {
+                setDuplicateModuleData((prev) => ({
+                  ...prev,
+                  isPublished: checked === true,
+                }));
+              }}
+              disabled={isLoading}
+            />
+            <label
+              htmlFor="publish-module"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Publish Module
+            </label>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                setOpenDuplicateModal({
+                  courseId: "",
+                  moduleId: "",
+                  copyCourseId: "",
+                })
+              }
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              Duplicate
+            </Button>
+          </div>
+        </form>
+      </DialogWrapper>
 
       <div className="space-y-4" role="list" aria-label="Module list">
         {orderModuleRecentlyCreatedAndStarred(
@@ -477,40 +453,33 @@ export default function ModuleList({
                         {module.name}
                       </h3>
                     </div>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={(e: any) => {
-                              e.stopPropagation();
-                              isStarred
-                                ? removeStarredModule(course.id, module.id)
-                                : createStarredModule(course.id, module.id);
-                            }}
-                            disabled={isLoading}
-                            className={cn(
-                              "p-1.5 rounded-full ml-2 flex-shrink-0",
-                              isStarred
-                                ? "text-gold hover:text-muted"
-                                : "text-muted hover:text-gold"
-                            )}
-                          >
-                            <Star
-                              size={12}
-                              fill={isStarred ? "currentColor" : "none"}
-                              className={cn(
-                                isStarred
-                                  ? "hover:fill-none"
-                                  : "hover:fill-current"
-                              )}
-                            />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="">
-                          {isStarred ? "Unstar Module" : "Star Module"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <TooltipWrapper
+                      content={isStarred ? "Unstar Module" : "Star Module"}
+                    >
+                      <button
+                        onClick={(e: any) => {
+                          e.stopPropagation();
+                          isStarred
+                            ? removeStarredModule(course.id, module.id)
+                            : createStarredModule(course.id, module.id);
+                        }}
+                        disabled={isLoading}
+                        className={cn(
+                          "p-1.5 rounded-full ml-2 flex-shrink-0",
+                          isStarred
+                            ? "text-gold hover:text-muted"
+                            : "text-muted hover:text-gold"
+                        )}
+                      >
+                        <Star
+                          size={12}
+                          fill={isStarred ? "currentColor" : "none"}
+                          className={cn(
+                            isStarred ? "hover:fill-none" : "hover:fill-current"
+                          )}
+                        />
+                      </button>
+                    </TooltipWrapper>
                   </div>
 
                   {/* Course info */}
@@ -540,25 +509,16 @@ export default function ModuleList({
                             : "PapyrusAIInstructors"
                         ) ||
                         user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() =>
-                                  navigator(
-                                    `/dashboard/${course.id}/${module.id}`
-                                  )
-                                }
-                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                              >
-                                <Eye size={14} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="">
-                              View Reports
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <TooltipWrapper content="View Reports">
+                          <button
+                            onClick={() =>
+                              navigator(`/dashboard/${course.id}/${module.id}`)
+                            }
+                            className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                          >
+                            <Eye size={14} />
+                          </button>
+                        </TooltipWrapper>
                       )}
 
                       {(user?.groups.includes(
@@ -572,28 +532,21 @@ export default function ModuleList({
                             : "PapyrusAIInstructors"
                         ) ||
                         user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => {
-                                  setOpenDuplicateModal({
-                                    courseId: course.id,
-                                    moduleId: module.id,
-                                    copyCourseId: "",
-                                  });
-                                  setOpenCourseListModal(true);
-                                }}
-                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                              >
-                                <Copy size={14} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="">
-                              Copy Module
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <TooltipWrapper content="Copy Module">
+                          <button
+                            onClick={() => {
+                              setOpenDuplicateModal({
+                                courseId: course.id,
+                                moduleId: module.id,
+                                copyCourseId: "",
+                              });
+                              setOpenCourseListModal(true);
+                            }}
+                            className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </TooltipWrapper>
                       )}
 
                       {(user?.groups.includes(
@@ -609,25 +562,18 @@ export default function ModuleList({
                               (a: CustomUserType) =>
                                 a.username === user?.username
                             ))) && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={() =>
-                                    navigator(
-                                      `/courses/${course.id}/editmodule/${module.id}`
-                                    )
-                                  }
-                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                                >
-                                  <Edit size={14} />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="">
-                                Edit Module
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <TooltipWrapper content="Edit Module">
+                            <button
+                              onClick={() =>
+                                navigator(
+                                  `/courses/${course.id}/editmodule/${module.id}`
+                                )
+                              }
+                              className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                            >
+                              <Edit size={14} />
+                            </button>
+                          </TooltipWrapper>
                         )}
                     </div>
 
@@ -675,40 +621,35 @@ export default function ModuleList({
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 ml-4 flex-shrink-0">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={(e: any) => {
-                                e.stopPropagation();
-                                isStarred
-                                  ? removeStarredModule(course.id, module.id)
-                                  : createStarredModule(course.id, module.id);
-                              }}
-                              disabled={isLoading}
-                              className={cn(
-                                "p-1.5 rounded-full",
-                                isStarred
-                                  ? "text-gold hover:text-muted"
-                                  : "text-muted hover:text-gold"
-                              )}
-                            >
-                              <Star
-                                size={12}
-                                fill={isStarred ? "currentColor" : "none"}
-                                className={cn(
-                                  isStarred
-                                    ? "hover:fill-none"
-                                    : "hover:fill-current"
-                                )}
-                              />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="">
-                            {isStarred ? "Unstar Module" : "Star Module"}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <TooltipWrapper
+                        content={isStarred ? "Unstar Module" : "Star Module"}
+                      >
+                        <button
+                          onClick={(e: any) => {
+                            e.stopPropagation();
+                            isStarred
+                              ? removeStarredModule(course.id, module.id)
+                              : createStarredModule(course.id, module.id);
+                          }}
+                          disabled={isLoading}
+                          className={cn(
+                            "p-1.5 rounded-full",
+                            isStarred
+                              ? "text-gold hover:text-muted"
+                              : "text-muted hover:text-gold"
+                          )}
+                        >
+                          <Star
+                            size={12}
+                            fill={isStarred ? "currentColor" : "none"}
+                            className={cn(
+                              isStarred
+                                ? "hover:fill-none"
+                                : "hover:fill-current"
+                            )}
+                          />
+                        </button>
+                      </TooltipWrapper>
 
                       {(user?.groups.includes(
                         process.env.REACT_APP_ADMIN
@@ -721,25 +662,16 @@ export default function ModuleList({
                             : "PapyrusAIInstructors"
                         ) ||
                         user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() =>
-                                  navigator(
-                                    `/dashboard/${course.id}/${module.id}`
-                                  )
-                                }
-                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                              >
-                                <Eye size={12} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="">
-                              View Reports
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <TooltipWrapper content="View Reports">
+                          <button
+                            onClick={() =>
+                              navigator(`/dashboard/${course.id}/${module.id}`)
+                            }
+                            className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                          >
+                            <Eye size={12} />
+                          </button>
+                        </TooltipWrapper>
                       )}
 
                       {(user?.groups.includes(
@@ -753,28 +685,21 @@ export default function ModuleList({
                             : "PapyrusAIInstructors"
                         ) ||
                         user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => {
-                                  setOpenDuplicateModal({
-                                    courseId: course.id,
-                                    moduleId: module.id,
-                                    copyCourseId: "",
-                                  });
-                                  setOpenCourseListModal(true);
-                                }}
-                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                              >
-                                <Copy size={12} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="">
-                              Copy Module
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <TooltipWrapper content="Copy Module">
+                          <button
+                            onClick={() => {
+                              setOpenDuplicateModal({
+                                courseId: course.id,
+                                moduleId: module.id,
+                                copyCourseId: "",
+                              });
+                              setOpenCourseListModal(true);
+                            }}
+                            className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                          >
+                            <Copy size={12} />
+                          </button>
+                        </TooltipWrapper>
                       )}
 
                       {(user?.groups.includes(
@@ -790,25 +715,18 @@ export default function ModuleList({
                               (a: CustomUserType) =>
                                 a.username === user?.username
                             ))) && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  onClick={() =>
-                                    navigator(
-                                      `/courses/${course.id}/editmodule/${module.id}`
-                                    )
-                                  }
-                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                                >
-                                  <Edit size={12} />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="">
-                                Edit Module
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <TooltipWrapper content="Edit Module">
+                            <button
+                              onClick={() =>
+                                navigator(
+                                  `/courses/${course.id}/editmodule/${module.id}`
+                                )
+                              }
+                              className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                            >
+                              <Edit size={12} />
+                            </button>
+                          </TooltipWrapper>
                         )}
 
                       <Button

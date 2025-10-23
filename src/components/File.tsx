@@ -2,14 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "./ui/dialog";
+import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { FileType, FolderType } from "../utility/types/CourseTypes";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
@@ -483,75 +476,69 @@ export const File = (props: FileProps) => {
   return (
     <div key={props.keyy ? props.keyy : "key"}>
       {/* Delete Dialog */}
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete File?</DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to permanently delete this file?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={deleteFile}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDeleteDialog}
+        onOpenChange={setOpenDeleteDialog}
+        title="Delete File?"
+        description="Are you sure you would like to permanently delete this file?"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDeleteDialog(false),
+            variant: "outline",
+          },
+          {
+            label: "Delete",
+            onClick: deleteFile,
+            variant: "destructive",
+          },
+        ]}
+      />
 
       {/* Copy To Dialog */}
-      <Dialog open={openCopyToDialog} onOpenChange={setOpenCopyToDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Copy File To?</DialogTitle>
-            <DialogDescription>
-              Select a folder to copy this file to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
-            <ListFolders noShowMenu onClick={copyTo} compactGrid />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenCopyToDialog(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openCopyToDialog}
+        onOpenChange={setOpenCopyToDialog}
+        title="Copy File To?"
+        description="Select a folder to copy this file to."
+        contentClassName="max-w-2xl"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenCopyToDialog(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <div className="max-h-96 overflow-y-auto">
+          <ListFolders noShowMenu onClick={copyTo} compactGrid />
+        </div>
+      </DialogWrapper>
 
       {/* Move To Dialog */}
-      <Dialog open={openMoveDialog} onOpenChange={setOpenMoveDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Move File To?</DialogTitle>
-            <DialogDescription>
-              Select a folder to move this file to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 w-90vw overflow-y-auto">
-            <ListFolders
-              noShowMenu
-              onClick={moveTo}
-              disableFolderId={props.folder.id}
-              compactGrid
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenMoveDialog(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openMoveDialog}
+        onOpenChange={setOpenMoveDialog}
+        title="Move File To?"
+        description="Select a folder to move this file to."
+        contentClassName="max-w-2xl"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenMoveDialog(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <div className="max-h-96 w-90vw overflow-y-auto">
+          <ListFolders
+            noShowMenu
+            onClick={moveTo}
+            disableFolderId={props.folder.id}
+            compactGrid
+          />
+        </div>
+      </DialogWrapper>
 
       <Card className="h-full">
         <CardContent className="p-4 h-full flex flex-col">

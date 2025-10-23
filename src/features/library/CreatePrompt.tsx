@@ -6,27 +6,9 @@ import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 
 import { Checkbox } from "../../components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import {
   Card,
   CardContent,
@@ -258,69 +240,59 @@ export default function CreatePrompt(): JSX.Element {
   return promptInfo && !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
       {/* Dialogs */}
-      <Dialog
+      <DialogWrapper
         open={showSavePublishTooltip}
         onOpenChange={setShowSavePublishTooltip}
+        title="About Prompts"
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Got it",
+            onClick: () => setShowSavePublishTooltip(false),
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5" />
-              About Prompts
-            </DialogTitle>
-          </DialogHeader>
-          <DialogDescription className="space-y-3">
-            <p>
-              Prompts function in PapyrusAI as the first set of instructions
-              sent to the AI that will guide students' interactions with the AI.
-              When you click <strong>"Save & Publish"</strong>, your prompt will
-              be saved to your library.
-            </p>
-            <p className="text-sm">
-              For more information on creating a prompt, please see the{" "}
-              <a
-                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:no-underline font-medium text-primary"
-              >
-                "Creating a Prompt" section of our instructor guide
-              </a>
-              .
-            </p>
-          </DialogDescription>
-          <DialogFooter>
-            <Button onClick={() => setShowSavePublishTooltip(false)}>
-              Got it
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-destructive">
-              Discard Changes?
-            </DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            Are you sure you would like to discard the changes to this prompt?
-            This action cannot be undone.
-          </DialogDescription>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenDiscardModal(false)}
+        <div className="space-y-3">
+          <p>
+            Prompts function in PapyrusAI as the first set of instructions sent
+            to the AI that will guide students' interactions with the AI. When
+            you click <strong>"Save & Publish"</strong>, your prompt will be
+            saved to your library.
+          </p>
+          <p className="text-sm">
+            For more information on creating a prompt, please see the{" "}
+            <a
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2 hover:no-underline font-medium text-primary"
             >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={() => navigator(-1)}>
-              Discard Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              "Creating a Prompt" section of our instructor guide
+            </a>
+            .
+          </p>
+        </div>
+      </DialogWrapper>
+
+      <DialogWrapper
+        open={openDiscardModal}
+        onOpenChange={setOpenDiscardModal}
+        title="Discard Changes?"
+        description="Are you sure you would like to discard the changes to this prompt? This action cannot be undone."
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDiscardModal(false),
+            variant: "outline",
+          },
+          {
+            label: "Discard Changes",
+            onClick: () => navigator(-1),
+            variant: "destructive",
+          },
+        ]}
+      />
 
       {/* Standard Page Header Pattern */}
       <header className="animate-in slide-in-from-bottom-4 duration-700">
@@ -391,8 +363,10 @@ export default function CreatePrompt(): JSX.Element {
               >
                 {options[selectedIndexSave]}
               </Button>
-              <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
-                <DropdownMenuTrigger asChild>
+              <DropdownWrapper
+                open={openSaveTop}
+                onOpenChange={setOpenSaveTop}
+                trigger={
                   <Button
                     size="sm"
                     className="rounded-none border-0 border-l px-2"
@@ -402,22 +376,17 @@ export default function CreatePrompt(): JSX.Element {
                   >
                     <ChevronDown className="h-4 w-4" aria-hidden="true" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {options.map((option, index) => (
-                    <DropdownMenuItem
-                      key={option}
-                      onClick={() => handleMenuItemClick(index)}
-                      className={cn(
-                        index === selectedIndexSave && "bg-accent",
-                        index === 1 && "text-destructive focus:text-destructive"
-                      )}
-                    >
-                      {option}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                }
+                actions={options.map((option, index) => ({
+                  label: option,
+                  onClick: () => handleMenuItemClick(index),
+                  className: cn(
+                    index === selectedIndexSave && "bg-accent",
+                    index === 1 && "text-destructive focus:text-destructive"
+                  ),
+                }))}
+                align="end"
+              />
             </div>
           </nav>
         </header>
@@ -439,21 +408,9 @@ export default function CreatePrompt(): JSX.Element {
                   <Label htmlFor="name" className="text-sm font-medium">
                     Prompt Name *
                   </Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">
-                          The name for the prompt that users will see. We
-                          recommend choosing a name that makes it easy for
-                          students to understand what the prompt will do or help
-                          them with.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <TooltipWrapper content="The name for the prompt that users will see. We recommend choosing a name that makes it easy for students to understand what the prompt will do or help them with.">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipWrapper>
                 </div>
                 <Input
                   id="name"
@@ -485,20 +442,9 @@ export default function CreatePrompt(): JSX.Element {
                   <Label htmlFor="prompt" className="text-sm font-medium">
                     Prompt *
                   </Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">
-                          The instructions that will be sent to the AI (i.e.,
-                          the first message sent to the AI that will guide the
-                          interaction).
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <TooltipWrapper content="The instructions that will be sent to the AI (i.e., the first message sent to the AI that will guide the interaction).">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipWrapper>
                 </div>
                 <Textarea
                   id="prompt"
@@ -529,19 +475,9 @@ export default function CreatePrompt(): JSX.Element {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium">Tags</Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">
-                          Tags describe a feature of the prompts and will be
-                          used to allow for sorting prompts by type.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <TooltipWrapper content="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type.">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipWrapper>
                 </div>
                 <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
                   {tagList.length > 0 ? (
@@ -609,11 +545,10 @@ export default function CreatePrompt(): JSX.Element {
               >
                 {options[selectedIndexSave]}
               </Button>
-              <DropdownMenu
+              <DropdownWrapper
                 open={openSaveBottom}
                 onOpenChange={setOpenSaveBottom}
-              >
-                <DropdownMenuTrigger asChild>
+                trigger={
                   <Button
                     size="sm"
                     className="rounded-none border-0 border-l px-2"
@@ -623,22 +558,17 @@ export default function CreatePrompt(): JSX.Element {
                   >
                     <ChevronDown className="h-4 w-4" aria-hidden="true" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {options.map((option, index) => (
-                    <DropdownMenuItem
-                      key={option}
-                      onClick={() => handleMenuItemClick(index)}
-                      className={cn(
-                        index === selectedIndexSave && "bg-accent",
-                        index === 1 && "text-destructive focus:text-destructive"
-                      )}
-                    >
-                      {option}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                }
+                actions={options.map((option, index) => ({
+                  label: option,
+                  onClick: () => handleMenuItemClick(index),
+                  className: cn(
+                    index === selectedIndexSave && "bg-accent",
+                    index === 1 && "text-destructive focus:text-destructive"
+                  ),
+                }))}
+                align="end"
+              />
             </div>
           </nav>
         </section>

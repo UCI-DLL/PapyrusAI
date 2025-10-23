@@ -8,15 +8,7 @@ import React, {
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import { AlertCircle } from "lucide-react";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import Get from "../../utility/Get";
 import {
@@ -1034,7 +1026,7 @@ export default function Chat(): JSX.Element {
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="min-h-screen lg:h-screen flex bg-background text-foreground">
       {/* Error Modal */}
-      <Dialog
+      <DialogWrapper
         open={openErrorModal.open}
         onOpenChange={(open) =>
           setOpenErrorModal({
@@ -1042,182 +1034,145 @@ export default function Chat(): JSX.Element {
             message: open ? openErrorModal.message : "",
           })
         }
+        title="We ran into an error!"
+        description={openErrorModal.message}
+        contentClassName="sm:max-w-md"
+        footerClassName="flex-col gap-2 sm:flex-row"
+        actions={[
+          {
+            label: "Close",
+            onClick: () => setOpenErrorModal({ open: false, message: "" }),
+            variant: "outline",
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              We ran into an error!
-            </DialogTitle>
-            <DialogDescription>{openErrorModal.message}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button
-              variant="outline"
-              onClick={() => setOpenErrorModal({ open: false, message: "" })}
-            >
-              Close
-            </Button>
-            <Button
-              asChild
-              onClick={() => setOpenErrorModal({ open: false, message: "" })}
-            >
-              <Link
-                to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`}
-                className="no-underline"
-              >
-                Back to Conversation List
-              </Link>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <Button
+          asChild
+          onClick={() => setOpenErrorModal({ open: false, message: "" })}
+        >
+          <Link
+            to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`}
+            className="no-underline"
+          >
+            Back to Conversation List
+          </Link>
+        </Button>
+      </DialogWrapper>
 
       {/* Document Modal */}
-      <Dialog open={openDocumentModal} onOpenChange={setOpenDocumentModal}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              Document Upload
-            </DialogTitle>
-          </DialogHeader>
-          <DocumentModal returnDocText={returnDocText} />
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenDocumentModal(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDocumentModal}
+        onOpenChange={setOpenDocumentModal}
+        title="Document Upload"
+        contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDocumentModal(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <DocumentModal returnDocText={returnDocText} />
+      </DialogWrapper>
 
       {/* Speech to Text Modal */}
-      <Dialog
+      <DialogWrapper
         open={openSpeechToTextModal}
         onOpenChange={setOpenSpeechToTextModal}
+        title="Speech to Text"
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenSpeechToTextModal(false),
+            variant: "outline",
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              Speech to Text
-            </DialogTitle>
-          </DialogHeader>
-          <SpeechToTextModal returnSpeechText={returnSpeakingText} />
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenSpeechToTextModal(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <SpeechToTextModal returnSpeechText={returnSpeakingText} />
+      </DialogWrapper>
 
       {/* Delete Conversation Modal */}
-      <Dialog
+      <DialogWrapper
         open={openUpdateConvoModal.deleteOpen}
         onOpenChange={(open) =>
           setOpenUpdateConvoModal((prev) => ({ ...prev, deleteOpen: open }))
         }
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              Hide Conversation?
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to hide this conversation? Instructors
-              can still view hidden conversations.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button
-              variant="outline"
-              onClick={() =>
-                setOpenUpdateConvoModal((prev) => ({
-                  ...prev,
-                  deleteOpen: false,
-                }))
-              }
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() =>
-                handleConverstionNameDeleteUpdate({
-                  ...openUpdateConvoModal,
-                  isDeleted: true,
-                })
-              }
-            >
-              Hide Conversation
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title="Hide Conversation?"
+        description="Are you sure you would like to hide this conversation? Instructors can still view hidden conversations."
+        contentClassName="sm:max-w-md"
+        footerClassName="flex-col gap-2 sm:flex-row"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () =>
+              setOpenUpdateConvoModal((prev) => ({
+                ...prev,
+                deleteOpen: false,
+              })),
+            variant: "outline",
+          },
+          {
+            label: "Hide Conversation",
+            onClick: () =>
+              handleConverstionNameDeleteUpdate({
+                ...openUpdateConvoModal,
+                isDeleted: true,
+              }),
+            variant: "destructive",
+          },
+        ]}
+      />
 
       {/* Rename Conversation Modal */}
-      <Dialog
+      <DialogWrapper
         open={openUpdateConvoModal.open}
         onOpenChange={(open) =>
           setOpenUpdateConvoModal((prev) => ({ ...prev, open }))
         }
+        title="Rename Conversation"
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () =>
+              setOpenUpdateConvoModal((prev) => ({ ...prev, open: false })),
+            variant: "outline",
+          },
+          {
+            label: "Submit",
+            onClick: () =>
+              handleConverstionNameDeleteUpdate(openUpdateConvoModal),
+            disabled: isLoading,
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Rename Conversation</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="conversation-name">Conversation Name</Label>
-              <Input
-                id="conversation-name"
-                name="name"
-                value={openUpdateConvoModal.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setOpenUpdateConvoModal((prev) => ({
-                    ...prev,
-                    name: e.target.value,
-                  }));
-                }}
-                className={
-                  openUpdateConvoModal.error ? "border-destructive" : ""
-                }
-                disabled={isLoading}
-                autoFocus
-              />
-              {openUpdateConvoModal.error && (
-                <p className="text-sm text-destructive">
-                  {openUpdateConvoModal.error}
-                </p>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() =>
-                setOpenUpdateConvoModal((prev) => ({ ...prev, open: false }))
-              }
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() =>
-                handleConverstionNameDeleteUpdate(openUpdateConvoModal)
-              }
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="conversation-name">Conversation Name</Label>
+            <Input
+              id="conversation-name"
+              name="name"
+              value={openUpdateConvoModal.name}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setOpenUpdateConvoModal((prev) => ({
+                  ...prev,
+                  name: e.target.value,
+                }));
+              }}
+              className={openUpdateConvoModal.error ? "border-destructive" : ""}
               disabled={isLoading}
-            >
-              Submit
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              autoFocus
+            />
+            {openUpdateConvoModal.error && (
+              <p className="text-sm text-destructive">
+                {openUpdateConvoModal.error}
+              </p>
+            )}
+          </div>
+        </div>
+      </DialogWrapper>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 lg:h-full">

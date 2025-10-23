@@ -10,20 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Separator } from "../../components/ui/separator";
 import {
@@ -34,7 +22,6 @@ import {
   FileText,
   MessageSquare,
   Save,
-  Folder,
   Trash2,
   CheckCircle,
   XCircle,
@@ -548,211 +535,166 @@ export default function AddModule({
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <Dialog
+      <DialogWrapper
         open={showSavePublishTooltip}
         onOpenChange={setShowSavePublishTooltip}
+        title="What is Save & Publish?"
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Got it",
+            onClick: () => setShowSavePublishTooltip(false),
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Info className="h-5 w-5" aria-hidden="true" />
-              What is Save & Publish?
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm leading-6">
-              To save and publish (i.e., make visible to students) your module,
-              select "Save & Publish". If you want to save your module without
-              publishing it, select "Save without Publishing".
-            </p>
-            <p className="text-sm text-muted-foreground italic">
-              Note: Choosing this option after the module has already been
-              published will unpublish the module.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowSavePublishTooltip(false)}>
-              Got it
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Discard Changes?</DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to discard the changes to this module?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenDiscardModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={() => navigator(-1)}>
-              Discard
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <div className="space-y-3">
+          <p className="text-sm leading-6">
+            To save and publish (i.e., make visible to students) your module,
+            select "Save & Publish". If you want to save your module without
+            publishing it, select "Save without Publishing".
+          </p>
+          <p className="text-sm text-muted-foreground italic">
+            Note: Choosing this option after the module has already been
+            published will unpublish the module.
+          </p>
+        </div>
+      </DialogWrapper>
+
+      <DialogWrapper
+        open={openDiscardModal}
+        onOpenChange={setOpenDiscardModal}
+        title="Discard Changes?"
+        description="Are you sure you would like to discard the changes to this module?"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDiscardModal(false),
+            variant: "outline",
+          },
+          {
+            label: "Discard",
+            onClick: () => navigator(-1),
+            variant: "destructive",
+          },
+        ]}
+      />
 
       {/* Edit-specific dialogs */}
       {isEditMode && (
         <>
-          <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Delete Module?</DialogTitle>
-                <DialogDescription>
-                  Are you sure you would like to permanently delete this module?
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenDeleteModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={(e) => handleSubmit(e, false, true)}
-                >
-                  Delete
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <DialogWrapper
+            open={openDeleteModal}
+            onOpenChange={setOpenDeleteModal}
+            title="Delete Module?"
+            description="Are you sure you would like to permanently delete this module?"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () => setOpenDeleteModal(false),
+                variant: "outline",
+              },
+              {
+                label: "Delete",
+                onClick: () => handleSubmit(null, false, true),
+                variant: "destructive",
+              },
+            ]}
+          />
 
-          <Dialog open={openActiveModal} onOpenChange={setOpenActiveModal}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Unpublish Module?</DialogTitle>
-                <DialogDescription>
-                  This module is current published and available to the public.
-                  Continuing will make the module unavailable to students.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenActiveModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={(e) => handleSubmit(e, false, false)}>
-                  Continue
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <DialogWrapper
+            open={openActiveModal}
+            onOpenChange={setOpenActiveModal}
+            title="Unpublish Module?"
+            description="This module is current published and available to the public. Continuing will make the module unavailable to students."
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () => setOpenActiveModal(false),
+                variant: "outline",
+              },
+              {
+                label: "Continue",
+                onClick: () => handleSubmit(null, false, false),
+              },
+            ]}
+          />
         </>
       )}
-      <Dialog
+      <DialogWrapper
         open={openSelectFolderModal}
         onOpenChange={setOpenSelectFolderModal}
+        title="Select Folder"
+        contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenSelectFolderModal(false),
+            variant: "outline",
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Folder className="h-5 w-5" />
-              Select Folder
-            </DialogTitle>
-          </DialogHeader>
-          <div>
-            <ListFolders noShowMenu onClick={selectFolder} compactGrid />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenSelectFolderModal(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog
+        <div>
+          <ListFolders noShowMenu onClick={selectFolder} compactGrid />
+        </div>
+      </DialogWrapper>
+
+      <DialogWrapper
         open={openSelectPromptModal.folderId !== ""}
         onOpenChange={(open) =>
           !open &&
           setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })
         }
+        title="Select Asset"
+        contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        actions={[
+          {
+            label: "Back",
+            onClick: () => {
+              setOpenSelectPromptModal({ folderId: "", isOrgFolder: false });
+              setOpenSelectFolderModal(true);
+            },
+            variant: "outline",
+          },
+          {
+            label: "Cancel",
+            onClick: () =>
+              setOpenSelectPromptModal({ folderId: "", isOrgFolder: false }),
+            variant: "outline",
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Select Asset
-            </DialogTitle>
-          </DialogHeader>
-          <div>
-            <ListFolderContents
-              folderId={openSelectPromptModal.folderId}
-              isOrgFolder={openSelectPromptModal.isOrgFolder}
-              noShowMenu
-              onClick={selectAsset}
-              compactGrid
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setOpenSelectPromptModal({ folderId: "", isOrgFolder: false });
-                setOpenSelectFolderModal(true);
-              }}
-            >
-              Back
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })
-              }
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog
+        <div>
+          <ListFolderContents
+            folderId={openSelectPromptModal.folderId}
+            isOrgFolder={openSelectPromptModal.isOrgFolder}
+            noShowMenu
+            onClick={selectAsset}
+            compactGrid
+          />
+        </div>
+      </DialogWrapper>
+
+      <DialogWrapper
         open={openConfirmationModal.id !== ""}
         onOpenChange={(open) =>
           !open && setOpenConfirmationModal({ id: "", type: "" })
         }
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remove Asset?</DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to remove this asset from the module?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenConfirmationModal({ id: "", type: "" })}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() =>
-                removeAsset(
-                  openConfirmationModal.id,
-                  openConfirmationModal.type
-                )
-              }
-            >
-              Remove
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title="Remove Asset?"
+        description="Are you sure you would like to remove this asset from the module?"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenConfirmationModal({ id: "", type: "" }),
+            variant: "outline",
+          },
+          {
+            label: "Remove",
+            onClick: () =>
+              removeAsset(openConfirmationModal.id, openConfirmationModal.type),
+            variant: "destructive",
+          },
+        ]}
+      />
       {/* Standard Page Header Pattern */}
       <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
@@ -861,8 +803,10 @@ export default function AddModule({
               <Info className="h-4 w-4" aria-hidden="true" />
               {isEditMode ? "Help" : "Info"}
             </Button>
-            <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
-              <DropdownMenuTrigger asChild>
+            <DropdownWrapper
+              open={openSaveTop}
+              onOpenChange={setOpenSaveTop}
+              trigger={
                 <Button
                   className="gap-2"
                   aria-label={`${options[selectedIndexSave]} module`}
@@ -871,22 +815,23 @@ export default function AddModule({
                   {options[selectedIndexSave]}
                   <ChevronDown className="h-4 w-4" aria-hidden="true" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {options.map((option, index) => (
-                  <DropdownMenuItem
-                    key={option}
-                    onClick={(event) => handleMenuItemClick(event, index)}
-                    className={cn(
-                      index === selectedIndexSave && "bg-accent",
-                      index === 2 && "text-destructive focus:text-destructive"
-                    )}
-                  >
-                    {option}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              }
+              actions={options.map((option, index) => ({
+                label: option,
+                onClick: () => {
+                  const fakeEvent = {} as React.MouseEvent<
+                    HTMLDivElement,
+                    MouseEvent
+                  >;
+                  handleMenuItemClick(fakeEvent, index);
+                },
+                className: cn(
+                  index === selectedIndexSave && "bg-accent",
+                  index === 2 && "text-destructive focus:text-destructive"
+                ),
+              }))}
+              align="end"
+            />
           </nav>
         </header>
       </section>
@@ -1181,8 +1126,10 @@ export default function AddModule({
             <Info className="h-4 w-4" aria-hidden="true" />
             {isEditMode ? "Help" : "Info"}
           </Button>
-          <DropdownMenu open={openSaveBottom} onOpenChange={setOpenSaveBottom}>
-            <DropdownMenuTrigger asChild>
+          <DropdownWrapper
+            open={openSaveBottom}
+            onOpenChange={setOpenSaveBottom}
+            trigger={
               <Button
                 className="gap-2"
                 aria-label={`${options[selectedIndexSave]} module`}
@@ -1191,22 +1138,23 @@ export default function AddModule({
                 {options[selectedIndexSave]}
                 <ChevronDown className="h-4 w-4" aria-hidden="true" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {options.map((option, index) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={(event) => handleMenuItemClick(event, index)}
-                  className={cn(
-                    index === selectedIndexSave && "bg-accent",
-                    index === 2 && "text-destructive focus:text-destructive"
-                  )}
-                >
-                  {option}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            }
+            actions={options.map((option, index) => ({
+              label: option,
+              onClick: () => {
+                const fakeEvent = {} as React.MouseEvent<
+                  HTMLDivElement,
+                  MouseEvent
+                >;
+                handleMenuItemClick(fakeEvent, index);
+              },
+              className: cn(
+                index === selectedIndexSave && "bg-accent",
+                index === 2 && "text-destructive focus:text-destructive"
+              ),
+            }))}
+            align="end"
+          />
         </nav>
       </section>
     </main>

@@ -19,14 +19,7 @@ import CreateCourse from "./features/course-groups/CreateCourse";
 import Get from "./utility/Get";
 import { getUserData } from "./utility/endpoints/UserEndpoints";
 import { UserType } from "./utility/types/UserTypes";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "./components/ui/dialog";
-import { Button } from "./components/ui/button";
+import { DialogWrapper } from "./components/ui-wrappers/DialogWrapper";
 import { Loader2 } from "lucide-react";
 import { Toaster } from "sonner";
 import MissingUserInfoForm from "./features/dashboard/MissingUserInfoForm";
@@ -162,88 +155,85 @@ function App(): JSX.Element {
         <UserContext.Provider value={value}>
           <AlertContext.Provider value={alertValue}>
             <Router>
-              <Dialog open={showUpdateUserInfoModal} onOpenChange={() => { }}>
-                <DialogContent className="sm:max-w-md [&>button]:hidden">
-                  <DialogHeader>
-                    <DialogTitle>We are missing some details</DialogTitle>
-                  </DialogHeader>
+              <DialogWrapper
+                open={showUpdateUserInfoModal}
+                onOpenChange={() => {}}
+                title="We are missing some details"
+                contentClassName="sm:max-w-md [&>button]:hidden"
+                actions={[
+                  {
+                    label: "Log Out",
+                    onClick: () => handleLogOut(),
+                    variant: "secondary",
+                  },
+                ]}
+                footerClassName="w-full"
+              >
+                <MissingUserInfoForm
+                  user={user ? user : undefined}
+                  closeForm={(updatedUser) => {
+                    //Set user with new information
+                    if (user) {
+                      setUser((prev) => {
+                        if (prev)
+                          return {
+                            ...prev,
+                            name: updatedUser.name,
+                            family_name: updatedUser.family_name,
+                          };
+                        else return null;
+                      });
 
-                  <MissingUserInfoForm
-                    user={user ? user : undefined}
-                    closeForm={(updatedUser) => {
-                      //Set user with new information
-                      if (user) {
-                        setUser((prev) => {
-                          if (prev)
-                            return {
-                              ...prev,
-                              name: updatedUser.name,
-                              family_name: updatedUser.family_name,
-                            };
-                          else return null;
-                        });
-
-                        setShowUpdateUserInfoModal(false);
-
-                        //Handle new user tutorial
-                        introJs()
-                          .setOptions({
-                            steps: [
-                              {
-                                intro:
-                                  "Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.",
-                              },
-                              {
-                                intro:
-                                  'For help with navigating PapyrusAI and other resources, see "Resources" in the left sidebar.',
-                              },
-                              {
-                                intro:
-                                  'If you encounter any bugs or issues while using PapyrusAI, click "Report Issue" on the bottom left of the navigation to report to the development team.',
-                              },
-                              {
-                                intro: user.groups.includes(
-                                  process.env.REACT_APP_INSTRUCTOR
-                                    ? process.env.REACT_APP_INSTRUCTOR
-                                    : "PapyrusAIInstructors"
-                                )
-                                  ? 'To join a course, click "Join Course" at the top right. To create a course, click "Create Course" at the top right.'
-                                  : 'To join a course, click "Join Course" at the top right. Your instructor will give you the course code.',
-                              },
-                            ],
-                          })
-                          .start();
-                      }
-                      if (
-                        localStorage.getItem("papyrusai_user") &&
-                        localStorage.getItem("papyrusai_user") !== null
-                      ) {
-                        var old = JSON.parse(
-                          localStorage.getItem("papyrusai_user") ?? ""
-                        );
-                        old.name = updatedUser.name;
-                        old.family_name = updatedUser.family_name;
-                        localStorage.setItem(
-                          "papyrusai_user",
-                          JSON.stringify(old)
-                        );
-                      }
-                      //then close modal
                       setShowUpdateUserInfoModal(false);
-                    }}
-                  />
 
-                  <DialogFooter>
-                    <Button
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() => handleLogOut()}
-                    >
-                      Log Out
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                      //Handle new user tutorial
+                      introJs()
+                        .setOptions({
+                          steps: [
+                            {
+                              intro:
+                                "Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.",
+                            },
+                            {
+                              intro:
+                                'For help with navigating PapyrusAI and other resources, see "Resources" in the left sidebar.',
+                            },
+                            {
+                              intro:
+                                'If you encounter any bugs or issues while using PapyrusAI, click "Report Issue" on the bottom left of the navigation to report to the development team.',
+                            },
+                            {
+                              intro: user.groups.includes(
+                                process.env.REACT_APP_INSTRUCTOR
+                                  ? process.env.REACT_APP_INSTRUCTOR
+                                  : "PapyrusAIInstructors"
+                              )
+                                ? 'To join a course, click "Join Course" at the top right. To create a course, click "Create Course" at the top right.'
+                                : 'To join a course, click "Join Course" at the top right. Your instructor will give you the course code.',
+                            },
+                          ],
+                        })
+                        .start();
+                    }
+                    if (
+                      localStorage.getItem("papyrusai_user") &&
+                      localStorage.getItem("papyrusai_user") !== null
+                    ) {
+                      var old = JSON.parse(
+                        localStorage.getItem("papyrusai_user") ?? ""
+                      );
+                      old.name = updatedUser.name;
+                      old.family_name = updatedUser.family_name;
+                      localStorage.setItem(
+                        "papyrusai_user",
+                        JSON.stringify(old)
+                      );
+                    }
+                    //then close modal
+                    setShowUpdateUserInfoModal(false);
+                  }}
+                />
+              </DialogWrapper>
               <Routes>
                 <Route
                   path="/login"
@@ -264,10 +254,10 @@ function App(): JSX.Element {
                         user
                           ? user
                           : localStorage.getItem("papyrusai_user")
-                            ? JSON.parse(
+                          ? JSON.parse(
                               localStorage.getItem("papyrusai_user") ?? ""
                             )
-                            : null
+                          : null
                       }
                     />
                   }

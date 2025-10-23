@@ -5,8 +5,8 @@ import { CustomTypingIndicator } from "./CustomTypingIndictor";
 import { MessageTypeType } from "../utility/types/ConversationTypes";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
+import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import {
   ChevronUp,
   ChevronDown,
@@ -14,7 +14,7 @@ import {
   Volume2,
   VolumeX,
   Copy,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import RaterEssay from "./RaterEssay";
 import { truncateString } from "../utility/Helpers";
@@ -25,57 +25,65 @@ interface MessageProps {
   message: string;
   displayName?: string;
   typing?: boolean;
-  messageType?: MessageTypeType,
-  outOfContext?: boolean,
-  visible?: boolean, // visible to user?
-  expandableMessage?: string, //message is clickable and shows extra text in modal
-  isInstructor?: boolean, //show the message if not user visible and is an instructor
-  sources?: Array<any> //web access sources
+  messageType?: MessageTypeType;
+  outOfContext?: boolean;
+  visible?: boolean; // visible to user?
+  expandableMessage?: string; //message is clickable and shows extra text in modal
+  isInstructor?: boolean; //show the message if not user visible and is an instructor
+  sources?: Array<any>; //web access sources
 }
 
 interface ViewSourcesProps {
-  sources: Array<{ url: string, title: string, summary?: string }>; // An array of Source objects
+  sources: Array<{ url: string; title: string; summary?: string }>; // An array of Source objects
 }
 
 const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
   return (
     <div className="space-y-3 mt-4">
-      {sources.map((source: { url: string, title: string, summary?: string }, index: number) => (
-        <Card key={index} className="transition-all duration-200 hover:shadow-md border-l-4 border-l-primary/20">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm text-muted-foreground">
-                Source {index + 1}
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="h-8 w-8 p-0"
-              >
-                <a
-                  href={source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Visit source: ${source.title}`}
+      {sources.map(
+        (
+          source: { url: string; title: string; summary?: string },
+          index: number
+        ) => (
+          <Card
+            key={index}
+            className="transition-all duration-200 hover:shadow-md border-l-4 border-l-primary/20"
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm text-muted-foreground">
+                  Source {index + 1}
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-8 w-8 p-0"
                 >
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <h4 className="font-semibold text-sm mb-2 line-clamp-2">
-              {truncateString(source.title, 50)}
-            </h4>
-            {source.summary && (
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {truncateString(source.summary, 200)}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Visit source: ${source.title}`}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <h4 className="font-semibold text-sm mb-2 line-clamp-2">
+                {truncateString(source.title, 50)}
+              </h4>
+              {source.summary && (
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {truncateString(source.summary, 200)}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )
+      )}
     </div>
   );
 };
@@ -84,8 +92,11 @@ export const MessageLeft = (props: MessageProps) => {
   const displayName = props.displayName ? props.displayName : "Assistant";
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState<any>(null);
-  const [showExpandableMessage, setShowExpandableMessage] = useState<boolean>(false);
-  const [expandableMessage] = useState(props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined);
+  const [showExpandableMessage, setShowExpandableMessage] =
+    useState<boolean>(false);
+  const [expandableMessage] = useState(
+    props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined
+  );
 
   useEffect(() => {
     const synth = window.speechSynthesis;
@@ -136,21 +147,22 @@ export const MessageLeft = (props: MessageProps) => {
     return <></>;
   }
 
-  return (props.visible === undefined || props.visible || props.isInstructor) ? (
+  return props.visible === undefined || props.visible || props.isInstructor ? (
     <div className="flex flex-col gap-2 mb-6">
       {props.expandableMessage && expandableMessage && (
-        <Dialog open={showExpandableMessage} onOpenChange={setShowExpandableMessage}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Essay Feedback</DialogTitle>
-            </DialogHeader>
-            <RaterEssay
-              message={expandableMessage.message}
-              raterArray={expandableMessage.rater}
-              essay={expandableMessage.essay}
-            />
-          </DialogContent>
-        </Dialog>
+        <DialogWrapper
+          open={showExpandableMessage}
+          onOpenChange={setShowExpandableMessage}
+          title="Essay Feedback"
+          contentClassName="max-w-4xl max-h-[80vh] overflow-y-auto"
+          showFooter={false}
+        >
+          <RaterEssay
+            message={expandableMessage.message}
+            raterArray={expandableMessage.rater}
+            essay={expandableMessage.essay}
+          />
+        </DialogWrapper>
       )}
 
       <div className="flex items-start gap-3">
@@ -163,47 +175,33 @@ export const MessageLeft = (props: MessageProps) => {
               {displayName}
             </span>
             <div className="flex items-center gap-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={isPlaying ? handleStop : handlePlay}
-                      aria-label={isPlaying ? "Stop reading" : "Read message aloud"}
-                    >
-                      {isPlaying ? (
-                        <VolumeX className="h-4 w-4" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{isPlaying ? "Stop" : "Read aloud"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <TooltipWrapper content={isPlaying ? "Stop" : "Read aloud"}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={isPlaying ? handleStop : handlePlay}
+                  aria-label={isPlaying ? "Stop reading" : "Read message aloud"}
+                >
+                  {isPlaying ? (
+                    <VolumeX className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipWrapper>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={handleCopy}
-                      aria-label="Copy message"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Copy message</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <TooltipWrapper content="Copy message">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={handleCopy}
+                  aria-label="Copy message"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipWrapper>
             </div>
           </div>
 
@@ -211,10 +209,11 @@ export const MessageLeft = (props: MessageProps) => {
             <Button
               variant="outline"
               onClick={() => setShowExpandableMessage(true)}
-              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${(props.outOfContext || (!props.visible && props.isInstructor))
-                ? "opacity-60 border-dashed"
-                : ""
-                }`}
+              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${
+                props.outOfContext || (!props.visible && props.isInstructor)
+                  ? "opacity-60 border-dashed"
+                  : ""
+              }`}
             >
               {props.typing ? (
                 <CustomTypingIndicator />
@@ -229,10 +228,13 @@ export const MessageLeft = (props: MessageProps) => {
               )}
             </Button>
           ) : (
-            <div className={`bg-muted/50 rounded-lg p-4 ${(props.outOfContext || (!props.visible && props.isInstructor))
-              ? "opacity-60 border border-dashed"
-              : ""
-              }`}>
+            <div
+              className={`bg-muted/50 rounded-lg p-4 ${
+                props.outOfContext || (!props.visible && props.isInstructor)
+                  ? "opacity-60 border border-dashed"
+                  : ""
+              }`}
+            >
               {props.typing ? (
                 <CustomTypingIndicator />
               ) : (
@@ -255,7 +257,6 @@ export const MessageLeft = (props: MessageProps) => {
     <ViewSources sources={props.sources} />
   ) : null;
 };
-
 
 export const MessageRight = (props: MessageProps) => {
   const [openFileModal, setOpenFileModal] = useState<boolean>(false);
@@ -307,53 +308,39 @@ export const MessageRight = (props: MessageProps) => {
     );
   }
   //Note: replace new lines with double new line for markdown
-  return (props.visible === undefined || props.visible || props.isInstructor) ? (
+  return props.visible === undefined || props.visible || props.isInstructor ? (
     <div className="flex flex-col gap-2 mb-6">
       <div className="flex items-start gap-3 justify-end">
         <div className="flex-1 flex flex-col items-end">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex items-center gap-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={isPlaying ? handleStop : handlePlay}
-                      aria-label={isPlaying ? "Stop reading" : "Read message aloud"}
-                    >
-                      {isPlaying ? (
-                        <VolumeX className="h-4 w-4" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{isPlaying ? "Stop" : "Read aloud"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <TooltipWrapper content={isPlaying ? "Stop" : "Read aloud"}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={isPlaying ? handleStop : handlePlay}
+                  aria-label={isPlaying ? "Stop reading" : "Read message aloud"}
+                >
+                  {isPlaying ? (
+                    <VolumeX className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipWrapper>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={handleCopy}
-                      aria-label="Copy message"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Copy message</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <TooltipWrapper content="Copy message">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={handleCopy}
+                  aria-label="Copy message"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipWrapper>
             </div>
             <span className="text-sm font-medium text-muted-foreground">
               {props.isInstructor && !props.visible && (
@@ -364,25 +351,31 @@ export const MessageRight = (props: MessageProps) => {
           </div>
 
           {props.messageType && props.messageType === "file" ? (
-            <div className={`max-w-md ${(props.outOfContext || (!props.visible && props.isInstructor))
-              ? "opacity-60 border border-dashed"
-              : ""
-              }`}>
-              <Dialog open={openFileModal} onOpenChange={setOpenFileModal}>
-                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>File Content</DialogTitle>
-                  </DialogHeader>
-                  <Markdown className="whitespace-pre-wrap font-mono text-sm p-4 rounded-lg">
-                    {props.message.replace(/\n/g, "\n\n")}
-                  </Markdown>
-                </DialogContent>
-              </Dialog>
+            <div
+              className={`max-w-md ${
+                props.outOfContext || (!props.visible && props.isInstructor)
+                  ? "opacity-60 border border-dashed"
+                  : ""
+              }`}
+            >
+              <DialogWrapper
+                open={openFileModal}
+                onOpenChange={setOpenFileModal}
+                title="File Content"
+                contentClassName="max-w-4xl max-h-[80vh] overflow-y-auto"
+                showFooter={false}
+              >
+                <Markdown className="whitespace-pre-wrap font-mono text-sm p-4 rounded-lg">
+                  {props.message.replace(/\n/g, "\n\n")}
+                </Markdown>
+              </DialogWrapper>
 
               <Card className="transition-all duration-200">
                 <CardContent className="p-4">
                   <Markdown className="whitespace-pre-wrap font-mono text-sm mb-4 max-h-32 overflow-hidden">
-                    {expandFile ? props.message.replace(/\n/g, "\n\n") : props.message.substring(0, 200) + "..."}
+                    {expandFile
+                      ? props.message.replace(/\n/g, "\n\n")
+                      : props.message.substring(0, 200) + "..."}
                   </Markdown>
                   <div className="flex items-center gap-2 pt-2 border-t">
                     <Button
@@ -417,10 +410,13 @@ export const MessageRight = (props: MessageProps) => {
               </Card>
             </div>
           ) : (
-            <div className={`bg-primary/10 rounded-lg p-4 max-w-md ${(props.outOfContext || (!props.visible && props.isInstructor))
-              ? "opacity-60 border border-dashed"
-              : ""
-              }`}>
+            <div
+              className={`bg-primary/10 rounded-lg p-4 max-w-md ${
+                props.outOfContext || (!props.visible && props.isInstructor)
+                  ? "opacity-60 border border-dashed"
+                  : ""
+              }`}
+            >
               <Markdown
                 className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground"
                 components={{ a: LinkRenderer }}

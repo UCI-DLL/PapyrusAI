@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -35,14 +35,21 @@ import {
   MessageSquare,
   Save,
   Folder,
+  Trash2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import Put from "../../utility/Put";
-import { putCreateModule } from "../../utility/endpoints/CourseEndpoints";
+import Get from "../../utility/Get";
+import {
+  putCreateModule,
+  getModule,
+  putUpdateModule,
+} from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
 import ListFolderContents from "../library/ListFolderContents";
 import ListFolders from "../library/ListFolders";
-import Get from "../../utility/Get";
 import {
   getOrgFile,
   getOrgPrompt,
@@ -53,7 +60,7 @@ import { Prompt } from "../../components/Prompt";
 import { FileType, PromptType } from "../../utility/types/CourseTypes";
 import { File } from "../../components/File";
 
-type AddModuleType = {
+type ModuleFormType = {
   name: string;
   moduleDescription: string;
   isRepeating: boolean;
@@ -62,8 +69,20 @@ type AddModuleType = {
   prompts: Array<PromptType>;
   files: Array<FileType>;
   webSearch: boolean;
+  id?: string;
+  isDeleted?: boolean;
+  isTemplate?: boolean;
+  showWizard?: boolean;
+  raterEnabled?: boolean;
 };
-//Note: ^ missing showWizard. Need to add later
+
+type ModuleFormMode = "create" | "edit";
+
+interface ModuleFormProps {
+  mode?: ModuleFormMode;
+  courseId?: string;
+  moduleId?: string;
+}
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -78,10 +97,26 @@ const options = [
   "Discard Changes",
 ];
 
-export default function AddModule(): JSX.Element {
+export default function AddModule({
+  mode = "create",
+  courseId,
+  moduleId,
+}: ModuleFormProps = {}): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
-  const [session, setSession] = useState<AddModuleType>({
+
+  // Determine if we're in edit mode based on URL or props
+  const isEditMode =
+    mode === "edit" || location.pathname.includes("/editmodule/");
+  const actualCourseId =
+    courseId ||
+    (isEditMode
+      ? location.pathname.split("/")[2]
+      : location.pathname.split("/")[2]);
+  const actualModuleId =
+    moduleId || (isEditMode ? location.pathname.split("/")[4] : undefined);
+
+  const [session, setSession] = useState<ModuleFormType>({
     name: "",
     moduleDescription: "",
     isRepeating: false,
@@ -90,7 +125,16 @@ export default function AddModule(): JSX.Element {
     prompts: [],
     files: [],
     webSearch: false,
+    id: "",
+    isDeleted: false,
+    isTemplate: false,
+    showWizard: true,
+    raterEnabled: false,
   });
+  const [moduleIds, setModuleIds] = useState<{
+    courseId: string;
+    moduleId: string;
+  }>();
   const [errors, setErrors] = useState<any>({
     name: "",
     moduleDescription: "",
@@ -100,7 +144,7 @@ export default function AddModule(): JSX.Element {
     prompts: "",
     files: "",
   });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(isEditMode);
   const { setAlert } = useContext(AlertContext);
   const [openSelectFolderModal, setOpenSelectFolderModal] =
     useState<boolean>(false);
@@ -111,7 +155,9 @@ export default function AddModule(): JSX.Element {
   const [openSaveTop, setOpenSaveTop] = useState(false);
   const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
+  const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
+  const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
   const [showSavePublishTooltip, setShowSavePublishTooltip] =
     useState<boolean>(false);
   const [openConfirmationModal, setOpenConfirmationModal] = useState<{
@@ -121,6 +167,53 @@ export default function AddModule(): JSX.Element {
     id: "",
     type: "",
   });
+
+  useEffect(() => {
+    //When the page changes, reset the alert
+    setAlert({ message: "", type: "info" });
+    // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    if (isEditMode && actualCourseId && actualModuleId) {
+      // Load existing module data for edit mode
+      const controller = new AbortController();
+      setModuleIds({ courseId: actualCourseId, moduleId: actualModuleId });
+
+      Get(getModule(actualCourseId, actualModuleId), controller.signal).then(
+        (res) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data && res.data.prompts) {
+              var tempSession = res.data;
+              if (!tempSession.files) {
+                tempSession.files = [];
+              }
+              setSession(tempSession);
+              setIsLoading(false);
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res === undefined) {
+            } else {
+              //handle error
+              navigator("/courses");
+              setAlert({ message: "Module does not exist", type: "error" });
+              setIsLoading(false);
+            }
+          }
+        }
+      );
+
+      return () => {
+        controller.abort();
+      };
+    } else if (!isEditMode) {
+      // For create mode, just set loading to false
+      setIsLoading(false);
+    }
+    // eslint-disable-next-line
+  }, [isEditMode, actualCourseId, actualModuleId]);
 
   // function handleSaveClick(e: any) {
   //   if (selectedIndexSave === 0) {
@@ -135,15 +228,21 @@ export default function AddModule(): JSX.Element {
   //   }
   // }
 
-  const handleMenuItemClick = (index: number) => {
+  const handleMenuItemClick = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    index: number
+  ) => {
     if (index === 0) {
       //Save and publish
-      const fakeEvent = { preventDefault: () => {} } as any;
-      handleSubmit(fakeEvent, true);
+      handleSubmit(e, true, false);
     } else if (index === 1) {
       //save and not publish
-      const fakeEvent = { preventDefault: () => {} } as any;
-      handleSubmit(fakeEvent, false);
+      if (isEditMode && session.isPublished) {
+        //handle case that module is already published and they are switching it
+        setOpenActiveModal(true);
+      } else {
+        handleSubmit(e, false, false);
+      }
     } else if (index === 2) {
       //discard changes
       setOpenDiscardModal(true);
@@ -153,7 +252,7 @@ export default function AddModule(): JSX.Element {
     setOpenSaveBottom(false);
   };
 
-  function handleSubmit(e: any, isPublished = false) {
+  function handleSubmit(e: any, isPublished = false, isDeleted = false) {
     e.preventDefault();
     if (session.name === "") {
       setErrors((prev: any) => ({ ...prev, name: "Name missing" }));
@@ -163,39 +262,84 @@ export default function AddModule(): JSX.Element {
         moduleDescription: "Module description missing",
       }));
     } else {
-      //create module
-      const courseId = location.pathname.split("/")[2];
       // set is loading
       setIsLoading(true);
-      const dataToSend = {
-        name: session.name,
-        moduleDescription: session.moduleDescription,
-        isRepeating: session.isRepeating,
-        isPublished: isPublished,
-        showInitialPrompt: session.showInitialPrompt,
-        prompts: session.prompts, //Send prompts with all information + folderId
-        files: session.files, //send files with all information + folderid
-        isDeleted: false,
-        webSearch: session.webSearch,
-      };
-      // post data back
-      Put(putCreateModule(courseId), dataToSend).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data && res.data) {
-            //redirect to module list of that course
-            navigator(`/courses/${courseId}/modules`);
-            //pop up notifying user of creation
-            setAlert({ message: "Module Created", type: "success" });
+
+      if (isEditMode && moduleIds) {
+        // Update module
+        const dataToSend = {
+          name: session.name,
+          moduleDescription: session.moduleDescription,
+          isRepeating: session.isRepeating,
+          isPublished: isPublished,
+          showInitialPrompt: session.showInitialPrompt,
+          prompts: session.prompts, //Send prompts with all information + folderId
+          files: session.files, //send files with all information + folderid
+          showWizard: session.showWizard,
+          isDeleted: isDeleted,
+          isTemplate: session.isTemplate,
+          id: session.id,
+          raterEnabled: session.raterEnabled ? true : false,
+          webSearch: session.webSearch ? true : false,
+        };
+        // put data back
+        Put(
+          putUpdateModule(moduleIds.courseId, moduleIds.moduleId),
+          dataToSend
+        ).then((res) => {
+          if (res.status && res.status < 300) {
+            if (res.data && res.data) {
+              //redirect to module list
+              navigator(`/courses/${moduleIds.courseId}/modules`);
+              //pop up notifying user of update
+              setAlert({ message: "Module updated", type: "success" });
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            // set errors
+            setErrors({
+              name: res.data,
+              moduleDescription: res.data,
+              isDeleted: res.data,
+              isPublished: res.data,
+            });
           }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          // set errors
-          setErrors({ name: res.data, moduleDescription: res.data });
-        }
-        // set is loading back
-        setIsLoading(false);
-      });
+          // set is loading back
+          setIsLoading(false);
+        });
+      } else {
+        // Create module
+        const dataToSend = {
+          name: session.name,
+          moduleDescription: session.moduleDescription,
+          isRepeating: session.isRepeating,
+          isPublished: isPublished,
+          showInitialPrompt: session.showInitialPrompt,
+          prompts: session.prompts, //Send prompts with all information + folderId
+          files: session.files, //send files with all information + folderid
+          isDeleted: false,
+          webSearch: session.webSearch,
+        };
+        // post data back
+        Put(putCreateModule(actualCourseId), dataToSend).then((res) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data && res.data) {
+              //redirect to module list of that course
+              navigator(`/courses/${actualCourseId}/modules`);
+              //pop up notifying user of creation
+              setAlert({ message: "Module Created", type: "success" });
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            // set errors
+            setErrors({ name: res.data, moduleDescription: res.data });
+          }
+          // set is loading back
+          setIsLoading(false);
+        });
+      }
     }
   }
 
@@ -380,7 +524,29 @@ export default function AddModule(): JSX.Element {
     setOpenConfirmationModal({ id: id, type: type });
   }
 
-  return !isLoading ? (
+  if (isLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <Loader2
+            className="h-8 w-8 animate-spin text-primary"
+            aria-hidden="true"
+          />
+          <p className="text-muted-foreground">
+            {isEditMode
+              ? "Loading module..."
+              : "Loading module creation form..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
     <main className="bg-background text-foreground p-4 space-y-6">
       <Dialog
         open={showSavePublishTooltip}
@@ -432,6 +598,59 @@ export default function AddModule(): JSX.Element {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit-specific dialogs */}
+      {isEditMode && (
+        <>
+          <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Module?</DialogTitle>
+                <DialogDescription>
+                  Are you sure you would like to permanently delete this module?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenDeleteModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={(e) => handleSubmit(e, false, true)}
+                >
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={openActiveModal} onOpenChange={setOpenActiveModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Unpublish Module?</DialogTitle>
+                <DialogDescription>
+                  This module is current published and available to the public.
+                  Continuing will make the module unavailable to students.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenActiveModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={(e) => handleSubmit(e, false, false)}>
+                  Continue
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
       <Dialog
         open={openSelectFolderModal}
         onOpenChange={setOpenSelectFolderModal}
@@ -546,20 +765,28 @@ export default function AddModule(): JSX.Element {
 
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              Create Module
+              {isEditMode
+                ? `Edit ${session.name || "Module"}`
+                : "Create Module"}
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Modules provide users access to conversations with the AI. Modules
               can be customized to allow or restrict access to specific assets,
               including conversation prompts (AI instructions) and documents.
-              For more information on creating a module, please see the{" "}
+              For more information on {isEditMode ? "editing" : "creating"} a
+              module, please see the{" "}
               <a
-                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                href={
+                  isEditMode
+                    ? "https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.cabsr1px9wcb"
+                    : "https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                }
                 target="_blank"
                 rel="noreferrer"
                 className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
               >
-                "Creating a Module" section of our instructor guide
+                {isEditMode ? "Editing a Module" : "Creating a Module"} section
+                of our instructor guide
               </a>
               .
             </p>
@@ -571,21 +798,60 @@ export default function AddModule(): JSX.Element {
       <section aria-labelledby="actions-heading">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h2
-              id="actions-heading"
-              className="text-2xl font-bold text-foreground mb-1"
-            >
-              Module Setup
-            </h2>
+            <div className="flex items-center gap-3 mb-1">
+              <h2
+                id="actions-heading"
+                className="text-2xl font-bold text-foreground"
+              >
+                {isEditMode ? "Module Management" : "Module Setup"}
+              </h2>
+              {isEditMode && (
+                <div className="flex items-center gap-2">
+                  {session.isPublished ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <span className="text-green-600 font-medium">
+                        Published
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-muted-foreground font-medium">
+                        Unpublished
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
             <p className="text-muted-foreground text-sm">
-              Configure your module settings and publish options.
+              {isEditMode
+                ? "Update your module settings and publish options."
+                : "Configure your module settings and publish options."}
             </p>
           </div>
           <nav
             className="flex flex-col md:flex-row gap-2"
             role="toolbar"
-            aria-label="Module creation actions"
+            aria-label={
+              isEditMode
+                ? "Module management actions"
+                : "Module creation actions"
+            }
           >
+            {isEditMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setOpenDeleteModal(true)}
+                className="text-destructive hover:text-destructive"
+                aria-label="Delete module"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Delete
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -593,7 +859,7 @@ export default function AddModule(): JSX.Element {
               aria-label="Get help with Save & Publish options"
             >
               <Info className="h-4 w-4" aria-hidden="true" />
-              Info
+              {isEditMode ? "Help" : "Info"}
             </Button>
             <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
               <DropdownMenuTrigger asChild>
@@ -610,7 +876,7 @@ export default function AddModule(): JSX.Element {
                 {options.map((option, index) => (
                   <DropdownMenuItem
                     key={option}
-                    onClick={() => handleMenuItemClick(index)}
+                    onClick={(event) => handleMenuItemClick(event, index)}
                     className={cn(
                       index === selectedIndexSave && "bg-accent",
                       index === 2 && "text-destructive focus:text-destructive"
@@ -890,8 +1156,22 @@ export default function AddModule(): JSX.Element {
         <nav
           className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
           role="toolbar"
-          aria-label="Module creation actions"
+          aria-label={
+            isEditMode ? "Module management actions" : "Module creation actions"
+          }
         >
+          {isEditMode && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOpenDeleteModal(true)}
+              className="text-destructive hover:text-destructive"
+              aria-label="Delete module"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Delete
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -899,7 +1179,7 @@ export default function AddModule(): JSX.Element {
             aria-label="Get help with Save & Publish options"
           >
             <Info className="h-4 w-4" aria-hidden="true" />
-            Info
+            {isEditMode ? "Help" : "Info"}
           </Button>
           <DropdownMenu open={openSaveBottom} onOpenChange={setOpenSaveBottom}>
             <DropdownMenuTrigger asChild>
@@ -916,7 +1196,7 @@ export default function AddModule(): JSX.Element {
               {options.map((option, index) => (
                 <DropdownMenuItem
                   key={option}
-                  onClick={() => handleMenuItemClick(index)}
+                  onClick={(event) => handleMenuItemClick(event, index)}
                   className={cn(
                     index === selectedIndexSave && "bg-accent",
                     index === 2 && "text-destructive focus:text-destructive"
@@ -930,19 +1210,5 @@ export default function AddModule(): JSX.Element {
         </nav>
       </section>
     </main>
-  ) : (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      role="status"
-      aria-live="polite"
-    >
-      <div className="flex flex-col items-center gap-4">
-        <Loader2
-          className="h-8 w-8 animate-spin text-primary"
-          aria-hidden="true"
-        />
-        <p className="text-muted-foreground">Loading module creation form...</p>
-      </div>
-    </div>
   );
 }

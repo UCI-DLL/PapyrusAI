@@ -2,18 +2,13 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
+import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
+import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { FolderType } from "../utility/types/CourseTypes";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
 import { AlertContext } from "../utility/context/AlertContext";
@@ -31,18 +26,6 @@ import {
   putUpdateUserFavoritingData,
 } from "../utility/endpoints/UserEndpoints";
 import { Star, Folder, MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "./ui/tooltip";
 import { cn } from "../lib/utils";
 
 interface FolderProps {
@@ -396,123 +379,105 @@ export const FolderComponent = (props: FolderProps) => {
   return (
     <div key={props.keyy ? props.keyy : "key"}>
       {/* Promote Dialog */}
-      <Dialog open={openPromoteDialog} onOpenChange={setOpenPromoteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Promote Folder?</DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to promote this folder into an
-              organization folder along everything in it? This will remove the
-              folder from your personal ownership and transfer it to the
-              organization level. Proceeding will allow all instructors to be
-              able to read and use contains in modules. All admins will be able
-              to edit this folder.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenPromoteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={promote}>Confirm</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openPromoteDialog}
+        onOpenChange={setOpenPromoteDialog}
+        title="Promote Folder?"
+        description="Are you sure you would like to promote this folder into an organization folder along everything in it? This will remove the folder from your personal ownership and transfer it to the organization level. Proceeding will allow all instructors to be able to read and use contains in modules. All admins will be able to edit this folder."
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenPromoteDialog(false),
+            variant: "outline",
+          },
+          {
+            label: "Confirm",
+            onClick: promote,
+            variant: "default",
+          },
+        ]}
+      />
 
       {/* Demote Dialog */}
-      <Dialog open={openDemoteDialog} onOpenChange={setOpenDemoteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Demote Folder?</DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to demote this organization folder
-              into a personal user folder along everything in it? This will
-              remove the folder from the organization ownership and transfer it
-              to the user level. Proceeding will only let you edit the folder.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenDemoteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={demote}>Confirm</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDemoteDialog}
+        onOpenChange={setOpenDemoteDialog}
+        title="Demote Folder?"
+        description="Are you sure you would like to demote this organization folder into a personal user folder along everything in it? This will remove the folder from the organization ownership and transfer it to the user level. Proceeding will only let you edit the folder."
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDemoteDialog(false),
+            variant: "outline",
+          },
+          {
+            label: "Confirm",
+            onClick: demote,
+            variant: "default",
+          },
+        ]}
+      />
 
       {/* Delete Dialog */}
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Folder?</DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to permanently delete this folder and
-              everything in it?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={deleteFolder}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDeleteDialog}
+        onOpenChange={setOpenDeleteDialog}
+        title="Delete Folder?"
+        description="Are you sure you would like to permanently delete this folder and everything in it?"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDeleteDialog(false),
+            variant: "outline",
+          },
+          {
+            label: "Delete",
+            onClick: deleteFolder,
+            variant: "destructive",
+          },
+        ]}
+      />
 
       {/* Rename Dialog */}
-      <Dialog open={openRenameDialog} onOpenChange={setOpenRenameDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rename Folder</DialogTitle>
-            <DialogDescription>
-              Enter a new name for your folder.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="folder-name">Folder Name</Label>
-              <Input
-                id="folder-name"
-                value={renameFolderText}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setRenameFolderText(e.target.value);
-                }}
-                placeholder="Enter folder name"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenRenameDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                setOpenRenameDialog(false);
-                rename();
+      <DialogWrapper
+        open={openRenameDialog}
+        onOpenChange={setOpenRenameDialog}
+        title="Rename Folder"
+        description="Enter a new name for your folder."
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenRenameDialog(false),
+            variant: "outline",
+          },
+          {
+            label: "Rename",
+            onClick: () => {
+              setOpenRenameDialog(false);
+              rename();
+            },
+            variant: "default",
+          },
+        ]}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="folder-name">Folder Name</Label>
+            <Input
+              id="folder-name"
+              value={renameFolderText}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setRenameFolderText(e.target.value);
               }}
-            >
-              Rename
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              placeholder="Enter folder name"
+            />
+          </div>
+        </div>
+      </DialogWrapper>
 
       <Card
-        className="h-full hover:shadow-md transition-shadow duration-200 cursor-pointer group"
-        onClick={props.onClick}
+        className="h-full hover:shadow-md transition-shadow duration-200 group"
+        // onClick={props.onClick}
       >
         <CardContent className="p-4 h-full flex flex-col">
           {/* Header with folder icon, visibility, and star */}
@@ -530,36 +495,32 @@ export const FolderComponent = (props: FolderProps) => {
               >
                 {props.isOrganizationFolder ? "public" : "private"}
               </Badge>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={toggleStar}
-                      className={cn(
-                        "p-1 rounded-full transition-all duration-300",
-                        starred
-                          ? "text-gold hover:text-muted"
-                          : "text-muted hover:text-gold"
-                      )}
-                      aria-label={
-                        starred ? "Remove from favorites" : "Add to favorites"
-                      }
-                    >
-                      <Star
-                        size={16}
-                        fill={starred ? "currentColor" : "none"}
-                        className={cn(
-                          starred ? "hover:fill-none" : "hover:fill-current"
-                        )}
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    {starred ? "Unstar Folder" : "Star Folder"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <TooltipWrapper
+                content={starred ? "Unstar Folder" : "Star Folder"}
+                side="top"
+              >
+                <button
+                  onClick={toggleStar}
+                  className={cn(
+                    "p-1 rounded-full transition-all duration-300",
+                    starred
+                      ? "text-gold hover:text-muted"
+                      : "text-muted hover:text-gold"
+                  )}
+                  aria-label={
+                    starred ? "Remove from favorites" : "Add to favorites"
+                  }
+                >
+                  <Star
+                    size={16}
+                    fill={starred ? "currentColor" : "none"}
+                    className={cn(
+                      starred ? "hover:fill-none" : "hover:fill-current"
+                    )}
+                    aria-hidden="true"
+                  />
+                </button>
+              </TooltipWrapper>
             </div>
           </div>
 
@@ -593,66 +554,55 @@ export const FolderComponent = (props: FolderProps) => {
             </span>
             <div className="flex items-center gap-2">
               {!props.noShowMenu && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <DropdownWrapper
+                  trigger={
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0"
+                      className="p-2"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal className="h-3 w-3" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {(props.isOrganizationFolder
-                      ? user?.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
-                        )
-                        ? adminOrgMenu
-                        : instructorOrgMenu
-                      : user?.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
-                        )
-                      ? adminUserMenu
-                      : instructorUserMenu
-                    ).map((item) =>
-                      item.type === "link" ? (
-                        <DropdownMenuItem
-                          key={item.label}
-                          asChild
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            props.loading();
-                          }}
-                        >
-                          <Link to={item.action} className="no-underline">
-                            {item.label}
-                          </Link>
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem
-                          key={item.label}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            item.action();
-                          }}
-                        >
-                          {item.label}
-                        </DropdownMenuItem>
+                  }
+                  actions={(props.isOrganizationFolder
+                    ? user?.groups.includes(
+                        process.env.REACT_APP_ADMIN
+                          ? process.env.REACT_APP_ADMIN
+                          : "PapyrusAIAdmin"
                       )
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      ? adminOrgMenu
+                      : instructorOrgMenu
+                    : user?.groups.includes(
+                        process.env.REACT_APP_ADMIN
+                          ? process.env.REACT_APP_ADMIN
+                          : "PapyrusAIAdmin"
+                      )
+                    ? adminUserMenu
+                    : instructorUserMenu
+                  ).map((item) => ({
+                    label: item.label,
+                    onClick: () => {
+                      if (item.type === "link") {
+                        navigator(item.action);
+                      } else {
+                        item.action();
+                      }
+                    },
+                    type: item.type === "link" ? "link" : "button",
+                    href: item.type === "link" ? item.action : undefined,
+                  }))}
+                  align="end"
+                  tooltipContent="Folder Options"
+                  tooltipSide="top"
+                />
               )}
               <Button
                 variant="ghost"
                 size="icon"
                 className="flex items-center gap-1 text-primary text-xs font-medium w-full p-2"
+                onClick={props.onClick}
+                // disabled={props.noShowMenu}
               >
                 {props.noShowMenu ? "Select" : "View"}
               </Button>

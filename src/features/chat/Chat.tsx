@@ -53,6 +53,7 @@ export default function Chat(): JSX.Element {
   const [messages, setMessages] = useState<Array<MessageType>>([]);
   const messagesRef = useRef<Array<MessageType>>();
   messagesRef.current = messages;
+  const currentStreamIdRef = useRef<string | null>(null);
   const [courseInfo, setCourseInfo] = useState<CourseType>();
   const [moduleInfo, setModuleInfo] = useState<ModuleType>();
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>();
@@ -379,9 +380,7 @@ export default function Chat(): JSX.Element {
           raterReference: "",
           expandableMessage: "",
         };
-        if (messages) {
-          setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
-        }
+        setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
         setShowWizard(false);
       } else if (returnData.status < 300) {
         const returnMessage: StreamMessageType = JSON.parse(returnData.data);
@@ -396,13 +395,18 @@ export default function Chat(): JSX.Element {
           if (returnMessage.message !== null && !returnMessage.note) {
             setMessageNote(undefined);
           }
-          if (
-            messagesRef.current &&
-            messagesRef.current.length > 0 &&
-            messagesRef.current[messagesRef.current.length - 1].stream &&
-            messagesRef.current[messagesRef.current.length - 1].stream?.[0]
-              .id === returnMessage.id
-          ) {
+
+          // Check if this stream message belongs to the current streaming message
+          const shouldAppendToExisting =
+            currentStreamIdRef.current === returnMessage.id ||
+            (messagesRef.current &&
+              messagesRef.current.length > 0 &&
+              messagesRef.current[messagesRef.current.length - 1].role === "assistant" &&
+              messagesRef.current[messagesRef.current.length - 1].stream &&
+              messagesRef.current[messagesRef.current.length - 1].stream?.[0]
+                .id === returnMessage.id);
+
+          if (shouldAppendToExisting) {
             setMessages((prev) => {
               if (prev && messagesRef.current) {
                 var temp = [...messagesRef.current];
@@ -448,14 +452,16 @@ export default function Chat(): JSX.Element {
               expandableMessage: "",
               stream: [returnMessage],
             };
-            if (messages) {
-              setMessages((prev) => [...prev, responseMessage]);
-            }
+            // Track this stream ID to prevent duplicates
+            currentStreamIdRef.current = returnMessage.id;
+            setMessages((prev) => [...prev, responseMessage]);
           }
         } else if (
           returnMessage.finished &&
           returnMessage.messageType === "finalMessage"
         ) {
+          // Clear the stream ID when finished
+          currentStreamIdRef.current = null;
           setMessages((prev) => {
             if (prev && messagesRef.current) {
               var temp = [...messagesRef.current];
@@ -474,7 +480,7 @@ export default function Chat(): JSX.Element {
         }
       }
     },
-    [messages]
+    []
   );
 
   const onConnect = useCallback(

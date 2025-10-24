@@ -2,13 +2,7 @@ import React from "react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { ScrollArea } from "../../../components/ui/scroll-area";
-import {
-  Search,
-  X,
-  Plus,
-  Loader2,
-  MessageCircle,
-} from "lucide-react";
+import { Search, X, Plus, Loader2, MessageCircle } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { ConversationListType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";
@@ -45,9 +39,12 @@ export default function ChatSidebar({
   onConversationClick,
   onClose,
 }: ChatSidebarProps): JSX.Element | null {
-  const filteredConversations = conversationList?.conversations?.filter((conv) =>
-    conv.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ).reverse() || [];
+  const filteredConversations =
+    conversationList?.conversations
+      ?.filter((conv) =>
+        conv.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .reverse() || [];
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -95,14 +92,16 @@ export default function ChatSidebar({
             </p>
             <p>
               <span className="font-medium">Instructor:</span>{" "}
-              {courseInfo.instructor.name + " " + courseInfo.instructor.family_name}
+              {courseInfo.instructor.name +
+                " " +
+                courseInfo.instructor.family_name}
             </p>
           </div>
         </div>
       </div>
 
       {/* Search */}
-      <div className="p-4 border-b border-border">
+      {/* <div className="p-4 border-b border-border">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -112,75 +111,90 @@ export default function ChatSidebar({
             className="pl-9 text-sm h-8"
           />
         </div>
-      </div>
+      </div> */}
 
       {/* Conversations List */}
       <div className="flex-1 min-h-0">
         <ScrollArea className="h-full">
-        {filteredConversations.length > 0 ? (
-          <div className="space-y-1 p-2">
-            {filteredConversations.map((conversation) => {
-              const conversationIndex = conversationList?.conversations
-                ? conversationList.conversations.findIndex(c => c.id === conversation.id)
-                : 0;
-              const isCurrentConversation = conversationIndex.toString() === currentConversationIndex;
-              const conversationLink = `/chat/${user?.username}/${courseInfo.id}/${moduleInfo.id}/${conversationIndex}`;
+          {filteredConversations.length > 0 ? (
+            <div className="space-y-1 p-2">
+              {filteredConversations.map((conversation) => {
+                const conversationIndex = conversationList?.conversations
+                  ? conversationList.conversations.findIndex(
+                      (c) => c.id === conversation.id
+                    )
+                  : 0;
+                const isCurrentConversation =
+                  conversationIndex.toString() === currentConversationIndex;
+                const conversationLink = `/chat/${user?.username}/${courseInfo.id}/${moduleInfo.id}/${conversationIndex}`;
 
-              return (
-                <div
-                  key={conversation.id}
-                  className={cn(
-                    "rounded-lg p-3 cursor-pointer transition-colors border",
-                    isCurrentConversation
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "hover:bg-accent border-transparent"
-                  )}
-                  onClick={() => onConversationClick(conversationLink)}
-                >
-                  <div className="space-y-1">
-                    <p className={cn(
-                      "text-sm font-medium truncate",
-                      isCurrentConversation ? "text-primary-foreground" : "text-foreground"
-                    )}>
-                      {conversation.name}
-                    </p>
-                    <p className={cn(
-                      "text-xs truncate",
-                      isCurrentConversation ? "text-primary-foreground/70" : "text-muted-foreground"
-                    )}>
-                      {new Date(parseInt(conversation.id.substring(0, 13))).toLocaleDateString()}
-                    </p>
+                return (
+                  <div
+                    key={conversation.id}
+                    className={cn(
+                      "rounded-lg p-3 cursor-pointer transition-colors border",
+                      isCurrentConversation
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "hover:bg-accent border-transparent"
+                    )}
+                    onClick={() => onConversationClick(conversationLink)}
+                  >
+                    <div className="space-y-1">
+                      <p
+                        className={cn(
+                          "text-sm font-medium truncate",
+                          isCurrentConversation
+                            ? "text-primary-foreground"
+                            : "text-foreground"
+                        )}
+                      >
+                        {conversation.name}
+                      </p>
+                      <p
+                        className={cn(
+                          "text-xs truncate",
+                          isCurrentConversation
+                            ? "text-primary-foreground/70"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {new Date(
+                          parseInt(conversation.id.substring(0, 13))
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground p-4">
-            <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">
-              {searchTerm ? "No matching conversations" : "No conversations yet"}
-            </p>
-            {!searchTerm && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  onNewConversation();
-                  if (isMobile && onClose) onClose();
-                }}
-                disabled={creatingConvo}
-                className="mt-3 text-xs"
-              >
-                {creatingConvo ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                  <Plus className="mr-1 h-3 w-3" />
-                )}
-                Start conversation
-              </Button>
-            )}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground p-4">
+              <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">
+                {searchTerm
+                  ? "No matching conversations"
+                  : "No conversations yet"}
+              </p>
+              {!searchTerm && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    onNewConversation();
+                    if (isMobile && onClose) onClose();
+                  }}
+                  disabled={creatingConvo}
+                  className="mt-3 text-xs"
+                >
+                  {creatingConvo ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <Plus className="mr-1 h-3 w-3" />
+                  )}
+                  Start conversation
+                </Button>
+              )}
+            </div>
+          )}
         </ScrollArea>
       </div>
     </div>

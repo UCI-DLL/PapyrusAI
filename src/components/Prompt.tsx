@@ -64,6 +64,7 @@ interface PromptProps {
   selected?: boolean;
   noShowDesc?: boolean;
   isStarred?: boolean;
+  disableStarring?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -429,7 +430,8 @@ export const Prompt = (props: PromptProps) => {
 
   function createStarredPrompt() {
     Post(postCreateUserFavoritingData(), {
-      prompts: [{ promptId: props.prompt.id, folderId: props.folder.id }],
+      id: { folderId: props.folder.id, promptId: props.prompt.id },
+      type: "prompts",
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(true);
@@ -439,14 +441,14 @@ export const Prompt = (props: PromptProps) => {
       } else {
         setAlert({ message: "Failed to star prompt", type: "error" });
       }
+      props.refreshList();
     });
   }
 
   function removeStarredPrompt() {
     Put(putUpdateUserFavoritingData(), {
-      prompts: starred
-        ? [{ promptId: props.prompt.id, folderId: props.folder.id }]
-        : [],
+      id: { folderId: props.folder.id, promptId: props.prompt.id },
+      type: "prompts",
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(false);
@@ -456,6 +458,7 @@ export const Prompt = (props: PromptProps) => {
       } else {
         setAlert({ message: "Failed to unstar prompt", type: "error" });
       }
+      props.refreshList();
     });
   }
 
@@ -693,34 +696,36 @@ export const Prompt = (props: PromptProps) => {
                 {getPromptCategory()}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <TooltipWrapper
-                content={starred ? "Unstar Prompt" : "Star Prompt"}
-                side="top"
-              >
-                <button
-                  onClick={toggleStar}
-                  className={cn(
-                    "p-1 rounded-full transition-all duration-300",
-                    starred
-                      ? "text-gold hover:text-muted"
-                      : "text-muted hover:text-gold"
-                  )}
-                  aria-label={
-                    starred ? "Remove from favorites" : "Add to favorites"
-                  }
+            {!props.disableStarring && (
+              <div className="flex items-center gap-2">
+                <TooltipWrapper
+                  content={starred ? "Unstar Prompt" : "Star Prompt"}
+                  side="top"
                 >
-                  <Star
-                    size={16}
-                    fill={starred ? "currentColor" : "none"}
+                  <button
+                    onClick={toggleStar}
                     className={cn(
-                      starred ? "hover:fill-none" : "hover:fill-current"
+                      "p-1 rounded-full transition-all duration-300",
+                      starred
+                        ? "text-gold hover:text-muted"
+                        : "text-muted hover:text-gold"
                     )}
-                    aria-hidden="true"
-                  />
-                </button>
-              </TooltipWrapper>
-            </div>
+                    aria-label={
+                      starred ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    <Star
+                      size={16}
+                      fill={starred ? "currentColor" : "none"}
+                      className={cn(
+                        starred ? "hover:fill-none" : "hover:fill-current"
+                      )}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </TooltipWrapper>
+              </div>
+            )}
           </div>
 
           {/* Prompt title */}
@@ -822,6 +827,7 @@ export const Prompt = (props: PromptProps) => {
               props.showRemove ? (
                 <TooltipWrapper content="Remove prompt from module" side="top">
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
@@ -844,6 +850,7 @@ export const Prompt = (props: PromptProps) => {
               ) : (
                 <TooltipWrapper content="Add prompt to module" side="top">
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
@@ -866,6 +873,7 @@ export const Prompt = (props: PromptProps) => {
               )
             ) : (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 className="flex items-center gap-1 text-primary text-xs font-medium"

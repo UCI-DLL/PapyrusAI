@@ -53,6 +53,7 @@ interface FileProps {
   ) => void; //type is "prompt" or "file"
   showRemove?: boolean;
   isStarred?: boolean;
+  disableStarring?: boolean;
 }
 
 export const File = (props: FileProps) => {
@@ -540,34 +541,36 @@ export const File = (props: FileProps) => {
                 {getFileType()}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <TooltipWrapper
-                content={starred ? "Unstar File" : "Star File"}
-                side="top"
-              >
-                <button
-                  onClick={toggleStar}
-                  className={cn(
-                    "p-1 rounded-full transition-all duration-300",
-                    starred
-                      ? "text-gold hover:text-muted"
-                      : "text-muted hover:text-gold"
-                  )}
-                  aria-label={
-                    starred ? "Remove from favorites" : "Add to favorites"
-                  }
+            {!props.disableStarring && (
+              <div className="flex items-center gap-2">
+                <TooltipWrapper
+                  content={starred ? "Unstar File" : "Star File"}
+                  side="top"
                 >
-                  <Star
-                    size={16}
-                    fill={starred ? "currentColor" : "none"}
+                  <button
+                    onClick={toggleStar}
                     className={cn(
-                      starred ? "hover:fill-none" : "hover:fill-current"
+                      "p-1 rounded-full transition-all duration-300",
+                      starred
+                        ? "text-gold hover:text-muted"
+                        : "text-muted hover:text-gold"
                     )}
-                    aria-hidden="true"
-                  />
-                </button>
-              </TooltipWrapper>
-            </div>
+                    aria-label={
+                      starred ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    <Star
+                      size={16}
+                      fill={starred ? "currentColor" : "none"}
+                      className={cn(
+                        starred ? "hover:fill-none" : "hover:fill-current"
+                      )}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </TooltipWrapper>
+              </div>
+            )}
           </div>
 
           {/* File title */}
@@ -643,6 +646,7 @@ export const File = (props: FileProps) => {
                 <TooltipWrapper content="Remove file from module" side="top">
                   <Button
                     variant="ghost"
+                    type="button"
                     size="sm"
                     className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
                     onClick={(e) => {
@@ -665,6 +669,7 @@ export const File = (props: FileProps) => {
                 <TooltipWrapper content="Add file to module" side="top">
                   <Button
                     variant="ghost"
+                    type="button"
                     size="sm"
                     className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
                     onClick={(e) => {
@@ -686,6 +691,7 @@ export const File = (props: FileProps) => {
               )
             ) : (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 className="text-xs font-medium text-primary"

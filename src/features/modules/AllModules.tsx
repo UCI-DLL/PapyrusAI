@@ -10,13 +10,12 @@ import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { Loader2, BookOpen } from "lucide-react";
 
-
 export default function AllModules(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
-  const [courseList, setCourseList] = useState<Array<CourseType>>([])
+  const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [starred, setStarred] = useState<UserStarred | undefined>();
 
   useEffect(() => {
@@ -35,7 +34,7 @@ export default function AllModules(): JSX.Element {
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
-    Get(getCourseList(), signal).then(res => {
+    Get(getCourseList(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           // Use next line if you want the list of all modules but dont care about the course id or name
@@ -58,7 +57,7 @@ export default function AllModules(): JSX.Element {
   }
 
   function getStarred(signal: AbortSignal) {
-    Get(getUserFavoritingData(), signal).then(res => {
+    Get(getUserFavoritingData(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //get the list of all favorited for this specific user
@@ -77,7 +76,7 @@ export default function AllModules(): JSX.Element {
 
   function refreshList() {
     const controller = new AbortController();
-    getCourses(controller.signal)
+    getCourses(controller.signal);
   }
 
   if (isLoading) {
@@ -115,16 +114,41 @@ export default function AllModules(): JSX.Element {
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Modules provide users access to conversations with the AI.
-              {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ?
-                " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)." :
-                ""}
+              {user?.groups.includes(
+                process.env.REACT_APP_INSTRUCTOR
+                  ? process.env.REACT_APP_INSTRUCTOR
+                  : "PapyrusAIInstructors"
+              )
+                ? " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)."
+                : ""}
             </p>
+            {user?.groups.includes(
+              process.env.REACT_APP_INSTRUCTOR
+                ? process.env.REACT_APP_INSTRUCTOR
+                : "PapyrusAIInstructors"
+            ) && (
+              <div className="mt-4">
+                <p className="text-primary/80 text-sm leading-relaxed">
+                  For information on creating, editing, copying, or viewing
+                  activity for a module, please see the{" "}
+                  <a
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                  >
+                    "Modules" section of our instructor guide
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       {error ? (
-        <div 
+        <div
           className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
           role="alert"
         >
@@ -135,30 +159,6 @@ export default function AllModules(): JSX.Element {
         <>
           {courseList.length > 0 ? (
             <section aria-labelledby="modules-content">
-              <header className="mb-6">
-                <h2 id="modules-content" className="text-2xl font-bold text-foreground mb-1">
-                  Module Collection
-                </h2>
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                  <p className="text-primary/80 text-sm leading-relaxed">
-                    To access a module, click the "Begin Module" button for the desired module.
-                    {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
-                      <span>
-                        {" "}For information on creating, editing, copying, or viewing activity for a module, please see the{" "}
-                        <a
-                          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
-                        >
-                          "Modules" section of our instructor guide
-                        </a>.
-                      </span>
-                    ) : ("")}
-                  </p>
-                </div>
-              </header>
-              
               <div className="space-y-6">
                 {orderCourseRecentlyCreated(courseList).map((course, index) => {
                   return course.modules.length > 0 ? (
@@ -169,15 +169,19 @@ export default function AllModules(): JSX.Element {
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           {course.section
-                            ? `${course.term ? course.term : ""}${course.year ? course.year : ""} - ${course.section}`
-                            : `${course.term ? course.term : ""}${course.year ? course.year : ""}`
-                          }
+                            ? `${course.term ? course.term : ""}${
+                                course.year ? course.year : ""
+                              } - ${course.section}`
+                            : `${course.term ? course.term : ""}${
+                                course.year ? course.year : ""
+                              }`}
                         </p>
                       </div>
-                      <ModuleList 
-                        course={course} 
-                        refreshList={refreshList} 
-                        starredList={starred ? starred : undefined} 
+                      <ModuleList
+                        course={course}
+                        refreshList={refreshList}
+                        starredList={starred ? starred : undefined}
+                        viewMode="card"
                       />
                     </div>
                   ) : null;
@@ -185,15 +189,22 @@ export default function AllModules(): JSX.Element {
               </div>
             </section>
           ) : (
-            <div 
-              className="text-center py-12 text-muted-foreground bg-card border rounded-lg" 
+            <div
+              className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
               role="status"
             >
               <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No modules are currently available to you.</p>
-              {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
+              <p className="text-lg font-medium mb-2">
+                No modules are currently available to you.
+              </p>
+              {user?.groups.includes(
+                process.env.REACT_APP_INSTRUCTOR
+                  ? process.env.REACT_APP_INSTRUCTOR
+                  : "PapyrusAIInstructors"
+              ) ? (
                 <p className="text-sm">
-                  To create a module, go to the course in which you would like to create the module.
+                  To create a module, go to the course in which you would like
+                  to create the module.
                 </p>
               ) : null}
             </div>

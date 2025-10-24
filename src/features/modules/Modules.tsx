@@ -8,7 +8,8 @@ import ModuleList from "./ModuleList";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
-import { Loader2, PlusIcon, GraduationCap, ExternalLink } from "lucide-react";
+import { Loader2, PlusIcon, GraduationCap, ChartColumnBig } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Modules(): JSX.Element {
   let location = useLocation();
@@ -120,105 +121,109 @@ export default function Modules(): JSX.Element {
             <GraduationCap size={192} className="text-primary" />
           </div>
 
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              {course?.name
-                ? `${course.name} Modules`
-                : "Available Modules"}
-            </h1>
-            {course && (
-              <div className="space-y-1 mb-2">
-                <p className="text-sm text-muted-foreground font-medium">
-                  {course.section
-                    ? `${course.term ?? ""}${course.year ?? ""} - ${
-                        course.section
-                      }`
-                    : `${course.term ?? ""}${course.year ?? ""}`}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Instructor: {course.instructor.name}{" "}
-                  {course.instructor.family_name}
+          <div className="relative z-10 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                  {course?.name
+                    ? `${course.name} Modules`
+                    : "Available Modules"}
+                </h1>
+                {course && (
+                  <div className="space-y-1 mb-2">
+                    <p className="text-sm text-muted-foreground font-medium">
+                      {course.section
+                        ? `${course.term ?? ""}${course.year ?? ""} - ${
+                            course.section
+                          }`
+                        : `${course.term ?? ""}${course.year ?? ""}`}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Instructor: {course.instructor.name}{" "}
+                      {course.instructor.family_name}
+                    </p>
+                  </div>
+                )}
+                <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                  Modules provide users access to conversations with the AI.
+                  {isInstructor
+                    ? " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)."
+                    : ""}
                 </p>
               </div>
+
+              <nav
+                className="flex flex-col md:flex-row gap-2 md:shrink-0"
+                role="toolbar"
+                aria-label="Module actions"
+              >
+                {isInstructorOrTA && (
+                  <Button size="sm" asChild aria-label="Create new module">
+                    <Link
+                      to={`/reports/course/${course?.id}`}
+                      className="no-underline hover:text-white "
+                    >
+                      <ChartColumnBig className="w-4 h-4" aria-hidden="true" />
+                      View Reports
+                    </Link>
+                  </Button>
+                )}
+                {isInstructorOrTA && (
+                  <Button size="sm" asChild aria-label="Create new module">
+                    <Link
+                      to={`/courses/${course?.id}/createmodule`}
+                      className="no-underline hover:text-white "
+                    >
+                      <PlusIcon className="w-4 h-4" aria-hidden="true" />
+                      Create Module
+                    </Link>
+                  </Button>
+                )}
+              </nav>
+            </div>
+
+            {course && course.modules.length > 0 && (
+              <p className="text-muted-foreground text-sm max-w-3xl">
+                To access a module, click the "Begin Module" button for the
+                desired module.
+                {isInstructor && (
+                  <>
+                    {" "}
+                    For information on creating, editing, copying, or viewing
+                    activity for a module, please see the{" "}
+                    <a
+                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                    >
+                      "Modules" section of our instructor guide
+                    </a>
+                    .
+                  </>
+                )}
+              </p>
             )}
-            <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Modules provide users access to conversations with the AI.
-              {isInstructor
-                ? " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)."
-                : ""}
-            </p>
           </div>
         </div>
       </header>
 
       {error ? (
-        <div className="bg-destructive/15 border border-destructive rounded-lg p-4" role="alert">
+        <div
+          className="bg-destructive/15 border border-destructive rounded-lg p-4"
+          role="alert"
+        >
           <p className="text-destructive font-medium">{error}</p>
         </div>
       ) : (
         <section aria-labelledby="modules-content">
-          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h2
-                id="modules-content"
-                className="text-2xl font-bold text-foreground mb-1"
-              >
-                Course Modules
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                {course && course.modules.length > 0 ? (
-                  <>
-                    To access a module, click the "Begin Module" button for the
-                    desired module.
-                    {isInstructor && (
-                      <>
-                        {" "}
-                        For information on creating, editing, copying, or
-                        viewing activity for a module, please see the{" "}
-                        <a
-                          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-primary underline underline-offset-2 hover:no-underline font-medium transition-colors duration-200 inline-flex items-center gap-1"
-                        >
-                          "Modules" section of our instructor guide
-                          <ExternalLink className="w-3 h-3" aria-hidden="true" />
-                        </a>
-                        .
-                      </>
-                    )}
-                  </>
-                ) : (
-                  "Start learning by selecting a module below."
-                )}
-              </p>
-            </div>
-            {isInstructorOrTA && (
-              <nav
-                className="flex flex-col md:flex-row gap-2"
-                role="toolbar"
-                aria-label="Module actions"
-              >
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    navigator(`/courses/${course?.id}/createmodule`)
-                  }
-                  aria-label="Create new module"
-                >
-                  <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                  Create Module
-                </Button>
-              </nav>
-            )}
-          </header>
-
           <div className="w-full">
             {course ? (
               <ModuleList
                 course={course}
                 refreshList={refreshList}
                 starredList={starred ? starred : undefined}
+                viewMode="card"
               />
             ) : (
               <div

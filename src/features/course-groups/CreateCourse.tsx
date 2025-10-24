@@ -32,6 +32,7 @@ import {
   Clock,
   Trash2,
   XCircle,
+  CheckCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -519,9 +520,33 @@ export default function CreateCourse({
 
               <div className="relative z-10">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                  <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                    Create Course
-                  </h1>
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                      {isEditMode
+                        ? `Edit ${prevSession?.name || "Course"}`
+                        : "Create Course"}
+                    </h1>
+                    {isEditMode && (
+                      <div className="flex items-center gap-2">
+                        {session.isActive ? (
+                          <>
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                            <Badge
+                              variant="default"
+                              className="bg-green-100 text-green-800 dark:bg-green-900 pointer-events-none"
+                            >
+                              Published
+                            </Badge>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-5 w-5 text-gray-500 pointer-events-none" />
+                            <Badge variant="secondary">Unpublished</Badge>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <nav
                     className="flex flex-col md:flex-row gap-2"
                     role="toolbar"

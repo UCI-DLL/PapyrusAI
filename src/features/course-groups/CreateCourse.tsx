@@ -561,6 +561,20 @@ export default function CreateCourse({
                       <Info className="h-4 w-4" aria-hidden="true" />
                       Info
                     </Button>
+                    {isEditMode && (
+                      <TooltipWrapper content="Delete Course">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setOpenDeleteModal(true)}
+                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          aria-label="Delete course"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          Delete
+                        </Button>
+                      </TooltipWrapper>
+                    )}
                     <div className="flex rounded-lg border overflow-hidden">
                       <Button
                         size="sm"

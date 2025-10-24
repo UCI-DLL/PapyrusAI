@@ -26,16 +26,7 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../../utility/endpoints/UserEndpoints";
-import {
-  Star,
-  Play,
-  Eye,
-  Copy,
-  Edit,
-  Loader2,
-  Grid3X3,
-  List,
-} from "lucide-react";
+import { Star, Play, Eye, Copy, Edit, Loader2 } from "lucide-react";
 import Post from "../../utility/Post";
 import { cn } from "../../lib/utils";
 import {

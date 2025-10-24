@@ -61,7 +61,7 @@ export default function EditPrompt(): JSX.Element {
   }>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false); //TODO add tags
   const [selectedOption, setSelectedOption] = useState(0);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
@@ -539,7 +539,7 @@ export default function EditPrompt(): JSX.Element {
                   className={cn(
                     "transition-colors",
                     errors.name &&
-                      "border-destructive focus-visible:ring-destructive"
+                    "border-destructive focus-visible:ring-destructive"
                   )}
                 />
                 {errors.name && (
@@ -563,7 +563,7 @@ export default function EditPrompt(): JSX.Element {
                   className={cn(
                     "transition-colors resize-none",
                     errors.prompt &&
-                      "border-destructive focus-visible:ring-destructive"
+                    "border-destructive focus-visible:ring-destructive"
                   )}
                 />
                 {errors.prompt && (

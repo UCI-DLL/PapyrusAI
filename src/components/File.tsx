@@ -2,14 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "./ui/dialog";
+import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { FileType, FolderType } from "../utility/types/CourseTypes";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
@@ -39,18 +32,8 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "./ui/tooltip";
+import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
+import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { cn } from "../lib/utils";
 import { useNavigate, Link } from "react-router-dom";
 import ListFolders from "../features/library/ListFolders";
@@ -70,6 +53,7 @@ interface FileProps {
   ) => void; //type is "prompt" or "file"
   showRemove?: boolean;
   isStarred?: boolean;
+  disableStarring?: boolean;
 }
 
 export const File = (props: FileProps) => {
@@ -483,75 +467,69 @@ export const File = (props: FileProps) => {
   return (
     <div key={props.keyy ? props.keyy : "key"}>
       {/* Delete Dialog */}
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete File?</DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to permanently delete this file?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={deleteFile}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDeleteDialog}
+        onOpenChange={setOpenDeleteDialog}
+        title="Delete File?"
+        description="Are you sure you would like to permanently delete this file?"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDeleteDialog(false),
+            variant: "outline",
+          },
+          {
+            label: "Delete",
+            onClick: deleteFile,
+            variant: "destructive",
+          },
+        ]}
+      />
 
       {/* Copy To Dialog */}
-      <Dialog open={openCopyToDialog} onOpenChange={setOpenCopyToDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Copy File To?</DialogTitle>
-            <DialogDescription>
-              Select a folder to copy this file to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
-            <ListFolders noShowMenu onClick={copyTo} compactGrid />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenCopyToDialog(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openCopyToDialog}
+        onOpenChange={setOpenCopyToDialog}
+        title="Copy File To?"
+        description="Select a folder to copy this file to."
+        contentClassName="max-w-2xl"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenCopyToDialog(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <div className="max-h-96 overflow-y-auto">
+          <ListFolders noShowMenu onClick={copyTo} compactGrid />
+        </div>
+      </DialogWrapper>
 
       {/* Move To Dialog */}
-      <Dialog open={openMoveDialog} onOpenChange={setOpenMoveDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Move File To?</DialogTitle>
-            <DialogDescription>
-              Select a folder to move this file to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 w-90vw overflow-y-auto">
-            <ListFolders
-              noShowMenu
-              onClick={moveTo}
-              disableFolderId={props.folder.id}
-              compactGrid
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenMoveDialog(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openMoveDialog}
+        onOpenChange={setOpenMoveDialog}
+        title="Move File To?"
+        description="Select a folder to move this file to."
+        contentClassName="max-w-2xl"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenMoveDialog(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <div className="max-h-96 w-90vw overflow-y-auto">
+          <ListFolders
+            noShowMenu
+            onClick={moveTo}
+            disableFolderId={props.folder.id}
+            compactGrid
+          />
+        </div>
+      </DialogWrapper>
 
       <Card className="h-full">
         <CardContent className="p-4 h-full flex flex-col">
@@ -563,38 +541,36 @@ export const File = (props: FileProps) => {
                 {getFileType()}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={toggleStar}
+            {!props.disableStarring && (
+              <div className="flex items-center gap-2">
+                <TooltipWrapper
+                  content={starred ? "Unstar File" : "Star File"}
+                  side="top"
+                >
+                  <button
+                    onClick={toggleStar}
+                    className={cn(
+                      "p-1 rounded-full transition-all duration-300",
+                      starred
+                        ? "text-gold hover:text-muted"
+                        : "text-muted hover:text-gold"
+                    )}
+                    aria-label={
+                      starred ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    <Star
+                      size={16}
+                      fill={starred ? "currentColor" : "none"}
                       className={cn(
-                        "p-1 rounded-full transition-all duration-300",
-                        starred
-                          ? "text-gold hover:text-muted"
-                          : "text-muted hover:text-gold"
+                        starred ? "hover:fill-none" : "hover:fill-current"
                       )}
-                      aria-label={
-                        starred ? "Remove from favorites" : "Add to favorites"
-                      }
-                    >
-                      <Star
-                        size={16}
-                        fill={starred ? "currentColor" : "none"}
-                        className={cn(
-                          starred ? "hover:fill-none" : "hover:fill-current"
-                        )}
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    {starred ? "Unstar File" : "Star File"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+                      aria-hidden="true"
+                    />
+                  </button>
+                </TooltipWrapper>
+              </div>
+            )}
           </div>
 
           {/* File title */}
@@ -623,8 +599,8 @@ export const File = (props: FileProps) => {
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               {!props.noShowMenu && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <DropdownWrapper
+                  trigger={
                     <Button
                       variant="ghost"
                       size="sm"
@@ -633,115 +609,89 @@ export const File = (props: FileProps) => {
                     >
                       <MoreHorizontal className="h-3 w-3" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {(props.file.isOrganizationFile
-                      ? user?.groups.includes(
+                  }
+                  actions={(props.file.isOrganizationFile
+                    ? user?.groups.includes(
                         process.env.REACT_APP_ADMIN
                           ? process.env.REACT_APP_ADMIN
                           : "PapyrusAIAdmin"
                       )
-                        ? adminOrgMenu
-                        : instructorOrgMenu
-                      : user?.groups.includes(
+                      ? adminOrgMenu
+                      : instructorOrgMenu
+                    : user?.groups.includes(
                         process.env.REACT_APP_ADMIN
                           ? process.env.REACT_APP_ADMIN
                           : "PapyrusAIAdmin"
                       )
-                        ? adminUserMenu
-                        : instructorUserMenu
-                    ).map((item) =>
-                      item.type === "link" ? (
-                        <DropdownMenuItem
-                          key={item.label}
-                          asChild
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            props.loading();
-                          }}
-                        >
-                          <Link to={item.action} className="no-underline">
-                            {item.label}
-                          </Link>
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem
-                          key={item.label}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            item.action();
-                          }}
-                        >
-                          {item.label}
-                        </DropdownMenuItem>
-                      )
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    ? adminUserMenu
+                    : instructorUserMenu
+                  ).map((item) => ({
+                    label: item.label,
+                    onClick: () => {
+                      if (item.type === "link") {
+                        props.loading();
+                      } else {
+                        item.action();
+                      }
+                    },
+                    type: item.type,
+                    href: item.type === "link" ? item.action : undefined,
+                  }))}
+                  align="end"
+                />
               )}
             </div>
             {props.noShowMenu ? (
               props.showRemove ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (props.onClick) {
-                            props.onClick(
-                              props.folder.id,
-                              props.file.id,
-                              props.file.isOrganizationFile ?? false,
-                              "file"
-                            );
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Remove
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      Remove file from module
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <TooltipWrapper content="Remove file from module" side="top">
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    size="sm"
+                    className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (props.onClick) {
+                        props.onClick(
+                          props.folder.id,
+                          props.file.id,
+                          props.file.isOrganizationFile ?? false,
+                          "file"
+                        );
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Remove
+                  </Button>
+                </TooltipWrapper>
               ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (props.onClick) {
-                            props.onClick(
-                              props.folder.id,
-                              props.file.id,
-                              props.file.isOrganizationFile ?? false,
-                              "file"
-                            );
-                          }
-                        }}
-                      >
-                        <Plus className="h-3 w-3" />
-                        Add
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      Add file to module
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <TooltipWrapper content="Add file to module" side="top">
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    size="sm"
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (props.onClick) {
+                        props.onClick(
+                          props.folder.id,
+                          props.file.id,
+                          props.file.isOrganizationFile ?? false,
+                          "file"
+                        );
+                      }
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                    Add
+                  </Button>
+                </TooltipWrapper>
               )
             ) : (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 className="text-xs font-medium text-primary"

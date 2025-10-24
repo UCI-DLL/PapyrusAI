@@ -10,25 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { Checkbox } from "../../components/ui/checkbox";
 import Get from "../../utility/Get";
 import Put from "../../utility/Put";
@@ -359,88 +343,69 @@ export default function EditPrompt(): JSX.Element {
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
       {/* Dialogs */}
-      <Dialog
+      <DialogWrapper
         open={showSavePublishTooltip}
         onOpenChange={setShowSavePublishTooltip}
+        title="Editing Prompts"
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Got it",
+            onClick: () => setShowSavePublishTooltip(false),
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5" />
-              Editing Prompts
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm leading-6">
-              Update your prompt name, content, or tags as needed. Click{" "}
-              <strong>"Save & Publish"</strong> to save your changes.
-            </p>
-            <p className="text-sm text-muted-foreground italic">
-              Note: Choosing <strong>"Discard Changes"</strong> will return you
-              to the previous page without saving any modifications.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowSavePublishTooltip(false)}>
-              Got it
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <div className="space-y-3">
+          <p className="text-sm leading-6">
+            Update your prompt name, content, or tags as needed. Click{" "}
+            <strong>"Save & Publish"</strong> to save your changes.
+          </p>
+          <p className="text-sm text-muted-foreground italic">
+            Note: Choosing <strong>"Discard Changes"</strong> will return you to
+            the previous page without saving any modifications.
+          </p>
+        </div>
+      </DialogWrapper>
 
-      <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-destructive">
-              Delete Prompt?
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>
-              Are you sure you would like to permanently delete this prompt?
-              This action cannot be undone.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setOpenDeleteModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={(e) => handleSubmit(e, true)}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDeleteModal}
+        onOpenChange={setOpenDeleteModal}
+        title="Delete Prompt?"
+        description="Are you sure you would like to permanently delete this prompt? This action cannot be undone."
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDeleteModal(false),
+            variant: "outline",
+          },
+          {
+            label: "Delete",
+            onClick: () => handleSubmit(null, true),
+            variant: "destructive",
+          },
+        ]}
+      />
 
-      <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-destructive">
-              Discard Changes?
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>
-              Are you sure you would like to discard the changes to this prompt?
-              This action cannot be undone.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenDiscardModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={() => navigator(-1)}>
-              Discard Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDiscardModal}
+        onOpenChange={setOpenDiscardModal}
+        title="Discard Changes?"
+        description="Are you sure you would like to discard the changes to this prompt? This action cannot be undone."
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDiscardModal(false),
+            variant: "outline",
+          },
+          {
+            label: "Discard Changes",
+            onClick: () => navigator(-1),
+            variant: "destructive",
+          },
+        ]}
+      />
 
       <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
@@ -489,25 +454,18 @@ export default function EditPrompt(): JSX.Element {
               <Info className="h-4 w-4" aria-hidden="true" />
               Info
             </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setOpenDeleteModal(true)}
-                    disabled={isLoading}
-                    aria-label="Delete prompt permanently"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    Delete
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Delete Prompt</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipWrapper content="Delete Prompt">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setOpenDeleteModal(true)}
+                disabled={isLoading}
+                aria-label="Delete prompt permanently"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Delete
+              </Button>
+            </TooltipWrapper>
             <div className="flex rounded-lg border overflow-hidden">
               <Button
                 size="sm"
@@ -518,8 +476,10 @@ export default function EditPrompt(): JSX.Element {
               >
                 {options[selectedOption]}
               </Button>
-              <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
-                <DropdownMenuTrigger asChild>
+              <DropdownWrapper
+                open={openSaveTop}
+                onOpenChange={setOpenSaveTop}
+                trigger={
                   <Button
                     size="sm"
                     className="rounded-none border-0 border-l px-2"
@@ -529,22 +489,17 @@ export default function EditPrompt(): JSX.Element {
                   >
                     <ChevronDown className="h-4 w-4" aria-hidden="true" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {options.map((option, index) => (
-                    <DropdownMenuItem
-                      key={option}
-                      onClick={() => handleMenuItemClick(index)}
-                      className={cn(
-                        index === selectedOption && "bg-accent",
-                        index === 1 && "text-destructive focus:text-destructive"
-                      )}
-                    >
-                      {option}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                }
+                actions={options.map((option, index) => ({
+                  label: option,
+                  onClick: () => handleMenuItemClick(index),
+                  className: cn(
+                    index === selectedOption && "bg-accent",
+                    index === 1 && "text-destructive focus:text-destructive"
+                  ),
+                }))}
+                align="end"
+              />
             </div>
           </nav>
         </header>
@@ -569,18 +524,9 @@ export default function EditPrompt(): JSX.Element {
                   <Label htmlFor="name" className="text-sm font-medium">
                     Prompt Name *
                   </Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="max-w-xs">
-                          The name for the prompt that users will see.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <TooltipWrapper content="The name for the prompt that users will see.">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipWrapper>
                 </div>
                 <Input
                   id="name"
@@ -677,25 +623,18 @@ export default function EditPrompt(): JSX.Element {
               <Info className="h-4 w-4" aria-hidden="true" />
               Info
             </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setOpenDeleteModal(true)}
-                    disabled={isLoading}
-                    aria-label="Delete prompt permanently"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    Delete
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Delete Prompt</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipWrapper content="Delete Prompt">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setOpenDeleteModal(true)}
+                disabled={isLoading}
+                aria-label="Delete prompt permanently"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Delete
+              </Button>
+            </TooltipWrapper>
             <div className="flex rounded-lg border overflow-hidden">
               <Button
                 size="sm"
@@ -706,11 +645,10 @@ export default function EditPrompt(): JSX.Element {
               >
                 {options[selectedOption]}
               </Button>
-              <DropdownMenu
+              <DropdownWrapper
                 open={openSaveBottom}
                 onOpenChange={setOpenSaveBottom}
-              >
-                <DropdownMenuTrigger asChild>
+                trigger={
                   <Button
                     size="sm"
                     className="rounded-none border-0 border-l px-2"
@@ -720,22 +658,17 @@ export default function EditPrompt(): JSX.Element {
                   >
                     <ChevronDown className="h-4 w-4" aria-hidden="true" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {options.map((option, index) => (
-                    <DropdownMenuItem
-                      key={option}
-                      onClick={() => handleMenuItemClick(index)}
-                      className={cn(
-                        index === selectedOption && "bg-accent",
-                        index === 1 && "text-destructive focus:text-destructive"
-                      )}
-                    >
-                      {option}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                }
+                actions={options.map((option, index) => ({
+                  label: option,
+                  onClick: () => handleMenuItemClick(index),
+                  className: cn(
+                    index === selectedOption && "bg-accent",
+                    index === 1 && "text-destructive focus:text-destructive"
+                  ),
+                }))}
+                align="end"
+              />
             </div>
           </nav>
         </section>

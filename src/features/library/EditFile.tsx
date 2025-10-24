@@ -4,25 +4,9 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Checkbox } from "../../components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import {
   Card,
   CardContent,
@@ -716,87 +700,69 @@ export default function EditFile(): JSX.Element {
       {newFile.name && fileInfo ? (
         <>
           {/* Dialogs */}
-          <Dialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-destructive">
-                  Delete File?
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <p>
-                  Are you sure you would like to permanently delete this file?
-                  This action cannot be undone.
-                </p>
-              </div>
-              <DialogFooter className="gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenDeleteModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={(e) => handleUpload(e, true)}
-                >
-                  Delete
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <DialogWrapper
+            open={openDeleteModal}
+            onOpenChange={setOpenDeleteModal}
+            title="Delete File?"
+            description="Are you sure you would like to permanently delete this file? This action cannot be undone."
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () => setOpenDeleteModal(false),
+                variant: "outline",
+              },
+              {
+                label: "Delete",
+                onClick: () => handleUpload(undefined, true),
+                variant: "destructive",
+              },
+            ]}
+          />
 
-          <Dialog open={openDiscardModal} onOpenChange={setOpenDiscardModal}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-destructive">
-                  Discard Changes?
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <p>
-                  Are you sure you would like to discard the changes to this
-                  file? This action cannot be undone.
-                </p>
-              </div>
-              <DialogFooter className="gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenDiscardModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button variant="destructive" onClick={() => navigator(-1)}>
-                  Discard Changes
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={showInfoTooltip} onOpenChange={setShowInfoTooltip}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-                  <Info className="h-5 w-5" aria-hidden="true" />
-                  Editing Files
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <p className="text-sm leading-6">
-                  Update your file name, replace the file content, or modify
-                  tags as needed. Click "Save & Publish" to save your changes.
-                </p>
-                <p className="text-sm text-muted-foreground italic">
-                  Note: Choosing "Discard Changes" will return you to the
-                  previous page without saving any modifications.
-                </p>
-              </div>
-              <DialogFooter>
-                <Button onClick={() => setShowInfoTooltip(false)}>
-                  Got it
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <DialogWrapper
+            open={openDiscardModal}
+            onOpenChange={setOpenDiscardModal}
+            title="Discard Changes?"
+            description="Are you sure you would like to discard the changes to this file? This action cannot be undone."
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () => setOpenDiscardModal(false),
+                variant: "outline",
+              },
+              {
+                label: "Discard Changes",
+                onClick: () => navigator(-1),
+                variant: "destructive",
+              },
+            ]}
+          />
+
+          <DialogWrapper
+            open={showInfoTooltip}
+            onOpenChange={setShowInfoTooltip}
+            title="Editing Files"
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Got it",
+                onClick: () => setShowInfoTooltip(false),
+              },
+            ]}
+          >
+            <div className="space-y-3">
+              <p className="text-sm leading-6">
+                Update your file name, replace the file content, or modify tags
+                as needed. Click "Save & Publish" to save your changes.
+              </p>
+              <p className="text-sm text-muted-foreground italic">
+                Note: Choosing "Discard Changes" will return you to the previous
+                page without saving any modifications.
+              </p>
+            </div>
+          </DialogWrapper>
 
           {/* Standard Page Header Pattern */}
           <header className="animate-in slide-in-from-bottom-4 duration-700">
@@ -848,25 +814,18 @@ export default function EditFile(): JSX.Element {
                   <Info className="h-4 w-4" aria-hidden="true" />
                   Info
                 </Button>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setOpenDeleteModal(true)}
-                        disabled={isLoading}
-                        aria-label="Delete file permanently"
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        Delete
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Delete File</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <TooltipWrapper content="Delete File">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setOpenDeleteModal(true)}
+                    disabled={isLoading}
+                    aria-label="Delete file permanently"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    Delete
+                  </Button>
+                </TooltipWrapper>
                 <div className="flex rounded-lg border overflow-hidden">
                   <Button
                     size="sm"
@@ -877,11 +836,10 @@ export default function EditFile(): JSX.Element {
                   >
                     {options[selectedIndexSave]}
                   </Button>
-                  <DropdownMenu
+                  <DropdownWrapper
                     open={openSaveTop}
                     onOpenChange={setOpenSaveTop}
-                  >
-                    <DropdownMenuTrigger asChild>
+                    trigger={
                       <Button
                         size="sm"
                         className="rounded-none border-0 border-l px-2"
@@ -891,23 +849,17 @@ export default function EditFile(): JSX.Element {
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {options.map((option, index) => (
-                        <DropdownMenuItem
-                          key={option}
-                          onClick={() => handleMenuItemClick(index)}
-                          className={cn(
-                            index === selectedIndexSave && "bg-accent",
-                            index === 1 &&
-                            "text-destructive focus:text-destructive"
-                          )}
-                        >
-                          {option}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    }
+                    actions={options.map((option, index) => ({
+                      label: option,
+                      onClick: () => handleMenuItemClick(index),
+                      className: cn(
+                        index === selectedIndexSave && "bg-accent",
+                        index === 1 && "text-destructive focus:text-destructive"
+                      ),
+                    }))}
+                    align="end"
+                  />
                 </div>
               </nav>
             </header>
@@ -924,16 +876,9 @@ export default function EditFile(): JSX.Element {
                     <Label htmlFor="name" className="text-sm font-medium">
                       File Name *
                     </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">The name for the document.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <TooltipWrapper content="The name for the document.">
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipWrapper>
                   </div>
                   <Input
                     id="name"
@@ -963,19 +908,9 @@ export default function EditFile(): JSX.Element {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label className="text-sm font-medium">File Upload</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">
-                            Select a JPEG, PNG, PDF, TXT, DOCX file to replace
-                            the current file.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <TooltipWrapper content="Select a JPEG, PNG, PDF, TXT, DOCX file to replace the current file.">
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipWrapper>
                   </div>
                   <input
                     ref={fileRef}
@@ -1041,19 +976,9 @@ export default function EditFile(): JSX.Element {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label className="text-sm font-medium">Tags</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">
-                            Tags describe a feature of the files and will be
-                            used to allow for sorting files by type.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <TooltipWrapper content="Tags describe a feature of the files and will be used to allow for sorting files by type.">
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipWrapper>
                   </div>
                   <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
                     {tagList.length > 0 ? (
@@ -1124,25 +1049,18 @@ export default function EditFile(): JSX.Element {
                 <Info className="h-4 w-4" aria-hidden="true" />
                 Info
               </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setOpenDeleteModal(true)}
-                      disabled={isLoading}
-                      aria-label="Delete file permanently"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      Delete
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Delete File</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <TooltipWrapper content="Delete File">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setOpenDeleteModal(true)}
+                  disabled={isLoading}
+                  aria-label="Delete file permanently"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  Delete
+                </Button>
+              </TooltipWrapper>
               <div className="flex rounded-lg border overflow-hidden">
                 <Button
                   size="sm"
@@ -1153,11 +1071,10 @@ export default function EditFile(): JSX.Element {
                 >
                   {options[selectedIndexSave]}
                 </Button>
-                <DropdownMenu
+                <DropdownWrapper
                   open={openSaveBottom}
                   onOpenChange={setOpenSaveBottom}
-                >
-                  <DropdownMenuTrigger asChild>
+                  trigger={
                     <Button
                       size="sm"
                       className="rounded-none border-0 border-l px-2"
@@ -1167,23 +1084,17 @@ export default function EditFile(): JSX.Element {
                     >
                       <ChevronDown className="h-4 w-4" aria-hidden="true" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {options.map((option, index) => (
-                      <DropdownMenuItem
-                        key={option}
-                        onClick={() => handleMenuItemClick(index)}
-                        className={cn(
-                          index === selectedIndexSave && "bg-accent",
-                          index === 1 &&
-                          "text-destructive focus:text-destructive"
-                        )}
-                      >
-                        {option}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  }
+                  actions={options.map((option, index) => ({
+                    label: option,
+                    onClick: () => handleMenuItemClick(index),
+                    className: cn(
+                      index === selectedIndexSave && "bg-accent",
+                      index === 1 && "text-destructive focus:text-destructive"
+                    ),
+                  }))}
+                  align="end"
+                />
               </div>
             </nav>
           </section>

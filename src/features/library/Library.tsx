@@ -3,14 +3,8 @@ import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../../components/ui/dialog";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import { TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { UserContext } from "../../utility/context/UserContext";
@@ -26,11 +20,6 @@ import Put from "../../utility/Put";
 import { onlyLettersAndNumbers } from "../../utility/Helpers";
 import ListFolders from "./ListFolders";
 import { Loader2, Tag, Folder, Trash2, Save } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -205,188 +194,150 @@ export default function Library(): JSX.Element {
           ? process.env.REACT_APP_ADMIN
           : "PapyrusAIAdmin"
       ) && (
-        <Dialog
+        <DialogWrapper
           open={openManageTagsModal}
           onOpenChange={setOpenManageTagsModal}
+          title="Manage Tags"
+          description="Create, edit, and delete tags for organizing content."
+          contentClassName="sm:max-w-2xl"
+          actions={[
+            {
+              label: "Close",
+              onClick: () => setOpenManageTagsModal(false),
+              variant: "outline",
+            },
+          ]}
         >
-          <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                Manage Tags
-              </DialogTitle>
-              <DialogDescription>
-                Create, edit, and delete tags for organizing content.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Existing Tags */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">Existing Tags</h3>
-                <div className="max-h-64 overflow-y-auto space-y-2">
-                  {tagList.length === 0 ? (
-                    <p className="text-muted-foreground text-sm text-center py-8">
-                      No tags found. Create your first tag below.
-                    </p>
-                  ) : (
-                    tagList.map((tag, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-2 p-3 rounded-md border"
-                      >
-                        <Input
-                          name={`${i}_tag`}
-                          className="flex-1"
-                          value={tag.name ? tag.name : tag.id}
-                          onChange={(
-                            e: React.ChangeEvent<HTMLInputElement>
-                          ) => {
-                            setTagList((prev) => {
-                              if (onlyLettersAndNumbers(e.target.value)) {
-                                var list = [...prev];
-                                list[i].name = e.target.value;
-                                return list;
-                              } else {
-                                return prev;
-                              }
-                            });
-                          }}
-                        />
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              onClick={() =>
-                                handleUpdateTag(
-                                  tag.id,
-                                  false,
-                                  tagList[i].name ?? ""
-                                )
-                              }
-                              size="sm"
-                              aria-label="Save tag changes"
-                            >
-                              <Save className="h-4 w-4 mr-1.5" />
-                              Save
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Save changes to this tag</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              onClick={() => handleUpdateTag(tag.id, true)}
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              aria-label="Delete tag"
-                            >
-                              <Trash2 className="h-4 w-4 mr-1.5" />
-                              Delete
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Permanently delete this tag</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Create New Tag */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">Create New Tag</h3>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Enter tag name"
-                    value={newTag}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      if (onlyLettersAndNumbers(e.target.value)) {
-                        setNewTag(e.target.value);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && newTag.trim()) {
-                        handleCreateTag();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleCreateTag} disabled={!newTag.trim()}>
-                    <Tag className="h-4 w-4 mr-2" />
-                    Create
-                  </Button>
-                </div>
+          <div className="space-y-6">
+            {/* Existing Tags */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Existing Tags</h3>
+              <div className="max-h-64 overflow-y-auto space-y-2">
+                {tagList.length === 0 ? (
+                  <p className="text-muted-foreground text-sm text-center py-8">
+                    No tags found. Create your first tag below.
+                  </p>
+                ) : (
+                  tagList.map((tag, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 p-3 rounded-md border"
+                    >
+                      <Input
+                        name={`${i}_tag`}
+                        className="flex-1"
+                        value={tag.name ? tag.name : tag.id}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setTagList((prev) => {
+                            if (onlyLettersAndNumbers(e.target.value)) {
+                              var list = [...prev];
+                              list[i].name = e.target.value;
+                              return list;
+                            } else {
+                              return prev;
+                            }
+                          });
+                        }}
+                      />
+                      <TooltipWrapper content="Save changes to this tag">
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            handleUpdateTag(
+                              tag.id,
+                              false,
+                              tagList[i].name ?? ""
+                            )
+                          }
+                          size="sm"
+                          aria-label="Save tag changes"
+                        >
+                          <Save className="h-4 w-4 mr-1.5" />
+                          Save
+                        </Button>
+                      </TooltipWrapper>
+                      <TooltipWrapper content="Permanently delete this tag">
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleUpdateTag(tag.id, true)}
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          aria-label="Delete tag"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1.5" />
+                          Delete
+                        </Button>
+                      </TooltipWrapper>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setOpenManageTagsModal(false)}
-              >
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            {/* Create New Tag */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Create New Tag</h3>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter tag name"
+                  value={newTag}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    if (onlyLettersAndNumbers(e.target.value)) {
+                      setNewTag(e.target.value);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newTag.trim()) {
+                      handleCreateTag();
+                    }
+                  }}
+                />
+                <Button onClick={handleCreateTag} disabled={!newTag.trim()}>
+                  <Tag className="h-4 w-4 mr-2" />
+                  Create
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogWrapper>
       )}
-      <Dialog
+      <DialogWrapper
         open={openCreateFolderModal}
         onOpenChange={setOpenCreateFolderModal}
+        title="New Folder"
+        description="Enter a name for your personal folder, then click 'Create Folder'. Your folder and its contents will only be visible to you."
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenCreateFolderModal(false),
+            variant: "outline",
+          },
+          {
+            label: "Create Folder",
+            onClick: handleCreateFolder,
+            disabled: !newFolderName.trim(),
+          },
+        ]}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Folder className="h-5 w-5" />
-              New Folder
-            </DialogTitle>
-            <DialogDescription>
-              Enter a name for your personal folder, then click "Create Folder".
-              Your folder and its contents will only be visible to you.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleCreateFolder} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="folder-name">Folder Name</Label>
-              <Input
-                id="folder-name"
-                name="foldername"
-                placeholder="Enter folder name"
-                value={newFolderName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setNewFolderName(e.target.value);
-                }}
-                required
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setOpenCreateFolderModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                type="submit"
-                onClick={handleCreateFolder}
-                className="flex items-center gap-2"
-                disabled={!newFolderName.trim()}
-              >
-                <Folder className="h-4 w-4" />
-                Create Folder
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        <div className="space-y-2">
+          <Label htmlFor="folder-name">Folder Name</Label>
+          <Input
+            id="folder-name"
+            name="foldername"
+            placeholder="Enter folder name"
+            value={newFolderName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setNewFolderName(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && newFolderName.trim()) {
+                handleCreateFolder();
+              }
+            }}
+          />
+        </div>
+      </DialogWrapper>
 
       <div className="mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <header className="animate-in slide-in-from-bottom-4 duration-700">

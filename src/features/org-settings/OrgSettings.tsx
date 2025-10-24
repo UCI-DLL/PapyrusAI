@@ -10,14 +10,7 @@ import {
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../../components/ui/dialog";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import {
   Select,
   SelectContent,
@@ -33,11 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "../../components/ui/card";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import {
   Search,
@@ -208,7 +197,9 @@ export default function OrgSettings(): JSX.Element {
       const dataToSend = {
         //if admin, then admin and instructor permissions
         isAdmin: false,
-        isInstructor: showAddOrgPermissionModal.permission === PermissionsOptions.Instructor,
+        isInstructor:
+          showAddOrgPermissionModal.permission ===
+          PermissionsOptions.Instructor,
         id: showAddOrgPermissionModal.email.toLowerCase(),
       };
       // post data back
@@ -257,17 +248,24 @@ export default function OrgSettings(): JSX.Element {
       const dataToSend = {
         //if admin, then admin and instructor permissions
         isAdmin: false,
-        isInstructor: showUpdateOrgPermissionModal.permission === PermissionsOptions.Instructor,
+        isInstructor:
+          showUpdateOrgPermissionModal.permission ===
+          PermissionsOptions.Instructor,
         id: showUpdateOrgPermissionModal.id.toLowerCase(),
         isDeleted: false,
       };
       // post data back
-      Put(updateOrgPermission(showUpdateOrgPermissionModal.id.toLowerCase()), dataToSend).then((res) => {
+      Put(
+        updateOrgPermission(showUpdateOrgPermissionModal.id.toLowerCase()),
+        dataToSend
+      ).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             // update list
             setOrgPermissionsList((prev) => {
-              const index = prev.findIndex((x) => x.id === showUpdateOrgPermissionModal.id.toLowerCase());
+              const index = prev.findIndex(
+                (x) => x.id === showUpdateOrgPermissionModal.id.toLowerCase()
+              );
               const newList = prev;
               newList[index] = res.data;
               return newList;
@@ -305,12 +303,17 @@ export default function OrgSettings(): JSX.Element {
         isDeleted: true,
       };
       // post data back
-      Put(updateOrgPermission(openDeleteModal.id.toLowerCase()), dataToSend).then((res) => {
+      Put(
+        updateOrgPermission(openDeleteModal.id.toLowerCase()),
+        dataToSend
+      ).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             // update list
             setOrgPermissionsList((prev) => {
-              const newList = prev.filter((x) => x.id !== openDeleteModal.id.toLowerCase());
+              const newList = prev.filter(
+                (x) => x.id !== openDeleteModal.id.toLowerCase()
+              );
               return newList;
             });
             //pop up notifying user of creation
@@ -338,13 +341,16 @@ export default function OrgSettings(): JSX.Element {
   return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
       {error ? (
-        <div className="bg-destructive/15 border border-destructive rounded-lg p-4" role="alert">
+        <div
+          className="bg-destructive/15 border border-destructive rounded-lg p-4"
+          role="alert"
+        >
           <p className="text-destructive font-medium text-center">{error}</p>
         </div>
       ) : (
         <>
           {/* Add Permission Modal */}
-          <Dialog
+          <DialogWrapper
             open={showAddOrgPermissionModal.open}
             onOpenChange={(open) => {
               if (!open) {
@@ -355,131 +361,118 @@ export default function OrgSettings(): JSX.Element {
                 });
               }
             }}
+            title="Add New Permissions"
+            description="Grant permission access to a user by entering their email address."
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () =>
+                  setShowAddOrgPermissionModal({
+                    open: false,
+                    email: "",
+                    permission: "None",
+                  }),
+                variant: "outline",
+              },
+              {
+                label: isLoading ? "Adding..." : "Add Permission",
+                onClick: () => {
+                  const fakeEvent = {
+                    preventDefault: () => {},
+                  } as React.FormEvent;
+                  addPermission(fakeEvent);
+                },
+                disabled: isLoading,
+              },
+            ]}
           >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Add New Permissions
-                </DialogTitle>
-                <DialogDescription>
-                  Grant permission access to a user by entering their email
-                  address.
-                </DialogDescription>
-              </DialogHeader>
-
-              <form onSubmit={addPermission} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="user@example.com"
-                    value={showAddOrgPermissionModal.email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setShowAddOrgPermissionModal((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="user@example.com"
+                  value={showAddOrgPermissionModal.email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setShowAddOrgPermissionModal((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const fakeEvent = {
+                        preventDefault: () => {},
+                      } as React.FormEvent;
+                      addPermission(fakeEvent);
                     }
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
+                  }}
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="permission-level">Permission Level</Label>
-                  <Select
-                    value={showAddOrgPermissionModal.permission}
-                    onValueChange={(value) => {
-                      setShowAddOrgPermissionModal((prev) => ({
-                        ...prev,
-                        permission: value,
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select permission level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(PermissionsOptions).map((key) => (
-                        <SelectItem value={key} key={key}>
-                          {key}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      setShowAddOrgPermissionModal({
-                        open: false,
-                        email: "",
-                        permission: "None",
-                      })
-                    }
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Add Permission
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+              <div className="space-y-2">
+                <Label htmlFor="permission-level">Permission Level</Label>
+                <Select
+                  value={showAddOrgPermissionModal.permission}
+                  onValueChange={(value) => {
+                    setShowAddOrgPermissionModal((prev) => ({
+                      ...prev,
+                      permission: value,
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select permission level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(PermissionsOptions).map((key) => (
+                      <SelectItem value={key} key={key}>
+                        {key}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </DialogWrapper>
 
           {/* Delete Permission Modal */}
-          <Dialog
+          <DialogWrapper
             open={openDeleteModal !== undefined}
             onOpenChange={(open) => {
               if (!open) setOpenDeleteModal(undefined);
             }}
+            title="Remove All Permissions?"
+            description="This action cannot be undone. The user will lose all elevated permissions."
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () => setOpenDeleteModal(undefined),
+                variant: "outline",
+              },
+              {
+                label: "Remove Permissions",
+                onClick: handleDelete,
+                variant: "destructive",
+              },
+            ]}
           >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <ShieldX className="h-5 w-5 text-destructive" />
-                  Remove All Permissions?
-                </DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. The user will lose all elevated
-                  permissions.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="py-4">
-                <p>
-                  Are you sure you would like to remove permissions from{" "}
-                  <span className="font-medium">{openDeleteModal?.id}</span>?
-                  They will still have student level access.
-                </p>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenDeleteModal(undefined)}
-                >
-                  Cancel
-                </Button>
-                <Button variant="destructive" onClick={handleDelete}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Remove Permissions
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            <div className="py-4">
+              <p>
+                Are you sure you would like to remove permissions from{" "}
+                <span className="font-medium">{openDeleteModal?.id}</span>? They
+                will still have student level access.
+              </p>
+            </div>
+          </DialogWrapper>
 
           {/* Update Permission Modal */}
-          <Dialog
+          <DialogWrapper
             open={showUpdateOrgPermissionModal.id !== ""}
             onOpenChange={(open) => {
               if (!open) {
@@ -489,77 +482,69 @@ export default function OrgSettings(): JSX.Element {
                 });
               }
             }}
+            title="Update Permissions"
+            description="Change the permission level for this user."
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: "Cancel",
+                onClick: () =>
+                  setShowUpdateOrgPermissionModal({
+                    id: "",
+                    permission: "",
+                  }),
+                variant: "outline",
+              },
+              {
+                label: isLoading ? "Updating..." : "Update Permission",
+                onClick: () => {
+                  const fakeEvent = {
+                    preventDefault: () => {},
+                  } as React.FormEvent;
+                  updatePermission(fakeEvent);
+                },
+                disabled: isLoading,
+              },
+            ]}
           >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Update Permissions
-                </DialogTitle>
-                <DialogDescription>
-                  Change the permission level for this user.
-                </DialogDescription>
-              </DialogHeader>
+            <div className="space-y-4">
+              <div className="py-2">
+                <p>
+                  Update permissions for{" "}
+                  <span className="font-medium">
+                    {showUpdateOrgPermissionModal.id}
+                  </span>
+                  ?
+                </p>
+              </div>
 
-              <form onSubmit={updatePermission} className="space-y-4">
-                <div className="py-2">
-                  <p>
-                    Update permissions for{" "}
-                    <span className="font-medium">
-                      {showUpdateOrgPermissionModal.id}
-                    </span>
-                    ?
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="update-permission-level">
-                    Permission Level
-                  </Label>
-                  <Select
-                    value={showUpdateOrgPermissionModal.permission}
-                    onValueChange={(value) => {
-                      setShowUpdateOrgPermissionModal((prev) => ({
-                        ...prev,
-                        permission: value,
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select permission level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(PermissionsOptions).map((key) => (
-                        <SelectItem value={key} key={key}>
-                          {key}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      setShowUpdateOrgPermissionModal({
-                        id: "",
-                        permission: "",
-                      })
-                    }
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Update Permission
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+              <div className="space-y-2">
+                <Label htmlFor="update-permission-level">
+                  Permission Level
+                </Label>
+                <Select
+                  value={showUpdateOrgPermissionModal.permission}
+                  onValueChange={(value) => {
+                    setShowUpdateOrgPermissionModal((prev) => ({
+                      ...prev,
+                      permission: value,
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select permission level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(PermissionsOptions).map((key) => (
+                      <SelectItem value={key} key={key}>
+                        {key}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </DialogWrapper>
 
           {/* Standard Page Header Pattern */}
           <header className="animate-in slide-in-from-bottom-4 duration-700">
@@ -576,7 +561,8 @@ export default function OrgSettings(): JSX.Element {
                   Organization Settings
                 </h1>
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                  Manage user permissions and access levels for your organization.
+                  Manage user permissions and access levels for your
+                  organization.
                 </p>
               </div>
             </div>
@@ -593,7 +579,8 @@ export default function OrgSettings(): JSX.Element {
                   User Permissions
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Manage access levels for {filteredOrgPermissionList.length} users in your organization.
+                  Manage access levels for {filteredOrgPermissionList.length}{" "}
+                  users in your organization.
                 </p>
               </div>
               <nav
@@ -621,7 +608,10 @@ export default function OrgSettings(): JSX.Element {
               <CardHeader>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                      aria-hidden="true"
+                    />
                     <Input
                       placeholder="Search by email address..."
                       value={filter.search}
@@ -641,7 +631,9 @@ export default function OrgSettings(): JSX.Element {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Email Address</TableHead>
-                        <TableHead className="text-right">Access Level</TableHead>
+                        <TableHead className="text-right">
+                          Access Level
+                        </TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -651,9 +643,13 @@ export default function OrgSettings(): JSX.Element {
                           <TableCell colSpan={3} className="text-center py-8">
                             <div className="flex flex-col items-center gap-2">
                               <Users className="h-8 w-8 text-muted-foreground opacity-50" />
-                              <p className="text-muted-foreground">No users found</p>
+                              <p className="text-muted-foreground">
+                                No users found
+                              </p>
                               <p className="text-sm text-muted-foreground">
-                                {filter.search ? "Try adjusting your search" : "Add permissions to get started"}
+                                {filter.search
+                                  ? "Try adjusting your search"
+                                  : "Add permissions to get started"}
                               </p>
                             </div>
                           </TableCell>
@@ -664,7 +660,10 @@ export default function OrgSettings(): JSX.Element {
                             <TableCell className="font-medium">
                               {permission.isAdmin ? (
                                 <span className="flex items-center gap-2">
-                                  <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+                                  <ShieldCheck
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                  />
                                   {permission.id}
                                 </span>
                               ) : (
@@ -682,7 +681,10 @@ export default function OrgSettings(): JSX.Element {
                                   className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
                                   aria-label={`Update permissions for ${permission.id}`}
                                 >
-                                  <Shield className="h-4 w-4" aria-hidden="true" />
+                                  <Shield
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                  />
                                   {permission.id}
                                 </button>
                               )}
@@ -699,7 +701,10 @@ export default function OrgSettings(): JSX.Element {
                                   variant="outline"
                                   className="text-muted-foreground pointer-events-none"
                                 >
-                                  <ShieldX className="mr-1 h-3 w-3" aria-hidden="true" />
+                                  <ShieldX
+                                    className="mr-1 h-3 w-3"
+                                    aria-hidden="true"
+                                  />
                                   No Access
                                 </Badge>
                               )}
@@ -723,16 +728,24 @@ export default function OrgSettings(): JSX.Element {
                                       }
                                       aria-label={`Edit permissions for ${permission.id}`}
                                     >
-                                      <Shield className="h-4 w-4" aria-hidden="true" />
+                                      <Shield
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                      />
                                     </Button>
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => setOpenDeleteModal(permission)}
+                                      onClick={() =>
+                                        setOpenDeleteModal(permission)
+                                      }
                                       className="text-destructive hover:text-destructive"
                                       aria-label={`Remove permissions for ${permission.id}`}
                                     >
-                                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                      <Trash2
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                      />
                                     </Button>
                                   </>
                                 )}

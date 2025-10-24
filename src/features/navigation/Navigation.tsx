@@ -148,49 +148,86 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
   useEffect(() => {
     //set breadcrumb text based on the url location
     const pathnameSplit = location.pathname.split("/");
+
+    // Handle root dashboard
     if (location.pathname === "/") {
-      setBreadcrumbText(["Dashboard", "Overview"]);
-    } else if (location.pathname === "/courses") {
+      setBreadcrumbText(["Dashboard", ""]);
+    }
+    // Handle courses list
+    else if (location.pathname === "/courses") {
       setBreadcrumbText(["Courses", ""]);
-    } else if (location.pathname === "/createcourse") {
-      setBreadcrumbText(["Create Course", ""]);
-    } else if (location.pathname === "/modules") {
+    }
+    // Handle all modules
+    else if (location.pathname === "/modules") {
       setBreadcrumbText(["All Modules", ""]);
-    } else if (
+    }
+    // Handle course-specific modules: /courses/:id/modules
+    else if (
       pathnameSplit.length === 4 &&
       pathnameSplit[1] === "courses" &&
       pathnameSplit[3] === "modules"
     ) {
-      setBreadcrumbText(["Modules", ""]);
-    } else if (
-      pathnameSplit.length === 5 &&
-      pathnameSplit[1] === "courses" &&
-      pathnameSplit[3] === "editmodule"
-    ) {
-      setBreadcrumbText(["Edit Module", ""]);
-    } else if (
+      setBreadcrumbText(["Courses", "Modules"]);
+    }
+    // Handle conversations in a module: /courses/:id/modules/:id
+    else if (
       pathnameSplit.length === 5 &&
       pathnameSplit[1] === "courses" &&
       pathnameSplit[3] === "modules"
     ) {
-      setBreadcrumbText(["Conversations", ""]);
-    } else if (pathnameSplit[1] === "chat") {
-      setBreadcrumbText(["Chat", ""]);
-    } else if (pathnameSplit[1] === "reports") {
+      setBreadcrumbText(["Courses", "Conversations"]);
+    }
+    // Handle chat: /chat/:id/:id/:id/:id
+    else if (pathnameSplit[1] === "chat") {
+      setBreadcrumbText(["Courses", "Chat"]);
+    }
+    // Handle edit module: /courses/:id/editmodule/:id
+    else if (
+      pathnameSplit.length === 5 &&
+      pathnameSplit[1] === "courses" &&
+      pathnameSplit[3] === "editmodule"
+    ) {
+      setBreadcrumbText(["Courses", "Edit Module"]);
+    }
+    // Handle edit course: /editcourse/:id
+    else if (pathnameSplit[1] === "editcourse") {
+      setBreadcrumbText(["Courses", "Edit Course"]);
+    }
+    // Handle create course: /createcourse
+    else if (pathnameSplit[1] === "createcourse") {
+      setBreadcrumbText(["Courses", "Create Course"]);
+    }
+    // Handle add module: /addmodule
+    else if (pathnameSplit[1] === "addmodule") {
+      setBreadcrumbText(["Modules", "Add Module"]);
+    }
+    // Handle reports
+    else if (pathnameSplit[1] === "reports") {
       setBreadcrumbText(["Reports", ""]);
-    } else if (location.pathname === "/account") {
+    }
+    // Handle account
+    else if (location.pathname === "/account") {
       setBreadcrumbText(["Account", ""]);
-    } else if (location.pathname === "/about") {
+    }
+    // Handle about
+    else if (location.pathname === "/about") {
       setBreadcrumbText(["About", ""]);
-    } else if (pathnameSplit[1] === "editcourse") {
-      setBreadcrumbText(["Edit Course", ""]);
-    } else if (pathnameSplit[1] === "prompts") {
-      //hidden
-      setBreadcrumbText(["Prompts", ""]);
-    } else if (pathnameSplit[1] === "library") {
+    }
+    // Handle library
+    else if (pathnameSplit[1] === "library") {
       setBreadcrumbText(["Library", ""]);
-    } else if (pathnameSplit[1] === "org-settings") {
+    }
+    // Handle prompts (hidden)
+    else if (pathnameSplit[1] === "prompts") {
+      setBreadcrumbText(["Prompts", ""]);
+    }
+    // Handle organization settings
+    else if (pathnameSplit[1] === "org-settings") {
       setBreadcrumbText(["Organization Settings", ""]);
+    }
+    // Default fallback
+    else {
+      setBreadcrumbText(["Dashboard", ""]);
     }
   }, [location.pathname]);
 
@@ -320,20 +357,37 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
           <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent" />
 
           <Breadcrumb>
-            <BreadcrumbList className="text-sidebar-foreground text-md">
+            <BreadcrumbList className="text-sidebar-foreground">
               {breadcrumbText[0] !== "" && breadcrumbText[1] !== "" ? (
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
                       <button
-                        onClick={() =>
-                          navigator(
-                            breadcrumbText[0] === "Dashboard"
-                              ? "/"
-                              : `/courses/${breadcrumbText[0]}/modules`
-                          )
-                        }
-                        className="cursor-pointer hover:underline text-sidebar-foreground hover:text-sidebar-accent-foreground text-md"
+                        onClick={() => {
+                          // Navigate to appropriate parent page based on current context
+                          if (breadcrumbText[0] === "Dashboard") {
+                            navigator("/");
+                          } else if (breadcrumbText[0] === "Courses") {
+                            navigator("/courses");
+                          } else if (breadcrumbText[0] === "Modules") {
+                            navigator("/modules");
+                          } else if (breadcrumbText[0] === "Reports") {
+                            navigator("/reports");
+                          } else if (breadcrumbText[0] === "Library") {
+                            navigator("/library");
+                          } else if (breadcrumbText[0] === "Account") {
+                            navigator("/account");
+                          } else if (breadcrumbText[0] === "About") {
+                            navigator("/about");
+                          } else if (
+                            breadcrumbText[0] === "Organization Settings"
+                          ) {
+                            navigator("/org-settings");
+                          } else if (breadcrumbText[0] === "Prompts") {
+                            navigator("/prompts");
+                          }
+                        }}
+                        className="cursor-pointer hover:underline text-sidebar-foreground hover:text-sidebar-accent-foreground text-sm font-medium"
                       >
                         {breadcrumbText[0]}
                       </button>
@@ -341,14 +395,14 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="text-sidebar-foreground" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage className="text-sidebar-foreground text-md">
+                    <BreadcrumbPage className="text-sidebar-foreground text-sm font-medium">
                       {breadcrumbText[1]}
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </>
               ) : (
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="text-sidebar-foreground text-md">
+                  <BreadcrumbPage className="text-sidebar-foreground text-sm font-medium">
                     {breadcrumbText[0]}
                   </BreadcrumbPage>
                 </BreadcrumbItem>

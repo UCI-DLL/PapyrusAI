@@ -1,11 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../components/ui/popover";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { FolderType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { UserContext } from "../../utility/context/UserContext";
@@ -148,14 +144,18 @@ export default function ViewFolder(): JSX.Element {
                     {folder?.name}
                   </h1>
                 </div>
-                <nav className="flex flex-col sm:flex-row gap-2" role="toolbar" aria-label="Content management actions">
+                <nav
+                  className="flex flex-col sm:flex-row gap-2"
+                  role="toolbar"
+                  aria-label="Content management actions"
+                >
                   {user?.groups.includes(
                     process.env.REACT_APP_INSTRUCTOR
                       ? process.env.REACT_APP_INSTRUCTOR
                       : "PapyrusAIInstructors"
                   ) && (
-                    <Popover>
-                      <PopoverTrigger asChild>
+                    <DropdownWrapper
+                      trigger={
                         <Button
                           variant="default"
                           className="flex items-center gap-2"
@@ -164,46 +164,31 @@ export default function ViewFolder(): JSX.Element {
                           <Plus className="h-4 w-4" aria-hidden="true" />
                           Add Content
                         </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-2" align="end">
-                        <div className="flex flex-col gap-2">
-                          <Button
-                            variant="ghost"
-                            className="justify-start flex items-center gap-2 h-auto p-3"
-                            onClick={() => {
-                              const basePath =
-                                location.pathname.split("/")[2] !== "org"
-                                  ? `/library/${folder.id}/createprompt`
-                                  : `/library/org/${folder.id}/createprompt`;
-                              navigator(basePath);
-                            }}
-                            aria-label="Create new prompt"
-                          >
-                            <MessageSquare className="h-4 w-4" aria-hidden="true" />
-                            <div className="text-left">
-                              <div className="font-medium">Add Prompt</div>
-                            </div>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            className="justify-start flex items-center gap-2 h-auto p-3"
-                            onClick={() => {
-                              const basePath =
-                                location.pathname.split("/")[2] !== "org"
-                                  ? `/library/${folder.id}/createfile`
-                                  : `/library/org/${folder.id}/createfile`;
-                              navigator(basePath);
-                            }}
-                            aria-label="Upload new file"
-                          >
-                            <FileText className="h-4 w-4" aria-hidden="true" />
-                            <div className="text-left">
-                              <div className="font-medium">Add File</div>
-                            </div>
-                          </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                      }
+                      actions={[
+                        {
+                          label: "Add Prompt",
+                          onClick: () => {
+                            const basePath =
+                              location.pathname.split("/")[2] !== "org"
+                                ? `/library/${folder.id}/createprompt`
+                                : `/library/org/${folder.id}/createprompt`;
+                            navigator(basePath);
+                          },
+                        },
+                        {
+                          label: "Add File",
+                          onClick: () => {
+                            const basePath =
+                              location.pathname.split("/")[2] !== "org"
+                                ? `/library/${folder.id}/createfile`
+                                : `/library/org/${folder.id}/createfile`;
+                            navigator(basePath);
+                          },
+                        },
+                      ]}
+                      align="end"
+                    />
                   )}
                 </nav>
               </div>
@@ -215,44 +200,48 @@ export default function ViewFolder(): JSX.Element {
           </div>
         </header>
 
-        <div className="flex gap-2 mb-6" role="tablist" aria-label="Content filter tabs">
-            <Button
-              variant={activeTab === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("all")}
-              className="flex items-center gap-2"
-              role="tab"
-              aria-selected={activeTab === "all"}
-              aria-controls="folder-content"
-            >
-              <Folder className="h-4 w-4" aria-hidden="true" />
-              All Items ({getTotalItems()})
-            </Button>
-            <Button
-              variant={activeTab === "prompts" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("prompts")}
-              className="flex items-center gap-2"
-              role="tab"
-              aria-selected={activeTab === "prompts"}
-              aria-controls="folder-content"
-            >
-              <MessageSquare className="h-4 w-4" aria-hidden="true" />
-              Prompts ({getPromptCount()})
-            </Button>
-            <Button
-              variant={activeTab === "files" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("files")}
-              className="flex items-center gap-2"
-              role="tab"
-              aria-selected={activeTab === "files"}
-              aria-controls="folder-content"
-            >
-              <FileText className="h-4 w-4" aria-hidden="true" />
-              Files ({getFileCount()})
-            </Button>
-          </div>
+        <div
+          className="flex gap-2 mb-6"
+          role="tablist"
+          aria-label="Content filter tabs"
+        >
+          <Button
+            variant={activeTab === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("all")}
+            className="flex items-center gap-2"
+            role="tab"
+            aria-selected={activeTab === "all"}
+            aria-controls="folder-content"
+          >
+            <Folder className="h-4 w-4" aria-hidden="true" />
+            All Items ({getTotalItems()})
+          </Button>
+          <Button
+            variant={activeTab === "prompts" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("prompts")}
+            className="flex items-center gap-2"
+            role="tab"
+            aria-selected={activeTab === "prompts"}
+            aria-controls="folder-content"
+          >
+            <MessageSquare className="h-4 w-4" aria-hidden="true" />
+            Prompts ({getPromptCount()})
+          </Button>
+          <Button
+            variant={activeTab === "files" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("files")}
+            className="flex items-center gap-2"
+            role="tab"
+            aria-selected={activeTab === "files"}
+            aria-controls="folder-content"
+          >
+            <FileText className="h-4 w-4" aria-hidden="true" />
+            Files ({getFileCount()})
+          </Button>
+        </div>
 
         <div id="folder-content" role="tabpanel">
           <ListFolderContents

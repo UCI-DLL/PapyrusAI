@@ -2,18 +2,8 @@ import React, { useState } from "react";
 import { Button } from "../../../components/ui/button";
 import { Textarea } from "../../../components/ui/textarea";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../../components/ui/tooltip";
-import {
-  Send,
-  Paperclip,
-  Mic,
-  AlertCircle,
-} from "lucide-react";
+import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
+import { Send, Paperclip, Mic, AlertCircle } from "lucide-react";
 import { removeSpecialCharacters } from "../../../utility/Helpers";
 
 interface ChatInputProps {
@@ -75,23 +65,18 @@ export default function ChatInput({
       <div className="p-4 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div className="relative flex items-end gap-3 p-3 border rounded-lg bg-background shadow-sm">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={onOpenDocumentModal}
-                    aria-label="Add file"
-                  >
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Add file</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipWrapper content="Add file" side="top">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={onOpenDocumentModal}
+                aria-label="Add file"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            </TooltipWrapper>
 
             <Textarea
               placeholder="Enter message..."
@@ -102,23 +87,18 @@ export default function ChatInput({
               onKeyDown={handleKeyDown}
             />
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={onOpenSpeechToTextModal}
-                    aria-label="Speech to text"
-                  >
-                    <Mic className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Speech to text</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <TooltipWrapper content="Speech to text" side="top">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={onOpenSpeechToTextModal}
+                aria-label="Speech to text"
+              >
+                <Mic className="h-4 w-4" />
+              </Button>
+            </TooltipWrapper>
 
             <Button
               type="submit"

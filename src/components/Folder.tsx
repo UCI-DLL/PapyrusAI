@@ -509,7 +509,7 @@ export const FolderComponent = (props: FolderProps) => {
             <div className="flex items-center gap-2">
               <Badge
                 variant={props.isOrganizationFolder ? "default" : "secondary"}
-                className="text-xs"
+                className="text-xs pointer-events-none"
               >
                 {props.isOrganizationFolder ? "public" : "private"}
               </Badge>
@@ -558,7 +558,7 @@ export const FolderComponent = (props: FolderProps) => {
               <Badge
                 key={index}
                 variant="outline"
-                className="text-xs bg-green-50 text-green-700 border-green-200"
+                className="text-xs bg-green-50 text-green-700 border-green-200 pointer-events-none"
               >
                 {tag}
               </Badge>

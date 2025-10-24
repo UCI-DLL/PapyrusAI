@@ -61,7 +61,7 @@ export default function ChatInput({
   }
 
   return (
-    <div className="border-t border-border bg-card flex-shrink-0 lg:sticky lg:bottom-0 z-10">
+    <div className="border-t border-border bg-card flex-shrink-0 sticky bottom-0 z-10 w-full">
       <div className="p-4 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div className="relative flex items-end gap-3 p-3 border rounded-lg bg-background shadow-sm">

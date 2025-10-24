@@ -31,9 +31,19 @@ import {
   Calendar,
   Clock,
   Trash2,
-  CheckCircle,
   XCircle,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
 import {
   postCreateCourse,
   getCourse,
@@ -201,6 +211,20 @@ export default function CreateCourse({
     setSelectedIndexSave(index);
     setOpenSaveTop(false);
     setOpenSaveBottom(false);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (selectedIndexSave === 0) {
+      handleSubmit(e, true, false);
+    } else if (selectedIndexSave === 1) {
+      if (isEditMode && session.isActive) {
+        setOpenActiveModal(true);
+      } else {
+        handleSubmit(e, false, false);
+      }
+    } else if (selectedIndexSave === 2) {
+      setOpenDiscardModal(true);
+    }
   };
 
   function getUsers(PaginationToken: string, signal: AbortSignal) {
@@ -481,7 +505,7 @@ export default function CreateCourse({
       )}
 
       {/* Main Content */}
-      {!error && (isEditMode ? prevSession || isLoading : true) ? (
+      {!error ? (
         <div className="bg-background text-foreground p-4 space-y-6">
           {/* Standard Page Header Pattern */}
           <header className="animate-in slide-in-from-bottom-4 duration-700">
@@ -494,159 +518,95 @@ export default function CreateCourse({
               </div>
 
               <div className="relative z-10">
-                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                  {isEditMode
-                    ? `Edit ${prevSession?.name || "Course"}`
-                    : "Create Course"}
-                </h1>
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                  <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                    Create Course
+                  </h1>
+                  <nav
+                    className="flex flex-col md:flex-row gap-2"
+                    role="toolbar"
+                    aria-label="Course creation actions"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowSavePublishTooltip(true)}
+                      aria-label="Get help with Save & Publish options"
+                    >
+                      <Info className="h-4 w-4" aria-hidden="true" />
+                      Info
+                    </Button>
+                    <div className="flex rounded-lg border overflow-hidden">
+                      <Button
+                        size="sm"
+                        onClick={handleClick}
+                        className="rounded-none border-0 w-full"
+                        disabled={isLoading}
+                        aria-label={`${options[selectedIndexSave]} course`}
+                      >
+                        {options[selectedIndexSave]}
+                      </Button>
+                      <DropdownMenu
+                        open={openSaveTop}
+                        onOpenChange={setOpenSaveTop}
+                      >
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="sm"
+                            className="rounded-none border-0 border-l px-2"
+                            variant="default"
+                            disabled={isLoading}
+                            aria-label="Select save and activation strategy"
+                          >
+                            <ChevronDown
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {options.map((option, index) => (
+                            <DropdownMenuItem
+                              key={option}
+                              onClick={() => {
+                                const fakeEvent = {} as React.MouseEvent<
+                                  HTMLDivElement,
+                                  MouseEvent
+                                >;
+                                handleMenuItemClick(fakeEvent, index);
+                              }}
+                              className={cn(
+                                index === selectedIndexSave && "bg-accent",
+                                index === 2 &&
+                                  "text-destructive focus:text-destructive"
+                              )}
+                            >
+                              {option}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </nav>
+                </div>
+
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
                   Courses are spaces in which instructors can create and
                   organize modules that allow students to interact with the AI.
-                  For more information on {isEditMode ? "editing" : "creating"}{" "}
-                  a course, please see{" "}
+                  For more information on creating a course, please see
                   <a
-                    href={
-                      isEditMode
-                        ? "https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1pkdik3iscqd"
-                        : "https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
-                    }
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
                     target="_blank"
                     rel="noreferrer"
                     className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
                   >
-                    {isEditMode ? "Editing a Course" : "Creating a Course"}{" "}
-                    section of our instructor guide
+                    "Creating a Course" section of our instructor guide
                   </a>
                   .
                 </p>
               </div>
             </div>
           </header>
-
-          {/* Actions Section */}
-          <section aria-labelledby="actions-heading">
-            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h2
-                    id="actions-heading"
-                    className="text-2xl font-bold text-foreground"
-                  >
-                    Course Setup
-                  </h2>
-                  {isEditMode && (
-                    <div className="flex items-center gap-2">
-                      {session.isActive ? (
-                        <>
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                          <Badge
-                            variant="default"
-                            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          >
-                            Published
-                          </Badge>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="h-5 w-5 text-gray-500" />
-                          <Badge variant="secondary">Unpublished</Badge>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  Configure your course settings and publish options.
-                </p>
-              </div>
-              <nav
-                className="flex flex-col md:flex-row gap-2"
-                role="toolbar"
-                aria-label={
-                  isEditMode
-                    ? "Course editing actions"
-                    : "Course creation actions"
-                }
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSavePublishTooltip(true)}
-                  aria-label="Get help with Save & Publish options"
-                >
-                  <Info className="h-4 w-4" aria-hidden="true" />
-                  Info
-                </Button>
-                {isEditMode && (
-                  <TooltipWrapper content="Delete Course">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setOpenDeleteModal(true)}
-                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                      aria-label="Delete course"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      Delete
-                    </Button>
-                  </TooltipWrapper>
-                )}
-                <div className="flex rounded-lg border overflow-hidden">
-                  <Button
-                    size="sm"
-                    onClick={(e) => {
-                      if (selectedIndexSave === 0) {
-                        handleSubmit(e, true, false);
-                      } else if (selectedIndexSave === 1) {
-                        if (isEditMode && session.isActive) {
-                          setOpenActiveModal(true);
-                        } else {
-                          handleSubmit(e, false, false);
-                        }
-                      } else if (selectedIndexSave === 2) {
-                        setOpenDiscardModal(true);
-                      }
-                    }}
-                    className="rounded-none border-0"
-                    disabled={isLoading}
-                    aria-label={`${options[selectedIndexSave]} course`}
-                  >
-                    {options[selectedIndexSave]}
-                  </Button>
-                  <DropdownWrapper
-                    open={openSaveTop}
-                    onOpenChange={setOpenSaveTop}
-                    trigger={
-                      <Button
-                        size="sm"
-                        className="rounded-none border-0 border-l px-2"
-                        variant="default"
-                        disabled={isLoading}
-                        aria-label="Select save and activation strategy"
-                      >
-                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    }
-                    actions={options.map((option, index) => ({
-                      label: option,
-                      onClick: () => {
-                        const fakeEvent = {} as React.MouseEvent<
-                          HTMLDivElement,
-                          MouseEvent
-                        >;
-                        handleMenuItemClick(fakeEvent, index);
-                      },
-                      className: cn(
-                        index === selectedIndexSave && "bg-accent",
-                        index === 2 && "text-destructive focus:text-destructive"
-                      ),
-                    }))}
-                    align="end"
-                  />
-                </div>
-              </nav>
-            </header>
-          </section>
 
           {/* Form */}
           <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
@@ -668,9 +628,17 @@ export default function CreateCourse({
                     <Label htmlFor="name" className="text-sm font-medium">
                       Course Name *
                     </Label>
-                    <TooltipWrapper content="The name for your course that users will see upon joining.">
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipWrapper>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          The name for your course that users will see upon
+                          joining.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                   <Input
                     id="name"
@@ -686,27 +654,29 @@ export default function CreateCourse({
                         "border-destructive focus-visible:ring-destructive"
                     )}
                   />
-                  {errors.name && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <X className="h-3 w-3" />
-                      {errors.name}
-                    </p>
-                  )}
                 </div>
-
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="signUpCode" className="text-sm font-medium">
                       Course Sign Up Code *
                     </Label>
-                    <TooltipWrapper content="The unique sign up code that users will use to join your course. You can use any combination of letters and numbers. This is case sensitive.">
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipWrapper>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          The unique sign up code that users will use to join
+                          your course. You can use any combination of letters
+                          and numbers. This is case sensitive.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                   <Input
                     id="signUpCode"
                     name="signUpCode"
-                    placeholder="e.g., FALL2024ENG190W"
+                    placeholder="e.g., FALL2025ENG190W"
                     value={session.signUpCode}
                     onChange={handleChange}
                     disabled={isLoading}

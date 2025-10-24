@@ -152,6 +152,8 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
       setBreadcrumbText(["Dashboard", "Overview"]);
     } else if (location.pathname === "/courses") {
       setBreadcrumbText(["Courses", ""]);
+    } else if (location.pathname === "/createcourse") {
+      setBreadcrumbText(["Create Course", ""]);
     } else if (location.pathname === "/modules") {
       setBreadcrumbText(["All Modules", ""]);
     } else if (
@@ -318,7 +320,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
           <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent" />
 
           <Breadcrumb>
-            <BreadcrumbList className="text-sidebar-foreground font-medium">
+            <BreadcrumbList className="text-sidebar-foreground text-md">
               {breadcrumbText[0] !== "" && breadcrumbText[1] !== "" ? (
                 <>
                   <BreadcrumbItem>
@@ -331,7 +333,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                               : `/courses/${breadcrumbText[0]}/modules`
                           )
                         }
-                        className="cursor-pointer hover:underline text-sidebar-foreground hover:text-sidebar-accent-foreground font-medium"
+                        className="cursor-pointer hover:underline text-sidebar-foreground hover:text-sidebar-accent-foreground text-md"
                       >
                         {breadcrumbText[0]}
                       </button>
@@ -339,14 +341,14 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="text-sidebar-foreground" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage className="text-sidebar-foreground font-medium">
+                    <BreadcrumbPage className="text-sidebar-foreground text-md">
                       {breadcrumbText[1]}
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </>
               ) : (
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="text-sidebar-foreground font-medium">
+                  <BreadcrumbPage className="text-sidebar-foreground text-md">
                     {breadcrumbText[0]}
                   </BreadcrumbPage>
                 </BreadcrumbItem>

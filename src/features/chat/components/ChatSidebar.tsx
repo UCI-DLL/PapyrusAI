@@ -191,7 +191,7 @@ export default function ChatSidebar({
 
     return (
       <div
-        className="lg:hidden fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+        className="lg:hidden fixed inset-0 z-50 backdrop-blur-sm"
         onClick={onClose}
       >
         <div

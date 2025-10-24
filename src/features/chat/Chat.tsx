@@ -1231,7 +1231,7 @@ export default function Chat(): JSX.Element {
       </Dialog>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0" style={sidebarOpen ? { height: "calc(100vh - 4rem)" } : {}}>
+      <div className="flex-1 flex flex-col min-w-0" style={sidebarOpen ? { height: "calc(100vh - 4rem)" } : { height: "100vh" }}>
         {/* Chat Header */}
         <ChatHeader
           conversationName={openUpdateConvoModal.name || "Chat Title"}

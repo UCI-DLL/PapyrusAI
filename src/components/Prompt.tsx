@@ -530,7 +530,7 @@ export const Prompt = (props: PromptProps) => {
   ];
 
   const adminOrgMenuFunctions = [
-    () => {},
+    () => { },
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -538,12 +538,12 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenDeleteDialog(true),
   ];
   const instructorOrgMenuFunctions = [
-    () => {},
+    () => { },
     starred ? removeStarredPrompt : createStarredPrompt,
     openCopyTo,
   ];
   const adminUserMenuFunctions = [
-    () => {},
+    () => { },
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -551,7 +551,7 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenDeleteDialog(true),
   ];
   const instructorUserMenuFunctions = [
-    () => {},
+    () => { },
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -773,7 +773,7 @@ export const Prompt = (props: PromptProps) => {
                 <Badge
                   key={index}
                   variant="outline"
-                  className="text-xs bg-green-50 text-green-700 border-green-200"
+                  className="text-xs bg-green-50 text-green-700 border-green-200 pointer-events-none"
                 >
                   {tag}
                 </Badge>
@@ -798,40 +798,40 @@ export const Prompt = (props: PromptProps) => {
                   <DropdownMenuContent align="end">
                     {props.prompt.isOrganizationPrompt
                       ? user?.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
-                        )
+                        process.env.REACT_APP_ADMIN
+                          ? process.env.REACT_APP_ADMIN
+                          : "PapyrusAIAdmin"
+                      )
                         ? adminOrgMenu.map((item: string, index: number) => (
+                          <DropdownMenuItem
+                            key={index}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              adminOrgMenuFunctions[index]();
+                            }}
+                          >
+                            {item}
+                          </DropdownMenuItem>
+                        ))
+                        : instructorOrgMenu.map(
+                          (item: string, index: number) => (
                             <DropdownMenuItem
                               key={index}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                adminOrgMenuFunctions[index]();
+                                instructorOrgMenuFunctions[index]();
                               }}
                             >
                               {item}
                             </DropdownMenuItem>
-                          ))
-                        : instructorOrgMenu.map(
-                            (item: string, index: number) => (
-                              <DropdownMenuItem
-                                key={index}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  instructorOrgMenuFunctions[index]();
-                                }}
-                              >
-                                {item}
-                              </DropdownMenuItem>
-                            )
                           )
-                      : user?.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
                         )
-                      ? adminUserMenu.map((item: string, index: number) => (
+                      : user?.groups.includes(
+                        process.env.REACT_APP_ADMIN
+                          ? process.env.REACT_APP_ADMIN
+                          : "PapyrusAIAdmin"
+                      )
+                        ? adminUserMenu.map((item: string, index: number) => (
                           <DropdownMenuItem
                             key={index}
                             onClick={(e) => {
@@ -842,7 +842,7 @@ export const Prompt = (props: PromptProps) => {
                             {item}
                           </DropdownMenuItem>
                         ))
-                      : instructorUserMenu.map(
+                        : instructorUserMenu.map(
                           (item: string, index: number) => (
                             <DropdownMenuItem
                               key={index}

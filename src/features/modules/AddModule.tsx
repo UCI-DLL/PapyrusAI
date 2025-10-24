@@ -426,13 +426,17 @@ export default function AddModule({
           if (res && res.status && res.status < 300) {
             if (res.data) {
               //also set session
-              setSession((prev) => ({
-                ...prev,
-                files: [
-                  ...prev.files,
-                  { ...res.data, isOrgFolder: true, folderId: folderId },
-                ],
-              }));
+              if (
+                session.files.filter((x) => x.id === res.data.id).length === 0
+              ) {
+                setSession((prev) => ({
+                  ...prev,
+                  files: [
+                    ...prev.files,
+                    { ...res.data, isOrgFolder: true, folderId: folderId },
+                  ],
+                }));
+              }
               setIsLoading(false);
             }
           } else if (res && res.status === 401) {
@@ -451,13 +455,17 @@ export default function AddModule({
           if (res && res.status && res.status < 300) {
             if (res.data) {
               //also set session
-              setSession((prev) => ({
-                ...prev,
-                files: [
-                  ...prev.files,
-                  { ...res.data, isOrgFolder: false, folderId: folderId },
-                ],
-              }));
+              if (
+                session.files.filter((x) => x.id === res.data.id).length === 0
+              ) {
+                setSession((prev) => ({
+                  ...prev,
+                  files: [
+                    ...prev.files,
+                    { ...res.data, isOrgFolder: false, folderId: folderId },
+                  ],
+                }));
+              }
               setIsLoading(false);
             }
           } else if (res && res.status === 401) {
@@ -803,35 +811,60 @@ export default function AddModule({
               <Info className="h-4 w-4" aria-hidden="true" />
               {isEditMode ? "Help" : "Info"}
             </Button>
-            <DropdownWrapper
-              open={openSaveTop}
-              onOpenChange={setOpenSaveTop}
-              trigger={
-                <Button
-                  className="gap-2"
-                  aria-label={`${options[selectedIndexSave]} module`}
-                >
-                  <Save className="h-4 w-4" aria-hidden="true" />
-                  {options[selectedIndexSave]}
-                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              }
-              actions={options.map((option, index) => ({
-                label: option,
-                onClick: () => {
-                  const fakeEvent = {} as React.MouseEvent<
-                    HTMLDivElement,
-                    MouseEvent
-                  >;
-                  handleMenuItemClick(fakeEvent, index);
-                },
-                className: cn(
-                  index === selectedIndexSave && "bg-accent",
-                  index === 2 && "text-destructive focus:text-destructive"
-                ),
-              }))}
-              align="end"
-            />
+            <div className="flex rounded-lg border overflow-hidden">
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  if (selectedIndexSave === 0) {
+                    handleSubmit(e, true, false);
+                  } else if (selectedIndexSave === 1) {
+                    if (isEditMode && session.isPublished) {
+                      setOpenActiveModal(true);
+                    } else {
+                      handleSubmit(e, false, false);
+                    }
+                  } else if (selectedIndexSave === 2) {
+                    setOpenDiscardModal(true);
+                  }
+                }}
+                className="rounded-none border-0"
+                disabled={isLoading}
+                aria-label={`${options[selectedIndexSave]} module`}
+              >
+                <Save className="h-4 w-4 mr-2" aria-hidden="true" />
+                {options[selectedIndexSave]}
+              </Button>
+              <DropdownWrapper
+                open={openSaveTop}
+                onOpenChange={setOpenSaveTop}
+                trigger={
+                  <Button
+                    size="sm"
+                    className="rounded-none border-0 border-l px-2"
+                    variant="default"
+                    disabled={isLoading}
+                    aria-label="Select save and publish strategy"
+                  >
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                }
+                actions={options.map((option, index) => ({
+                  label: option,
+                  onClick: () => {
+                    const fakeEvent = {} as React.MouseEvent<
+                      HTMLDivElement,
+                      MouseEvent
+                    >;
+                    handleMenuItemClick(fakeEvent, index);
+                  },
+                  className: cn(
+                    index === selectedIndexSave && "bg-accent",
+                    index === 2 && "text-destructive focus:text-destructive"
+                  ),
+                }))}
+                align="end"
+              />
+            </div>
           </nav>
         </header>
       </section>
@@ -934,14 +967,24 @@ export default function AddModule({
 
             {session.prompts.length < 1 && session.files.length < 1 ? (
               <div
-                className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
-                role="status"
+                className="text-center py-12 cursor-pointer text-muted-foreground bg-card border rounded-lg hover:bg-muted/50 transition-colors duration-200"
+                role="button"
+                tabIndex={0}
+                onClick={() => setOpenSelectFolderModal(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setOpenSelectFolderModal(true);
+                  }
+                }}
+                aria-label="Click here to add an asset (including prompts and documents) to the module"
+                title="Click here to add an asset (including prompts and documents) to the module"
               >
                 <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">No assets added</p>
                 <p className="text-sm">
-                  To add an asset (including prompts and documents), click "Add
-                  Asset" above.
+                  Click here to add an asset (including prompts and documents)
+                  to the module.
                 </p>
               </div>
             ) : (
@@ -975,6 +1018,7 @@ export default function AddModule({
                           noShowMenu={true}
                           showRemove
                           onClick={setConfirmationModal}
+                          disableStarring={true}
                         />
                       </div>
                     );
@@ -1011,6 +1055,7 @@ export default function AddModule({
                             noShowMenu={true}
                             showRemove
                             onClick={setConfirmationModal}
+                            disableStarring={true}
                           />
                         </div>
                       );
@@ -1049,9 +1094,10 @@ export default function AddModule({
                     Allows users to see the full text of the embedded prompt
                     with which they begin their chat with the AI. Unchecking
                     this will mean that the user will not be able to see the
-                    initial text of the prompt sent initially to the AI. For
-                    more information on why you might choose one or the other,
-                    see the{" "}
+                    initial text of the prompt sent initially to the AI.
+                    <br />
+                    For more information on why you might choose one or the
+                    other, see the{" "}
                     <a
                       href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
                       target="_blank"
@@ -1082,12 +1128,14 @@ export default function AddModule({
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground ml-6">
-                    Allow PapyrusAI to search the internet in response to a
-                    query or question from students. Have the students prompt
-                    the AI with things like "Look up this topic", and it will
-                    get some sources from the internet, give a list of the links
-                    to the student, and read them to use those sources in
-                    conversation with the student.
+                    Allows PapyrusAI to search the internet in response to a
+                    query or question. Students can prompt the AI to search the
+                    web by using phrases like “Look up this topic. ”
+                    <br />
+                    In generating the web search output, PapyrusAI will collect
+                    sources from the internet, give a list of those sources to
+                    the students, and reference the content from each source in
+                    the conversation with the student.
                   </p>
                 </div>
               </div>
@@ -1107,6 +1155,7 @@ export default function AddModule({
         >
           {isEditMode && (
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={() => setOpenDeleteModal(true)}
@@ -1118,6 +1167,7 @@ export default function AddModule({
             </Button>
           )}
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => setShowSavePublishTooltip(true)}
@@ -1126,35 +1176,62 @@ export default function AddModule({
             <Info className="h-4 w-4" aria-hidden="true" />
             {isEditMode ? "Help" : "Info"}
           </Button>
-          <DropdownWrapper
-            open={openSaveBottom}
-            onOpenChange={setOpenSaveBottom}
-            trigger={
-              <Button
-                className="gap-2"
-                aria-label={`${options[selectedIndexSave]} module`}
-              >
-                <Save className="h-4 w-4" aria-hidden="true" />
-                {options[selectedIndexSave]}
-                <ChevronDown className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            }
-            actions={options.map((option, index) => ({
-              label: option,
-              onClick: () => {
-                const fakeEvent = {} as React.MouseEvent<
-                  HTMLDivElement,
-                  MouseEvent
-                >;
-                handleMenuItemClick(fakeEvent, index);
-              },
-              className: cn(
-                index === selectedIndexSave && "bg-accent",
-                index === 2 && "text-destructive focus:text-destructive"
-              ),
-            }))}
-            align="end"
-          />
+          <div className="flex rounded-lg border overflow-hidden">
+            <Button
+              type="button"
+              size="sm"
+              onClick={(e) => {
+                if (selectedIndexSave === 0) {
+                  handleSubmit(e, true, false);
+                } else if (selectedIndexSave === 1) {
+                  if (isEditMode && session.isPublished) {
+                    setOpenActiveModal(true);
+                  } else {
+                    handleSubmit(e, false, false);
+                  }
+                } else if (selectedIndexSave === 2) {
+                  setOpenDiscardModal(true);
+                }
+              }}
+              className="rounded-none border-0"
+              disabled={isLoading}
+              aria-label={`${options[selectedIndexSave]} module`}
+            >
+              <Save className="h-4 w-4 mr-2" aria-hidden="true" />
+              {options[selectedIndexSave]}
+            </Button>
+            <DropdownWrapper
+              open={openSaveBottom}
+              onOpenChange={setOpenSaveBottom}
+              trigger={
+                <Button
+                  type="button"
+                  size="sm"
+                  className="rounded-none border-0 border-l px-2"
+                  variant="default"
+                  disabled={isLoading}
+                  aria-label="Select save and publish strategy"
+                >
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              }
+              actions={options.map((option, index) => ({
+                label: option,
+                onClick: () => {
+                  const fakeEvent = {} as React.MouseEvent<
+                    HTMLDivElement,
+                    MouseEvent
+                  >;
+                  handleMenuItemClick(fakeEvent, index);
+                },
+                className: cn(
+                  index === selectedIndexSave && "bg-accent",
+                  index === 2 && "text-destructive focus:text-destructive"
+                ),
+              }))}
+              align="end"
+            />
+          </div>
         </nav>
       </section>
     </main>

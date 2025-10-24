@@ -60,6 +60,10 @@ export const FolderComponent = (props: FolderProps) => {
     setStarred(props.isStarred ? props.isStarred : false);
   }, [props.isStarred]);
 
+  useEffect(() => {
+    setRenameFolderText(props.folder.name);
+  }, [props.folder.name]);
+
   const getViewUrl = () => {
     if (props.isOrganizationFolder) {
       return `/library/org/${props.folder.id}`;
@@ -261,32 +265,46 @@ export const FolderComponent = (props: FolderProps) => {
   }
 
   function createStarredFolder() {
+    props.loading();
     Post(postCreateUserFavoritingData(), {
-      folders: [{ folderId: props.folder.id }],
+      id: { folderId: props.folder.id },
+      type: "folders",
     }).then((res) => {
       if (res.status && res.status < 300) {
-        setStarred(true);
-        setAlert({ message: "Folder starred", type: "success" });
+        if (res.data && res.data.folders) {
+          //update course lists as needed
+          setStarred(res.data.folders);
+          setAlert({ message: "Course added to favorites.", type: "info" });
+        }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to star folder", type: "error" });
+        // set errors
+        setAlert({ message: res.data, type: "error" });
       }
+      props.refreshList();
     });
   }
 
   function removeStarredFolder() {
+    props.loading();
     Put(putUpdateUserFavoritingData(), {
-      folders: starred ? [{ folderId: props.folder.id }] : [],
+      id: { folderId: props.folder.id },
+      type: "folders",
     }).then((res) => {
       if (res.status && res.status < 300) {
-        setStarred(false);
-        setAlert({ message: "Folder unstarred", type: "success" });
+        if (res.data && res.data.folders) {
+          //update course lists as needed
+          setStarred(res.data.folders);
+          setAlert({ message: "Folder removed from favorites.", type: "info" });
+        }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to unstar folder", type: "error" });
+        // set errors
+        setAlert({ message: res.data, type: "error" });
       }
+      props.refreshList();
     });
   }
 

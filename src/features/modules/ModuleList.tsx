@@ -17,6 +17,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import Put from "../../utility/Put";
 import { Checkbox } from "../../components/ui/checkbox";
 import CourseCard from "../../components/CourseCard";
+import ModuleCard from "../../components/ModuleCard";
 import {
   orderCourseRecentlyCreatedAndStarred,
   orderModuleRecentlyCreatedAndStarred,
@@ -25,7 +26,16 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../../utility/endpoints/UserEndpoints";
-import { Star, Play, Eye, Copy, Edit, Loader2 } from "lucide-react";
+import {
+  Star,
+  Play,
+  Eye,
+  Copy,
+  Edit,
+  Loader2,
+  Grid3X3,
+  List,
+} from "lucide-react";
 import Post from "../../utility/Post";
 import { cn } from "../../lib/utils";
 import {
@@ -37,12 +47,14 @@ interface ModuleListProps {
   course: CourseType;
   starredList: UserStarred | undefined;
   refreshList: () => void;
+  viewMode?: "list" | "card";
 }
 
 export default function ModuleList({
   course,
   starredList,
   refreshList,
+  viewMode = "list",
 }: ModuleListProps): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
@@ -307,453 +319,493 @@ export default function ModuleList({
 
   return course.modules.length > 0 ? (
     <section>
-      <DialogWrapper
-        open={openCourseListModal}
-        onOpenChange={setOpenCourseListModal}
-        title="Copy Module To?"
-        description="Please select a course you would like to copy this module to. Copying a module will copy over all module customizations, including the module name, description, added assets, and settings."
-        contentClassName="sm:max-w-5xl max-h-[90vh] overflow-y-auto"
-        actions={[
-          {
-            label: "Close",
-            onClick: () => setOpenCourseListModal(false),
-            variant: "outline",
-          },
-        ]}
-      >
-        <section
+      {viewMode === "card" && (
+        <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           role="list"
-          aria-label="Available courses"
+          aria-label="Module cards"
         >
-          {orderCourseRecentlyCreatedAndStarred(courseList, starredCourses).map(
-            (course) => (
-              <div key={course.id} role="listitem">
-                <CourseCard
-                  course={course}
-                  refreshList={refreshList}
-                  onClick={(courseId: string) => {
-                    setOpenCourseListModal(false);
-                    setOpenDuplicateModal((prev) => ({
-                      ...prev,
-                      copyCourseId: courseId,
-                    }));
-                  }}
-                  isStarred={starredCourses.some(
-                    (c) => c.courseId === course.id
-                  )}
+          {orderModuleRecentlyCreatedAndStarred(
+            course.modules,
+            starredModules
+          ).map((module, index) => (
+            <div key={index} role="listitem">
+              <ModuleCard
+                module={module}
+                course={course}
+                refreshList={refreshList}
+                starredList={starredList}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {viewMode === "list" && (
+        <>
+          <DialogWrapper
+            open={openCourseListModal}
+            onOpenChange={setOpenCourseListModal}
+            title="Copy Module To?"
+            description="Please select a course you would like to copy this module to. Copying a module will copy over all module customizations, including the module name, description, added assets, and settings."
+            contentClassName="sm:max-w-5xl max-h-[90vh] overflow-y-auto"
+            actions={[
+              {
+                label: "Close",
+                onClick: () => setOpenCourseListModal(false),
+                variant: "outline",
+              },
+            ]}
+          >
+            <section
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              role="list"
+              aria-label="Available courses"
+            >
+              {orderCourseRecentlyCreatedAndStarred(
+                courseList,
+                starredCourses
+              ).map((course) => (
+                <div key={course.id} role="listitem">
+                  <CourseCard
+                    course={course}
+                    refreshList={refreshList}
+                    onClick={(courseId: string) => {
+                      setOpenCourseListModal(false);
+                      setOpenDuplicateModal((prev) => ({
+                        ...prev,
+                        copyCourseId: courseId,
+                      }));
+                    }}
+                    isStarred={starredCourses.some(
+                      (c) => c.courseId === course.id
+                    )}
+                  />
+                </div>
+              ))}
+            </section>
+          </DialogWrapper>
+
+          <DialogWrapper
+            open={openDuplicateModal.copyCourseId !== ""}
+            onOpenChange={(open) =>
+              !open &&
+              setOpenDuplicateModal({
+                courseId: "",
+                moduleId: "",
+                copyCourseId: "",
+              })
+            }
+            title="Duplicate Module"
+            description="Please enter a unique name for your module. Duplicating the module will also copy over all settings within this module."
+            contentClassName="sm:max-w-md"
+            showFooter={false}
+          >
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleCopyModuleTo();
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="module-name">Module Name</Label>
+                <Input
+                  id="module-name"
+                  name="name"
+                  placeholder="New Module Name"
+                  value={duplicateModuleData.name}
+                  onChange={handleChange}
+                  required
+                  disabled={isLoading}
                 />
               </div>
-            )
-          )}
-        </section>
-      </DialogWrapper>
-
-      <DialogWrapper
-        open={openDuplicateModal.copyCourseId !== ""}
-        onOpenChange={(open) =>
-          !open &&
-          setOpenDuplicateModal({
-            courseId: "",
-            moduleId: "",
-            copyCourseId: "",
-          })
-        }
-        title="Duplicate Module"
-        description="Please enter a unique name for your module. Duplicating the module will also copy over all settings within this module."
-        contentClassName="sm:max-w-md"
-        showFooter={false}
-      >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleCopyModuleTo();
-          }}
-          className="space-y-4"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="module-name">Module Name</Label>
-            <Input
-              id="module-name"
-              name="name"
-              placeholder="New Module Name"
-              value={duplicateModuleData.name}
-              onChange={handleChange}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="publish-module"
-              checked={duplicateModuleData.isPublished}
-              onCheckedChange={(checked) => {
-                setDuplicateModuleData((prev) => ({
-                  ...prev,
-                  isPublished: checked === true,
-                }));
-              }}
-              disabled={isLoading}
-            />
-            <label
-              htmlFor="publish-module"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Publish Module
-            </label>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                setOpenDuplicateModal({
-                  courseId: "",
-                  moduleId: "",
-                  copyCourseId: "",
-                })
-              }
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              Duplicate
-            </Button>
-          </div>
-        </form>
-      </DialogWrapper>
-
-      <div className="space-y-4" role="list" aria-label="Module list">
-        {orderModuleRecentlyCreatedAndStarred(
-          course.modules,
-          starredModules
-        ).map((module, index) => {
-          const isStarred = starredModules.some(
-            (m) => m.moduleId === module.id
-          );
-          const courseInfo = `${course.name} - ${course.instructor.name} ${course.instructor.family_name}`;
-
-          return (
-            <div
-              key={index}
-              className="group bg-card border rounded-xl hover-lift shadow-sm relative"
-            >
-              {/* Background Pattern */}
-              <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
-                <Play size={64} className="transform rotate-12" />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="publish-module"
+                  checked={duplicateModuleData.isPublished}
+                  onCheckedChange={(checked) => {
+                    setDuplicateModuleData((prev) => ({
+                      ...prev,
+                      isPublished: checked === true,
+                    }));
+                  }}
+                  disabled={isLoading}
+                />
+                <label
+                  htmlFor="publish-module"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Publish Module
+                </label>
               </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setOpenDuplicateModal({
+                      courseId: "",
+                      moduleId: "",
+                      copyCourseId: "",
+                    })
+                  }
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  Duplicate
+                </Button>
+              </div>
+            </form>
+          </DialogWrapper>
 
-              {/* Mobile Layout */}
-              <div className="block md:hidden">
-                <div className="p-3">
-                  {/* Header with title and favorite */}
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 leading-tight">
-                        {module.name}
-                      </h3>
-                    </div>
-                    <TooltipWrapper
-                      content={isStarred ? "Unstar Module" : "Star Module"}
-                    >
-                      <button
-                        onClick={(e: any) => {
-                          e.stopPropagation();
-                          isStarred
-                            ? removeStarredModule(course.id, module.id)
-                            : createStarredModule(course.id, module.id);
-                        }}
-                        disabled={isLoading}
-                        className={cn(
-                          "p-1.5 rounded-full ml-2 flex-shrink-0",
-                          isStarred
-                            ? "text-gold hover:text-muted"
-                            : "text-muted hover:text-gold"
-                        )}
-                      >
-                        <Star
-                          size={12}
-                          fill={isStarred ? "currentColor" : "none"}
-                          className={cn(
-                            isStarred ? "hover:fill-none" : "hover:fill-current"
-                          )}
-                        />
-                      </button>
-                    </TooltipWrapper>
+          <div className="space-y-4" role="list" aria-label="Module list">
+            {orderModuleRecentlyCreatedAndStarred(
+              course.modules,
+              starredModules
+            ).map((module, index) => {
+              const isStarred = starredModules.some(
+                (m) => m.moduleId === module.id
+              );
+              const courseInfo = `${course.name} - ${course.instructor.name} ${course.instructor.family_name}`;
+
+              return (
+                <div
+                  key={index}
+                  className="group bg-card border rounded-xl hover-lift shadow-sm relative"
+                >
+                  {/* Background Pattern */}
+                  <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
+                    <Play size={64} className="transform rotate-12" />
                   </div>
 
-                  {/* Course info */}
-                  <p className="text-xs text-muted-foreground mb-2 font-medium leading-relaxed">
-                    {courseInfo}
-                  </p>
-
-                  {/* Description */}
-                  {module.moduleDescription && (
-                    <p className="text-muted-foreground leading-relaxed text-sm mb-3">
-                      {module.moduleDescription}
-                    </p>
-                  )}
-
-                  {/* Actions row */}
-                  <div className="flex items-center justify-between">
-                    {/* Secondary actions */}
-                    <div className="flex items-center gap-1">
-                      {(user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      ) ||
-                        user?.groups.includes(
-                          process.env.REACT_APP_INSTRUCTOR
-                            ? process.env.REACT_APP_INSTRUCTOR
-                            : "PapyrusAIInstructors"
-                        ) ||
-                        user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipWrapper content="View Reports">
+                  {/* Mobile Layout */}
+                  <div className="block md:hidden">
+                    <div className="p-3">
+                      {/* Header with title and favorite */}
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 leading-tight">
+                            {module.name}
+                          </h3>
+                        </div>
+                        <TooltipWrapper
+                          content={isStarred ? "Unstar Module" : "Star Module"}
+                        >
                           <button
-                            onClick={() =>
-                              navigator(`/dashboard/${course.id}/${module.id}`)
-                            }
-                            className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                          >
-                            <Eye size={14} />
-                          </button>
-                        </TooltipWrapper>
-                      )}
-
-                      {(user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      ) ||
-                        user?.groups.includes(
-                          process.env.REACT_APP_INSTRUCTOR
-                            ? process.env.REACT_APP_INSTRUCTOR
-                            : "PapyrusAIInstructors"
-                        ) ||
-                        user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipWrapper content="Copy Module">
-                          <button
-                            onClick={() => {
-                              setOpenDuplicateModal({
-                                courseId: course.id,
-                                moduleId: module.id,
-                                copyCourseId: "",
-                              });
-                              setOpenCourseListModal(true);
+                            onClick={(e: any) => {
+                              e.stopPropagation();
+                              isStarred
+                                ? removeStarredModule(course.id, module.id)
+                                : createStarredModule(course.id, module.id);
                             }}
-                            className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                            disabled={isLoading}
+                            className={cn(
+                              "p-1.5 rounded-full ml-2 flex-shrink-0",
+                              isStarred
+                                ? "text-gold hover:text-muted"
+                                : "text-muted hover:text-gold"
+                            )}
                           >
-                            <Copy size={14} />
+                            <Star
+                              size={12}
+                              fill={isStarred ? "currentColor" : "none"}
+                              className={cn(
+                                isStarred
+                                  ? "hover:fill-none"
+                                  : "hover:fill-current"
+                              )}
+                            />
                           </button>
                         </TooltipWrapper>
-                      )}
-
-                      {(user?.groups.includes(
-                        process.env.REACT_APP_INSTRUCTOR
-                          ? process.env.REACT_APP_INSTRUCTOR
-                          : "PapyrusAIInstructors"
-                      ) ||
-                        user?.groups.includes(course.id + "-TA")) &&
-                        user?.groups.includes(course.id) &&
-                        (course.instructor.username === user.username ||
-                          (course.taList &&
-                            course.taList.find(
-                              (a: CustomUserType) =>
-                                a.username === user?.username
-                            ))) && (
-                          <TooltipWrapper content="Edit Module">
-                            <button
-                              onClick={() =>
-                                navigator(
-                                  `/courses/${course.id}/editmodule/${module.id}`
-                                )
-                              }
-                              className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                            >
-                              <Edit size={14} />
-                            </button>
-                          </TooltipWrapper>
-                        )}
-                    </div>
-
-                    {/* Primary action */}
-                    <Button
-                      onClick={() =>
-                        navigator(`/courses/${course.id}/modules/${module.id}`)
-                      }
-                      variant="default"
-                      size="sm"
-                      className="flex items-center gap-2"
-                    >
-                      <Play size={14} />
-                      Begin
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Desktop Layout */}
-              <div className="hidden md:block">
-                <div className="p-4">
-                  <div className="relative flex items-start justify-between">
-                    <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
-                      <Play size={64} className="transform rotate-12" />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 truncate">
-                          {module.name}
-                        </h3>
                       </div>
 
-                      <p className="text-xs text-muted-foreground mb-1 font-medium">
+                      {/* Course info */}
+                      <p className="text-xs text-muted-foreground mb-2 font-medium leading-relaxed">
                         {courseInfo}
                       </p>
+
+                      {/* Description */}
                       {module.moduleDescription && (
-                        <p className="text-muted-foreground leading-relaxed text-sm">
+                        <p className="text-muted-foreground leading-relaxed text-sm mb-3">
                           {module.moduleDescription}
                         </p>
                       )}
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 ml-4 flex-shrink-0">
-                      <TooltipWrapper
-                        content={isStarred ? "Unstar Module" : "Star Module"}
-                      >
-                        <button
-                          onClick={(e: any) => {
-                            e.stopPropagation();
-                            isStarred
-                              ? removeStarredModule(course.id, module.id)
-                              : createStarredModule(course.id, module.id);
-                          }}
-                          disabled={isLoading}
-                          className={cn(
-                            "p-1.5 rounded-full",
-                            isStarred
-                              ? "text-gold hover:text-muted"
-                              : "text-muted hover:text-gold"
+                      {/* Actions row */}
+                      <div className="flex items-center justify-between">
+                        {/* Secondary actions */}
+                        <div className="flex items-center gap-1">
+                          {(user?.groups.includes(
+                            process.env.REACT_APP_ADMIN
+                              ? process.env.REACT_APP_ADMIN
+                              : "PapyrusAIAdmin"
+                          ) ||
+                            user?.groups.includes(
+                              process.env.REACT_APP_INSTRUCTOR
+                                ? process.env.REACT_APP_INSTRUCTOR
+                                : "PapyrusAIInstructors"
+                            ) ||
+                            user?.groups.includes(course.id + "-TA")) && (
+                            <TooltipWrapper content="View Reports">
+                              <button
+                                onClick={() =>
+                                  navigator(
+                                    `/dashboard/${course.id}/${module.id}`
+                                  )
+                                }
+                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                              >
+                                <Eye size={14} />
+                              </button>
+                            </TooltipWrapper>
                           )}
-                        >
-                          <Star
-                            size={12}
-                            fill={isStarred ? "currentColor" : "none"}
-                            className={cn(
-                              isStarred
-                                ? "hover:fill-none"
-                                : "hover:fill-current"
+
+                          {(user?.groups.includes(
+                            process.env.REACT_APP_ADMIN
+                              ? process.env.REACT_APP_ADMIN
+                              : "PapyrusAIAdmin"
+                          ) ||
+                            user?.groups.includes(
+                              process.env.REACT_APP_INSTRUCTOR
+                                ? process.env.REACT_APP_INSTRUCTOR
+                                : "PapyrusAIInstructors"
+                            ) ||
+                            user?.groups.includes(course.id + "-TA")) && (
+                            <TooltipWrapper content="Copy Module">
+                              <button
+                                onClick={() => {
+                                  setOpenDuplicateModal({
+                                    courseId: course.id,
+                                    moduleId: module.id,
+                                    copyCourseId: "",
+                                  });
+                                  setOpenCourseListModal(true);
+                                }}
+                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                              >
+                                <Copy size={14} />
+                              </button>
+                            </TooltipWrapper>
+                          )}
+
+                          {(user?.groups.includes(
+                            process.env.REACT_APP_INSTRUCTOR
+                              ? process.env.REACT_APP_INSTRUCTOR
+                              : "PapyrusAIInstructors"
+                          ) ||
+                            user?.groups.includes(course.id + "-TA")) &&
+                            user?.groups.includes(course.id) &&
+                            (course.instructor.username === user.username ||
+                              (course.taList &&
+                                course.taList.find(
+                                  (a: CustomUserType) =>
+                                    a.username === user?.username
+                                ))) && (
+                              <TooltipWrapper content="Edit Module">
+                                <button
+                                  onClick={() =>
+                                    navigator(
+                                      `/courses/${course.id}/editmodule/${module.id}`
+                                    )
+                                  }
+                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                                >
+                                  <Edit size={14} />
+                                </button>
+                              </TooltipWrapper>
                             )}
-                          />
-                        </button>
-                      </TooltipWrapper>
+                        </div>
 
-                      {(user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      ) ||
-                        user?.groups.includes(
-                          process.env.REACT_APP_INSTRUCTOR
-                            ? process.env.REACT_APP_INSTRUCTOR
-                            : "PapyrusAIInstructors"
-                        ) ||
-                        user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipWrapper content="View Reports">
-                          <button
-                            onClick={() =>
-                              navigator(`/dashboard/${course.id}/${module.id}`)
+                        {/* Primary action */}
+                        <Button
+                          onClick={() =>
+                            navigator(
+                              `/courses/${course.id}/modules/${module.id}`
+                            )
+                          }
+                          variant="default"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <Play size={14} />
+                          Begin
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop Layout */}
+                  <div className="hidden md:block">
+                    <div className="p-4">
+                      <div className="relative flex items-start justify-between">
+                        <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
+                          <Play size={64} className="transform rotate-12" />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 truncate">
+                              {module.name}
+                            </h3>
+                          </div>
+
+                          <p className="text-xs text-muted-foreground mb-1 font-medium">
+                            {courseInfo}
+                          </p>
+                          {module.moduleDescription && (
+                            <p className="text-muted-foreground leading-relaxed text-sm">
+                              {module.moduleDescription}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 ml-4 flex-shrink-0">
+                          <TooltipWrapper
+                            content={
+                              isStarred ? "Unstar Module" : "Star Module"
                             }
-                            className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                           >
-                            <Eye size={12} />
-                          </button>
-                        </TooltipWrapper>
-                      )}
-
-                      {(user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      ) ||
-                        user?.groups.includes(
-                          process.env.REACT_APP_INSTRUCTOR
-                            ? process.env.REACT_APP_INSTRUCTOR
-                            : "PapyrusAIInstructors"
-                        ) ||
-                        user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipWrapper content="Copy Module">
-                          <button
-                            onClick={() => {
-                              setOpenDuplicateModal({
-                                courseId: course.id,
-                                moduleId: module.id,
-                                copyCourseId: "",
-                              });
-                              setOpenCourseListModal(true);
-                            }}
-                            className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                          >
-                            <Copy size={12} />
-                          </button>
-                        </TooltipWrapper>
-                      )}
-
-                      {(user?.groups.includes(
-                        process.env.REACT_APP_INSTRUCTOR
-                          ? process.env.REACT_APP_INSTRUCTOR
-                          : "PapyrusAIInstructors"
-                      ) ||
-                        user?.groups.includes(course.id + "-TA")) &&
-                        user?.groups.includes(course.id) &&
-                        (course.instructor.username === user.username ||
-                          (course.taList &&
-                            course.taList.find(
-                              (a: CustomUserType) =>
-                                a.username === user?.username
-                            ))) && (
-                          <TooltipWrapper content="Edit Module">
                             <button
-                              onClick={() =>
-                                navigator(
-                                  `/courses/${course.id}/editmodule/${module.id}`
-                                )
-                              }
-                              className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                              onClick={(e: any) => {
+                                e.stopPropagation();
+                                isStarred
+                                  ? removeStarredModule(course.id, module.id)
+                                  : createStarredModule(course.id, module.id);
+                              }}
+                              disabled={isLoading}
+                              className={cn(
+                                "p-1.5 rounded-full",
+                                isStarred
+                                  ? "text-gold hover:text-muted"
+                                  : "text-muted hover:text-gold"
+                              )}
                             >
-                              <Edit size={12} />
+                              <Star
+                                size={12}
+                                fill={isStarred ? "currentColor" : "none"}
+                                className={cn(
+                                  isStarred
+                                    ? "hover:fill-none"
+                                    : "hover:fill-current"
+                                )}
+                              />
                             </button>
                           </TooltipWrapper>
-                        )}
 
-                      <Button
-                        onClick={() => handleBeginModule(course.id, module.id)}
-                        variant="default"
-                        size="sm"
-                        className="flex items-center gap-2 ml-2"
-                        disabled={
-                          isNavigatingToModule === `${course.id}-${module.id}`
-                        }
-                      >
-                        {isNavigatingToModule ===
-                        `${course.id}-${module.id}` ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Play size={14} />
-                        )}
-                        Begin Module
-                      </Button>
+                          {(user?.groups.includes(
+                            process.env.REACT_APP_ADMIN
+                              ? process.env.REACT_APP_ADMIN
+                              : "PapyrusAIAdmin"
+                          ) ||
+                            user?.groups.includes(
+                              process.env.REACT_APP_INSTRUCTOR
+                                ? process.env.REACT_APP_INSTRUCTOR
+                                : "PapyrusAIInstructors"
+                            ) ||
+                            user?.groups.includes(course.id + "-TA")) && (
+                            <TooltipWrapper content="View Reports">
+                              <button
+                                onClick={() =>
+                                  navigator(
+                                    `/dashboard/${course.id}/${module.id}`
+                                  )
+                                }
+                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                              >
+                                <Eye size={12} />
+                              </button>
+                            </TooltipWrapper>
+                          )}
+
+                          {(user?.groups.includes(
+                            process.env.REACT_APP_ADMIN
+                              ? process.env.REACT_APP_ADMIN
+                              : "PapyrusAIAdmin"
+                          ) ||
+                            user?.groups.includes(
+                              process.env.REACT_APP_INSTRUCTOR
+                                ? process.env.REACT_APP_INSTRUCTOR
+                                : "PapyrusAIInstructors"
+                            ) ||
+                            user?.groups.includes(course.id + "-TA")) && (
+                            <TooltipWrapper content="Copy Module">
+                              <button
+                                onClick={() => {
+                                  setOpenDuplicateModal({
+                                    courseId: course.id,
+                                    moduleId: module.id,
+                                    copyCourseId: "",
+                                  });
+                                  setOpenCourseListModal(true);
+                                }}
+                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                              >
+                                <Copy size={12} />
+                              </button>
+                            </TooltipWrapper>
+                          )}
+
+                          {(user?.groups.includes(
+                            process.env.REACT_APP_INSTRUCTOR
+                              ? process.env.REACT_APP_INSTRUCTOR
+                              : "PapyrusAIInstructors"
+                          ) ||
+                            user?.groups.includes(course.id + "-TA")) &&
+                            user?.groups.includes(course.id) &&
+                            (course.instructor.username === user.username ||
+                              (course.taList &&
+                                course.taList.find(
+                                  (a: CustomUserType) =>
+                                    a.username === user?.username
+                                ))) && (
+                              <TooltipWrapper content="Edit Module">
+                                <button
+                                  onClick={() =>
+                                    navigator(
+                                      `/courses/${course.id}/editmodule/${module.id}`
+                                    )
+                                  }
+                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                                >
+                                  <Edit size={12} />
+                                </button>
+                              </TooltipWrapper>
+                            )}
+
+                          <Button
+                            onClick={() =>
+                              handleBeginModule(course.id, module.id)
+                            }
+                            variant="default"
+                            size="sm"
+                            className="flex items-center gap-2 ml-2"
+                            disabled={
+                              isNavigatingToModule ===
+                              `${course.id}-${module.id}`
+                            }
+                          >
+                            {isNavigatingToModule ===
+                            `${course.id}-${module.id}` ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Play size={14} />
+                            )}
+                            Begin Module
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </section>
   ) : (
     <div

@@ -2,16 +2,12 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
+import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
+import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { FolderType, PromptType } from "../utility/types/CourseTypes";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
@@ -41,23 +37,10 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "./ui/tooltip";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router";
 import ListFolders from "../features/library/ListFolders";
 import { truncateString } from "../utility/Helpers";
-import { Textarea } from "./ui/textarea";
 
 interface PromptProps {
   prompt: PromptType;
@@ -81,6 +64,7 @@ interface PromptProps {
   selected?: boolean;
   noShowDesc?: boolean;
   isStarred?: boolean;
+  disableStarring?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -446,7 +430,8 @@ export const Prompt = (props: PromptProps) => {
 
   function createStarredPrompt() {
     Post(postCreateUserFavoritingData(), {
-      prompts: [{ promptId: props.prompt.id, folderId: props.folder.id }],
+      id: { folderId: props.folder.id, promptId: props.prompt.id },
+      type: "prompts",
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(true);
@@ -456,14 +441,14 @@ export const Prompt = (props: PromptProps) => {
       } else {
         setAlert({ message: "Failed to star prompt", type: "error" });
       }
+      props.refreshList();
     });
   }
 
   function removeStarredPrompt() {
     Put(putUpdateUserFavoritingData(), {
-      prompts: starred
-        ? [{ promptId: props.prompt.id, folderId: props.folder.id }]
-        : [],
+      id: { folderId: props.folder.id, promptId: props.prompt.id },
+      type: "prompts",
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(false);
@@ -473,6 +458,7 @@ export const Prompt = (props: PromptProps) => {
       } else {
         setAlert({ message: "Failed to unstar prompt", type: "error" });
       }
+      props.refreshList();
     });
   }
 
@@ -530,7 +516,7 @@ export const Prompt = (props: PromptProps) => {
   ];
 
   const adminOrgMenuFunctions = [
-    () => { },
+    () => {},
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -538,12 +524,12 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenDeleteDialog(true),
   ];
   const instructorOrgMenuFunctions = [
-    () => { },
+    () => {},
     starred ? removeStarredPrompt : createStarredPrompt,
     openCopyTo,
   ];
   const adminUserMenuFunctions = [
-    () => { },
+    () => {},
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -551,7 +537,7 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenDeleteDialog(true),
   ];
   const instructorUserMenuFunctions = [
-    () => { },
+    () => {},
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -562,150 +548,143 @@ export const Prompt = (props: PromptProps) => {
   return (
     <div key={props.keyy ? props.keyy : "key"}>
       {/* Preview Dialog */}
-      <Dialog open={openPreviewDialog} onOpenChange={setOpenPreviewDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>{props.prompt.name}</DialogTitle>
-            <DialogDescription>Full prompt content</DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
-            <div className="bg-muted/50 border rounded-lg p-4">
-              <pre className="text-sm text-muted-foreground font-mono whitespace-pre-wrap break-words">
-                {props.prompt.prompt}
-              </pre>
-            </div>
+      <DialogWrapper
+        open={openPreviewDialog}
+        onOpenChange={setOpenPreviewDialog}
+        title={props.prompt.name}
+        description="Full prompt content"
+        contentClassName="max-w-4xl max-h-[80vh]"
+        actions={[
+          {
+            label: "Close",
+            onClick: () => setOpenPreviewDialog(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <div className="max-h-96 overflow-y-auto">
+          <div className="bg-muted/50 border rounded-lg p-4">
+            <pre className="text-sm text-muted-foreground font-mono whitespace-pre-wrap break-words">
+              {props.prompt.prompt}
+            </pre>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenPreviewDialog(false)}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </DialogWrapper>
 
       {/* Delete Dialog */}
-      <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Prompt?</DialogTitle>
-            <DialogDescription>
-              Are you sure you would like to permanently delete this prompt?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={deletePrompt}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDeleteDialog}
+        onOpenChange={setOpenDeleteDialog}
+        title="Delete Prompt?"
+        description="Are you sure you would like to permanently delete this prompt?"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDeleteDialog(false),
+            variant: "outline",
+          },
+          {
+            label: "Delete",
+            onClick: deletePrompt,
+            variant: "destructive",
+          },
+        ]}
+      />
 
       {/* Copy To Dialog */}
-      <Dialog open={openCopyToDialog} onOpenChange={setOpenCopyToDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Copy Prompt To?</DialogTitle>
-            <DialogDescription>
-              Select a folder to copy this prompt to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
-            <ListFolders noShowMenu onClick={copyTo} compactGrid />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenCopyToDialog(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openCopyToDialog}
+        onOpenChange={setOpenCopyToDialog}
+        title="Copy Prompt To?"
+        description="Select a folder to copy this prompt to."
+        contentClassName="max-w-2xl"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenCopyToDialog(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <div className="max-h-96 overflow-y-auto">
+          <ListFolders noShowMenu onClick={copyTo} compactGrid />
+        </div>
+      </DialogWrapper>
 
       {/* Move To Dialog */}
-      <Dialog open={openMoveDialog} onOpenChange={setOpenMoveDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Move Prompt To?</DialogTitle>
-            <DialogDescription>
-              Select a folder to move this prompt to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
-            <ListFolders
-              noShowMenu
-              onClick={moveTo}
-              disableFolderId={props.folder.id}
-              compactGrid
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenMoveDialog(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openMoveDialog}
+        onOpenChange={setOpenMoveDialog}
+        title="Move Prompt To?"
+        description="Select a folder to move this prompt to."
+        contentClassName="max-w-2xl"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenMoveDialog(false),
+            variant: "outline",
+          },
+        ]}
+      >
+        <div className="max-h-96 overflow-y-auto">
+          <ListFolders
+            noShowMenu
+            onClick={moveTo}
+            disableFolderId={props.folder.id}
+            compactGrid
+          />
+        </div>
+      </DialogWrapper>
 
       {/* Edit Dialog */}
-      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Prompt</DialogTitle>
-            <DialogDescription>
-              Update the prompt name and content.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="prompt-name">Prompt Name</Label>
-              <Input
-                id="prompt-name"
-                value={editNameText}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setEditNameText(e.target.value);
-                }}
-                placeholder="Enter prompt name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="prompt-content">Prompt Content</Label>
-              <Textarea
-                id="prompt-content"
-                value={editPromptText}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                  setEditPromptText(e.target.value);
-                }}
-                placeholder="Enter prompt content"
-                className="w-full min-h-[200px] p-3 border rounded-md resize-none"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenEditDialog(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                setOpenEditDialog(false);
-                edit();
+      <DialogWrapper
+        open={openEditDialog}
+        onOpenChange={setOpenEditDialog}
+        title="Edit Prompt"
+        description="Update the prompt name and content."
+        contentClassName="max-w-2xl"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenEditDialog(false),
+            variant: "outline",
+          },
+          {
+            label: "Save Changes",
+            onClick: () => {
+              setOpenEditDialog(false);
+              edit();
+            },
+            variant: "default",
+          },
+        ]}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="prompt-name">Prompt Name</Label>
+            <Input
+              id="prompt-name"
+              value={editNameText}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setEditNameText(e.target.value);
               }}
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              placeholder="Enter prompt name"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="prompt-content">Prompt Content</Label>
+            <Textarea
+              id="prompt-content"
+              value={editPromptText}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                setEditPromptText(e.target.value);
+              }}
+              placeholder="Enter prompt content"
+              className="w-full min-h-[200px] p-3 border rounded-md resize-none"
+            />
+          </div>
+        </div>
+      </DialogWrapper>
 
       <Card className="h-full hover:shadow-md transition-shadow duration-200 group">
         <CardContent className="p-4 h-full flex flex-col">
@@ -717,38 +696,36 @@ export const Prompt = (props: PromptProps) => {
                 {getPromptCategory()}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={toggleStar}
+            {!props.disableStarring && (
+              <div className="flex items-center gap-2">
+                <TooltipWrapper
+                  content={starred ? "Unstar Prompt" : "Star Prompt"}
+                  side="top"
+                >
+                  <button
+                    onClick={toggleStar}
+                    className={cn(
+                      "p-1 rounded-full transition-all duration-300",
+                      starred
+                        ? "text-gold hover:text-muted"
+                        : "text-muted hover:text-gold"
+                    )}
+                    aria-label={
+                      starred ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    <Star
+                      size={16}
+                      fill={starred ? "currentColor" : "none"}
                       className={cn(
-                        "p-1 rounded-full transition-all duration-300",
-                        starred
-                          ? "text-gold hover:text-muted"
-                          : "text-muted hover:text-gold"
+                        starred ? "hover:fill-none" : "hover:fill-current"
                       )}
-                      aria-label={
-                        starred ? "Remove from favorites" : "Add to favorites"
-                      }
-                    >
-                      <Star
-                        size={16}
-                        fill={starred ? "currentColor" : "none"}
-                        className={cn(
-                          starred ? "hover:fill-none" : "hover:fill-current"
-                        )}
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    {starred ? "Unstar Prompt" : "Star Prompt"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+                      aria-hidden="true"
+                    />
+                  </button>
+                </TooltipWrapper>
+              </div>
+            )}
           </div>
 
           {/* Prompt title */}
@@ -784,8 +761,8 @@ export const Prompt = (props: PromptProps) => {
           <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center gap-2">
               {!props.noShowMenu && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <DropdownWrapper
+                  trigger={
                     <Button
                       variant="ghost"
                       size="sm"
@@ -794,133 +771,109 @@ export const Prompt = (props: PromptProps) => {
                     >
                       <MoreHorizontal className="h-3 w-3" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {props.prompt.isOrganizationPrompt
+                  }
+                  actions={
+                    props.prompt.isOrganizationPrompt
                       ? user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      )
-                        ? adminOrgMenu.map((item: string, index: number) => (
-                          <DropdownMenuItem
-                            key={index}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              adminOrgMenuFunctions[index]();
-                            }}
-                          >
-                            {item}
-                          </DropdownMenuItem>
-                        ))
-                        : instructorOrgMenu.map(
-                          (item: string, index: number) => (
-                            <DropdownMenuItem
-                              key={index}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                instructorOrgMenuFunctions[index]();
-                              }}
-                            >
-                              {item}
-                            </DropdownMenuItem>
-                          )
+                          process.env.REACT_APP_ADMIN
+                            ? process.env.REACT_APP_ADMIN
+                            : "PapyrusAIAdmin"
                         )
-                      : user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      )
-                        ? adminUserMenu.map((item: string, index: number) => (
-                          <DropdownMenuItem
-                            key={index}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              adminUserMenuFunctions[index]();
-                            }}
-                          >
-                            {item}
-                          </DropdownMenuItem>
-                        ))
-                        : instructorUserMenu.map(
-                          (item: string, index: number) => (
-                            <DropdownMenuItem
-                              key={index}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                instructorUserMenuFunctions[index]();
-                              }}
-                            >
-                              {item}
-                            </DropdownMenuItem>
+                        ? adminOrgMenu.map((item: string, index: number) => ({
+                            label: item,
+                            onClick: () => {
+                              adminOrgMenuFunctions[index]();
+                            },
+                            type: "button" as const,
+                          }))
+                        : instructorOrgMenu.map(
+                            (item: string, index: number) => ({
+                              label: item,
+                              onClick: () => {
+                                instructorOrgMenuFunctions[index]();
+                              },
+                              type: "button" as const,
+                            })
                           )
-                        )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      : user?.groups.includes(
+                          process.env.REACT_APP_ADMIN
+                            ? process.env.REACT_APP_ADMIN
+                            : "PapyrusAIAdmin"
+                        )
+                      ? adminUserMenu.map((item: string, index: number) => ({
+                          label: item,
+                          onClick: () => {
+                            adminUserMenuFunctions[index]();
+                          },
+                          type: "button" as const,
+                        }))
+                      : instructorUserMenu.map(
+                          (item: string, index: number) => ({
+                            label: item,
+                            onClick: () => {
+                              instructorUserMenuFunctions[index]();
+                            },
+                            type: "button" as const,
+                          })
+                        )
+                  }
+                  align="end"
+                  tooltipContent="Prompt Options"
+                  tooltipSide="top"
+                />
               )}
             </div>
             {props.noShowMenu ? (
               props.showRemove ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (props.onClick) {
-                            props.onClick(
-                              props.folder.id,
-                              props.prompt.id,
-                              props.prompt.isOrganizationPrompt ?? false,
-                              "prompt"
-                            );
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Remove
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      Remove prompt from module
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <TooltipWrapper content="Remove prompt from module" side="top">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (props.onClick) {
+                        props.onClick(
+                          props.folder.id,
+                          props.prompt.id,
+                          props.prompt.isOrganizationPrompt ?? false,
+                          "prompt"
+                        );
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Remove
+                  </Button>
+                </TooltipWrapper>
               ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (props.onClick) {
-                            props.onClick(
-                              props.folder.id,
-                              props.prompt.id,
-                              props.prompt.isOrganizationPrompt ?? false,
-                              "prompt"
-                            );
-                          }
-                        }}
-                      >
-                        <Plus className="h-3 w-3" />
-                        Add
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      Add prompt to module
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <TooltipWrapper content="Add prompt to module" side="top">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (props.onClick) {
+                        props.onClick(
+                          props.folder.id,
+                          props.prompt.id,
+                          props.prompt.isOrganizationPrompt ?? false,
+                          "prompt"
+                        );
+                      }
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                    Add
+                  </Button>
+                </TooltipWrapper>
               )
             ) : (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 className="flex items-center gap-1 text-primary text-xs font-medium"

@@ -4,6 +4,7 @@ import React, {
   useContext,
   useMemo,
   useCallback,
+  useRef,
 } from "react";
 import CourseList from "../course-groups/CourseList";
 import ModuleList from "../modules/ModuleList";
@@ -13,13 +14,15 @@ import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
-import AddCourseForm from "../course-groups/AddCourseForm";
+import AddCourseForm, {
+  AddCourseFormHandle,
+} from "../course-groups/AddCourseForm";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { ExternalLink, EyeIcon, Loader2, PlusIcon, Target } from "lucide-react";
-import { Dialog, DialogTrigger } from "../../components/ui/dialog";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { Link } from "react-router-dom";
 
 export default function Dashboard(): JSX.Element {
@@ -29,7 +32,9 @@ export default function Dashboard(): JSX.Element {
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showAddCourseModal, setShowAddCourseModal] = useState<boolean>(false);
+  const [isJoiningCourse, setIsJoiningCourse] = useState<boolean>(false);
   const [starred, setStarred] = useState<UserStarred | undefined>();
+  const addCourseFormRef = useRef<AddCourseFormHandle>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -196,19 +201,40 @@ export default function Dashboard(): JSX.Element {
                 </Link>
               </Button>
             )}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="sm" aria-label="Join existing course">
-                  <ExternalLink className="w-4 h-4" aria-hidden="true" />
-                  Join Course
-                </Button>
-              </DialogTrigger>
+            <Button
+              size="sm"
+              aria-label="Join existing course"
+              onClick={() => setShowAddCourseModal(true)}
+            >
+              <ExternalLink className="w-4 h-4" aria-hidden="true" />
+              Join Course
+            </Button>
+
+            <DialogWrapper
+              open={showAddCourseModal}
+              onOpenChange={setShowAddCourseModal}
+              title="Join Course by Sign Up Code"
+              description="Enter the unique course sign up code associated with the course you want to join. Not sure what the sign up code is? Ask the instructor of the course!"
+              contentClassName="sm:max-w-md"
+              actions={[
+                {
+                  label: "Cancel",
+                  onClick: () => setShowAddCourseModal(false),
+                  variant: "outline",
+                },
+                {
+                  label: isJoiningCourse ? "Joining..." : "Join Course",
+                  onClick: () => addCourseFormRef.current?.handleSubmit(),
+                  disabled: isJoiningCourse,
+                },
+              ]}
+            >
               <AddCourseForm
-                closeForm={() => {
-                  setShowAddCourseModal(false);
-                }}
+                ref={addCourseFormRef}
+                closeForm={() => setShowAddCourseModal(false)}
+                setIsLoading={setIsJoiningCourse}
               />
-            </Dialog>
+            </DialogWrapper>
           </nav>
         </header>
 

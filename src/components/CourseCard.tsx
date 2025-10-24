@@ -1,25 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "./ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "./ui/dialog";
+import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
+import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
+import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { useNavigate, Link } from "react-router-dom";
 import { Star, BookOpen, Calendar, User, MoreHorizontal } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
@@ -175,90 +159,83 @@ export default function CourseCard({
     );
   }
 
+  console.log({
+    groups: user?.groups,
+    courseId: course.id,
+    admin: process.env.REACT_APP_ADMIN,
+    instructor: process.env.REACT_APP_INSTRUCTOR,
+  });
+
   return (
     <>
-      <Dialog open={openDuplicateModal} onOpenChange={setOpenDuplicateModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Duplicate Course</DialogTitle>
-            <DialogDescription>
-              Enter a name and a unique sign up code for the duplicated course.
-              Duplicating a course will also copy over all the modules and
-              settings within this course.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleDuplicateCourse();
-            }}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="course-name" className="text-sm font-medium">
-                New Course Name
-              </Label>
-              <Input
-                id="course-name"
-                name="name"
-                placeholder="Enter new course name"
-                value={duplicateCourseData.name}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-                aria-describedby="course-name-description"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="signup-code" className="text-sm font-medium">
-                New Course Sign Up Code
-              </Label>
-              <Input
-                id="signup-code"
-                name="signUpCode"
-                placeholder="Enter new sign up code"
-                value={duplicateCourseData.signUpCode}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-                aria-describedby="signup-code-description"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="publish-course"
-                checked={duplicateCourseData.isActive}
-                onCheckedChange={(checked) => {
-                  setDuplicateCourseData((prev) => ({
-                    ...prev,
-                    isActive: checked === true,
-                  }));
-                }}
-                disabled={isLoading}
-              />
-              <Label
-                htmlFor="publish-course"
-                className="text-sm font-medium leading-none"
-              >
-                Publish Course
-              </Label>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpenDuplicateModal(false)}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                Duplicate
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <DialogWrapper
+        open={openDuplicateModal}
+        onOpenChange={setOpenDuplicateModal}
+        title="Duplicate Course"
+        description="Enter a name and a unique sign up code for the duplicated course. Duplicating a course will also copy over all the modules and settings within this course."
+        showFooter={true}
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setOpenDuplicateModal(false),
+            variant: "outline",
+          },
+          {
+            label: "Duplicate",
+            onClick: handleDuplicateCourse,
+            variant: "default",
+          },
+        ]}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="course-name" className="font-bold">
+              New Course Name
+            </Label>
+            <Input
+              id="course-name"
+              name="name"
+              placeholder="Enter new course name"
+              value={duplicateCourseData.name}
+              onChange={handleChange}
+              required
+              disabled={isLoading}
+              aria-describedby="course-name-description"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-code" className="font-bold">
+              New Course Sign Up Code
+            </Label>
+            <Input
+              id="signup-code"
+              name="signUpCode"
+              placeholder="Enter new sign up code"
+              value={duplicateCourseData.signUpCode}
+              onChange={handleChange}
+              required
+              disabled={isLoading}
+              aria-describedby="signup-code-description"
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="publish-course"
+              checked={duplicateCourseData.isActive}
+              onCheckedChange={(checked) => {
+                setDuplicateCourseData((prev) => ({
+                  ...prev,
+                  isActive: checked === true,
+                }));
+              }}
+              disabled={isLoading}
+            />
+            <Label htmlFor="publish-course" className="font-bold leading-none">
+              Publish Course
+            </Label>
+          </div>
+        </div>
+      </DialogWrapper>
 
       <article className="group bg-card border rounded-xl hover-lift shadow-sm relative h-50 flex flex-col">
         <div
@@ -303,40 +280,38 @@ export default function CourseCard({
               className="flex items-center gap-1 ml-2 flex-shrink-0"
               aria-label="Course actions"
             >
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      starred
-                        ? removeStarredCourse(course.id)
-                        : createStarredCourse(course.id);
-                    }}
-                    disabled={isLoading}
+              <TooltipWrapper
+                content={starred ? "Unstar Course" : "Star Course"}
+                side="top"
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    starred
+                      ? removeStarredCourse(course.id)
+                      : createStarredCourse(course.id);
+                  }}
+                  disabled={isLoading}
+                  className={cn(
+                    "p-1 rounded-full transition-all duration-300",
+                    starred
+                      ? "text-gold hover:text-muted"
+                      : "text-muted hover:text-gold"
+                  )}
+                  aria-label={
+                    starred ? "Remove from favorites" : "Add to favorites"
+                  }
+                >
+                  <Star
+                    size={12}
+                    fill={starred ? "currentColor" : "none"}
                     className={cn(
-                      "p-1 rounded-full transition-all duration-300",
-                      starred
-                        ? "text-gold hover:text-muted"
-                        : "text-muted hover:text-gold"
+                      starred ? "hover:fill-none" : "hover:fill-current"
                     )}
-                    aria-label={
-                      starred ? "Remove from favorites" : "Add to favorites"
-                    }
-                  >
-                    <Star
-                      size={12}
-                      fill={starred ? "currentColor" : "none"}
-                      className={cn(
-                        starred ? "hover:fill-none" : "hover:fill-current"
-                      )}
-                      aria-hidden="true"
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    {starred ? "Unstar Course" : "Star Course"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                    aria-hidden="true"
+                  />
+                </button>
+              </TooltipWrapper>
 
               {user.groups.includes(course.id) &&
                 !onClick &&
@@ -347,53 +322,38 @@ export default function CourseCard({
                     process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
                   ) ||
                   user?.groups.includes(course.id + "-TA")) && (
-                  <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <DropdownMenuTrigger
-                            className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                            }}
-                            aria-label="Course options menu"
-                          >
-                            <MoreHorizontal size={12} aria-hidden="true" />
-                          </DropdownMenuTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          Course Options
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <DropdownMenuContent align="end">
-                      {(course.instructor.username === user.username
-                        ? ownerMenu
-                        : nonOwnerMenu
-                      ).map((item) =>
-                        item.type === "link" ? (
-                          <DropdownMenuItem key={item.label} asChild>
-                            <Link
-                              to={item.action}
-                              className="cursor-pointer text-primary no-underline"
-                            >
-                              {item.label}
-                            </Link>
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                            key={item.label}
-                            onClick={() => {
-                              item.action(course.id);
-                            }}
-                            className="cursor-pointer text-primary"
-                          >
-                            {item.label}
-                          </DropdownMenuItem>
-                        )
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <DropdownWrapper
+                    trigger={
+                      <button
+                        className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        aria-label="Course options menu"
+                      >
+                        <MoreHorizontal size={12} aria-hidden="true" />
+                      </button>
+                    }
+                    actions={(course.instructor.username === user.username
+                      ? ownerMenu
+                      : nonOwnerMenu
+                    ).map((item) => ({
+                      label: item.label,
+                      onClick: () => {
+                        if (item.type === "link") {
+                          navigator(item.action);
+                        } else {
+                          item.action(course.id);
+                        }
+                      },
+                      type: item.type === "link" ? "link" : "button",
+                      href: item.type === "link" ? item.action : undefined,
+                    }))}
+                    open={menuOpen}
+                    onOpenChange={setMenuOpen}
+                    tooltipContent="Course Options"
+                    tooltipSide="top"
+                  />
                 )}
             </nav>
           </header>

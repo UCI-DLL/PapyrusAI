@@ -16,12 +16,12 @@ import {
   PopoverTrigger,
 } from "../../components/ui/popover";
 import { Calendar } from "../../components/ui/calendar";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { FolderType, TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import {
   Search,
   Filter,
-  SlidersHorizontal,
   Calendar as CalendarIcon,
   Loader2,
   Folder,
@@ -497,225 +497,218 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Popover
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => setIsFilterPopoverOpen(true)}
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+          </Button>
+
+          <DialogWrapper
             open={isFilterPopoverOpen}
             onOpenChange={setIsFilterPopoverOpen}
+            title="Filters"
+            description="Filter folders by date, tags, owner, and more."
+            contentClassName="sm:max-w-xl"
+            showFooter={false}
           >
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filters
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-96 p-0" align="start">
-              <div className="border-b px-4 py-3">
-                <div className="flex items-center gap-2 font-medium">
-                  <SlidersHorizontal className="h-5 w-5" />
-                  Filters
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Filter folders by date, tags, owner, and more.
-                </p>
-              </div>
-              <div className="space-y-6 p-4 max-h-96 overflow-y-auto">
-                <div className="space-y-2">
-                  <Label htmlFor="sort-select">Sort</Label>
-                  <Select
-                    value={filters.sort}
-                    onValueChange={(value) => {
-                      setFilters((prev) => ({
-                        ...prev,
-                        sort: SortOptions[value as keyof typeof SortOptions],
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select sort order" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(SortOptions).map((key) => (
-                        <SelectItem value={key} key={key}>
-                          {key}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="starred-select">Starred</Label>
-                  <Select
-                    value={filters.starred}
-                    onValueChange={(value) => {
-                      setFilters((prev) => ({
-                        ...prev,
-                        starred:
-                          StarredOptions[value as keyof typeof StarredOptions],
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by starred status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(StarredOptions).map((key) => (
-                        <SelectItem value={key} key={key}>
-                          {key}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="owner-select">Owner</Label>
-                  <Select
-                    value={filters.owner}
-                    onValueChange={(value) => {
-                      setFilters((prev) => ({
-                        ...prev,
-                        owner:
-                          OwnerTypeOptions[
-                            value as keyof typeof OwnerTypeOptions
-                          ],
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by owner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.keys(OwnerTypeOptions).map((key) => (
-                        <SelectItem value={key} key={key}>
-                          {key}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tag-select">Tag</Label>
-                  <Select
-                    value={filters.tags}
-                    onValueChange={(value) => {
-                      setFilters((prev) => ({
-                        ...prev,
-                        tags: value,
-                      }));
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by tag" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none" key="none">
-                        No filter
-                      </SelectItem>
-                      {tagList.map((tag, i) => (
-                        <SelectItem value={tag.id} key={i}>
-                          {tag.id}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-4">
-                  <Label className="text-sm font-medium">Date Created</Label>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="start-date">Start Date</Label>
-                    <Popover
-                      open={startDateOpen}
-                      onOpenChange={setStartDateOpen}
-                    >
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !filters.startDate && "text-muted-foreground"
-                          )}
-                          disabled={isLoading}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {filters.startDate
-                            ? format(filters.startDate, "PPP")
-                            : "Pick a start date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={filters.startDate}
-                          onSelect={(date) => {
-                            setFilters((prev) => ({
-                              ...prev,
-                              startDate: date,
-                            }));
-                            setStartDateOpen(false);
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="end-date">End Date</Label>
-                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !filters.endDate && "text-muted-foreground"
-                          )}
-                          disabled={isLoading}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {filters.endDate
-                            ? format(filters.endDate, "PPP")
-                            : "Pick an end date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={filters.endDate}
-                          onSelect={(date) => {
-                            setFilters((prev) => ({
-                              ...prev,
-                              endDate: date,
-                            }));
-                            setEndDateOpen(false);
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t p-4 flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleResetFilters}
-                  className="flex-1"
-                >
-                  Clear Filters
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    setIsFilterPopoverOpen(false);
-                    handleFilter(e);
+            <div className="space-y-6 max-h-96 overflow-y-auto">
+              <div className="space-y-2">
+                <Label htmlFor="sort-select">Sort</Label>
+                <Select
+                  value={filters.sort}
+                  onValueChange={(value) => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      sort: SortOptions[value as keyof typeof SortOptions],
+                    }));
                   }}
-                  className="flex-1"
                 >
-                  Apply Filters
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select sort order" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(SortOptions).map((key) => (
+                      <SelectItem value={key} key={key}>
+                        {key}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </PopoverContent>
-          </Popover>
+              <div className="space-y-2">
+                <Label htmlFor="starred-select">Starred</Label>
+                <Select
+                  value={filters.starred}
+                  onValueChange={(value) => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      starred:
+                        StarredOptions[value as keyof typeof StarredOptions],
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by starred status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(StarredOptions).map((key) => (
+                      <SelectItem value={key} key={key}>
+                        {key}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="owner-select">Owner</Label>
+                <Select
+                  value={filters.owner}
+                  onValueChange={(value) => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      owner:
+                        OwnerTypeOptions[
+                          value as keyof typeof OwnerTypeOptions
+                        ],
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by owner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(OwnerTypeOptions).map((key) => (
+                      <SelectItem value={key} key={key}>
+                        {key}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tag-select">Tag</Label>
+                <Select
+                  value={filters.tags}
+                  onValueChange={(value) => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      tags: value,
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by tag" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none" key="none">
+                      No filter
+                    </SelectItem>
+                    {tagList.map((tag, i) => (
+                      <SelectItem value={tag.id} key={i}>
+                        {tag.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">Date Created</Label>
+
+                <div className="space-y-2">
+                  <Label htmlFor="start-date">Start Date</Label>
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !filters.startDate && "text-muted-foreground"
+                        )}
+                        disabled={isLoading}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filters.startDate
+                          ? format(filters.startDate, "PPP")
+                          : "Pick a start date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filters.startDate}
+                        onSelect={(date) => {
+                          setFilters((prev) => ({
+                            ...prev,
+                            startDate: date,
+                          }));
+                          setStartDateOpen(false);
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="end-date">End Date</Label>
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !filters.endDate && "text-muted-foreground"
+                        )}
+                        disabled={isLoading}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {filters.endDate
+                          ? format(filters.endDate, "PPP")
+                          : "Pick an end date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={filters.endDate}
+                        onSelect={(date) => {
+                          setFilters((prev) => ({
+                            ...prev,
+                            endDate: date,
+                          }));
+                          setEndDateOpen(false);
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={handleResetFilters}
+                className="flex-1"
+              >
+                Clear Filters
+              </Button>
+              <Button
+                onClick={(e) => {
+                  setIsFilterPopoverOpen(false);
+                  handleFilter(e);
+                }}
+                className="flex-1"
+              >
+                Apply Filters
+              </Button>
+            </div>
+          </DialogWrapper>
         </div>
       </div>
 

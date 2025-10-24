@@ -1,16 +1,7 @@
 import React from "react";
 import { Button } from "../../../components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu";
-import {
-  MessageSquare,
-  MoreVertical,
-  PanelRightOpen,
-} from "lucide-react";
+import { DropdownWrapper } from "../../../components/ui-wrappers/DropdownWrapper";
+import { MessageSquare, MoreVertical, PanelRightOpen } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 
@@ -39,12 +30,13 @@ export default function ChatHeader({
   onToggleSidebar,
   isMobile = false,
 }: ChatHeaderProps): JSX.Element {
-  const canModifyConversation = user && viewUser && user.username === viewUser.username;
+  const canModifyConversation =
+    user && viewUser && user.username === viewUser.username;
 
   return (
     <div className="bg-card border-b border-border px-4 py-3 sticky top-0 z-20">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="flex flex-col items-start  gap-3 min-w-0 flex-1">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MessageSquare className="h-4 w-4" />
             <span className="font-medium text-foreground">
@@ -56,26 +48,32 @@ export default function ChatHeader({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <DropdownWrapper
+            trigger={
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <MoreVertical className="h-4 w-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onRename}>
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDownload}>
-                Download
-              </DropdownMenuItem>
-              {canModifyConversation && (
-                <DropdownMenuItem onClick={onHide}>
-                  Hide Conversation
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            }
+            actions={[
+              {
+                label: "Rename",
+                onClick: onRename,
+              },
+              {
+                label: "Download",
+                onClick: onDownload,
+              },
+              ...(canModifyConversation
+                ? [
+                    {
+                      label: "Hide Conversation",
+                      onClick: onHide,
+                    },
+                  ]
+                : []),
+            ]}
+            align="end"
+          />
           {isMobile && (
             <Button
               variant="ghost"

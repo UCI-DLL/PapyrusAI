@@ -20,7 +20,7 @@ export default function DocumentModal({
   returnDocText,
 }: ChatWizardProps): JSX.Element {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-  
+
   const [docText, setDocText] = useState<string>("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -35,7 +35,7 @@ export default function DocumentModal({
     setError("");
     setIsLoading(true);
     const file = e.target.files[0];
-    
+
     try {
       if (file.type === "text/plain") {
         const reader = new FileReader();
@@ -105,36 +105,30 @@ export default function DocumentModal({
             Upload Document
           </CardTitle>
           <CardDescription>
-            Upload a document or paste text that you would like to send to the AI as part of the conversation
+            Upload the document or copy and paste the text (e.g., a rubric) that you would like to send to the AI. See the{" "}
+            {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
+              <a
+                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+              >
+                "Starting a Conversation" section of our user guide
+              </a>
+            ) : (
+              <a
+                href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+              >
+                "Starting a Conversation" section of our user guide
+              </a>
+            )}
+            {" "}for more information on when and why you might want to use documents.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Alert>
-            <AlertDescription className="text-sm">
-              Upload the document or copy and paste the text (e.g., a rubric) that you would like to send to the AI. See the{" "}
-              {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
-                <a
-                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="underline underline-offset-2 hover:no-underline text-primary font-medium"
-                >
-                  "Starting a Conversation" section of our user guide
-                </a>
-              ) : (
-                <a
-                  href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="underline underline-offset-2 hover:no-underline text-primary font-medium"
-                >
-                  "Starting a Conversation" section of our user guide
-                </a>
-              )}
-              {" "}for more information on when and why you might want to use documents.
-            </AlertDescription>
-          </Alert>
-
           <div className="space-y-4">
             <div>
               <Label htmlFor="file-upload" className="sr-only">Upload File</Label>

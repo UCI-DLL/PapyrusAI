@@ -47,7 +47,7 @@ export default function ChatSidebar({
       .reverse() || [];
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
@@ -205,7 +205,7 @@ export default function ChatSidebar({
 
     return (
       <div
-        className="lg:hidden fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+        className="lg:hidden fixed inset-0 z-50 backdrop-blur-sm"
         onClick={onClose}
       >
         <div
@@ -219,7 +219,10 @@ export default function ChatSidebar({
   }
 
   return (
-    <div className="hidden lg:flex w-80 border-l border-border bg-card h-screen">
+    <div
+      className="hidden lg:flex w-80 border-l border-border bg-card"
+      style={{ height: "calc(100vh - 4rem)" }}
+    >
       {sidebarContent}
     </div>
   );

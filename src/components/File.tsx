@@ -590,7 +590,7 @@ export const File = (props: FileProps) => {
                 <Badge
                   key={index}
                   variant="outline"
-                  className="text-xs bg-green-50 text-green-700 border-green-200"
+                  className="text-xs bg-green-50 text-green-700 border-green-200 pointer-events-none"
                 >
                   {tag}
                 </Badge>

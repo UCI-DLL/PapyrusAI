@@ -237,8 +237,7 @@ export default function ModuleList({
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
               navigator(
-                `/chat/${user.username}/${courseId}/${moduleId}/${
-                  createRes.data.conversations.length - 1
+                `/chat/${user.username}/${courseId}/${moduleId}/${createRes.data.conversations.length - 1
                 }`
               );
             }
@@ -540,26 +539,26 @@ export default function ModuleList({
                             : "PapyrusAIInstructors"
                         ) ||
                         user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() =>
-                                  navigator(
-                                    `/dashboard/${course.id}/${module.id}`
-                                  )
-                                }
-                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                              >
-                                <Eye size={14} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="">
-                              View Reports
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() =>
+                                    navigator(
+                                      `/dashboard/${course.id}/${module.id}`
+                                    )
+                                  }
+                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                                >
+                                  <Eye size={14} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="">
+                                View Reports
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
 
                       {(user?.groups.includes(
                         process.env.REACT_APP_ADMIN
@@ -572,29 +571,29 @@ export default function ModuleList({
                             : "PapyrusAIInstructors"
                         ) ||
                         user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => {
-                                  setOpenDuplicateModal({
-                                    courseId: course.id,
-                                    moduleId: module.id,
-                                    copyCourseId: "",
-                                  });
-                                  setOpenCourseListModal(true);
-                                }}
-                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                              >
-                                <Copy size={14} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="">
-                              Copy Module
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => {
+                                    setOpenDuplicateModal({
+                                      courseId: course.id,
+                                      moduleId: module.id,
+                                      copyCourseId: "",
+                                    });
+                                    setOpenCourseListModal(true);
+                                  }}
+                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                                >
+                                  <Copy size={14} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="">
+                                Copy Module
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
 
                       {(user?.groups.includes(
                         process.env.REACT_APP_INSTRUCTOR
@@ -721,26 +720,26 @@ export default function ModuleList({
                             : "PapyrusAIInstructors"
                         ) ||
                         user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() =>
-                                  navigator(
-                                    `/dashboard/${course.id}/${module.id}`
-                                  )
-                                }
-                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                              >
-                                <Eye size={12} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="">
-                              View Reports
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() =>
+                                    navigator(
+                                      `/dashboard/${course.id}/${module.id}`
+                                    )
+                                  }
+                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                                >
+                                  <Eye size={12} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="">
+                                View Reports
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
 
                       {(user?.groups.includes(
                         process.env.REACT_APP_ADMIN
@@ -753,29 +752,29 @@ export default function ModuleList({
                             : "PapyrusAIInstructors"
                         ) ||
                         user?.groups.includes(course.id + "-TA")) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => {
-                                  setOpenDuplicateModal({
-                                    courseId: course.id,
-                                    moduleId: module.id,
-                                    copyCourseId: "",
-                                  });
-                                  setOpenCourseListModal(true);
-                                }}
-                                className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                              >
-                                <Copy size={12} />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="">
-                              Copy Module
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => {
+                                    setOpenDuplicateModal({
+                                      courseId: course.id,
+                                      moduleId: module.id,
+                                      copyCourseId: "",
+                                    });
+                                    setOpenCourseListModal(true);
+                                  }}
+                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                                >
+                                  <Copy size={12} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="">
+                                Copy Module
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
 
                       {(user?.groups.includes(
                         process.env.REACT_APP_INSTRUCTOR
@@ -815,13 +814,13 @@ export default function ModuleList({
                         onClick={() => handleBeginModule(course.id, module.id)}
                         variant="default"
                         size="sm"
-                        className="flex items-center gap-2 ml-2"
+                        className="flex items-center gap-2 ml-2 z-20"
                         disabled={
                           isNavigatingToModule === `${course.id}-${module.id}`
                         }
                       >
                         {isNavigatingToModule ===
-                        `${course.id}-${module.id}` ? (
+                          `${course.id}-${module.id}` ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : (
                           <Play size={14} />
@@ -849,11 +848,11 @@ export default function ModuleList({
       {user?.groups.includes(
         process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
       ) && (
-        <p className="text-sm">
-          To create a module, go to the course in which you would like to create
-          the module.
-        </p>
-      )}
+          <p className="text-sm">
+            To create a module, go to the course in which you would like to create
+            the module.
+          </p>
+        )}
     </div>
   );
 }

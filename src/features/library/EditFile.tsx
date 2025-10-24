@@ -35,7 +35,6 @@ import {
   ChevronRight,
   Info,
   Loader2,
-  Save,
   Trash2,
   Upload,
   X,
@@ -901,7 +900,7 @@ export default function EditFile(): JSX.Element {
                           className={cn(
                             index === selectedIndexSave && "bg-accent",
                             index === 1 &&
-                              "text-destructive focus:text-destructive"
+                            "text-destructive focus:text-destructive"
                           )}
                         >
                           {option}
@@ -1177,7 +1176,7 @@ export default function EditFile(): JSX.Element {
                         className={cn(
                           index === selectedIndexSave && "bg-accent",
                           index === 1 &&
-                            "text-destructive focus:text-destructive"
+                          "text-destructive focus:text-destructive"
                         )}
                       >
                         {option}

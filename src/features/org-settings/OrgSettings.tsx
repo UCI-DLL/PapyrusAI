@@ -586,7 +586,7 @@ export default function OrgSettings(): JSX.Element {
           <section aria-labelledby="permissions-content">
             <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
               <div>
-                <h2 
+                <h2
                   id="permissions-content"
                   className="text-2xl font-bold text-foreground mb-1"
                 >
@@ -675,8 +675,8 @@ export default function OrgSettings(): JSX.Element {
                                       permission: permission.isAdmin
                                         ? "Admin"
                                         : permission.isInstructor
-                                        ? "Instructor"
-                                        : "None",
+                                          ? "Instructor"
+                                          : "None",
                                     })
                                   }
                                   className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
@@ -689,15 +689,15 @@ export default function OrgSettings(): JSX.Element {
                             </TableCell>
                             <TableCell className="text-right">
                               {permission.isAdmin ? (
-                                <Badge variant="default" className="bg-primary">
+                                <Badge variant="default" className="bg-primary pointer-events-none">
                                   Admin
                                 </Badge>
                               ) : permission.isInstructor ? (
-                                <Badge variant="secondary">Instructor</Badge>
+                                <Badge variant="secondary" className="pointer-events-none">Instructor</Badge>
                               ) : (
                                 <Badge
                                   variant="outline"
-                                  className="text-muted-foreground"
+                                  className="text-muted-foreground pointer-events-none"
                                 >
                                   <ShieldX className="mr-1 h-3 w-3" aria-hidden="true" />
                                   No Access
@@ -717,8 +717,8 @@ export default function OrgSettings(): JSX.Element {
                                           permission: permission.isAdmin
                                             ? "Admin"
                                             : permission.isInstructor
-                                            ? "Instructor"
-                                            : "None",
+                                              ? "Instructor"
+                                              : "None",
                                         })
                                       }
                                       aria-label={`Edit permissions for ${permission.id}`}

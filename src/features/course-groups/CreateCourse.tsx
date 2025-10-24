@@ -324,9 +324,66 @@ export default function CreateCourse(): JSX.Element {
             </div>
 
             <div className="relative z-10">
-              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                Create Course
-              </h1>
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                  Create Course
+                </h1>
+                <nav
+                  className="flex flex-col md:flex-row gap-2"
+                  role="toolbar"
+                  aria-label="Course creation actions"
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSavePublishTooltip(true)}
+                    aria-label="Get help with Save & Publish options"
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                    Info
+                  </Button>
+                  <div className="flex rounded-lg border overflow-hidden">
+                    <Button
+                      size="sm"
+                      onClick={handleClick}
+                      className="rounded-none border-0 w-full"
+                      disabled={isLoading}
+                      aria-label={`${options[selectedIndexSave]} course`}
+                    >
+                      {options[selectedIndexSave]}
+                    </Button>
+                    <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          className="rounded-none border-0 border-l px-2"
+                          variant="default"
+                          disabled={isLoading}
+                          aria-label="Select save and activation strategy"
+                        >
+                          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {options.map((option, index) => (
+                          <DropdownMenuItem
+                            key={option}
+                            onClick={() => handleMenuItemClick(index)}
+                            className={cn(
+                              index === selectedIndexSave && "bg-accent",
+                              index === 2 &&
+                              "text-destructive focus:text-destructive"
+                            )}
+                          >
+                            {option}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </nav>
+              </div>
+
               <p className="text-muted-foreground max-w-2xl text-base leading-6">
                 Courses are spaces in which instructors can create and organize
                 modules that allow students to interact with the AI. For more
@@ -344,77 +401,6 @@ export default function CreateCourse(): JSX.Element {
             </div>
           </div>
         </header>
-
-        {/* Actions Section */}
-        <section aria-labelledby="actions-heading">
-          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h2
-                id="actions-heading"
-                className="text-2xl font-bold text-foreground mb-1"
-              >
-                Course Setup
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Configure your course settings and publish options.
-              </p>
-            </div>
-            <nav
-              className="flex flex-col md:flex-row gap-2"
-              role="toolbar"
-              aria-label="Course creation actions"
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSavePublishTooltip(true)}
-                aria-label="Get help with Save & Publish options"
-              >
-                <Info className="h-4 w-4" aria-hidden="true" />
-                Info
-              </Button>
-              <div className="flex rounded-lg border overflow-hidden">
-                <Button
-                  size="sm"
-                  onClick={handleClick}
-                  className="rounded-none border-0"
-                  disabled={isLoading}
-                  aria-label={`${options[selectedIndexSave]} course`}
-                >
-                  {options[selectedIndexSave]}
-                </Button>
-                <DropdownMenu open={openSaveTop} onOpenChange={setOpenSaveTop}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="sm"
-                      className="rounded-none border-0 border-l px-2"
-                      variant="default"
-                      disabled={isLoading}
-                      aria-label="Select save and activation strategy"
-                    >
-                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {options.map((option, index) => (
-                      <DropdownMenuItem
-                        key={option}
-                        onClick={() => handleMenuItemClick(index)}
-                        className={cn(
-                          index === selectedIndexSave && "bg-accent",
-                          index === 2 &&
-                            "text-destructive focus:text-destructive"
-                        )}
-                      >
-                        {option}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </nav>
-          </header>
-        </section>
 
         {/* Form */}
         <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
@@ -459,7 +445,7 @@ export default function CreateCourse(): JSX.Element {
                   className={cn(
                     "transition-colors",
                     errors.name &&
-                      "border-destructive focus-visible:ring-destructive"
+                    "border-destructive focus-visible:ring-destructive"
                   )}
                 />
                 {errors.name && (
@@ -491,7 +477,7 @@ export default function CreateCourse(): JSX.Element {
                 <Input
                   id="signUpCode"
                   name="signUpCode"
-                  placeholder="e.g., FALL2024ENG190W"
+                  placeholder="e.g., FALL2025ENG190W"
                   value={session.signUpCode}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -499,7 +485,7 @@ export default function CreateCourse(): JSX.Element {
                   className={cn(
                     "transition-colors",
                     errors.signUpCode &&
-                      "border-destructive focus-visible:ring-destructive"
+                    "border-destructive focus-visible:ring-destructive"
                   )}
                 />
                 {errors.signUpCode && (
@@ -544,7 +530,7 @@ export default function CreateCourse(): JSX.Element {
                     id="year"
                     name="year"
                     type="number"
-                    placeholder="2024"
+                    placeholder="2025"
                     value={session.year}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -554,7 +540,7 @@ export default function CreateCourse(): JSX.Element {
                     className={cn(
                       "transition-colors",
                       errors.year &&
-                        "border-destructive focus-visible:ring-destructive"
+                      "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                   {errors.year && (
@@ -588,7 +574,7 @@ export default function CreateCourse(): JSX.Element {
                       className={cn(
                         "transition-colors",
                         errors.term &&
-                          "border-destructive focus-visible:ring-destructive"
+                        "border-destructive focus-visible:ring-destructive"
                       )}
                     >
                       <Clock className="h-4 w-4 text-muted-foreground" />
@@ -633,7 +619,7 @@ export default function CreateCourse(): JSX.Element {
                     className={cn(
                       "transition-colors",
                       errors.section &&
-                        "border-destructive focus-visible:ring-destructive"
+                      "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                   {errors.section && (
@@ -676,9 +662,9 @@ export default function CreateCourse(): JSX.Element {
                         {ta.name && ta.family_name
                           ? `${ta.name} ${ta.family_name}`
                           : ta.name ||
-                            ta.family_name ||
-                            ta.email ||
-                            ta.username}
+                          ta.family_name ||
+                          ta.email ||
+                          ta.username}
                         <Button
                           type="button"
                           variant="ghost"
@@ -762,9 +748,9 @@ export default function CreateCourse(): JSX.Element {
                                 {user.name && user.family_name
                                   ? `${user.name} ${user.family_name}`
                                   : user.name ||
-                                    user.family_name ||
-                                    user.email ||
-                                    user.username}
+                                  user.family_name ||
+                                  user.email ||
+                                  user.username}
                               </span>
                               {user.email &&
                                 (user.name || user.family_name) && (
@@ -819,7 +805,7 @@ export default function CreateCourse(): JSX.Element {
                 <Button
                   size="sm"
                   onClick={handleClick}
-                  className="rounded-none border-0"
+                  className="rounded-none border-0 w-full"
                   disabled={isLoading}
                   aria-label={`${options[selectedIndexSave]} course`}
                 >
@@ -848,7 +834,7 @@ export default function CreateCourse(): JSX.Element {
                         className={cn(
                           index === selectedIndexSave && "bg-accent",
                           index === 2 &&
-                            "text-destructive focus:text-destructive"
+                          "text-destructive focus:text-destructive"
                         )}
                       >
                         {option}

@@ -381,7 +381,7 @@ export const MessageRight = (props: MessageProps) => {
 
               <Card className="transition-all duration-200">
                 <CardContent className="p-4">
-                  <Markdown className="whitespace-pre-wrap font-mono text-sm mb-4 max-h-32 overflow-hidden">
+                  <Markdown className="whitespace-pre-wrap font-mono text-sm mb-4 overflow-hidden">
                     {expandFile ? props.message.replace(/\n/g, "\n\n") : props.message.substring(0, 200) + "..."}
                   </Markdown>
                   <div className="flex items-center gap-2 pt-2 border-t">

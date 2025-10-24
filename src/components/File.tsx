@@ -614,7 +614,7 @@ export const File = (props: FileProps) => {
                 <Badge
                   key={index}
                   variant="outline"
-                  className="text-xs bg-green-50 text-green-700 border-green-200"
+                  className="text-xs bg-green-50 text-green-700 border-green-200 pointer-events-none"
                 >
                   {tag}
                 </Badge>
@@ -637,19 +637,19 @@ export const File = (props: FileProps) => {
                   <DropdownMenuContent align="end">
                     {(props.file.isOrganizationFile
                       ? user?.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
-                        )
+                        process.env.REACT_APP_ADMIN
+                          ? process.env.REACT_APP_ADMIN
+                          : "PapyrusAIAdmin"
+                      )
                         ? adminOrgMenu
                         : instructorOrgMenu
                       : user?.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
-                        )
-                      ? adminUserMenu
-                      : instructorUserMenu
+                        process.env.REACT_APP_ADMIN
+                          ? process.env.REACT_APP_ADMIN
+                          : "PapyrusAIAdmin"
+                      )
+                        ? adminUserMenu
+                        : instructorUserMenu
                     ).map((item) =>
                       item.type === "link" ? (
                         <DropdownMenuItem

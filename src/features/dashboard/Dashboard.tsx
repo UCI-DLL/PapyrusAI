@@ -265,13 +265,13 @@ export default function Dashboard(): JSX.Element {
 
         <div className="w-full">
           {courseList.length > 0 &&
-          coursesWithRecentModules.some(
-            (course) => course.modules.length > 0
-          ) ? (
-            <div className="space-y-4">
+            coursesWithRecentModules.some(
+              (course) => course.modules.length > 0
+            ) ? (
+            <div className="space-y-4 flex flex-col items-center">
               {coursesWithRecentModules.map((course, index) => {
                 return course.modules.length > 0 ? (
-                  <div className="w-full" key={course.id || index}>
+                  <div style={{ width: "99%" }} key={course.id || index}>
                     <ModuleList
                       course={{
                         ...course,
@@ -311,8 +311,8 @@ function mostRecentModules(courses: Array<CourseType>) {
     const mostRecentItem =
       course.modules.length > 0
         ? course.modules.reduce((latest, item) =>
-            item.id > latest.id ? item : latest
-          )
+          item.id > latest.id ? item : latest
+        )
         : null;
 
     return { ...course, mostRecentItem };

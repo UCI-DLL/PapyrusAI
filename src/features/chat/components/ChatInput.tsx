@@ -79,7 +79,7 @@ export default function ChatInput({
             </TooltipWrapper>
 
             <Textarea
-              placeholder="Ask me anything about your studies..."
+              placeholder="Enter message..."
               value={message}
               disabled={isLoading}
               className="flex-1 min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-6"

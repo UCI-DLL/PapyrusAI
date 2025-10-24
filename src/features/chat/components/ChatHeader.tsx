@@ -36,7 +36,7 @@ export default function ChatHeader({
   return (
     <div className="bg-card border-b border-border px-4 py-3 sticky top-0 z-20">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="flex flex-col items-start  gap-3 min-w-0 flex-1">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MessageSquare className="h-4 w-4" />
             <span className="font-medium text-foreground">

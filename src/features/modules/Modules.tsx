@@ -8,8 +8,9 @@ import ModuleList from "./ModuleList";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
-import { Loader2, PlusIcon, GraduationCap, ChartColumnBig } from "lucide-react";
+import { Loader2, PlusIcon, GraduationCap, ChartColumnBig, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Input } from "../../components/ui/input";
 
 export default function Modules(): JSX.Element {
   let location = useLocation();
@@ -19,6 +20,7 @@ export default function Modules(): JSX.Element {
   const [error, setError] = useState<string>();
   const [course, setCourse] = useState<CourseType>();
   const [starred, setStarred] = useState<UserStarred | undefined>();
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -92,6 +94,11 @@ export default function Modules(): JSX.Element {
     ((isInstructor && course.instructor.username === user?.username) ||
       user?.groups.includes(course.id + "-TA"));
 
+  // Filter modules based on search query
+  const filteredModules = course ? course.modules.filter((module) =>
+    module.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) : [];
+
   if (isLoading) {
     return (
       <div
@@ -129,27 +136,6 @@ export default function Modules(): JSX.Element {
                     ? `${course.name} Modules`
                     : "Available Modules"}
                 </h1>
-                {course && (
-                  <div className="space-y-1 mb-2">
-                    <p className="text-sm text-muted-foreground font-medium">
-                      {course.section
-                        ? `${course.term ?? ""}${course.year ?? ""} - ${
-                            course.section
-                          }`
-                        : `${course.term ?? ""}${course.year ?? ""}`}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Instructor: {course.instructor.name}{" "}
-                      {course.instructor.family_name}
-                    </p>
-                  </div>
-                )}
-                <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                  Modules provide users access to conversations with the AI.
-                  {isInstructor
-                    ? " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)."
-                    : ""}
-                </p>
               </div>
 
               <nav
@@ -158,10 +144,10 @@ export default function Modules(): JSX.Element {
                 aria-label="Module actions"
               >
                 {isInstructorOrTA && (
-                  <Button size="sm" asChild aria-label="Create new module">
+                  <Button size="sm" asChild aria-label="Create new module" variant="outline">
                     <Link
-                      to={`/reports/course/${course?.id}`}
-                      className="no-underline hover:text-white "
+                      to={`/reports/course/${course?.id}`} //TODO have justin check this
+                      className="no-underline hover:text-white"
                     >
                       <ChartColumnBig className="w-4 h-4" aria-hidden="true" />
                       View Reports
@@ -181,6 +167,33 @@ export default function Modules(): JSX.Element {
                 )}
               </nav>
             </div>
+
+            {course && (
+              <div className="flex flex-wrap flex-row justify-between mb-2">
+                <div className="mr-4">
+                  <p className="text-md capitalize m-0">
+                    {course.section
+                      ? `${course.term ?? ""}${course.year ?? ""} - ${course.section
+                      }`
+                      : `${course.term ?? ""}${course.year ?? ""}`}
+                  </p>
+                  <span className="text-sm text-muted-foreground m-0">Term</span>
+                </div>
+                <div className="mr-4">
+                  <p className="text-md m-0">
+                    {course.instructor.name}{" "}
+                    {course.instructor.family_name}
+                  </p>
+                  <span className="text-sm text-muted-foreground m-0">Instructor</span>
+                </div>
+                <div className="mr-4">
+                  <p className="text-md m-0">
+                    {course.modules.filter(x => x.isPublished).length}
+                  </p>
+                  <span className="text-sm text-muted-foreground m-0">Published Modules</span>
+                </div>
+              </div>
+            )}
 
             {course && course.modules.length > 0 && (
               <p className="text-muted-foreground text-sm max-w-3xl">
@@ -217,10 +230,27 @@ export default function Modules(): JSX.Element {
         </div>
       ) : (
         <section aria-labelledby="modules-content">
+          <div className="mb-6 w-full bg-card p-4 rounded-lg shadow-md">
+            <div className="relative w-full">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                id="module-content"
+                type="text"
+                placeholder="Search modules..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                aria-label="Search modules"
+              />
+            </div>
+          </div>
           <div className="w-full">
             {course ? (
               <ModuleList
-                course={course}
+                course={{ ...course, modules: filteredModules }}
                 refreshList={refreshList}
                 starredList={starred ? starred : undefined}
                 viewMode="card"

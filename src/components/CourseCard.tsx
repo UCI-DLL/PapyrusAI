@@ -159,13 +159,6 @@ export default function CourseCard({
     );
   }
 
-  console.log({
-    groups: user?.groups,
-    courseId: course.id,
-    admin: process.env.REACT_APP_ADMIN,
-    instructor: process.env.REACT_APP_INSTRUCTOR,
-  });
-
   return (
     <>
       <DialogWrapper
@@ -256,9 +249,8 @@ export default function CourseCard({
                   <Calendar size={10} aria-hidden="true" />
                   <span className="font-medium text-sm capitalize">
                     {course.section
-                      ? `${course.term || ""} ${course.year || ""} - ${
-                          course.section
-                        }`
+                      ? `${course.term || ""} ${course.year || ""} - ${course.section
+                      }`
                       : `${course.term || ""} ${course.year || ""}`}
                   </span>
                 </div>

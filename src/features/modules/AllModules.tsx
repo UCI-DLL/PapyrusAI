@@ -110,7 +110,7 @@ export default function AllModules(): JSX.Element {
 
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              All Available <span className="text-primary">Modules</span>
+              All Available Modules
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Modules provide users access to conversations with the AI.
@@ -127,22 +127,22 @@ export default function AllModules(): JSX.Element {
                 ? process.env.REACT_APP_INSTRUCTOR
                 : "PapyrusAIInstructors"
             ) && (
-              <div className="mt-4">
-                <p className="text-primary/80 text-sm leading-relaxed">
-                  For information on creating, editing, copying, or viewing
-                  activity for a module, please see the{" "}
-                  <a
-                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
-                  >
-                    "Modules" section of our instructor guide
-                  </a>
-                  .
-                </p>
-              </div>
-            )}
+                <div className="mt-4">
+                  <p className="text-primary/80 text-sm leading-relaxed">
+                    For information on creating, editing, copying, or viewing
+                    activity for a module, please see the{" "}
+                    <a
+                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                    >
+                      "Modules" section of our instructor guide
+                    </a>
+                    .
+                  </p>
+                </div>
+              )}
           </div>
         </div>
       </header>
@@ -162,19 +162,17 @@ export default function AllModules(): JSX.Element {
               <div className="space-y-6">
                 {orderCourseRecentlyCreated(courseList).map((course, index) => {
                   return course.modules.length > 0 ? (
-                    <div key={index} className="w-full">
+                    <div key={index} className="mb-6 w-full bg-card p-4 rounded-lg shadow-md">
                       <div className="mb-4">
                         <h3 className="text-xl font-semibold text-foreground mb-1">
                           {course.name}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground capitalize">
                           {course.section
-                            ? `${course.term ? course.term : ""}${
-                                course.year ? course.year : ""
-                              } - ${course.section}`
-                            : `${course.term ? course.term : ""}${
-                                course.year ? course.year : ""
-                              }`}
+                            ? `${course.term ? course.term : ""}${course.year ? course.year : ""
+                            } - ${course.section}`
+                            : `${course.term ? course.term : ""}${course.year ? course.year : ""
+                            }`}
                         </p>
                       </div>
                       <ModuleList

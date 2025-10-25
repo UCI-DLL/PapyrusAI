@@ -46,6 +46,7 @@ import {
 import { Prompt } from "../../components/Prompt";
 import { FileType, PromptType } from "../../utility/types/CourseTypes";
 import { File } from "../../components/File";
+import { Badge } from "../../components/ui/badge";
 
 type ModuleFormType = {
   name: string;
@@ -483,7 +484,7 @@ export default function AddModule({
     }
   }
 
-  function refreshList() {} //empty
+  function refreshList() { } //empty
 
   function removeAsset(id: string, type: string) {
     if (type === "file") {
@@ -714,11 +715,121 @@ export default function AddModule({
           </div>
 
           <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              {isEditMode
-                ? `Edit ${session.name || "Module"}`
-                : "Create Module"}
-            </h1>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+              <div>
+                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                  {isEditMode
+                    ? `Edit ${session.name || "Module"}`
+                    : "Create Module"}
+                </h1>
+                {isEditMode && (
+                  <div className="flex items-center gap-2">
+                    {session.isPublished ? (
+                      <>
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <Badge
+                          variant="default"
+                          className="bg-green-100 text-green-800 dark:bg-green-900 pointer-events-none"
+                        >
+                          Published
+                        </Badge>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-5 w-5 text-gray-500 pointer-events-none" />
+                        <Badge variant="secondary">Unpublished</Badge>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+              <nav
+                className="flex flex-col md:flex-row gap-2"
+                role="toolbar"
+                aria-label={
+                  isEditMode
+                    ? "Module management actions"
+                    : "Module creation actions"
+                }
+              >
+                {isEditMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setOpenDeleteModal(true)}
+                    className="text-destructive hover:text-destructive"
+                    aria-label="Delete module"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSavePublishTooltip(true)}
+                  aria-label="Get help with Save & Publish options"
+                >
+                  <Info className="h-4 w-4" aria-hidden="true" />
+                </Button>
+                <div className="flex rounded-lg border overflow-hidden">
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      if (selectedIndexSave === 0) {
+                        handleSubmit(e, true, false);
+                      } else if (selectedIndexSave === 1) {
+                        if (isEditMode && session.isPublished) {
+                          setOpenActiveModal(true);
+                        } else {
+                          handleSubmit(e, false, false);
+                        }
+                      } else if (selectedIndexSave === 2) {
+                        setOpenDiscardModal(true);
+                      }
+                    }}
+                    className="rounded-none border-0 w-full"
+                    disabled={isLoading}
+                    aria-label={`${options[selectedIndexSave]} module`}
+                  >
+                    <Save className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {options[selectedIndexSave]}
+                  </Button>
+                  <DropdownWrapper
+                    open={openSaveTop}
+                    onOpenChange={setOpenSaveTop}
+                    trigger={
+                      <Button
+                        size="sm"
+                        className="rounded-none border-0 border-l px-2"
+                        variant="default"
+                        disabled={isLoading}
+                        aria-label="Select save and publish strategy"
+                      >
+                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    }
+                    actions={options.map((option, index) => ({
+                      label: option,
+                      onClick: () => {
+                        const fakeEvent = {} as React.MouseEvent<
+                          HTMLDivElement,
+                          MouseEvent
+                        >;
+                        handleMenuItemClick(fakeEvent, index);
+                      },
+                      className: cn(
+                        index === selectedIndexSave && "bg-accent",
+                        index === 2 && "text-destructive focus:text-destructive"
+                      ),
+                    }))}
+                    align="end"
+                  />
+                </div>
+              </nav>
+
+
+            </div>
+
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Modules provide users access to conversations with the AI. Modules
               can be customized to allow or restrict access to specific assets,
@@ -743,131 +854,6 @@ export default function AddModule({
           </div>
         </div>
       </header>
-
-      {/* Actions Section */}
-      <section aria-labelledby="actions-heading">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h2
-                id="actions-heading"
-                className="text-2xl font-bold text-foreground"
-              >
-                {isEditMode ? "Module Management" : "Module Setup"}
-              </h2>
-              {isEditMode && (
-                <div className="flex items-center gap-2">
-                  {session.isPublished ? (
-                    <>
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span className="text-green-600 font-medium">
-                        Published
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-muted-foreground font-medium">
-                        Unpublished
-                      </span>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-            <p className="text-muted-foreground text-sm">
-              {isEditMode
-                ? "Update your module settings and publish options."
-                : "Configure your module settings and publish options."}
-            </p>
-          </div>
-          <nav
-            className="flex flex-col md:flex-row gap-2"
-            role="toolbar"
-            aria-label={
-              isEditMode
-                ? "Module management actions"
-                : "Module creation actions"
-            }
-          >
-            {isEditMode && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setOpenDeleteModal(true)}
-                className="text-destructive hover:text-destructive"
-                aria-label="Delete module"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-                Delete
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSavePublishTooltip(true)}
-              aria-label="Get help with Save & Publish options"
-            >
-              <Info className="h-4 w-4" aria-hidden="true" />
-              {isEditMode ? "Help" : "Info"}
-            </Button>
-            <div className="flex rounded-lg border overflow-hidden">
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  if (selectedIndexSave === 0) {
-                    handleSubmit(e, true, false);
-                  } else if (selectedIndexSave === 1) {
-                    if (isEditMode && session.isPublished) {
-                      setOpenActiveModal(true);
-                    } else {
-                      handleSubmit(e, false, false);
-                    }
-                  } else if (selectedIndexSave === 2) {
-                    setOpenDiscardModal(true);
-                  }
-                }}
-                className="rounded-none border-0"
-                disabled={isLoading}
-                aria-label={`${options[selectedIndexSave]} module`}
-              >
-                <Save className="h-4 w-4 mr-2" aria-hidden="true" />
-                {options[selectedIndexSave]}
-              </Button>
-              <DropdownWrapper
-                open={openSaveTop}
-                onOpenChange={setOpenSaveTop}
-                trigger={
-                  <Button
-                    size="sm"
-                    className="rounded-none border-0 border-l px-2"
-                    variant="default"
-                    disabled={isLoading}
-                    aria-label="Select save and publish strategy"
-                  >
-                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                }
-                actions={options.map((option, index) => ({
-                  label: option,
-                  onClick: () => {
-                    const fakeEvent = {} as React.MouseEvent<
-                      HTMLDivElement,
-                      MouseEvent
-                    >;
-                    handleMenuItemClick(fakeEvent, index);
-                  },
-                  className: cn(
-                    index === selectedIndexSave && "bg-accent",
-                    index === 2 && "text-destructive focus:text-destructive"
-                  ),
-                }))}
-                align="end"
-              />
-            </div>
-          </nav>
-        </header>
-      </section>
 
       <Card className="transition-all duration-300 hover:shadow-md">
         <CardHeader>
@@ -899,7 +885,7 @@ export default function AddModule({
                 required
                 className={cn(
                   errors.name &&
-                    "border-destructive focus-visible:ring-destructive"
+                  "border-destructive focus-visible:ring-destructive"
                 )}
                 aria-describedby={errors.name ? "name-error" : undefined}
               />
@@ -931,7 +917,7 @@ export default function AddModule({
                 required
                 className={cn(
                   errors.moduleDescription &&
-                    "border-destructive focus-visible:ring-destructive",
+                  "border-destructive focus-visible:ring-destructive",
                   "min-h-[100px]"
                 )}
                 aria-describedby={
@@ -988,16 +974,50 @@ export default function AddModule({
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  {session.prompts.map((prompt: PromptType, i) => {
+              <div className="grid gap-6 grid-flow-row grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {session.prompts.map((prompt: PromptType, i) => {
+                  return (
+                    <div key={i}>
+                      <Prompt
+                        prompt={prompt}
+                        folder={{
+                          //pass in temp folder
+                          id: prompt.folderId ? prompt.folderId : "",
+                          creator: {
+                            email: "",
+                            sub: "",
+                            name: "",
+                            family_name: "",
+                            username: "",
+                          },
+                          isDeleted: false,
+                          name: "",
+                          prompts: [],
+                          organization: "",
+                          timestamp: "",
+                          files: [],
+                        }}
+                        keyy={`${i}`}
+                        refreshList={() => refreshList()}
+                        loading={() => setIsLoading(true)}
+                        noShowMenu={true}
+                        showRemove
+                        onClick={setConfirmationModal}
+                        disableStarring={true}
+                      />
+                    </div>
+                  );
+                })}
+
+                {session.files &&
+                  session.files.map((file: FileType, i) => {
                     return (
                       <div key={i}>
-                        <Prompt
-                          prompt={prompt}
+                        <File
+                          file={file}
                           folder={{
                             //pass in temp folder
-                            id: prompt.folderId ? prompt.folderId : "",
+                            id: file.folderId ? file.folderId : "",
                             creator: {
                               email: "",
                               sub: "",
@@ -1023,44 +1043,6 @@ export default function AddModule({
                       </div>
                     );
                   })}
-                </div>
-
-                <div className="space-y-3">
-                  {session.files &&
-                    session.files.map((file: FileType, i) => {
-                      return (
-                        <div key={i}>
-                          <File
-                            file={file}
-                            folder={{
-                              //pass in temp folder
-                              id: file.folderId ? file.folderId : "",
-                              creator: {
-                                email: "",
-                                sub: "",
-                                name: "",
-                                family_name: "",
-                                username: "",
-                              },
-                              isDeleted: false,
-                              name: "",
-                              prompts: [],
-                              organization: "",
-                              timestamp: "",
-                              files: [],
-                            }}
-                            keyy={`${i}`}
-                            refreshList={() => refreshList()}
-                            loading={() => setIsLoading(true)}
-                            noShowMenu={true}
-                            showRemove
-                            onClick={setConfirmationModal}
-                            disableStarring={true}
-                          />
-                        </div>
-                      );
-                    })}
-                </div>
               </div>
             )}
 
@@ -1174,7 +1156,7 @@ export default function AddModule({
             aria-label="Get help with Save & Publish options"
           >
             <Info className="h-4 w-4" aria-hidden="true" />
-            {isEditMode ? "Help" : "Info"}
+            Info
           </Button>
           <div className="flex rounded-lg border overflow-hidden">
             <Button
@@ -1193,7 +1175,7 @@ export default function AddModule({
                   setOpenDiscardModal(true);
                 }
               }}
-              className="rounded-none border-0"
+              className="rounded-none border-0 w-full"
               disabled={isLoading}
               aria-label={`${options[selectedIndexSave]} module`}
             >

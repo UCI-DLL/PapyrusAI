@@ -183,8 +183,7 @@ export default function ConversationList(): JSX.Element {
             //then go right into chat
             if (res.data.conversations) {
               navigator(
-                `/chat/${user?.username}/${moduleIds.courseId}/${
-                  moduleIds.moduleId
+                `/chat/${user?.username}/${moduleIds.courseId}/${moduleIds.moduleId
                 }/${res.data.conversations.length - 1}`
               );
             }
@@ -477,14 +476,12 @@ export default function ConversationList(): JSX.Element {
                 )}
                 {course && (
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground capitalize">
                       {course.section
-                        ? `${course.term ? course.term : ""}${
-                            course.year ? course.year : ""
-                          } - ${course.section}`
-                        : `${course.term ? course.term : ""}${
-                            course.year ? course.year : ""
-                          }`}
+                        ? `${course.term ? course.term : ""}${course.year ? course.year : ""
+                        } - ${course.section}`
+                        : `${course.term ? course.term : ""}${course.year ? course.year : ""
+                        }`}
                     </p>
                     <h2 className="text-lg font-semibold text-foreground">
                       {
@@ -562,9 +559,9 @@ export default function ConversationList(): JSX.Element {
             {conversationList ? (
               <>
                 {moduleIds &&
-                user &&
-                conversationList.conversations &&
-                conversationList.conversations.length > 0 ? (
+                  user &&
+                  conversationList.conversations &&
+                  conversationList.conversations.length > 0 ? (
                   conversationList.conversations
                     .sort((a: any, b: any) =>
                       b.id > a.id ? 1 : a.id > b.id ? -1 : 0
@@ -574,16 +571,12 @@ export default function ConversationList(): JSX.Element {
                         parseInt(conversation.id.substring(0, 13), 10)
                       ).toLocaleString();
                       const link = viewUser
-                        ? `/chat/${viewUser.username}/${moduleIds.courseId}/${
-                            moduleIds.moduleId
-                          }/${
-                            conversationList.conversations.length - index - 1
-                          }`
-                        : `/chat/${user.username}/${moduleIds.courseId}/${
-                            moduleIds.moduleId
-                          }/${
-                            conversationList.conversations.length - index - 1
-                          }`;
+                        ? `/chat/${viewUser.username}/${moduleIds.courseId}/${moduleIds.moduleId
+                        }/${conversationList.conversations.length - index - 1
+                        }`
+                        : `/chat/${user.username}/${moduleIds.courseId}/${moduleIds.moduleId
+                        }/${conversationList.conversations.length - index - 1
+                        }`;
                       return conversation.isDeleted && !viewUser ? (
                         <div key={index}></div>
                       ) : (

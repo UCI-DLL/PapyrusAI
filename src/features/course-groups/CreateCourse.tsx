@@ -559,7 +559,6 @@ export default function CreateCourse({
                       aria-label="Get help with Save & Publish options"
                     >
                       <Info className="h-4 w-4" aria-hidden="true" />
-                      Info
                     </Button>
                     {isEditMode && (
                       <TooltipWrapper content="Delete Course">
@@ -571,7 +570,6 @@ export default function CreateCourse({
                           aria-label="Delete course"
                         >
                           <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          Delete
                         </Button>
                       </TooltipWrapper>
                     )}
@@ -617,7 +615,7 @@ export default function CreateCourse({
                               className={cn(
                                 index === selectedIndexSave && "bg-accent",
                                 index === 2 &&
-                                  "text-destructive focus:text-destructive"
+                                "text-destructive focus:text-destructive"
                               )}
                             >
                               {option}
@@ -690,7 +688,7 @@ export default function CreateCourse({
                     className={cn(
                       "transition-colors",
                       errors.name &&
-                        "border-destructive focus-visible:ring-destructive"
+                      "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                 </div>
@@ -723,7 +721,7 @@ export default function CreateCourse({
                     className={cn(
                       "transition-colors",
                       errors.signUpCode &&
-                        "border-destructive focus-visible:ring-destructive"
+                      "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                   {errors.signUpCode && (
@@ -763,7 +761,7 @@ export default function CreateCourse({
                       id="year"
                       name="year"
                       type="number"
-                      placeholder="2024"
+                      placeholder="2025"
                       value={session.year}
                       onChange={handleChange}
                       disabled={isLoading}
@@ -773,7 +771,7 @@ export default function CreateCourse({
                       className={cn(
                         "transition-colors",
                         errors.year &&
-                          "border-destructive focus-visible:ring-destructive"
+                        "border-destructive focus-visible:ring-destructive"
                       )}
                     />
                     {errors.year && (
@@ -802,7 +800,7 @@ export default function CreateCourse({
                         className={cn(
                           "transition-colors",
                           errors.term &&
-                            "border-destructive focus-visible:ring-destructive"
+                          "border-destructive focus-visible:ring-destructive"
                         )}
                       >
                         <Clock className="h-4 w-4 text-muted-foreground" />
@@ -842,7 +840,7 @@ export default function CreateCourse({
                       className={cn(
                         "transition-colors",
                         errors.section &&
-                          "border-destructive focus-visible:ring-destructive"
+                        "border-destructive focus-visible:ring-destructive"
                       )}
                     />
                     {errors.section && (
@@ -886,9 +884,9 @@ export default function CreateCourse({
                             {ta.name && ta.family_name
                               ? `${ta.name} ${ta.family_name}`
                               : ta.name ||
-                                ta.family_name ||
-                                ta.email ||
-                                ta.username}
+                              ta.family_name ||
+                              ta.email ||
+                              ta.username}
                             <Button
                               type="button"
                               variant="ghost"
@@ -977,9 +975,9 @@ export default function CreateCourse({
                                   {user.name && user.family_name
                                     ? `${user.name} ${user.family_name}`
                                     : user.name ||
-                                      user.family_name ||
-                                      user.email ||
-                                      user.username}
+                                    user.family_name ||
+                                    user.email ||
+                                    user.username}
                                 </span>
                                 {user.email &&
                                   (user.name || user.family_name) && (
@@ -1066,7 +1064,7 @@ export default function CreateCourse({
                       setOpenDiscardModal(true);
                     }
                   }}
-                  className="rounded-none border-0"
+                  className="rounded-none border-0 w-full"
                   disabled={isLoading}
                   aria-label={`${options[selectedIndexSave]} course`}
                 >

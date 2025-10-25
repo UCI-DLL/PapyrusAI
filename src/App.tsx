@@ -157,7 +157,7 @@ function App(): JSX.Element {
             <Router>
               <DialogWrapper
                 open={showUpdateUserInfoModal}
-                onOpenChange={() => {}}
+                onOpenChange={() => { }}
                 title="We are missing some details"
                 contentClassName="sm:max-w-md [&>button]:hidden"
                 actions={[
@@ -254,10 +254,10 @@ function App(): JSX.Element {
                         user
                           ? user
                           : localStorage.getItem("papyrusai_user")
-                          ? JSON.parse(
+                            ? JSON.parse(
                               localStorage.getItem("papyrusai_user") ?? ""
                             )
-                          : null
+                            : null
                       }
                     />
                   }
@@ -360,6 +360,7 @@ function App(): JSX.Element {
                         />
                       </Route>
 
+                      {/* TODO change pathname  */}
                       <Route
                         path="/dashboard/:id/:id"
                         element={<PrivateRoute user={user} />}

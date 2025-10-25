@@ -2,6 +2,7 @@
  * ModuleReports.tsx, component for displaying reports for a specific module
  */
 
+// TODO redo this
 import {
   Paper,
   TableContainer,
@@ -34,16 +35,16 @@ import { getUserConversationList } from "../../utility/endpoints/ConversationEnd
 
 interface Column {
   id:
-    | "name"
-    | "convos"
-    | "essays"
-    | "lead"
-    | "position"
-    | "claim"
-    | "counterclaim"
-    | "rebuttal"
-    | "evidence"
-    | "conclude";
+  | "name"
+  | "convos"
+  | "essays"
+  | "lead"
+  | "position"
+  | "claim"
+  | "counterclaim"
+  | "rebuttal"
+  | "evidence"
+  | "conclude";
   label: string;
   minWidth?: number;
   align?: "right";

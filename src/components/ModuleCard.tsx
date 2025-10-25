@@ -7,7 +7,7 @@ import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { useNavigate } from "react-router-dom";
-import { Star, Play, Eye, MoreHorizontal, Loader2 } from "lucide-react";
+import { Star, Play, Eye, MoreHorizontal, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType, ModuleType } from "../utility/types/CourseTypes";
@@ -30,6 +30,7 @@ import {
 import { cn } from "../lib/utils";
 import { orderCourseRecentlyCreatedAndStarred } from "../utility/Helpers";
 import CourseCard from "./CourseCard";
+import { Badge } from "../components/ui/badge";
 
 interface ModuleCardProps {
   module: ModuleType;
@@ -228,8 +229,7 @@ export default function ModuleCard({
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
               navigator(
-                `/chat/${user.username}/${course.id}/${module.id}/${
-                  createRes.data.conversations.length - 1
+                `/chat/${user.username}/${course.id}/${module.id}/${createRes.data.conversations.length - 1
                 }`
               );
             }
@@ -487,6 +487,26 @@ export default function ModuleCard({
               <h3 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-300">
                 {module.name}
               </h3>
+              {isInstructorOrTA && (
+                <div className="flex items-center gap-2">
+                  {module.isPublished ? (
+                    <>
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <Badge
+                        variant="default"
+                        className="bg-green-100 text-green-800 dark:bg-green-900 pointer-events-none"
+                      >
+                        Published
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-5 w-5 text-gray-500 pointer-events-none" />
+                      <Badge variant="secondary">Unpublished</Badge>
+                    </>
+                  )}
+                </div>
+              )}
               <div className="flex flex-col my-2 gap-2 text-xs text-muted-foreground">
                 <div className="font-medium text-sm truncate">{courseInfo}</div>
                 {module.moduleDescription && (
@@ -560,11 +580,11 @@ export default function ModuleCard({
                     </button>
                   }
                   actions={(user?.groups.includes(course.id) &&
-                  (course.instructor.username === user.username ||
-                    (course.taList &&
-                      course.taList.find(
-                        (a: CustomUserType) => a.username === user?.username
-                      )))
+                    (course.instructor.username === user.username ||
+                      (course.taList &&
+                        course.taList.find(
+                          (a: CustomUserType) => a.username === user?.username
+                        )))
                     ? ownerMenu
                     : nonOwnerMenu
                   ).map((item) => ({

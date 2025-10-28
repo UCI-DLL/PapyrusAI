@@ -508,7 +508,7 @@ export default function ModuleCard({
                 </div>
               )}
               <div className="flex flex-col my-2 gap-2 text-xs text-muted-foreground">
-                <div className="font-medium text-sm truncate">{courseInfo}</div>
+                <div className="font-medium text-sm truncate-text">{courseInfo}</div>
                 {module.moduleDescription && (
                   <p className="text-muted-foreground leading-relaxed text-sm line-clamp-2">
                     {module.moduleDescription}

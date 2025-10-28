@@ -101,7 +101,7 @@ export default function ChatSidebar({
       </div>
 
       {/* Search */}
-      {/* <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -111,7 +111,7 @@ export default function ChatSidebar({
             className="pl-9 text-sm h-8"
           />
         </div>
-      </div> */}
+      </div>
 
       {/* Conversations List */}
       <div className="flex-1 min-h-0 border-darkest-blue">
@@ -121,8 +121,8 @@ export default function ChatSidebar({
               {filteredConversations.map((conversation) => {
                 const conversationIndex = conversationList?.conversations
                   ? conversationList.conversations.findIndex(
-                      (c) => c.id === conversation.id
-                    )
+                    (c) => c.id === conversation.id
+                  )
                   : 0;
                 const isCurrentConversation =
                   conversationIndex.toString() === currentConversationIndex;
@@ -135,28 +135,18 @@ export default function ChatSidebar({
                       "rounded-lg p-3 cursor-pointer transition-colors border",
                       isCurrentConversation
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "hover:bg-accent border-transparent"
+                        : "hover:bg-accent hover:text-secondary-foreground border-transparent"
                     )}
                     onClick={() => onConversationClick(conversationLink)}
                   >
                     <div className="space-y-1">
                       <p
-                        className={cn(
-                          "text-sm font-medium truncate",
-                          isCurrentConversation
-                            ? "text-primary-foreground"
-                            : "text-foreground"
-                        )}
+                        className={"text-sm font-medium truncate-text"}
                       >
                         {conversation.name}
                       </p>
                       <p
-                        className={cn(
-                          "text-xs truncate",
-                          isCurrentConversation
-                            ? "text-primary-foreground/70"
-                            : "text-muted-foreground"
-                        )}
+                        className={"text-xs truncate-text"}
                       >
                         {new Date(
                           parseInt(conversation.id.substring(0, 13))

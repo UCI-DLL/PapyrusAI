@@ -516,7 +516,7 @@ export const Prompt = (props: PromptProps) => {
   ];
 
   const adminOrgMenuFunctions = [
-    () => {},
+    () => { },
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -524,12 +524,12 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenDeleteDialog(true),
   ];
   const instructorOrgMenuFunctions = [
-    () => {},
+    () => { },
     starred ? removeStarredPrompt : createStarredPrompt,
     openCopyTo,
   ];
   const adminUserMenuFunctions = [
-    () => {},
+    () => { },
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -537,7 +537,7 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenDeleteDialog(true),
   ];
   const instructorUserMenuFunctions = [
-    () => {},
+    () => { },
     starred ? removeStarredPrompt : createStarredPrompt,
     () => setOpenEditDialog(true),
     openCopyTo,
@@ -775,39 +775,39 @@ export const Prompt = (props: PromptProps) => {
                   actions={
                     props.prompt.isOrganizationPrompt
                       ? user?.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
-                        )
+                        process.env.REACT_APP_ADMIN
+                          ? process.env.REACT_APP_ADMIN
+                          : "PapyrusAIAdmin"
+                      )
                         ? adminOrgMenu.map((item: string, index: number) => ({
+                          label: item,
+                          onClick: () => {
+                            adminOrgMenuFunctions[index]();
+                          },
+                          type: "button" as const,
+                        }))
+                        : instructorOrgMenu.map(
+                          (item: string, index: number) => ({
                             label: item,
                             onClick: () => {
-                              adminOrgMenuFunctions[index]();
+                              instructorOrgMenuFunctions[index]();
                             },
                             type: "button" as const,
-                          }))
-                        : instructorOrgMenu.map(
-                            (item: string, index: number) => ({
-                              label: item,
-                              onClick: () => {
-                                instructorOrgMenuFunctions[index]();
-                              },
-                              type: "button" as const,
-                            })
-                          )
-                      : user?.groups.includes(
-                          process.env.REACT_APP_ADMIN
-                            ? process.env.REACT_APP_ADMIN
-                            : "PapyrusAIAdmin"
+                          })
                         )
-                      ? adminUserMenu.map((item: string, index: number) => ({
+                      : user?.groups.includes(
+                        process.env.REACT_APP_ADMIN
+                          ? process.env.REACT_APP_ADMIN
+                          : "PapyrusAIAdmin"
+                      )
+                        ? adminUserMenu.map((item: string, index: number) => ({
                           label: item,
                           onClick: () => {
                             adminUserMenuFunctions[index]();
                           },
                           type: "button" as const,
                         }))
-                      : instructorUserMenu.map(
+                        : instructorUserMenu.map(
                           (item: string, index: number) => ({
                             label: item,
                             onClick: () => {
@@ -830,7 +830,7 @@ export const Prompt = (props: PromptProps) => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
+                    className="flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (props.onClick) {

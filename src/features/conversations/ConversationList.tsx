@@ -330,11 +330,12 @@ export default function ConversationList(): JSX.Element {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <EyeOff className="h-5 w-5" />
-                  Hide Conversation?
+                  Archive Conversation?
                 </DialogTitle>
                 <DialogDescription>
-                  Are you sure you would like to hide this conversation?
-                  Instructors can still view hidden conversations.
+                  Are you sure you would like to archive this conversation?
+                  This conversation will no longer be visible in your conversation list.
+                  Instructors can still view archived conversations.
                 </DialogDescription>
               </DialogHeader>
 
@@ -365,7 +366,7 @@ export default function ConversationList(): JSX.Element {
                     })
                   }
                 >
-                  Hide Conversation
+                  Archive Conversation
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -590,7 +591,7 @@ export default function ConversationList(): JSX.Element {
                                   className="flex-1 min-w-0 no-underline group"
                                 >
                                   <div className="space-y-1">
-                                    <p className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors truncate no-underline">
+                                    <p className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors truncate-text no-underline">
                                       {conversation.name}
                                     </p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1 no-underline">
@@ -652,13 +653,13 @@ export default function ConversationList(): JSX.Element {
                                               });
                                             }}
                                             className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                            aria-label="Hide Conversation"
+                                            aria-label="Archive Conversation"
                                           >
                                             <EyeOff className="h-3 w-3" />
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent side="top">
-                                          Hide conversation (instructors can
+                                          Archive conversation (instructors can
                                           still view)
                                         </TooltipContent>
                                       </Tooltip>

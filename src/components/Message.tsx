@@ -209,11 +209,10 @@ export const MessageLeft = (props: MessageProps) => {
             <Button
               variant="outline"
               onClick={() => setShowExpandableMessage(true)}
-              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${
-                props.outOfContext || (!props.visible && props.isInstructor)
-                  ? "opacity-60 border-dashed"
-                  : ""
-              }`}
+              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-60 border-dashed"
+                : ""
+                }`}
             >
               {props.typing ? (
                 <CustomTypingIndicator />
@@ -229,11 +228,10 @@ export const MessageLeft = (props: MessageProps) => {
             </Button>
           ) : (
             <div
-              className={`bg-muted/50 rounded-lg p-4 ${
-                props.outOfContext || (!props.visible && props.isInstructor)
-                  ? "opacity-60 border border-dashed"
-                  : ""
-              }`}
+              className={`bg-muted rounded-lg p-4 ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-60 border border-dashed"
+                : ""
+                }`}
             >
               {props.typing ? (
                 <CustomTypingIndicator />
@@ -352,11 +350,10 @@ export const MessageRight = (props: MessageProps) => {
 
           {props.messageType && props.messageType === "file" ? (
             <div
-              className={`max-w-md ${
-                props.outOfContext || (!props.visible && props.isInstructor)
-                  ? "opacity-60 border border-dashed"
-                  : ""
-              }`}
+              className={`max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-60 border border-dashed"
+                : ""
+                }`}
             >
               <DialogWrapper
                 open={openFileModal}
@@ -411,11 +408,10 @@ export const MessageRight = (props: MessageProps) => {
             </div>
           ) : (
             <div
-              className={`bg-primary/10 rounded-lg p-4 max-w-md ${
-                props.outOfContext || (!props.visible && props.isInstructor)
-                  ? "opacity-60 border border-dashed"
-                  : ""
-              }`}
+              className={`bg-primary/20 rounded-lg p-4 max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-60 border border-dashed"
+                : ""
+                }`}
             >
               <Markdown
                 className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground"

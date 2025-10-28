@@ -19,7 +19,7 @@
     --color-light-gray: #c6beb5;
 
     /* UCI Accent Colors */
-    --color-accent: #6aa2b8;
+    --color-accent: #404449;
     --color-accent-foreground: #ffffff;
     --color-athletics-gold: #f8cf56;
     --color-light-yellow: #f7eb5f;
@@ -33,8 +33,8 @@
     --color-background: #f8fafc;
     --color-card: #ffffff;
     --color-border: #e2e8f0;
-    --color-muted: #64748b;
-    --color-muted-foreground: #475569;
+    --color-muted: #dddddd;
+    --color-muted-foreground: #29323d;
 
     /* Shadcn UI Compatibility */
     --background: 248 250 252;
@@ -50,7 +50,7 @@
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 200 50% 57%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 35%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
@@ -141,8 +141,8 @@
     --muted-foreground: 210 22% 30%;
     --accent: 28 75% 45%; /* Orange 600 balanced */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 35%;
+    --destructive-foreground: 210 40% 98%;
     --border: 150 18% 76%;
     --input: 150 18% 76%;
     --ring: 160 84% 39%;
@@ -165,8 +165,7 @@
     background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
     color: var(--color-muted-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-      sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     min-height: 100vh;
     height: 100vh;
     overflow: hidden;
@@ -576,51 +575,27 @@
   }
 
   .gradient-primary {
-    background: linear-gradient(
-      135deg,
-      var(--color-primary) 0%,
-      var(--color-secondary) 100%
-    );
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   }
 
   .gradient-accent {
-    background: linear-gradient(
-      135deg,
-      var(--color-teal-blue) 0%,
-      var(--color-turquoise) 100%
-    );
+    background: linear-gradient(135deg, var(--color-teal-blue) 0%, var(--color-turquoise) 100%);
   }
 
   .gradient-warm {
-    background: linear-gradient(
-      135deg,
-      var(--color-orange) 0%,
-      var(--color-gold) 100%
-    );
+    background: linear-gradient(135deg, var(--color-orange) 0%, var(--color-gold) 100%);
   }
 
   .gradient-purple {
-    background: linear-gradient(
-      135deg,
-      var(--color-bright-purple) 0%,
-      var(--color-magenta) 100%
-    );
+    background: linear-gradient(135deg, var(--color-bright-purple) 0%, var(--color-magenta) 100%);
   }
 
   .gradient-green {
-    background: linear-gradient(
-      135deg,
-      var(--color-green) 0%,
-      var(--color-lime-green) 100%
-    );
+    background: linear-gradient(135deg, var(--color-green) 0%, var(--color-lime-green) 100%);
   }
 
   .gradient-royal {
-    background: linear-gradient(
-      135deg,
-      var(--color-royal-blue) 0%,
-      var(--color-primary) 100%
-    );
+    background: linear-gradient(135deg, var(--color-royal-blue) 0%, var(--color-primary) 100%);
   }
 
   .glass-effect {

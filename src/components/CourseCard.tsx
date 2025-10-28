@@ -256,7 +256,7 @@ export default function CourseCard({
                 </div>
                 <div className="flex items-center gap-1">
                   <User size={10} aria-hidden="true" />
-                  <span className="font-medium text-sm truncate">
+                  <span className="font-medium text-sm truncate-text">
                     Instructor:{" "}
                     {`${course.instructor.name} ${course.instructor.family_name}`}
                   </span>

@@ -1116,8 +1116,8 @@ export default function Chat(): JSX.Element {
         onOpenChange={(open) =>
           setOpenUpdateConvoModal((prev) => ({ ...prev, deleteOpen: open }))
         }
-        title="Hide Conversation?"
-        description="Are you sure you would like to hide this conversation? Instructors can still view hidden conversations."
+        title="Archive Conversation?"
+        description="Are you sure you would like to archive this conversation? This conversation will no longer be visible in your conversation list. Instructors can still view archived conversations."
         contentClassName="sm:max-w-md"
         footerClassName="flex-col gap-2 sm:flex-row"
         actions={[
@@ -1131,7 +1131,7 @@ export default function Chat(): JSX.Element {
             variant: "outline",
           },
           {
-            label: "Hide Conversation",
+            label: "Archive Conversation",
             onClick: () =>
               handleConverstionNameDeleteUpdate({
                 ...openUpdateConvoModal,

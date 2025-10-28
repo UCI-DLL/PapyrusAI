@@ -9,11 +9,9 @@ import {
 import { Info } from "lucide-react";
 
 export default function About(): JSX.Element {
-  const text = `PapyrusAI was developed by the [Digital Learning Lab](https://www.digitallearninglab.org/) at the University of California, Irvine, in partnership with the Samueli School of Engineering, as part of an NSF grant (#23152984).
+  const text = `PapyrusAI and the related instructional resources have been developed by the [Digital Learning Lab](https://www.digitallearninglab.org/) at the University of California, Irvine, in 2023 with grant funding from NSF (#23152984), UCI, The Learning Agency, and the California Education Learning Lab.
 
-While our initial goal is to develop this tool for use in higher education courses, we received a Proof of Product grant from UCI's Beall Applied Innovation Center to adapt the tool for secondary school and determine the marketability and feasibility of commercializing PapyrusAI.
-
-This tool is built on AWS serverless functions and React for the front end. We are using GPT-4 via OpenAI's API to power our tutor, although we are exploring other language models such as Claude and Llama 2 as alternatives.
+For resources on using generative AI in instruction, see our site at [GenAIed.org](https://www.genaied.org/). This tool is built on AWS serverless functions and React for the front end. We are using OpenAI's API to power our tool, but continuously evaluate other commercial models.
 
 If you want to learn more about what we're doing or want to get involved, email us at <digitallearninglab@uci.edu>.`;
 
@@ -31,11 +29,8 @@ If you want to learn more about what we're doing or want to get involved, email 
 
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              About <span className="text-primary">PapyrusAI</span>
+              About PapyrusAI
             </h1>
-            <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Learn about our mission and the team behind PapyrusAI
-            </p>
           </div>
         </div>
       </header>

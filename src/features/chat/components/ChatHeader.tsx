@@ -65,11 +65,11 @@ export default function ChatHeader({
               },
               ...(canModifyConversation
                 ? [
-                    {
-                      label: "Hide Conversation",
-                      onClick: onHide,
-                    },
-                  ]
+                  {
+                    label: "Archive Conversation",
+                    onClick: onHide,
+                  },
+                ]
                 : []),
             ]}
             align="end"

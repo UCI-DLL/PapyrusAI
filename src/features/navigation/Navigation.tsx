@@ -29,6 +29,7 @@ import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
+  useSidebar,
 } from "../../components/ui/sidebar";
 import {
   Breadcrumb,
@@ -61,6 +62,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
   const { user, setUser } = useContext(UserContext);
   let navigator = useNavigate();
   const location = useLocation();
+  const { state, openMobile, setOpenMobile } = useSidebar();
 
   // For the side drawer main nav menu
   // base this list off instructor, admin, student access, and TAs
@@ -244,7 +246,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
     <div className="flex h-screen w-full">
       <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader className="border-b border-sidebar-border">
-          <div className="flex items-center gap-3 px-4 py-2">
+          <div className="flex items-center gap-3 px-4 py-2" style={state === "collapsed" && !openMobile ? { padding: "0" } : {}}>
             <img
               src="/dll-logo-noname.png"
               alt="PapyrusAI logo"
@@ -269,11 +271,12 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
-                        className="h-10 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground cursor-pointer"
+                        className="h-10 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:bg-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground cursor-pointer"
                       >
                         <Link
                           to={mainMenuLinks[index]}
                           className="no-underline"
+                          onClick={() => setOpenMobile(false)}
                         >
                           <div className="flex items-center gap-3">
                             {IconComponent && (
@@ -303,7 +306,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                         "_blank"
                       )
                     }
-                    className="h-10 rounded-lg px-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    className="h-10 rounded-lg px-3 text-sidebar-foreground hover:bg-sidebar-accent hover:bg-accent"
                     tooltip="Resources"
                   >
                     <ExternalLink className="h-4 w-4 shrink-0" />
@@ -333,7 +336,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 w-full justify-start rounded-lg border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
+              className="h-9 w-full justify-start rounded-lg border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2"
               onClick={() =>
                 window.open(
                   "https://docs.google.com/forms/d/e/1FAIpQLSe1XsS-I2bhQyoWv_LwPTp-jVoFPqups9XBuPqvLmmWQByfVw/viewform",

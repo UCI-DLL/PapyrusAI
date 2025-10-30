@@ -88,7 +88,7 @@ export const File = (props: FileProps) => {
     if (props.file.isOrganizationFile) {
       if (isOrgFolder) {
         Post(
-          postCopyOrgFileToOrgFolder(props.file.id, folderId, props.folder.id),
+          postCopyOrgFileToOrgFolder(props.folder.id, props.file.id, folderId),
           {}
         ).then((res) => {
           if (res.status && res.status < 300) {
@@ -109,7 +109,7 @@ export const File = (props: FileProps) => {
         });
       } else {
         Post(
-          postCopyOrgFileToUserFolder(props.file.id, folderId, props.folder.id),
+          postCopyOrgFileToUserFolder(props.folder.id, props.file.id, folderId),
           {}
         ).then((res) => {
           if (res.status && res.status < 300) {
@@ -132,7 +132,7 @@ export const File = (props: FileProps) => {
     } else {
       if (isOrgFolder) {
         Post(
-          postCopyUserFileToOrgFolder(props.file.id, folderId, props.folder.id),
+          postCopyUserFileToOrgFolder(props.folder.id, props.file.id, folderId),
           {}
         ).then((res) => {
           if (res.status && res.status < 300) {
@@ -154,9 +154,7 @@ export const File = (props: FileProps) => {
       } else {
         Post(
           postCopyUserFileToUserFolder(
-            props.file.id,
-            folderId,
-            props.folder.id
+            props.folder.id, props.file.id, folderId
           ),
           {}
         ).then((res) => {
@@ -186,8 +184,10 @@ export const File = (props: FileProps) => {
       const dataToSend = {
         name: props.file.name,
         isDeleted: true,
+        tags: props.file.tags,
+        id: props.file.id,
       };
-      Put(putUpdateOrgFile(props.file.id, props.folder.id), dataToSend).then(
+      Put(putUpdateOrgFile(props.folder.id, props.file.id), dataToSend).then(
         (res) => {
           if (res.status && res.status < 300) {
             setAlert({
@@ -210,8 +210,10 @@ export const File = (props: FileProps) => {
       const dataToSend = {
         name: props.file.name,
         isDeleted: true,
+        tags: props.file.tags,
+        id: props.file.id,
       };
-      Put(putUpdateUserFile(props.file.id, props.folder.id), dataToSend).then(
+      Put(putUpdateUserFile(props.folder.id, props.file.id), dataToSend).then(
         (res) => {
           if (res.status && res.status < 300) {
             setAlert({
@@ -242,7 +244,7 @@ export const File = (props: FileProps) => {
     if (props.file.isOrganizationFile) {
       if (isOrgFolder) {
         Post(
-          postMoveOrgFileToOrgFolder(props.file.id, folderId, props.folder.id),
+          postMoveOrgFileToOrgFolder(props.folder.id, props.file.id, folderId),
           {}
         ).then((res) => {
           if (res.status && res.status < 300) {
@@ -263,7 +265,7 @@ export const File = (props: FileProps) => {
         });
       } else {
         Post(
-          postMoveOrgFileToUserFolder(props.file.id, folderId, props.folder.id),
+          postMoveOrgFileToUserFolder(props.folder.id, props.file.id, folderId),
           {}
         ).then((res) => {
           if (res.status && res.status < 300) {
@@ -286,7 +288,7 @@ export const File = (props: FileProps) => {
     } else {
       if (isOrgFolder) {
         Post(
-          postMoveUserFileToOrgFolder(props.file.id, folderId, props.folder.id),
+          postMoveUserFileToOrgFolder(props.folder.id, props.file.id, folderId),
           {}
         ).then((res) => {
           if (res.status && res.status < 300) {
@@ -308,9 +310,7 @@ export const File = (props: FileProps) => {
       } else {
         Post(
           postMoveUserFileToUserFolder(
-            props.file.id,
-            folderId,
-            props.folder.id
+            props.folder.id, props.file.id, folderId
           ),
           {}
         ).then((res) => {
@@ -336,7 +336,8 @@ export const File = (props: FileProps) => {
 
   function createStarredFile() {
     Post(postCreateUserFavoritingData(), {
-      files: [{ fileId: props.file.id, folderId: props.folder.id }],
+      id: { folderId: props.folder.id, fileId: props.file.id },
+      type: "files",
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(true);
@@ -351,9 +352,8 @@ export const File = (props: FileProps) => {
 
   function removeStarredFile() {
     Put(putUpdateUserFavoritingData(), {
-      files: starred
-        ? [{ fileId: props.file.id, folderId: props.folder.id }]
-        : [],
+      id: { folderId: props.folder.id, fileId: props.file.id },
+      type: "files",
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(false);
@@ -534,15 +534,15 @@ export const File = (props: FileProps) => {
       <Card className="h-full">
         <CardContent className="p-4 h-full flex flex-col">
           {/* Header with icon, file type, and star */}
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-orange-600" />
               <span className="text-xs font-medium text-orange-600 uppercase tracking-wide">
                 {getFileType()}
               </span>
             </div>
-            {!props.disableStarring && (
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              {!props.disableStarring && (
                 <TooltipWrapper
                   content={starred ? "Unstar File" : "Star File"}
                   side="top"
@@ -552,8 +552,8 @@ export const File = (props: FileProps) => {
                     className={cn(
                       "p-1 rounded-full transition-all duration-300",
                       starred
-                        ? "text-gold hover:text-muted"
-                        : "text-muted hover:text-gold"
+                        ? "text-gold hover:text-muted text-lg"
+                        : "text-muted hover:text-gold text-lg"
                     )}
                     aria-label={
                       starred ? "Remove from favorites" : "Add to favorites"
@@ -563,14 +563,56 @@ export const File = (props: FileProps) => {
                       size={16}
                       fill={starred ? "currentColor" : "none"}
                       className={cn(
-                        starred ? "hover:fill-none" : "hover:fill-current"
+                        starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
                       )}
                       aria-hidden="true"
                     />
                   </button>
                 </TooltipWrapper>
-              </div>
-            )}
+              )}
+              {!props.noShowMenu && (
+                <DropdownWrapper
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex text-lg items-center p-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="h-[1em] w-[1em]" />
+                    </Button>
+                  }
+                  actions={(props.file.isOrganizationFile
+                    ? user?.groups.includes(
+                      process.env.REACT_APP_ADMIN
+                        ? process.env.REACT_APP_ADMIN
+                        : "PapyrusAIAdmin"
+                    )
+                      ? adminOrgMenu
+                      : instructorOrgMenu
+                    : user?.groups.includes(
+                      process.env.REACT_APP_ADMIN
+                        ? process.env.REACT_APP_ADMIN
+                        : "PapyrusAIAdmin"
+                    )
+                      ? adminUserMenu
+                      : instructorUserMenu
+                  ).map((item) => ({
+                    label: item.label,
+                    onClick: () => {
+                      if (item.type === "link") {
+                        props.loading();
+                      } else {
+                        item.action();
+                      }
+                    },
+                    type: item.type,
+                    href: item.type === "link" ? item.action : undefined,
+                  }))}
+                  align="end"
+                />
+              )}
+            </div>
           </div>
 
           {/* File title */}
@@ -598,48 +640,7 @@ export const File = (props: FileProps) => {
           </div>
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
-              {!props.noShowMenu && (
-                <DropdownWrapper
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreHorizontal className="h-3 w-3" />
-                    </Button>
-                  }
-                  actions={(props.file.isOrganizationFile
-                    ? user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      )
-                      ? adminOrgMenu
-                      : instructorOrgMenu
-                    : user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      )
-                    ? adminUserMenu
-                    : instructorUserMenu
-                  ).map((item) => ({
-                    label: item.label,
-                    onClick: () => {
-                      if (item.type === "link") {
-                        props.loading();
-                      } else {
-                        item.action();
-                      }
-                    },
-                    type: item.type,
-                    href: item.type === "link" ? item.action : undefined,
-                  }))}
-                  align="end"
-                />
-              )}
+
             </div>
             {props.noShowMenu ? (
               props.showRemove ? (

@@ -490,6 +490,7 @@ export default function EditFile(): JSX.Element {
 
   function handleUpload(e?: React.FormEvent, isDeleted = false) {
     e?.preventDefault();
+    setIsLoading(true);
     if (newFile.name === "") {
       setErrors((prev: any) => ({ ...prev, name: "Name is too short" }));
     }
@@ -591,7 +592,7 @@ export default function EditFile(): JSX.Element {
   }
 
   function renderFile(): React.JSX.Element {
-    if (file && file.fileReference) {
+    if (file && file.fileReference && file.fileReference.split(".")[1]) {
       switch (file.fileReference.split(".")[1].toLocaleLowerCase()) {
         case "txt": {
           return (
@@ -697,7 +698,7 @@ export default function EditFile(): JSX.Element {
 
   return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
-      {newFile.name && fileInfo ? (
+      {fileInfo ? (
         <>
           {/* Dialogs */}
           <DialogWrapper
@@ -775,97 +776,116 @@ export default function EditFile(): JSX.Element {
               </div>
 
               <div className="relative z-10">
-                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                  Edit <span className="text-primary">{file?.name}</span>
-                </h1>
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                  <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                    Edit {file?.name}
+                  </h1>
+                  <nav
+                    className="flex flex-col md:flex-row gap-2"
+                    role="toolbar"
+                    aria-label="File editing actions"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowInfoTooltip(true)}
+                      aria-label="Get help with file editing"
+                    >
+                      <Info className="h-4 w-4" aria-hidden="true" />
+                      Info
+                    </Button>
+                    <TooltipWrapper content="Delete File">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setOpenDeleteModal(true)}
+                        disabled={isLoading}
+                        aria-label="Delete file permanently"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        Delete
+                      </Button>
+                    </TooltipWrapper>
+                    <div className="flex rounded-lg border overflow-hidden">
+                      <Button
+                        size="sm"
+                        onClick={handleClick}
+                        className="rounded-none border-0 w-full"
+                        disabled={isLoading}
+                        aria-label={`${options[selectedIndexSave]} file`}
+                      >
+                        {options[selectedIndexSave]}
+                      </Button>
+                      <DropdownWrapper
+                        open={openSaveTop}
+                        onOpenChange={setOpenSaveTop}
+                        trigger={
+                          <Button
+                            size="sm"
+                            className="rounded-none border-0 border-l px-2"
+                            variant="default"
+                            disabled={isLoading}
+                            aria-label="Select file save strategy"
+                          >
+                            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        }
+                        actions={options.map((option, index) => ({
+                          label: option,
+                          onClick: () => handleMenuItemClick(index),
+                          className: cn(
+                            index === selectedIndexSave && "bg-accent",
+                            index === 1 && "text-destructive focus:text-destructive"
+                          ),
+                        }))}
+                        align="end"
+                      />
+                    </div>
+                  </nav>
+                </div>
+
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                  Update your file information and content as needed.
+                  Upload documents that will factor into generated AI output for
+                  your course. For more information on this system, please see the{" "}
+                  <a
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                  >
+                    "Uploading a Document" section of our instructor guide
+                  </a>
+                  .
                 </p>
               </div>
             </div>
           </header>
 
-          {/* Actions Section */}
-          <section aria-labelledby="actions-heading">
-            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div>
-                <h2
-                  id="actions-heading"
-                  className="text-2xl font-bold text-foreground mb-1"
-                >
-                  File Actions
-                </h2>
+          {/* File preview section */}
+          {newFile && newFile.name && newFile.url && (
+            <Card className="mt-6 transition-all duration-300 hover:shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  Current File Preview
+                </CardTitle>
                 <p className="text-muted-foreground text-sm">
-                  Manage and update your file settings. Fields marked with * are
-                  required.
+                  Preview of your current file content.
                 </p>
-              </div>
-              <nav
-                className="flex flex-col md:flex-row gap-2"
-                role="toolbar"
-                aria-label="File editing actions"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowInfoTooltip(true)}
-                  aria-label="Get help with file editing"
-                >
-                  <Info className="h-4 w-4" aria-hidden="true" />
-                  Info
-                </Button>
-                <TooltipWrapper content="Delete File">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setOpenDeleteModal(true)}
-                    disabled={isLoading}
-                    aria-label="Delete file permanently"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    Delete
-                  </Button>
-                </TooltipWrapper>
-                <div className="flex rounded-lg border overflow-hidden">
-                  <Button
-                    size="sm"
-                    onClick={handleClick}
-                    className="rounded-none border-0"
-                    disabled={isLoading}
-                    aria-label={`${options[selectedIndexSave]} file`}
-                  >
-                    {options[selectedIndexSave]}
-                  </Button>
-                  <DropdownWrapper
-                    open={openSaveTop}
-                    onOpenChange={setOpenSaveTop}
-                    trigger={
-                      <Button
-                        size="sm"
-                        className="rounded-none border-0 border-l px-2"
-                        variant="default"
-                        disabled={isLoading}
-                        aria-label="Select file save strategy"
-                      >
-                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    }
-                    actions={options.map((option, index) => ({
-                      label: option,
-                      onClick: () => handleMenuItemClick(index),
-                      className: cn(
-                        index === selectedIndexSave && "bg-accent",
-                        index === 1 && "text-destructive focus:text-destructive"
-                      ),
-                    }))}
-                    align="end"
-                  />
-                </div>
-              </nav>
-            </header>
-          </section>
+              </CardHeader>
+              <CardContent>{renderFile()}</CardContent>
+            </Card>
+          )}
 
           <Card className="transition-all duration-300 hover:shadow-md pt-4">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-foreground">
+                File Information
+              </CardTitle>
+              <p className="text-muted-foreground text-sm">
+                Enter the essential details for your file. Fields marked with *
+                are required.
+              </p>
+            </CardHeader>
             <CardContent>
               <form
                 onSubmit={(e) => handleUpload(e, false)}
@@ -930,7 +950,7 @@ export default function EditFile(): JSX.Element {
                     >
                       <div className="flex flex-col items-center gap-2">
                         <Upload className="h-8 w-8 text-muted-foreground" />
-                        <span className="text-sm font-medium">
+                        <span className="text-sm font-medium text-muted-foreground">
                           Choose new file to upload
                         </span>
                         <span className="text-xs text-muted-foreground">
@@ -1018,21 +1038,6 @@ export default function EditFile(): JSX.Element {
             </CardContent>
           </Card>
 
-          {/* File preview section */}
-          {newFile && newFile.url && (
-            <Card className="mt-6 transition-all duration-300 hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-foreground">
-                  Current File Preview
-                </CardTitle>
-                <p className="text-muted-foreground text-sm">
-                  Preview of your current file content.
-                </p>
-              </CardHeader>
-              <CardContent>{renderFile()}</CardContent>
-            </Card>
-          )}
-
           {/* Bottom Actions */}
           <section aria-labelledby="bottom-actions-heading" className="pt-4">
             <nav
@@ -1065,7 +1070,7 @@ export default function EditFile(): JSX.Element {
                 <Button
                   size="sm"
                   onClick={handleClick}
-                  className="rounded-none border-0"
+                  className="rounded-none border-0 w-full"
                   disabled={isLoading}
                   aria-label={`${options[selectedIndexSave]} file`}
                 >

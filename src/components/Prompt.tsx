@@ -2,9 +2,6 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
@@ -74,12 +71,7 @@ export const Prompt = (props: PromptProps) => {
   const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
-  const [openEditDialog, setOpenEditDialog] = useState<boolean>(false);
   const [openPreviewDialog, setOpenPreviewDialog] = useState<boolean>(false);
-  const [editPromptText, setEditPromptText] = useState<string>(
-    props.prompt.prompt
-  );
-  const [editNameText, setEditNameText] = useState<string>(props.prompt.name);
   const [starred, setStarred] = useState<boolean>(
     props.isStarred ? props.isStarred : false
   );
@@ -91,57 +83,9 @@ export const Prompt = (props: PromptProps) => {
   function edit() {
     props.loading();
     if (props.prompt.isOrganizationPrompt) {
-      const dataToSend = {
-        name: editNameText,
-        prompt: editPromptText,
-        isDeleted: props.prompt.isDeleted,
-      };
-      Put(
-        postUpdateOrgPrompt(props.prompt.id, props.folder.id),
-        dataToSend
-      ).then((res) => {
-        if (res.status && res.status < 300) {
-          setAlert({
-            message: "Prompt updated successfully",
-            type: "success",
-          });
-          props.refreshList();
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          setAlert({
-            message: "Failed to update prompt",
-            type: "error",
-          });
-        }
-        setOpenEditDialog(false);
-      });
+      navigator(`/library/org/${props.folder.id}/prompts/${props.prompt.id}`)
     } else {
-      const dataToSend = {
-        name: editNameText,
-        prompt: editPromptText,
-        isDeleted: props.prompt.isDeleted,
-      };
-      Put(
-        postUpdateUserPrompt(props.prompt.id, props.folder.id),
-        dataToSend
-      ).then((res) => {
-        if (res.status && res.status < 300) {
-          setAlert({
-            message: "Prompt updated successfully",
-            type: "success",
-          });
-          props.refreshList();
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          setAlert({
-            message: "Failed to update prompt",
-            type: "error",
-          });
-        }
-        setOpenEditDialog(false);
-      });
+      navigator(`/library/${props.folder.id}/prompts/${props.prompt.id}`)
     }
   }
 
@@ -155,9 +99,9 @@ export const Prompt = (props: PromptProps) => {
       if (isOrgFolder) {
         Post(
           postCopyOrgPromptToOrgFolder(
+            props.folder.id,
             props.prompt.id,
-            folderId,
-            props.folder.id
+            folderId
           ),
           {}
         ).then((res) => {
@@ -180,9 +124,9 @@ export const Prompt = (props: PromptProps) => {
       } else {
         Post(
           postCopyOrgPromptToUserFolder(
+            props.folder.id,
             props.prompt.id,
-            folderId,
-            props.folder.id
+            folderId
           ),
           {}
         ).then((res) => {
@@ -207,9 +151,9 @@ export const Prompt = (props: PromptProps) => {
       if (isOrgFolder) {
         Post(
           postCopyUserPromptToOrgFolder(
+            props.folder.id,
             props.prompt.id,
-            folderId,
-            props.folder.id
+            folderId
           ),
           {}
         ).then((res) => {
@@ -232,9 +176,9 @@ export const Prompt = (props: PromptProps) => {
       } else {
         Post(
           postCopyUserPromptToUserFolder(
+            props.folder.id,
             props.prompt.id,
-            folderId,
-            props.folder.id
+            folderId
           ),
           {}
         ).then((res) => {
@@ -265,9 +209,10 @@ export const Prompt = (props: PromptProps) => {
         name: props.prompt.name,
         prompt: props.prompt.prompt,
         isDeleted: true,
+        tags: props.prompt.tags
       };
       Put(
-        postUpdateOrgPrompt(props.prompt.id, props.folder.id),
+        postUpdateOrgPrompt(props.folder.id, props.prompt.id),
         dataToSend
       ).then((res) => {
         if (res.status && res.status < 300) {
@@ -291,9 +236,10 @@ export const Prompt = (props: PromptProps) => {
         name: props.prompt.name,
         prompt: props.prompt.prompt,
         isDeleted: true,
+        tags: props.prompt.tags
       };
       Put(
-        postUpdateUserPrompt(props.prompt.id, props.folder.id),
+        postUpdateUserPrompt(props.folder.id, props.prompt.id),
         dataToSend
       ).then((res) => {
         if (res.status && res.status < 300) {
@@ -325,9 +271,9 @@ export const Prompt = (props: PromptProps) => {
       if (isOrgFolder) {
         Post(
           postMoveOrgPromptToOrgFolder(
+            props.folder.id,
             props.prompt.id,
-            folderId,
-            props.folder.id
+            folderId
           ),
           {}
         ).then((res) => {
@@ -350,9 +296,9 @@ export const Prompt = (props: PromptProps) => {
       } else {
         Post(
           postMoveOrgPromptToUserFolder(
+            props.folder.id,
             props.prompt.id,
-            folderId,
-            props.folder.id
+            folderId
           ),
           {}
         ).then((res) => {
@@ -377,9 +323,9 @@ export const Prompt = (props: PromptProps) => {
       if (isOrgFolder) {
         Post(
           postMoveUserPromptToOrgFolder(
+            props.folder.id,
             props.prompt.id,
-            folderId,
-            props.folder.id
+            folderId
           ),
           {}
         ).then((res) => {
@@ -402,9 +348,9 @@ export const Prompt = (props: PromptProps) => {
       } else {
         Post(
           postMoveUserPromptToUserFolder(
+            props.folder.id,
             props.prompt.id,
-            folderId,
-            props.folder.id
+            folderId
           ),
           {}
         ).then((res) => {
@@ -516,30 +462,30 @@ export const Prompt = (props: PromptProps) => {
   ];
 
   const adminOrgMenuFunctions = [
-    () => { },
+    () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
-    () => setOpenEditDialog(true),
+    edit,
     openCopyTo,
     openMovePrompt,
     () => setOpenDeleteDialog(true),
   ];
   const instructorOrgMenuFunctions = [
-    () => { },
+    () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
     openCopyTo,
   ];
   const adminUserMenuFunctions = [
-    () => { },
+    () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
-    () => setOpenEditDialog(true),
+    edit,
     openCopyTo,
     openMovePrompt,
     () => setOpenDeleteDialog(true),
   ];
   const instructorUserMenuFunctions = [
-    () => { },
+    () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
-    () => setOpenEditDialog(true),
+    edit,
     openCopyTo,
     openMovePrompt,
     () => setOpenDeleteDialog(true),
@@ -636,68 +582,18 @@ export const Prompt = (props: PromptProps) => {
         </div>
       </DialogWrapper>
 
-      {/* Edit Dialog */}
-      <DialogWrapper
-        open={openEditDialog}
-        onOpenChange={setOpenEditDialog}
-        title="Edit Prompt"
-        description="Update the prompt name and content."
-        contentClassName="max-w-2xl"
-        actions={[
-          {
-            label: "Cancel",
-            onClick: () => setOpenEditDialog(false),
-            variant: "outline",
-          },
-          {
-            label: "Save Changes",
-            onClick: () => {
-              setOpenEditDialog(false);
-              edit();
-            },
-            variant: "default",
-          },
-        ]}
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="prompt-name">Prompt Name</Label>
-            <Input
-              id="prompt-name"
-              value={editNameText}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setEditNameText(e.target.value);
-              }}
-              placeholder="Enter prompt name"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="prompt-content">Prompt Content</Label>
-            <Textarea
-              id="prompt-content"
-              value={editPromptText}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                setEditPromptText(e.target.value);
-              }}
-              placeholder="Enter prompt content"
-              className="w-full min-h-[200px] p-3 border rounded-md resize-none"
-            />
-          </div>
-        </div>
-      </DialogWrapper>
-
       <Card className="h-full hover:shadow-md transition-shadow duration-200 group">
         <CardContent className="p-4 h-full flex flex-col">
           {/* Header with icon, category, and star */}
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-primary" />
               <span className="text-xs font-medium text-primary uppercase tracking-wide">
                 {getPromptCategory()}
               </span>
             </div>
-            {!props.disableStarring && (
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              {!props.disableStarring && (
                 <TooltipWrapper
                   content={starred ? "Unstar Prompt" : "Star Prompt"}
                   side="top"
@@ -707,8 +603,8 @@ export const Prompt = (props: PromptProps) => {
                     className={cn(
                       "p-1 rounded-full transition-all duration-300",
                       starred
-                        ? "text-gold hover:text-muted"
-                        : "text-muted hover:text-gold"
+                        ? "text-gold hover:text-muted text-lg"
+                        : "text-muted hover:text-gold text-lg"
                     )}
                     aria-label={
                       starred ? "Remove from favorites" : "Add to favorites"
@@ -718,58 +614,23 @@ export const Prompt = (props: PromptProps) => {
                       size={16}
                       fill={starred ? "currentColor" : "none"}
                       className={cn(
-                        starred ? "hover:fill-none" : "hover:fill-current"
+                        starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
                       )}
                       aria-hidden="true"
                     />
                   </button>
                 </TooltipWrapper>
-              </div>
-            )}
-          </div>
-
-          {/* Prompt title */}
-          <h3 className="font-semibold text-foreground mb-2 text-lg leading-tight">
-            {props.prompt.name}
-          </h3>
-
-          {/* Prompt preview box */}
-          <div
-            className="bg-muted/50 border rounded-lg p-3 mb-4 mt-auto cursor-pointer hover:bg-muted/70 transition-colors"
-            onClick={() => setOpenPreviewDialog(true)}
-          >
-            <p className="text-sm text-muted-foreground font-mono">
-              {getPromptPreview()}
-            </p>
-          </div>
-
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1 mb-4">
-            {props.prompt.tags &&
-              props.prompt.tags.map((tag, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="text-xs bg-green-50 text-green-700 border-green-200 pointer-events-none"
-                >
-                  {tag}
-                </Badge>
-              ))}
-          </div>
-
-          {/* Footer with actions */}
-          <div className="flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-2">
+              )}
               {!props.noShowMenu && (
                 <DropdownWrapper
                   trigger={
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6"
+                      className="flex text-lg items-center p-1"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <MoreHorizontal className="h-3 w-3" />
+                      <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
                   }
                   actions={
@@ -822,6 +683,42 @@ export const Prompt = (props: PromptProps) => {
                   tooltipSide="top"
                 />
               )}
+            </div>
+          </div>
+
+          {/* Prompt title */}
+          <h3 className="font-semibold text-foreground mb-2 text-lg leading-tight">
+            {props.prompt.name}
+          </h3>
+
+          {/* Prompt preview box */}
+          <div
+            className="bg-muted/50 border rounded-lg p-3 mb-4 mt-auto cursor-pointer hover:bg-muted/70 transition-colors"
+            onClick={() => setOpenPreviewDialog(true)}
+          >
+            <p className="text-sm text-muted-foreground font-mono">
+              {getPromptPreview()}
+            </p>
+          </div>
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-1 mb-4">
+            {props.prompt.tags &&
+              props.prompt.tags.map((tag, index) => (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className="text-xs bg-green-50 text-green-700 border-green-200 pointer-events-none"
+                >
+                  {tag}
+                </Badge>
+              ))}
+          </div>
+
+          {/* Footer with actions */}
+          <div className="flex items-center justify-between mt-auto">
+            <div className="flex items-center gap-2">
+
             </div>
             {props.noShowMenu ? (
               props.showRemove ? (

@@ -272,9 +272,9 @@ export const FolderComponent = (props: FolderProps) => {
     }).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data.folders) {
-          //update course lists as needed
+          //update foler lists as needed
           setStarred(res.data.folders);
-          setAlert({ message: "Course added to favorites.", type: "info" });
+          setAlert({ message: "Folder added to favorites.", type: "info" });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
@@ -294,7 +294,7 @@ export const FolderComponent = (props: FolderProps) => {
     }).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data.folders) {
-          //update course lists as needed
+          //update folder lists as needed
           setStarred(res.data.folders);
           setAlert({ message: "Folder removed from favorites.", type: "info" });
         }
@@ -324,13 +324,13 @@ export const FolderComponent = (props: FolderProps) => {
   };
 
   const getItemCount = () => {
-    return props.folder.prompts.length + props.folder.files.length;
+    return props.folder.prompts.filter(x => !x.isDeleted).length + props.folder.files.filter(x => !x.isDeleted).length;
   };
 
   const getFolderDescription = () => {
     // Generate a description based on the folder content
-    const promptCount = props.folder.prompts.length;
-    const fileCount = props.folder.files.length;
+    const promptCount = props.folder.prompts.filter(x => !x.isDeleted).length;
+    const fileCount = props.folder.files.filter(x => !x.isDeleted).length;
 
     if (promptCount === 0 && fileCount === 0) return "Empty Folder";
 
@@ -495,11 +495,11 @@ export const FolderComponent = (props: FolderProps) => {
 
       <Card
         className="h-full hover:shadow-md transition-shadow duration-200 group"
-        // onClick={props.onClick}
+      // onClick={props.onClick}
       >
         <CardContent className="p-4 h-full flex flex-col">
           {/* Header with folder icon, visibility, and star */}
-          <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Folder className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -508,7 +508,7 @@ export const FolderComponent = (props: FolderProps) => {
             </div>
             <div className="flex items-center gap-2">
               <Badge
-                variant={props.isOrganizationFolder ? "default" : "secondary"}
+                variant={props.isOrganizationFolder ? "default" : "outline"}
                 className="text-xs pointer-events-none"
               >
                 {props.isOrganizationFolder ? "public" : "private"}
@@ -520,7 +520,7 @@ export const FolderComponent = (props: FolderProps) => {
                 <button
                   onClick={toggleStar}
                   className={cn(
-                    "p-1 rounded-full transition-all duration-300",
+                    "p-1 text-lg rounded-full transition-all duration-300",
                     starred
                       ? "text-gold hover:text-muted"
                       : "text-muted hover:text-gold"
@@ -533,12 +533,56 @@ export const FolderComponent = (props: FolderProps) => {
                     size={16}
                     fill={starred ? "currentColor" : "none"}
                     className={cn(
-                      starred ? "hover:fill-none" : "hover:fill-current"
+                      starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
                     )}
                     aria-hidden="true"
                   />
                 </button>
               </TooltipWrapper>
+              {!props.noShowMenu && (
+                <DropdownWrapper
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex text-lg items-center p-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="h-[1em] w-[1em]" />
+                    </Button>
+                  }
+                  actions={(props.isOrganizationFolder
+                    ? user?.groups.includes(
+                      process.env.REACT_APP_ADMIN
+                        ? process.env.REACT_APP_ADMIN
+                        : "PapyrusAIAdmin"
+                    )
+                      ? adminOrgMenu
+                      : instructorOrgMenu
+                    : user?.groups.includes(
+                      process.env.REACT_APP_ADMIN
+                        ? process.env.REACT_APP_ADMIN
+                        : "PapyrusAIAdmin"
+                    )
+                      ? adminUserMenu
+                      : instructorUserMenu
+                  ).map((item) => ({
+                    label: item.label,
+                    onClick: () => {
+                      if (item.type === "link") {
+                        navigator(item.action);
+                      } else {
+                        item.action();
+                      }
+                    },
+                    type: item.type === "link" ? "link" : "button",
+                    href: item.type === "link" ? item.action : undefined,
+                  }))}
+                  align="end"
+                  tooltipContent="Folder Options"
+                  tooltipSide="top"
+                />
+              )}
             </div>
           </div>
 
@@ -571,56 +615,12 @@ export const FolderComponent = (props: FolderProps) => {
               {getItemCount()} items
             </span>
             <div className="flex items-center gap-2">
-              {!props.noShowMenu && (
-                <DropdownWrapper
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="p-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreHorizontal className="h-3 w-3" />
-                    </Button>
-                  }
-                  actions={(props.isOrganizationFolder
-                    ? user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      )
-                      ? adminOrgMenu
-                      : instructorOrgMenu
-                    : user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      )
-                    ? adminUserMenu
-                    : instructorUserMenu
-                  ).map((item) => ({
-                    label: item.label,
-                    onClick: () => {
-                      if (item.type === "link") {
-                        navigator(item.action);
-                      } else {
-                        item.action();
-                      }
-                    },
-                    type: item.type === "link" ? "link" : "button",
-                    href: item.type === "link" ? item.action : undefined,
-                  }))}
-                  align="end"
-                  tooltipContent="Folder Options"
-                  tooltipSide="top"
-                />
-              )}
               <Button
                 variant="ghost"
                 size="icon"
                 className="flex items-center gap-1 text-primary text-xs font-medium w-full p-2"
                 onClick={props.onClick}
-                // disabled={props.noShowMenu}
+              // disabled={props.noShowMenu}
               >
                 {props.noShowMenu ? "Select" : "View"}
               </Button>

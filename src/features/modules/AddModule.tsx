@@ -826,8 +826,6 @@ export default function AddModule({
                   />
                 </div>
               </nav>
-
-
             </div>
 
             <p className="text-muted-foreground max-w-2xl text-base leading-6">

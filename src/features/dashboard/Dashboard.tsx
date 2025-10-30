@@ -168,9 +168,6 @@ export default function Dashboard(): JSX.Element {
             >
               My Courses
             </h2>
-            <p className="text-muted-foreground text-sm">
-              Continue your learning journey
-            </p>
           </div>
           <nav
             className="flex flex-col md:flex-row gap-2"
@@ -271,9 +268,6 @@ export default function Dashboard(): JSX.Element {
             >
               Recent Modules
             </h2>
-            <p className="text-muted-foreground text-sm">
-              Pick up where you left off
-            </p>
           </div>
 
           <Button

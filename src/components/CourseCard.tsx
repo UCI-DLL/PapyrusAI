@@ -285,7 +285,7 @@ export default function CourseCard({
                   }}
                   disabled={isLoading}
                   className={cn(
-                    "p-1 rounded-full transition-all duration-300",
+                    "p-1 rounded-full transition-all duration-300 text-lg",
                     starred
                       ? "text-gold hover:text-muted"
                       : "text-muted hover:text-gold"
@@ -298,7 +298,7 @@ export default function CourseCard({
                     size={12}
                     fill={starred ? "currentColor" : "none"}
                     className={cn(
-                      starred ? "hover:fill-none" : "hover:fill-current"
+                      starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
                     )}
                     aria-hidden="true"
                   />
@@ -317,13 +317,13 @@ export default function CourseCard({
                   <DropdownWrapper
                     trigger={
                       <button
-                        className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                        className="p-1 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                         onClick={(e) => {
                           e.stopPropagation();
                         }}
                         aria-label="Course options menu"
                       >
-                        <MoreHorizontal size={12} aria-hidden="true" />
+                        <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
                       </button>
                     }
                     actions={(course.instructor.username === user.username

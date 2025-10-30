@@ -7,7 +7,7 @@ import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { useNavigate } from "react-router-dom";
-import { Star, Play, Eye, MoreHorizontal, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Star, Play, MoreHorizontal, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType, ModuleType } from "../utility/types/CourseTypes";
@@ -532,7 +532,7 @@ export default function ModuleCard({
                   }}
                   disabled={isLoading}
                   className={cn(
-                    "p-1 rounded-full transition-all duration-300",
+                    "p-1 rounded-full transition-all duration-300 text-lg",
                     isStarred
                       ? "text-gold hover:text-muted"
                       : "text-muted hover:text-gold"
@@ -545,14 +545,14 @@ export default function ModuleCard({
                     size={12}
                     fill={isStarred ? "currentColor" : "none"}
                     className={cn(
-                      isStarred ? "hover:fill-none" : "hover:fill-current"
+                      isStarred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
                     )}
                     aria-hidden="true"
                   />
                 </button>
               </TooltipWrapper>
 
-              {isInstructorOrTA && (
+              {/* {isInstructorOrTA && ( //TODO figure this out later
                 <TooltipWrapper content="View Reports">
                   <button
                     onClick={() =>
@@ -561,22 +561,22 @@ export default function ModuleCard({
                     className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                     aria-label="View module reports"
                   >
-                    <Eye size={12} aria-hidden="true" />
+                    <Eye className="h-[1em] w-[1em]" aria-hidden="true" />
                   </button>
                 </TooltipWrapper>
-              )}
+              )} */}
 
               {isInstructorOrTA && (
                 <DropdownWrapper
                   trigger={
                     <button
-                      className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                      className="p-1 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
                       aria-label="Module options menu"
                     >
-                      <MoreHorizontal size={12} aria-hidden="true" />
+                      <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
                     </button>
                   }
                   actions={(user?.groups.includes(course.id) &&

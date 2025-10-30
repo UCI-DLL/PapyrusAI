@@ -449,9 +449,62 @@ export default function CreateFile(): JSX.Element {
             <Upload size={192} className="text-primary" />
           </div>
           <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              Create File
-            </h1>
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                Create File
+              </h1>
+              <nav
+                className="flex flex-col md:flex-row gap-2"
+                role="toolbar"
+                aria-label="File creation actions"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSavePublishTooltip(true)}
+                  aria-label="Get help with file upload"
+                >
+                  <Info className="h-4 w-4" aria-hidden="true" />
+                  Info
+                </Button>
+                <div className="flex rounded-lg border overflow-hidden">
+                  <Button
+                    size="sm"
+                    onClick={handleClick}
+                    className="rounded-none border-0 w-full"
+                    disabled={isLoading}
+                    aria-label={`${options[selectedIndexSave]} file`}
+                  >
+                    {options[selectedIndexSave]}
+                  </Button>
+                  <DropdownWrapper
+                    open={openSaveTop}
+                    onOpenChange={setOpenSaveTop}
+                    trigger={
+                      <Button
+                        size="sm"
+                        className="rounded-none border-0 border-l px-2"
+                        variant="default"
+                        disabled={isLoading}
+                        aria-label="Select file upload strategy"
+                      >
+                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    }
+                    actions={options.map((option, index) => ({
+                      label: option,
+                      onClick: () => handleMenuItemClick(index),
+                      className: cn(
+                        index === selectedIndexSave && "bg-accent",
+                        index === 1 && "text-destructive focus:text-destructive"
+                      ),
+                    }))}
+                    align="end"
+                  />
+                </div>
+              </nav>
+            </div>
+
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
               Upload documents that will factor into generated AI output for
               your course. For more information on this system, please see the{" "}
@@ -471,70 +524,6 @@ export default function CreateFile(): JSX.Element {
 
       {/* Actions Section */}
       <section aria-labelledby="actions-heading">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h2
-              id="actions-heading"
-              className="text-2xl font-bold text-foreground mb-1"
-            >
-              File Setup
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              Configure your file upload and metadata settings.
-            </p>
-          </div>
-          <nav
-            className="flex flex-col md:flex-row gap-2"
-            role="toolbar"
-            aria-label="File creation actions"
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSavePublishTooltip(true)}
-              aria-label="Get help with file upload"
-            >
-              <Info className="h-4 w-4" aria-hidden="true" />
-              Info
-            </Button>
-            <div className="flex rounded-lg border overflow-hidden">
-              <Button
-                size="sm"
-                onClick={handleClick}
-                className="rounded-none border-0"
-                disabled={isLoading}
-                aria-label={`${options[selectedIndexSave]} file`}
-              >
-                {options[selectedIndexSave]}
-              </Button>
-              <DropdownWrapper
-                open={openSaveTop}
-                onOpenChange={setOpenSaveTop}
-                trigger={
-                  <Button
-                    size="sm"
-                    className="rounded-none border-0 border-l px-2"
-                    variant="default"
-                    disabled={isLoading}
-                    aria-label="Select file upload strategy"
-                  >
-                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                }
-                actions={options.map((option, index) => ({
-                  label: option,
-                  onClick: () => handleMenuItemClick(index),
-                  className: cn(
-                    index === selectedIndexSave && "bg-accent",
-                    index === 1 && "text-destructive focus:text-destructive"
-                  ),
-                }))}
-                align="end"
-              />
-            </div>
-          </nav>
-        </header>
-
         <Card className="transition-all duration-300 hover:shadow-md">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-foreground">
@@ -606,7 +595,7 @@ export default function CreateFile(): JSX.Element {
                   >
                     <div className="flex flex-col items-center gap-2">
                       <Upload className="h-8 w-8 text-muted-foreground" />
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium text-muted-foreground">
                         Choose file to upload
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -714,7 +703,7 @@ export default function CreateFile(): JSX.Element {
               <Button
                 size="sm"
                 onClick={handleClick}
-                className="rounded-none border-0"
+                className="rounded-none border-0 w-full"
                 disabled={isLoading}
                 aria-label={`${options[selectedIndexSave]} file`}
               >

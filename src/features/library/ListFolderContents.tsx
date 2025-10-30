@@ -108,7 +108,7 @@ export default function ListFolderContents(
 
   // Handle search filtering
   useEffect(() => {
-    const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+    const syntheticEvent = { preventDefault: () => { } } as React.FormEvent;
     handleFilter(syntheticEvent);
     // eslint-disable-next-line
   }, [searchTerm]);
@@ -168,10 +168,10 @@ export default function ListFolderContents(
       setFilteredFolder((prev) =>
         prev
           ? {
-              ...prev,
-              prompts: filteredPrompts,
-              files: filteredFiles,
-            }
+            ...prev,
+            prompts: filteredPrompts,
+            files: filteredFiles,
+          }
           : prev
       );
     }

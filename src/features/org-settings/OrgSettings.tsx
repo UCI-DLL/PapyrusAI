@@ -379,7 +379,7 @@ export default function OrgSettings(): JSX.Element {
                 label: isLoading ? "Adding..." : "Add Permission",
                 onClick: () => {
                   const fakeEvent = {
-                    preventDefault: () => {},
+                    preventDefault: () => { },
                   } as React.FormEvent;
                   addPermission(fakeEvent);
                 },
@@ -406,7 +406,7 @@ export default function OrgSettings(): JSX.Element {
                     if (e.key === "Enter") {
                       e.preventDefault();
                       const fakeEvent = {
-                        preventDefault: () => {},
+                        preventDefault: () => { },
                       } as React.FormEvent;
                       addPermission(fakeEvent);
                     }
@@ -499,7 +499,7 @@ export default function OrgSettings(): JSX.Element {
                 label: isLoading ? "Updating..." : "Update Permission",
                 onClick: () => {
                   const fakeEvent = {
-                    preventDefault: () => {},
+                    preventDefault: () => { },
                   } as React.FormEvent;
                   updatePermission(fakeEvent);
                 },
@@ -739,7 +739,7 @@ export default function OrgSettings(): JSX.Element {
                                       onClick={() =>
                                         setOpenDeleteModal(permission)
                                       }
-                                      className="text-destructive hover:text-destructive"
+                                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                                       aria-label={`Remove permissions for ${permission.id}`}
                                     >
                                       <Trash2

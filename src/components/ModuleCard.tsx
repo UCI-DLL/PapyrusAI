@@ -501,8 +501,8 @@ export default function ModuleCard({
                     </>
                   ) : (
                     <>
-                      <XCircle className="h-5 w-5 text-gray-500 pointer-events-none" />
-                      <Badge variant="secondary">Unpublished</Badge>
+                      <XCircle className="h-5 w-5 text-gray-500" />
+                      <Badge className="pointer-events-none" variant="secondary">Unpublished</Badge>
                     </>
                   )}
                 </div>

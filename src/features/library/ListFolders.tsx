@@ -151,7 +151,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
 
   // Handle search filtering
   useEffect(() => {
-    const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+    const syntheticEvent = { preventDefault: () => { } } as React.FormEvent;
     handleFilter(syntheticEvent);
     // eslint-disable-next-line
   }, [searchTerm]);
@@ -247,7 +247,8 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
           ) {
             getTags(res.data.LastEvaluatedKey.id, signal);
           } else {
-            setIsLoading(false);
+            //don't stop loading since this api call could be faster than get folders
+            // setIsLoading(false);
           }
         }
       } else if (res && res.status === 401) {
@@ -256,7 +257,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
         if (res === undefined) {
         } else {
           // handle error
-          setIsLoading(false);
+          // setIsLoading(false);
         }
       }
     });
@@ -571,7 +572,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                       ...prev,
                       owner:
                         OwnerTypeOptions[
-                          value as keyof typeof OwnerTypeOptions
+                        value as keyof typeof OwnerTypeOptions
                         ],
                     }));
                   }}
@@ -787,8 +788,8 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
             <p className="text-lg font-medium mb-2">No folders found</p>
             <p className="text-sm">
               {searchTerm ||
-              filters.tags !== "none" ||
-              filters.starred !== StarredOptions.All
+                filters.tags !== "none" ||
+                filters.starred !== StarredOptions.All
                 ? "Try adjusting your search or filters"
                 : "Create your first folder to get started organizing your content"}
             </p>

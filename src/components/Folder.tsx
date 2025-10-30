@@ -577,6 +577,7 @@ export const FolderComponent = (props: FolderProps) => {
                     },
                     type: item.type === "link" ? "link" : "button",
                     href: item.type === "link" ? item.action : undefined,
+                    className: item.label === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                   }))}
                   align="end"
                   tooltipContent="Folder Options"

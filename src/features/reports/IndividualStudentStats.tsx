@@ -282,9 +282,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       <button
         onClick={() => {
           const userId = info?.username || student.id || "unknown";
-          console.log("Navigating to reports for user:", userId);
-          console.log("Student object:", student);
-          console.log("Student info:", info);
+
           navigate(`/reports/${userId}`);
         }}
         style={{

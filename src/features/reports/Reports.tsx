@@ -113,13 +113,13 @@ export default function Reports(): JSX.Element {
           //remove TAs also
           if (
             group ===
-            (process.env.REACT_APP_INSTRUCTOR
-              ? process.env.REACT_APP_INSTRUCTOR
-              : "PapyrusAIInstructors") ||
+              (process.env.REACT_APP_INSTRUCTOR
+                ? process.env.REACT_APP_INSTRUCTOR
+                : "PapyrusAIInstructors") ||
             group ===
-            (process.env.REACT_APP_ADMIN
-              ? process.env.REACT_APP_ADMIN
-              : "PapyrusAIAdmin") ||
+              (process.env.REACT_APP_ADMIN
+                ? process.env.REACT_APP_ADMIN
+                : "PapyrusAIAdmin") ||
             group.includes("-TA")
           ) {
             return "";
@@ -719,15 +719,15 @@ export default function Reports(): JSX.Element {
                       ? process.env.REACT_APP_ADMIN
                       : "PapyrusAIAdmin"
                   ) && (
-                      <Button
-                        variant="outline"
-                        onClick={() => setOpenDownloadCourseModal(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        Download Course
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpenDownloadCourseModal(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Course
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -739,115 +739,112 @@ export default function Reports(): JSX.Element {
             ? process.env.REACT_APP_ADMIN
             : "PapyrusAIAdmin"
         ) && (
-            <Dialog
-              open={openDownloadCourseModal}
-              onOpenChange={setOpenDownloadCourseModal}
-            >
-              <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Download className="h-5 w-5" />
-                    Select Courses to Download
-                  </DialogTitle>
-                  <DialogDescription>
-                    Choose the courses you want to download and select the format.
-                    Note: downloading multiple courses may take several minutes.
-                  </DialogDescription>
-                </DialogHeader>
+          <Dialog
+            open={openDownloadCourseModal}
+            onOpenChange={setOpenDownloadCourseModal}
+          >
+            <DialogContent className="sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  Select Courses to Download
+                </DialogTitle>
+                <DialogDescription>
+                  Choose the courses you want to download and select the format.
+                  Note: downloading multiple courses may take several minutes.
+                </DialogDescription>
+              </DialogHeader>
 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="download-format">Download Format</Label>
-                    <Select value={downloadType} onValueChange={setDownloadType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select format" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="json">JSON</SelectItem>
-                        <SelectItem value="csv">CSV</SelectItem>
-                        <SelectItem value="txt">TXT</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-medium">Available Courses</h3>
-                    <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
-                      {filterCoursesBySearch(
-                        sortCourseList(userList),
-                        searchTerm
-                      ).map((x, index) => {
-                        const labelId = `checkbox-list-secondary-label-${index}`;
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent"
-                          >
-                            <Checkbox
-                              id={labelId}
-                              checked={checked.includes(index)}
-                              onCheckedChange={handleToggle(index)}
-                            />
-                            <Label
-                              htmlFor={labelId}
-                              className="flex-1 cursor-pointer text-sm"
-                            >
-                              {x.course.name} | Instructor:{" "}
-                              {x.course.instructor.name}{" "}
-                              {x.course.instructor.family_name}
-                            </Label>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="download-format">Download Format</Label>
+                  <Select value={downloadType} onValueChange={setDownloadType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="json">JSON</SelectItem>
+                      <SelectItem value="csv">CSV</SelectItem>
+                      <SelectItem value="txt">TXT</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setOpenDownloadCourseModal(false)}
-                  >
-                    Close
-                  </Button>
-                  <Button onClick={downloadCourses}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium">Available Courses</h3>
+                  <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
+                    {filterCoursesBySearch(
+                      sortCourseList(userList),
+                      searchTerm
+                    ).map((x, index) => {
+                      const labelId = `checkbox-list-secondary-label-${index}`;
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent"
+                        >
+                          <Checkbox
+                            id={labelId}
+                            checked={checked.includes(index)}
+                            onCheckedChange={handleToggle(index)}
+                          />
+                          <Label
+                            htmlFor={labelId}
+                            className="flex-1 cursor-pointer text-sm"
+                          >
+                            {x.course.name} | Instructor:{" "}
+                            {x.course.instructor.name}{" "}
+                            {x.course.instructor.family_name}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenDownloadCourseModal(false)}
+                >
+                  Close
+                </Button>
+                <Button onClick={downloadCourses}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <section aria-labelledby="reports-courses-heading">
-          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h2
-                id="reports-courses-heading"
-                className="text-2xl font-bold text-foreground mb-1"
-              >
-                Course Reports
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Click on any course to view detailed analytics and student
-                interactions.
-              </p>
-            </div>
-            <div className="relative max-w-md w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <header className="mb-6 w-full bg-card p-4 rounded-lg shadow-md">
+            <div className="relative w-full">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                aria-hidden="true"
+              />
               <Input
                 type="text"
                 placeholder="Search courses by name, instructor, section..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-9 w-full"
+                aria-label="Search courses"
               />
             </div>
           </header>
 
           <div className="space-y-4">
-            {filterCoursesBySearch(sortCourseList(userList), searchTerm)
-              .length === 0 ? (
+            {userList.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+                <p className="text-muted-foreground">Loading courses...</p>
+              </div>
+            ) : filterCoursesBySearch(sortCourseList(userList), searchTerm)
+                .length === 0 ? (
               <div className="text-center py-12">
                 <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -876,8 +873,19 @@ export default function Reports(): JSX.Element {
                   return (
                     <Card
                       key={index}
-                      className="group bg-card border rounded-xl hover-lift shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md"
+                      className="group bg-card border rounded-xl hover-lift shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       onClick={handleRowClick}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View course reports for ${
+                        x.course.name ? x.course.name : "Unnamed Course"
+                      }`}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleRowClick();
+                        }
+                      }}
                     >
                       <CardContent className="p-6">
                         <div className="flex justify-between items-start mb-4">
@@ -892,10 +900,12 @@ export default function Reports(): JSX.Element {
                               </div>
                               <div className="text-sm text-muted-foreground capitalize">
                                 {x.course.section
-                                  ? `${x.course.term ? x.course.term : ""} ${x.course.year ? x.course.year : ""
-                                  } - ${x.course.section}`
-                                  : `${x.course.term ? x.course.term : ""} ${x.course.year ? x.course.year : ""
-                                  }`}
+                                  ? `${x.course.term ? x.course.term : ""} ${
+                                      x.course.year ? x.course.year : ""
+                                    } - ${x.course.section}`
+                                  : `${x.course.term ? x.course.term : ""} ${
+                                      x.course.year ? x.course.year : ""
+                                    }`}
                               </div>
                             </div>
                           </div>

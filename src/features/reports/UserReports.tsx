@@ -28,9 +28,9 @@ export default function UserReports(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const retryCountRef = useRef<number>(0);
 
-  // Console log loading status changes
+  // Track loading status (no console output)
   useEffect(() => {
-    console.log("UserReports: isLoading changed to:", isLoading);
+    // no-op
   }, [isLoading]);
   const [viewUser, setViewUser] = useState<UserType>();
   const { user } = useContext(UserContext);
@@ -52,22 +52,15 @@ export default function UserReports(): JSX.Element {
       const fetchConversations = () => {
         Get(getUserConversationList(username), controller.signal, true).then(
           (res) => {
-            console.log("UserReports: getUserConversationList response:", res);
-            console.log("UserReports: Response status:", res?.status);
-            console.log("UserReports: Response data:", res?.data);
-
             if (res === undefined) {
               if (retryCountRef.current < 3) {
                 retryCountRef.current += 1;
-                console.log(
-                  `UserReports: Request returned undefined, retrying in 2 seconds... (attempt ${retryCountRef.current}/3)`
-                );
+
                 setTimeout(() => {
                   fetchConversations();
                 }, 2000);
                 return;
               } else {
-                console.log("UserReports: Max retries reached, giving up");
                 setIsLoading(false);
                 return;
               }
@@ -78,12 +71,6 @@ export default function UserReports(): JSX.Element {
 
             if (res && res.status && res.status < 300) {
               if (res.data) {
-                console.log(
-                  "UserReports: Got conversation list, processing",
-                  res.data.length,
-                  "conversations"
-                );
-
                 // Track how many course fetches we need to complete
                 let completedFetches = 0;
                 const totalFetches = res.data.length;
@@ -94,9 +81,6 @@ export default function UserReports(): JSX.Element {
                   Get(getCourse(conversation.courseId), controller.signal).then(
                     (res1) => {
                       completedFetches++;
-                      console.log(
-                        `UserReports: Completed fetch ${completedFetches}/${totalFetches}`
-                      );
 
                       if (res1 && res1.status && res1.status < 300) {
                         if (
@@ -133,9 +117,6 @@ export default function UserReports(): JSX.Element {
 
                       // Only set loading to false when all course fetches are complete
                       if (completedFetches === totalFetches) {
-                        console.log(
-                          "UserReports: All course fetches completed, setting loading to false"
-                        );
                         setIsLoading(false);
                       }
                     }
@@ -145,25 +126,16 @@ export default function UserReports(): JSX.Element {
 
                 // If no conversations to process, set loading to false immediately
                 if (totalFetches === 0) {
-                  console.log(
-                    "UserReports: No conversations to process, setting loading to false"
-                  );
                   setIsLoading(false);
                 }
               } else {
-                console.log(
-                  "UserReports: No conversation data, setting loading to false"
-                );
                 setIsLoading(false);
               }
             } else if (res && res.status === 401) {
               navigator("/login");
             } else {
               // handle error
-              console.log(
-                "UserReports: Error getting conversation list, setting loading to false"
-              );
-              console.log("UserReports: Error response details:", res);
+
               setIsLoading(false);
             }
           }

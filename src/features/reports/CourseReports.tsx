@@ -11,6 +11,10 @@ import ClassCharts from "./ClassCharts";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { analyzeCourse } from "../../utility/reports/analysis";
 import {
+  getCourse,
+  getUsersInCourse,
+} from "../../utility/endpoints/CourseEndpoints";
+import {
   getContentModMessage,
   getConversation,
   getConversationList,
@@ -38,28 +42,140 @@ export default function CourseReports(): JSX.Element {
   useEffect(() => {
     if (!courseId || !user) return;
 
-    console.log(
-      "CourseReports: Course data from navigation state:",
-      courseData
-    );
-    console.log("CourseReports: Users data from navigation state:", usersData);
-
     // If we have course data from navigation state, use it
     if (courseData && usersData) {
-      console.log("CourseReports: Using course data from navigation state");
       setCourse(courseData);
       setUsers(usersData);
       setIsLoading(false);
       return;
     }
 
-    // If no course data, redirect back to reports
-    console.log("CourseReports: No course data found, redirecting to reports");
-    setAlert({
-      message: "Course data not found. Please try again from the reports page.",
-      type: "error",
+    // If no course data, fetch course and users by courseId
+
+    const controller = new AbortController();
+    setIsLoading(true);
+    // Fetch course details
+
+    Get(getCourse(courseId), controller.signal, true).then((courseRes) => {
+      if (
+        courseRes &&
+        courseRes.status &&
+        courseRes.status < 300 &&
+        courseRes.data
+      ) {
+        const fetchedCourse = courseRes.data as CourseType;
+        setCourse(fetchedCourse);
+        // Fetch users (handle pagination)
+        const allUsers: Array<CustomUserType> = [];
+        const fetchUsersPage = (nextToken?: string) => {
+          Get(
+            getUsersInCourse(courseId, 50, nextToken ?? ""),
+            controller.signal,
+            true
+          ).then((usersRes) => {
+            if (
+              usersRes &&
+              usersRes.status &&
+              usersRes.status < 300 &&
+              usersRes.data
+            ) {
+              if (usersRes.data.users) {
+                allUsers.push(...usersRes.data.users);
+              }
+              if (usersRes.data.nextToken) {
+                fetchUsersPage(usersRes.data.nextToken);
+              } else {
+                setUsers(allUsers);
+                setIsLoading(false);
+              }
+            } else if (usersRes && usersRes.status === 401) {
+              navigate("/login");
+            } else {
+              console.error("CourseReports: getUsersInCourse failed", usersRes);
+              setIsLoading(false);
+            }
+          });
+        };
+        fetchUsersPage();
+      } else if (courseRes && courseRes.status === 401) {
+        navigate("/login");
+      } else {
+        console.error(
+          "CourseReports: getCourse failed, retrying shortly...",
+          courseRes
+        );
+        // This is really messy solution, but it works for now
+        // Better fix would be to have some other timeout for the retry
+        // Retry once after a short delay; keep loading UI
+        setTimeout(() => {
+          if (!controller.signal.aborted) {
+            Get(getCourse(courseId), controller.signal, true).then(
+              (retryRes) => {
+                if (
+                  retryRes &&
+                  retryRes.status &&
+                  retryRes.status < 300 &&
+                  retryRes.data
+                ) {
+                  const fetchedCourse = retryRes.data as CourseType;
+                  setCourse(fetchedCourse);
+                  const allUsers: Array<CustomUserType> = [];
+                  const fetchUsersPage = (nextToken?: string) => {
+                    Get(
+                      getUsersInCourse(courseId, 50, nextToken ?? ""),
+                      controller.signal,
+                      true
+                    ).then((usersRes) => {
+                      if (
+                        usersRes &&
+                        usersRes.status &&
+                        usersRes.status < 300 &&
+                        usersRes.data
+                      ) {
+                        if (usersRes.data.users) {
+                          allUsers.push(...usersRes.data.users);
+                        }
+                        if (usersRes.data.nextToken) {
+                          fetchUsersPage(usersRes.data.nextToken);
+                        } else {
+                          setUsers(allUsers);
+                          setIsLoading(false);
+                        }
+                      } else if (usersRes && usersRes.status === 401) {
+                        navigate("/login");
+                      } else {
+                        console.error(
+                          "CourseReports: getUsersInCourse failed on retry, retrying again...",
+                          usersRes
+                        );
+                        setTimeout(() => fetchUsersPage(nextToken), 1500);
+                      }
+                    });
+                  };
+                  fetchUsersPage();
+                } else if (retryRes && retryRes.status === 401) {
+                  navigate("/login");
+                } else {
+                  console.error(
+                    "CourseReports: retry getCourse failed; giving up for now",
+                    retryRes
+                  );
+                  setIsLoading(false);
+                  setAlert({
+                    message: `Unable to load course data${
+                      retryRes?.status ? ` (status ${retryRes.status})` : ""
+                    }.`,
+                    type: "error",
+                  });
+                }
+              }
+            );
+          }
+        }, 1500);
+      }
     });
-    navigate("/reports");
+
+    return () => controller.abort();
   }, [courseId, user, courseData, usersData, setAlert, navigate]);
 
   // Helper function to get conversation data
@@ -231,11 +347,8 @@ export default function CourseReports(): JSX.Element {
         // Wait for all conversations to be fetched
         await Promise.all(promiseArray);
 
-        console.log("Complete Course Data with Conversations:", courseData);
-
         const analysisResult = analyzeCourse(courseData);
         setAnalysis(analysisResult);
-        console.log("analysis", analysisResult);
       } catch (error) {
         console.error("Error fetching conversation data:", error);
         setAlert({
@@ -251,7 +364,6 @@ export default function CourseReports(): JSX.Element {
   }, [course, users, isLoading, setAlert, getConvoListForClick]);
 
   if (isLoading) {
-    console.log("CourseReports: Rendering loading state");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -275,8 +387,19 @@ export default function CourseReports(): JSX.Element {
     );
   }
 
+  // If analysis isn't ready yet, show a preparing state instead of rendering charts with null
+  if (!analysis) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground text-lg">Preparing analysis...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!course) {
-    console.log("CourseReports: Course is null, rendering course not found");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -286,17 +409,12 @@ export default function CourseReports(): JSX.Element {
     );
   }
 
-  console.log("CourseReports: Rendering ClassCharts with analysis:", analysis);
   return (
     <ClassCharts
       analysis={analysis}
       setAnalysis={(newAnalysis: any) => {
-        console.log("CourseReports: setAnalysis called with:", newAnalysis);
         setAnalysis(newAnalysis);
         if (newAnalysis === null) {
-          console.log(
-            "CourseReports: Analysis is null, navigating back to reports"
-          );
           // Navigate back to reports when analysis is cleared
           navigate("/reports");
         }

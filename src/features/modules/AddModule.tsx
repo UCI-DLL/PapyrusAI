@@ -241,7 +241,6 @@ export default function AddModule({
   };
 
   function handleSubmit(e: any, isPublished = false, isDeleted = false) {
-    e.preventDefault();
     if (session.name === "") {
       setErrors((prev: any) => ({ ...prev, name: "Name missing" }));
     } else if (session.moduleDescription === "") {
@@ -736,8 +735,8 @@ export default function AddModule({
                       </>
                     ) : (
                       <>
-                        <XCircle className="h-5 w-5 text-gray-500 pointer-events-none" />
-                        <Badge variant="secondary">Unpublished</Badge>
+                        <XCircle className="h-5 w-5 text-gray-500" />
+                        <Badge className="pointer-events-none" variant="secondary">Unpublished</Badge>
                       </>
                     )}
                   </div>
@@ -757,7 +756,7 @@ export default function AddModule({
                     variant="outline"
                     size="sm"
                     onClick={() => setOpenDeleteModal(true)}
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     aria-label="Delete module"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -818,8 +817,8 @@ export default function AddModule({
                         handleMenuItemClick(fakeEvent, index);
                       },
                       className: cn(
-                        index === selectedIndexSave && "bg-accent",
-                        index === 2 && "text-destructive focus:text-destructive"
+                        index === selectedIndexSave && "bg-primary/30",
+                        index === 2 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                       ),
                     }))}
                     align="end"
@@ -1139,7 +1138,7 @@ export default function AddModule({
               variant="outline"
               size="sm"
               onClick={() => setOpenDeleteModal(true)}
-              className="text-destructive hover:text-destructive"
+              className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
               aria-label="Delete module"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -1205,8 +1204,8 @@ export default function AddModule({
                   handleMenuItemClick(fakeEvent, index);
                 },
                 className: cn(
-                  index === selectedIndexSave && "bg-accent",
-                  index === 2 && "text-destructive focus:text-destructive"
+                  index === selectedIndexSave && "bg-primary/30",
+                  index === 2 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                 ),
               }))}
               align="end"

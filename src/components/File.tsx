@@ -608,6 +608,7 @@ export const File = (props: FileProps) => {
                     },
                     type: item.type,
                     href: item.type === "link" ? item.action : undefined,
+                    className: item.label === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                   }))}
                   align="end"
                 />
@@ -649,7 +650,7 @@ export const File = (props: FileProps) => {
                     variant="ghost"
                     type="button"
                     size="sm"
-                    className="flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive"
+                    className="flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (props.onClick) {
@@ -672,7 +673,7 @@ export const File = (props: FileProps) => {
                     variant="ghost"
                     type="button"
                     size="sm"
-                    className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary hover:text-primary-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (props.onClick) {

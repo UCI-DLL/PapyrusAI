@@ -5,7 +5,7 @@
 @layer base {
   :root {
     /* UCI Primary Colors */
-    --color-primary: #255799;
+    --color-primary: #204c86;
     --color-primary-foreground: #ffffff;
 
     /* UCI Secondary Colors */
@@ -51,6 +51,7 @@
     --accent: 200 50% 57%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 35%;
+    --destructive-hover: 0 84% 30%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
@@ -97,6 +98,7 @@
     --accent: 200 50% 57%; /* UCI accent blue */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 72% 51%; /* Bright red for visibility */
+    --destructive-hover: 0 84% 35%;
     --destructive-foreground: 210 40% 98%;
     --border: 240 3.7% 15.9%; /* Subtle borders */
     --input: 240 3.7% 15.9%;
@@ -142,6 +144,7 @@
     --accent: 28 75% 45%; /* Orange 600 balanced */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 35%;
+    --destructive-hover: 0 84% 30%;
     --destructive-foreground: 210 40% 98%;
     --border: 150 18% 76%;
     --input: 150 18% 76%;
@@ -211,6 +214,7 @@
     --accent: 38 92% 50%; /* Amber 500 */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 72% 51%;
+    --destructive-hover: 0 84% 35%;
     --destructive-foreground: 210 40% 98%;
     --border: 160 16% 20%;
     --input: 160 16% 20%;

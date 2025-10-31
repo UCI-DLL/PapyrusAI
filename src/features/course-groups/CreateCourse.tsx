@@ -41,11 +41,6 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../../components/ui/tooltip";
-import {
   postCreateCourse,
   getCourse,
   putUpdateCourse,
@@ -278,7 +273,6 @@ export default function CreateCourse({
   }
 
   function handleSubmit(e: any, isActive = false, isDeleted = false) {
-    if (e) e.preventDefault();
     if (session.name === "") {
       setErrors((prev) => ({ ...prev, name: "Name missing" }));
     } else if (session.signUpCode === "") {
@@ -540,8 +534,8 @@ export default function CreateCourse({
                           </>
                         ) : (
                           <>
-                            <XCircle className="h-5 w-5 text-gray-500 pointer-events-none" />
-                            <Badge variant="secondary">Unpublished</Badge>
+                            <XCircle className="h-5 w-5 text-gray-500" />
+                            <Badge className="pointer-events-none" variant="secondary">Unpublished</Badge>
                           </>
                         )}
                       </div>
@@ -552,14 +546,6 @@ export default function CreateCourse({
                     role="toolbar"
                     aria-label="Course creation actions"
                   >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowSavePublishTooltip(true)}
-                      aria-label="Get help with Save & Publish options"
-                    >
-                      <Info className="h-4 w-4" aria-hidden="true" />
-                    </Button>
                     {isEditMode && (
                       <TooltipWrapper content="Delete Course">
                         <Button
@@ -573,6 +559,14 @@ export default function CreateCourse({
                         </Button>
                       </TooltipWrapper>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowSavePublishTooltip(true)}
+                      aria-label="Get help with Save & Publish options"
+                    >
+                      <Info className="h-4 w-4" aria-hidden="true" />
+                    </Button>
                     <div className="flex rounded-lg border overflow-hidden">
                       <Button
                         size="sm"
@@ -613,9 +607,8 @@ export default function CreateCourse({
                                 handleMenuItemClick(fakeEvent, index);
                               }}
                               className={cn(
-                                index === selectedIndexSave && "bg-accent",
-                                index === 2 &&
-                                "text-destructive focus:text-destructive"
+                                index === selectedIndexSave && "bg-primary/30",
+                                index === 2 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                               )}
                             >
                               {option}
@@ -665,17 +658,12 @@ export default function CreateCourse({
                     <Label htmlFor="name" className="text-sm font-medium">
                       Course Name *
                     </Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
+                    <TooltipWrapper content="The name for your course that users will see upon
+                            joining.">
+                      <button>
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          The name for your course that users will see upon
-                          joining.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
+                      </button>
+                    </TooltipWrapper>
                   </div>
                   <Input
                     id="name"
@@ -697,18 +685,13 @@ export default function CreateCourse({
                     <Label htmlFor="signUpCode" className="text-sm font-medium">
                       Course Sign Up Code *
                     </Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
+                    <TooltipWrapper content="The unique sign up code that users will use to join
+                            your course. You can use any combination of letters
+                            and numbers. This is case sensitive.">
+                      <button>
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          The unique sign up code that users will use to join
-                          your course. You can use any combination of letters
-                          and numbers. This is case sensitive.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
+                      </button>
+                    </TooltipWrapper>
                   </div>
                   <Input
                     id="signUpCode"
@@ -754,7 +737,9 @@ export default function CreateCourse({
                         Year
                       </Label>
                       <TooltipWrapper content="The year in which your course is taking place.">
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        <button>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </button>
                       </TooltipWrapper>
                     </div>
                     <Input
@@ -788,7 +773,9 @@ export default function CreateCourse({
                         Term
                       </Label>
                       <TooltipWrapper content="The term in which your course is taking place.">
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        <button>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </button>
                       </TooltipWrapper>
                     </div>
                     <Select
@@ -827,7 +814,9 @@ export default function CreateCourse({
                         Section / Period
                       </Label>
                       <TooltipWrapper content="The section number or period for your course.">
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        <button>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </button>
                       </TooltipWrapper>
                     </div>
                     <Input
@@ -1024,16 +1013,6 @@ export default function CreateCourse({
                   : "Course creation actions"
               }
             >
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSavePublishTooltip(true)}
-                aria-label="Get help with Save & Publish options"
-              >
-                <Info className="h-4 w-4" aria-hidden="true" />
-                Info
-              </Button>
               {isEditMode && (
                 <TooltipWrapper content="Delete Course">
                   <Button
@@ -1048,6 +1027,16 @@ export default function CreateCourse({
                   </Button>
                 </TooltipWrapper>
               )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSavePublishTooltip(true)}
+                aria-label="Get help with Save & Publish options"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                Info
+              </Button>
               <div className="flex rounded-lg border overflow-hidden">
                 <Button
                   size="sm"
@@ -1094,8 +1083,8 @@ export default function CreateCourse({
                       handleMenuItemClick(fakeEvent, index);
                     },
                     className: cn(
-                      index === selectedIndexSave && "bg-accent",
-                      index === 2 && "text-destructive focus:text-destructive"
+                      index === selectedIndexSave && "bg-primary/30",
+                      index === 2 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                     ),
                   }))}
                   align="end"

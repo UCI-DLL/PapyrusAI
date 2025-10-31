@@ -477,6 +477,20 @@ export default function CreatePrompt({
                 role="toolbar"
                 aria-label="Prompt creation actions"
               >
+                {isEditMode && (
+                  <TooltipWrapper content="Delete Prompt">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOpenDeleteModal(true)}
+                      disabled={isLoading}
+                      aria-label="Delete prompt permanently"
+                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </TooltipWrapper>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -484,22 +498,7 @@ export default function CreatePrompt({
                   aria-label="Get help with prompt creation"
                 >
                   <Info className="h-4 w-4" aria-hidden="true" />
-                  Info
                 </Button>
-                {isEditMode && (
-                  <TooltipWrapper content="Delete Prompt">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setOpenDeleteModal(true)}
-                      disabled={isLoading}
-                      aria-label="Delete prompt permanently"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      Delete
-                    </Button>
-                  </TooltipWrapper>
-                )}
                 <div className="flex rounded-lg border overflow-hidden">
                   <Button
                     size="sm"
@@ -528,8 +527,8 @@ export default function CreatePrompt({
                       label: option,
                       onClick: () => handleMenuItemClick(index),
                       className: cn(
-                        index === selectedIndexSave && "bg-accent",
-                        index === 1 && "text-destructive focus:text-destructive"
+                        index === selectedIndexSave && "bg-primary/30",
+                        index === 1 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                       ),
                     }))}
                     align="end"
@@ -576,7 +575,9 @@ export default function CreatePrompt({
                     Prompt Name *
                   </Label>
                   <TooltipWrapper content="The name for the prompt that users will see. We recommend choosing a name that makes it easy for students to understand what the prompt will do or help them with.">
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <button>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
                   </TooltipWrapper>
                 </div>
                 <Input
@@ -610,7 +611,9 @@ export default function CreatePrompt({
                     Prompt *
                   </Label>
                   <TooltipWrapper content="The instructions that will be sent to the AI (i.e., the first message sent to the AI that will guide the interaction).">
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <button>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
                   </TooltipWrapper>
                 </div>
                 <Textarea
@@ -643,7 +646,9 @@ export default function CreatePrompt({
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium">Tags</Label>
                   <TooltipWrapper content="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type.">
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <button>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
                   </TooltipWrapper>
                 </div>
                 <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
@@ -693,6 +698,21 @@ export default function CreatePrompt({
             role="toolbar"
             aria-label="Prompt creation actions"
           >
+            {isEditMode && (
+              <TooltipWrapper content="Delete Prompt">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOpenDeleteModal(true)}
+                  disabled={isLoading}
+                  aria-label="Delete prompt permanently"
+                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  Delete
+                </Button>
+              </TooltipWrapper>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -702,21 +722,6 @@ export default function CreatePrompt({
               <Info className="h-4 w-4" aria-hidden="true" />
               Info
             </Button>
-            {isEditMode && (
-              <TooltipWrapper content="Delete Prompt">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setOpenDeleteModal(true)}
-                  disabled={isLoading}
-                  aria-label="Delete prompt permanently"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Delete
-                </Button>
-              </TooltipWrapper>
-            )}
-
             <div className="flex rounded-lg border overflow-hidden">
               <Button
                 size="sm"
@@ -745,8 +750,8 @@ export default function CreatePrompt({
                   label: option,
                   onClick: () => handleMenuItemClick(index),
                   className: cn(
-                    index === selectedIndexSave && "bg-accent",
-                    index === 1 && "text-destructive focus:text-destructive"
+                    index === selectedIndexSave && "bg-primary/30",
+                    index === 1 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                   ),
                 }))}
                 align="end"

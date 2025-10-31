@@ -646,6 +646,7 @@ export const Prompt = (props: PromptProps) => {
                             adminOrgMenuFunctions[index]();
                           },
                           type: "button" as const,
+                          className: item === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                         }))
                         : instructorOrgMenu.map(
                           (item: string, index: number) => ({
@@ -654,6 +655,7 @@ export const Prompt = (props: PromptProps) => {
                               instructorOrgMenuFunctions[index]();
                             },
                             type: "button" as const,
+                            className: item === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                           })
                         )
                       : user?.groups.includes(
@@ -667,6 +669,7 @@ export const Prompt = (props: PromptProps) => {
                             adminUserMenuFunctions[index]();
                           },
                           type: "button" as const,
+                          className: item === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                         }))
                         : instructorUserMenu.map(
                           (item: string, index: number) => ({
@@ -675,6 +678,7 @@ export const Prompt = (props: PromptProps) => {
                               instructorUserMenuFunctions[index]();
                             },
                             type: "button" as const,
+                            className: item === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                           })
                         )
                   }
@@ -727,7 +731,7 @@ export const Prompt = (props: PromptProps) => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive"
+                    className="flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (props.onClick) {
@@ -750,7 +754,7 @@ export const Prompt = (props: PromptProps) => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary hover:text-primary-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (props.onClick) {

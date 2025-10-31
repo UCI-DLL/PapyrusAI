@@ -785,6 +785,18 @@ export default function EditFile(): JSX.Element {
                     role="toolbar"
                     aria-label="File editing actions"
                   >
+                    <TooltipWrapper content="Delete File">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOpenDeleteModal(true)}
+                        disabled={isLoading}
+                        aria-label="Delete file permanently"
+                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </TooltipWrapper>
                     <Button
                       variant="outline"
                       size="sm"
@@ -792,20 +804,7 @@ export default function EditFile(): JSX.Element {
                       aria-label="Get help with file editing"
                     >
                       <Info className="h-4 w-4" aria-hidden="true" />
-                      Info
                     </Button>
-                    <TooltipWrapper content="Delete File">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setOpenDeleteModal(true)}
-                        disabled={isLoading}
-                        aria-label="Delete file permanently"
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        Delete
-                      </Button>
-                    </TooltipWrapper>
                     <div className="flex rounded-lg border overflow-hidden">
                       <Button
                         size="sm"
@@ -834,8 +833,8 @@ export default function EditFile(): JSX.Element {
                           label: option,
                           onClick: () => handleMenuItemClick(index),
                           className: cn(
-                            index === selectedIndexSave && "bg-accent",
-                            index === 1 && "text-destructive focus:text-destructive"
+                            index === selectedIndexSave && "bg-primary/30",
+                            index === 1 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                           ),
                         }))}
                         align="end"
@@ -897,7 +896,9 @@ export default function EditFile(): JSX.Element {
                       File Name *
                     </Label>
                     <TooltipWrapper content="The name for the document.">
-                      <Info className="h-4 w-4 text-muted-foreground" />
+                      <button>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
                     </TooltipWrapper>
                   </div>
                   <Input
@@ -929,7 +930,9 @@ export default function EditFile(): JSX.Element {
                   <div className="flex items-center gap-2">
                     <Label className="text-sm font-medium">File Upload</Label>
                     <TooltipWrapper content="Select a JPEG, PNG, PDF, TXT, DOCX file to replace the current file.">
-                      <Info className="h-4 w-4 text-muted-foreground" />
+                      <button>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
                     </TooltipWrapper>
                   </div>
                   <input
@@ -997,7 +1000,9 @@ export default function EditFile(): JSX.Element {
                   <div className="flex items-center gap-2">
                     <Label className="text-sm font-medium">Tags</Label>
                     <TooltipWrapper content="Tags describe a feature of the files and will be used to allow for sorting files by type.">
-                      <Info className="h-4 w-4 text-muted-foreground" />
+                      <button>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </button>
                     </TooltipWrapper>
                   </div>
                   <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
@@ -1045,6 +1050,19 @@ export default function EditFile(): JSX.Element {
               role="toolbar"
               aria-label="File editing actions"
             >
+              <TooltipWrapper content="Delete File">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOpenDeleteModal(true)}
+                  disabled={isLoading}
+                  aria-label="Delete file permanently"
+                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  Delete
+                </Button>
+              </TooltipWrapper>
               <Button
                 variant="outline"
                 size="sm"
@@ -1054,18 +1072,6 @@ export default function EditFile(): JSX.Element {
                 <Info className="h-4 w-4" aria-hidden="true" />
                 Info
               </Button>
-              <TooltipWrapper content="Delete File">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setOpenDeleteModal(true)}
-                  disabled={isLoading}
-                  aria-label="Delete file permanently"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Delete
-                </Button>
-              </TooltipWrapper>
               <div className="flex rounded-lg border overflow-hidden">
                 <Button
                   size="sm"
@@ -1094,8 +1100,8 @@ export default function EditFile(): JSX.Element {
                     label: option,
                     onClick: () => handleMenuItemClick(index),
                     className: cn(
-                      index === selectedIndexSave && "bg-accent",
-                      index === 1 && "text-destructive focus:text-destructive"
+                      index === selectedIndexSave && "bg-primary/30",
+                      index === 1 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                     ),
                   }))}
                   align="end"

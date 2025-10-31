@@ -129,10 +129,10 @@ export default function ChatSidebar({
                 const conversationLink = `/chat/${user?.username}/${courseInfo.id}/${moduleInfo.id}/${conversationIndex}`;
 
                 return (
-                  <div
+                  <button
                     key={conversation.id}
                     className={cn(
-                      "rounded-lg p-3 cursor-pointer transition-colors border",
+                      "rounded-lg p-3 cursor-pointer transition-colors border text-left w-full",
                       isCurrentConversation
                         ? "bg-primary text-primary-foreground border-primary"
                         : "hover:bg-accent hover:text-secondary-foreground border-transparent"
@@ -153,7 +153,7 @@ export default function ChatSidebar({
                         ).toLocaleDateString()}
                       </p>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>

@@ -557,9 +557,31 @@ export default function OrgSettings(): JSX.Element {
               </div>
 
               <div className="relative z-10">
-                <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                  Organization Settings
-                </h1>
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                  <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                    Organization Settings
+                  </h1>
+                  <nav
+                    className="flex flex-col md:flex-row gap-2"
+                    role="toolbar"
+                    aria-label="Permission actions"
+                  >
+                    <Button
+                      onClick={() =>
+                        setShowAddOrgPermissionModal((prev) => ({
+                          ...prev,
+                          open: true,
+                        }))
+                      }
+                      className="flex items-center gap-2"
+                      aria-label="Add new user permission"
+                    >
+                      <UserPlus className="h-4 w-4" aria-hidden="true" />
+                      Add Permission
+                    </Button>
+                  </nav>
+                </div>
+
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
                   Manage user permissions and access levels for your
                   organization.
@@ -570,40 +592,6 @@ export default function OrgSettings(): JSX.Element {
 
           {/* Content Section */}
           <section aria-labelledby="permissions-content">
-            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div>
-                <h2
-                  id="permissions-content"
-                  className="text-2xl font-bold text-foreground mb-1"
-                >
-                  User Permissions
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Manage access levels for {filteredOrgPermissionList.length}{" "}
-                  users in your organization.
-                </p>
-              </div>
-              <nav
-                className="flex flex-col md:flex-row gap-2"
-                role="toolbar"
-                aria-label="Permission actions"
-              >
-                <Button
-                  onClick={() =>
-                    setShowAddOrgPermissionModal((prev) => ({
-                      ...prev,
-                      open: true,
-                    }))
-                  }
-                  className="flex items-center gap-2"
-                  aria-label="Add new user permission"
-                >
-                  <UserPlus className="h-4 w-4" aria-hidden="true" />
-                  Add Permission
-                </Button>
-              </nav>
-            </header>
-
             <Card className="transition-all duration-300 hover:shadow-md">
               <CardHeader>
                 <div className="flex flex-col sm:flex-row gap-4">

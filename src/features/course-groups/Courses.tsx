@@ -130,82 +130,81 @@ export default function Courses(): JSX.Element {
             <BookOpen size={192} className="text-primary" />
           </div>
 
-          <div className="relative z-10 space-y-4">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-              <div className="flex-1">
+          <div className="relative z-10">
+            <div>
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   My Courses
                 </h1>
-                <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                  Courses are spaces in which instructors can create and
-                  organize modules that customize how students can interact with
-                  the AI. For more information on creating a course, please see
-                  the{" "}
-                  <a
-                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
-                  >
-                    "Creating a Course" section of our instructor guide
-                  </a>
-                  .
-                </p>
-              </div>
-
-              <nav
-                className="flex flex-col md:flex-row gap-2 md:shrink-0"
-                role="toolbar"
-                aria-label="Course actions"
-              >
-                {isInstructor && (
+                <nav
+                  className="flex flex-col md:flex-row gap-2 md:shrink-0"
+                  role="toolbar"
+                  aria-label="Course actions"
+                >
+                  {isInstructor && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      asChild
+                      aria-label="Create new course"
+                    >
+                      <Link to="/createcourse" className="no-underline">
+                        <PlusIcon className="w-4 h-4" aria-hidden="true" />
+                        Create Course
+                      </Link>
+                    </Button>
+                  )}
                   <Button
                     size="sm"
-                    variant="outline"
-                    asChild
-                    aria-label="Create new course"
+                    aria-label="Join existing course"
+                    onClick={() => setShowAddCourseModal(true)}
                   >
-                    <Link to="/createcourse" className="no-underline">
-                      <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                      Create Course
-                    </Link>
+                    <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                    Join Course
                   </Button>
-                )}
-                <Button
-                  size="sm"
-                  aria-label="Join existing course"
-                  onClick={() => setShowAddCourseModal(true)}
-                >
-                  <ExternalLink className="w-4 h-4" aria-hidden="true" />
-                  Join Course
-                </Button>
 
-                <DialogWrapper
-                  open={showAddCourseModal}
-                  onOpenChange={setShowAddCourseModal}
-                  title="Join Course by Sign Up Code"
-                  description="Enter the unique course sign up code associated with the course you want to join. Not sure what the sign up code is? Ask the instructor of the course!"
-                  contentClassName="sm:max-w-md"
-                  actions={[
-                    {
-                      label: "Cancel",
-                      onClick: () => setShowAddCourseModal(false),
-                      variant: "outline",
-                    },
-                    {
-                      label: isJoiningCourse ? "Joining..." : "Join Course",
-                      onClick: () => addCourseFormRef.current?.handleSubmit(),
-                      disabled: isJoiningCourse,
-                    },
-                  ]}
+                  <DialogWrapper
+                    open={showAddCourseModal}
+                    onOpenChange={setShowAddCourseModal}
+                    title="Join Course by Sign Up Code"
+                    description="Enter the unique course sign up code associated with the course you want to join. Not sure what the sign up code is? Ask the instructor of the course!"
+                    contentClassName="sm:max-w-md"
+                    actions={[
+                      {
+                        label: "Cancel",
+                        onClick: () => setShowAddCourseModal(false),
+                        variant: "outline",
+                      },
+                      {
+                        label: isJoiningCourse ? "Joining..." : "Join Course",
+                        onClick: () => addCourseFormRef.current?.handleSubmit(),
+                        disabled: isJoiningCourse,
+                      },
+                    ]}
+                  >
+                    <AddCourseForm
+                      ref={addCourseFormRef}
+                      closeForm={() => setShowAddCourseModal(false)}
+                      setIsLoading={setIsJoiningCourse}
+                    />
+                  </DialogWrapper>
+                </nav>
+              </div>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                Courses are spaces in which instructors can create and
+                organize modules that customize how students can interact with
+                the AI. For more information on creating a course, please see
+                the{" "}
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
                 >
-                  <AddCourseForm
-                    ref={addCourseFormRef}
-                    closeForm={() => setShowAddCourseModal(false)}
-                    setIsLoading={setIsJoiningCourse}
-                  />
-                </DialogWrapper>
-              </nav>
+                  "Creating a Course" section of our instructor guide
+                </a>
+                .
+              </p>
             </div>
 
             {courseList.length > 0 && (

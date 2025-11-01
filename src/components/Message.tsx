@@ -135,7 +135,7 @@ export const MessageLeft = (props: MessageProps) => {
         href={props.href}
         target="_blank"
         rel="noreferrer"
-        className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+        className="text-primary dark:text-gold colorful-dark:text-gold hover:text-primary/80 underline underline-offset-2 transition-colors"
       >
         {props.children}
       </a>
@@ -210,7 +210,7 @@ export const MessageLeft = (props: MessageProps) => {
               variant="outline"
               onClick={() => setShowExpandableMessage(true)}
               className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${props.outOfContext || (!props.visible && props.isInstructor)
-                ? "opacity-60 border-dashed"
+                ? "opacity-80 border-dashed"
                 : ""
                 }`}
             >
@@ -219,7 +219,16 @@ export const MessageLeft = (props: MessageProps) => {
               ) : (
                 <Markdown
                   remarkPlugins={[remarkGfm]}
-                  className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
+                  className="prose prose-sm max-w-none dark:prose-invert 
+                  colorful-dark:prose-invert prose-headings:font-semibold 
+                  prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted 
+                  prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 
+                  prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm 
+                  prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary 
+                  prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border 
+                  prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold 
+                  prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc 
+                  prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
                   components={{ a: LinkRenderer }}
                 >
                   {props.message}
@@ -229,7 +238,7 @@ export const MessageLeft = (props: MessageProps) => {
           ) : (
             <div
               className={`bg-muted rounded-lg p-4 ${props.outOfContext || (!props.visible && props.isInstructor)
-                ? "opacity-60 border border-dashed"
+                ? "opacity-80 border border-dashed"
                 : ""
                 }`}
             >
@@ -238,7 +247,16 @@ export const MessageLeft = (props: MessageProps) => {
               ) : (
                 <Markdown
                   remarkPlugins={[remarkGfm]}
-                  className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
+                  className="prose prose-sm max-w-none dark:prose-invert colorful-dark:prose-invert 
+                  prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed 
+                  prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted 
+                  prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono 
+                  prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 
+                  prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic 
+                  prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted 
+                  prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border 
+                  prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal 
+                  prose-li:marker:text-muted-foreground markdown-content"
                   components={{ a: LinkRenderer }}
                 >
                   {props.message}
@@ -299,7 +317,7 @@ export const MessageRight = (props: MessageProps) => {
         href={props.href}
         target="_blank"
         rel="noreferrer"
-        className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+        className="text-primary dark:text-gold colorful-dark:text-gold hover:text-primary/80 underline underline-offset-2 transition-colors"
       >
         {props.children}
       </a>
@@ -351,7 +369,7 @@ export const MessageRight = (props: MessageProps) => {
           {props.messageType && props.messageType === "file" ? (
             <div
               className={`max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
-                ? "opacity-60 border border-dashed"
+                ? "opacity-80 border border-dashed"
                 : ""
                 }`}
             >
@@ -409,12 +427,20 @@ export const MessageRight = (props: MessageProps) => {
           ) : (
             <div
               className={`bg-primary/20 rounded-lg p-4 max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
-                ? "opacity-60 border border-dashed"
+                ? "opacity-80 border border-dashed"
                 : ""
                 }`}
             >
               <Markdown
-                className="prose prose-sm max-w-none dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground"
+                className="prose prose-sm max-w-none dark:prose-invert colorful-dark:prose-invert 
+                prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed 
+                prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted 
+                prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono 
+                prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 
+                prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic 
+                prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted 
+                prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border 
+                prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground"
                 components={{ a: LinkRenderer }}
               >
                 {props.message.replace(/\n/g, "\n\n")}

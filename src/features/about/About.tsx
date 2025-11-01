@@ -63,7 +63,8 @@ If you want to learn more about what we're doing or want to get involved, email 
                         href={href}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary underline underline-offset-2 hover:no-underline font-medium transition-colors duration-200"
+                        className="text-primary dark:text-gold colorful-dark:text-gold 
+                        underline underline-offset-2 hover:no-underline font-medium transition-colors duration-200"
                       >
                         {children}
                       </a>

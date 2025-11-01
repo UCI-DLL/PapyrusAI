@@ -403,7 +403,7 @@ export default function CreatePrompt({
               href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
               target="_blank"
               rel="noreferrer"
-              className="underline underline-offset-2 hover:no-underline font-medium text-primary"
+              className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
             >
               "Creating a Prompt" section of our instructor guide
             </a>
@@ -545,7 +545,7 @@ export default function CreatePrompt({
                 href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
               >
                 "Creating a Prompt" section of our instructor guide
               </a>

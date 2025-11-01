@@ -72,13 +72,13 @@
     --color-background: #0a0a0b;
     --color-card: #1a1a1b;
     --color-border: #2d2d30;
-    --color-muted: #6b7280;
+    --color-muted: #333538;
     --color-muted-foreground: #f7f8fa;
 
     /* Keep some UCI colors as accents */
     --color-primary: #255799; /* UCI primary blue */
     --color-secondary: #1b3d6d; /* UCI secondary blue */
-    --color-accent: #6aa2b8; /* UCI accent blue */
+    --color-accent: #002244;
     --color-gold: #f0ab00; /* UCI gold */
     --color-orange: #f78d2d; /* UCI orange */
     --color-light-yellow: #fef3c7; /* Soft yellow background */
@@ -95,9 +95,9 @@
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 3.7% 15.9%; /* Subtle muted backgrounds */
     --muted-foreground: 240 5% 64.9%; /* Readable muted text */
-    --accent: 200 50% 57%; /* UCI accent blue */
+    --accent: 210 100% 13.3%; /* UCI accent blue */
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 72% 51%; /* Bright red for visibility */
+    --destructive: 351 100% 54.6%; /* Bright red for visibility */
     --destructive-hover: 0 84% 35%;
     --destructive-foreground: 210 40% 98%;
     --border: 240 3.7% 15.9%; /* Subtle borders */
@@ -115,19 +115,20 @@
 
   .colorful-light {
     /* Calm, accessible light theme – Emerald & Mint */
-    --color-background: #f4fcf7;
-    --color-card: #fbfefc;
-    --color-border: #cde9db;
-    --color-muted: #64748b;
-    --color-muted-foreground: #1f2937;
+    --color-background: #f8fafc;
+    --color-card: #ffffff;
+    --color-border: #e2e8f0;
+    --color-muted: #dddddd;
+    --color-muted-foreground: #29323d;
 
     /* Brand accents */
-    --color-primary: #059669; /* Emerald 600 */
-    --color-secondary: #16a34a; /* Green 600 */
-    --color-accent: #ea580c; /* Orange 600 (muted warmth) */
-    --color-gold: #f59e0b;
-    --color-orange: #ea580c; /* Orange 600 */
-    --color-light-yellow: #fdf5e6; /* Warmer soft surface */
+    --color-primary: #165e1a;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #15534e;
+    --color-accent: #183b41;
+    --color-gold: #f0ab00;
+    --color-orange: #f78d2d;
+    --color-light-yellow: #f7eb5f;
 
     /* Shadcn tokens (HSL) – tuned for WCAG contrast */
     --background: 150 45% 95%; /* deeper mint backdrop */
@@ -135,29 +136,29 @@
     --card: 150 20% 98%; /* light mint surface */
     --card-foreground: 210 34% 14%;
     --popover: 0 0% 100%;
-    --primary: 160 84% 39%; /* Emerald 600 */
+    --primary: 123 62.1% 22.7%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 142 69% 36%; /* Green 600 */
+    --secondary: 277 62.1% 22.8%;
     --secondary-foreground: 210 40% 98%;
     --muted: 150 22% 88%;
     --muted-foreground: 210 22% 30%;
-    --accent: 28 75% 45%; /* Orange 600 balanced */
+    --accent: 28 75% 45%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 35%;
     --destructive-hover: 0 84% 30%;
     --destructive-foreground: 210 40% 98%;
     --border: 150 18% 76%;
     --input: 150 18% 76%;
-    --ring: 160 84% 39%;
+    --ring: 123 62.1% 22.7%;
     --radius: 0.5rem;
-    --sidebar-background: 150 42% 95%;
+    --sidebar-background: 257 42% 95%;
     --sidebar-foreground: 210 34% 14%;
-    --sidebar-primary: 160 84% 39%;
+    --sidebar-primary: 123 62.1% 22.7%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 142 69% 36%;
+    --sidebar-accent: 277 62.1% 22.8%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 150 18% 76%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-ring: 123 62.1% 22.7%;
   }
 
   * {
@@ -184,49 +185,49 @@
   }
 
   .colorful-dark {
-    /* Soothing, accessible dark theme – Emerald & Deep Mint */
-    --color-background: #0a1412; /* deep green-tinted */
-    --color-card: #0e1a17; /* slightly lighter surface */
-    --color-border: #12332a; /* greenish border */
-    --color-muted: #99b0a8; /* desaturated greenish gray */
-    --color-muted-foreground: #e2f0eb;
+    /* Soothing, accessible dark theme */
+    --color-background: #280119;
+    --color-card: #1a1a1b;
+    --color-border: #2d2d30;
+    --color-muted: #333538;
+    --color-muted-foreground: #f7f8fa;
 
-    /* Brand accents */
-    --color-primary: #059669; /* Emerald 600 */
-    --color-secondary: #16a34a; /* Green 600 */
-    --color-accent: #f59e0b; /* Amber 500 */
-    --color-gold: #f59e0b;
-    --color-orange: #fb923c;
-    --color-light-yellow: #0f2a22; /* subtle green tint for surfaces */
+    /* Keep some UCI colors as accents */
+    --color-primary: #165e4e;
+    --color-secondary: #011628;
+    --color-accent: #011628;
+    --color-gold: #f0ab00; /* UCI gold */
+    --color-orange: #f78d2d; /* UCI orange */
+    --color-light-yellow: #fef3c7; /* Soft yellow background */
 
-    /* Shadcn tokens (HSL) – balanced for dark mode readability */
-    --background: 160 20% 7%;
-    --foreground: 160 20% 92%;
-    --card: 160 20% 10%;
-    --card-foreground: 160 20% 92%;
-    --popover: 160 20% 10%;
-    --primary: 160 84% 39%; /* Emerald 600 */
+    /* Shadcn UI Dark Mode - Modern */
+    --background: 240 10% 4%; /* Very dark with slight warmth */
+    --foreground: 210 40% 98%; /* High contrast white */
+    --card: 240 10% 10%; /* Dark cards with subtle warmth */
+    --card-foreground: 210 40% 98%;
+    --popover: 240 10% 10%;
+    --primary: 123 62.1% 14.5%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 142 69% 36%; /* Green 600 */
-    --secondary-foreground: 210 40% 98%;
-    --muted: 160 14% 18%;
-    --muted-foreground: 160 12% 75%;
-    --accent: 38 92% 50%; /* Amber 500 */
+    --secondary: 240 4.9% 83.9%; /* Light gray for secondary */
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 3.7% 15.9%; /* Subtle muted backgrounds */
+    --muted-foreground: 240 5% 64.9%; /* Readable muted text */
+    --accent: 210 100% 13.3%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 72% 51%;
+    --destructive: 351 100% 54.6%; /* Bright red for visibility */
     --destructive-hover: 0 84% 35%;
     --destructive-foreground: 210 40% 98%;
-    --border: 160 16% 20%;
-    --input: 160 16% 20%;
-    --ring: 160 84% 39%;
-    --sidebar-background: 160 20% 7%;
-    --sidebar-foreground: 160 20% 92%;
-    --sidebar-primary: 160 84% 39%;
+    --border: 148 15.8% 15.9%; /* Subtle borders */
+    --input: 148 15.8% 15.9%;
+    --ring: 123 62.1% 14.5%; /* UCI blue ring */
+    --sidebar-background: 20 3.8% 9.4%;
+    --sidebar-foreground: 29 4.8% 95.9%;
+    --sidebar-primary: 148 15.8% 15.9%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 142 69% 36%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 160 16% 20%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-accent: 167 62.1% 22.7%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 148 15.8% 15.9%;
+    --sidebar-ring: 123 62.1% 14.5%;
   }
 
   .colorful-dark body {

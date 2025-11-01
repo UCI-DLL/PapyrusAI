@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+const plugin = require('tailwindcss/plugin');
 module.exports = {
 	darkMode: ["class"],
 	content: [
@@ -90,5 +91,12 @@ module.exports = {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate"), require("@tailwindcss/forms")],
+	plugins: [
+		require("tailwindcss-animate"),
+		require("@tailwindcss/forms"),
+		function ({ addVariant }) {
+			addVariant('colorful-dark', '.colorful-dark &')
+			// This means any element inside a parent with .colorful-dark will apply the variant
+		},
+	],
 }

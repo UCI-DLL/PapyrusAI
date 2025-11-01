@@ -64,8 +64,8 @@ export default function StudentListPopup({
   const students =
     analysis && analysis.students
       ? Object.entries(
-          analysis.students as Record<string, Record<string, unknown>>
-        )
+        analysis.students as Record<string, Record<string, unknown>>
+      )
       : [];
 
   const handleStudentClick = (
@@ -123,9 +123,8 @@ export default function StudentListPopup({
                 const info = studentInfo.info as
                   | Record<string, unknown>
                   | undefined;
-                const studentName = `${info?.name as string} ${
-                  info?.family_name as string
-                }`;
+                const studentName = `${info?.name as string} ${info?.family_name as string
+                  }`;
                 const studentEmail = info?.email as string;
 
                 return (
@@ -148,7 +147,7 @@ export default function StudentListPopup({
                         <User className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <div className="font-medium text-foreground group-hover:text-primary transition-colors">
+                        <div className="font-medium text-foreground group-hover:text-primary dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors">
                           {studentName}
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -156,7 +155,7 @@ export default function StudentListPopup({
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                    <div className="text-sm text-muted-foreground group-hover:text-primary dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors">
                       View Reports →
                     </div>
                   </div>

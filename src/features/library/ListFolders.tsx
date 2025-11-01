@@ -487,7 +487,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
       )}
 
       {/* Search and Filter Section */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+      <div className="bg-card rounded-xl border p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

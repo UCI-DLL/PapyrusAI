@@ -250,9 +250,9 @@ export default function UserReports(): JSX.Element {
                 var tempTime =
                   row.conversations && row.conversations.length > 0
                     ? row.conversations
-                        .reduce(
-                          (x, y) =>
-                            x.messages.length > 0 &&
+                      .reduce(
+                        (x, y) =>
+                          x.messages.length > 0 &&
                             y.messages.length > 0 &&
                             x.messages.reduce(
                               (largest, current) =>
@@ -261,24 +261,24 @@ export default function UserReports(): JSX.Element {
                                   : largest,
                               row.conversations[0].messages[0]
                             ) >
-                              y.messages.reduce(
-                                (largest, current) =>
-                                  parseInt(current) > parseInt(largest)
-                                    ? current
-                                    : largest,
-                                row.conversations[0].messages[0]
-                              )
-                              ? x
-                              : y,
-                          row.conversations[0]
-                        )
-                        .messages.reduce(
-                          (largest, current) =>
-                            parseInt(current) > parseInt(largest)
-                              ? current
-                              : largest,
-                          row.conversations[0].messages[0]
-                        )
+                            y.messages.reduce(
+                              (largest, current) =>
+                                parseInt(current) > parseInt(largest)
+                                  ? current
+                                  : largest,
+                              row.conversations[0].messages[0]
+                            )
+                            ? x
+                            : y,
+                        row.conversations[0]
+                      )
+                      .messages.reduce(
+                        (largest, current) =>
+                          parseInt(current) > parseInt(largest)
+                            ? current
+                            : largest,
+                        row.conversations[0].messages[0]
+                      )
                     : "";
                 if (tempTime) {
                   tempTime = new Date(
@@ -296,7 +296,8 @@ export default function UserReports(): JSX.Element {
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                          <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary dark:group-hover:text-gold 
+                          colorful-dark:group-hover:text-gold transition-colors duration-300">
                             {row.course.name}
                           </h3>
                           <div className="space-y-1">

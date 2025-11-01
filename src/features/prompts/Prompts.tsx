@@ -29,7 +29,6 @@ import { getPromptList } from "../../utility/endpoints/PromptEndpoints";
 import CreatePromptForm from "./CreatePromptForm";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { Search, Filter, Plus, Loader2, User, Calendar } from "lucide-react";
-import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -144,16 +143,16 @@ export default function OldPrompts(): JSX.Element {
         b.name.toLowerCase() > a.name.toLowerCase()
           ? 1
           : a.name.toLowerCase() > b.name.toLowerCase()
-          ? -1
-          : 0
+            ? -1
+            : 0
       );
     } else if ((filter.sort as string) === SortOptions.Ascending) {
       filteredList = filteredList.sort((a, b) =>
         a.name.toLowerCase() > b.name.toLowerCase()
           ? 1
           : b.name.toLowerCase() > a.name.toLowerCase()
-          ? -1
-          : 0
+            ? -1
+            : 0
       );
     } else if ((filter.sort as string) === SortOptions.Oldest) {
       filteredList = filteredList.sort(
@@ -173,8 +172,8 @@ export default function OldPrompts(): JSX.Element {
         b.name.toLowerCase() > a.name.toLowerCase()
           ? 1
           : a.name.toLowerCase() > b.name.toLowerCase()
-          ? -1
-          : 0
+            ? -1
+            : 0
       );
     }
 

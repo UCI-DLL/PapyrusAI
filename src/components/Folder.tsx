@@ -619,7 +619,7 @@ export const FolderComponent = (props: FolderProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex items-center gap-1 text-primary text-xs font-medium w-full p-2"
+                className="flex items-center gap-1 text-muted-foreground text-xs font-medium w-full p-2 hover:bg-primary hover:text-primary-foreground"
                 onClick={props.onClick}
               // disabled={props.noShowMenu}
               >

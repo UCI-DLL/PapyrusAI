@@ -532,7 +532,7 @@ export default function ConversationList(): JSX.Element {
                   href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
                   target="_blank"
                   rel="noreferrer"
-                  className="underline underline-offset-2 hover:no-underline text-primary"
+                  className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
                 >
                   "Starting a Conversation" section of our user guide
                 </a>
@@ -541,7 +541,7 @@ export default function ConversationList(): JSX.Element {
                   href="https://docs.google.com/document/d/1hVXs5RwWi8Pau1YlhwoF5Y5zO3-1hMZAyUxych7iIDo/edit?tab=t.0#heading=h.ap3bxaogq8pi"
                   target="_blank"
                   rel="noreferrer"
-                  className="underline underline-offset-2 hover:no-underline text-primary"
+                  className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
                 >
                   "Starting a Conversation" section of our user guide
                 </a>
@@ -591,7 +591,9 @@ export default function ConversationList(): JSX.Element {
                                   className="flex-1 min-w-0 no-underline group"
                                 >
                                   <div className="space-y-1">
-                                    <p className="text-2xl font-semibold text-foreground group-hover:text-primary transition-colors truncate-text no-underline">
+                                    <p className="text-2xl font-semibold text-foreground 
+                                    group-hover:text-primary dark:group-hover:text-gold 
+                                    colorful-dark:group-hover:text-gold transition-colors truncate-text no-underline">
                                       {conversation.name}
                                     </p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1 no-underline">

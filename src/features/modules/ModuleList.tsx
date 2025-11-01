@@ -476,7 +476,8 @@ export default function ModuleList({
                       {/* Header with title and favorite */}
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 leading-tight">
+                          <h3 className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
+                          colorful-dark:group-hover:text-gold transition-colors duration-300 leading-tight">
                             {module.name}
                           </h3>
                         </div>
@@ -637,7 +638,8 @@ export default function ModuleList({
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300 truncate-text">
+                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
+                            colorful-dark:group-hover:text-gold transition-colors duration-300 truncate-text">
                               {module.name}
                             </h3>
                           </div>

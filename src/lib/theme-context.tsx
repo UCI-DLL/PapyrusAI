@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "colorful-light" | "colorful-dark";
 
 interface ThemeContextType {
   theme: Theme;
@@ -15,7 +15,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Apply theme class to document root
     const root = document.documentElement;
-    root.classList.remove("light", "dark");
+    root.classList.remove("light", "dark", "colorful-light", "colorful-dark");
     root.classList.add(theme);
 
     // Also apply to html element for compatibility

@@ -673,7 +673,7 @@ export const File = (props: FileProps) => {
                     variant="ghost"
                     type="button"
                     size="sm"
-                    className="flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary hover:text-primary-foreground"
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (props.onClick) {
@@ -696,7 +696,7 @@ export const File = (props: FileProps) => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-xs font-medium text-primary"
+                className="text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                 asChild
                 onClick={() => props.loading()}
               >

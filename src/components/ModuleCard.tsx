@@ -484,7 +484,8 @@ export default function ModuleCard({
         <div className="p-4 flex flex-col flex-1 relative z-10">
           <header className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
-              <h3 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+              <h3 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary 
+              dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors duration-300">
                 {module.name}
               </h3>
               {isInstructorOrTA && (
@@ -494,7 +495,8 @@ export default function ModuleCard({
                       <CheckCircle className="h-5 w-5 text-green-600" />
                       <Badge
                         variant="default"
-                        className="bg-green-100 text-green-800 dark:bg-green-900 pointer-events-none"
+                        className="bg-green-100 text-green-800 dark:bg-green-900 
+                        colorful-dark:bg-green-900 dark:text-white colorful-dark:text-white pointer-events-none"
                       >
                         Published
                       </Badge>

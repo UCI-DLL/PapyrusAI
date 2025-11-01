@@ -427,7 +427,7 @@ export default function CreateCourse({
             If you want to save your course without publishing the course,
             select <strong>"Save without Publishing"</strong>.
           </p>
-          <p className="text-amber-600 dark:text-amber-500 text-sm">
+          <p className="text-amber-600 dark:text-amber-500 colorful-dark:text-amber-500 text-sm">
             <strong>Note:</strong> Choosing this option after the course has
             already been published will unpublish the course.
           </p>
@@ -527,7 +527,7 @@ export default function CreateCourse({
                             <CheckCircle className="h-5 w-5 text-green-600" />
                             <Badge
                               variant="default"
-                              className="bg-green-100 text-green-800 dark:bg-green-900 pointer-events-none"
+                              className="bg-green-100 text-green-800 dark:bg-green-900 colorful-dark:bg-green-900 pointer-events-none"
                             >
                               Published
                             </Badge>
@@ -623,12 +623,12 @@ export default function CreateCourse({
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
                   Courses are spaces in which instructors can create and
                   organize modules that allow students to interact with the AI.
-                  For more information on creating a course, please see
+                  For more information on creating a course, please see&nbsp;
                   <a
                     href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
                     target="_blank"
                     rel="noreferrer"
-                    className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                    className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
                   >
                     "Creating a Course" section of our instructor guide
                   </a>
@@ -868,7 +868,8 @@ export default function CreateCourse({
                           <Badge
                             key={index}
                             variant="secondary"
-                            className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                            className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-100 text-purple-800 
+                            dark:bg-purple-900 dark:text-purple-200 colorful-dark:bg-purple-900 colorful-dark:text-purple-200"
                           >
                             {ta.name && ta.family_name
                               ? `${ta.name} ${ta.family_name}`
@@ -989,7 +990,7 @@ export default function CreateCourse({
                   </p>
                 )}
 
-                <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 colorful-dark:bg-gray-800 p-3 rounded-md">
                   <p className="text-xs">
                     <strong>Note:</strong> Teaching assistants can create and
                     edit modules for you, but not delete or unpublish the

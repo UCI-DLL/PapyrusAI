@@ -728,7 +728,8 @@ export default function AddModule({
                         <CheckCircle className="h-5 w-5 text-green-600" />
                         <Badge
                           variant="default"
-                          className="bg-green-100 text-green-800 dark:bg-green-900 pointer-events-none"
+                          className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-white 
+                          colorful-dark:bg-green-900 colorful-dark:text-white pointer-events-none"
                         >
                           Published
                         </Badge>
@@ -841,7 +842,7 @@ export default function AddModule({
                 }
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium underline underline-offset-2 hover:no-underline text-primary transition-colors duration-200"
+                className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
               >
                 {isEditMode ? "Editing a Module" : "Creating a Module"} section
                 of our instructor guide
@@ -1081,7 +1082,7 @@ export default function AddModule({
                       href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
                       target="_blank"
                       rel="noreferrer"
-                      className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+                      className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
                     >
                       "Creating a Module" section of our instructor guide
                     </a>

@@ -113,13 +113,13 @@ export default function Reports(): JSX.Element {
           //remove TAs also
           if (
             group ===
-              (process.env.REACT_APP_INSTRUCTOR
-                ? process.env.REACT_APP_INSTRUCTOR
-                : "PapyrusAIInstructors") ||
+            (process.env.REACT_APP_INSTRUCTOR
+              ? process.env.REACT_APP_INSTRUCTOR
+              : "PapyrusAIInstructors") ||
             group ===
-              (process.env.REACT_APP_ADMIN
-                ? process.env.REACT_APP_ADMIN
-                : "PapyrusAIAdmin") ||
+            (process.env.REACT_APP_ADMIN
+              ? process.env.REACT_APP_ADMIN
+              : "PapyrusAIAdmin") ||
             group.includes("-TA")
           ) {
             return "";
@@ -692,11 +692,28 @@ export default function Reports(): JSX.Element {
               <BarChart3 size={192} className="text-primary" />
             </div>
             <div className="relative z-10">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div>
+              <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                   <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                     Reports
                   </h1>
+                  {user?.groups.includes(
+                    process.env.REACT_APP_ADMIN
+                      ? process.env.REACT_APP_ADMIN
+                      : "PapyrusAIAdmin"
+                  ) && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setOpenDownloadCourseModal(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Course
+                      </Button>
+                    )}
+
+                </div>
+                <div>
                   <p className="text-muted-foreground max-w-2xl text-base leading-6">
                     Reports summarize users' activity and interactions with the
                     AI in your courses. For any course of which you are the
@@ -706,28 +723,12 @@ export default function Reports(): JSX.Element {
                       href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.bsxols4iy4zg"
                       target="_blank"
                       rel="noreferrer"
-                      className="underline underline-offset-2 hover:no-underline text-primary font-medium"
+                      className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
                     >
                       "Instructor Reports" section of our instructor guide
                     </a>
                     .
                   </p>
-                </div>
-                <div>
-                  {user?.groups.includes(
-                    process.env.REACT_APP_ADMIN
-                      ? process.env.REACT_APP_ADMIN
-                      : "PapyrusAIAdmin"
-                  ) && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setOpenDownloadCourseModal(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Course
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>
@@ -739,85 +740,85 @@ export default function Reports(): JSX.Element {
             ? process.env.REACT_APP_ADMIN
             : "PapyrusAIAdmin"
         ) && (
-          <Dialog
-            open={openDownloadCourseModal}
-            onOpenChange={setOpenDownloadCourseModal}
-          >
-            <DialogContent className="sm:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  Select Courses to Download
-                </DialogTitle>
-                <DialogDescription>
-                  Choose the courses you want to download and select the format.
-                  Note: downloading multiple courses may take several minutes.
-                </DialogDescription>
-              </DialogHeader>
+            <Dialog
+              open={openDownloadCourseModal}
+              onOpenChange={setOpenDownloadCourseModal}
+            >
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Select Courses to Download
+                  </DialogTitle>
+                  <DialogDescription>
+                    Choose the courses you want to download and select the format.
+                    Note: downloading multiple courses may take several minutes.
+                  </DialogDescription>
+                </DialogHeader>
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="download-format">Download Format</Label>
-                  <Select value={downloadType} onValueChange={setDownloadType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="json">JSON</SelectItem>
-                      <SelectItem value="csv">CSV</SelectItem>
-                      <SelectItem value="txt">TXT</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="download-format">Download Format</Label>
+                    <Select value={downloadType} onValueChange={setDownloadType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="json">JSON</SelectItem>
+                        <SelectItem value="csv">CSV</SelectItem>
+                        <SelectItem value="txt">TXT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium">Available Courses</h3>
-                  <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
-                    {filterCoursesBySearch(
-                      sortCourseList(userList),
-                      searchTerm
-                    ).map((x, index) => {
-                      const labelId = `checkbox-list-secondary-label-${index}`;
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent"
-                        >
-                          <Checkbox
-                            id={labelId}
-                            checked={checked.includes(index)}
-                            onCheckedChange={handleToggle(index)}
-                          />
-                          <Label
-                            htmlFor={labelId}
-                            className="flex-1 cursor-pointer text-sm"
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium">Available Courses</h3>
+                    <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
+                      {filterCoursesBySearch(
+                        sortCourseList(userList),
+                        searchTerm
+                      ).map((x, index) => {
+                        const labelId = `checkbox-list-secondary-label-${index}`;
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent"
                           >
-                            {x.course.name} | Instructor:{" "}
-                            {x.course.instructor.name}{" "}
-                            {x.course.instructor.family_name}
-                          </Label>
-                        </div>
-                      );
-                    })}
+                            <Checkbox
+                              id={labelId}
+                              checked={checked.includes(index)}
+                              onCheckedChange={handleToggle(index)}
+                            />
+                            <Label
+                              htmlFor={labelId}
+                              className="flex-1 cursor-pointer text-sm"
+                            >
+                              {x.course.name} | Instructor:{" "}
+                              {x.course.instructor.name}{" "}
+                              {x.course.instructor.family_name}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setOpenDownloadCourseModal(false)}
-                >
-                  Close
-                </Button>
-                <Button onClick={downloadCourses}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setOpenDownloadCourseModal(false)}
+                  >
+                    Close
+                  </Button>
+                  <Button onClick={downloadCourses}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
 
         <section aria-labelledby="reports-courses-heading">
           <header className="mb-6 w-full bg-card p-4 rounded-lg shadow-md">
@@ -844,7 +845,7 @@ export default function Reports(): JSX.Element {
                 <p className="text-muted-foreground">Loading courses...</p>
               </div>
             ) : filterCoursesBySearch(sortCourseList(userList), searchTerm)
-                .length === 0 ? (
+              .length === 0 ? (
               <div className="text-center py-12">
                 <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -873,13 +874,13 @@ export default function Reports(): JSX.Element {
                   return (
                     <Card
                       key={index}
-                      className="group bg-card border rounded-xl hover-lift shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      className="group bg-card border rounded-xl hover-lift shadow-sm cursor-pointer transition-all 
+                      duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                       onClick={handleRowClick}
                       tabIndex={0}
                       role="button"
-                      aria-label={`View course reports for ${
-                        x.course.name ? x.course.name : "Unnamed Course"
-                      }`}
+                      aria-label={`View course reports for ${x.course.name ? x.course.name : "Unnamed Course"
+                        }`}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
@@ -890,7 +891,8 @@ export default function Reports(): JSX.Element {
                       <CardContent className="p-6">
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                            <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary dark:group-hover:text-gold 
+                            colorful-dark:group-hover:text-gold transition-colors duration-300">
                               {x.course.name ? x.course.name : "Unnamed Course"}
                             </h3>
                             <div className="space-y-1">
@@ -900,12 +902,10 @@ export default function Reports(): JSX.Element {
                               </div>
                               <div className="text-sm text-muted-foreground capitalize">
                                 {x.course.section
-                                  ? `${x.course.term ? x.course.term : ""} ${
-                                      x.course.year ? x.course.year : ""
-                                    } - ${x.course.section}`
-                                  : `${x.course.term ? x.course.term : ""} ${
-                                      x.course.year ? x.course.year : ""
-                                    }`}
+                                  ? `${x.course.term ? x.course.term : ""} ${x.course.year ? x.course.year : ""
+                                  } - ${x.course.section}`
+                                  : `${x.course.term ? x.course.term : ""} ${x.course.year ? x.course.year : ""
+                                  }`}
                               </div>
                             </div>
                           </div>

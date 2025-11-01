@@ -241,7 +241,10 @@ export default function CourseCard({
         <div className="p-4 flex flex-col flex-1 relative z-10">
           <header className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
-              <h3 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+              <h3 className="text-xl font-bold 
+              text-foreground mb-1 line-clamp-2 
+              group-hover:text-primary dark:group-hover:text-gold 
+              colorful-dark:group-hover:text-gold transition-colors duration-300">
                 {course.name}
               </h3>
               <div className="flex flex-col my-2 gap-2 text-xs text-muted-foreground">

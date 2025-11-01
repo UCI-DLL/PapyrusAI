@@ -754,7 +754,7 @@ export const Prompt = (props: PromptProps) => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary hover:text-primary-foreground"
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (props.onClick) {
@@ -777,7 +777,7 @@ export const Prompt = (props: PromptProps) => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="flex items-center gap-1 text-primary text-xs font-medium"
+                className="flex items-center gap-1 text-muted-foreground text-xs font-medium hover:bg-primary hover:text-primary-foreground"
                 onClick={() => setOpenPreviewDialog(true)}
               >
                 <Eye className="h-3 w-3" />

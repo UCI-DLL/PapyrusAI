@@ -2,7 +2,8 @@ import React from "react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { ScrollArea } from "../../../components/ui/scroll-area";
-import { Search, X, Plus, Loader2, MessageCircle } from "lucide-react";
+import { Sheet, SheetContent } from "../../../components/ui/sheet";
+import { Search, Plus, Loader2, MessageCircle } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { ConversationListType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";
@@ -52,30 +53,18 @@ export default function ChatSidebar({
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Conversations</h2>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              onClick={onNewConversation}
-              disabled={creatingConvo}
-              className="h-7 px-2 text-xs"
-            >
-              {creatingConvo ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Plus className="h-3 w-3" />
-              )}
-            </Button>
-            {isMobile && onClose && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={onClose}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+          <Button
+            size="sm"
+            onClick={onNewConversation}
+            disabled={creatingConvo}
+            className="h-7 px-2 text-xs"
+          >
+            {creatingConvo ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Plus className="h-3 w-3" />
             )}
-          </div>
+          </Button>
         </div>
       </div>
 
@@ -121,8 +110,8 @@ export default function ChatSidebar({
               {filteredConversations.map((conversation) => {
                 const conversationIndex = conversationList?.conversations
                   ? conversationList.conversations.findIndex(
-                    (c) => c.id === conversation.id
-                  )
+                      (c) => c.id === conversation.id
+                    )
                   : 0;
                 const isCurrentConversation =
                   conversationIndex.toString() === currentConversationIndex;
@@ -140,14 +129,10 @@ export default function ChatSidebar({
                     onClick={() => onConversationClick(conversationLink)}
                   >
                     <div className="space-y-1">
-                      <p
-                        className={"text-sm font-medium truncate-text"}
-                      >
+                      <p className={"text-sm font-medium truncate-text"}>
                         {conversation.name}
                       </p>
-                      <p
-                        className={"text-xs truncate-text"}
-                      >
+                      <p className={"text-xs truncate-text"}>
                         {new Date(
                           parseInt(conversation.id.substring(0, 13))
                         ).toLocaleDateString()}
@@ -191,20 +176,12 @@ export default function ChatSidebar({
   );
 
   if (isMobile) {
-    if (!isOpen) return null;
-
     return (
-      <div
-        className="lg:hidden fixed inset-0 z-50 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <div
-          className="fixed right-0 top-0 h-full w-80 bg-card border-l border-border shadow-lg"
-          onClick={(e) => e.stopPropagation()}
-        >
+      <Sheet open={isOpen} onOpenChange={(open) => !open && onClose?.()}>
+        <SheetContent side="right" className="w-80 p-0">
           {sidebarContent}
-        </div>
-      </div>
+        </SheetContent>
+      </Sheet>
     );
   }
 

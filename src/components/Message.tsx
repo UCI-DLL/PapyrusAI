@@ -426,7 +426,7 @@ export const MessageRight = (props: MessageProps) => {
             </div>
           ) : (
             <div
-              className={`bg-primary/20 rounded-lg p-4 max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
+              className={`bg-primary/20 colorful-dark:bg-card rounded-lg p-4 max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
                 ? "opacity-80 border border-dashed"
                 : ""
                 }`}

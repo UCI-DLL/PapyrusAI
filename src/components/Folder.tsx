@@ -547,6 +547,7 @@ export const FolderComponent = (props: FolderProps) => {
                       size="sm"
                       className="flex text-lg items-center p-1"
                       onClick={(e) => e.stopPropagation()}
+                      aria-label="More Options"
                     >
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
@@ -612,7 +613,7 @@ export const FolderComponent = (props: FolderProps) => {
 
           {/* Footer with item count and view link */}
           <div className="flex items-center justify-between mt-auto">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-700 dark:text-gray-300 colorful-dark:text-gray-300">
               {getItemCount()} items
             </span>
             <div className="flex items-center gap-2">
@@ -621,7 +622,8 @@ export const FolderComponent = (props: FolderProps) => {
                 size="icon"
                 className="flex items-center gap-1 text-muted-foreground text-xs font-medium w-full p-2 hover:bg-primary hover:text-primary-foreground"
                 onClick={props.onClick}
-              // disabled={props.noShowMenu}
+                // disabled={props.noShowMenu}
+                aria-label={props.noShowMenu ? "Select" : "View"}
               >
                 {props.noShowMenu ? "Select" : "View"}
               </Button>

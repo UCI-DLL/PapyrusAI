@@ -50,7 +50,7 @@ export default function ChatHeader({
         <div className="flex items-center gap-1">
           <DropdownWrapper
             trigger={
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="More Options">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             }

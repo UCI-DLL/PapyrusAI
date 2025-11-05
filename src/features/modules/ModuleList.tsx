@@ -498,6 +498,7 @@ export default function ModuleList({
                                 ? "text-gold hover:text-muted"
                                 : "text-muted hover:text-gold"
                             )}
+                            aria-label={isStarred ? "Unstar Module" : "Star Module"}
                           >
                             <Star
                               size={12}
@@ -575,6 +576,7 @@ export default function ModuleList({
                                     setOpenCourseListModal(true);
                                   }}
                                   className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                                  aria-label="Copy Module"
                                 >
                                   <Copy className="h-[1em] w-[1em]" />
                                 </button>
@@ -601,6 +603,7 @@ export default function ModuleList({
                                       `/courses/${course.id}/editmodule/${module.id}`
                                     )
                                   }
+                                  aria-label="Edit Module"
                                   className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
                                 >
                                   <Edit className="h-[1em] w-[1em]" />
@@ -619,6 +622,7 @@ export default function ModuleList({
                           variant="default"
                           size="sm"
                           className="flex items-center gap-2"
+                          aria-label="Begin Module"
                         >
                           <Play size={14} />
                           Begin
@@ -675,6 +679,7 @@ export default function ModuleList({
                                   ? "text-gold hover:text-muted"
                                   : "text-muted hover:text-gold"
                               )}
+                              aria-label={isStarred ? "Unstar Module" : "Star Module"}
                             >
                               <Star
                                 size={12}
@@ -735,6 +740,7 @@ export default function ModuleList({
                                     setOpenCourseListModal(true);
                                   }}
                                   className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                                  aria-label="Copy Module"
                                 >
                                   <Copy className="h-[1em] w-[1em]" />
                                 </button>
@@ -761,6 +767,7 @@ export default function ModuleList({
                                       `/courses/${course.id}/editmodule/${module.id}`
                                     )
                                   }
+                                  aria-label="Edit Module"
                                   className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                                 >
                                   <Edit className="h-[1em] w-[1em]" />

@@ -578,6 +578,7 @@ export const File = (props: FileProps) => {
                       size="sm"
                       className="flex text-lg items-center p-1"
                       onClick={(e) => e.stopPropagation()}
+                      aria-label="More Options"
                     >
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
@@ -699,6 +700,7 @@ export const File = (props: FileProps) => {
                 className="text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                 asChild
                 onClick={() => props.loading()}
+                aria-label="View"
               >
                 <Link
                   to={getEditUrl()}

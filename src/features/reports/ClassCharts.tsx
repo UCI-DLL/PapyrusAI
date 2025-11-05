@@ -526,8 +526,7 @@ export default function ClassCharts({
           y: "count",
           fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
           title: (d: any) =>
-            `Classification: ${
-              d.fullClassification || d.classification
+            `Classification: ${d.fullClassification || d.classification
             }\nCount: ${d.count}`,
           tip: {
             format: {
@@ -603,7 +602,7 @@ export default function ClassCharts({
     return (
       <div style={{ marginLeft: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: "0.9rem", color: "#666" }}>
+          <span style={{ fontSize: "0.9rem" }}>
             Filter by students:
           </span>
           <StudentMenu
@@ -855,22 +854,17 @@ export default function ClassCharts({
                   >
                     Select All Dates
                   </button>
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setStartDate("");
                       setEndDate("");
                     }}
-                    style={{
-                      padding: "0.3rem 0.8rem",
-                      borderRadius: 4,
-                      border: "1px solid #e53935",
-                      background: "#fff",
-                      color: "#e53935",
-                      cursor: "pointer",
-                    }}
+                    size="sm"
+                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   >
                     Clear Selection
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

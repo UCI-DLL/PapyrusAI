@@ -324,6 +324,7 @@ export default function Library(): JSX.Element {
           <Label htmlFor="folder-name">Folder Name</Label>
           <Input
             id="folder-name"
+            aria-label="Tag"
             name="foldername"
             placeholder="Enter folder name"
             value={newFolderName}

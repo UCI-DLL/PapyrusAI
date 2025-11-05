@@ -587,8 +587,8 @@ export const Prompt = (props: PromptProps) => {
           {/* Header with icon, category, and star */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-primary uppercase tracking-wide">
+              <MessageSquare className="h-4 w-4 text-primary dark:text-gold colorful-dark:text-gold" />
+              <span className="text-xs font-medium text-primary dark:text-gold colorful-dark:text-gold uppercase tracking-wide">
                 {getPromptCategory()}
               </span>
             </div>
@@ -629,6 +629,7 @@ export const Prompt = (props: PromptProps) => {
                       size="sm"
                       className="flex text-lg items-center p-1"
                       onClick={(e) => e.stopPropagation()}
+                      aria-label="More Options"
                     >
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
@@ -779,6 +780,7 @@ export const Prompt = (props: PromptProps) => {
                 size="sm"
                 className="flex items-center gap-1 text-muted-foreground text-xs font-medium hover:bg-primary hover:text-primary-foreground"
                 onClick={() => setOpenPreviewDialog(true)}
+                aria-label="View"
               >
                 <Eye className="h-3 w-3" />
                 View

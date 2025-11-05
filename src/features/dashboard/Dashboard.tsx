@@ -151,9 +151,6 @@ export default function Dashboard(): JSX.Element {
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
               Welcome back, {user?.name}!
             </h1>
-            <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Continue your learning journey and unlock your potential.
-            </p>
           </div>
         </div>
       </header>

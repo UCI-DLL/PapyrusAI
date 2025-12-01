@@ -140,7 +140,6 @@ export default function Modules(): JSX.Element {
 
               <nav
                 className="flex flex-col md:flex-row gap-2 md:shrink-0"
-                role="toolbar"
                 aria-label="Module actions"
               >
                 {isInstructorOrTA && (

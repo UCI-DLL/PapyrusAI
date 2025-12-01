@@ -484,10 +484,10 @@ export default function ModuleCard({
         <div className="p-4 flex flex-col flex-1 relative z-10">
           <header className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
-              <h3 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary 
+              <h2 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary 
               dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors duration-300">
                 {module.name}
-              </h3>
+              </h2>
               {isInstructorOrTA && (
                 <div className="flex items-center gap-2">
                   {module.isPublished ? (

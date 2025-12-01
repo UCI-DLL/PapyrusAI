@@ -168,7 +168,6 @@ export default function Dashboard(): JSX.Element {
           </div>
           <nav
             className="flex flex-col md:flex-row gap-2"
-            role="toolbar"
             aria-label="Course actions"
           >
             <Button

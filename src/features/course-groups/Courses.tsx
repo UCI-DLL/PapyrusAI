@@ -138,7 +138,6 @@ export default function Courses(): JSX.Element {
                 </h1>
                 <nav
                   className="flex flex-col md:flex-row gap-2 md:shrink-0"
-                  role="toolbar"
                   aria-label="Course actions"
                 >
                   {isInstructor && (

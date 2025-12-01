@@ -772,7 +772,7 @@ export default function Reports(): JSX.Element {
                   </div>
 
                   <div className="space-y-3">
-                    <h3 className="text-sm font-medium">Available Courses</h3>
+                    <h2 className="text-sm font-medium">Available Courses</h2>
                     <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
                       {filterCoursesBySearch(
                         sortCourseList(userList),
@@ -848,9 +848,9 @@ export default function Reports(): JSX.Element {
               .length === 0 ? (
               <div className="text-center py-12">
                 <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
+                <h2 className="text-lg font-medium text-foreground mb-2">
                   No courses found
-                </h3>
+                </h2>
                 <p className="text-muted-foreground">
                   {searchTerm.trim()
                     ? `No courses match "${searchTerm}". Try adjusting your search terms.`
@@ -891,10 +891,10 @@ export default function Reports(): JSX.Element {
                       <CardContent className="p-6">
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary dark:group-hover:text-gold 
+                            <h2 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary dark:group-hover:text-gold 
                             colorful-dark:group-hover:text-gold transition-colors duration-300">
                               {x.course.name ? x.course.name : "Unnamed Course"}
-                            </h3>
+                            </h2>
                             <div className="space-y-1">
                               <div className="text-sm text-muted-foreground">
                                 Instructor: {x.course.instructor.name}{" "}

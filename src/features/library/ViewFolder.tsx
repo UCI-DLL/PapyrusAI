@@ -146,7 +146,6 @@ export default function ViewFolder(): JSX.Element {
                 </div>
                 <nav
                   className="flex flex-col sm:flex-row gap-2"
-                  role="toolbar"
                   aria-label="Content management actions"
                 >
                   {user?.groups.includes(
@@ -154,42 +153,42 @@ export default function ViewFolder(): JSX.Element {
                       ? process.env.REACT_APP_INSTRUCTOR
                       : "PapyrusAIInstructors"
                   ) && (
-                    <DropdownWrapper
-                      trigger={
-                        <Button
-                          variant="default"
-                          className="flex items-center gap-2"
-                          aria-label="Add new content to folder"
-                        >
-                          <Plus className="h-4 w-4" aria-hidden="true" />
-                          Add Content
-                        </Button>
-                      }
-                      actions={[
-                        {
-                          label: "Add Prompt",
-                          onClick: () => {
-                            const basePath =
-                              location.pathname.split("/")[2] !== "org"
-                                ? `/library/${folder.id}/createprompt`
-                                : `/library/org/${folder.id}/createprompt`;
-                            navigator(basePath);
+                      <DropdownWrapper
+                        trigger={
+                          <Button
+                            variant="default"
+                            className="flex items-center gap-2"
+                            aria-label="Add new content to folder"
+                          >
+                            <Plus className="h-4 w-4" aria-hidden="true" />
+                            Add Content
+                          </Button>
+                        }
+                        actions={[
+                          {
+                            label: "Add Prompt",
+                            onClick: () => {
+                              const basePath =
+                                location.pathname.split("/")[2] !== "org"
+                                  ? `/library/${folder.id}/createprompt`
+                                  : `/library/org/${folder.id}/createprompt`;
+                              navigator(basePath);
+                            },
                           },
-                        },
-                        {
-                          label: "Add File",
-                          onClick: () => {
-                            const basePath =
-                              location.pathname.split("/")[2] !== "org"
-                                ? `/library/${folder.id}/createfile`
-                                : `/library/org/${folder.id}/createfile`;
-                            navigator(basePath);
+                          {
+                            label: "Add File",
+                            onClick: () => {
+                              const basePath =
+                                location.pathname.split("/")[2] !== "org"
+                                  ? `/library/${folder.id}/createfile`
+                                  : `/library/org/${folder.id}/createfile`;
+                              navigator(basePath);
+                            },
                           },
-                        },
-                      ]}
-                      align="end"
-                    />
-                  )}
+                        ]}
+                        align="end"
+                      />
+                    )}
                 </nav>
               </div>
               <p className="text-muted-foreground max-w-2xl text-base leading-6">

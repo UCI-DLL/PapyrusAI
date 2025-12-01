@@ -8,7 +8,7 @@ import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { ConversationListType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import { cn } from "../../../lib/utils";
-import { TooltipWrapper } from "@/components/ui-wrappers/TooltipWrapper";
+import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
 
 interface ChatSidebarProps {
   courseInfo: CourseType;

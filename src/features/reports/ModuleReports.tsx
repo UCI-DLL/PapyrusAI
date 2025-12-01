@@ -420,9 +420,9 @@ export default function ModuleReports(): JSX.Element {
         <div>{error}</div>
       ) : (
         <>
-          <h3>
+          <h2>
             {courseData?.name} - {moduleData?.name}
-          </h3>
+          </h2>
           <div>
             On this page, you can view the overall usage within this module. If
             you wish to view a specific user’s activity, click on their name to

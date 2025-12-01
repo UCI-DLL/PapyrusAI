@@ -782,7 +782,6 @@ export default function EditFile(): JSX.Element {
                   </h1>
                   <nav
                     className="flex flex-col md:flex-row gap-2"
-                    role="toolbar"
                     aria-label="File editing actions"
                   >
                     <TooltipWrapper content="Delete File">
@@ -1047,7 +1046,6 @@ export default function EditFile(): JSX.Element {
           <section aria-labelledby="bottom-actions-heading" className="pt-4">
             <nav
               className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
-              role="toolbar"
               aria-label="File editing actions"
             >
               <TooltipWrapper content="Delete File">

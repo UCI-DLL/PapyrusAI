@@ -589,9 +589,9 @@ export const FolderComponent = (props: FolderProps) => {
           </div>
 
           {/* Folder title */}
-          <h3 className="font-semibold text-foreground mb-2 text-lg leading-tight">
+          <h2 className="font-semibold text-foreground mb-2 text-lg leading-tight">
             {displayName}
-          </h3>
+          </h2>
 
           {/* Description */}
           <p className="text-sm text-muted-foreground mb-4 flex-grow leading-relaxed">

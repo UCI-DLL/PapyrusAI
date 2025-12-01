@@ -96,7 +96,7 @@ export default function ChatMessages({
           <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
             <div className="bg-card border border-border rounded-lg p-8 max-w-md text-center">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-              <h3 className="text-lg font-semibold mb-2">Start the conversation</h3>
+              <h2 className="text-lg font-semibold mb-2">Start the conversation</h2>
               <p className="text-sm text-muted-foreground mb-4">
                 {moduleInfo.moduleDescription}
               </p>

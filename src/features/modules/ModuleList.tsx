@@ -462,6 +462,7 @@ export default function ModuleList({
 
               return (
                 <div
+                  role="listitem"
                   key={index}
                   className="group bg-card border rounded-xl hover-lift shadow-sm relative"
                 >

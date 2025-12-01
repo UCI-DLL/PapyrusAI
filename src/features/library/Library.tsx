@@ -226,6 +226,7 @@ export default function Library(): JSX.Element {
                         <Input
                           name={`${i}_tag`}
                           className="flex-1"
+                          aria-label="Tag"
                           value={tag.name ? tag.name : tag.id}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             setTagList((prev) => {
@@ -281,6 +282,7 @@ export default function Library(): JSX.Element {
                   <Input
                     placeholder="Enter tag name"
                     value={newTag}
+                    aria-label="Create New Tag"
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       if (onlyLettersAndNumbers(e.target.value)) {
                         setNewTag(e.target.value);
@@ -324,7 +326,7 @@ export default function Library(): JSX.Element {
           <Label htmlFor="folder-name">Folder Name</Label>
           <Input
             id="folder-name"
-            aria-label="Tag"
+            aria-label="Folder Name"
             name="foldername"
             placeholder="Enter folder name"
             value={newFolderName}

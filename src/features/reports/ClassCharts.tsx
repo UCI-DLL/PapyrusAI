@@ -881,16 +881,16 @@ export default function ClassCharts({
                 className="chart-grid"
               >
                 <div style={{ marginBottom: "1rem" }}>
-                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
                     Daily Conversation Lengths
-                  </h3>
+                  </h2>
                   <div ref={lengthsRef} />
                 </div>
 
                 <div style={{ marginBottom: "1rem" }}>
-                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
                     Daily Conversation Counts
-                  </h3>
+                  </h2>
                   <div ref={countsRef} />
                 </div>
               </div>
@@ -910,9 +910,9 @@ export default function ClassCharts({
                 className="chart-grid"
               >
                 <div style={{ marginBottom: "1rem" }}>
-                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
                     Module Usage
-                  </h3>
+                  </h2>
                   {startDate && endDate ? (
                     <div ref={moduleUsageRef} />
                   ) : (
@@ -921,7 +921,7 @@ export default function ClassCharts({
                 </div>
 
                 {/* <div style={{ marginBottom: "1rem" }}>
-                <h3>Student Chat Classification</h3>
+                <h2>Student Chat Classification</h2>
                 {startDate && endDate ? (
                   showClassificationChart ? (
                     <div ref={chatClassificationRef} />

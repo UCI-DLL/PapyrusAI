@@ -796,7 +796,7 @@ export default function CreateCourse({
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <SelectValue placeholder="Select term" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent aria-label="Select Term">
                         <SelectItem value="spring">Spring</SelectItem>
                         <SelectItem value="summer">Summer</SelectItem>
                         <SelectItem value="fall">Fall</SelectItem>

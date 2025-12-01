@@ -536,8 +536,8 @@ export const File = (props: FileProps) => {
           {/* Header with icon, file type, and star */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-orange-600" />
-              <span className="text-xs font-medium text-orange-600 uppercase tracking-wide">
+              <FileText className="h-4 w-4 text-orange-800 dark:text-orange-400 colorful-dark:text-orange-400" />
+              <span className="text-xs font-medium text-orange-800 dark:text-orange-400 colorful-dark:text-orange-400 uppercase tracking-wide">
                 {getFileType()}
               </span>
             </div>

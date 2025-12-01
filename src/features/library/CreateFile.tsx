@@ -542,7 +542,7 @@ export default function CreateFile(): JSX.Element {
                     File Name *
                   </Label>
                   <TooltipWrapper content="The name for the document.">
-                    <button>
+                    <button aria-label="The name for the document.">
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -576,7 +576,7 @@ export default function CreateFile(): JSX.Element {
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium">File Upload *</Label>
                   <TooltipWrapper content="Select a JPEG, PNG, PDF, TXT, DOCX file.">
-                    <button>
+                    <button aria-label="Select a JPEG, PNG, PDF, TXT, DOCX file.">
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -646,7 +646,7 @@ export default function CreateFile(): JSX.Element {
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium">Tags</Label>
                   <TooltipWrapper content="Tags describe a feature of the files and will be used to allow for sorting files by type.">
-                    <button>
+                    <button aria-label="Tags describe a feature of the files and will be used to allow for sorting files by type.">
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>

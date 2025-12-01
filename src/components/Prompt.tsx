@@ -587,8 +587,8 @@ export const Prompt = (props: PromptProps) => {
           {/* Header with icon, category, and star */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-primary dark:text-gold colorful-dark:text-gold" />
-              <span className="text-xs font-medium text-primary dark:text-gold colorful-dark:text-gold uppercase tracking-wide">
+              <MessageSquare className="h-4 w-4 text-primary dark:text-blue-400 colorful-dark:text-blue-400" />
+              <span className="text-xs font-medium text-primary dark:text-blue-400 colorful-dark:text-blue-400 uppercase tracking-wide">
                 {getPromptCategory()}
               </span>
             </div>

@@ -784,6 +784,7 @@ export default function CreateCourse({
                       value={session.term}
                       onValueChange={handleTermChange}
                       disabled={isLoading}
+                      aria-label="Select Term"
                     >
                       <SelectTrigger
                         className={cn(
@@ -884,6 +885,7 @@ export default function CreateCourse({
                               variant="ghost"
                               size="sm"
                               className="h-4 w-4 p-0 ml-1 hover:bg-red-500 hover:text-white rounded-full"
+                              aria-label="Remove TA"
                               onClick={() => {
                                 const newTaList = session.taList.filter(
                                   (_: CustomUserType, i: number) => i !== index

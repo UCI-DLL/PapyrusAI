@@ -8,6 +8,7 @@ import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { ConversationListType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import { cn } from "../../../lib/utils";
+import { TooltipWrapper } from "@/components/ui-wrappers/TooltipWrapper";
 
 interface ChatSidebarProps {
   courseInfo: CourseType;
@@ -53,18 +54,22 @@ export default function ChatSidebar({
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Conversations</h2>
-          <Button
-            size="sm"
-            onClick={onNewConversation}
-            disabled={creatingConvo}
-            className="h-7 px-2 text-xs"
-          >
-            {creatingConvo ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Plus className="h-3 w-3" />
-            )}
-          </Button>
+          <TooltipWrapper content="Create New Conversation">
+            <Button
+              size="sm"
+              onClick={onNewConversation}
+              disabled={creatingConvo}
+              className="h-7 px-2 text-xs"
+              aria-label="Create new conversation"
+            >
+              {creatingConvo ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Plus className="h-3 w-3" />
+              )}
+            </Button>
+          </TooltipWrapper>
+
         </div>
       </div>
 
@@ -110,8 +115,8 @@ export default function ChatSidebar({
               {filteredConversations.map((conversation) => {
                 const conversationIndex = conversationList?.conversations
                   ? conversationList.conversations.findIndex(
-                      (c) => c.id === conversation.id
-                    )
+                    (c) => c.id === conversation.id
+                  )
                   : 0;
                 const isCurrentConversation =
                   conversationIndex.toString() === currentConversationIndex;

@@ -575,7 +575,7 @@ export default function CreatePrompt({
                     Prompt Name *
                   </Label>
                   <TooltipWrapper content="The name for the prompt that users will see. We recommend choosing a name that makes it easy for students to understand what the prompt will do or help them with.">
-                    <button>
+                    <button aria-label="The name for the prompt that users will see. We recommend choosing a name that makes it easy for students to understand what the prompt will do or help them with.">
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -611,7 +611,7 @@ export default function CreatePrompt({
                     Prompt *
                   </Label>
                   <TooltipWrapper content="The instructions that will be sent to the AI (i.e., the first message sent to the AI that will guide the interaction).">
-                    <button>
+                    <button aria-label="The instructions that will be sent to the AI (i.e., the first message sent to the AI that will guide the interaction).">
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -646,7 +646,7 @@ export default function CreatePrompt({
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium">Tags</Label>
                   <TooltipWrapper content="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type.">
-                    <button>
+                    <button aria-label="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type.">
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>

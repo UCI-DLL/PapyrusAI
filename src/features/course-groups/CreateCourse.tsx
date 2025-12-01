@@ -660,7 +660,8 @@ export default function CreateCourse({
                     </Label>
                     <TooltipWrapper content="The name for your course that users will see upon
                             joining.">
-                      <button>
+                      <button aria-label="The name for your course that users will see upon
+                            joining.">
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                       </button>
                     </TooltipWrapper>
@@ -688,7 +689,9 @@ export default function CreateCourse({
                     <TooltipWrapper content="The unique sign up code that users will use to join
                             your course. You can use any combination of letters
                             and numbers. This is case sensitive.">
-                      <button>
+                      <button aria-label="The unique sign up code that users will use to join
+                            your course. You can use any combination of letters
+                            and numbers. This is case sensitive.">
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                       </button>
                     </TooltipWrapper>
@@ -737,7 +740,7 @@ export default function CreateCourse({
                         Year
                       </Label>
                       <TooltipWrapper content="The year in which your course is taking place.">
-                        <button>
+                        <button aria-label="The year in which your course is taking place.">
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>
@@ -773,7 +776,7 @@ export default function CreateCourse({
                         Term
                       </Label>
                       <TooltipWrapper content="The term in which your course is taking place.">
-                        <button>
+                        <button aria-label="The term in which your course is taking place.">
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>
@@ -814,7 +817,7 @@ export default function CreateCourse({
                         Section / Period
                       </Label>
                       <TooltipWrapper content="The section number or period for your course.">
-                        <button>
+                        <button aria-label="The section number or period for your course.">
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>

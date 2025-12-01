@@ -477,10 +477,10 @@ export default function ModuleList({
                       {/* Header with title and favorite */}
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
+                          <h2 className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
                           colorful-dark:group-hover:text-gold transition-colors duration-300 leading-tight">
                             {module.name}
-                          </h3>
+                          </h2>
                         </div>
                         <TooltipWrapper
                           content={isStarred ? "Unstar Module" : "Star Module"}
@@ -643,10 +643,10 @@ export default function ModuleList({
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
+                            <h2 className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
                             colorful-dark:group-hover:text-gold transition-colors duration-300 truncate-text">
                               {module.name}
-                            </h3>
+                            </h2>
                           </div>
 
                           <p className="text-xs text-muted-foreground mb-1 font-medium">

@@ -692,9 +692,9 @@ export const Prompt = (props: PromptProps) => {
           </div>
 
           {/* Prompt title */}
-          <h3 className="font-semibold text-foreground mb-2 text-lg leading-tight">
+          <h2 className="font-semibold text-foreground mb-2 text-lg leading-tight">
             {props.prompt.name}
-          </h3>
+          </h2>
 
           {/* Prompt preview box */}
           <div

@@ -168,8 +168,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           y: "count",
           fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
           title: (d: any) =>
-            `Classification: ${
-              d.fullClassification || d.classification
+            `Classification: ${d.fullClassification || d.classification
             }\nCount: ${d.count}`,
           tip: {
             format: {
@@ -318,25 +317,25 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         className="chart-grid"
       >
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3 className="text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-2">
             Daily Conversation Lengths
-          </h3>
+          </h2>
           <div ref={lengthsRef} />
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3 className="text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-2">
             Daily Conversation Counts
-          </h3>
+          </h2>
           <div ref={countsRef} />
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3 className="text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-2">
             Module Usage
-          </h3>
+          </h2>
           <div ref={moduleUsageRef} />
         </div>
         {/* <div className="card" style={{ marginBottom: "1rem" }}>
-          <h3>Classification Counts</h3>
+          <h2>Classification Counts</h2>
           <div ref={classificationRef} />
         </div> */}
       </div>

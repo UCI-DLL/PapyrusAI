@@ -296,10 +296,10 @@ export default function UserReports(): JSX.Element {
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary dark:group-hover:text-gold 
+                          <h2 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary dark:group-hover:text-gold 
                           colorful-dark:group-hover:text-gold transition-colors duration-300">
                             {row.course.name}
-                          </h3>
+                          </h2>
                           <div className="space-y-1">
                             <div className="text-sm text-muted-foreground">
                               Module:{" "}

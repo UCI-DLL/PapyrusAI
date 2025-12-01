@@ -563,7 +563,6 @@ export default function OrgSettings(): JSX.Element {
                   </h1>
                   <nav
                     className="flex flex-col md:flex-row gap-2"
-                    role="toolbar"
                     aria-label="Permission actions"
                   >
                     <Button

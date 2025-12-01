@@ -745,7 +745,6 @@ export default function AddModule({
               </div>
               <nav
                 className="flex flex-col md:flex-row gap-2"
-                role="toolbar"
                 aria-label={
                   isEditMode
                     ? "Module management actions"
@@ -1128,7 +1127,6 @@ export default function AddModule({
       <section aria-labelledby="bottom-actions-heading" className="pt-4">
         <nav
           className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
-          role="toolbar"
           aria-label={
             isEditMode ? "Module management actions" : "Module creation actions"
           }

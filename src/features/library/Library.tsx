@@ -360,7 +360,6 @@ export default function Library(): JSX.Element {
                 </div>
                 <nav
                   className="flex flex-col sm:flex-row gap-2"
-                  role="toolbar"
                   aria-label="Library management actions"
                 >
                   {user?.groups.includes(

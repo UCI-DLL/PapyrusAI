@@ -164,9 +164,9 @@ export default function AllModules(): JSX.Element {
                   return course.modules.length > 0 ? (
                     <div key={index} className="mb-6 w-full bg-card p-4 rounded-lg shadow-md">
                       <div className="mb-4">
-                        <h3 className="text-xl font-semibold text-foreground mb-1">
+                        <h2 className="text-xl font-semibold text-foreground mb-1">
                           {course.name}
-                        </h3>
+                        </h2>
                         <p className="text-sm text-muted-foreground capitalize">
                           {course.section
                             ? `${course.term ? course.term : ""}${course.year ? course.year : ""

@@ -786,10 +786,12 @@ export default function Reports(): JSX.Element {
                           >
                             <Checkbox
                               id={labelId}
+                              aria-labelledby={`${labelId}Label`}
                               checked={checked.includes(index)}
                               onCheckedChange={handleToggle(index)}
                             />
                             <Label
+                              id={`${labelId}Label`}
                               htmlFor={labelId}
                               className="flex-1 cursor-pointer text-sm"
                             >

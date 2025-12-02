@@ -1053,6 +1053,7 @@ export default function AddModule({
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="showInitialPrompt"
+                      aria-labelledby="showInitialPromptLabel"
                       checked={session.showInitialPrompt}
                       onCheckedChange={(checked) => {
                         setSession((prev) => ({
@@ -1065,6 +1066,7 @@ export default function AddModule({
                     <Label
                       htmlFor="showInitialPrompt"
                       className="text-md font-bold"
+                      id="showInitialPromptLabel"
                     >
                       Show Embedded Prompt
                     </Label>
@@ -1093,6 +1095,7 @@ export default function AddModule({
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="webSearch"
+                      aria-labelledby="webSearchLabel"
                       checked={session.webSearch}
                       onCheckedChange={(checked) => {
                         setSession((prev) => ({
@@ -1102,7 +1105,7 @@ export default function AddModule({
                       }}
                       disabled={isLoading}
                     />
-                    <Label htmlFor="webSearch" className="text-md font-bold">
+                    <Label id="webSearchLabel" htmlFor="webSearch" className="text-md font-bold">
                       Allow Web Search
                     </Label>
                   </div>

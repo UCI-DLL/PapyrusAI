@@ -222,6 +222,7 @@ export default function OldEditPrompt(): JSX.Element {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="delete-prompt"
+                aria-labelledby="deletePromptLabel"
                 checked={session ? session.isDeleted : false}
                 onCheckedChange={(checked) => {
                   setSession((prev) => ({
@@ -232,6 +233,7 @@ export default function OldEditPrompt(): JSX.Element {
                 disabled={isLoading}
               />
               <Label
+                id="deletePromptLabel"
                 htmlFor="delete-prompt"
                 className="text-sm font-medium cursor-pointer"
               >

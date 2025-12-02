@@ -159,7 +159,7 @@ export default function AllModules(): JSX.Element {
         <>
           {courseList.length > 0 ? (
             <section aria-labelledby="modules-content">
-              <div className="space-y-6">
+              <div className="space-y-6" id="modules-content">
                 {orderCourseRecentlyCreated(courseList).map((course, index) => {
                   return course.modules.length > 0 ? (
                     <div key={index} className="mb-6 w-full bg-card p-4 rounded-lg shadow-md">

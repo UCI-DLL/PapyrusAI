@@ -523,7 +523,7 @@ export default function CreateFile(): JSX.Element {
 
       {/* Actions Section */}
       <section aria-labelledby="actions-heading">
-        <Card className="transition-all duration-300 hover:shadow-md">
+        <Card className="transition-all duration-300 hover:shadow-md" id="actions-heading">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-foreground">
               File Information
@@ -693,6 +693,7 @@ export default function CreateFile(): JSX.Element {
           <nav
             className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
             aria-label="File creation actions"
+            id="bottom-actions-heading"
           >
             <Button
               variant="outline"

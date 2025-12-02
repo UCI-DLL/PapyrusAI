@@ -556,7 +556,7 @@ export default function CreatePrompt({
 
       {/* Actions Section */}
       <section aria-labelledby="actions-heading">
-        <Card className="transition-all duration-300 hover:shadow-md">
+        <Card className="transition-all duration-300 hover:shadow-md" id="actions-heading">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-foreground">
               Prompt Information
@@ -695,6 +695,7 @@ export default function CreatePrompt({
           <nav
             className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
             aria-label="Prompt creation actions"
+            id="bottom-actions-heading"
           >
             {isEditMode && (
               <TooltipWrapper content="Delete Prompt">

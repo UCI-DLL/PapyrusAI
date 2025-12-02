@@ -50,7 +50,7 @@ export default function Account(): JSX.Element {
 
       {/* Content Section */}
       <section aria-labelledby="account-content">
-        <div className="w-full">
+        <div className="w-full" id="account-content">
           <MissingUserInfoForm
             user={user ? user : undefined}
             closeForm={(_newuser: UserType) => {

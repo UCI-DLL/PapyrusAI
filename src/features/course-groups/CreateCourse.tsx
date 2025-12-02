@@ -936,7 +936,7 @@ export default function CreateCourse({
                       }
                     }}
                   >
-                    <SelectTrigger id="taSelect">
+                    <SelectTrigger id="taSelect" aria-label="TA select">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder="Select a teaching assistant to add..." />
                     </SelectTrigger>
@@ -1017,6 +1017,7 @@ export default function CreateCourse({
                   ? "Course editing actions"
                   : "Course creation actions"
               }
+              id="bottom-actions-heading"
             >
               {isEditMode && (
                 <TooltipWrapper content="Delete Course">

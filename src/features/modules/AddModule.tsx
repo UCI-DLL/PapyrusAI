@@ -1130,6 +1130,7 @@ export default function AddModule({
           aria-label={
             isEditMode ? "Module management actions" : "Module creation actions"
           }
+          id="bottom-actions-heading"
         >
           {isEditMode && (
             <Button

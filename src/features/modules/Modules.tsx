@@ -246,7 +246,7 @@ export default function Modules(): JSX.Element {
               />
             </div>
           </div>
-          <div className="w-full">
+          <div className="w-full" id="modules-content">
             {course ? (
               <ModuleList
                 course={{ ...course, modules: filteredModules }}

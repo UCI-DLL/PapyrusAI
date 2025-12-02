@@ -1047,6 +1047,7 @@ export default function EditFile(): JSX.Element {
             <nav
               className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
               aria-label="File editing actions"
+              id="bottom-actions-heading"
             >
               <TooltipWrapper content="Delete File">
                 <Button

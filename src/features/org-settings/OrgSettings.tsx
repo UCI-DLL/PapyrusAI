@@ -591,7 +591,7 @@ export default function OrgSettings(): JSX.Element {
 
           {/* Content Section */}
           <section aria-labelledby="permissions-content">
-            <Card className="transition-all duration-300 hover:shadow-md">
+            <Card className="transition-all duration-300 hover:shadow-md" id="permissions-content">
               <CardHeader>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative flex-1">

@@ -821,7 +821,7 @@ export default function Reports(): JSX.Element {
           )}
 
         <section aria-labelledby="reports-courses-heading">
-          <header className="mb-6 w-full bg-card p-4 rounded-lg shadow-md">
+          <header className="mb-6 w-full bg-card p-4 rounded-lg shadow-md" id="reports-courses-heading">
             <div className="relative w-full">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"

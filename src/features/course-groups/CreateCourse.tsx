@@ -527,7 +527,8 @@ export default function CreateCourse({
                             <CheckCircle className="h-5 w-5 text-green-600" />
                             <Badge
                               variant="default"
-                              className="bg-green-100 text-green-800 dark:bg-green-900 colorful-dark:bg-green-900 pointer-events-none"
+                              className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-white 
+                              colorful-dark:bg-green-900 colorful-dark:text-white pointer-events-none"
                             >
                               Published
                             </Badge>
@@ -784,7 +785,6 @@ export default function CreateCourse({
                       value={session.term}
                       onValueChange={handleTermChange}
                       disabled={isLoading}
-                      aria-label="Select Term"
                     >
                       <SelectTrigger
                         className={cn(
@@ -792,6 +792,7 @@ export default function CreateCourse({
                           errors.term &&
                           "border-destructive focus-visible:ring-destructive"
                         )}
+                        aria-label="Select Term"
                       >
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <SelectValue placeholder="Select term" />

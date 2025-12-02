@@ -671,7 +671,7 @@ export default function EditFile(): JSX.Element {
           ];
           return (
             <div className="space-y-4">
-              <h4 className="text-lg font-medium">Document Preview</h4>
+              <h3 className="text-lg font-medium">Document Preview</h3>
               <div className="border rounded-md overflow-hidden">
                 <DocViewer
                   pluginRenderers={[CustomFileRender, ...DocViewerRenderers]}

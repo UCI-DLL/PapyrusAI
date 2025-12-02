@@ -907,7 +907,7 @@ export default function CreateCourse({
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="taSelect" className="text-sm font-medium">
+                  <Label id="taLabel" htmlFor="taSelect" className="text-sm font-medium">
                     Add Teaching Assistant
                   </Label>
                   <Select
@@ -936,7 +936,7 @@ export default function CreateCourse({
                       }
                     }}
                   >
-                    <SelectTrigger id="taSelect" aria-label="TA select">
+                    <SelectTrigger id="taSelect" aria-labelledby="taLabel">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder="Select a teaching assistant to add..." />
                     </SelectTrigger>

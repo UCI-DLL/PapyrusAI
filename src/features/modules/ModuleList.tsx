@@ -413,6 +413,7 @@ export default function ModuleList({
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="publish-module"
+                  aria-labelledby="publishModuleLabel"
                   checked={duplicateModuleData.isPublished}
                   onCheckedChange={(checked) => {
                     setDuplicateModuleData((prev) => ({
@@ -423,6 +424,7 @@ export default function ModuleList({
                   disabled={isLoading}
                 />
                 <label
+                  id="publishModuleLabel"
                   htmlFor="publish-module"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >

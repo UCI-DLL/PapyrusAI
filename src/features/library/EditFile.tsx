@@ -1014,11 +1014,13 @@ export default function EditFile(): JSX.Element {
                           >
                             <Checkbox
                               id={`tag-${tag.id}`}
+                              aria-labelledby={`tag-${tag.id}label`}
                               checked={newFile.tags.includes(tag.id)}
                               onCheckedChange={() => handleTagToggle(tag.id)}
                               disabled={isLoading}
                             />
                             <Label
+                              id={`tag-${tag.id}label`}
                               htmlFor={`tag-${tag.id}`}
                               className="text-sm font-normal cursor-pointer"
                             >

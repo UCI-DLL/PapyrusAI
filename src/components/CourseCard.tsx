@@ -214,6 +214,7 @@ export default function CourseCard({
           <div className="flex items-center space-x-2">
             <Checkbox
               id="publish-course"
+              aria-labelledby="publishCourseLabel"
               checked={duplicateCourseData.isActive}
               onCheckedChange={(checked) => {
                 setDuplicateCourseData((prev) => ({
@@ -223,7 +224,7 @@ export default function CourseCard({
               }}
               disabled={isLoading}
             />
-            <Label htmlFor="publish-course" className="font-bold leading-none">
+            <Label id="publishCourseLabel" htmlFor="publish-course" className="font-bold leading-none">
               Publish Course
             </Label>
           </div>

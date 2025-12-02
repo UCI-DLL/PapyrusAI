@@ -660,11 +660,13 @@ export default function CreatePrompt({
                         >
                           <Checkbox
                             id={`tag-${tag.id}`}
+                            aria-labelledby={`tag-${tag.id}label`}
                             checked={prompt.tags.includes(tag.id)}
                             onCheckedChange={() => handleTagToggle(tag.id)}
                             disabled={isLoading}
                           />
                           <Label
+                            id={`tag-${tag.id}label`}
                             htmlFor={`tag-${tag.id}`}
                             className="text-sm font-normal cursor-pointer"
                           >

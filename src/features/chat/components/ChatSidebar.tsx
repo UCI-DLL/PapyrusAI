@@ -9,6 +9,7 @@ import { ConversationListType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import { cn } from "../../../lib/utils";
 import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
+import { Link } from "react-router-dom";
 
 interface ChatSidebarProps {
   courseInfo: CourseType;
@@ -69,7 +70,6 @@ export default function ChatSidebar({
               )}
             </Button>
           </TooltipWrapper>
-
         </div>
       </div>
 
@@ -115,8 +115,8 @@ export default function ChatSidebar({
               {filteredConversations.map((conversation) => {
                 const conversationIndex = conversationList?.conversations
                   ? conversationList.conversations.findIndex(
-                    (c) => c.id === conversation.id
-                  )
+                      (c) => c.id === conversation.id
+                    )
                   : 0;
                 const isCurrentConversation =
                   conversationIndex.toString() === currentConversationIndex;
@@ -133,16 +133,18 @@ export default function ChatSidebar({
                     )}
                     onClick={() => onConversationClick(conversationLink)}
                   >
-                    <div className="space-y-1">
-                      <p className={"text-sm font-medium truncate-text"}>
-                        {conversation.name}
-                      </p>
-                      <p className={"text-xs truncate-text"}>
-                        {new Date(
-                          parseInt(conversation.id.substring(0, 13))
-                        ).toLocaleDateString()}
-                      </p>
-                    </div>
+                    <Link to={conversationLink} className="no-underline">
+                      <div className="space-y-1">
+                        <p className={"text-sm font-medium truncate-text"}>
+                          {conversation.name}
+                        </p>
+                        <p className={"text-xs truncate-text"}>
+                          {new Date(
+                            parseInt(conversation.id.substring(0, 13))
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </Link>
                   </button>
                 );
               })}

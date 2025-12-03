@@ -8,7 +8,7 @@ import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { FolderType } from "../utility/types/CourseTypes";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
 import { AlertContext } from "../utility/context/AlertContext";
@@ -625,7 +625,10 @@ export const FolderComponent = (props: FolderProps) => {
                 // disabled={props.noShowMenu}
                 aria-label={props.noShowMenu ? "Select" : "View"}
               >
-                {props.noShowMenu ? "Select" : "View"}
+                {props.noShowMenu ? "Select" : 
+                <Link to={getViewUrl()} className="no-underline">
+                  View
+                </Link>}
               </Button>
             </div>
           </div>

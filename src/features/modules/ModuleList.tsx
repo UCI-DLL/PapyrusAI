@@ -33,6 +33,7 @@ import {
   getConversationList,
   postCreateConversation,
 } from "../../utility/endpoints/ConversationEndpoints";
+import { Link } from "react-router-dom";
 
 interface ModuleListProps {
   course: CourseType;
@@ -228,7 +229,8 @@ export default function ModuleList({
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
               navigator(
-                `/chat/${user.username}/${courseId}/${moduleId}/${createRes.data.conversations.length - 1
+                `/chat/${user.username}/${courseId}/${moduleId}/${
+                  createRes.data.conversations.length - 1
                 }`
               );
             }
@@ -479,8 +481,10 @@ export default function ModuleList({
                       {/* Header with title and favorite */}
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
-                          <h2 className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
-                          colorful-dark:group-hover:text-gold transition-colors duration-300 leading-tight">
+                          <h2
+                            className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
+                          colorful-dark:group-hover:text-gold transition-colors duration-300 leading-tight"
+                          >
                             {module.name}
                           </h2>
                         </div>
@@ -501,7 +505,9 @@ export default function ModuleList({
                                 ? "text-gold hover:text-muted"
                                 : "text-muted hover:text-gold"
                             )}
-                            aria-label={isStarred ? "Unstar Module" : "Star Module"}
+                            aria-label={
+                              isStarred ? "Unstar Module" : "Star Module"
+                            }
                           >
                             <Star
                               size={12}
@@ -568,23 +574,23 @@ export default function ModuleList({
                                 : "PapyrusAIInstructors"
                             ) ||
                             user?.groups.includes(course.id + "-TA")) && (
-                              <TooltipWrapper content="Copy Module">
-                                <button
-                                  onClick={() => {
-                                    setOpenDuplicateModal({
-                                      courseId: course.id,
-                                      moduleId: module.id,
-                                      copyCourseId: "",
-                                    });
-                                    setOpenCourseListModal(true);
-                                  }}
-                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                                  aria-label="Copy Module"
-                                >
-                                  <Copy className="h-[1em] w-[1em]" />
-                                </button>
-                              </TooltipWrapper>
-                            )}
+                            <TooltipWrapper content="Copy Module">
+                              <button
+                                onClick={() => {
+                                  setOpenDuplicateModal({
+                                    courseId: course.id,
+                                    moduleId: module.id,
+                                    copyCourseId: "",
+                                  });
+                                  setOpenCourseListModal(true);
+                                }}
+                                className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-300"
+                                aria-label="Copy Module"
+                              >
+                                <Copy className="h-[1em] w-[1em]" />
+                              </button>
+                            </TooltipWrapper>
+                          )}
 
                           {(user?.groups.includes(
                             process.env.REACT_APP_INSTRUCTOR
@@ -601,15 +607,14 @@ export default function ModuleList({
                                 ))) && (
                               <TooltipWrapper content="Edit Module">
                                 <button
-                                  onClick={() =>
-                                    navigator(
-                                      `/courses/${course.id}/editmodule/${module.id}`
-                                    )
-                                  }
                                   aria-label="Edit Module"
-                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                                  className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-300"
                                 >
-                                  <Edit className="h-[1em] w-[1em]" />
+                                  <Link
+                                    to={`/courses/${course.id}/editmodule/${module.id}`}
+                                  >
+                                    <Edit className="h-[1em] w-[1em]" />
+                                  </Link>
                                 </button>
                               </TooltipWrapper>
                             )}
@@ -645,8 +650,10 @@ export default function ModuleList({
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h2 className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
-                            colorful-dark:group-hover:text-gold transition-colors duration-300 truncate-text">
+                            <h2
+                              className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
+                            colorful-dark:group-hover:text-gold transition-colors duration-300 truncate-text"
+                            >
                               {module.name}
                             </h2>
                           </div>
@@ -682,7 +689,9 @@ export default function ModuleList({
                                   ? "text-gold hover:text-muted"
                                   : "text-muted hover:text-gold"
                               )}
-                              aria-label={isStarred ? "Unstar Module" : "Star Module"}
+                              aria-label={
+                                isStarred ? "Unstar Module" : "Star Module"
+                              }
                             >
                               <Star
                                 size={12}
@@ -732,23 +741,23 @@ export default function ModuleList({
                                 : "PapyrusAIInstructors"
                             ) ||
                             user?.groups.includes(course.id + "-TA")) && (
-                              <TooltipWrapper content="Copy Module">
-                                <button
-                                  onClick={() => {
-                                    setOpenDuplicateModal({
-                                      courseId: course.id,
-                                      moduleId: module.id,
-                                      copyCourseId: "",
-                                    });
-                                    setOpenCourseListModal(true);
-                                  }}
-                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                                  aria-label="Copy Module"
-                                >
-                                  <Copy className="h-[1em] w-[1em]" />
-                                </button>
-                              </TooltipWrapper>
-                            )}
+                            <TooltipWrapper content="Copy Module">
+                              <button
+                                onClick={() => {
+                                  setOpenDuplicateModal({
+                                    courseId: course.id,
+                                    moduleId: module.id,
+                                    copyCourseId: "",
+                                  });
+                                  setOpenCourseListModal(true);
+                                }}
+                                className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
+                                aria-label="Copy Module"
+                              >
+                                <Copy className="h-[1em] w-[1em]" />
+                              </button>
+                            </TooltipWrapper>
+                          )}
 
                           {(user?.groups.includes(
                             process.env.REACT_APP_INSTRUCTOR
@@ -765,15 +774,15 @@ export default function ModuleList({
                                 ))) && (
                               <TooltipWrapper content="Edit Module">
                                 <button
-                                  onClick={() =>
-                                    navigator(
-                                      `/courses/${course.id}/editmodule/${module.id}`
-                                    )
-                                  }
                                   aria-label="Edit Module"
-                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                                  className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
                                 >
-                                  <Edit className="h-[1em] w-[1em]" />
+                                  <Link
+                                    to={`/courses/${course.id}/editmodule/${module.id}`}
+                                    className="no-underline"
+                                  >
+                                    <Edit className="h-[1em] w-[1em]" />
+                                  </Link>
                                 </button>
                               </TooltipWrapper>
                             )}
@@ -790,13 +799,13 @@ export default function ModuleList({
                               `${course.id}-${module.id}`
                             }
                           >
-                            {isNavigatingToModule ===
+                              {isNavigatingToModule ===
                               `${course.id}-${module.id}` ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Play size={14} />
-                            )}
-                            Begin Module
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Play size={14} />
+                              )}
+                              Begin Module
                           </Button>
                         </div>
                       </div>
@@ -821,11 +830,11 @@ export default function ModuleList({
       {user?.groups.includes(
         process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
       ) && (
-          <p className="text-sm">
-            To create a module, go to the course in which you would like to create
-            the module.
-          </p>
-        )}
+        <p className="text-sm">
+          To create a module, go to the course in which you would like to create
+          the module.
+        </p>
+      )}
     </div>
   );
 }

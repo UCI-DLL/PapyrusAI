@@ -678,6 +678,8 @@ export default function AddModule({
             noShowMenu
             onClick={selectAsset}
             compactGrid
+            selectedPromptIds={session.prompts.map((p) => p.id)}
+            selectedFileIds={session.files.map((f) => f.id)}
           />
         </div>
       </DialogWrapper>

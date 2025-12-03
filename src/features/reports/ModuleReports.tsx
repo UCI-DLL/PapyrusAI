@@ -2,26 +2,13 @@
  * ModuleReports.tsx, component for displaying reports for a specific module
  */
 
-// TODO redo this
-import {
-  Paper,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  TablePagination,
-} from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import LinearProgress from "@mui/material/LinearProgress";
 import {
   buildStyles,
   CircularProgressbarWithChildren,
 } from "react-circular-progressbar";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import { CheckCircle2, X, ChevronLeft, ChevronRight, BarChart3 } from "lucide-react";
 import { UserContext } from "../../utility/context/UserContext";
 import Get from "../../utility/Get";
 import {
@@ -32,6 +19,24 @@ import {
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import { getUserConversationList } from "../../utility/endpoints/ConversationEndpoints";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { PageLoader, PageHeaderCard } from "../../components/Common";
 
 interface Column {
   id:
@@ -403,229 +408,261 @@ export default function ModuleReports(): JSX.Element {
     });
   }
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(+event.target.value);
+  const handleChangeRowsPerPage = (value: string) => {
+    setRowsPerPage(+value);
     setPage(0);
   };
 
+  const totalPages = Math.ceil(rows.length / rowsPerPage);
+  const startIndex = page * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedRows = rows.slice(startIndex, endIndex);
+
   return !isLoading ? (
-    <div className="reports">
+    <main className="bg-background text-foreground p-4 space-y-6">
       {error ? (
-        <div>{error}</div>
+        <div
+          className="bg-destructive/15 border border-destructive rounded-lg p-4"
+          role="alert"
+        >
+          <p className="text-destructive font-medium text-center">{error}</p>
+        </div>
       ) : (
         <>
-          <h2>
-            {courseData?.name} - {moduleData?.name}
-          </h2>
-          <div>
+          <PageHeaderCard
+            title={`${courseData?.name || "Course"} - ${moduleData?.name || "Module"}`}
+            icon={<BarChart3 size={192} className="text-primary" />}
+          />
+
+          <div className="text-muted-foreground max-w-2xl">
             On this page, you can view the overall usage within this module. If
-            you wish to view a specific user’s activity, click on their name to
+            you wish to view a specific user's activity, click on their name to
             access their conversations.
           </div>
-          {stats ? (
+          {stats && (
             <>
-              <hr />
-              <div className="reports__progressbar_row">
-                <div className="reports__progressbar_item">
-                  <CircularProgressbarWithChildren
-                    value={stats.lead}
-                    background
-                    styles={buildStyles({
-                      strokeLinecap: "round",
-                      pathColor: "#ffd200",
-                      textColor: "#000",
-                      trailColor: "#d6d6d6", //white
-                      backgroundColor: "#d6d6d6",
-                      textSize: 8,
-                      pathTransitionDuration: 0.15,
-                    })}
-                  >
-                    <div className="reports__progressbar_text">{`${stats.lead}%`}</div>
-                    <div className="reports__progressbar_text">{`Lead`}</div>
-                  </CircularProgressbarWithChildren>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="flex flex-col items-center">
+                  <div className="w-32 h-32">
+                    <CircularProgressbarWithChildren
+                      value={stats.lead}
+                      background
+                      styles={buildStyles({
+                        strokeLinecap: "round",
+                        pathColor: "#ffd200",
+                        textColor: "#000",
+                        trailColor: "#d6d6d6",
+                        backgroundColor: "#d6d6d6",
+                        textSize: 8,
+                        pathTransitionDuration: 0.15,
+                      })}
+                    >
+                      <div className="text-lg font-bold">{`${stats.lead}%`}</div>
+                      <div className="text-sm text-muted-foreground">{`Lead`}</div>
+                    </CircularProgressbarWithChildren>
+                  </div>
                 </div>
 
-                <div className="reports__progressbar_item">
-                  <CircularProgressbarWithChildren
-                    value={stats.position}
-                    background
-                    styles={buildStyles({
-                      strokeLinecap: "round",
-                      pathColor: "#0064a4",
-                      textColor: "#000",
-                      trailColor: "#d6d6d6", //white
-                      backgroundColor: "#d6d6d6",
-                      textSize: 8,
-                      pathTransitionDuration: 0.15,
-                    })}
-                  >
-                    <div className="reports__progressbar_text">{`${stats.position}%`}</div>
-                    <div className="reports__progressbar_text">{`Position`}</div>
-                  </CircularProgressbarWithChildren>
-                </div>
-                <div className="reports__progressbar_item">
-                  <CircularProgressbarWithChildren
-                    value={stats.claim}
-                    background
-                    styles={buildStyles({
-                      strokeLinecap: "round",
-                      pathColor: "#6aa2b8",
-                      textColor: "#000",
-                      trailColor: "#d6d6d6", //white
-                      backgroundColor: "#d6d6d6",
-                      textSize: 8,
-                      pathTransitionDuration: 0.15,
-                    })}
-                  >
-                    <div className="reports__progressbar_text">{`${stats.claim}%`}</div>
-                    <div className="reports__progressbar_text">{`Claim`}</div>
-                  </CircularProgressbarWithChildren>
-                </div>
-                <div className="reports__progressbar_item">
-                  <CircularProgressbarWithChildren
-                    value={stats.counterClaim}
-                    background
-                    styles={buildStyles({
-                      strokeLinecap: "round",
-                      pathColor: "#f78d2d",
-                      textColor: "#000",
-                      trailColor: "#d6d6d6", //white
-                      backgroundColor: "#d6d6d6",
-                      textSize: 8,
-                      pathTransitionDuration: 0.15,
-                    })}
-                  >
-                    <div className="reports__progressbar_text">{`${stats.counterClaim}%`}</div>
-                    <div className="reports__progressbar_text">{`Counterclaim`}</div>
-                  </CircularProgressbarWithChildren>
-                </div>
-              </div>
-              <div className="reports__progressbar_row">
-                <div className="reports__progressbar_item">
-                  <CircularProgressbarWithChildren
-                    value={stats.rebuttal}
-                    background
-                    styles={buildStyles({
-                      strokeLinecap: "round",
-                      pathColor: "#934D6D",
-                      textColor: "#000",
-                      trailColor: "#d6d6d6", //white
-                      backgroundColor: "#d6d6d6",
-                      textSize: 8,
-                      pathTransitionDuration: 0.15,
-                    })}
-                  >
-                    <div className="reports__progressbar_text">{`${stats.rebuttal}%`}</div>
-                    <div className="reports__progressbar_text">{`Rebuttal`}</div>
-                  </CircularProgressbarWithChildren>
+                <div className="flex flex-col items-center">
+                  <div className="w-32 h-32">
+                    <CircularProgressbarWithChildren
+                      value={stats.position}
+                      background
+                      styles={buildStyles({
+                        strokeLinecap: "round",
+                        pathColor: "#0064a4",
+                        textColor: "#000",
+                        trailColor: "#d6d6d6",
+                        backgroundColor: "#d6d6d6",
+                        textSize: 8,
+                        pathTransitionDuration: 0.15,
+                      })}
+                    >
+                      <div className="text-lg font-bold">{`${stats.position}%`}</div>
+                      <div className="text-sm text-muted-foreground">{`Position`}</div>
+                    </CircularProgressbarWithChildren>
+                  </div>
                 </div>
 
-                <div className="reports__progressbar_item">
-                  <CircularProgressbarWithChildren
-                    value={stats.evidence}
-                    background
-                    styles={buildStyles({
-                      strokeLinecap: "round",
-                      pathColor: "#8D91C7",
-                      textColor: "#000",
-                      trailColor: "#d6d6d6", //white
-                      backgroundColor: "#d6d6d6",
-                      textSize: 8,
-                      pathTransitionDuration: 0.15,
-                    })}
-                  >
-                    <div className="reports__progressbar_text">{`${stats.evidence}%`}</div>
-                    <div className="reports__progressbar_text">{`Evidence`}</div>
-                  </CircularProgressbarWithChildren>
+                <div className="flex flex-col items-center">
+                  <div className="w-32 h-32">
+                    <CircularProgressbarWithChildren
+                      value={stats.claim}
+                      background
+                      styles={buildStyles({
+                        strokeLinecap: "round",
+                        pathColor: "#6aa2b8",
+                        textColor: "#000",
+                        trailColor: "#d6d6d6",
+                        backgroundColor: "#d6d6d6",
+                        textSize: 8,
+                        pathTransitionDuration: 0.15,
+                      })}
+                    >
+                      <div className="text-lg font-bold">{`${stats.claim}%`}</div>
+                      <div className="text-sm text-muted-foreground">{`Claim`}</div>
+                    </CircularProgressbarWithChildren>
+                  </div>
                 </div>
-                <div className="reports__progressbar_item">
-                  <CircularProgressbarWithChildren
-                    value={stats.conclude}
-                    background
-                    styles={buildStyles({
-                      strokeLinecap: "round",
-                      pathColor: "#7ab800",
-                      textColor: "#000",
-                      trailColor: "#d6d6d6", //white
-                      backgroundColor: "#d6d6d6",
-                      textSize: 8,
-                      pathTransitionDuration: 0.15,
-                    })}
-                  >
-                    <div className="reports__progressbar_text">{`${stats.conclude}%`}</div>
-                    <div className="reports__progressbar_text">{`Concluding Summary`}</div>
-                  </CircularProgressbarWithChildren>
+
+                <div className="flex flex-col items-center">
+                  <div className="w-32 h-32">
+                    <CircularProgressbarWithChildren
+                      value={stats.counterClaim}
+                      background
+                      styles={buildStyles({
+                        strokeLinecap: "round",
+                        pathColor: "#f78d2d",
+                        textColor: "#000",
+                        trailColor: "#d6d6d6",
+                        backgroundColor: "#d6d6d6",
+                        textSize: 8,
+                        pathTransitionDuration: 0.15,
+                      })}
+                    >
+                      <div className="text-lg font-bold">{`${stats.counterClaim}%`}</div>
+                      <div className="text-sm text-muted-foreground">{`Counterclaim`}</div>
+                    </CircularProgressbarWithChildren>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div className="w-32 h-32">
+                    <CircularProgressbarWithChildren
+                      value={stats.rebuttal}
+                      background
+                      styles={buildStyles({
+                        strokeLinecap: "round",
+                        pathColor: "#934D6D",
+                        textColor: "#000",
+                        trailColor: "#d6d6d6",
+                        backgroundColor: "#d6d6d6",
+                        textSize: 8,
+                        pathTransitionDuration: 0.15,
+                      })}
+                    >
+                      <div className="text-lg font-bold">{`${stats.rebuttal}%`}</div>
+                      <div className="text-sm text-muted-foreground">{`Rebuttal`}</div>
+                    </CircularProgressbarWithChildren>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div className="w-32 h-32">
+                    <CircularProgressbarWithChildren
+                      value={stats.evidence}
+                      background
+                      styles={buildStyles({
+                        strokeLinecap: "round",
+                        pathColor: "#8D91C7",
+                        textColor: "#000",
+                        trailColor: "#d6d6d6",
+                        backgroundColor: "#d6d6d6",
+                        textSize: 8,
+                        pathTransitionDuration: 0.15,
+                      })}
+                    >
+                      <div className="text-lg font-bold">{`${stats.evidence}%`}</div>
+                      <div className="text-sm text-muted-foreground">{`Evidence`}</div>
+                    </CircularProgressbarWithChildren>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div className="w-32 h-32">
+                    <CircularProgressbarWithChildren
+                      value={stats.conclude}
+                      background
+                      styles={buildStyles({
+                        strokeLinecap: "round",
+                        pathColor: "#7ab800",
+                        textColor: "#000",
+                        trailColor: "#d6d6d6",
+                        backgroundColor: "#d6d6d6",
+                        textSize: 8,
+                        pathTransitionDuration: 0.15,
+                      })}
+                    >
+                      <div className="text-lg font-bold">{`${stats.conclude}%`}</div>
+                      <div className="text-sm text-muted-foreground">{`Concluding Summary`}</div>
+                    </CircularProgressbarWithChildren>
+                  </div>
                 </div>
               </div>
             </>
-          ) : (
-            <></>
           )}
 
-          <hr />
+          <div className="border-t border-border"></div>
 
-          <Paper sx={{ width: "100%", overflow: "hidden" }}>
-            <TableContainer sx={{ maxHeight: 440, border: "1px solid black" }}>
-              <Table stickyHeader aria-label="rater table">
-                <TableHead>
-                  {moduleData?.raterEnabled ? (
-                    <TableRow>
-                      {columns.map((column) => (
-                        <TableCell
-                          key={column.id}
-                          align={column.align}
-                          style={{ minWidth: column.minWidth }}
-                        >
-                          {column.label}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ) : (
-                    <TableRow style={{ width: "100%" }}>
-                      <TableCell
-                        key={"name"}
-                        align={"left"}
-                        style={{ minWidth: 170, width: "100%" }}
-                      >
-                        Name
-                      </TableCell>
-                      <TableCell
-                        key={"convos"}
-                        align={"left"}
-                        style={{ minWidth: 170, width: "100%" }}
-                      >
-                        Num Convos
-                      </TableCell>
-                      <TableCell
-                        key={"essay"}
-                        align={"left"}
-                        style={{ minWidth: 170, width: "100%" }}
-                      >
-                        Num Essays
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableHead>
-                {moduleData?.raterEnabled ? (
+          <Card className="transition-all duration-300 hover:shadow-md">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <h3 className="text-lg font-semibold">Student Reports</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Rows per page:</span>
+                  <Select
+                    value={rowsPerPage.toString()}
+                    onValueChange={handleChangeRowsPerPage}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    {moduleData?.raterEnabled ? (
+                      <TableRow>
+                        {columns.map((column) => (
+                          <TableHead
+                            key={column.id}
+                            className={column.align === "right" ? "text-right" : ""}
+                            style={{ minWidth: column.minWidth }}
+                          >
+                            {column.label}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ) : (
+                      <TableRow>
+                        <TableHead style={{ minWidth: 170 }}>Name</TableHead>
+                        <TableHead style={{ minWidth: 170 }}>Num Convos</TableHead>
+                        <TableHead style={{ minWidth: 170 }}>Num Essays</TableHead>
+                      </TableRow>
+                    )}
+                  </TableHeader>
                   <TableBody>
-                    {rows
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map((row) => {
+                    {paginatedRows.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={moduleData?.raterEnabled ? columns.length : 3}
+                          className="text-center py-8"
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
+                            <p className="text-muted-foreground">No data available</p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : moduleData?.raterEnabled ? (
+                      paginatedRows.map((row) => {
                         return (
                           <TableRow
-                            hover
-                            role="button"
-                            tabIndex={-1}
                             key={row.name}
+                            className="cursor-pointer hover:bg-muted/50"
                             onClick={() =>
                               navigator(
                                 `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
@@ -635,21 +672,25 @@ export default function ModuleReports(): JSX.Element {
                             {columns.map((column) => {
                               const value = row[column.id];
                               return (
-                                //add button on row to view user's conversations
-                                <TableCell key={column.id} align={column.align}>
+                                <TableCell
+                                  key={column.id}
+                                  className={column.align === "right" ? "text-right" : ""}
+                                >
                                   {typeof value === "boolean" ? (
                                     value ? (
-                                      <CheckCircleOutlineIcon color="success" />
+                                      <CheckCircle2 className="h-5 w-5 text-green-600" />
                                     ) : (
-                                      <HighlightOffIcon color="error" />
+                                      <X className="h-5 w-5 text-destructive" />
                                     )
                                   ) : (
                                     <button
-                                      onClick={() =>
+                                      className="hover:text-primary transition-colors"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         navigator(
                                           `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                                        )
-                                      }
+                                        );
+                                      }}
                                     >
                                       {value}
                                     </button>
@@ -659,73 +700,103 @@ export default function ModuleReports(): JSX.Element {
                             })}
                           </TableRow>
                         );
-                      })}
-                  </TableBody>
-                ) : (
-                  <TableBody>
-                    {rows
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map((row) => {
+                      })
+                    ) : (
+                      paginatedRows.map((row) => {
                         return (
                           <TableRow
-                            hover
-                            role="button"
-                            tabIndex={-1}
                             key={row.name}
+                            className="cursor-pointer hover:bg-muted/50"
                             onClick={() =>
                               navigator(
                                 `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
                               )
                             }
                           >
-                            {columns.map((column) => {
-                              const value = row[column.id];
-                              if (typeof value !== "boolean") {
-                                return (
-                                  //add button on row to view user's conversations
-                                  <TableCell
-                                    key={column.id}
-                                    align={column.align}
-                                  >
-                                    <button
-                                      onClick={() =>
-                                        navigator(
-                                          `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                                        )
-                                      }
-                                    >
-                                      {value}
-                                    </button>
-                                  </TableCell>
-                                );
-                              } else {
-                                return <></>;
-                              }
-                            })}
+                            <TableCell>
+                              <button
+                                className="hover:text-primary transition-colors font-medium"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator(
+                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
+                                  );
+                                }}
+                              >
+                                {row.name}
+                              </button>
+                            </TableCell>
+                            <TableCell>
+                              <button
+                                className="hover:text-primary transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator(
+                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
+                                  );
+                                }}
+                              >
+                                {row.convos}
+                              </button>
+                            </TableCell>
+                            <TableCell>
+                              <button
+                                className="hover:text-primary transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator(
+                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
+                                  );
+                                }}
+                              >
+                                {row.essays}
+                              </button>
+                            </TableCell>
                           </TableRow>
                         );
-                      })}
+                      })
+                    )}
                   </TableBody>
-                )}
-              </Table>
-            </TableContainer>
-            <TablePagination
-              rowsPerPageOptions={[10, 25, 100]}
-              component="div"
-              count={rows.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </Paper>
+                </Table>
+              </div>
+
+              {rows.length > 0 && (
+                <div className="flex items-center justify-between px-2 py-4">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1} to {Math.min(endIndex, rows.length)} of{" "}
+                    {rows.length} entries
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleChangePage(page - 1)}
+                      disabled={page === 0}
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="text-sm text-muted-foreground">
+                      Page {page + 1} of {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleChangePage(page + 1)}
+                      disabled={page >= totalPages - 1}
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
-    </div>
+    </main>
   ) : (
-    <LinearProgress />
+    <PageLoader pageName="Module Reports" />
   );
 }

@@ -14,6 +14,7 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
+  Eye,
 } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
@@ -575,7 +576,7 @@ export default function ModuleCard({
                 </button>
               </TooltipWrapper>
 
-              {/* {isInstructorOrTA && ( //TODO figure this out later
+              {isInstructorOrTA && ( //TODO figure this out later
                 <TooltipWrapper content="View Reports">
                   <button
                     onClick={() =>
@@ -587,7 +588,7 @@ export default function ModuleCard({
                     <Eye className="h-[1em] w-[1em]" aria-hidden="true" />
                   </button>
                 </TooltipWrapper>
-              )} */}
+              )}
 
               {isInstructorOrTA && (
                 <DropdownWrapper

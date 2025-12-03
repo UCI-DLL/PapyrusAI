@@ -31,6 +31,7 @@ import {
   Eye,
   Plus,
   Trash2,
+  CheckCircle,
 } from "lucide-react";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
@@ -54,6 +55,7 @@ interface FileProps {
   showRemove?: boolean;
   isStarred?: boolean;
   disableStarring?: boolean;
+  isSelected?: boolean;
 }
 
 export const File = (props: FileProps) => {
@@ -666,6 +668,19 @@ export const File = (props: FileProps) => {
                   >
                     <Trash2 className="h-3 w-3" />
                     Remove
+                  </Button>
+                </TooltipWrapper>
+              ) : props.isSelected ? (
+                <TooltipWrapper content="This file is already added to the module" side="top">
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    size="sm"
+                    disabled
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground opacity-50 cursor-not-allowed"
+                  >
+                    <CheckCircle className="h-3 w-3" />
+                    Added
                   </Button>
                 </TooltipWrapper>
               ) : (

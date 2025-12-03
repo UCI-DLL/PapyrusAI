@@ -12,21 +12,22 @@ import { Button } from "../../components/ui/button";
 import { useNavigate } from "react-router";
 import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
-import { CourseType } from "../../utility/types/CourseTypes";
+import type { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
-import AddCourseForm, {
+import AddCourseForm, { type
   AddCourseFormHandle,
 } from "../course-groups/AddCourseForm";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
-import { UserStarred } from "../../utility/types/UserTypes";
-import { ExternalLink, EyeIcon, Loader2, PlusIcon, Target } from "lucide-react";
+import type { UserStarred } from "../../utility/types/UserTypes";
+import { ExternalLink, EyeIcon, PlusIcon, Target } from "lucide-react";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { Link } from "react-router-dom";
+import { PageLoader, PageHeaderCard } from "../../components/Common";
 
 export default function Dashboard(): JSX.Element {
-  let navigator = useNavigate();
+  const navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
@@ -118,42 +119,14 @@ export default function Dashboard(): JSX.Element {
   );
 
   if (isLoading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Loader2
-            className="h-8 w-8 animate-spin text-primary"
-            aria-hidden="true"
-          />
-          <p className="text-muted-foreground">Loading Dashboard</p>
-        </div>
-      </div>
-    );
+    return <PageLoader pageName="Dashboard" />
   }
 
+  console.trace(orderedCourses)
+  
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      {/* Standard Page Header Pattern */}
-      <header className="animate-in slide-in-from-bottom-4 duration-700">
-        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
-          <div
-            className="absolute top-0 right-0 w-48 h-48 opacity-10"
-            aria-hidden="true"
-          >
-            <Target size={192} className="text-primary" />
-          </div>
-
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              Welcome back, {user?.name}!
-            </h1>
-          </div>
-        </div>
-      </header>
+      <PageHeaderCard title={`Welcome back, ${user?.name}!`} icon={<Target size={192} className="text-primary" />} />
 
       {/* Courses Section */}
       <section aria-labelledby="courses-heading">

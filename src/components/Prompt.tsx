@@ -33,6 +33,7 @@ import {
   Eye,
   Plus,
   Trash2,
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router";
@@ -62,6 +63,7 @@ interface PromptProps {
   noShowDesc?: boolean;
   isStarred?: boolean;
   disableStarring?: boolean;
+  isSelected?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -747,6 +749,19 @@ export const Prompt = (props: PromptProps) => {
                   >
                     <Trash2 className="h-3 w-3" />
                     Remove
+                  </Button>
+                </TooltipWrapper>
+              ) : props.isSelected ? (
+                <TooltipWrapper content="This prompt is already added to the module" side="top">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground opacity-50 cursor-not-allowed"
+                  >
+                    <CheckCircle className="h-3 w-3" />
+                    Added
                   </Button>
                 </TooltipWrapper>
               ) : (

@@ -7,7 +7,14 @@ import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { useNavigate } from "react-router-dom";
-import { Star, Play, MoreHorizontal, Loader2, CheckCircle, XCircle } from "lucide-react";
+import {
+  Star,
+  Play,
+  MoreHorizontal,
+  Loader2,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType, ModuleType } from "../utility/types/CourseTypes";
@@ -229,7 +236,8 @@ export default function ModuleCard({
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
               navigator(
-                `/chat/${user.username}/${course.id}/${module.id}/${createRes.data.conversations.length - 1
+                `/chat/${user.username}/${course.id}/${module.id}/${
+                  createRes.data.conversations.length - 1
                 }`
               );
             }
@@ -486,8 +494,10 @@ export default function ModuleCard({
         <div className="p-4 flex flex-col flex-1 relative z-10">
           <header className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary 
-              dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors duration-300">
+              <h2
+                className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary 
+              dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors duration-300"
+              >
                 {module.name}
               </h2>
               {isInstructorOrTA && (
@@ -506,13 +516,20 @@ export default function ModuleCard({
                   ) : (
                     <>
                       <XCircle className="h-5 w-5 text-gray-500" />
-                      <Badge className="pointer-events-none" variant="secondary">Unpublished</Badge>
+                      <Badge
+                        className="pointer-events-none"
+                        variant="secondary"
+                      >
+                        Unpublished
+                      </Badge>
                     </>
                   )}
                 </div>
               )}
               <div className="flex flex-col my-2 gap-2 text-xs text-muted-foreground">
-                <div className="font-medium text-sm truncate-text">{courseInfo}</div>
+                <div className="font-medium text-sm truncate-text">
+                  {courseInfo}
+                </div>
                 {module.moduleDescription && (
                   <p className="text-muted-foreground leading-relaxed text-sm line-clamp-2">
                     {module.moduleDescription}
@@ -549,7 +566,9 @@ export default function ModuleCard({
                     size={12}
                     fill={isStarred ? "currentColor" : "none"}
                     className={cn(
-                      isStarred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
+                      isStarred
+                        ? "hover:fill-none h-[1em] w-[1em]"
+                        : "hover:fill-current h-[1em] w-[1em]"
                     )}
                     aria-hidden="true"
                   />
@@ -574,21 +593,24 @@ export default function ModuleCard({
                 <DropdownWrapper
                   trigger={
                     <button
-                      className="p-1 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                      className="p-1 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
                       aria-label="Module options menu"
                     >
-                      <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
+                      <MoreHorizontal
+                        className="h-[1em] w-[1em]"
+                        aria-hidden="true"
+                      />
                     </button>
                   }
                   actions={(user?.groups.includes(course.id) &&
-                    (course.instructor.username === user.username ||
-                      (course.taList &&
-                        course.taList.find(
-                          (a: CustomUserType) => a.username === user?.username
-                        )))
+                  (course.instructor.username === user.username ||
+                    (course.taList &&
+                      course.taList.find(
+                        (a: CustomUserType) => a.username === user?.username
+                      )))
                     ? ownerMenu
                     : nonOwnerMenu
                   ).map((item) => ({

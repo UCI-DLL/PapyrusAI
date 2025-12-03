@@ -3,18 +3,20 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Sheet, SheetContent } from "../../../components/ui/sheet";
-import { Search, Plus, Loader2, MessageCircle } from "lucide-react";
+import { Search, Plus, Loader2, MessageCircle, MoreVertical } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { ConversationListType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import { cn } from "../../../lib/utils";
 import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
+import { DropdownWrapper } from "../../../components/ui-wrappers/DropdownWrapper";
 import { Link } from "react-router-dom";
 
 interface ChatSidebarProps {
   courseInfo: CourseType;
   moduleInfo: ModuleType;
   user?: UserType | null;
+  viewUser?: UserType;
   conversationList?: ConversationListType;
   currentConversationIndex?: string;
   searchTerm: string;
@@ -24,6 +26,9 @@ interface ChatSidebarProps {
   onSearchChange: (term: string) => void;
   onNewConversation: () => void;
   onConversationClick: (link: string) => void;
+  onRenameConversation: (courseId: string, moduleId: string, index: string, name: string) => void;
+  onArchiveConversation: (courseId: string, moduleId: string, index: string) => void;
+  onDownloadConversation: (courseId: string, moduleId: string, index: string) => void;
   onClose?: () => void;
 }
 
@@ -31,6 +36,7 @@ export default function ChatSidebar({
   courseInfo,
   moduleInfo,
   user,
+  viewUser,
   conversationList,
   currentConversationIndex,
   searchTerm,
@@ -40,6 +46,9 @@ export default function ChatSidebar({
   onSearchChange,
   onNewConversation,
   onConversationClick,
+  onRenameConversation,
+  onArchiveConversation,
+  onDownloadConversation,
   onClose,
 }: ChatSidebarProps): JSX.Element | null {
   const filteredConversations =
@@ -121,31 +130,101 @@ export default function ChatSidebar({
                 const isCurrentConversation =
                   conversationIndex.toString() === currentConversationIndex;
                 const conversationLink = `/chat/${user?.username}/${courseInfo.id}/${moduleInfo.id}/${conversationIndex}`;
+                const canModifyConversation =
+                  user && viewUser && user.username === viewUser.username;
 
                 return (
-                  <button
+                  <div
                     key={conversation.id}
                     className={cn(
-                      "rounded-lg p-3 cursor-pointer transition-colors border text-left w-full",
+                      "rounded-lg border transition-colors group",
                       isCurrentConversation
                         ? "bg-primary text-primary-foreground border-primary"
                         : "hover:bg-accent hover:text-secondary-foreground border-transparent"
                     )}
-                    onClick={() => onConversationClick(conversationLink)}
                   >
-                    <Link to={conversationLink} className="no-underline">
-                      <div className="space-y-1">
-                        <p className={"text-sm font-medium truncate-text"}>
-                          {conversation.name}
-                        </p>
-                        <p className={"text-xs truncate-text"}>
-                          {new Date(
-                            parseInt(conversation.id.substring(0, 13))
-                          ).toLocaleDateString()}
-                        </p>
+                    <div className="flex items-center gap-2 p-3">
+                      <Link
+                        to={conversationLink}
+                        className="flex-1 text-left min-w-0 no-underline cursor-pointer"
+                        onClick={() => onConversationClick(conversationLink)}
+                      >
+                        <div className="space-y-1">
+                          <p className={"text-sm font-medium truncate"}>
+                            {conversation.name}
+                          </p>
+                          <p className={"text-xs truncate"}>
+                            {new Date(
+                              parseInt(conversation.id.substring(0, 13))
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </Link>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DropdownWrapper
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={cn(
+                                "h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
+                                isCurrentConversation && "opacity-100"
+                              )}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                              aria-label="Conversation options"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          }
+                          actions={[
+                            {
+                              label: "Rename",
+                              onClick: () => {
+                                onRenameConversation(
+                                  courseInfo.id,
+                                  moduleInfo.id,
+                                  conversationIndex.toString(),
+                                  conversation.name
+                                );
+                                if (isMobile && onClose) onClose();
+                              },
+                            },
+                            {
+                              label: "Download",
+                              onClick: () => {
+                                onDownloadConversation(
+                                  courseInfo.id,
+                                  moduleInfo.id,
+                                  conversationIndex.toString()
+                                );
+                                if (isMobile && onClose) onClose();
+                              },
+                            },
+                            ...(canModifyConversation
+                              ? [
+                                  {
+                                    label: "Archive Conversation",
+                                    onClick: () => {
+                                      onArchiveConversation(
+                                        courseInfo.id,
+                                        moduleInfo.id,
+                                        conversationIndex.toString()
+                                      );
+                                      if (isMobile && onClose) onClose();
+                                    },
+                                    className: "text-destructive",
+                                  },
+                                ]
+                              : []),
+                          ]}
+                          align="end"
+                        />
                       </div>
-                    </Link>
-                  </button>
+                    </div>
+                  </div>
                 );
               })}
             </div>

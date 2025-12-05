@@ -47,17 +47,21 @@ const Alert = ({
         }
     };
 
-    // Auto-dismiss after 10 seconds
+    // Auto-dismiss after 30 seconds
     React.useEffect(() => {
         const timer = setTimeout(() => {
             onClose();
-        }, 10000);
+        }, 30000);
 
         return () => clearTimeout(timer);
     }, [onClose]);
 
     return (
-        <div className={`border rounded-md p-4 mb-4 ${bgColor} flex items-start gap-3`}>
+        <div
+            role="alert"
+            aria-live="assertive"
+            className={`border rounded-md p-4 mb-4 ${bgColor} flex items-start gap-3`}
+        >
             {getIcon(severity)}
             <div className="flex-1">{children}</div>
             <button

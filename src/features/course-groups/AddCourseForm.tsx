@@ -92,6 +92,7 @@ const AddCourseForm = forwardRef<AddCourseFormHandle, AddCourseFormProps>(
               id="signup-error"
               className="text-sm text-destructive"
               role="alert"
+              aria-live="assertive"
             >
               {errors.signUpCode}
             </p>

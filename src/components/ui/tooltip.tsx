@@ -15,7 +15,7 @@ const Tooltip = ({
   children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Root>) => (
-  <TooltipPrimitive.Root disableHoverableContent {...props}>
+  <TooltipPrimitive.Root  {...props}>
     {children}
   </TooltipPrimitive.Root>
 )

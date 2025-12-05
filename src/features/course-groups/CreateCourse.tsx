@@ -567,11 +567,11 @@ export default function CreateCourse({
                     >
                       <Info className="h-4 w-4" aria-hidden="true" />
                     </Button>
-                    <div className="flex rounded-lg border overflow-hidden">
+                    <div className="flex rounded-lg border">
                       <Button
                         size="sm"
                         onClick={handleClick}
-                        className="rounded-none border-0 w-full"
+                        className="rounded-none border-0 w-full rounded-l"
                         disabled={isLoading}
                         aria-label={`${options[selectedIndexSave]} course`}
                       >
@@ -584,7 +584,7 @@ export default function CreateCourse({
                         <DropdownMenuTrigger asChild>
                           <Button
                             size="sm"
-                            className="rounded-none border-0 border-l px-2"
+                            className="rounded-none border-0 border-l px-2 rounded-r"
                             variant="default"
                             disabled={isLoading}
                             aria-label="Select save and activation strategy"
@@ -680,6 +680,16 @@ export default function CreateCourse({
                       "border-destructive focus-visible:ring-destructive"
                     )}
                   />
+                  {errors.name !== "" && (
+                    <p
+                      className="text-sm text-destructive flex items-center gap-1"
+                      role="alert"
+                      aria-live="assertive"
+                    >
+                      <X className="h-3 w-3" />
+                      {errors.name}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -711,7 +721,11 @@ export default function CreateCourse({
                     )}
                   />
                   {errors.signUpCode && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
+                    <p
+                      className="text-sm text-destructive flex items-center gap-1"
+                      role="alert"
+                      aria-live="assertive"
+                    >
                       <X className="h-3 w-3" />
                       {errors.signUpCode}
                     </p>
@@ -763,7 +777,11 @@ export default function CreateCourse({
                       )}
                     />
                     {errors.year && (
-                      <p className="text-sm text-destructive flex items-center gap-1">
+                      <p
+                        className="text-sm text-destructive flex items-center gap-1"
+                        role="alert"
+                        aria-live="assertive"
+                      >
                         <X className="h-3 w-3" />
                         {errors.year}
                       </p>
@@ -805,7 +823,11 @@ export default function CreateCourse({
                       </SelectContent>
                     </Select>
                     {errors.term && (
-                      <p className="text-sm text-destructive flex items-center gap-1">
+                      <p
+                        className="text-sm text-destructive flex items-center gap-1"
+                        role="alert"
+                        aria-live="assertive"
+                      >
                         <X className="h-3 w-3" />
                         {errors.term}
                       </p>
@@ -837,7 +859,11 @@ export default function CreateCourse({
                       )}
                     />
                     {errors.section && (
-                      <p className="text-sm text-destructive flex items-center gap-1">
+                      <p
+                        className="text-sm text-destructive flex items-center gap-1"
+                        role="alert"
+                        aria-live="assertive"
+                      >
                         <X className="h-3 w-3" />
                         {errors.section}
                       </p>
@@ -989,7 +1015,11 @@ export default function CreateCourse({
                 </div>
 
                 {errors.taList !== "" && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
+                  <p
+                    className="text-sm text-destructive flex items-center gap-1"
+                    role="alert"
+                    aria-live="assertive"
+                  >
                     <X className="h-3 w-3" />
                     {errors.taList}
                   </p>
@@ -1043,7 +1073,7 @@ export default function CreateCourse({
                 <Info className="h-4 w-4" aria-hidden="true" />
                 Info
               </Button>
-              <div className="flex rounded-lg border overflow-hidden">
+              <div className="flex rounded-lg border">
                 <Button
                   size="sm"
                   onClick={(e) => {
@@ -1059,7 +1089,7 @@ export default function CreateCourse({
                       setOpenDiscardModal(true);
                     }
                   }}
-                  className="rounded-none border-0 w-full"
+                  className="rounded-none border-0 w-full rounded-l"
                   disabled={isLoading}
                   aria-label={`${options[selectedIndexSave]} course`}
                 >
@@ -1071,7 +1101,7 @@ export default function CreateCourse({
                   trigger={
                     <Button
                       size="sm"
-                      className="rounded-none border-0 border-l px-2"
+                      className="rounded-none border-0 border-l px-2 rounded-r"
                       variant="default"
                       disabled={isLoading}
                       aria-label="Select save and activation strategy"

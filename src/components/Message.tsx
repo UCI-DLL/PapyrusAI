@@ -215,7 +215,9 @@ export const MessageLeft = (props: MessageProps) => {
                 }`}
             >
               {props.typing ? (
-                <CustomTypingIndicator />
+                <div aria-live="polite">
+                  <CustomTypingIndicator />
+                </div>
               ) : (
                 <Markdown
                   remarkPlugins={[remarkGfm]}
@@ -243,7 +245,9 @@ export const MessageLeft = (props: MessageProps) => {
                 }`}
             >
               {props.typing ? (
-                <CustomTypingIndicator />
+                <div aria-live="polite">
+                  <CustomTypingIndicator />
+                </div>
               ) : (
                 <Markdown
                   remarkPlugins={[remarkGfm]}

@@ -364,7 +364,7 @@ export const MessageRight = (props: MessageProps) => {
             </div>
             <span className="text-sm font-medium text-muted-foreground">
               {props.isInstructor && !props.visible && (
-                <span className="text-destructive">Hidden Message - </span>
+                <span className="text-destructive dark:text-orange colorful-dark:text-orange">Hidden Message - </span>
               )}
               {props.displayName ? props.displayName : "You"}
             </span>

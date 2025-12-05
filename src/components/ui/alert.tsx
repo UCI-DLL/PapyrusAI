@@ -28,6 +28,7 @@ function Alert({
     <div
       data-slot="alert"
       role="alert"
+      aria-live="assertive"
       className={cn(alertVariants({ variant }), className)}
       {...props}
     />

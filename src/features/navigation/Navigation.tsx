@@ -415,7 +415,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main id="main-content" className="flex-1 overflow-auto">{children}</main>
       </SidebarInset>
     </div>
   );

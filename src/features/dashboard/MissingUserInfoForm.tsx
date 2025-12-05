@@ -202,6 +202,7 @@ export default function MissingUserInfoForm({
                   : ""
               }
               aria-describedby={errors.name ? "name-error" : undefined}
+              autoComplete="given-name"
             />
             {errors.name && (
               <p
@@ -233,6 +234,7 @@ export default function MissingUserInfoForm({
               aria-describedby={
                 errors.family_name ? "family-name-error" : undefined
               }
+              autoComplete="family-name"
             />
             {errors.family_name && (
               <p

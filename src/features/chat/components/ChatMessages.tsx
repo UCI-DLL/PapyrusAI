@@ -129,7 +129,7 @@ export default function ChatMessages({
 
         {/* Messages */}
         {messages.length > 0 && (
-          <div className="space-y-4">
+          <div role="log" aria-live="polite" aria-relevant="additions" className="space-y-4">
             {messages.map((message, index) => {
               const isContextDivider =
                 index ===

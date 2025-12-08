@@ -536,7 +536,12 @@ export default function CreateCourse({
                         ) : (
                           <>
                             <XCircle className="h-5 w-5 text-gray-500" />
-                            <Badge className="pointer-events-none" variant="secondary">Unpublished</Badge>
+                            <Badge
+                              className="pointer-events-none"
+                              variant="secondary"
+                            >
+                              Unpublished
+                            </Badge>
                           </>
                         )}
                       </div>
@@ -608,7 +613,8 @@ export default function CreateCourse({
                               }}
                               className={cn(
                                 index === selectedIndexSave && "bg-primary/30",
-                                index === 2 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                                index === 2 &&
+                                  "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                               )}
                             >
                               {option}
@@ -658,10 +664,15 @@ export default function CreateCourse({
                     <Label htmlFor="name" className="text-sm font-medium">
                       Course Name *
                     </Label>
-                    <TooltipWrapper content="The name for your course that users will see upon
-                            joining.">
-                      <button aria-label="The name for your course that users will see upon
-                            joining.">
+                    <TooltipWrapper
+                      content="The name for your course that users will see upon
+                            joining."
+                    >
+                      <button
+                        type="button"
+                        aria-label="The name for your course that users will see upon
+                            joining."
+                      >
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                       </button>
                     </TooltipWrapper>
@@ -677,7 +688,7 @@ export default function CreateCourse({
                     className={cn(
                       "transition-colors",
                       errors.name &&
-                      "border-destructive focus-visible:ring-destructive"
+                        "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                   {errors.name !== "" && (
@@ -696,12 +707,17 @@ export default function CreateCourse({
                     <Label htmlFor="signUpCode" className="text-sm font-medium">
                       Course Sign Up Code *
                     </Label>
-                    <TooltipWrapper content="The unique sign up code that users will use to join
+                    <TooltipWrapper
+                      content="The unique sign up code that users will use to join
                             your course. You can use any combination of letters
-                            and numbers. This is case sensitive.">
-                      <button aria-label="The unique sign up code that users will use to join
+                            and numbers. This is case sensitive."
+                    >
+                      <button
+                        type="button"
+                        aria-label="The unique sign up code that users will use to join
                             your course. You can use any combination of letters
-                            and numbers. This is case sensitive.">
+                            and numbers. This is case sensitive."
+                      >
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                       </button>
                     </TooltipWrapper>
@@ -717,7 +733,7 @@ export default function CreateCourse({
                     className={cn(
                       "transition-colors",
                       errors.signUpCode &&
-                      "border-destructive focus-visible:ring-destructive"
+                        "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                   {errors.signUpCode && (
@@ -754,7 +770,10 @@ export default function CreateCourse({
                         Year
                       </Label>
                       <TooltipWrapper content="The year in which your course is taking place.">
-                        <button aria-label="The year in which your course is taking place.">
+                        <button
+                          type="button"
+                          aria-label="The year in which your course is taking place."
+                        >
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>
@@ -773,7 +792,7 @@ export default function CreateCourse({
                       className={cn(
                         "transition-colors",
                         errors.year &&
-                        "border-destructive focus-visible:ring-destructive"
+                          "border-destructive focus-visible:ring-destructive"
                       )}
                     />
                     {errors.year && (
@@ -794,7 +813,10 @@ export default function CreateCourse({
                         Term
                       </Label>
                       <TooltipWrapper content="The term in which your course is taking place.">
-                        <button aria-label="The term in which your course is taking place.">
+                        <button
+                          type="button"
+                          aria-label="The term in which your course is taking place."
+                        >
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>
@@ -808,7 +830,7 @@ export default function CreateCourse({
                         className={cn(
                           "transition-colors",
                           errors.term &&
-                          "border-destructive focus-visible:ring-destructive"
+                            "border-destructive focus-visible:ring-destructive"
                         )}
                         aria-label="Select Term"
                       >
@@ -840,7 +862,10 @@ export default function CreateCourse({
                         Section / Period
                       </Label>
                       <TooltipWrapper content="The section number or period for your course.">
-                        <button aria-label="The section number or period for your course.">
+                        <button
+                          type="button"
+                          aria-label="The section number or period for your course."
+                        >
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>
@@ -855,7 +880,7 @@ export default function CreateCourse({
                       className={cn(
                         "transition-colors",
                         errors.section &&
-                        "border-destructive focus-visible:ring-destructive"
+                          "border-destructive focus-visible:ring-destructive"
                       )}
                     />
                     {errors.section && (
@@ -904,9 +929,9 @@ export default function CreateCourse({
                             {ta.name && ta.family_name
                               ? `${ta.name} ${ta.family_name}`
                               : ta.name ||
-                              ta.family_name ||
-                              ta.email ||
-                              ta.username}
+                                ta.family_name ||
+                                ta.email ||
+                                ta.username}
                             <Button
                               type="button"
                               variant="ghost"
@@ -933,7 +958,11 @@ export default function CreateCourse({
                 )}
 
                 <div className="space-y-2">
-                  <Label id="taLabel" htmlFor="taSelect" className="text-sm font-medium">
+                  <Label
+                    id="taLabel"
+                    htmlFor="taSelect"
+                    className="text-sm font-medium"
+                  >
                     Add Teaching Assistant
                   </Label>
                   <Select
@@ -996,9 +1025,9 @@ export default function CreateCourse({
                                   {user.name && user.family_name
                                     ? `${user.name} ${user.family_name}`
                                     : user.name ||
-                                    user.family_name ||
-                                    user.email ||
-                                    user.username}
+                                      user.family_name ||
+                                      user.email ||
+                                      user.username}
                                 </span>
                                 {user.email &&
                                   (user.name || user.family_name) && (
@@ -1120,7 +1149,8 @@ export default function CreateCourse({
                     },
                     className: cn(
                       index === selectedIndexSave && "bg-primary/30",
-                      index === 2 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                      index === 2 &&
+                        "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                     ),
                   }))}
                   align="end"

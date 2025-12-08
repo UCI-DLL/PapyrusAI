@@ -64,8 +64,8 @@ export default function StudentListPopup({
   const students =
     analysis && analysis.students
       ? Object.entries(
-        analysis.students as Record<string, Record<string, unknown>>
-      )
+          analysis.students as Record<string, Record<string, unknown>>
+        )
       : [];
 
   const handleStudentClick = (
@@ -123,8 +123,9 @@ export default function StudentListPopup({
                 const info = studentInfo.info as
                   | Record<string, unknown>
                   | undefined;
-                const studentName = `${info?.name as string} ${info?.family_name as string
-                  }`;
+                const studentName = `${info?.name as string} ${
+                  info?.family_name as string
+                }`;
                 const studentEmail = info?.email as string;
 
                 return (
@@ -140,7 +141,7 @@ export default function StudentListPopup({
                         handleStudentClick(id, student);
                       }
                     }}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-accent cursor-pointer transition-colors group focus:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted cursor-pointer transition-colors group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">

@@ -13,6 +13,7 @@ interface ChatHeaderProps {
   viewUser?: UserType;
   onRename: () => void;
   onDownload: () => void;
+  onClassification: () => void;
   onHide: () => void;
   onToggleSidebar: () => void;
   isMobile?: boolean;
@@ -26,12 +27,16 @@ export default function ChatHeader({
   viewUser,
   onRename,
   onDownload,
+  onClassification,
   onHide,
   onToggleSidebar,
   isMobile = false,
 }: ChatHeaderProps): JSX.Element {
   const canModifyConversation =
     user && viewUser && user.username === viewUser.username;
+  const isAdmin = user?.groups.includes(
+    process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin"
+  );
 
   return (
     <div className="bg-card border-b border-border px-4 py-3 sticky top-0 z-20">
@@ -50,7 +55,12 @@ export default function ChatHeader({
         <div className="flex items-center gap-1">
           <DropdownWrapper
             trigger={
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="More Options">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                aria-label="More Options"
+              >
                 <MoreVertical className="h-4 w-4" />
               </Button>
             }
@@ -59,17 +69,25 @@ export default function ChatHeader({
                 label: "Rename",
                 onClick: onRename,
               },
+              ...(isAdmin
+                ? [
+                    {
+                      label: "Classify",
+                      onClick: onClassification,
+                    },
+                  ]
+                : []),
               {
                 label: "Download",
                 onClick: onDownload,
               },
               ...(canModifyConversation
                 ? [
-                  {
-                    label: "Archive Conversation",
-                    onClick: onHide,
-                  },
-                ]
+                    {
+                      label: "Archive Conversation",
+                      onClick: onHide,
+                    },
+                  ]
                 : []),
             ]}
             align="end"

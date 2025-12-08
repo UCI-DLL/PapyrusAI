@@ -14,6 +14,7 @@ import Get from "../../utility/Get";
 import {
   getConversation,
   getConversationList,
+  getConversationClassification,
   postAutoCreateConvoName,
   postCreateConversation,
   postUpdateConversation,
@@ -69,7 +70,8 @@ export default function Chat(): JSX.Element {
     useState<ConversationListType>();
   const [creatingConvo, setCreatingConvo] = useState<boolean>(false);
   const [messageNote, setMessageNote] = useState<string>();
-  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{ //used for autonaming also
+  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
+    //used for autonaming also
     open: boolean;
     deleteOpen: boolean;
     courseId: string;
@@ -263,7 +265,8 @@ export default function Chat(): JSX.Element {
           if (res && res.status === 400) {
             setAlert({ message: "Conversation not found", type: "error" });
             navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
+              `/courses/${location.pathname.split("/")[3]}/modules/${
+                location.pathname.split("/")[4]
               }`
             );
           }
@@ -346,141 +349,139 @@ export default function Chat(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname, user, viewUser]);
 
-  const onSocketMessage = useCallback(
-    (dataStr: string) => {
-      const returnData = JSON.parse(dataStr);
-      setShowTypingIndicator(false);
-      if (returnData.essay && returnData.status < 300 && returnData.rater) {
-        const tempTimestamp = Date.now();
-        const essayTempId =
-          tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-        const messageTempId = (Number(essayTempId) + 1).toString();
-        var essayMessage: MessageType = {
-          id: essayTempId,
-          content: "View your essay feedback by clicking on this message.",
-          messageType: "text",
-          role: "assistant",
-          sender: "ChatGPT",
-          timestamp: tempTimestamp.toString(),
-          promptId: null,
-          userVisible: true,
-          raterReference: "",
-          expandableMessage: JSON.stringify(returnData.rater),
-        };
-        var essayResponseMessage: MessageType = {
-          id: messageTempId,
-          content: returnData.data,
-          messageType: "text",
-          role: "assistant",
-          sender: "ChatGPT",
-          timestamp: tempTimestamp.toString(),
-          promptId: null,
-          userVisible: true,
-          raterReference: "",
-          expandableMessage: "",
-        };
-        setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
-        setShowWizard(false);
-      } else if (returnData.status < 300) {
-        const returnMessage: StreamMessageType = JSON.parse(returnData.data);
-        if (returnMessage.message === null && returnMessage.note) {
-          setMessageNote(returnMessage.note);
-          setShowTypingIndicator(true);
+  const onSocketMessage = useCallback((dataStr: string) => {
+    const returnData = JSON.parse(dataStr);
+    setShowTypingIndicator(false);
+    if (returnData.essay && returnData.status < 300 && returnData.rater) {
+      const tempTimestamp = Date.now();
+      const essayTempId =
+        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId = (Number(essayTempId) + 1).toString();
+      var essayMessage: MessageType = {
+        id: essayTempId,
+        content: "View your essay feedback by clicking on this message.",
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: tempTimestamp.toString(),
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: JSON.stringify(returnData.rater),
+      };
+      var essayResponseMessage: MessageType = {
+        id: messageTempId,
+        content: returnData.data,
+        messageType: "text",
+        role: "assistant",
+        sender: "ChatGPT",
+        timestamp: tempTimestamp.toString(),
+        promptId: null,
+        userVisible: true,
+        raterReference: "",
+        expandableMessage: "",
+      };
+      setMessages((prev) => [...prev, essayMessage, essayResponseMessage]);
+      setShowWizard(false);
+    } else if (returnData.status < 300) {
+      const returnMessage: StreamMessageType = JSON.parse(returnData.data);
+      if (returnMessage.message === null && returnMessage.note) {
+        setMessageNote(returnMessage.note);
+        setShowTypingIndicator(true);
+      }
+      if (
+        returnMessage.messageType === "streamMessage" &&
+        !returnMessage.finished
+      ) {
+        if (returnMessage.message !== null && !returnMessage.note) {
+          setMessageNote(undefined);
         }
-        if (
-          returnMessage.messageType === "streamMessage" &&
-          !returnMessage.finished
-        ) {
-          if (returnMessage.message !== null && !returnMessage.note) {
-            setMessageNote(undefined);
-          }
 
-          // Check if this stream message belongs to the current streaming message
-          const shouldAppendToExisting =
-            currentStreamIdRef.current === returnMessage.id ||
-            (messagesRef.current &&
-              messagesRef.current.length > 0 &&
-              messagesRef.current[messagesRef.current.length - 1].role === "assistant" &&
-              messagesRef.current[messagesRef.current.length - 1].stream &&
-              messagesRef.current[messagesRef.current.length - 1].stream?.[0]
-                .id === returnMessage.id);
+        // Check if this stream message belongs to the current streaming message
+        const shouldAppendToExisting =
+          currentStreamIdRef.current === returnMessage.id ||
+          (messagesRef.current &&
+            messagesRef.current.length > 0 &&
+            messagesRef.current[messagesRef.current.length - 1].role ===
+              "assistant" &&
+            messagesRef.current[messagesRef.current.length - 1].stream &&
+            messagesRef.current[messagesRef.current.length - 1].stream?.[0]
+              .id === returnMessage.id);
 
-          if (shouldAppendToExisting) {
-            setMessages((prev) => {
-              if (prev && messagesRef.current) {
-                var temp = [...messagesRef.current];
-                if (temp[temp.length - 1].stream) {
-                  temp[temp.length - 1].stream?.push(returnMessage);
-                  const stream = temp[temp.length - 1].stream || [];
-                  const filteredArray: StreamMessageType[] = stream.filter(
-                    (obj, index, self) =>
-                      index ===
-                      self.findIndex(
-                        (t) =>
-                          t.timestamp === obj.timestamp &&
-                          t.message === obj.message
-                      )
-                  );
-                  const reconstructed = filteredArray
-                    .sort((a, b) => a.timestamp - b.timestamp)
-                    .map((m) => m.message)
-                    .join("");
-                  temp[temp.length - 1].content =
-                    reconstructed || temp[temp.length - 1].content;
-                }
-                return temp;
-              } else return prev;
-            });
-          } else {
-            if (returnMessage.message !== null && !returnMessage.note) {
-              setMessageNote(undefined);
-            }
-            const tempTimestamp = Date.now();
-            const messageTempId =
-              tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-            var responseMessage: MessageType = {
-              id: messageTempId,
-              content: returnMessage.message,
-              messageType: "text",
-              role: "assistant",
-              sender: "ChatGPT",
-              timestamp: tempTimestamp.toString(),
-              promptId: null,
-              userVisible: true,
-              raterReference: "",
-              expandableMessage: "",
-              stream: [returnMessage],
-            };
-            // Track this stream ID to prevent duplicates
-            currentStreamIdRef.current = returnMessage.id;
-            setMessages((prev) => [...prev, responseMessage]);
-          }
-        } else if (
-          returnMessage.finished &&
-          returnMessage.messageType === "finalMessage"
-        ) {
-          // Clear the stream ID when finished
-          currentStreamIdRef.current = null;
+        if (shouldAppendToExisting) {
           setMessages((prev) => {
             if (prev && messagesRef.current) {
               var temp = [...messagesRef.current];
-              temp[temp.length - 1].content = returnMessage.message;
-              if (returnMessage.sources && returnMessage.sources.sources) {
-                temp[temp.length - 1].sources = returnMessage.sources.sources;
+              if (temp[temp.length - 1].stream) {
+                temp[temp.length - 1].stream?.push(returnMessage);
+                const stream = temp[temp.length - 1].stream || [];
+                const filteredArray: StreamMessageType[] = stream.filter(
+                  (obj, index, self) =>
+                    index ===
+                    self.findIndex(
+                      (t) =>
+                        t.timestamp === obj.timestamp &&
+                        t.message === obj.message
+                    )
+                );
+                const reconstructed = filteredArray
+                  .sort((a, b) => a.timestamp - b.timestamp)
+                  .map((m) => m.message)
+                  .join("");
+                temp[temp.length - 1].content =
+                  reconstructed || temp[temp.length - 1].content;
               }
               return temp;
             } else return prev;
           });
+        } else {
+          if (returnMessage.message !== null && !returnMessage.note) {
+            setMessageNote(undefined);
+          }
+          const tempTimestamp = Date.now();
+          const messageTempId =
+            tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+          var responseMessage: MessageType = {
+            id: messageTempId,
+            content: returnMessage.message,
+            messageType: "text",
+            role: "assistant",
+            sender: "ChatGPT",
+            timestamp: tempTimestamp.toString(),
+            promptId: null,
+            userVisible: true,
+            raterReference: "",
+            expandableMessage: "",
+            stream: [returnMessage],
+          };
+          // Track this stream ID to prevent duplicates
+          currentStreamIdRef.current = returnMessage.id;
+          setMessages((prev) => [...prev, responseMessage]);
         }
-      } else {
-        setOpenErrorModal({ open: true, message: returnData.data });
-        if (returnData.status === 400) {
-          setOpenUpdateConvoModal((prev) => ({ ...prev, completed: true }));
-        }
+      } else if (
+        returnMessage.finished &&
+        returnMessage.messageType === "finalMessage"
+      ) {
+        // Clear the stream ID when finished
+        currentStreamIdRef.current = null;
+        setMessages((prev) => {
+          if (prev && messagesRef.current) {
+            var temp = [...messagesRef.current];
+            temp[temp.length - 1].content = returnMessage.message;
+            if (returnMessage.sources && returnMessage.sources.sources) {
+              temp[temp.length - 1].sources = returnMessage.sources.sources;
+            }
+            return temp;
+          } else return prev;
+        });
       }
-    },
-    []
-  );
+    } else {
+      setOpenErrorModal({ open: true, message: returnData.data });
+      if (returnData.status === 400) {
+        setOpenUpdateConvoModal((prev) => ({ ...prev, completed: true }));
+      }
+    }
+  }, []);
 
   const onConnect = useCallback(
     (courseId: string, moduleId: string, conversationIndex: string) => {
@@ -550,7 +551,9 @@ export default function Chat(): JSX.Element {
             .concat(messageList)
             .filter(
               (m) =>
-                (m.promptId === null || m.promptId === "") && m.role === "user" && m.userVisible
+                (m.promptId === null || m.promptId === "") &&
+                m.role === "user" &&
+                m.userVisible
             ).length === 1
         ) {
           autoCreateConvoName(messagesToSend);
@@ -636,7 +639,7 @@ export default function Chat(): JSX.Element {
     messages: Array<{ role: string; content: string }>
   ) {
     if (user) {
-      //set a timeout so that we aren't updating the same conversation 
+      //set a timeout so that we aren't updating the same conversation
       // on the backend at the same time and overwritting
       setTimeout(() => {
         Post(
@@ -654,10 +657,12 @@ export default function Chat(): JSX.Element {
               setConversationList((prev) => {
                 if (prev) {
                   var convos = prev.conversations;
-                  const index = parseInt(conversationIds ? conversationIds.conversationIndex : "")
-                  convos[index].name = res.data.conversations[index].name
-                  return { ...prev, conversations: convos }
-                } else return prev
+                  const index = parseInt(
+                    conversationIds ? conversationIds.conversationIndex : ""
+                  );
+                  convos[index].name = res.data.conversations[index].name;
+                  return { ...prev, conversations: convos };
+                } else return prev;
               });
               setOpenUpdateConvoModal({
                 open: false,
@@ -670,13 +675,14 @@ export default function Chat(): JSX.Element {
                 isDeleted:
                   res.data.conversations[location.pathname.split("/")[5]]
                     .isDeleted,
-                completed: res.data.conversations[location.pathname.split("/")[5]]
-                  .completed
+                completed: res.data.conversations[
+                  location.pathname.split("/")[5]
+                ].completed
                   ? res.data.conversations[location.pathname.split("/")[5]]
-                    .completed
+                      .completed
                   : false,
                 error: "",
-              })
+              });
             }
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -687,7 +693,7 @@ export default function Chat(): JSX.Element {
             });
           }
         });
-      }, 15000)
+      }, 15000);
     }
   }
 
@@ -808,7 +814,8 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
             if (res.data.conversations) {
               navigator(
-                `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId
+                `/chat/${user?.username}/${conversationIds.courseId}/${
+                  conversationIds.moduleId
                 }/${res.data.conversations.length - 1}`
               );
             }
@@ -870,6 +877,50 @@ export default function Chat(): JSX.Element {
       link.href = url;
       link.click();
       setIsLoading(false);
+    }
+  }
+
+  function handleClassification() {
+    // Frontend check: ensure user is admin
+    if (
+      !user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
+    ) {
+      setAlert({
+        message: "Only administrators can classify conversations.",
+        type: "error",
+      });
+      return;
+    }
+
+    if (conversationIds) {
+      console.log("conversationIds", conversationIds);
+      setIsLoading(true);
+      Get(
+        getConversationClassification(
+          conversationIds.courseId,
+          conversationIds.moduleId,
+          conversationIds.conversationIndex
+        )
+      ).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            setAlert({
+              message: "Classification completed successfully",
+              type: "success",
+            });
+            // You can handle the classification data here if needed
+            console.log("Classification result:", res.data);
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          setAlert({
+            message: "Failed to classify conversation. Please try again later.",
+            type: "error",
+          });
+        }
+        setIsLoading(false);
+      });
     }
   }
 
@@ -954,12 +1005,13 @@ export default function Chat(): JSX.Element {
               completed: res.data.conversations[location.pathname.split("/")[5]]
                 .completed
                 ? res.data.conversations[location.pathname.split("/")[5]]
-                  .completed
+                    .completed
                 : false,
               error: "",
             });
             navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
+              `/courses/${location.pathname.split("/")[3]}/modules/${
+                location.pathname.split("/")[4]
               }`
             );
           }
@@ -1011,7 +1063,7 @@ export default function Chat(): JSX.Element {
                   location.pathname.split("/")[5]
                 ].completed
                   ? res.data.conversations[location.pathname.split("/")[5]]
-                    .completed
+                      .completed
                   : false,
                 error: "",
               });
@@ -1192,7 +1244,10 @@ export default function Chat(): JSX.Element {
       </DialogWrapper>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0" style={sidebarOpen ? { height: "calc(100vh - 4rem)" } : {}}>
+      <div
+        className="flex-1 flex flex-col min-w-0"
+        style={sidebarOpen ? { height: "calc(100vh - 4rem)" } : {}}
+      >
         {/* Chat Header */}
         <ChatHeader
           conversationName={openUpdateConvoModal.name || "Chat Title"}
@@ -1207,6 +1262,7 @@ export default function Chat(): JSX.Element {
             }))
           }
           onDownload={downloadChat}
+          onClassification={handleClassification}
           onHide={() =>
             setOpenUpdateConvoModal((prev) => ({
               ...prev,

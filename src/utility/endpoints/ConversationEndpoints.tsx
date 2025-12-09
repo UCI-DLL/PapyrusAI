@@ -39,9 +39,14 @@ export function getConversationClassification(
   // GET /conversation/{courseId}/{moduleId}/{index}/classification
   courseId: string,
   moduleId: string,
-  index: string
+  index: string,
+  username?: string
 ) {
-  return `conversation/${courseId}/${moduleId}/${index}/classification?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  if (username) {
+    return `conversation/${courseId}/${moduleId}/${index}/classification?username=${username}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+  } else {
+    return `conversation/${courseId}/${moduleId}/${index}/classification?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  }
 }
 
 export function getContentModMessage(

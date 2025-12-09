@@ -892,14 +892,21 @@ export default function Chat(): JSX.Element {
       return;
     }
 
-    if (conversationIds) {
-      console.log("conversationIds", conversationIds);
+    // Extract parameters directly from URL
+    const pathParts = location.pathname.split("/");
+    if (pathParts[3] && pathParts[4] && pathParts[5]) {
+      const username = pathParts[2];
+      const courseId = pathParts[3];
+      const moduleId = pathParts[4];
+      const conversationIndex = pathParts[5];
+
       setIsLoading(true);
       Get(
         getConversationClassification(
-          conversationIds.courseId,
-          conversationIds.moduleId,
-          conversationIds.conversationIndex
+          courseId,
+          moduleId,
+          conversationIndex,
+          username
         )
       ).then((res) => {
         if (res && res.status && res.status < 300) {

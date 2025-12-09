@@ -45,6 +45,32 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     return label.substring(0, maxLength - 3) + "...";
   }, []);
 
+  // Helper function to parse date strings as local dates (not UTC)
+  // This prevents "2025-12-08" from being interpreted as UTC midnight
+  // which would show as the previous day in PST (UTC-8)
+  function parseLocalDate(dateString: string): Date {
+    // If the string is in YYYY-MM-DD format, parse it as local time
+    const dateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateMatch) {
+      const [, year, month, day] = dateMatch;
+      // Month is 0-indexed in Date constructor (0 = January, 11 = December)
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    // Fallback to standard Date parsing for other formats
+    return new Date(dateString);
+  }
+
+  // Helper function to format dates as YYYY-MM-DD for tooltips
+  function formatDateForTooltip(date: Date | string | undefined): string {
+    if (!date) return "";
+    const dateObj = date instanceof Date ? date : new Date(date);
+    if (isNaN(dateObj.getTime())) return "";
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
   // Get chart dimensions specifically for module usage (taller to accommodate rotated labels)
   const getModuleChartDimensions = () => {
     const containerWidth =
@@ -61,8 +87,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     // Parse date strings to Date objects
     const processedData = dailyConvoLengths.map((item) => ({
       ...item,
-      date: new Date(item.date as string),
+      date: parseLocalDate(item.date as string),
     }));
+    console.log(processedData);
 
     const plot = Plot.plot({
       style: {
@@ -82,6 +109,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             x: "date",
             y: "avg_convo_length",
             fill: backgroundColor,
+            format: {
+              x: (date: any) => formatDateForTooltip(date),
+            },
           })
         ),
       ],
@@ -119,7 +149,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     // Parse date strings to Date objects
     const processedData = dailyConvoCounts.map((item) => ({
       ...item,
-      date: new Date(item.date as string),
+      date: parseLocalDate(item.date as string),
     }));
 
     const plot = Plot.plot({
@@ -136,7 +166,14 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         Plot.dot(processedData, { x: "date", y: "num_convos" }),
         Plot.tip(
           processedData,
-          Plot.pointerX({ x: "date", y: "num_convos", fill: backgroundColor })
+          Plot.pointerX({
+            x: "date",
+            y: "num_convos",
+            fill: backgroundColor,
+            format: {
+              x: (date: any) => formatDateForTooltip(date),
+            },
+          })
         ),
       ],
       width: 500,
@@ -428,7 +465,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
                 <tbody>
                   {dailyConvoLengths.map((d: any, i) => (
                     <tr key={i}>
-                      <td>{new Date(d.date).toLocaleDateString()}</td>
+                      <td>
+                        {parseLocalDate(d.date as string).toLocaleDateString()}
+                      </td>
                       <td>{d.avg_convo_length}</td>
                     </tr>
                   ))}
@@ -464,7 +503,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
                 <tbody>
                   {dailyConvoCounts.map((d: any, i) => (
                     <tr key={i}>
-                      <td>{new Date(d.date).toLocaleDateString()}</td>
+                      <td>
+                        {parseLocalDate(d.date as string).toLocaleDateString()}
+                      </td>
                       <td>{d.num_convos}</td>
                     </tr>
                   ))}

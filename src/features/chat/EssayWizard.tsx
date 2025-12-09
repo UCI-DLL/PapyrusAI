@@ -104,7 +104,7 @@ export default function EssayWizard({
                 <SelectTrigger id="prompt-select">
                   <SelectValue placeholder="Choose the prompt for AI feedback..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent avoidCollisions={false} position="popper">
                   {prompts.map((prompt, index) => (
                     <SelectItem key={index} value={prompt.id}>
                       {prompt.name}

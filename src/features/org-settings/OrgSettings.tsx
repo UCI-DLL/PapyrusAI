@@ -428,7 +428,7 @@ export default function OrgSettings(): JSX.Element {
                   <SelectTrigger>
                     <SelectValue placeholder="Select permission level" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.keys(PermissionsOptions).map((key) => (
                       <SelectItem value={key} key={key}>
                         {key}
@@ -534,7 +534,7 @@ export default function OrgSettings(): JSX.Element {
                   <SelectTrigger>
                     <SelectValue placeholder="Select permission level" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.keys(PermissionsOptions).map((key) => (
                       <SelectItem value={key} key={key}>
                         {key}

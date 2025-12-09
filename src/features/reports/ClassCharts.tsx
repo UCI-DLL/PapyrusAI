@@ -344,6 +344,25 @@ export default function ClassCharts({
     if (moduleUsageRef.current) {
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const rects = plot.querySelectorAll("rect[fill]");
+        let dataIndex = 0;
+        rects.forEach((rect) => {
+          if (rect.getAttribute("fill") && dataIndex < aggregatedData.length) {
+            const data = aggregatedData[dataIndex];
+            rect.setAttribute("role", "img");
+            rect.setAttribute(
+              "aria-label",
+              `Module ${data.fullModuleName || data.moduleName}, Count ${
+                data.count
+              }`
+            );
+            rect.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [
     analysis,
@@ -411,6 +430,25 @@ export default function ClassCharts({
     if (lengthsRef.current) {
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const dots = plot.querySelectorAll("circle");
+        let dataIndex = 0;
+        dots.forEach((dot) => {
+          if (dataIndex < parsedData.length) {
+            const data = parsedData[dataIndex];
+            dot.setAttribute("role", "img");
+            dot.setAttribute(
+              "aria-label",
+              `Date ${data.date.toLocaleDateString()}, Average conversation length ${
+                data.avg_convo_length
+              }`
+            );
+            dot.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [
     analysis,
@@ -477,6 +515,25 @@ export default function ClassCharts({
     if (countsRef.current) {
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const dots = plot.querySelectorAll("circle");
+        let dataIndex = 0;
+        dots.forEach((dot) => {
+          if (dataIndex < parsedData.length) {
+            const data = parsedData[dataIndex];
+            dot.setAttribute("role", "img");
+            dot.setAttribute(
+              "aria-label",
+              `Date ${data.date.toLocaleDateString()}, Number of conversations ${
+                data.num_convos
+              }`
+            );
+            dot.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [
     analysis,
@@ -526,7 +583,8 @@ export default function ClassCharts({
           y: "count",
           fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
           title: (d: any) =>
-            `Classification: ${d.fullClassification || d.classification
+            `Classification: ${
+              d.fullClassification || d.classification
             }\nCount: ${d.count}`,
           tip: {
             format: {
@@ -602,9 +660,7 @@ export default function ClassCharts({
     return (
       <div style={{ marginLeft: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: "0.9rem" }}>
-            Filter by students:
-          </span>
+          <span style={{ fontSize: "0.9rem" }}>Filter by students:</span>
           <StudentMenu
             analysis={analysis}
             selectedStudentIds={selectedStudentIds}
@@ -679,12 +735,14 @@ export default function ClassCharts({
 
           {/* Collective Stats Section */}
           <div style={{ marginBottom: "3rem" }}>
-            <h2
-              className="text-2xl font-bold text-foreground mb-1"
-              style={{ padding: "0 2rem" }}
-            >
-              Combined Statistics
-            </h2>
+            {selectedStudents.length > 1 && (
+              <h2
+                className="text-2xl font-bold text-foreground mb-1"
+                style={{ padding: "0 2rem" }}
+              >
+                Combined Statistics
+              </h2>
+            )}
             <StudentPage students={selectedStudents} />
           </div>
         </CardContent>
@@ -881,17 +939,35 @@ export default function ClassCharts({
                 className="chart-grid"
               >
                 <div style={{ marginBottom: "1rem" }}>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                  <h2
+                    className="text-2xl font-bold text-foreground mb-2"
+                    id="class-lengths-chart-heading"
+                  >
                     Daily Conversation Lengths
                   </h2>
-                  <div ref={lengthsRef} />
+                  <div
+                    ref={lengthsRef}
+                    role="region"
+                    aria-labelledby="class-lengths-chart-heading"
+                    tabIndex={0}
+                    className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                  />
                 </div>
 
                 <div style={{ marginBottom: "1rem" }}>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                  <h2
+                    className="text-2xl font-bold text-foreground mb-2"
+                    id="class-counts-chart-heading"
+                  >
                     Daily Conversation Counts
                   </h2>
-                  <div ref={countsRef} />
+                  <div
+                    ref={countsRef}
+                    role="region"
+                    aria-labelledby="class-counts-chart-heading"
+                    tabIndex={0}
+                    className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                  />
                 </div>
               </div>
             </div>
@@ -910,11 +986,20 @@ export default function ClassCharts({
                 className="chart-grid"
               >
                 <div style={{ marginBottom: "1rem" }}>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                  <h2
+                    className="text-2xl font-bold text-foreground mb-2"
+                    id="class-module-usage-chart-heading"
+                  >
                     Module Usage
                   </h2>
                   {startDate && endDate ? (
-                    <div ref={moduleUsageRef} />
+                    <div
+                      ref={moduleUsageRef}
+                      role="region"
+                      aria-labelledby="class-module-usage-chart-heading"
+                      tabIndex={0}
+                      className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+                    />
                   ) : (
                     <EmptyChartPlaceholder title="Module Usage Data" />
                   )}

@@ -44,6 +44,32 @@ export default function ClassCharts({
     getComputedStyle(document.documentElement).getPropertyValue("--foreground")
   );
 
+  // Helper function to parse date strings as local dates (not UTC)
+  // This prevents "2025-12-08" from being interpreted as UTC midnight
+  // which would show as the previous day in PST (UTC-8)
+  const parseLocalDate = (dateString: string): Date => {
+    // If the string is in YYYY-MM-DD format, parse it as local time
+    const dateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateMatch) {
+      const [, year, month, day] = dateMatch;
+      // Month is 0-indexed in Date constructor (0 = January, 11 = December)
+      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    // Fallback to standard Date parsing for other formats
+    return new Date(dateString);
+  };
+
+  // Helper function to format dates as YYYY-MM-DD for tooltips
+  const formatDateForTooltip = (date: Date | string | undefined): string => {
+    if (!date) return "";
+    const dateObj = date instanceof Date ? date : new Date(date);
+    if (isNaN(dateObj.getTime())) return "";
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // Get available dates from the data and convert to proper date format
   const getAvailableDates = useCallback(() => {
     if (!analysis) return [];
@@ -200,10 +226,10 @@ export default function ClassCharts({
     (dateStr: string) => {
       if (!startDate || !endDate) return false;
 
-      const startDateObj = new Date(startDate);
-      const endDateObj = new Date(endDate);
+      const startDateObj = parseLocalDate(startDate);
+      const endDateObj = parseLocalDate(endDate);
 
-      const dateObj = new Date(dateStr);
+      const dateObj = parseLocalDate(dateStr);
 
       return dateObj >= startDateObj && dateObj <= endDateObj;
     },
@@ -385,9 +411,9 @@ export default function ClassCharts({
     let filteredData = lengthsData;
     if (startDate && endDate) {
       filteredData = lengthsData.filter((item) => {
-        const itemDate = new Date(item.date);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        const itemDate = parseLocalDate(item.date);
+        const start = parseLocalDate(startDate);
+        const end = parseLocalDate(endDate);
         return itemDate >= start && itemDate <= end;
       });
     }
@@ -395,7 +421,7 @@ export default function ClassCharts({
     // Parse date strings to Date objects
     const parsedData = filteredData.map((item) => ({
       ...item,
-      date: new Date(item.date),
+      date: parseLocalDate(item.date),
     }));
 
     const { width, height } = getChartDimensions();
@@ -421,6 +447,9 @@ export default function ClassCharts({
             x: "date",
             y: "avg_convo_length",
             fill: backgroundColor,
+            format: {
+              x: (date: any) => formatDateForTooltip(date),
+            },
           })
         ),
       ],
@@ -470,9 +499,9 @@ export default function ClassCharts({
     let filteredData = countsData;
     if (startDate && endDate) {
       filteredData = countsData.filter((item) => {
-        const itemDate = new Date(item.date);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        const itemDate = parseLocalDate(item.date);
+        const start = parseLocalDate(startDate);
+        const end = parseLocalDate(endDate);
         return itemDate >= start && itemDate <= end;
       });
     }
@@ -480,7 +509,7 @@ export default function ClassCharts({
     // Parse date strings to Date objects
     const parsedData = filteredData.map((item) => ({
       ...item,
-      date: new Date(item.date),
+      date: parseLocalDate(item.date),
     }));
 
     const { width, height } = getChartDimensions();
@@ -506,6 +535,9 @@ export default function ClassCharts({
             x: "date",
             y: "num_convos",
             fill: backgroundColor,
+            format: {
+              x: (date: any) => formatDateForTooltip(date),
+            },
           })
         ),
       ],

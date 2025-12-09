@@ -25,6 +25,29 @@ const truncateLabel = (label: string, maxLength: number = 15) => {
   return label.substring(0, maxLength - 3) + "...";
 };
 
+// Helper function to parse date strings as local dates (not UTC)
+// This prevents "2025-12-08" from being interpreted as UTC midnight
+// which would show as the previous day in PST (UTC-8)
+function parseLocalDate(dateString: string): Date {
+  // If the string is in YYYY-MM-DD format, parse it as local time
+  const dateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (dateMatch) {
+    const [, year, month, day] = dateMatch;
+    // Month is 0-indexed in Date constructor (0 = January, 11 = December)
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  // Fallback to standard Date parsing for other formats
+  return new Date(dateString);
+}
+
+// Helper function to format dates as YYYY-MM-DD for tooltips
+function formatDateForTooltip(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function getStackedDailyData(students: Record<string, unknown>[]) {
   const countsMap = new Map<
     string,
@@ -42,7 +65,7 @@ function getStackedDailyData(students: Record<string, unknown>[]) {
       | undefined;
     if (dailyConvoCounts) {
       dailyConvoCounts.forEach((d) => {
-        const date = new Date(d.date as string);
+        const date = parseLocalDate(d.date as string);
         const dateKey = `${studentName}-${date.toISOString().split("T")[0]}`;
         const currentValue = countsMap.get(dateKey)?.value || 0;
         countsMap.set(dateKey, {
@@ -57,7 +80,7 @@ function getStackedDailyData(students: Record<string, unknown>[]) {
       | undefined;
     if (dailyConvoLengths) {
       dailyConvoLengths.forEach((d) => {
-        const date = new Date(d.date as string);
+        const date = parseLocalDate(d.date as string);
         const dateKey = `${studentName}-${date.toISOString().split("T")[0]}`;
         const currentValue = lengthsMap.get(dateKey)?.value || 0;
         const currentCount = lengthsMap.get(dateKey)?.count || 0;
@@ -170,12 +193,12 @@ export default function StudentPage({ students }: StudentPageProps) {
           y: "value",
           fill: "studentName",
           title: (d: any) =>
-            `Date: ${d.date.toLocaleDateString()}\nStudent: ${
+            `Date: ${formatDateForTooltip(d.date)}\nStudent: ${
               d.studentName
             }\nConversations: ${d.value}`,
           tip: {
             format: {
-              x: (d: any) => d.date.toLocaleDateString(),
+              x: (d: any) => formatDateForTooltip(d.date),
               fill: (d: any) => d.studentName,
               value: true,
             },
@@ -234,12 +257,12 @@ export default function StudentPage({ students }: StudentPageProps) {
           y: "value",
           fill: "studentName",
           title: (d: any) =>
-            `Date: ${d.date.toLocaleDateString()}\nStudent: ${
+            `Date: ${formatDateForTooltip(d.date)}\nStudent: ${
               d.studentName
             }\nAvg Length: ${d.value.toFixed(1)}`,
           tip: {
             format: {
-              x: (d: any) => d.date.toLocaleDateString(),
+              x: (d: any) => formatDateForTooltip(d.date),
               fill: (d: any) => d.studentName,
               value: true,
             },

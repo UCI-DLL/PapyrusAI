@@ -13,6 +13,10 @@ import StudentListPopup from "./StudentListPopup";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
+import {
+  parseLocalDate,
+  formatDateForTooltip,
+} from "../../utility/reports/date";
 import { Users } from "lucide-react";
 
 interface ClassChartsProps {
@@ -200,10 +204,10 @@ export default function ClassCharts({
     (dateStr: string) => {
       if (!startDate || !endDate) return false;
 
-      const startDateObj = new Date(startDate);
-      const endDateObj = new Date(endDate);
+      const startDateObj = parseLocalDate(startDate);
+      const endDateObj = parseLocalDate(endDate);
 
-      const dateObj = new Date(dateStr);
+      const dateObj = parseLocalDate(dateStr);
 
       return dateObj >= startDateObj && dateObj <= endDateObj;
     },
@@ -385,9 +389,9 @@ export default function ClassCharts({
     let filteredData = lengthsData;
     if (startDate && endDate) {
       filteredData = lengthsData.filter((item) => {
-        const itemDate = new Date(item.date);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        const itemDate = parseLocalDate(item.date);
+        const start = parseLocalDate(startDate);
+        const end = parseLocalDate(endDate);
         return itemDate >= start && itemDate <= end;
       });
     }
@@ -395,7 +399,7 @@ export default function ClassCharts({
     // Parse date strings to Date objects
     const parsedData = filteredData.map((item) => ({
       ...item,
-      date: new Date(item.date),
+      date: parseLocalDate(item.date),
     }));
 
     const { width, height } = getChartDimensions();
@@ -421,6 +425,9 @@ export default function ClassCharts({
             x: "date",
             y: "avg_convo_length",
             fill: backgroundColor,
+            format: {
+              x: (date: any) => formatDateForTooltip(date),
+            },
           })
         ),
       ],
@@ -470,9 +477,9 @@ export default function ClassCharts({
     let filteredData = countsData;
     if (startDate && endDate) {
       filteredData = countsData.filter((item) => {
-        const itemDate = new Date(item.date);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        const itemDate = parseLocalDate(item.date);
+        const start = parseLocalDate(startDate);
+        const end = parseLocalDate(endDate);
         return itemDate >= start && itemDate <= end;
       });
     }
@@ -480,7 +487,7 @@ export default function ClassCharts({
     // Parse date strings to Date objects
     const parsedData = filteredData.map((item) => ({
       ...item,
-      date: new Date(item.date),
+      date: parseLocalDate(item.date),
     }));
 
     const { width, height } = getChartDimensions();
@@ -506,6 +513,9 @@ export default function ClassCharts({
             x: "date",
             y: "num_convos",
             fill: backgroundColor,
+            format: {
+              x: (date: any) => formatDateForTooltip(date),
+            },
           })
         ),
       ],

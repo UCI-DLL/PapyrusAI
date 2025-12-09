@@ -7,6 +7,7 @@ import React, { useEffect, useRef } from "react";
 import IndividualStudentStats from "./IndividualStudentStats";
 import * as Plot from "@observablehq/plot";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
+import { parseLocalDate, formatDateForTooltip } from "../../utility/reports/date";
 
 interface StudentPageProps {
   students: Record<string, unknown>[];
@@ -25,6 +26,7 @@ const truncateLabel = (label: string, maxLength: number = 15) => {
   return label.substring(0, maxLength - 3) + "...";
 };
 
+
 function getStackedDailyData(students: Record<string, unknown>[]) {
   const countsMap = new Map<
     string,
@@ -42,7 +44,7 @@ function getStackedDailyData(students: Record<string, unknown>[]) {
       | undefined;
     if (dailyConvoCounts) {
       dailyConvoCounts.forEach((d) => {
-        const date = new Date(d.date as string);
+        const date = parseLocalDate(d.date as string);
         const dateKey = `${studentName}-${date.toISOString().split("T")[0]}`;
         const currentValue = countsMap.get(dateKey)?.value || 0;
         countsMap.set(dateKey, {
@@ -57,7 +59,7 @@ function getStackedDailyData(students: Record<string, unknown>[]) {
       | undefined;
     if (dailyConvoLengths) {
       dailyConvoLengths.forEach((d) => {
-        const date = new Date(d.date as string);
+        const date = parseLocalDate(d.date as string);
         const dateKey = `${studentName}-${date.toISOString().split("T")[0]}`;
         const currentValue = lengthsMap.get(dateKey)?.value || 0;
         const currentCount = lengthsMap.get(dateKey)?.count || 0;
@@ -170,12 +172,12 @@ export default function StudentPage({ students }: StudentPageProps) {
           y: "value",
           fill: "studentName",
           title: (d: any) =>
-            `Date: ${d.date.toLocaleDateString()}\nStudent: ${
+            `Date: ${formatDateForTooltip(d.date)}\nStudent: ${
               d.studentName
             }\nConversations: ${d.value}`,
           tip: {
             format: {
-              x: (d: any) => d.date.toLocaleDateString(),
+              x: (d: any) => formatDateForTooltip(d.date),
               fill: (d: any) => d.studentName,
               value: true,
             },
@@ -234,12 +236,12 @@ export default function StudentPage({ students }: StudentPageProps) {
           y: "value",
           fill: "studentName",
           title: (d: any) =>
-            `Date: ${d.date.toLocaleDateString()}\nStudent: ${
+            `Date: ${formatDateForTooltip(d.date)}\nStudent: ${
               d.studentName
             }\nAvg Length: ${d.value.toFixed(1)}`,
           tip: {
             format: {
-              x: (d: any) => d.date.toLocaleDateString(),
+              x: (d: any) => formatDateForTooltip(d.date),
               fill: (d: any) => d.studentName,
               value: true,
             },

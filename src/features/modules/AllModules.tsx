@@ -9,10 +9,12 @@ import { UserContext } from "../../utility/context/UserContext";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { Loader2, BookOpen } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function AllModules(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
@@ -49,7 +51,7 @@ export default function AllModules(): JSX.Element {
         if (res === undefined) {
         } else {
           // handle error
-          setError("No Modules Found");
+          setError(t("modules.noModulesFound"));
           setIsLoading(false);
         }
       }
@@ -91,7 +93,7 @@ export default function AllModules(): JSX.Element {
             className="h-8 w-8 animate-spin text-primary"
             aria-hidden="true"
           />
-          <p className="text-muted-foreground">Loading Modules</p>
+          <p className="text-muted-foreground">{t("modules.loadingModules")}</p>
         </div>
       </div>
     );
@@ -110,17 +112,10 @@ export default function AllModules(): JSX.Element {
 
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              All Available Modules
+              {t("modules.allAvailableModules")}
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Modules provide users access to conversations with the AI.
-              {user?.groups.includes(
-                process.env.REACT_APP_INSTRUCTOR
-                  ? process.env.REACT_APP_INSTRUCTOR
-                  : "PapyrusAIInstructors"
-              )
-                ? " Modules can be customized to allow or restrict access to specific conversation prompts (AI instructions)."
-                : ""}
+              {t("modules.createModuleDescription")}
             </p>
             {user?.groups.includes(
               process.env.REACT_APP_INSTRUCTOR
@@ -129,17 +124,7 @@ export default function AllModules(): JSX.Element {
             ) && (
                 <div className="mt-4">
                   <p className="text-primary/80 text-sm leading-relaxed">
-                    For information on creating, editing, copying, or viewing
-                    activity for a module, please see the{" "}
-                    <a
-                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                    >
-                      "Modules" section of our instructor guide
-                    </a>
-                    .
+                    {t("modules.allAvailableModulesDescription")}
                   </p>
                 </div>
               )}
@@ -193,7 +178,7 @@ export default function AllModules(): JSX.Element {
             >
               <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
               <p className="text-lg font-medium mb-2">
-                No modules are currently available to you.
+                {t("modules.noModulesAvailable")}
               </p>
               {user?.groups.includes(
                 process.env.REACT_APP_INSTRUCTOR
@@ -201,8 +186,7 @@ export default function AllModules(): JSX.Element {
                   : "PapyrusAIInstructors"
               ) ? (
                 <p className="text-sm">
-                  To create a module, go to the course in which you would like
-                  to create the module.
+                  {t("modules.createModulePrompt")}
                 </p>
               ) : null}
             </div>

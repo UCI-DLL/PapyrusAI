@@ -30,8 +30,7 @@ import {
   postUpdateUserPrompt,
 } from "../../utility/endpoints/FolderEndpoints";
 import Put from "../../utility/Put";
-
-const options = ["Save & Publish", "Discard Changes"];
+import { useTranslation } from "../../hooks/useTranslation";
 
 type PromptFormMode = "create" | "edit";
 
@@ -56,6 +55,11 @@ export default function CreatePrompt({
 }: PromptFormProps = {}): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
+  const { t } = useTranslation();
+  
+  // Translated options
+  const options = [t("createPrompt.savePublish"), t("createPrompt.discardChanges")];
+  
   // Determine if we're in edit mode based on URL or props
   const isEditMode =
     mode === "edit" || !location.pathname.includes("/createprompt")
@@ -234,9 +238,9 @@ export default function CreatePrompt({
   function handleSubmit(e: any, isDeleted = false) {
     setIsLoading(true);
     if (prompt.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }));
+      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
     } else if (prompt.prompt === "") {
-      setErrors((prev: any) => ({ ...prev, prompt: "Prompt is too short" }));
+      setErrors((prev: any) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("common.missing") }));
     } else {
       if (isEditMode && promptInfo && promptInfo.promptId) { //editing prompt
         const dataToSend = {
@@ -254,7 +258,7 @@ export default function CreatePrompt({
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of update
-                setAlert({ message: "Prompt Updated", type: "success" });
+                setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
               }
             } else if (res && res.status === 401) {
               navigator("/login");
@@ -262,7 +266,7 @@ export default function CreatePrompt({
               // handle error
               if (res) {
                 setAlert({
-                  message: "Prompt could not be updated. Try again later.",
+                  message: t("createPrompt.promptCouldNotBeUpdated"),
                   type: "error",
                 });
               }
@@ -308,7 +312,7 @@ export default function CreatePrompt({
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of created
-                setAlert({ message: "Prompt Created", type: "success" });
+                setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
               }
             } else if (res && res.status === 401) {
               navigator("/login");
@@ -316,7 +320,7 @@ export default function CreatePrompt({
               // handle error
               if (res) {
                 setAlert({
-                  message: "Prompt could not be created. Try again later.",
+                  message: t("createPrompt.promptCouldNotBeCreated"),
                   type: "error",
                 });
               }
@@ -337,14 +341,14 @@ export default function CreatePrompt({
               if (res.status && res.status < 300) {
                 if (res.data && res.data) {
                   //pop up notifying user of Created
-                  setAlert({ message: "Prompt Created", type: "success" });
+                  setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
                 }
               } else if (res && res.status === 401) {
                 navigator("/login");
               } else {
                 // set errors
                 setAlert({
-                  message: "Prompt could not be created. Try again later.",
+                  message: t("createPrompt.promptCouldNotBeCreated"),
                   type: "error",
                 });
               }
@@ -415,18 +419,18 @@ export default function CreatePrompt({
       <DialogWrapper
         open={openDiscardModal}
         onOpenChange={setOpenDiscardModal}
-        title="Discard Changes?"
-        description="Are you sure you would like to discard the changes to this prompt? This action cannot be undone."
+        title={t("createPrompt.discardChangesTitle")}
+        description={t("createPrompt.discardChangesDescription")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDiscardModal(false),
             variant: "outline",
             disabled: isLoading
           },
           {
-            label: "Discard Changes",
+            label: t("createPrompt.discardChanges"),
             onClick: () => navigator(-1),
             variant: "destructive",
             disabled: isLoading
@@ -437,18 +441,18 @@ export default function CreatePrompt({
       <DialogWrapper
         open={openDeleteModal}
         onOpenChange={setOpenDeleteModal}
-        title="Delete Prompt?"
-        description="Are you sure you would like to permanently delete this prompt? This action cannot be undone."
+        title={t("createPrompt.deletePrompt")}
+        description={t("createPrompt.deletePromptMessage")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDeleteModal(false),
             variant: "outline",
             disabled: isLoading
           },
           {
-            label: "Delete",
+            label: t("common.delete"),
             onClick: () => handleSubmit(null, true),
             variant: "destructive",
             disabled: isLoading
@@ -469,15 +473,15 @@ export default function CreatePrompt({
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
               <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                 {isEditMode
-                  ? `Edit ${prompt.name || "Prompt"}`
-                  : "Create Prompt"}
+                  ? t("createPrompt.editPrompt")
+                  : t("createPrompt.createPrompt")}
               </h1>
               <nav
                 className="flex flex-col md:flex-row gap-2"
                 aria-label="Prompt creation actions"
               >
                 {isEditMode && (
-                  <TooltipWrapper content="Delete Prompt">
+                  <TooltipWrapper content={t("createPrompt.deletePrompt")}>
                     <Button
                       variant="outline"
                       size="sm"
@@ -537,18 +541,7 @@ export default function CreatePrompt({
             </div>
 
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Create AI instructions that will guide student interactions with
-              the system. For more information on creating a prompt, please see
-              the{" "}
-              <a
-                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-              >
-                "Creating a Prompt" section of our instructor guide
-              </a>
-              .
+              {t("createPrompt.createPromptDescription")}
             </p>
           </div>
         </div>
@@ -559,11 +552,10 @@ export default function CreatePrompt({
         <Card className="transition-all duration-300 hover:shadow-md" id="actions-heading">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-foreground">
-              Prompt Information
+              {t("createPrompt.promptInformation")}
             </CardTitle>
             <p className="text-muted-foreground text-sm">
-              Enter the details for your prompt. Fields marked with *
-              are required.
+              {t("createPrompt.enterPromptDetails")}. {t("common.required")}
             </p>
           </CardHeader>
           <CardContent>
@@ -571,10 +563,10 @@ export default function CreatePrompt({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="name" className="text-sm font-medium">
-                    Prompt Name *
+                    {t("createPrompt.promptName")} *
                   </Label>
-                  <TooltipWrapper content="The name for the prompt that users will see. We recommend choosing a name that makes it easy for students to understand what the prompt will do or help them with.">
-                    <button aria-label="The name for the prompt that users will see. We recommend choosing a name that makes it easy for students to understand what the prompt will do or help them with.">
+                  <TooltipWrapper content={t("createPrompt.promptNameTooltip")}>
+                    <button aria-label={t("createPrompt.promptNameTooltip")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -582,7 +574,7 @@ export default function CreatePrompt({
                 <Input
                   id="name"
                   name="name"
-                  placeholder="Enter prompt name"
+                  placeholder={t("createPrompt.promptNameHelptext")}
                   value={prompt.name}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -607,10 +599,10 @@ export default function CreatePrompt({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="prompt" className="text-sm font-medium">
-                    Prompt *
+                    {t("common.prompt")} *
                   </Label>
-                  <TooltipWrapper content="The instructions that will be sent to the AI (i.e., the first message sent to the AI that will guide the interaction).">
-                    <button aria-label="The instructions that will be sent to the AI (i.e., the first message sent to the AI that will guide the interaction).">
+                  <TooltipWrapper content={t("createPrompt.promptTooltip")}>
+                    <button aria-label={t("createPrompt.promptTooltip")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -618,7 +610,7 @@ export default function CreatePrompt({
                 <Textarea
                   id="prompt"
                   name="prompt"
-                  placeholder="Enter your prompt instructions here..."
+                  placeholder={t("createPrompt.promptHelptext")}
                   value={prompt.prompt}
                   onChange={handleChange}
                   disabled={isLoading}

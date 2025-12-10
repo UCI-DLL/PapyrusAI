@@ -19,6 +19,7 @@ import {
 } from "../utility/endpoints/UserEndpoints";
 import { Label } from "./ui/label";
 import { cn } from "../lib/utils";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface CourseListProps {
   course: CourseType;
@@ -36,6 +37,7 @@ export default function CourseCard({
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openDuplicateModal, setOpenDuplicateModal] = useState<boolean>(false);
   const [duplicateCourseData, setDuplicateCourseData] = useState<{
@@ -261,13 +263,13 @@ export default function CourseCard({
                 <div className="flex items-center gap-1">
                   <User size={10} aria-hidden="true" />
                   <span className="font-medium text-sm truncate-text">
-                    Instructor:{" "}
+                    {t("common.instructor")}:{" "}
                     {`${course.instructor.name} ${course.instructor.family_name}`}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-xs">
                   {course.modules.length}{" "}
-                  {course.modules.length === 1 ? "Module" : "Modules"}
+                  {course.modules.length === 1 ? t("common.module") : t("common.modules")}
                 </div>
               </div>
             </div>
@@ -365,7 +367,7 @@ export default function CourseCard({
               aria-label={`Select ${course.name}`}
             >
               <BookOpen size={14} aria-hidden="true" />
-              Select
+              {t("common.select")}
             </Button>
           ) : (
             <Button
@@ -380,7 +382,7 @@ export default function CourseCard({
                 className="flex items-center justify-center gap-2 no-underline"
               >
                 <BookOpen size={14} aria-hidden="true" />
-                View Modules
+                {t("courses.viewModules")}
               </Link>
             </Button>
           )}

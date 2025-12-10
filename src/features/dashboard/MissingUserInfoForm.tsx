@@ -15,6 +15,8 @@ import { postUserData } from "../../utility/endpoints/UserEndpoints";
 import { changeTheme } from "../../utility/Themes";
 import { UserContext } from "../../utility/context/UserContext";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { changeLanguage } from "../../i18n";
+import { useTranslation } from "../../hooks/useTranslation";
 
 /**
  * This form is to update user's missing data
@@ -39,25 +41,30 @@ export default function MissingUserInfoForm({
     family_name: string;
     theme: string; //"light" | "dark",
     textSize: string; //"xs" | "sm" | "md" | "lg" | "xl"
+    language: string; //"english" | "spanish"
   }>({
     name: "",
     family_name: "",
     theme: "light",
     textSize: "md",
+    language: "english",
   });
   const [errors, setErrors] = useState<{
     name: string;
     family_name: string;
     theme: string;
     textSize: string;
+    language: string;
   }>({
     name: "",
     family_name: "",
     theme: "",
     textSize: "",
+    language: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setUser } = useContext(UserContext);
+  const { t } = useTranslation();
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close
@@ -104,6 +111,18 @@ export default function MissingUserInfoForm({
           normalizedTextSize
         );
       }
+      if (user && user["custom:language"] && user["custom:language"] !== "") {
+        // Keep valid language options
+        const normalizedLanguage = ["english", "spanish"].includes(
+          user["custom:language"]
+        )
+          ? user["custom:language"]
+          : "english";
+        setSession((prev) => ({ ...prev, language: normalizedLanguage }));
+        // Apply current language to document
+        const languageCode = normalizedLanguage === "spanish" ? "es" : "en";
+        document.documentElement.setAttribute("lang", languageCode);
+      }
       setIsLoading(false);
     }
   }, [user, closeForm, requireUpdate]);
@@ -126,7 +145,7 @@ export default function MissingUserInfoForm({
             //close modal if user data was updated
             closeForm(res.data);
             // localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-            setAlert({ message: "Account Updated!", type: "success" });
+            setAlert({ message: t("account.accountUpdated"), type: "success" });
           }
         } else {
           // set errors
@@ -135,6 +154,7 @@ export default function MissingUserInfoForm({
             family_name: res.data,
             theme: res.data,
             textSize: res.data,
+            language: res.data,
           });
         }
         // set is loading back
@@ -175,23 +195,43 @@ export default function MissingUserInfoForm({
     root.setAttribute("data-text-size", e.target.value);
   }
 
+  function handleLanguageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selectedLanguage = e.target.value;
+    setSession((prev) => ({ ...prev, [e.target.name]: selectedLanguage }));
+    
+    // Update i18n language
+    const languageCode = selectedLanguage === "spanish" ? "es" : "en";
+    changeLanguage(languageCode as "en" | "es");
+    
+    // Update HTML lang attribute
+    document.documentElement.setAttribute("lang", languageCode);
+    
+    if (user) {
+      setUser({ ...user, "custom:language": selectedLanguage });
+      localStorage.setItem(
+        "papyrusai_user",
+        JSON.stringify({ ...user, "custom:language": selectedLanguage })
+      );
+    }
+  }
+
   return (
     <Card className="transition-all duration-300 hover:shadow-md">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-foreground">
-          Profile Information
+          {t("account.profileInformation")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium">
-              Name *
+              {t("common.name")} *
             </Label>
             <Input
               id="name"
               name="name"
-              placeholder="Enter your first name"
+              placeholder={t("account.enterFirstName")}
               value={session.name}
               onChange={handleChange}
               disabled={isLoading}
@@ -216,12 +256,12 @@ export default function MissingUserInfoForm({
 
           <div className="space-y-2">
             <Label htmlFor="family_name" className="text-sm font-medium">
-              Last Name
+              {t("account.lastName")}
             </Label>
             <Input
               id="family_name"
               name="family_name"
-              placeholder="Enter your last name"
+              placeholder={t("account.enterLastName")}
               value={session.family_name}
               onChange={handleChange}
               disabled={isLoading}
@@ -246,7 +286,7 @@ export default function MissingUserInfoForm({
           </div>
 
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Theme Preference</Label>
+            <Label className="text-sm font-medium">{t("account.themePreference")}</Label>
             <RadioGroup
               value={session.theme}
               onValueChange={(value) => {
@@ -264,7 +304,7 @@ export default function MissingUserInfoForm({
                   htmlFor="light"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Light theme
+                  {t("account.lightTheme")}
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
@@ -273,7 +313,7 @@ export default function MissingUserInfoForm({
                   htmlFor="dark"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Dark theme
+                  {t("account.darkTheme")}
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
@@ -282,7 +322,7 @@ export default function MissingUserInfoForm({
                   htmlFor="colorful-light"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Colorful light theme
+                  {t("account.colorfulLightTheme")}
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
@@ -291,7 +331,7 @@ export default function MissingUserInfoForm({
                   htmlFor="colorful-dark"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Colorful dark theme
+                  {t("account.colorfulDarkTheme")}
                 </Label>
               </div>
             </RadioGroup>
@@ -307,7 +347,7 @@ export default function MissingUserInfoForm({
           </div>
 
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Text Size</Label>
+            <Label className="text-sm font-medium">{t("account.textSize")}</Label>
             <RadioGroup
               value={session.textSize}
               onValueChange={(value) => {
@@ -325,7 +365,7 @@ export default function MissingUserInfoForm({
                   htmlFor="text-xs"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Extra Small
+                  {t("account.extraSmall")}
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
@@ -334,7 +374,7 @@ export default function MissingUserInfoForm({
                   htmlFor="text-sm"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Small
+                  {t("account.small")}
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
@@ -343,7 +383,7 @@ export default function MissingUserInfoForm({
                   htmlFor="text-md"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Medium (Default)
+                  {t("account.medium")}
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
@@ -352,7 +392,7 @@ export default function MissingUserInfoForm({
                   htmlFor="text-lg"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Large
+                  {t("account.large")}
                 </Label>
               </div>
               <div className="flex items-center space-x-3">
@@ -361,7 +401,7 @@ export default function MissingUserInfoForm({
                   htmlFor="text-xl"
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Extra Large
+                  {t("account.extraLarge")}
                 </Label>
               </div>
             </RadioGroup>
@@ -376,17 +416,60 @@ export default function MissingUserInfoForm({
             )}
           </div>
 
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">{t("account.language")}</Label>
+            <RadioGroup
+              value={session.language}
+              onValueChange={(value) => {
+                const event = {
+                  target: { name: "language", value },
+                } as React.ChangeEvent<HTMLInputElement>;
+                handleLanguageChange(event);
+              }}
+              className="flex flex-col space-y-3"
+              aria-describedby={errors.language ? "language-error" : undefined}
+            >
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="english" id="language-english" />
+                <Label
+                  htmlFor="language-english"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  {t("account.english")}
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3">
+                <RadioGroupItem value="spanish" id="language-spanish" />
+                <Label
+                  htmlFor="language-spanish"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  {t("account.spanish")}
+                </Label>
+              </div>
+            </RadioGroup>
+            {errors.language && (
+              <p
+                id="language-error"
+                className="text-sm text-destructive"
+                role="alert"
+              >
+                {errors.language}
+              </p>
+            )}
+          </div>
+
           <Button
             type="submit"
             disabled={isLoading}
             className="w-full"
             aria-label={
               isLoading
-                ? "Saving profile information"
-                : "Save profile information"
+                ? t("account.saving")
+                : t("account.saveProfile")
             }
           >
-            {isLoading ? "Saving..." : "Save Profile"}
+            {isLoading ? t("account.saving") : t("account.saveProfile")}
           </Button>
         </form>
       </CardContent>

@@ -34,6 +34,7 @@ import {
   postCreateConversation,
 } from "../../utility/endpoints/ConversationEndpoints";
 import { Link } from "react-router-dom";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface ModuleListProps {
   course: CourseType;
@@ -51,6 +52,7 @@ export default function ModuleList({
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isNavigatingToModule, setIsNavigatingToModule] = useState<
     string | null
@@ -489,7 +491,7 @@ export default function ModuleList({
                           </h2>
                         </div>
                         <TooltipWrapper
-                          content={isStarred ? "Unstar Module" : "Star Module"}
+                          content={isStarred ? t("common.unstarModule") : t("common.starModule")}
                         >
                           <button
                             onClick={(e: any) => {
@@ -506,7 +508,7 @@ export default function ModuleList({
                                 : "text-muted hover:text-gold"
                             )}
                             aria-label={
-                              isStarred ? "Unstar Module" : "Star Module"
+                              isStarred ? t("common.unstarModule") : t("common.starModule")
                             }
                           >
                             <Star
@@ -574,7 +576,7 @@ export default function ModuleList({
                                 : "PapyrusAIInstructors"
                             ) ||
                             user?.groups.includes(course.id + "-TA")) && (
-                            <TooltipWrapper content="Copy Module">
+                            <TooltipWrapper content={t("common.copyModule")}>
                               <button
                                 onClick={() => {
                                   setOpenDuplicateModal({
@@ -585,7 +587,7 @@ export default function ModuleList({
                                   setOpenCourseListModal(true);
                                 }}
                                 className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-300"
-                                aria-label="Copy Module"
+                                aria-label={t("common.copyModule")}
                               >
                                 <Copy className="h-[1em] w-[1em]" />
                               </button>
@@ -605,9 +607,9 @@ export default function ModuleList({
                                   (a: CustomUserType) =>
                                     a.username === user?.username
                                 ))) && (
-                              <TooltipWrapper content="Edit Module">
+                              <TooltipWrapper content={t("common.editModule")}>
                                 <button
-                                  aria-label="Edit Module"
+                                  aria-label={t("common.editModule")}
                                   className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-300"
                                 >
                                   <Link
@@ -630,10 +632,10 @@ export default function ModuleList({
                           variant="default"
                           size="sm"
                           className="flex items-center gap-2"
-                          aria-label="Begin Module"
+                          aria-label={t("modules.beginModule")}
                         >
                           <Play size={14} />
-                          Begin
+                          {t("common.begin")}
                         </Button>
                       </div>
                     </div>
@@ -672,7 +674,7 @@ export default function ModuleList({
                         <div className="flex items-center gap-1 ml-4 flex-shrink-0">
                           <TooltipWrapper
                             content={
-                              isStarred ? "Unstar Module" : "Star Module"
+                              isStarred ? t("modules.unstarModule") : t("modules.starModule")
                             }
                           >
                             <button
@@ -690,7 +692,7 @@ export default function ModuleList({
                                   : "text-muted hover:text-gold"
                               )}
                               aria-label={
-                                isStarred ? "Unstar Module" : "Star Module"
+                                isStarred ? t("modules.unstarModule") : t("modules.starModule")
                               }
                             >
                               <Star
@@ -741,7 +743,7 @@ export default function ModuleList({
                                 : "PapyrusAIInstructors"
                             ) ||
                             user?.groups.includes(course.id + "-TA")) && (
-                            <TooltipWrapper content="Copy Module">
+                            <TooltipWrapper content={t("common.copyModule")}>
                               <button
                                 onClick={() => {
                                   setOpenDuplicateModal({
@@ -752,7 +754,7 @@ export default function ModuleList({
                                   setOpenCourseListModal(true);
                                 }}
                                 className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
-                                aria-label="Copy Module"
+                                aria-label={t("common.copyModule")}
                               >
                                 <Copy className="h-[1em] w-[1em]" />
                               </button>
@@ -772,9 +774,9 @@ export default function ModuleList({
                                   (a: CustomUserType) =>
                                     a.username === user?.username
                                 ))) && (
-                              <TooltipWrapper content="Edit Module">
+                              <TooltipWrapper content={t("common.editModule")}>
                                 <button
-                                  aria-label="Edit Module"
+                                  aria-label={t("common.editModule")}
                                   className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
                                 >
                                   <Link
@@ -805,7 +807,7 @@ export default function ModuleList({
                               ) : (
                                 <Play size={14} />
                               )}
-                              Begin Module
+                              {t("modules.beginModule")}
                           </Button>
                         </div>
                       </div>
@@ -825,14 +827,13 @@ export default function ModuleList({
     >
       <Play className="mx-auto h-12 w-12 mb-4 opacity-50" />
       <p className="text-lg font-medium mb-2">
-        No modules are currently available to you.
+        {t("modules.noModulesAvailable")}
       </p>
       {user?.groups.includes(
         process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
       ) && (
         <p className="text-sm">
-          To create a module, go to the course in which you would like to create
-          the module.
+          {t("modules.createModulePrompt")}
         </p>
       )}
     </div>

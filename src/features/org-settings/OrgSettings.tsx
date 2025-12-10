@@ -42,6 +42,7 @@ import {
 import Put from "../../utility/Put";
 import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export enum PermissionsOptions {
   // Admin = "Admin",
@@ -52,6 +53,7 @@ export enum PermissionsOptions {
 export default function OrgSettings(): JSX.Element {
   let navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [orgPermissionsList, setOrgPermissionsList] = useState<
     Array<OrgPermissionType>
   >([]); //org permissions list
@@ -135,7 +137,7 @@ export default function OrgSettings(): JSX.Element {
         if (res === undefined) {
         } else {
           // handle error
-          setError("No Permissions Found");
+          setError(t("orgSettings.noPermissionsFound"));
           setIsLoading(false);
         }
       }
@@ -176,7 +178,7 @@ export default function OrgSettings(): JSX.Element {
   function addPermission(e: React.FormEvent) {
     e.preventDefault();
     if (showAddOrgPermissionModal.permission === PermissionsOptions.None) {
-      setAlert({ message: "No Permissions Given", type: "info" });
+      setAlert({ message: t("orgSettings.noPermissionsGiven"), type: "info" });
       setShowAddOrgPermissionModal({
         open: false,
         email: "",
@@ -185,7 +187,7 @@ export default function OrgSettings(): JSX.Element {
     }
     //add permissions
     if (showAddOrgPermissionModal.email === "") {
-      setAlert({ message: "Missing Email", type: "error" });
+      setAlert({ message: t("orgSettings.missingEmail"), type: "error" });
       setShowAddOrgPermissionModal({
         open: false,
         email: "",
@@ -209,7 +211,7 @@ export default function OrgSettings(): JSX.Element {
             // update list
             setOrgPermissionsList((prev) => [...prev, res.data]);
             //pop up notifying user of creation
-            setAlert({ message: "Permission added", type: "success" });
+            setAlert({ message: t("orgSettings.permissionAdded"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -271,7 +273,7 @@ export default function OrgSettings(): JSX.Element {
               return newList;
             });
             //pop up notifying user of creation
-            setAlert({ message: "Permission updated", type: "success" });
+            setAlert({ message: t("orgSettings.permissionUpdated"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -317,7 +319,7 @@ export default function OrgSettings(): JSX.Element {
               return newList;
             });
             //pop up notifying user of creation
-            setAlert({ message: "Permission removed", type: "success" });
+            setAlert({ message: t("orgSettings.permissionRemoved"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -332,7 +334,7 @@ export default function OrgSettings(): JSX.Element {
       });
     } else {
       setAlert({
-        message: "Something went wrong. Please contact support.",
+        message: t("orgSettings.somethingWentWrong"),
         type: "error",
       });
     }
@@ -361,12 +363,12 @@ export default function OrgSettings(): JSX.Element {
                 });
               }
             }}
-            title="Add New Permissions"
-            description="Grant permission access to a user by entering their email address."
+            title={t("orgSettings.addNewPermissions")}
+            description={t("orgSettings.addPermissionsDescription")}
             contentClassName="sm:max-w-md"
             actions={[
               {
-                label: "Cancel",
+                label: t("common.cancel"),
                 onClick: () =>
                   setShowAddOrgPermissionModal({
                     open: false,
@@ -376,7 +378,7 @@ export default function OrgSettings(): JSX.Element {
                 variant: "outline",
               },
               {
-                label: isLoading ? "Adding..." : "Add Permission",
+                label: isLoading ? t("orgSettings.adding") : t("orgSettings.addPermission"),
                 onClick: () => {
                   const fakeEvent = {
                     preventDefault: () => { },
@@ -389,7 +391,7 @@ export default function OrgSettings(): JSX.Element {
           >
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t("orgSettings.emailAddress")}</Label>
                 <Input
                   id="email"
                   name="email"
@@ -415,7 +417,7 @@ export default function OrgSettings(): JSX.Element {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="permission-level">Permission Level</Label>
+                <Label htmlFor="permission-level">{t("orgSettings.permissionLevel")}</Label>
                 <Select
                   value={showAddOrgPermissionModal.permission}
                   onValueChange={(value) => {
@@ -426,7 +428,7 @@ export default function OrgSettings(): JSX.Element {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select permission level" />
+                    <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.keys(PermissionsOptions).map((key) => (
@@ -446,17 +448,17 @@ export default function OrgSettings(): JSX.Element {
             onOpenChange={(open) => {
               if (!open) setOpenDeleteModal(undefined);
             }}
-            title="Remove All Permissions?"
-            description="This action cannot be undone. The user will lose all elevated permissions."
+            title={t("orgSettings.removeAllPermissions")}
+            description={t("orgSettings.removePermissionsDescription")}
             contentClassName="sm:max-w-md"
             actions={[
               {
-                label: "Cancel",
+                label: t("common.cancel"),
                 onClick: () => setOpenDeleteModal(undefined),
                 variant: "outline",
               },
               {
-                label: "Remove Permissions",
+                label: t("orgSettings.removePermissions"),
                 onClick: handleDelete,
                 variant: "destructive",
               },
@@ -464,9 +466,7 @@ export default function OrgSettings(): JSX.Element {
           >
             <div className="py-4">
               <p>
-                Are you sure you would like to remove permissions from{" "}
-                <span className="font-medium">{openDeleteModal?.id}</span>? They
-                will still have student level access.
+                {t("orgSettings.removePermissionsConfirm", { email: openDeleteModal?.id })}
               </p>
             </div>
           </DialogWrapper>
@@ -482,12 +482,12 @@ export default function OrgSettings(): JSX.Element {
                 });
               }
             }}
-            title="Update Permissions"
-            description="Change the permission level for this user."
+            title={t("orgSettings.updatePermissions")}
+            description={t("orgSettings.updatePermissionDescription")}
             contentClassName="sm:max-w-md"
             actions={[
               {
-                label: "Cancel",
+                label: t("common.cancel"),
                 onClick: () =>
                   setShowUpdateOrgPermissionModal({
                     id: "",
@@ -496,7 +496,7 @@ export default function OrgSettings(): JSX.Element {
                 variant: "outline",
               },
               {
-                label: isLoading ? "Updating..." : "Update Permission",
+                label: isLoading ? t("orgSettings.updating") : t("orgSettings.updatePermission"),
                 onClick: () => {
                   const fakeEvent = {
                     preventDefault: () => { },
@@ -510,17 +510,13 @@ export default function OrgSettings(): JSX.Element {
             <div className="space-y-4">
               <div className="py-2">
                 <p>
-                  Update permissions for{" "}
-                  <span className="font-medium">
-                    {showUpdateOrgPermissionModal.id}
-                  </span>
-                  ?
+                  {t("orgSettings.updatePermissionsFor", { email: showUpdateOrgPermissionModal.id })}
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="update-permission-level">
-                  Permission Level
+                  {t("orgSettings.permissionLevel")}
                 </Label>
                 <Select
                   value={showUpdateOrgPermissionModal.permission}
@@ -532,7 +528,7 @@ export default function OrgSettings(): JSX.Element {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select permission level" />
+                    <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.keys(PermissionsOptions).map((key) => (
@@ -559,7 +555,7 @@ export default function OrgSettings(): JSX.Element {
               <div className="relative z-10">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                   <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                    Organization Settings
+                    {t("orgSettings.organizationSettings")}
                   </h1>
                   <nav
                     className="flex flex-col md:flex-row gap-2"
@@ -576,14 +572,13 @@ export default function OrgSettings(): JSX.Element {
                       aria-label="Add new user permission"
                     >
                       <UserPlus className="h-4 w-4" aria-hidden="true" />
-                      Add Permission
+                      {t("orgSettings.addPermission")}
                     </Button>
                   </nav>
                 </div>
 
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                  Manage user permissions and access levels for your
-                  organization.
+                  {t("orgSettings.orgSettingsDescription")}
                 </p>
               </div>
             </div>
@@ -600,7 +595,7 @@ export default function OrgSettings(): JSX.Element {
                       aria-hidden="true"
                     />
                     <Input
-                      placeholder="Search by email address..."
+                      placeholder={t("orgSettings.searchByEmail")}
                       value={filter.search}
                       onChange={handleSearchOrgPermissionList}
                       className="pl-10"
@@ -608,7 +603,7 @@ export default function OrgSettings(): JSX.Element {
                     />
                   </div>
                   <Button variant="outline" onClick={clearFilters}>
-                    Clear Filters
+                    {t("orgSettings.clearFilters")}
                   </Button>
                 </div>
               </CardHeader>
@@ -617,11 +612,11 @@ export default function OrgSettings(): JSX.Element {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Email Address</TableHead>
+                        <TableHead>{t("orgSettings.emailAddress")}</TableHead>
                         <TableHead className="text-right">
-                          Access Level
+                          {t("orgSettings.accessLevel")}
                         </TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">{t("common.actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -631,12 +626,12 @@ export default function OrgSettings(): JSX.Element {
                             <div className="flex flex-col items-center gap-2">
                               <Users className="h-8 w-8 text-muted-foreground opacity-50" />
                               <p className="text-muted-foreground">
-                                No users found
+                                {t("orgSettings.noUsersFound")}
                               </p>
                               <p className="text-sm text-muted-foreground">
                                 {filter.search
-                                  ? "Try adjusting your search"
-                                  : "Add permissions to get started"}
+                                  ? t("orgSettings.tryAdjustingSearch")
+                                  : t("orgSettings.addPermissionsToGetStarted")}
                               </p>
                             </div>
                           </TableCell>
@@ -679,10 +674,10 @@ export default function OrgSettings(): JSX.Element {
                             <TableCell className="text-right">
                               {permission.isAdmin ? (
                                 <Badge variant="default" className="bg-primary pointer-events-none">
-                                  Admin
+                                  {t("orgSettings.admin")}
                                 </Badge>
                               ) : permission.isInstructor ? (
-                                <Badge variant="secondary" className="pointer-events-none">Instructor</Badge>
+                                <Badge variant="secondary" className="pointer-events-none">{t("common.instructor")}</Badge>
                               ) : (
                                 <Badge
                                   variant="outline"
@@ -692,7 +687,7 @@ export default function OrgSettings(): JSX.Element {
                                     className="mr-1 h-3 w-3"
                                     aria-hidden="true"
                                   />
-                                  No Access
+                                  {t("orgSettings.noAccess")}
                                 </Badge>
                               )}
                             </TableCell>
@@ -761,7 +756,7 @@ export default function OrgSettings(): JSX.Element {
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
         />
-        <p className="text-muted-foreground">Loading Organization Settings</p>
+        <p className="text-muted-foreground">{t("orgSettings.loadingOrgSettings")}</p>
       </div>
     </div>
   );

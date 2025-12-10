@@ -27,12 +27,15 @@ import {
   postCreateUserFile,
 } from "../../utility/endpoints/FolderEndpoints";
 import axios from "axios";
-
-const options = ["Save & Upload", "Discard Changes"];
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function CreateFile(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
+  const { t } = useTranslation();
+  
+  // Translated options
+  const options = [t("createFile.saveUpload"), t("createFile.discardChanges")];
   const [newFile, setNewFile] = useState<{
     name: string;
     id: string;
@@ -79,7 +82,7 @@ export default function CreateFile(): JSX.Element {
       if (file.size > MAX_FILE_SIZE) {
         setErrors((prev: any) => ({
           ...prev,
-          file: "File is too large. File must be smaller than 1GB.",
+          file: t("createFile.fileTooLarge"),
         }));
         setSelectedFiles(null);
       } else {
@@ -90,7 +93,7 @@ export default function CreateFile(): JSX.Element {
         } else {
           setErrors((prev: any) => ({
             ...prev,
-            file: "Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.",
+            file: t("createFile.invalidFileType"),
           }));
           setSelectedFiles(null);
         }
@@ -221,7 +224,7 @@ export default function CreateFile(): JSX.Element {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of created
-            setAlert({ message: "File Created", type: "success" });
+            setAlert({ message: t("createFile.fileCreated"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -229,7 +232,7 @@ export default function CreateFile(): JSX.Element {
           // handle error
           if (res) {
             setAlert({
-              message: "File could not be created. Try again later.",
+              message: t("createFile.fileCouldNotBeCreated"),
               type: "error",
             });
           }
@@ -250,7 +253,7 @@ export default function CreateFile(): JSX.Element {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of Created
-            setAlert({ message: "File Created", type: "success" });
+            setAlert({ message: t("createFile.fileCreated"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -290,7 +293,7 @@ export default function CreateFile(): JSX.Element {
       return;
     }
     if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }));
+      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
     }
     // Handle here
     if (fileInfo) {
@@ -505,17 +508,7 @@ export default function CreateFile(): JSX.Element {
             </div>
 
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Upload documents that will factor into generated AI output for
-              your course. For more information on this system, please see the{" "}
-              <a
-                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-              >
-                "Uploading a Document" section of our instructor guide
-              </a>
-              .
+              {t("createFile.createFileDescription")}
             </p>
           </div>
         </div>
@@ -526,11 +519,10 @@ export default function CreateFile(): JSX.Element {
         <Card className="transition-all duration-300 hover:shadow-md" id="actions-heading">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-foreground">
-              File Information
+              {t("createFile.fileInformation")}
             </CardTitle>
             <p className="text-muted-foreground text-sm">
-              Enter the essential details for your file. Fields marked with *
-              are required.
+              {t("createFile.enterFileDetails")}. {t("common.required")}
             </p>
           </CardHeader>
           <CardContent>
@@ -538,10 +530,10 @@ export default function CreateFile(): JSX.Element {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="name" className="text-sm font-medium">
-                    File Name *
+                    {t("createFile.fileName")} *
                   </Label>
-                  <TooltipWrapper content="The name for the document.">
-                    <button aria-label="The name for the document.">
+                  <TooltipWrapper content={t("createFile.fileNameTooltip")}>
+                    <button aria-label={t("createFile.fileNameTooltip")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -549,7 +541,7 @@ export default function CreateFile(): JSX.Element {
                 <Input
                   id="name"
                   name="name"
-                  placeholder="Enter file name"
+                  placeholder={t("createFile.fileNameHelptext")}
                   value={newFile.name}
                   onChange={handleChange}
                   disabled={isLoading}

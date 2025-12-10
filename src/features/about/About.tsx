@@ -7,13 +7,10 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Info } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function About(): JSX.Element {
-  const text = `PapyrusAI and the related instructional resources have been developed by the [Digital Learning Lab](https://www.digitallearninglab.org/) at the University of California, Irvine, in 2023 with grant funding from NSF (#23152984), UCI, The Learning Agency, and the California Education Learning Lab.
-
-For resources on using generative AI in instruction, see our site at [GenAIed.org](https://www.genaied.org/). This tool is built on AWS serverless functions and React for the front end. We are using OpenAI's API to power our tool, but continuously evaluate other commercial models.
-
-If you want to learn more about what we're doing or want to get involved, email us at <digitallearninglab@uci.edu>.`;
+  const { t } = useTranslation();
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
@@ -29,7 +26,7 @@ If you want to learn more about what we're doing or want to get involved, email 
 
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              About PapyrusAI
+              {t("about.aboutPapyrusAI")}
             </h1>
           </div>
         </div>
@@ -45,7 +42,7 @@ If you want to learn more about what we're doing or want to get involved, email 
                 className="flex items-center gap-2 text-2xl font-bold text-foreground"
               >
                 <Info className="h-6 w-6 text-primary" aria-hidden="true" />
-                Our Story
+                {t("about.ourStory")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -71,7 +68,7 @@ If you want to learn more about what we're doing or want to get involved, email 
                     ),
                   }}
                 >
-                  {text}
+                  {t("about.aboutMessage")}
                 </Markdown>
               </div>
             </CardContent>

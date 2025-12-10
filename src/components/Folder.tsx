@@ -27,6 +27,7 @@ import {
 } from "../utility/endpoints/UserEndpoints";
 import { Star, Folder, MoreHorizontal } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface FolderProps {
   displayName: string;
@@ -44,6 +45,7 @@ export const FolderComponent = (props: FolderProps) => {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const displayName = props.displayName ? props.displayName : "Displayname";
   const [renameFolderText, setRenameFolderText] = useState<string>(
     props.folder.name
@@ -98,7 +100,7 @@ export const FolderComponent = (props: FolderProps) => {
       Put(postUpdateOrgFolder(props.folder.id), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({
-            message: "Folder renamed successfully",
+            message: t("components.folderRenamedSuccessfully"),
             type: "success",
           });
           props.refreshList();
@@ -106,7 +108,7 @@ export const FolderComponent = (props: FolderProps) => {
           navigator("/login");
         } else {
           setAlert({
-            message: "Failed to rename folder",
+            message: t("components.failedToRenameFolder"),
             type: "error",
           });
         }
@@ -120,7 +122,7 @@ export const FolderComponent = (props: FolderProps) => {
       Put(postUpdateUserFolder(props.folder.id), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({
-            message: "Folder renamed successfully",
+            message: t("components.folderRenamedSuccessfully"),
             type: "success",
           });
           props.refreshList();
@@ -128,7 +130,7 @@ export const FolderComponent = (props: FolderProps) => {
           navigator("/login");
         } else {
           setAlert({
-            message: "Failed to rename folder",
+            message: t("components.failedToRenameFolder"),
             type: "error",
           });
         }
@@ -143,7 +145,7 @@ export const FolderComponent = (props: FolderProps) => {
       Post(postCopyOrgFolder(props.folder.id), {}).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({
-            message: "Folder duplicated successfully",
+            message: t("components.folderDuplicatedSuccessfully"),
             type: "success",
           });
           props.refreshList();
@@ -151,7 +153,7 @@ export const FolderComponent = (props: FolderProps) => {
           navigator("/login");
         } else {
           setAlert({
-            message: "Failed to duplicate folder",
+            message: t("components.failedToDuplicateFolder"),
             type: "error",
           });
         }
@@ -160,7 +162,7 @@ export const FolderComponent = (props: FolderProps) => {
       Post(postCopyUserFolder(props.folder.id), {}).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({
-            message: "Folder duplicated successfully",
+            message: t("components.folderDuplicatedSuccessfully"),
             type: "success",
           });
           props.refreshList();
@@ -168,7 +170,7 @@ export const FolderComponent = (props: FolderProps) => {
           navigator("/login");
         } else {
           setAlert({
-            message: "Failed to duplicate folder",
+            message: t("components.failedToDuplicateFolder"),
             type: "error",
           });
         }
@@ -186,7 +188,7 @@ export const FolderComponent = (props: FolderProps) => {
       Put(postUpdateOrgFolder(props.folder.id), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({
-            message: "Folder deleted successfully",
+            message: t("components.folderDeletedSuccessfully"),
             type: "success",
           });
           props.refreshList();
@@ -194,7 +196,7 @@ export const FolderComponent = (props: FolderProps) => {
           navigator("/login");
         } else {
           setAlert({
-            message: "Failed to delete folder",
+            message: t("components.failedToDeleteFolder"),
             type: "error",
           });
         }
@@ -208,7 +210,7 @@ export const FolderComponent = (props: FolderProps) => {
       Put(postUpdateUserFolder(props.folder.id), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({
-            message: "Folder deleted successfully",
+            message: t("components.folderDeletedSuccessfully"),
             type: "success",
           });
           props.refreshList();
@@ -216,7 +218,7 @@ export const FolderComponent = (props: FolderProps) => {
           navigator("/login");
         } else {
           setAlert({
-            message: "Failed to delete folder",
+            message: t("components.failedToDeleteFolder"),
             type: "error",
           });
         }
@@ -230,7 +232,7 @@ export const FolderComponent = (props: FolderProps) => {
     Post(postPromoteUserFolder(props.folder.id), {}).then((res) => {
       if (res.status && res.status < 300) {
         setAlert({
-          message: "Folder promoted successfully",
+          message: t("components.folderPromotedSuccessfully"),
           type: "success",
         });
         props.refreshList();
@@ -238,7 +240,7 @@ export const FolderComponent = (props: FolderProps) => {
         navigator("/login");
       } else {
         setAlert({
-          message: "Failed to promote folder",
+          message: t("components.failedToPromoteFolder"),
           type: "error",
         });
       }
@@ -251,14 +253,14 @@ export const FolderComponent = (props: FolderProps) => {
     Post(postDemoteOrgFolder(props.folder.id), {}).then((res) => {
       if (res.status && res.status < 300) {
         setAlert({
-          message: "Folder demoted successfully",
+          message: t("components.folderDemotedSuccessfully"),
           type: "success",
         });
         props.refreshList();
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to demote folder", type: "error" });
+        setAlert({ message: t("components.failedToDemoteFolder"), type: "error" });
       }
       setOpenDemoteDialog(false);
     });
@@ -274,7 +276,7 @@ export const FolderComponent = (props: FolderProps) => {
         if (res.data && res.data.folders) {
           //update foler lists as needed
           setStarred(res.data.folders);
-          setAlert({ message: "Folder added to favorites.", type: "info" });
+          setAlert({ message: t("components.folderAddedToFavorites"), type: "info" });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
@@ -296,7 +298,7 @@ export const FolderComponent = (props: FolderProps) => {
         if (res.data && res.data.folders) {
           //update folder lists as needed
           setStarred(res.data.folders);
-          setAlert({ message: "Folder removed from favorites.", type: "info" });
+          setAlert({ message: t("components.folderRemovedFromFavorites"), type: "info" });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
@@ -332,66 +334,63 @@ export const FolderComponent = (props: FolderProps) => {
     const promptCount = props.folder.prompts.filter(x => !x.isDeleted).length;
     const fileCount = props.folder.files.filter(x => !x.isDeleted).length;
 
-    if (promptCount === 0 && fileCount === 0) return "Empty Folder";
+    if (promptCount === 0 && fileCount === 0) return t("components.emptyFolder");
 
     if (promptCount > 0 && fileCount > 0) {
-      const promptText =
-        promptCount === 1 ? "1 prompt" : `${promptCount} prompts`;
-      const fileText = fileCount === 1 ? "1 file" : `${fileCount} files`;
-      return `Contains ${promptText} and ${fileText}`;
+      return t("components.containsPromptsAndFiles", { promptCount, fileCount });
     }
 
     if (promptCount > 0) {
       return promptCount === 1
-        ? "Contains 1 prompt"
-        : `Contains ${promptCount} prompts`;
+        ? t("components.containsPrompt", { count: 1 })
+        : t("components.containsPrompts", { count: promptCount });
     }
 
-    return fileCount === 1 ? "Contains 1 file" : `Contains ${fileCount} files`;
+    return fileCount === 1 ? t("components.containsFile", { count: 1 }) : t("components.containsFiles", { count: fileCount });
   };
 
   const adminOrgMenu = [
-    { label: "View", type: "link" as const, action: getViewUrl() },
+    { label: t("common.view"), type: "link" as const, action: getViewUrl() },
     {
-      label: starred ? "Unstar" : "Star",
+      label: starred ? t("common.unstar") : t("common.star"),
       type: "function" as const,
       action: starred ? removeStarredFolder : createStarredFolder,
     },
-    { label: "Rename", type: "function" as const, action: openRename },
-    { label: "Duplicate", type: "function" as const, action: duplicate },
-    { label: "Make Private", type: "function" as const, action: openDemote },
-    { label: "Delete", type: "function" as const, action: openDelete },
+    { label: t("common.rename"), type: "function" as const, action: openRename },
+    { label: t("common.duplicate"), type: "function" as const, action: duplicate },
+    { label: t("common.makePrivate"), type: "function" as const, action: openDemote },
+    { label: t("common.delete"), type: "function" as const, action: openDelete },
   ];
   const instructorOrgMenu = [
-    { label: "View", type: "link" as const, action: getViewUrl() },
+    { label: t("common.view"), type: "link" as const, action: getViewUrl() },
     {
-      label: starred ? "Unstar" : "Star",
+      label: starred ? t("common.unstar") : t("common.star"),
       type: "function" as const,
       action: starred ? removeStarredFolder : createStarredFolder,
     },
   ];
   const adminUserMenu = [
-    { label: "View", type: "link" as const, action: getViewUrl() },
+    { label: t("common.view"), type: "link" as const, action: getViewUrl() },
     {
-      label: starred ? "Unstar" : "Star",
+      label: starred ? t("common.unstar") : t("common.star"),
       type: "function" as const,
       action: starred ? removeStarredFolder : createStarredFolder,
     },
-    { label: "Rename", type: "function" as const, action: openRename },
-    { label: "Duplicate", type: "function" as const, action: duplicate },
-    { label: "Make Public", type: "function" as const, action: openPromote },
-    { label: "Delete", type: "function" as const, action: openDelete },
+    { label: t("common.rename"), type: "function" as const, action: openRename },
+    { label: t("common.duplicate"), type: "function" as const, action: duplicate },
+    { label: t("common.makePublic"), type: "function" as const, action: openPromote },
+    { label: t("common.delete"), type: "function" as const, action: openDelete },
   ];
   const instructorUserMenu = [
-    { label: "View", type: "link" as const, action: getViewUrl() },
+    { label: t("common.view"), type: "link" as const, action: getViewUrl() },
     {
-      label: starred ? "Unstar" : "Star",
+      label: starred ? t("common.unstar") : t("common.star"),
       type: "function" as const,
       action: starred ? removeStarredFolder : createStarredFolder,
     },
-    { label: "Rename", type: "function" as const, action: openRename },
-    { label: "Duplicate", type: "function" as const, action: duplicate },
-    { label: "Delete", type: "function" as const, action: openDelete },
+    { label: t("common.rename"), type: "function" as const, action: openRename },
+    { label: t("common.duplicate"), type: "function" as const, action: duplicate },
+    { label: t("common.delete"), type: "function" as const, action: openDelete },
   ];
 
   return (
@@ -400,16 +399,16 @@ export const FolderComponent = (props: FolderProps) => {
       <DialogWrapper
         open={openPromoteDialog}
         onOpenChange={setOpenPromoteDialog}
-        title="Promote Folder?"
-        description="Are you sure you would like to promote this folder into an organization folder along everything in it? This will remove the folder from your personal ownership and transfer it to the organization level. Proceeding will allow all instructors to be able to read and use contains in modules. All admins will be able to edit this folder."
+        title={t("components.promoteFolder")}
+        description={t("components.promoteFolderDescription")}
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenPromoteDialog(false),
             variant: "outline",
           },
           {
-            label: "Confirm",
+            label: t("common.confirm"),
             onClick: promote,
             variant: "default",
           },
@@ -420,16 +419,16 @@ export const FolderComponent = (props: FolderProps) => {
       <DialogWrapper
         open={openDemoteDialog}
         onOpenChange={setOpenDemoteDialog}
-        title="Demote Folder?"
-        description="Are you sure you would like to demote this organization folder into a personal user folder along everything in it? This will remove the folder from the organization ownership and transfer it to the user level. Proceeding will only let you edit the folder."
+        title={t("components.demoteFolder")}
+        description={t("components.demoteFolderDescription")}
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDemoteDialog(false),
             variant: "outline",
           },
           {
-            label: "Confirm",
+            label: t("common.confirm"),
             onClick: demote,
             variant: "default",
           },
@@ -440,16 +439,16 @@ export const FolderComponent = (props: FolderProps) => {
       <DialogWrapper
         open={openDeleteDialog}
         onOpenChange={setOpenDeleteDialog}
-        title="Delete Folder?"
-        description="Are you sure you would like to permanently delete this folder and everything in it?"
+        title={t("components.deleteFolder")}
+        description={t("components.deleteFolderMessage")}
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDeleteDialog(false),
             variant: "outline",
           },
           {
-            label: "Delete",
+            label: t("common.delete"),
             onClick: deleteFolder,
             variant: "destructive",
           },
@@ -460,16 +459,16 @@ export const FolderComponent = (props: FolderProps) => {
       <DialogWrapper
         open={openRenameDialog}
         onOpenChange={setOpenRenameDialog}
-        title="Rename Folder"
-        description="Enter a new name for your folder."
+        title={t("components.renameFolder")}
+        description={t("components.renameFolderDescription")}
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenRenameDialog(false),
             variant: "outline",
           },
           {
-            label: "Rename",
+            label: t("common.rename"),
             onClick: () => {
               setOpenRenameDialog(false);
               rename();
@@ -480,14 +479,14 @@ export const FolderComponent = (props: FolderProps) => {
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="folder-name">Folder Name</Label>
+            <Label htmlFor="folder-name">{t("common.folder")} {t("common.name")}</Label>
             <Input
               id="folder-name"
               value={renameFolderText}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setRenameFolderText(e.target.value);
               }}
-              placeholder="Enter folder name"
+              placeholder={t("components.enterFolderName")}
             />
           </div>
         </div>
@@ -511,10 +510,10 @@ export const FolderComponent = (props: FolderProps) => {
                 variant={props.isOrganizationFolder ? "default" : "outline"}
                 className="text-xs pointer-events-none"
               >
-                {props.isOrganizationFolder ? "public" : "private"}
+                {props.isOrganizationFolder ? t("common.public") : t("common.private")}
               </Badge>
               <TooltipWrapper
-                content={starred ? "Unstar Folder" : "Star Folder"}
+                content={starred ? t("common.unstar") + " " + t("common.folder") : t("common.star") + " " + t("common.folder")}
                 side="top"
               >
                 <button
@@ -525,9 +524,9 @@ export const FolderComponent = (props: FolderProps) => {
                       ? "text-gold hover:text-muted"
                       : "text-muted hover:text-gold"
                   )}
-                  aria-label={
-                    starred ? "Remove from favorites" : "Add to favorites"
-                  }
+                    aria-label={
+                      starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
+                    }
                 >
                   <Star
                     size={16}
@@ -547,7 +546,7 @@ export const FolderComponent = (props: FolderProps) => {
                       size="sm"
                       className="flex text-lg items-center p-1"
                       onClick={(e) => e.stopPropagation()}
-                      aria-label="More Options"
+                      aria-label={t("common.moreOptions")}
                     >
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
@@ -578,10 +577,10 @@ export const FolderComponent = (props: FolderProps) => {
                     },
                     type: item.type === "link" ? "link" : "button",
                     href: item.type === "link" ? item.action : undefined,
-                    className: item.label === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                    className: item.label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                   }))}
                   align="end"
-                  tooltipContent="Folder Options"
+                  tooltipContent={t("common.folderOptions")}
                   tooltipSide="top"
                 />
               )}
@@ -614,7 +613,7 @@ export const FolderComponent = (props: FolderProps) => {
           {/* Footer with item count and view link */}
           <div className="flex items-center justify-between mt-auto">
             <span className="text-xs text-gray-700 dark:text-gray-300 colorful-dark:text-gray-300">
-              {getItemCount()} items
+              {getItemCount()} {t("common.items")}
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -623,11 +622,11 @@ export const FolderComponent = (props: FolderProps) => {
                 className="flex items-center gap-1 text-muted-foreground text-xs font-medium w-full p-2 hover:bg-primary hover:text-primary-foreground"
                 onClick={props.onClick}
                 // disabled={props.noShowMenu}
-                aria-label={props.noShowMenu ? "Select" : "View"}
+                aria-label={props.noShowMenu ? t("common.select") : t("common.view")}
               >
-                {props.noShowMenu ? "Select" : 
+                {props.noShowMenu ? t("common.select") : 
                 <Link to={getViewUrl()} className="no-underline">
-                  View
+                  {t("common.view")}
                 </Link>}
               </Button>
             </div>

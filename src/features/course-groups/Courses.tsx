@@ -17,10 +17,18 @@ import {
   BookOpen,
   Search,
 } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../../components/ui/accordion";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function Courses(): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
+  const { t } = useTranslation();
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
@@ -60,7 +68,7 @@ export default function Courses(): JSX.Element {
         if (res === undefined) {
         } else {
           // handle error
-          setError("No Courses Found");
+          setError(t("courses.noCoursesFound"));
           setIsLoading(false);
         }
       }
@@ -112,7 +120,7 @@ export default function Courses(): JSX.Element {
             className="h-8 w-8 animate-spin text-primary"
             aria-hidden="true"
           />
-          <p className="text-muted-foreground">Loading Courses</p>
+          <p className="text-muted-foreground">{t("courses.loadingCourses")}</p>
         </div>
       </div>
     );
@@ -134,7 +142,7 @@ export default function Courses(): JSX.Element {
             <div>
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                  My Courses
+                  {t("courses.myCourses")}
                 </h1>
                 <nav
                   className="flex flex-col md:flex-row gap-2 md:shrink-0"
@@ -149,7 +157,7 @@ export default function Courses(): JSX.Element {
                     >
                       <Link to="/createcourse" className="no-underline">
                         <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                        Create Course
+                        {t("dashboard.createCourse")}
                       </Link>
                     </Button>
                   )}
@@ -159,23 +167,23 @@ export default function Courses(): JSX.Element {
                     onClick={() => setShowAddCourseModal(true)}
                   >
                     <ExternalLink className="w-4 h-4" aria-hidden="true" />
-                    Join Course
+                    {t("dashboard.joinCourse")}
                   </Button>
 
                   <DialogWrapper
                     open={showAddCourseModal}
                     onOpenChange={setShowAddCourseModal}
-                    title="Join Course by Sign Up Code"
-                    description="Enter the unique course sign up code associated with the course you want to join. Not sure what the sign up code is? Ask the instructor of the course!"
+                    title={t("dashboard.joinCourseByCode")}
+                    description={t("dashboard.joinCourseDescription")}
                     contentClassName="sm:max-w-md"
                     actions={[
                       {
-                        label: "Cancel",
+                        label: t("common.cancel"),
                         onClick: () => setShowAddCourseModal(false),
                         variant: "outline",
                       },
                       {
-                        label: isJoiningCourse ? "Joining..." : "Join Course",
+                        label: isJoiningCourse ? t("dashboard.joining") : t("dashboard.joinCourse"),
                         onClick: () => addCourseFormRef.current?.handleSubmit(),
                         disabled: isJoiningCourse,
                       },
@@ -189,31 +197,27 @@ export default function Courses(): JSX.Element {
                   </DialogWrapper>
                 </nav>
               </div>
-              <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                Courses are spaces in which instructors can create and
-                organize modules that customize how students can interact with
-                the AI. For more information on creating a course, please see
-                the{" "}
-                <a
-                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
-                >
-                  "Creating a Course" section of our instructor guide
-                </a>
-                .
-              </p>
-            </div>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="help-info" className="border-none">
+                  <AccordionTrigger className="text-sm text-muted-foreground hover:no-underline py-2">
+                    {t("courses.tapToLearnMore")}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                        {t("courses.createCourseDescription")}
+                      </p>
 
-            {courseList.length > 0 && (
-              <p className="text-muted-foreground text-sm max-w-3xl">
-                To access a course, click the "View Modules" button for your
-                desired course and choose from the available modules.
-                {isInstructor &&
-                  " To edit or duplicate a course, click on the options menu for the course you wish to use."}
-              </p>
-            )}
+                      {courseList.length > 0 && (
+                        <p className="text-muted-foreground text-sm max-w-3xl">
+                          {t("courses.courseListDescription")}
+                        </p>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </div>
         </div>
       </header>
@@ -236,7 +240,7 @@ export default function Courses(): JSX.Element {
               <Input
                 id="courses-content"
                 type="text"
-                placeholder="Search courses..."
+                placeholder={t("courses.searchCourses")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -259,9 +263,9 @@ export default function Courses(): JSX.Element {
                   role="status"
                 >
                   <Search className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                  <p className="text-lg font-medium mb-2">No courses found</p>
+                  <p className="text-lg font-medium mb-2">{t("courses.noCoursesFound")}</p>
                   <p className="text-sm">
-                    No courses match your search. Try a different search term.
+                    {t("courses.noCoursesMatchSearch")}
                   </p>
                 </div>
               )
@@ -271,10 +275,9 @@ export default function Courses(): JSX.Element {
                 role="status"
               >
                 <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">No courses found</p>
+                <p className="text-lg font-medium mb-2">{t("courses.noCoursesFound")}</p>
                 <p className="text-sm">
-                  No courses added yet. To join a course, click "Join Course"
-                  above.
+                  {t("courses.noCoursesAdded")}
                 </p>
               </div>
             )}

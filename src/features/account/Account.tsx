@@ -5,9 +5,11 @@ import { UserType } from "../../utility/types/UserTypes";
 import Get from "../../utility/Get";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { User } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function Account(): JSX.Element {
   const { user, setUser } = useContext(UserContext);
+  const { t } = useTranslation();
 
   useEffect(() => {
     Get(getUserData()).then((res) => {
@@ -39,10 +41,10 @@ export default function Account(): JSX.Element {
 
           <div className="relative z-10">
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              Account Settings
+              {t("account.accountSettings")}
             </h1>
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Manage your profile information and preferences.
+              {t("account.accountSettingsDescription")}
             </p>
           </div>
         </div>

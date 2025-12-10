@@ -4,6 +4,7 @@ import CourseCard from "../../components/CourseCard";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
 import { BookOpen } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface CourseListProps {
     list: Array<CourseType>;
@@ -17,6 +18,7 @@ export default function CourseList({
     starredList,
 }: CourseListProps): JSX.Element {
     const { user } = useContext(UserContext);
+    const { t } = useTranslation();
     const [starred, setStarred] =
         useState<Array<{ courseId: string }>>(starredList);
 
@@ -46,9 +48,9 @@ export default function CourseList({
             role="status"
         >
             <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No courses found</p>
+            <p className="text-lg font-medium mb-2">{t("courses.noCoursesFound")}</p>
             <p className="text-sm mb-2">
-                No courses added yet. To join a course, click "Join Course" above.
+                {t("courses.noCoursesAdded")}
             </p>
             {user?.groups.includes(
                 process.env.REACT_APP_INSTRUCTOR
@@ -56,11 +58,11 @@ export default function CourseList({
                     : "PapyrusAIInstructors"
             ) ? (
                 <p className="text-sm">
-                    To create a course, click "Create Course" above.
+                    {t("courses.createCoursePrompt")}
                 </p>
             ) : (
                 <p className="text-sm">
-                    Then, use the code your instructor gave you to join their course.
+                    {t("courses.joinCoursePrompt")}
                 </p>
             )}
         </div>

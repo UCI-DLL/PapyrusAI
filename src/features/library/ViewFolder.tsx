@@ -12,6 +12,7 @@ import {
 import { AlertContext } from "../../utility/context/AlertContext";
 import { Plus, MessageSquare, FileText, Folder, Loader2 } from "lucide-react";
 import ListFolderContents from "./ListFolderContents";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -27,6 +28,7 @@ export default function ViewFolder(): JSX.Element {
   const [folder, setFolder] = useState<FolderType>();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function ViewFolder(): JSX.Element {
             //redirect to prompt list
             navigator("/library");
             setAlert({
-              message: "Folder Does Not Exist",
+              message: t("library.folderDoesNotExist"),
               type: "error",
             });
             setIsLoading(false);
@@ -103,7 +105,7 @@ export default function ViewFolder(): JSX.Element {
             //redirect to prompt list
             // navigator("/library");
             setAlert({
-              message: "Folder Does Not Exist",
+              message: t("library.folderDoesNotExist"),
               type: "error",
             });
             setIsLoading(false);
@@ -161,12 +163,12 @@ export default function ViewFolder(): JSX.Element {
                             aria-label="Add new content to folder"
                           >
                             <Plus className="h-4 w-4" aria-hidden="true" />
-                            Add Content
+                            {t("library.addContent")}
                           </Button>
                         }
                         actions={[
                           {
-                            label: "Add Prompt",
+                            label: t("library.addPrompt"),
                             onClick: () => {
                               const basePath =
                                 location.pathname.split("/")[2] !== "org"
@@ -176,7 +178,7 @@ export default function ViewFolder(): JSX.Element {
                             },
                           },
                           {
-                            label: "Add File",
+                            label: t("library.addFile"),
                             onClick: () => {
                               const basePath =
                                 location.pathname.split("/")[2] !== "org"
@@ -192,8 +194,7 @@ export default function ViewFolder(): JSX.Element {
                 </nav>
               </div>
               <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                To create a custom prompt or upload a document, click "Add
-                Content" above.
+                {t("library.addContentDescription")}
               </p>
             </div>
           </div>
@@ -214,7 +215,7 @@ export default function ViewFolder(): JSX.Element {
             aria-controls="folder-content"
           >
             <Folder className="h-4 w-4" aria-hidden="true" />
-            All Items ({getTotalItems()})
+            {t("library.allItems")} ({getTotalItems()})
           </Button>
           <Button
             variant={activeTab === "prompts" ? "default" : "outline"}
@@ -226,7 +227,7 @@ export default function ViewFolder(): JSX.Element {
             aria-controls="folder-content"
           >
             <MessageSquare className="h-4 w-4" aria-hidden="true" />
-            Prompts ({getPromptCount()})
+            {t("library.prompts")} ({getPromptCount()})
           </Button>
           <Button
             variant={activeTab === "files" ? "default" : "outline"}
@@ -238,7 +239,7 @@ export default function ViewFolder(): JSX.Element {
             aria-controls="folder-content"
           >
             <FileText className="h-4 w-4" aria-hidden="true" />
-            Files ({getFileCount()})
+            {t("library.files")} ({getFileCount()})
           </Button>
         </div>
 
@@ -262,7 +263,7 @@ export default function ViewFolder(): JSX.Element {
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
         />
-        <p className="text-muted-foreground">Loading folder...</p>
+        <p className="text-muted-foreground">{t("library.loadingFolder")}</p>
       </div>
     </div>
   );

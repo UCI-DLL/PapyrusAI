@@ -4,6 +4,7 @@ import { Label } from "../../components/ui/label";
 import Post from "../../utility/Post";
 import { postAddUserToCourseGroup } from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface AddCourseFormProps {
   closeForm: () => void;
@@ -27,12 +28,13 @@ const AddCourseForm = forwardRef<AddCourseFormHandle, AddCourseFormProps>(
       signUpCode: "",
     });
     const { setAlert } = useContext(AlertContext);
+    const { t } = useTranslation();
 
     function handleSubmit() {
       if (session.signUpCode === "") {
         setErrors((prev) => ({
           ...prev,
-          signUpCode: "Sign up code missing",
+          signUpCode: t("courses.signUpCodeMissing"),
         }));
       } else {
         setIsLoading(true);
@@ -41,12 +43,12 @@ const AddCourseForm = forwardRef<AddCourseFormHandle, AddCourseFormProps>(
             if (res.data && res.data) {
               closeForm();
               setAlert({
-                message: "You have been added to the course.",
+                message: t("courses.addedToCourse"),
                 type: "info",
               });
             }
           } else {
-            setErrors({ signUpCode: "Course Not Found" });
+            setErrors({ signUpCode: t("courses.courseNotFound") });
             setSession({ signUpCode: "" });
           }
           setIsLoading(false);
@@ -66,7 +68,7 @@ const AddCourseForm = forwardRef<AddCourseFormHandle, AddCourseFormProps>(
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="signUpCode" className="text-sm font-medium">
-            Course Sign Up Code
+            {t("createCourse.courseSignUpCode")}
           </Label>
           <Input
             id="signUpCode"

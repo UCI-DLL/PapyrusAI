@@ -42,6 +42,7 @@ import {
 import Put from "../../utility/Put";
 import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 
 export enum PermissionsOptions {
   // Admin = "Admin",
@@ -544,6 +545,26 @@ export default function OrgSettings(): JSX.Element {
                     ))}
                   </SelectContent>
                 </Select>
+
+                <DropdownWrapper
+                  trigger={
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="More Options">
+                      test
+                    </Button>
+                  }
+                  actions={[
+                    {
+                      label: "Rename",
+                      onClick: () => { console.log("rename") },
+                    },
+                    {
+                      label: "Download",
+                      onClick: () => { console.log("download") },
+                    },
+
+                  ]}
+                  align="end"
+                />
               </div>
             </div>
           </DialogWrapper>

@@ -530,6 +530,8 @@ export default function OrgSettings(): JSX.Element {
                       permission: value,
                     }));
                   }}
+                  dir="ltr"
+                  defaultOpen={false}
                 >
                   <SelectTrigger aria-label="Permission Level">
                     <SelectValue aria-hidden="false" placeholder="Select permission level" />

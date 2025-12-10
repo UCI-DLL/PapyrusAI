@@ -546,25 +546,21 @@ export default function OrgSettings(): JSX.Element {
                   </SelectContent>
                 </Select>
 
-                <DropdownWrapper
-                  trigger={
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="More Options">
-                      test
-                    </Button>
-                  }
-                  actions={[
-                    {
-                      label: "Rename",
-                      onClick: () => { console.log("rename") },
-                    },
-                    {
-                      label: "Download",
-                      onClick: () => { console.log("download") },
-                    },
-
-                  ]}
-                  align="end"
-                />
+                <select id="fruit-select"
+                  value={showUpdateOrgPermissionModal.permission}
+                  onChange={(value) => {
+                    setShowUpdateOrgPermissionModal((prev) => ({
+                      ...prev,
+                      permission: value.target.id,
+                    }));
+                  }}
+                >
+                  {Object.keys(PermissionsOptions).map((key) => (
+                    <option value={key} key={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </DialogWrapper>

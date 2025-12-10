@@ -614,7 +614,7 @@ export default function CreateCourse({
                               className={cn(
                                 index === selectedIndexSave && "bg-primary/30",
                                 index === 2 &&
-                                  "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                                "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                               )}
                             >
                               {option}
@@ -688,7 +688,7 @@ export default function CreateCourse({
                     className={cn(
                       "transition-colors",
                       errors.name &&
-                        "border-destructive focus-visible:ring-destructive"
+                      "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                   {errors.name !== "" && (
@@ -733,7 +733,7 @@ export default function CreateCourse({
                     className={cn(
                       "transition-colors",
                       errors.signUpCode &&
-                        "border-destructive focus-visible:ring-destructive"
+                      "border-destructive focus-visible:ring-destructive"
                     )}
                   />
                   {errors.signUpCode && (
@@ -792,7 +792,7 @@ export default function CreateCourse({
                       className={cn(
                         "transition-colors",
                         errors.year &&
-                          "border-destructive focus-visible:ring-destructive"
+                        "border-destructive focus-visible:ring-destructive"
                       )}
                     />
                     {errors.year && (
@@ -830,7 +830,7 @@ export default function CreateCourse({
                         className={cn(
                           "transition-colors",
                           errors.term &&
-                            "border-destructive focus-visible:ring-destructive"
+                          "border-destructive focus-visible:ring-destructive"
                         )}
                         aria-label="Select Term"
                       >
@@ -880,7 +880,7 @@ export default function CreateCourse({
                       className={cn(
                         "transition-colors",
                         errors.section &&
-                          "border-destructive focus-visible:ring-destructive"
+                        "border-destructive focus-visible:ring-destructive"
                       )}
                     />
                     {errors.section && (
@@ -929,9 +929,9 @@ export default function CreateCourse({
                             {ta.name && ta.family_name
                               ? `${ta.name} ${ta.family_name}`
                               : ta.name ||
-                                ta.family_name ||
-                                ta.email ||
-                                ta.username}
+                              ta.family_name ||
+                              ta.email ||
+                              ta.username}
                             <Button
                               type="button"
                               variant="ghost"
@@ -1025,9 +1025,9 @@ export default function CreateCourse({
                                   {user.name && user.family_name
                                     ? `${user.name} ${user.family_name}`
                                     : user.name ||
-                                      user.family_name ||
-                                      user.email ||
-                                      user.username}
+                                    user.family_name ||
+                                    user.email ||
+                                    user.username}
                                 </span>
                                 {user.email &&
                                   (user.name || user.family_name) && (
@@ -1150,7 +1150,7 @@ export default function CreateCourse({
                     className: cn(
                       index === selectedIndexSave && "bg-primary/30",
                       index === 2 &&
-                        "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                      "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                     ),
                   }))}
                   align="end"

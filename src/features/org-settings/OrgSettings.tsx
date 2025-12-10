@@ -531,10 +531,10 @@ export default function OrgSettings(): JSX.Element {
                     }));
                   }}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select permission level" />
+                  <SelectTrigger aria-label="Permission Level">
+                    <SelectValue aria-hidden="false" placeholder="Select permission level" />
                   </SelectTrigger>
-                  <SelectContent avoidCollisions={false} position="popper">
+                  <SelectContent aria-label="Permission level options" avoidCollisions={false} position="popper">
                     {Object.keys(PermissionsOptions).map((key) => (
                       <SelectItem value={key} key={key}>
                         {key}

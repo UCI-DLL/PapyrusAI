@@ -160,6 +160,12 @@ function App(): JSX.Element {
       } //If not pass, nothing appears at the time of new version check.
     >
       <div className="flex flex-row justify-center bg-background">
+        <a
+          href="#main-content"
+          className="skip-link"
+        >
+          Skip to main content
+        </a>
         <UserContext.Provider value={value}>
           <AlertContext.Provider value={alertValue}>
             <Router>

@@ -49,7 +49,7 @@ export default function ChatWizard({
               <SelectTrigger id="prompt-select">
                 <SelectValue placeholder="Select a prompt to get started..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent avoidCollisions={false} position="popper">
                 {prompts.map((prompt, index) => (
                   <SelectItem key={index} value={prompt.id}>
                     {prompt.name}

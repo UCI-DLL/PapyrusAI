@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Plot from "@observablehq/plot";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
+import { parseLocalDate, formatDateForTooltip } from "../../utility/reports/date";
 
 type StudentStatsProps = {
   student: Record<string, unknown>;
@@ -45,6 +46,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     return label.substring(0, maxLength - 3) + "...";
   }, []);
 
+
   // Get chart dimensions specifically for module usage (taller to accommodate rotated labels)
   const getModuleChartDimensions = () => {
     const containerWidth =
@@ -61,8 +63,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     // Parse date strings to Date objects
     const processedData = dailyConvoLengths.map((item) => ({
       ...item,
-      date: new Date(item.date as string),
+      date: parseLocalDate(item.date as string),
     }));
+    console.log(processedData);
 
     const plot = Plot.plot({
       style: {
@@ -82,6 +85,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             x: "date",
             y: "avg_convo_length",
             fill: backgroundColor,
+            format: {
+              x: (date: any) => formatDateForTooltip(date),
+            },
           })
         ),
       ],
@@ -91,6 +97,25 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     if (lengthsRef.current) {
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const dots = plot.querySelectorAll("circle");
+        let dataIndex = 0;
+        dots.forEach((dot) => {
+          if (dataIndex < processedData.length) {
+            const data = processedData[dataIndex] as any;
+            dot.setAttribute("role", "img");
+            dot.setAttribute(
+              "aria-label",
+              `Date ${data.date.toLocaleDateString()}, Average conversation length ${
+                data.avg_convo_length
+              }`
+            );
+            dot.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [dailyConvoLengths, backgroundColor, foregroundColor]);
 
@@ -100,7 +125,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     // Parse date strings to Date objects
     const processedData = dailyConvoCounts.map((item) => ({
       ...item,
-      date: new Date(item.date as string),
+      date: parseLocalDate(item.date as string),
     }));
 
     const plot = Plot.plot({
@@ -117,7 +142,14 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         Plot.dot(processedData, { x: "date", y: "num_convos" }),
         Plot.tip(
           processedData,
-          Plot.pointerX({ x: "date", y: "num_convos", fill: backgroundColor })
+          Plot.pointerX({
+            x: "date",
+            y: "num_convos",
+            fill: backgroundColor,
+            format: {
+              x: (date: any) => formatDateForTooltip(date),
+            },
+          })
         ),
       ],
       width: 500,
@@ -126,6 +158,27 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     if (countsRef.current) {
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
+
+      // Chart container is already set up in JSX with tabindex and aria-labelledby
+
+      setTimeout(() => {
+        const dots = plot.querySelectorAll("circle");
+        let dataIndex = 0;
+        dots.forEach((dot) => {
+          if (dataIndex < processedData.length) {
+            const data = processedData[dataIndex] as any;
+            dot.setAttribute("role", "img");
+            dot.setAttribute(
+              "aria-label",
+              `Date ${data.date.toLocaleDateString()}, Number of conversations ${
+                data.num_convos
+              }`
+            );
+            dot.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [dailyConvoCounts, backgroundColor, foregroundColor]);
 
@@ -168,7 +221,8 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           y: "count",
           fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
           title: (d: any) =>
-            `Classification: ${d.fullClassification || d.classification
+            `Classification: ${
+              d.fullClassification || d.classification
             }\nCount: ${d.count}`,
           tip: {
             format: {
@@ -197,6 +251,28 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     if (classificationRef.current) {
       classificationRef.current.innerHTML = "";
       classificationRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const rects = plot.querySelectorAll("rect[fill]");
+        let dataIndex = 0;
+        rects.forEach((rect) => {
+          if (
+            rect.getAttribute("fill") &&
+            dataIndex < processedClassificationData.length
+          ) {
+            const data = processedClassificationData[dataIndex] as any;
+            rect.setAttribute("role", "img");
+            rect.setAttribute(
+              "aria-label",
+              `Classification ${
+                data.fullClassification || data.classification
+              }, Count ${data.count}`
+            );
+            rect.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [classificationCounts, truncateLabel, backgroundColor, foregroundColor]);
 
@@ -267,6 +343,28 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
     if (moduleUsageRef.current) {
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const rects = plot.querySelectorAll("rect[fill]");
+        let dataIndex = 0;
+        rects.forEach((rect) => {
+          if (
+            rect.getAttribute("fill") &&
+            dataIndex < processedModuleData.length
+          ) {
+            const data = processedModuleData[dataIndex] as any;
+            rect.setAttribute("role", "img");
+            rect.setAttribute(
+              "aria-label",
+              `Module ${data.fullModuleName || data.moduleName}, Count ${
+                data.count
+              }`
+            );
+            rect.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [moduleUsage, truncateLabel, backgroundColor, foregroundColor]);
 
@@ -317,22 +415,116 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         className="chart-grid"
       >
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
+          <h2
+            className="text-2xl font-bold text-foreground mb-2"
+            id="lengths-chart-heading"
+          >
             Daily Conversation Lengths
           </h2>
-          <div ref={lengthsRef} />
+          <div
+            ref={lengthsRef}
+            role="region"
+            aria-labelledby="lengths-chart-heading"
+            tabIndex={0}
+            className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+          />
+          {dailyConvoLengths && dailyConvoLengths.length > 0 && (
+            <div className="sr-only">
+              <table>
+                <caption>Daily Conversation Lengths Data Table</caption>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Avg Length</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyConvoLengths.map((d: any, i) => (
+                    <tr key={i}>
+                      <td>
+                        {parseLocalDate(d.date as string).toLocaleDateString()}
+                      </td>
+                      <td>{d.avg_convo_length}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
+          <h2
+            className="text-2xl font-bold text-foreground mb-2"
+            id="counts-chart-heading"
+          >
             Daily Conversation Counts
           </h2>
-          <div ref={countsRef} />
+          <div
+            ref={countsRef}
+            role="region"
+            aria-labelledby="counts-chart-heading"
+            tabIndex={0}
+            className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+          />
+          {dailyConvoCounts && dailyConvoCounts.length > 0 && (
+            <div className="sr-only">
+              <table>
+                <caption>Daily Conversation Counts Data Table</caption>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailyConvoCounts.map((d: any, i) => (
+                    <tr key={i}>
+                      <td>
+                        {parseLocalDate(d.date as string).toLocaleDateString()}
+                      </td>
+                      <td>{d.num_convos}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
         <div className="card" style={{ marginBottom: "1rem" }}>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
+          <h2
+            className="text-2xl font-bold text-foreground mb-2"
+            id="module-usage-chart-heading"
+          >
             Module Usage
           </h2>
-          <div ref={moduleUsageRef} />
+          <div
+            ref={moduleUsageRef}
+            role="region"
+            aria-labelledby="module-usage-chart-heading"
+            tabIndex={0}
+            className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+          />
+          {moduleUsage && moduleUsage.length > 0 && (
+            <div className="sr-only">
+              <table>
+                <caption>Module Usage Data Table</caption>
+                <thead>
+                  <tr>
+                    <th>Module</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {moduleUsage.map((d: any, i) => (
+                    <tr key={i}>
+                      <td>{d.moduleName}</td>
+                      <td>{d.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
         {/* <div className="card" style={{ marginBottom: "1rem" }}>
           <h2>Classification Counts</h2>

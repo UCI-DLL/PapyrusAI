@@ -468,6 +468,7 @@ export default function Chat(): JSX.Element {
               if (returnMessage.sources && returnMessage.sources.sources) {
                 temp[temp.length - 1].sources = returnMessage.sources.sources;
               }
+              temp[temp.length - 1].finished = true;
               return temp;
             } else return prev;
           });

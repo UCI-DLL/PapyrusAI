@@ -763,7 +763,7 @@ export default function Reports(): JSX.Element {
                       <SelectTrigger>
                         <SelectValue placeholder="Select format" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent avoidCollisions={false} position="popper">
                         <SelectItem value="json">JSON</SelectItem>
                         <SelectItem value="csv">CSV</SelectItem>
                         <SelectItem value="txt">TXT</SelectItem>

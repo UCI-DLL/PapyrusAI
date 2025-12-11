@@ -530,7 +530,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                   <SelectTrigger>
                     <SelectValue placeholder="Select sort order" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.keys(SortOptions).map((key) => (
                       <SelectItem value={key} key={key}>
                         {key}
@@ -554,7 +554,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                   <SelectTrigger>
                     <SelectValue placeholder="Filter by starred status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.keys(StarredOptions).map((key) => (
                       <SelectItem value={key} key={key}>
                         {key}
@@ -580,7 +580,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                   <SelectTrigger>
                     <SelectValue placeholder="Filter by owner" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.keys(OwnerTypeOptions).map((key) => (
                       <SelectItem value={key} key={key}>
                         {key}
@@ -604,7 +604,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                   <SelectTrigger>
                     <SelectValue placeholder="Filter by tag" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     <SelectItem value="none" key="none">
                       No filter
                     </SelectItem>

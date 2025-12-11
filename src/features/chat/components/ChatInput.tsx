@@ -79,6 +79,7 @@ export default function ChatInput({
             </TooltipWrapper>
 
             <AutosizeTextarea
+              aria-label="Message Input"
               placeholder="Enter message..."
               value={message}
               disabled={isLoading}

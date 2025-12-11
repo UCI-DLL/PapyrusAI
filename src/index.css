@@ -838,3 +838,13 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+.skip-link {
+  @apply absolute left-2 top-2 z-50 bg-white text-blue-600 
+         p-2 rounded shadow outline-none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}

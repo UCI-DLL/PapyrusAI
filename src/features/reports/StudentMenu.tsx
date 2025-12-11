@@ -199,7 +199,7 @@ export default function StudentMenu({
                     toggleStudent(id);
                   }
                 }}
-                className="px-3 py-2 text-sm min-h-8 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors focus:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                className="px-3 py-2 text-sm min-h-8 flex items-center gap-3 cursor-pointer hover:bg-muted focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 <div
                   className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${

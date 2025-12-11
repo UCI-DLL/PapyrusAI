@@ -192,7 +192,11 @@ export default function OldEditPrompt(): JSX.Element {
                 )}
               />
               {errors.name && (
-                <p className="text-sm text-destructive">{errors.name}</p>
+                <p
+                  className="text-sm text-destructive"
+                  role="alert"
+                  aria-live="assertive"
+                >{errors.name}</p>
               )}
             </div>
 
@@ -215,7 +219,11 @@ export default function OldEditPrompt(): JSX.Element {
                 )}
               />
               {errors.prompt && (
-                <p className="text-sm text-destructive">{errors.prompt}</p>
+                <p
+                  className="text-sm text-destructive"
+                  role="alert"
+                  aria-live="assertive"
+                >{errors.prompt}</p>
               )}
             </div>
 

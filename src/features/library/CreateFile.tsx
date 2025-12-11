@@ -469,11 +469,11 @@ export default function CreateFile(): JSX.Element {
                   <Info className="h-4 w-4" aria-hidden="true" />
                   Info
                 </Button>
-                <div className="flex rounded-lg border overflow-hidden">
+                <div className="flex rounded-lg border">
                   <Button
                     size="sm"
                     onClick={handleClick}
-                    className="rounded-none border-0 w-full"
+                    className="rounded-none border-0 w-full rounded-l"
                     disabled={isLoading}
                     aria-label={`${options[selectedIndexSave]} file`}
                   >
@@ -485,7 +485,7 @@ export default function CreateFile(): JSX.Element {
                     trigger={
                       <Button
                         size="sm"
-                        className="rounded-none border-0 border-l px-2"
+                        className="rounded-none border-0 border-l px-2 rounded-r"
                         variant="default"
                         disabled={isLoading}
                         aria-label="Select file upload strategy"
@@ -558,6 +558,7 @@ export default function CreateFile(): JSX.Element {
                     id="name-error"
                     className="text-sm text-destructive"
                     role="alert"
+                    aria-live="assertive"
                   >
                     {errors.name}
                   </p>
@@ -629,7 +630,11 @@ export default function CreateFile(): JSX.Element {
                   </div>
                 )}
                 {errors.file && (
-                  <p className="text-sm text-destructive">{errors.file}</p>
+                  <p
+                    className="text-sm text-destructive"
+                    role="alert"
+                    aria-live="assertive"
+                  >{errors.file}</p>
                 )}
               </div>
 
@@ -698,11 +703,11 @@ export default function CreateFile(): JSX.Element {
               <Info className="h-4 w-4" aria-hidden="true" />
               Info
             </Button>
-            <div className="flex rounded-lg border overflow-hidden">
+            <div className="flex rounded-lg border">
               <Button
                 size="sm"
                 onClick={handleClick}
-                className="rounded-none border-0 w-full"
+                className="rounded-none border-0 w-full rounded-l"
                 disabled={isLoading}
                 aria-label={`${options[selectedIndexSave]} file`}
               >
@@ -714,7 +719,7 @@ export default function CreateFile(): JSX.Element {
                 trigger={
                   <Button
                     size="sm"
-                    className="rounded-none border-0 border-l px-2"
+                    className="rounded-none border-0 border-l px-2 rounded-r"
                     variant="default"
                     disabled={isLoading}
                     aria-label="Select file upload strategy"

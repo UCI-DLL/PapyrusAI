@@ -430,7 +430,7 @@ export default function OrgSettings(): JSX.Element {
                   <SelectTrigger>
                     <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.keys(PermissionsOptions).map((key) => (
                       <SelectItem value={key} key={key}>
                         {key}
@@ -526,11 +526,13 @@ export default function OrgSettings(): JSX.Element {
                       permission: value,
                     }));
                   }}
+                  dir="ltr"
+                  defaultOpen={false}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent aria-label="Permission level options" avoidCollisions={false} position="popper">
                     {Object.keys(PermissionsOptions).map((key) => (
                       <SelectItem value={key} key={key}>
                         {key}
@@ -538,6 +540,22 @@ export default function OrgSettings(): JSX.Element {
                     ))}
                   </SelectContent>
                 </Select>
+
+                <select id="fruit-select"
+                  value={showUpdateOrgPermissionModal.permission}
+                  onChange={(value) => {
+                    setShowUpdateOrgPermissionModal((prev) => ({
+                      ...prev,
+                      permission: value.target.id,
+                    }));
+                  }}
+                >
+                  {Object.keys(PermissionsOptions).map((key) => (
+                    <option value={key} key={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </DialogWrapper>

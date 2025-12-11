@@ -7,6 +7,7 @@ import React, { useEffect, useRef } from "react";
 import IndividualStudentStats from "./IndividualStudentStats";
 import * as Plot from "@observablehq/plot";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
+import { parseLocalDate, formatDateForTooltip } from "../../utility/reports/date";
 
 interface StudentPageProps {
   students: Record<string, unknown>[];
@@ -25,6 +26,7 @@ const truncateLabel = (label: string, maxLength: number = 15) => {
   return label.substring(0, maxLength - 3) + "...";
 };
 
+
 function getStackedDailyData(students: Record<string, unknown>[]) {
   const countsMap = new Map<
     string,
@@ -42,7 +44,7 @@ function getStackedDailyData(students: Record<string, unknown>[]) {
       | undefined;
     if (dailyConvoCounts) {
       dailyConvoCounts.forEach((d) => {
-        const date = new Date(d.date as string);
+        const date = parseLocalDate(d.date as string);
         const dateKey = `${studentName}-${date.toISOString().split("T")[0]}`;
         const currentValue = countsMap.get(dateKey)?.value || 0;
         countsMap.set(dateKey, {
@@ -57,7 +59,7 @@ function getStackedDailyData(students: Record<string, unknown>[]) {
       | undefined;
     if (dailyConvoLengths) {
       dailyConvoLengths.forEach((d) => {
-        const date = new Date(d.date as string);
+        const date = parseLocalDate(d.date as string);
         const dateKey = `${studentName}-${date.toISOString().split("T")[0]}`;
         const currentValue = lengthsMap.get(dateKey)?.value || 0;
         const currentCount = lengthsMap.get(dateKey)?.count || 0;
@@ -170,12 +172,12 @@ export default function StudentPage({ students }: StudentPageProps) {
           y: "value",
           fill: "studentName",
           title: (d: any) =>
-            `Date: ${d.date.toLocaleDateString()}\nStudent: ${
+            `Date: ${formatDateForTooltip(d.date)}\nStudent: ${
               d.studentName
             }\nConversations: ${d.value}`,
           tip: {
             format: {
-              x: (d: any) => d.date.toLocaleDateString(),
+              x: (d: any) => formatDateForTooltip(d.date),
               fill: (d: any) => d.studentName,
               value: true,
             },
@@ -190,6 +192,26 @@ export default function StudentPage({ students }: StudentPageProps) {
     if (countsRef.current) {
       countsRef.current.innerHTML = "";
       countsRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const rects = plot.querySelectorAll("rect[fill]");
+        let dataIndex = 0;
+        rects.forEach((rect) => {
+          // Only process rects that are likely data points (have fill color)
+          if (rect.getAttribute("fill") && dataIndex < counts.length) {
+            const data = counts[dataIndex];
+            rect.setAttribute("role", "img");
+            rect.setAttribute(
+              "aria-label",
+              `Date ${data.date.toLocaleDateString()}, Student ${
+                data.studentName
+              }, ${data.value} conversations`
+            );
+            rect.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [counts, backgroundColor, foregroundColor]);
 
@@ -214,12 +236,12 @@ export default function StudentPage({ students }: StudentPageProps) {
           y: "value",
           fill: "studentName",
           title: (d: any) =>
-            `Date: ${d.date.toLocaleDateString()}\nStudent: ${
+            `Date: ${formatDateForTooltip(d.date)}\nStudent: ${
               d.studentName
             }\nAvg Length: ${d.value.toFixed(1)}`,
           tip: {
             format: {
-              x: (d: any) => d.date.toLocaleDateString(),
+              x: (d: any) => formatDateForTooltip(d.date),
               fill: (d: any) => d.studentName,
               value: true,
             },
@@ -234,6 +256,25 @@ export default function StudentPage({ students }: StudentPageProps) {
     if (lengthsRef.current) {
       lengthsRef.current.innerHTML = "";
       lengthsRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const rects = plot.querySelectorAll("rect[fill]");
+        let dataIndex = 0;
+        rects.forEach((rect) => {
+          if (rect.getAttribute("fill") && dataIndex < lengths.length) {
+            const data = lengths[dataIndex];
+            rect.setAttribute("role", "img");
+            rect.setAttribute(
+              "aria-label",
+              `Date ${data.date.toLocaleDateString()}, Student ${
+                data.studentName
+              }, Average conversation length ${data.value.toFixed(1)}`
+            );
+            rect.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [lengths, backgroundColor, foregroundColor]);
 
@@ -325,45 +366,156 @@ export default function StudentPage({ students }: StudentPageProps) {
     if (moduleUsageRef.current) {
       moduleUsageRef.current.innerHTML = "";
       moduleUsageRef.current.appendChild(plot);
+
+      setTimeout(() => {
+        const rects = plot.querySelectorAll("rect[fill]");
+        let dataIndex = 0;
+        rects.forEach((rect) => {
+          if (rect.getAttribute("fill") && dataIndex < moduleData.length) {
+            const data = moduleData[dataIndex];
+            rect.setAttribute("role", "img");
+            rect.setAttribute(
+              "aria-label",
+              `Module ${data.fullModuleName || data.moduleName}, Student ${
+                data.studentName
+              }, Count ${data.count}`
+            );
+            rect.setAttribute("tabindex", "0");
+            dataIndex++;
+          }
+        });
+      }, 0);
     }
   }, [moduleData, backgroundColor, foregroundColor]);
 
   return (
     <div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "1.5rem",
-          marginBottom: "2rem",
-          padding: "0 2rem",
-          borderBottom: "1px solid #eee",
-        }}
-        className="chart-grid"
-      >
-        <div className="card" style={{ marginBottom: "1rem" }}>
-          <h4 className="text-2xl font-bold text-foreground mb-2">
-            Daily Conversation Lengths (Stacked by Student)
-          </h4>
-          <div ref={lengthsRef} />
-        </div>
-        <div className="card" style={{ marginBottom: "1rem" }}>
-          <h4 className="text-2xl font-bold text-foreground mb-2">
-            Daily Conversation Counts (Stacked by Student)
-          </h4>
-          <div ref={countsRef} />
-        </div>
-        <div className="card" style={{ marginBottom: "1rem" }}>
-          <h4 className="text-2xl font-bold text-foreground mb-2">
-            Module Usage (Stacked by Student)
-          </h4>
-          <div ref={moduleUsageRef} />
-        </div>
-        {/* <div className="card" style={{ marginBottom: "1rem" }}>
+      {students.length > 1 && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "1.5rem",
+            marginBottom: "2rem",
+            padding: "0 2rem",
+            borderBottom: "1px solid #eee",
+          }}
+          className="chart-grid"
+        >
+          <div className="card" style={{ marginBottom: "1rem" }}>
+            <h4
+              className="text-2xl font-bold text-foreground mb-2"
+              id="stacked-lengths-chart-heading"
+            >
+              Daily Conversation Lengths (Stacked by Student)
+            </h4>
+            <div
+              ref={lengthsRef}
+              role="region"
+              aria-labelledby="stacked-lengths-chart-heading"
+              tabIndex={0}
+              className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+            />
+            <div className="sr-only">
+              <table>
+                <caption>Daily Conversation Lengths Data Table</caption>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Student</th>
+                    <th>Avg Length</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lengths.map((d, i) => (
+                    <tr key={i}>
+                      <td>{d.date.toLocaleDateString()}</td>
+                      <td>{d.studentName}</td>
+                      <td>{d.value.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="card" style={{ marginBottom: "1rem" }}>
+            <h4
+              className="text-2xl font-bold text-foreground mb-2"
+              id="stacked-counts-chart-heading"
+            >
+              Daily Conversation Counts (Stacked by Student)
+            </h4>
+            <div
+              ref={countsRef}
+              role="region"
+              aria-labelledby="stacked-counts-chart-heading"
+              tabIndex={0}
+              className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+            />
+            <div className="sr-only">
+              <table>
+                <caption>Daily Conversation Counts Data Table</caption>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Student</th>
+                    <th>Conversations</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {counts.map((d, i) => (
+                    <tr key={i}>
+                      <td>{d.date.toLocaleDateString()}</td>
+                      <td>{d.studentName}</td>
+                      <td>{d.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="card" style={{ marginBottom: "1rem" }}>
+            <h4
+              className="text-2xl font-bold text-foreground mb-2"
+              id="stacked-module-usage-chart-heading"
+            >
+              Module Usage (Stacked by Student)
+            </h4>
+            <div
+              ref={moduleUsageRef}
+              role="region"
+              aria-labelledby="stacked-module-usage-chart-heading"
+              tabIndex={0}
+              className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+            />
+            <div className="sr-only">
+              <table>
+                <caption>Module Usage Data Table</caption>
+                <thead>
+                  <tr>
+                    <th>Module</th>
+                    <th>Student</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {moduleData.map((d, i) => (
+                    <tr key={i}>
+                      <td>{d.fullModuleName || d.moduleName}</td>
+                      <td>{d.studentName}</td>
+                      <td>{d.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {/* <div className="card" style={{ marginBottom: "1rem" }}>
           <h4>Classification Counts (Stacked by Student)</h4>
           <div ref={classificationRef} />
         </div> */}
-      </div>
+        </div>
+      )}
       <h2
         className="text-2xl font-bold text-foreground mb-1"
         style={{ padding: "0 2rem" }}

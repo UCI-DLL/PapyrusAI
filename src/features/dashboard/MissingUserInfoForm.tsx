@@ -242,12 +242,14 @@ export default function MissingUserInfoForm({
                   : ""
               }
               aria-describedby={errors.name ? "name-error" : undefined}
+              autoComplete="given-name"
             />
             {errors.name && (
               <p
                 id="name-error"
                 className="text-sm text-destructive"
                 role="alert"
+                aria-live="assertive"
               >
                 {errors.name}
               </p>
@@ -273,12 +275,14 @@ export default function MissingUserInfoForm({
               aria-describedby={
                 errors.family_name ? "family-name-error" : undefined
               }
+              autoComplete="family-name"
             />
             {errors.family_name && (
               <p
                 id="family-name-error"
                 className="text-sm text-destructive"
                 role="alert"
+                aria-live="assertive"
               >
                 {errors.family_name}
               </p>
@@ -340,6 +344,7 @@ export default function MissingUserInfoForm({
                 id="theme-error"
                 className="text-sm text-destructive"
                 role="alert"
+                aria-live="assertive"
               >
                 {errors.theme}
               </p>
@@ -410,6 +415,7 @@ export default function MissingUserInfoForm({
                 id="text-size-error"
                 className="text-sm text-destructive"
                 role="alert"
+                aria-live="assertive"
               >
                 {errors.textSize}
               </p>

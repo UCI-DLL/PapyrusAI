@@ -521,7 +521,7 @@ export default function ListFolderContents(
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.values(TypeOptions).map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}
@@ -545,7 +545,7 @@ export default function ListFolderContents(
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.values(SortOptions).map((sort) => (
                       <SelectItem key={sort} value={sort}>
                         {sort}
@@ -569,7 +569,7 @@ export default function ListFolderContents(
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     {Object.values(StarredOptions).map((starred) => (
                       <SelectItem key={starred} value={starred}>
                         {starred}
@@ -593,7 +593,7 @@ export default function ListFolderContents(
                   <SelectTrigger>
                     <SelectValue placeholder="Select a tag" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     <SelectItem value="none" key="none">
                       No filter
                     </SelectItem>

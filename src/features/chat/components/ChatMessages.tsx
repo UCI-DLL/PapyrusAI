@@ -43,6 +43,20 @@ export default function ChatMessages({
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+  //screen reader new message announcement
+  const [srAnnouncement, setSrAnnouncement] = React.useState("");
+
+  React.useEffect(() => { //handles new message announcement
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant") return;
+
+    // Wait briefly so SR only reads chunks, not every token
+    const timeout = setTimeout(() => {
+      setSrAnnouncement(last.content);
+    }, last.finished ? 600 : 200);
+
+    return () => clearTimeout(timeout);
+  }, [messages]);
 
   useEffect(() => {
     scrollToBottom();
@@ -135,8 +149,19 @@ export default function ChatMessages({
                 index ===
                 messages.findIndex((message: MessageType) => !message.inContext);
 
+              const isLastMessage = index === messages.length - 1;
+              if (isLastMessage && message.role === "assistant" && message.finished) {
+                console.log("message", message.content)
+              }
+
+              const isStreamingAssistant =
+                message.role === "assistant" &&
+                  isLastMessage &&
+                  message.finished ? false : true; // <-- use whatever your streaming flag is
+
+
               return (
-                <React.Fragment key={message.id || index}>
+                <React.Fragment>
                   {isContextDivider && (
                     <div className="relative flex items-center justify-center my-6">
                       <div className="absolute inset-0 flex items-center">
@@ -150,7 +175,37 @@ export default function ChatMessages({
                     </div>
                   )}
 
-                  {message.role === "assistant" ? (
+                  {/* wrap message with aria-hidden when streaming message  */}
+                  {message.role === "assistant" ? isStreamingAssistant ? (
+                    <div aria-hidden="true">
+                      <MessageLeft
+                        message={message.content}
+                        displayName={
+                          message.sender === "ChatGPT" ? "Papyrus" : message.sender
+                        }
+                        messageType={message.messageType}
+                        outOfContext={message.inContext ? true : false}
+                        visible={
+                          message.userVisible === undefined || message.userVisible
+                            ? true
+                            : false
+                        }
+                        expandableMessage={
+                          message.expandableMessage && message.expandableMessage !== ""
+                            ? message.expandableMessage
+                            : undefined
+                        }
+                        isInstructor={isInstructor}
+                        sources={
+                          message.sources
+                            ? typeof message.sources === "string"
+                              ? JSON.parse(message.sources)
+                              : message.sources
+                            : []
+                        }
+                      />
+                    </div>
+                  ) : (
                     <MessageLeft
                       message={message.content}
                       displayName={
@@ -199,6 +254,22 @@ export default function ChatMessages({
             {showTypingIndicator && (
               <MessageLeft message={""} displayName={"Papyrus"} typing />
             )}
+
+            {/* screen reader announcement  */}
+            <div
+              aria-live="polite"
+              aria-atomic="true"
+              style={{ //sr-only messes up the styling of everything else
+                position: 'absolute',
+                left: '-9999px',
+                width: '1px',
+                height: '1px',
+                overflow: 'hidden'
+              }}
+            >
+              {srAnnouncement}
+            </div>
+
 
             {/* Message Note */}
             {messageNote && (

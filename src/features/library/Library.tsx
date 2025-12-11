@@ -20,6 +20,7 @@ import Put from "../../utility/Put";
 import { onlyLettersAndNumbers } from "../../utility/Helpers";
 import ListFolders from "./ListFolders";
 import { Loader2, Tag, Folder, Trash2, Save } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -37,6 +38,7 @@ export enum OwnerTypeOptions {
 export default function Library(): JSX.Element {
   let navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCreateFolderModal, setOpenCreateFolderModal] =
     useState<boolean>(false);
@@ -109,14 +111,14 @@ export default function Library(): JSX.Element {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
           //pop up notifying user of folder
-          setAlert({ message: "Folder Created", type: "success" });
+          setAlert({ message: t("library.folderCreated"), type: "success" });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
         // set errors
         setAlert({
-          message: "Folder could not be created. Try again later.",
+          message: t("library.folderCouldNotBeCreated"),
           type: "error",
         });
       }
@@ -132,14 +134,14 @@ export default function Library(): JSX.Element {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
           //pop up notifying user of tag
-          setAlert({ message: "Tag Created", type: "success" });
+          setAlert({ message: t("library.tagCreated"), type: "success" });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
         // set errors
         setAlert({
-          message: "Tag could not be created. Try again later.",
+          message: t("library.tagCouldNotBeCreated"),
           type: "error",
         });
       }
@@ -169,7 +171,7 @@ export default function Library(): JSX.Element {
         if (res.data && res.data) {
           //pop up notifying user of tag update
           setAlert({
-            message: isDeleted ? "Tag Deleted" : "Tag Updated",
+            message: isDeleted ? t("library.tagDeleted") : t("library.tagUpdated"),
             type: "success",
           });
         }
@@ -178,7 +180,7 @@ export default function Library(): JSX.Element {
       } else {
         // set errors
         setAlert({
-          message: "Tag could not be updated. Try again later.",
+          message: t("library.tagCouldNotBeUpdated"),
           type: "error",
         });
       }
@@ -197,12 +199,12 @@ export default function Library(): JSX.Element {
           <DialogWrapper
             open={openManageTagsModal}
             onOpenChange={setOpenManageTagsModal}
-            title="Manage Tags"
-            description="Create, edit, and delete tags for organizing content."
+            title={t("library.manageTags")}
+            description={t("library.manageTagsDescription")}
             contentClassName="sm:max-w-2xl"
             actions={[
               {
-                label: "Close",
+                label: t("common.close"),
                 onClick: () => setOpenManageTagsModal(false),
                 variant: "outline",
               },
@@ -211,11 +213,11 @@ export default function Library(): JSX.Element {
             <div className="space-y-6">
               {/* Existing Tags */}
               <div className="space-y-3">
-                <h3 className="text-sm font-medium">Existing Tags</h3>
+                <h3 className="text-sm font-medium">{t("library.existingTags")}</h3>
                 <div className="max-h-64 overflow-y-auto space-y-2">
                   {tagList.length === 0 ? (
                     <p className="text-muted-foreground text-sm text-center py-8">
-                      No tags found. Create your first tag below.
+                      {t("library.noTagsFound")}
                     </p>
                   ) : (
                     tagList.map((tag, i) => (
@@ -240,7 +242,7 @@ export default function Library(): JSX.Element {
                             });
                           }}
                         />
-                        <TooltipWrapper content="Save changes to this tag">
+                        <TooltipWrapper content={t("library.saveTagChanges")}>
                           <Button
                             variant="ghost"
                             onClick={() =>
@@ -251,22 +253,22 @@ export default function Library(): JSX.Element {
                               )
                             }
                             size="sm"
-                            aria-label="Save tag changes"
+                            aria-label={t("library.saveTagChanges")}
                           >
                             <Save className="h-4 w-4 mr-1.5" />
-                            Save
+                            {t("common.save")}
                           </Button>
                         </TooltipWrapper>
-                        <TooltipWrapper content="Permanently delete this tag">
+                        <TooltipWrapper content={t("library.permanentlyDeleteTag")}>
                           <Button
                             variant="ghost"
                             onClick={() => handleUpdateTag(tag.id, true)}
                             size="sm"
                             className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                            aria-label="Delete tag"
+                            aria-label={t("library.permanentlyDeleteTag")}
                           >
                             <Trash2 className="h-4 w-4 mr-1.5" />
-                            Delete
+                            {t("common.delete")}
                           </Button>
                         </TooltipWrapper>
                       </div>
@@ -277,12 +279,12 @@ export default function Library(): JSX.Element {
 
               {/* Create New Tag */}
               <div className="space-y-3">
-                <h3 className="text-sm font-medium">Create New Tag</h3>
+                <h3 className="text-sm font-medium">{t("library.createNewTag")}</h3>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Enter tag name"
+                    placeholder={t("library.enterTagName")}
                     value={newTag}
-                    aria-label="Create New Tag"
+                    aria-label={t("library.createNewTag")}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       if (onlyLettersAndNumbers(e.target.value)) {
                         setNewTag(e.target.value);
@@ -296,7 +298,7 @@ export default function Library(): JSX.Element {
                   />
                   <Button onClick={handleCreateTag} disabled={!newTag.trim()}>
                     <Tag className="h-4 w-4 mr-2" />
-                    Create
+                    {t("common.create")}
                   </Button>
                 </div>
               </div>
@@ -306,29 +308,29 @@ export default function Library(): JSX.Element {
       <DialogWrapper
         open={openCreateFolderModal}
         onOpenChange={setOpenCreateFolderModal}
-        title="New Folder"
-        description="Enter a name for your personal folder, then click 'Create Folder'. Your folder and its contents will only be visible to you."
+        title={t("library.newFolder")}
+        description={t("library.newFolderDescription")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenCreateFolderModal(false),
             variant: "outline",
           },
           {
-            label: "Create Folder",
+            label: t("library.createFolder"),
             onClick: handleCreateFolder,
             disabled: !newFolderName.trim(),
           },
         ]}
       >
         <div className="space-y-2">
-          <Label htmlFor="folder-name">Folder Name</Label>
+          <Label htmlFor="folder-name">{t("library.folderName")}</Label>
           <Input
             id="folder-name"
-            aria-label="Folder Name"
+            aria-label={t("library.folderName")}
             name="foldername"
-            placeholder="Enter folder name"
+            placeholder={t("library.enterFolderName")}
             value={newFolderName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setNewFolderName(e.target.value);
@@ -355,7 +357,7 @@ export default function Library(): JSX.Element {
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                 <div>
                   <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                    Library
+                    {t("library.library")}
                   </h1>
                 </div>
                 <nav
@@ -371,10 +373,10 @@ export default function Library(): JSX.Element {
                         variant="outline"
                         onClick={() => setOpenManageTagsModal(true)}
                         className="flex items-center gap-2"
-                        aria-label="Manage content tags"
+                        aria-label={t("library.manageTags")}
                       >
                         <Tag className="h-4 w-4" aria-hidden="true" />
-                        Manage Tags
+                        {t("library.manageTags")}
                       </Button>
                     )}
                   {user?.groups.includes(
@@ -386,34 +388,16 @@ export default function Library(): JSX.Element {
                         variant="default"
                         onClick={() => setOpenCreateFolderModal(true)}
                         className="flex items-center gap-2"
-                        aria-label="Create new folder"
+                        aria-label={t("library.newFolder")}
                       >
                         <Folder className="h-4 w-4" aria-hidden="true" />
-                        New Folder
+                        {t("library.newFolder")}
                       </Button>
                     )}
                 </nav>
               </div>
-              <p className="text-muted-foreground max-w-2xl text-base leading-6 mb-4">
-                The library contains all of the conversation prompts and
-                documents hosted within PapyrusAI. By default, you have access
-                to all prompts designed and tested by the PapyrusAI research
-                team.
-              </p>
               <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                You can click through the folders to browse our
-                researcher-created prompts. If you would like to use your own
-                assets (including your own prompts and documents) in your
-                course, you will need to host these within your own folder. For
-                more information on navigating the library, please see the&nbsp;
-                <a
-                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.i0aofs3p0aio"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                >
-                  "Library" section of our instructor guide.
-                </a>
+                {t("library.libraryDescription")}
               </p>
             </div>
           </div>
@@ -433,7 +417,7 @@ export default function Library(): JSX.Element {
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
         />
-        <p className="text-muted-foreground">Loading Library</p>
+        <p className="text-muted-foreground">{t("library.loadingLibrary")}</p>
       </div>
     </div>
   );

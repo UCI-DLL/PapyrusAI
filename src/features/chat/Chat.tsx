@@ -827,52 +827,6 @@ export default function Chat(): JSX.Element {
     }
   }
 
-  function downloadChat() {
-    if (courseInfo && moduleInfo && messages && viewUser && conversationIds) {
-      setIsLoading(true);
-      var fileData =
-        courseInfo.name +
-        "\n" +
-        moduleInfo.name +
-        "\n" +
-        courseInfo.instructor.name +
-        " " +
-        courseInfo.instructor.family_name +
-        "\n";
-      if (user) {
-        fileData += "User: " + user.email + "\n";
-      }
-      const isInstructor =
-        user &&
-        (user.groups.includes(admin) || user.groups.includes(instructor));
-      messages.forEach((message, index) => {
-        if (!moduleInfo.showInitialPrompt && index === 0 && !isInstructor) {
-        } else if (
-          message.userVisible !== undefined &&
-          !message.userVisible &&
-          !isInstructor
-        ) {
-        } else {
-          var dateTime = new Date(
-            parseInt(message.id.substring(0, 13), 10)
-          ).toLocaleString();
-          var sender =
-            message.sender === "ChatGPT"
-              ? "Papyrus"
-              : viewUser.name + " " + viewUser.family_name;
-          fileData +=
-            sender + " - " + dateTime + "\n" + message.content + "\n\n";
-        }
-      });
-      const blob = new Blob([fileData], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.download = `${courseInfo.name}_${moduleInfo.name}_${user?.email}_conversation${conversationIds.conversationIndex}.txt`;
-      link.href = url;
-      link.click();
-      setIsLoading(false);
-    }
-  }
 
   function returnDocText(docText: string) {
     setOpenDocumentModal(false);
@@ -918,6 +872,134 @@ export default function Chat(): JSX.Element {
     } else {
       setChatError("Message Too Long");
     }
+  }
+
+  // Handlers for sidebar conversation actions
+  function handleRenameConversation(
+    courseId: string,
+    moduleId: string,
+    index: string,
+    name: string
+  ) {
+    setOpenUpdateConvoModal({
+      open: true,
+      deleteOpen: false,
+      courseId,
+      moduleId,
+      index,
+      name,
+      isDeleted: false,
+      completed: false,
+      error: "",
+    });
+  }
+
+  function handleArchiveConversation(
+    courseId: string,
+    moduleId: string,
+    index: string
+  ) {
+    setIsLoading(true);
+    Post(postUpdateConversation(courseId, moduleId, index), {
+      isDeleted: true,
+    }).then((res) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          setConversationList(res.data);
+          if (
+            conversationIds &&
+            conversationIds.courseId === courseId &&
+            conversationIds.moduleId === moduleId &&
+            conversationIds.conversationIndex === index
+          ) {
+            navigator(`/courses/${courseId}/modules/${moduleId}`);
+          }
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        setOpenErrorModal({
+          open: true,
+          message: "Something went wrong. Try again later",
+        });
+      }
+      setIsLoading(false);
+    });
+  }
+
+  function handleDownloadConversation(
+    courseId: string,
+    moduleId: string,
+    index: string
+  ) {
+    if (!courseInfo || !moduleInfo || !viewUser || !user) return;
+
+    setIsLoading(true);
+    const controller = new AbortController();
+
+    Get(
+      getConversation(courseId, moduleId, index, viewUser.username),
+      controller.signal
+    ).then((res: any) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data.messages) {
+          const conversationMessages = res.data.messages.sort(
+            (a: MessageType, b: MessageType) =>
+              parseInt(b.timestamp) - parseInt(a.timestamp)
+          );
+          const sortedMessages = conversationMessages.reverse();
+
+          var fileData =
+            courseInfo.name +
+            "\n" +
+            moduleInfo.name +
+            "\n" +
+            courseInfo.instructor.name +
+            " " +
+            courseInfo.instructor.family_name +
+            "\n";
+          if (user) {
+            fileData += "User: " + user.email + "\n";
+          }
+          const isInstructor =
+            user &&
+            (user.groups.includes(admin) || user.groups.includes(instructor));
+          sortedMessages.forEach((message: MessageType, index: number) => {
+            if (!moduleInfo.showInitialPrompt && index === 0 && !isInstructor) {
+            } else if (
+              message.userVisible !== undefined &&
+              !message.userVisible &&
+              !isInstructor
+            ) {
+            } else {
+              var dateTime = new Date(
+                parseInt(message.id.substring(0, 13), 10)
+              ).toLocaleString();
+              var sender =
+                message.sender === "ChatGPT"
+                  ? "Papyrus"
+                  : viewUser.name + " " + viewUser.family_name;
+              fileData +=
+                sender + " - " + dateTime + "\n" + message.content + "\n\n";
+            }
+          });
+          const blob = new Blob([fileData], { type: "text/plain" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.download = `${courseInfo.name}_${moduleInfo.name}_${user?.email}_conversation${index}.txt`;
+          link.href = url;
+          link.click();
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        setOpenErrorModal({
+          open: true,
+          message: "Could not download conversation. Try again later",
+        });
+      }
+      setIsLoading(false);
+    });
   }
 
   function handleConverstionNameDeleteUpdate(convoUpdateObject: {
@@ -997,6 +1079,8 @@ export default function Chat(): JSX.Element {
         ).then((res) => {
           if (res && res.status && res.status < 300) {
             if (res.data) {
+              // Update conversation list to reflect the new name
+              setConversationList(res.data);
               setOpenUpdateConvoModal({
                 open: false,
                 deleteOpen: false,
@@ -1201,19 +1285,6 @@ export default function Chat(): JSX.Element {
           moduleInfo={moduleInfo}
           user={user}
           viewUser={viewUser}
-          onRename={() =>
-            setOpenUpdateConvoModal((prev) => ({
-              ...prev,
-              open: true,
-            }))
-          }
-          onDownload={downloadChat}
-          onHide={() =>
-            setOpenUpdateConvoModal((prev) => ({
-              ...prev,
-              deleteOpen: true,
-            }))
-          }
           onToggleSidebar={() => setSidebarOpen(true)}
           isMobile={window.innerWidth < 1024}
         />
@@ -1255,6 +1326,7 @@ export default function Chat(): JSX.Element {
         courseInfo={courseInfo}
         moduleInfo={moduleInfo}
         user={user}
+        viewUser={viewUser}
         conversationList={conversationList}
         currentConversationIndex={conversationIds?.conversationIndex}
         searchTerm={searchTerm}
@@ -1267,6 +1339,9 @@ export default function Chat(): JSX.Element {
           navigator(link);
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
+        onRenameConversation={handleRenameConversation}
+        onArchiveConversation={handleArchiveConversation}
+        onDownloadConversation={handleDownloadConversation}
         onClose={() => setSidebarOpen(false)}
       />
     </div>

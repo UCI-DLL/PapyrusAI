@@ -71,6 +71,8 @@ interface ListPromptsProps {
   ) => void; //type is "prompt" or "file"
   activeTab?: string;
   compactGrid?: boolean;
+  selectedPromptIds?: string[];
+  selectedFileIds?: string[];
 }
 
 export default function ListFolderContents(
@@ -727,6 +729,7 @@ export default function ListFolderContents(
                 starred.prompts.some((p) => p.promptId === prompt.id) &&
                 starred.prompts.some((c) => c.folderId === props.folderId)
               }
+              isSelected={props.selectedPromptIds?.includes(prompt.id) ?? false}
             />
           ))}
 
@@ -749,6 +752,7 @@ export default function ListFolderContents(
                 starred.files.some((p) => p.fileId === file.id) &&
                 starred.files.some((c) => c.folderId === props.folderId)
               }
+              isSelected={props.selectedFileIds?.includes(file.id) ?? false}
             />
           ))}
       </div>

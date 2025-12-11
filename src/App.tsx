@@ -48,6 +48,7 @@ import ModuleReports from "./features/reports/ModuleReports";
 import CourseReports from "./features/reports/CourseReports";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
+import { changeLanguage } from "./i18n";
 
 function App(): JSX.Element {
   // user object obtained from backend or local
@@ -78,6 +79,13 @@ function App(): JSX.Element {
         ? user["custom:textSize"]
         : "md";
       root.setAttribute("data-text-size", userTextSize);
+
+      // Initialize language preference
+      const userLanguage = user["custom:language"];
+      const languageCode = userLanguage === "spanish" ? "es" : "en";
+      changeLanguage(languageCode);
+      // Set HTML lang attribute
+      document.documentElement.setAttribute("lang", languageCode);
     }
   }, [user]);
 

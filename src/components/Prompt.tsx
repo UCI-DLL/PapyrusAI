@@ -33,11 +33,13 @@ import {
   Eye,
   Plus,
   Trash2,
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router";
 import ListFolders from "../features/library/ListFolders";
 import { truncateString } from "../utility/Helpers";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface PromptProps {
   prompt: PromptType;
@@ -62,12 +64,14 @@ interface PromptProps {
   noShowDesc?: boolean;
   isStarred?: boolean;
   disableStarring?: boolean;
+  isSelected?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
@@ -107,7 +111,7 @@ export const Prompt = (props: PromptProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "Prompt copied successfully",
+              message: t("components.promptCopiedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -115,7 +119,7 @@ export const Prompt = (props: PromptProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to copy prompt",
+              message: t("components.failedToCopyPrompt"),
               type: "error",
             });
           }
@@ -132,7 +136,7 @@ export const Prompt = (props: PromptProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "Prompt copied successfully",
+              message: t("components.promptCopiedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -140,7 +144,7 @@ export const Prompt = (props: PromptProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to copy prompt",
+              message: t("components.failedToCopyPrompt"),
               type: "error",
             });
           }
@@ -159,7 +163,7 @@ export const Prompt = (props: PromptProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "Prompt copied successfully",
+              message: t("components.promptCopiedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -167,7 +171,7 @@ export const Prompt = (props: PromptProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to copy prompt",
+              message: t("components.failedToCopyPrompt"),
               type: "error",
             });
           }
@@ -184,7 +188,7 @@ export const Prompt = (props: PromptProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "Prompt copied successfully",
+              message: t("components.promptCopiedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -192,7 +196,7 @@ export const Prompt = (props: PromptProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to copy prompt",
+              message: t("components.failedToCopyPrompt"),
               type: "error",
             });
           }
@@ -217,7 +221,7 @@ export const Prompt = (props: PromptProps) => {
       ).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({
-            message: "Prompt deleted successfully",
+            message: t("components.promptDeletedSuccessfully"),
             type: "success",
           });
           props.refreshList();
@@ -225,7 +229,7 @@ export const Prompt = (props: PromptProps) => {
           navigator("/login");
         } else {
           setAlert({
-            message: "Failed to delete prompt",
+            message: t("components.failedToDeletePrompt"),
             type: "error",
           });
         }
@@ -244,7 +248,7 @@ export const Prompt = (props: PromptProps) => {
       ).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({
-            message: "Prompt deleted successfully",
+            message: t("components.promptDeletedSuccessfully"),
             type: "success",
           });
           props.refreshList();
@@ -252,7 +256,7 @@ export const Prompt = (props: PromptProps) => {
           navigator("/login");
         } else {
           setAlert({
-            message: "Failed to delete prompt",
+            message: t("components.failedToDeletePrompt"),
             type: "error",
           });
         }
@@ -279,7 +283,7 @@ export const Prompt = (props: PromptProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "Prompt moved successfully",
+              message: t("components.promptMovedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -287,7 +291,7 @@ export const Prompt = (props: PromptProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to move prompt",
+              message: t("components.failedToMovePrompt"),
               type: "error",
             });
           }
@@ -304,7 +308,7 @@ export const Prompt = (props: PromptProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "Prompt moved successfully",
+              message: t("components.promptMovedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -312,7 +316,7 @@ export const Prompt = (props: PromptProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to move prompt",
+              message: t("components.failedToMovePrompt"),
               type: "error",
             });
           }
@@ -331,7 +335,7 @@ export const Prompt = (props: PromptProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "Prompt moved successfully",
+              message: t("components.promptMovedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -339,7 +343,7 @@ export const Prompt = (props: PromptProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to move prompt",
+              message: t("components.failedToMovePrompt"),
               type: "error",
             });
           }
@@ -356,7 +360,7 @@ export const Prompt = (props: PromptProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "Prompt moved successfully",
+              message: t("components.promptMovedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -364,7 +368,7 @@ export const Prompt = (props: PromptProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to move prompt",
+              message: t("components.failedToMovePrompt"),
               type: "error",
             });
           }
@@ -381,11 +385,11 @@ export const Prompt = (props: PromptProps) => {
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(true);
-        setAlert({ message: "Prompt starred", type: "success" });
+        setAlert({ message: t("components.promptStarred"), type: "success" });
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to star prompt", type: "error" });
+        setAlert({ message: t("components.failedToStarPrompt"), type: "error" });
       }
       props.refreshList();
     });
@@ -398,11 +402,11 @@ export const Prompt = (props: PromptProps) => {
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(false);
-        setAlert({ message: "Prompt unstarred", type: "success" });
+        setAlert({ message: t("components.promptUnstarred"), type: "success" });
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to unstar prompt", type: "error" });
+        setAlert({ message: t("components.failedToUnstarPrompt"), type: "error" });
       }
       props.refreshList();
     });
@@ -436,29 +440,29 @@ export const Prompt = (props: PromptProps) => {
   };
 
   const adminOrgMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Edit",
-    "Copy To",
-    "Move To",
-    "Delete",
+    t("common.view"),
+    starred ? t("common.unstar") : t("common.star"),
+    t("common.edit"),
+    t("common.copyTo"),
+    t("common.moveTo"),
+    t("common.delete"),
   ];
-  const instructorOrgMenu = ["View", starred ? "Unstar" : "Star", "Copy To"];
+  const instructorOrgMenu = [t("common.view"), starred ? t("common.unstar") : t("common.star"), t("common.copyTo")];
   const adminUserMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Edit",
-    "Copy To",
-    "Move To",
-    "Delete",
+    t("common.view"),
+    starred ? t("common.unstar") : t("common.star"),
+    t("common.edit"),
+    t("common.copyTo"),
+    t("common.moveTo"),
+    t("common.delete"),
   ];
   const instructorUserMenu = [
-    "View",
-    starred ? "Unstar" : "Star",
-    "Edit",
-    "Copy To",
-    "Move To",
-    "Delete",
+    t("common.view"),
+    starred ? t("common.unstar") : t("common.star"),
+    t("common.edit"),
+    t("common.copyTo"),
+    t("common.moveTo"),
+    t("common.delete"),
   ];
 
   const adminOrgMenuFunctions = [
@@ -498,11 +502,11 @@ export const Prompt = (props: PromptProps) => {
         open={openPreviewDialog}
         onOpenChange={setOpenPreviewDialog}
         title={props.prompt.name}
-        description="Full prompt content"
+        description={t("common.fullPromptContent")}
         contentClassName="max-w-4xl max-h-[80vh]"
         actions={[
           {
-            label: "Close",
+            label: t("common.close"),
             onClick: () => setOpenPreviewDialog(false),
             variant: "outline",
           },
@@ -521,16 +525,16 @@ export const Prompt = (props: PromptProps) => {
       <DialogWrapper
         open={openDeleteDialog}
         onOpenChange={setOpenDeleteDialog}
-        title="Delete Prompt?"
-        description="Are you sure you would like to permanently delete this prompt?"
+        title={t("components.deletePrompt")}
+        description={t("components.deletePromptMessage")}
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDeleteDialog(false),
             variant: "outline",
           },
           {
-            label: "Delete",
+            label: t("common.delete"),
             onClick: deletePrompt,
             variant: "destructive",
           },
@@ -541,12 +545,12 @@ export const Prompt = (props: PromptProps) => {
       <DialogWrapper
         open={openCopyToDialog}
         onOpenChange={setOpenCopyToDialog}
-        title="Copy Prompt To?"
-        description="Select a folder to copy this prompt to."
+        title={t("components.copyPromptTo")}
+        description={t("components.copyPromptToDescription")}
         contentClassName="max-w-2xl"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenCopyToDialog(false),
             variant: "outline",
           },
@@ -561,12 +565,12 @@ export const Prompt = (props: PromptProps) => {
       <DialogWrapper
         open={openMoveDialog}
         onOpenChange={setOpenMoveDialog}
-        title="Move Prompt To?"
-        description="Select a folder to move this prompt to."
+        title={t("components.movePromptTo")}
+        description={t("components.movePromptToDescription")}
         contentClassName="max-w-2xl"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenMoveDialog(false),
             variant: "outline",
           },
@@ -595,7 +599,7 @@ export const Prompt = (props: PromptProps) => {
             <div className="flex items-center gap-2">
               {!props.disableStarring && (
                 <TooltipWrapper
-                  content={starred ? "Unstar Prompt" : "Star Prompt"}
+                  content={starred ? t("common.unstar") + " " + t("common.prompt") : t("common.star") + " " + t("common.prompt")}
                   side="top"
                 >
                   <button
@@ -607,7 +611,7 @@ export const Prompt = (props: PromptProps) => {
                         : "text-muted hover:text-gold text-lg"
                     )}
                     aria-label={
-                      starred ? "Remove from favorites" : "Add to favorites"
+                      starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
                     }
                   >
                     <Star
@@ -629,7 +633,7 @@ export const Prompt = (props: PromptProps) => {
                       size="sm"
                       className="flex text-lg items-center p-1"
                       onClick={(e) => e.stopPropagation()}
-                      aria-label="More Options"
+                      aria-label={t("common.moreOptions")}
                     >
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
@@ -647,7 +651,7 @@ export const Prompt = (props: PromptProps) => {
                             adminOrgMenuFunctions[index]();
                           },
                           type: "button" as const,
-                          className: item === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                          className: item === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                         }))
                         : instructorOrgMenu.map(
                           (item: string, index: number) => ({
@@ -656,7 +660,7 @@ export const Prompt = (props: PromptProps) => {
                               instructorOrgMenuFunctions[index]();
                             },
                             type: "button" as const,
-                            className: item === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                            className: item === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                           })
                         )
                       : user?.groups.includes(
@@ -670,7 +674,7 @@ export const Prompt = (props: PromptProps) => {
                             adminUserMenuFunctions[index]();
                           },
                           type: "button" as const,
-                          className: item === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                          className: item === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                         }))
                         : instructorUserMenu.map(
                           (item: string, index: number) => ({
@@ -679,12 +683,12 @@ export const Prompt = (props: PromptProps) => {
                               instructorUserMenuFunctions[index]();
                             },
                             type: "button" as const,
-                            className: item === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                            className: item === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                           })
                         )
                   }
                   align="end"
-                  tooltipContent="Prompt Options"
+                  tooltipContent={t("common.promptOptions")}
                   tooltipSide="top"
                 />
               )}
@@ -727,7 +731,7 @@ export const Prompt = (props: PromptProps) => {
             </div>
             {props.noShowMenu ? (
               props.showRemove ? (
-                <TooltipWrapper content="Remove prompt from module" side="top">
+                <TooltipWrapper content={t("components.removePromptFromModule")} side="top">
                   <Button
                     type="button"
                     variant="ghost"
@@ -746,11 +750,24 @@ export const Prompt = (props: PromptProps) => {
                     }}
                   >
                     <Trash2 className="h-3 w-3" />
-                    Remove
+                    {t("common.remove")}
+                  </Button>
+                </TooltipWrapper>
+              ) : props.isSelected ? (
+                <TooltipWrapper content={t("components.thisPromptAlreadyAdded")} side="top">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground opacity-50 cursor-not-allowed"
+                  >
+                    <CheckCircle className="h-3 w-3" />
+                    {t("common.added")}
                   </Button>
                 </TooltipWrapper>
               ) : (
-                <TooltipWrapper content="Add prompt to module" side="top">
+                <TooltipWrapper content={t("components.addPromptToModule")} side="top">
                   <Button
                     type="button"
                     variant="ghost"
@@ -769,7 +786,7 @@ export const Prompt = (props: PromptProps) => {
                     }}
                   >
                     <Plus className="h-3 w-3" />
-                    Add
+                    {t("common.add")}
                   </Button>
                 </TooltipWrapper>
               )
@@ -780,10 +797,10 @@ export const Prompt = (props: PromptProps) => {
                 size="sm"
                 className="flex items-center gap-1 text-muted-foreground text-xs font-medium hover:bg-primary hover:text-primary-foreground"
                 onClick={() => setOpenPreviewDialog(true)}
-                aria-label="View"
+                aria-label={t("common.view")}
               >
                 <Eye className="h-3 w-3" />
-                View
+                {t("common.view")}
               </Button>
             )}
           </div>

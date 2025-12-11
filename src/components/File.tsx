@@ -31,12 +31,14 @@ import {
   Eye,
   Plus,
   Trash2,
+  CheckCircle,
 } from "lucide-react";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { cn } from "../lib/utils";
 import { useNavigate, Link } from "react-router-dom";
 import ListFolders from "../features/library/ListFolders";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface FileProps {
   file: FileType;
@@ -54,12 +56,14 @@ interface FileProps {
   showRemove?: boolean;
   isStarred?: boolean;
   disableStarring?: boolean;
+  isSelected?: boolean;
 }
 
 export const File = (props: FileProps) => {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
@@ -93,7 +97,7 @@ export const File = (props: FileProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "File copied successfully",
+              message: t("components.fileCopiedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -101,7 +105,7 @@ export const File = (props: FileProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to copy file",
+              message: t("components.failedToCopyFile"),
               type: "error",
             });
           }
@@ -114,7 +118,7 @@ export const File = (props: FileProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "File copied successfully",
+              message: t("components.fileCopiedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -122,7 +126,7 @@ export const File = (props: FileProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to copy file",
+              message: t("components.failedToCopyFile"),
               type: "error",
             });
           }
@@ -137,7 +141,7 @@ export const File = (props: FileProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "File copied successfully",
+              message: t("components.fileCopiedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -145,7 +149,7 @@ export const File = (props: FileProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to copy file",
+              message: t("components.failedToCopyFile"),
               type: "error",
             });
           }
@@ -160,7 +164,7 @@ export const File = (props: FileProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "File copied successfully",
+              message: t("components.fileCopiedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -168,7 +172,7 @@ export const File = (props: FileProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to copy file",
+              message: t("components.failedToCopyFile"),
               type: "error",
             });
           }
@@ -190,18 +194,18 @@ export const File = (props: FileProps) => {
       Put(putUpdateOrgFile(props.folder.id, props.file.id), dataToSend).then(
         (res) => {
           if (res.status && res.status < 300) {
-            setAlert({
-              message: "File deleted successfully",
-              type: "success",
-            });
+          setAlert({
+            message: t("components.fileDeletedSuccessfully"),
+            type: "success",
+          });
             props.refreshList();
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
-            setAlert({
-              message: "Failed to delete file",
-              type: "error",
-            });
+          setAlert({
+            message: t("components.failedToDeleteFile"),
+            type: "error",
+          });
           }
           setOpenDeleteDialog(false);
         }
@@ -216,18 +220,18 @@ export const File = (props: FileProps) => {
       Put(putUpdateUserFile(props.folder.id, props.file.id), dataToSend).then(
         (res) => {
           if (res.status && res.status < 300) {
-            setAlert({
-              message: "File deleted successfully",
-              type: "success",
-            });
+          setAlert({
+            message: t("components.fileDeletedSuccessfully"),
+            type: "success",
+          });
             props.refreshList();
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
-            setAlert({
-              message: "Failed to delete file",
-              type: "error",
-            });
+          setAlert({
+            message: t("components.failedToDeleteFile"),
+            type: "error",
+          });
           }
           setOpenDeleteDialog(false);
         }
@@ -249,7 +253,7 @@ export const File = (props: FileProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "File moved successfully",
+              message: t("components.fileMovedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -257,7 +261,7 @@ export const File = (props: FileProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to move file",
+              message: t("components.failedToMoveFile"),
               type: "error",
             });
           }
@@ -270,7 +274,7 @@ export const File = (props: FileProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "File moved successfully",
+              message: t("components.fileMovedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -278,7 +282,7 @@ export const File = (props: FileProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to move file",
+              message: t("components.failedToMoveFile"),
               type: "error",
             });
           }
@@ -293,7 +297,7 @@ export const File = (props: FileProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "File moved successfully",
+              message: t("components.fileMovedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -301,7 +305,7 @@ export const File = (props: FileProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to move file",
+              message: t("components.failedToMoveFile"),
               type: "error",
             });
           }
@@ -316,7 +320,7 @@ export const File = (props: FileProps) => {
         ).then((res) => {
           if (res.status && res.status < 300) {
             setAlert({
-              message: "File moved successfully",
+              message: t("components.fileMovedSuccessfully"),
               type: "success",
             });
             props.refreshList();
@@ -324,7 +328,7 @@ export const File = (props: FileProps) => {
             navigator("/login");
           } else {
             setAlert({
-              message: "Failed to move file",
+              message: t("components.failedToMoveFile"),
               type: "error",
             });
           }
@@ -341,11 +345,11 @@ export const File = (props: FileProps) => {
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(true);
-        setAlert({ message: "File starred", type: "success" });
+        setAlert({ message: t("components.fileStarred"), type: "success" });
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to star file", type: "error" });
+        setAlert({ message: t("components.failedToStarFile"), type: "error" });
       }
     });
   }
@@ -357,11 +361,11 @@ export const File = (props: FileProps) => {
     }).then((res) => {
       if (res.status && res.status < 300) {
         setStarred(false);
-        setAlert({ message: "File unstarred", type: "success" });
+        setAlert({ message: t("components.fileUnstarred"), type: "success" });
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to unstar file", type: "error" });
+        setAlert({ message: t("components.failedToUnstarFile"), type: "error" });
       }
     });
   }
@@ -407,58 +411,58 @@ export const File = (props: FileProps) => {
   };
 
   const adminOrgMenu = [
-    { label: "View", type: "link" as const, action: getEditUrl() },
+    { label: t("common.view"), type: "link" as const, action: getEditUrl() },
     {
-      label: starred ? "Unstar" : "Star",
+      label: starred ? t("common.unstar") : t("common.star"),
       type: "function" as const,
       action: starred ? removeStarredFile : createStarredFile,
     },
-    { label: "Edit", type: "link" as const, action: getEditUrl() },
-    { label: "Copy To", type: "function" as const, action: openCopyTo },
-    { label: "Move To", type: "function" as const, action: openMoveFile },
+    { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
+    { label: t("common.copyTo"), type: "function" as const, action: openCopyTo },
+    { label: t("common.moveTo"), type: "function" as const, action: openMoveFile },
     {
-      label: "Delete",
+      label: t("common.delete"),
       type: "function" as const,
       action: () => setOpenDeleteDialog(true),
     },
   ];
   const instructorOrgMenu = [
-    { label: "View", type: "link" as const, action: getEditUrl() },
+    { label: t("common.view"), type: "link" as const, action: getEditUrl() },
     {
-      label: starred ? "Unstar" : "Star",
+      label: starred ? t("common.unstar") : t("common.star"),
       type: "function" as const,
       action: starred ? removeStarredFile : createStarredFile,
     },
-    { label: "Copy To", type: "function" as const, action: openCopyTo },
+    { label: t("common.copyTo"), type: "function" as const, action: openCopyTo },
   ];
   const adminUserMenu = [
-    { label: "View", type: "link" as const, action: getEditUrl() },
+    { label: t("common.view"), type: "link" as const, action: getEditUrl() },
     {
-      label: starred ? "Unstar" : "Star",
+      label: starred ? t("common.unstar") : t("common.star"),
       type: "function" as const,
       action: starred ? removeStarredFile : createStarredFile,
     },
-    { label: "Edit", type: "link" as const, action: getEditUrl() },
-    { label: "Copy To", type: "function" as const, action: openCopyTo },
-    { label: "Move To", type: "function" as const, action: openMoveFile },
+    { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
+    { label: t("common.copyTo"), type: "function" as const, action: openCopyTo },
+    { label: t("common.moveTo"), type: "function" as const, action: openMoveFile },
     {
-      label: "Delete",
+      label: t("common.delete"),
       type: "function" as const,
       action: () => setOpenDeleteDialog(true),
     },
   ];
   const instructorUserMenu = [
-    { label: "View", type: "link" as const, action: getEditUrl() },
+    { label: t("common.view"), type: "link" as const, action: getEditUrl() },
     {
-      label: starred ? "Unstar" : "Star",
+      label: starred ? t("common.unstar") : t("common.star"),
       type: "function" as const,
       action: starred ? removeStarredFile : createStarredFile,
     },
-    { label: "Edit", type: "link" as const, action: getEditUrl() },
-    { label: "Copy To", type: "function" as const, action: openCopyTo },
-    { label: "Move To", type: "function" as const, action: openMoveFile },
+    { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
+    { label: t("common.copyTo"), type: "function" as const, action: openCopyTo },
+    { label: t("common.moveTo"), type: "function" as const, action: openMoveFile },
     {
-      label: "Delete",
+      label: t("common.delete"),
       type: "function" as const,
       action: () => setOpenDeleteDialog(true),
     },
@@ -470,16 +474,16 @@ export const File = (props: FileProps) => {
       <DialogWrapper
         open={openDeleteDialog}
         onOpenChange={setOpenDeleteDialog}
-        title="Delete File?"
-        description="Are you sure you would like to permanently delete this file?"
+        title={t("components.deleteFile")}
+        description={t("components.deleteFileMessage")}
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDeleteDialog(false),
             variant: "outline",
           },
           {
-            label: "Delete",
+            label: t("common.delete"),
             onClick: deleteFile,
             variant: "destructive",
           },
@@ -490,12 +494,12 @@ export const File = (props: FileProps) => {
       <DialogWrapper
         open={openCopyToDialog}
         onOpenChange={setOpenCopyToDialog}
-        title="Copy File To?"
-        description="Select a folder to copy this file to."
+        title={t("components.copyFileTo")}
+        description={t("components.copyFileToDescription")}
         contentClassName="max-w-2xl"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenCopyToDialog(false),
             variant: "outline",
           },
@@ -510,12 +514,12 @@ export const File = (props: FileProps) => {
       <DialogWrapper
         open={openMoveDialog}
         onOpenChange={setOpenMoveDialog}
-        title="Move File To?"
-        description="Select a folder to move this file to."
+        title={t("components.moveFileTo")}
+        description={t("components.moveFileToDescription")}
         contentClassName="max-w-2xl"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenMoveDialog(false),
             variant: "outline",
           },
@@ -544,7 +548,7 @@ export const File = (props: FileProps) => {
             <div className="flex items-center gap-2">
               {!props.disableStarring && (
                 <TooltipWrapper
-                  content={starred ? "Unstar File" : "Star File"}
+                  content={starred ? t("common.unstar") + " " + t("common.file") : t("common.star") + " " + t("common.file")}
                   side="top"
                 >
                   <button
@@ -556,7 +560,7 @@ export const File = (props: FileProps) => {
                         : "text-muted hover:text-gold text-lg"
                     )}
                     aria-label={
-                      starred ? "Remove from favorites" : "Add to favorites"
+                      starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
                     }
                   >
                     <Star
@@ -578,7 +582,7 @@ export const File = (props: FileProps) => {
                       size="sm"
                       className="flex text-lg items-center p-1"
                       onClick={(e) => e.stopPropagation()}
-                      aria-label="More Options"
+                      aria-label={t("common.moreOptions")}
                     >
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
@@ -609,7 +613,7 @@ export const File = (props: FileProps) => {
                     },
                     type: item.type,
                     href: item.type === "link" ? item.action : undefined,
-                    className: item.label === "Delete" ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                    className: item.label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
                   }))}
                   align="end"
                 />
@@ -646,7 +650,7 @@ export const File = (props: FileProps) => {
             </div>
             {props.noShowMenu ? (
               props.showRemove ? (
-                <TooltipWrapper content="Remove file from module" side="top">
+                <TooltipWrapper content={t("components.removeFileFromModule")} side="top">
                   <Button
                     variant="ghost"
                     type="button"
@@ -665,11 +669,24 @@ export const File = (props: FileProps) => {
                     }}
                   >
                     <Trash2 className="h-3 w-3" />
-                    Remove
+                    {t("common.remove")}
+                  </Button>
+                </TooltipWrapper>
+              ) : props.isSelected ? (
+                <TooltipWrapper content={t("components.thisFileAlreadyAdded")} side="top">
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    size="sm"
+                    disabled
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground opacity-50 cursor-not-allowed"
+                  >
+                    <CheckCircle className="h-3 w-3" />
+                    {t("common.added")}
                   </Button>
                 </TooltipWrapper>
               ) : (
-                <TooltipWrapper content="Add file to module" side="top">
+                <TooltipWrapper content={t("components.addFileToModule")} side="top">
                   <Button
                     variant="ghost"
                     type="button"
@@ -688,7 +705,7 @@ export const File = (props: FileProps) => {
                     }}
                   >
                     <Plus className="h-3 w-3" />
-                    Add
+                    {t("common.add")}
                   </Button>
                 </TooltipWrapper>
               )
@@ -700,14 +717,14 @@ export const File = (props: FileProps) => {
                 className="text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                 asChild
                 onClick={() => props.loading()}
-                aria-label="View"
+                aria-label={t("common.view")}
               >
                 <Link
                   to={getEditUrl()}
                   className="flex items-center gap-1 no-underline"
                 >
                   <Eye className="h-3 w-3" />
-                  View
+                  {t("common.view")}
                 </Link>
               </Button>
             )}

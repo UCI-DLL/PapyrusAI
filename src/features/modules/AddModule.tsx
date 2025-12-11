@@ -47,6 +47,7 @@ import { Prompt } from "../../components/Prompt";
 import { FileType, PromptType } from "../../utility/types/CourseTypes";
 import { File } from "../../components/File";
 import { Badge } from "../../components/ui/badge";
+import { useTranslation } from "../../hooks/useTranslation";
 
 type ModuleFormType = {
   name: string;
@@ -79,12 +80,6 @@ export enum SortOptions {
   Oldest = "Oldest",
 }
 
-const options = [
-  "Save & Publish",
-  "Save without Publishing",
-  "Discard Changes",
-];
-
 export default function AddModule({
   mode = "create",
   courseId,
@@ -92,6 +87,14 @@ export default function AddModule({
 }: ModuleFormProps = {}): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
+  const { t } = useTranslation();
+
+  // Translated options
+  const options = [
+    t("createModule.savePublish"),
+    t("createModule.saveNoPublish"),
+    t("createModule.discardChanges"),
+  ];
 
   // Determine if we're in edit mode based on URL or props
   const isEditMode =
@@ -242,11 +245,11 @@ export default function AddModule({
 
   function handleSubmit(e: any, isPublished = false, isDeleted = false) {
     if (session.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name missing" }));
+      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
     } else if (session.moduleDescription === "") {
       setErrors((prev: any) => ({
         ...prev,
-        moduleDescription: "Module description missing",
+        moduleDescription: t("common.description") + " " + t("common.missing"),
       }));
     } else {
       // set is loading
@@ -279,7 +282,7 @@ export default function AddModule({
               //redirect to module list
               navigator(`/courses/${moduleIds.courseId}/modules`);
               //pop up notifying user of update
-              setAlert({ message: "Module updated", type: "success" });
+              setAlert({ message: t("createModule.moduleUpdated"), type: "success" });
             }
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -315,7 +318,7 @@ export default function AddModule({
               //redirect to module list of that course
               navigator(`/courses/${actualCourseId}/modules`);
               //pop up notifying user of creation
-              setAlert({ message: "Module Created", type: "success" });
+              setAlert({ message: t("createModule.moduleCreated"), type: "success" });
             }
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -546,24 +549,18 @@ export default function AddModule({
       <DialogWrapper
         open={showSavePublishTooltip}
         onOpenChange={setShowSavePublishTooltip}
-        title="What is Save & Publish?"
+        title={t("createModule.whatIsSavePublish")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Got it",
+            label: t("common.gotIt"),
             onClick: () => setShowSavePublishTooltip(false),
           },
         ]}
       >
         <div className="space-y-3">
           <p className="text-sm leading-6">
-            To save and publish (i.e., make visible to students) your module,
-            select "Save & Publish". If you want to save your module without
-            publishing it, select "Save without Publishing".
-          </p>
-          <p className="text-sm text-muted-foreground italic">
-            Note: Choosing this option after the module has already been
-            published will unpublish the module.
+            {t("createModule.savePublishDescription")}
           </p>
         </div>
       </DialogWrapper>
@@ -571,16 +568,16 @@ export default function AddModule({
       <DialogWrapper
         open={openDiscardModal}
         onOpenChange={setOpenDiscardModal}
-        title="Discard Changes?"
-        description="Are you sure you would like to discard the changes to this module?"
+        title={t("createModule.discardChangesTitle")}
+        description={t("createModule.discardChangesDescription")}
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDiscardModal(false),
             variant: "outline",
           },
           {
-            label: "Discard",
+            label: t("common.discard"),
             onClick: () => navigator(-1),
             variant: "destructive",
           },
@@ -593,16 +590,16 @@ export default function AddModule({
           <DialogWrapper
             open={openDeleteModal}
             onOpenChange={setOpenDeleteModal}
-            title="Delete Module?"
-            description="Are you sure you would like to permanently delete this module?"
+            title={t("createModule.deleteModule")}
+            description={t("createModule.deleteModuleDescription")}
             actions={[
               {
-                label: "Cancel",
+                label: t("common.cancel"),
                 onClick: () => setOpenDeleteModal(false),
                 variant: "outline",
               },
               {
-                label: "Delete",
+                label: t("common.delete"),
                 onClick: () => handleSubmit(null, false, true),
                 variant: "destructive",
               },
@@ -612,16 +609,16 @@ export default function AddModule({
           <DialogWrapper
             open={openActiveModal}
             onOpenChange={setOpenActiveModal}
-            title="Unpublish Module?"
-            description="This module is current published and available to the public. Continuing will make the module unavailable to students."
+            title={t("createModule.unpublishModule")}
+            description={t("createModule.unpublishModuleDescription")}
             actions={[
               {
-                label: "Cancel",
+                label: t("common.cancel"),
                 onClick: () => setOpenActiveModal(false),
                 variant: "outline",
               },
               {
-                label: "Continue",
+                label: t("common.continue"),
                 onClick: () => handleSubmit(null, false, false),
               },
             ]}
@@ -631,11 +628,11 @@ export default function AddModule({
       <DialogWrapper
         open={openSelectFolderModal}
         onOpenChange={setOpenSelectFolderModal}
-        title="Select Folder"
+        title={t("createModule.selectFolder")}
         contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenSelectFolderModal(false),
             variant: "outline",
           },
@@ -652,11 +649,11 @@ export default function AddModule({
           !open &&
           setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })
         }
-        title="Select Asset"
+        title={t("createModule.selectAsset")}
         contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
         actions={[
           {
-            label: "Back",
+            label: t("common.back"),
             onClick: () => {
               setOpenSelectPromptModal({ folderId: "", isOrgFolder: false });
               setOpenSelectFolderModal(true);
@@ -664,7 +661,7 @@ export default function AddModule({
             variant: "outline",
           },
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () =>
               setOpenSelectPromptModal({ folderId: "", isOrgFolder: false }),
             variant: "outline",
@@ -678,6 +675,8 @@ export default function AddModule({
             noShowMenu
             onClick={selectAsset}
             compactGrid
+            selectedPromptIds={session.prompts.map((p) => p.id)}
+            selectedFileIds={session.files.map((f) => f.id)}
           />
         </div>
       </DialogWrapper>
@@ -718,8 +717,8 @@ export default function AddModule({
               <div>
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   {isEditMode
-                    ? `Edit ${session.name || "Module"}`
-                    : "Create Module"}
+                    ? t("createModule.editModule", { moduleName: session.name || t("common.module") })
+                    : t("createModule.createModule")}
                 </h1>
                 {isEditMode && (
                   <div className="flex items-center gap-2">
@@ -731,13 +730,13 @@ export default function AddModule({
                           className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-white 
                           colorful-dark:bg-green-900 colorful-dark:text-white pointer-events-none"
                         >
-                          Published
+                          {t("common.published")}
                         </Badge>
                       </>
                     ) : (
                       <>
                         <XCircle className="h-5 w-5 text-gray-500" />
-                        <Badge className="pointer-events-none" variant="secondary">Unpublished</Badge>
+                        <Badge className="pointer-events-none" variant="secondary">{t("common.unpublished")}</Badge>
                       </>
                     )}
                   </div>
@@ -828,25 +827,7 @@ export default function AddModule({
             </div>
 
             <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              Modules provide users access to conversations with the AI. Modules
-              can be customized to allow or restrict access to specific assets,
-              including conversation prompts (AI instructions) and documents.
-              For more information on {isEditMode ? "editing" : "creating"} a
-              module, please see the{" "}
-              <a
-                href={
-                  isEditMode
-                    ? "https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.cabsr1px9wcb"
-                    : "https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
-                }
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-              >
-                {isEditMode ? "Editing a Module" : "Creating a Module"} section
-                of our instructor guide
-              </a>
-              .
+              {t("createModule.createModuleDescription")}
             </p>
           </div>
         </div>
@@ -859,23 +840,22 @@ export default function AddModule({
               className="h-5 w-5 text-primary"
               aria-hidden="true"
             />
-            Module Information
+            {t("createModule.moduleInformation")}
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Enter the essential details for your module. Fields marked with *
-            are required.
+            {t("createModule.enterModuleInfo")}. {t("common.required")}
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">
-                Module Name *
+                {t("createModule.moduleName")} *
               </Label>
               <Input
                 id="name"
                 name="name"
-                placeholder="e.g., Argumentative Essay Writing Module"
+                placeholder={t("createModule.moduleNameHelptext")}
                 value={session.name}
                 onChange={handleChange}
                 disabled={isLoading}
@@ -903,12 +883,12 @@ export default function AddModule({
                 htmlFor="moduleDescription"
                 className="text-sm font-medium"
               >
-                Module Description *
+                {t("createModule.moduleDescription")} *
               </Label>
               <Textarea
                 id="moduleDescription"
                 name="moduleDescription"
-                placeholder="Describe the purpose and instructional goals for this module..."
+                placeholder={t("createModule.moduleDescriptionHelptext")}
                 value={session.moduleDescription}
                 onChange={handleChange}
                 disabled={isLoading}
@@ -937,7 +917,7 @@ export default function AddModule({
             <Separator />
 
             <div className="flex items-center justify-between">
-              <Label className="text-base font-medium">Module Assets</Label>
+              <Label className="text-base font-medium">{t("createModule.moduleAssets")}</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -946,7 +926,7 @@ export default function AddModule({
                 aria-label="Add asset to module"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                Add Asset
+                {t("createModule.addAsset")}
               </Button>
             </div>
 
@@ -966,10 +946,9 @@ export default function AddModule({
                 title="Click here to add an asset (including prompts and documents) to the module"
               >
                 <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">No assets added</p>
+                <p className="text-lg font-medium mb-2">{t("createModule.noAssetsAdded")}</p>
                 <p className="text-sm">
-                  Click here to add an asset (including prompts and documents)
-                  to the module.
+                  {t("createModule.noAssetsAddedDescription")}
                 </p>
               </div>
             ) : (

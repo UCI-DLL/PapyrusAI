@@ -7,7 +7,15 @@ import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { useNavigate } from "react-router-dom";
-import { Star, Play, MoreHorizontal, Loader2, CheckCircle, XCircle } from "lucide-react";
+import {
+  Star,
+  Play,
+  MoreHorizontal,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Eye,
+} from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType, ModuleType } from "../utility/types/CourseTypes";
@@ -31,6 +39,7 @@ import { cn } from "../lib/utils";
 import { orderCourseRecentlyCreatedAndStarred } from "../utility/Helpers";
 import CourseCard from "./CourseCard";
 import { Badge } from "../components/ui/badge";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface ModuleCardProps {
   module: ModuleType;
@@ -48,6 +57,7 @@ export default function ModuleCard({
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isNavigatingToModule, setIsNavigatingToModule] =
     useState<boolean>(false);
@@ -124,7 +134,7 @@ export default function ModuleCard({
         if (res === undefined) {
         } else {
           setAlert({
-            message: "No Courses Found. Cannot copy module.",
+            message: t("components.noCoursesFoundCannotCopy"),
             type: "error",
           });
           setIsLoading(false);
@@ -147,7 +157,7 @@ export default function ModuleCard({
         if (res.data && res.data) {
           setOpenCourseListModal(false);
           setAlert({
-            message: "Module copied to course",
+            message: t("components.moduleCopiedToCourse"),
             type: "success",
           });
           setDuplicateModuleData({
@@ -229,7 +239,8 @@ export default function ModuleCard({
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
               navigator(
-                `/chat/${user.username}/${course.id}/${module.id}/${createRes.data.conversations.length - 1
+                `/chat/${user.username}/${course.id}/${module.id}/${
+                  createRes.data.conversations.length - 1
                 }`
               );
             }
@@ -272,14 +283,14 @@ export default function ModuleCard({
         if (res.data && res.data.modules) {
           setStarredModules(res.data.modules);
           setAlert({
-            message: "Module added to favorites.",
+            message: t("components.moduleAddedToFavorites"),
             type: "success",
           });
         }
       } else if (res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to star module", type: "error" });
+        setAlert({ message: t("components.failedToStarModule"), type: "error" });
       }
       setIsLoading(false);
     });
@@ -295,14 +306,14 @@ export default function ModuleCard({
         if (res.data && res.data.modules) {
           setStarredModules(res.data.modules);
           setAlert({
-            message: "Module removed from favorites.",
+            message: t("components.moduleRemovedFromFavorites"),
             type: "success",
           });
         }
       } else if (res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to unstar module", type: "error" });
+        setAlert({ message: t("components.failedToUnstarModule"), type: "error" });
       }
       setIsLoading(false);
     });
@@ -310,12 +321,12 @@ export default function ModuleCard({
 
   const ownerMenu = [
     {
-      label: "Edit Module",
+      label: t("common.editModule"),
       type: "link" as const,
       action: `/courses/${course.id}/editmodule/${module.id}`,
     },
     {
-      label: "Copy Module",
+      label: t("common.copyModule"),
       type: "function" as const,
       action: () => {
         setOpenDuplicateModal({
@@ -329,7 +340,7 @@ export default function ModuleCard({
   ];
   const nonOwnerMenu = [
     {
-      label: "Copy Module",
+      label: t("common.copyModule"),
       type: "function" as const,
       action: () => {
         setOpenDuplicateModal({
@@ -345,7 +356,7 @@ export default function ModuleCard({
   if (!module || !user) {
     return (
       <div className="text-center py-8 text-muted-foreground" role="status">
-        No available modules
+        {t("components.noAvailableModules")}
       </div>
     );
   }
@@ -360,12 +371,12 @@ export default function ModuleCard({
       <DialogWrapper
         open={openCourseListModal}
         onOpenChange={setOpenCourseListModal}
-        title="Copy Module To?"
-        description="Please select a course you would like to copy this module to. Copying a module will copy over all module customizations, including the module name, description, added assets, and settings."
+        title={t("components.copyModuleTo")}
+        description={t("components.copyModuleToDescription")}
         contentClassName="sm:max-w-5xl max-h-[90vh] overflow-y-auto"
         actions={[
           {
-            label: "Close",
+            label: t("common.close"),
             onClick: () => setOpenCourseListModal(false),
             variant: "outline",
           },
@@ -374,7 +385,7 @@ export default function ModuleCard({
         <section
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           role="list"
-          aria-label="Available courses"
+          aria-label={t("courses.availableCourses")}
         >
           {orderCourseRecentlyCreatedAndStarred(courseList, starredCourses).map(
             (course) => (
@@ -409,8 +420,8 @@ export default function ModuleCard({
             copyCourseId: "",
           })
         }
-        title="Duplicate Module"
-        description="Please enter a unique name for your module. Duplicating the module will also copy over all settings within this module."
+        title={t("components.duplicateModule")}
+        description={t("components.duplicateModuleDescription")}
         contentClassName="sm:max-w-md"
         showFooter={false}
       >
@@ -422,11 +433,11 @@ export default function ModuleCard({
           className="space-y-4"
         >
           <div className="space-y-2">
-            <Label htmlFor="module-name">Module Name</Label>
+            <Label htmlFor="module-name">{t("common.module")} {t("common.name")}</Label>
             <Input
               id="module-name"
               name="name"
-              placeholder="New Module Name"
+              placeholder={t("components.newModuleName")}
               value={duplicateModuleData.name}
               onChange={handleChange}
               required
@@ -451,7 +462,7 @@ export default function ModuleCard({
               htmlFor="publish-module"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              Publish Module
+              {t("components.publishModule")}
             </label>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-end pt-4">
@@ -466,10 +477,10 @@ export default function ModuleCard({
                 })
               }
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              Duplicate
+              {t("common.duplicate")}
             </Button>
           </div>
         </form>
@@ -486,8 +497,10 @@ export default function ModuleCard({
         <div className="p-4 flex flex-col flex-1 relative z-10">
           <header className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary 
-              dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors duration-300">
+              <h2
+                className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary 
+              dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors duration-300"
+              >
                 {module.name}
               </h2>
               {isInstructorOrTA && (
@@ -500,19 +513,26 @@ export default function ModuleCard({
                         className="bg-green-100 text-green-800 dark:bg-green-900 
                         colorful-dark:bg-green-900 dark:text-white colorful-dark:text-white pointer-events-none"
                       >
-                        Published
+                        {t("common.published")}
                       </Badge>
                     </>
                   ) : (
                     <>
                       <XCircle className="h-5 w-5 text-gray-500" />
-                      <Badge className="pointer-events-none" variant="secondary">Unpublished</Badge>
+                      <Badge
+                        className="pointer-events-none"
+                        variant="secondary"
+                      >
+                        {t("common.unpublished")}
+                      </Badge>
                     </>
                   )}
                 </div>
               )}
               <div className="flex flex-col my-2 gap-2 text-xs text-muted-foreground">
-                <div className="font-medium text-sm truncate-text">{courseInfo}</div>
+                <div className="font-medium text-sm truncate-text">
+                  {courseInfo}
+                </div>
                 {module.moduleDescription && (
                   <p className="text-muted-foreground leading-relaxed text-sm line-clamp-2">
                     {module.moduleDescription}
@@ -526,7 +546,7 @@ export default function ModuleCard({
               aria-label="Module actions"
             >
               <TooltipWrapper
-                content={isStarred ? "Unstar Module" : "Star Module"}
+                content={isStarred ? t("common.unstarModule") : t("common.starModule")}
                 side="top"
               >
                 <button
@@ -541,54 +561,59 @@ export default function ModuleCard({
                       ? "text-gold hover:text-muted"
                       : "text-muted hover:text-gold"
                   )}
-                  aria-label={
-                    isStarred ? "Remove from favorites" : "Add to favorites"
-                  }
+                    aria-label={
+                      isStarred ? t("common.removeFromFavorites") : t("common.addToFavorites")
+                    }
                 >
                   <Star
                     size={12}
                     fill={isStarred ? "currentColor" : "none"}
                     className={cn(
-                      isStarred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
+                      isStarred
+                        ? "hover:fill-none h-[1em] w-[1em]"
+                        : "hover:fill-current h-[1em] w-[1em]"
                     )}
                     aria-hidden="true"
                   />
                 </button>
               </TooltipWrapper>
 
-              {/* {isInstructorOrTA && ( //TODO figure this out later
-                <TooltipWrapper content="View Reports">
+              {isInstructorOrTA && ( //TODO figure this out later
+                <TooltipWrapper content={t("common.view") + " " + t("common.reports")}>
                   <button
                     onClick={() =>
                       navigator(`/dashboard/${course.id}/${module.id}`)
                     }
                     className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                    aria-label="View module reports"
+                    aria-label={t("common.view") + " " + t("common.module") + " " + t("common.reports")}
                   >
                     <Eye className="h-[1em] w-[1em]" aria-hidden="true" />
                   </button>
                 </TooltipWrapper>
-              )} */}
+              )}
 
               {isInstructorOrTA && (
                 <DropdownWrapper
                   trigger={
                     <button
-                      className="p-1 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                      className="p-1 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
-                      aria-label="Module options menu"
+                      aria-label={t("common.moduleOptions")}
                     >
-                      <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
+                      <MoreHorizontal
+                        className="h-[1em] w-[1em]"
+                        aria-hidden="true"
+                      />
                     </button>
                   }
                   actions={(user?.groups.includes(course.id) &&
-                    (course.instructor.username === user.username ||
-                      (course.taList &&
-                        course.taList.find(
-                          (a: CustomUserType) => a.username === user?.username
-                        )))
+                  (course.instructor.username === user.username ||
+                    (course.taList &&
+                      course.taList.find(
+                        (a: CustomUserType) => a.username === user?.username
+                      )))
                     ? ownerMenu
                     : nonOwnerMenu
                   ).map((item) => ({
@@ -605,7 +630,7 @@ export default function ModuleCard({
                   }))}
                   open={menuOpen}
                   onOpenChange={setMenuOpen}
-                  tooltipContent="Module Options"
+                  tooltipContent={t("common.moduleOptions")}
                   tooltipSide="top"
                 />
               )}
@@ -627,7 +652,7 @@ export default function ModuleCard({
             ) : (
               <Play size={14} aria-hidden="true" />
             )}
-            Begin Module
+            {t("modules.beginModule")}
           </Button>
         </div>
       </article>

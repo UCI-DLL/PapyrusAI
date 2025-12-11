@@ -1,7 +1,6 @@
 import React from "react";
 import { Button } from "../../../components/ui/button";
-import { DropdownWrapper } from "../../../components/ui-wrappers/DropdownWrapper";
-import { MessageSquare, MoreVertical, PanelRightOpen } from "lucide-react";
+import { MessageSquare, PanelRightOpen } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 
@@ -11,9 +10,6 @@ interface ChatHeaderProps {
   moduleInfo: ModuleType;
   user?: UserType | null;
   viewUser?: UserType;
-  onRename: () => void;
-  onDownload: () => void;
-  onHide: () => void;
   onToggleSidebar: () => void;
   isMobile?: boolean;
 }
@@ -24,14 +20,9 @@ export default function ChatHeader({
   moduleInfo,
   user,
   viewUser,
-  onRename,
-  onDownload,
-  onHide,
   onToggleSidebar,
   isMobile = false,
 }: ChatHeaderProps): JSX.Element {
-  const canModifyConversation =
-    user && viewUser && user.username === viewUser.username;
 
   return (
     <div className="bg-card border-b border-border px-4 py-3 sticky top-0 z-20">
@@ -48,32 +39,6 @@ export default function ChatHeader({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <DropdownWrapper
-            trigger={
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="More Options">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            }
-            actions={[
-              {
-                label: "Rename",
-                onClick: onRename,
-              },
-              {
-                label: "Download",
-                onClick: onDownload,
-              },
-              ...(canModifyConversation
-                ? [
-                  {
-                    label: "Archive Conversation",
-                    onClick: onHide,
-                  },
-                ]
-                : []),
-            ]}
-            align="end"
-          />
           {isMobile && (
             <Button
               variant="ghost"

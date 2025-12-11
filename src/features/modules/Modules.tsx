@@ -11,11 +11,13 @@ import { UserStarred } from "../../utility/types/UserTypes";
 import { Loader2, PlusIcon, GraduationCap, ChartColumnBig, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "../../components/ui/input";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function Modules(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
   const [course, setCourse] = useState<CourseType>();
@@ -54,7 +56,7 @@ export default function Modules(): JSX.Element {
         if (res === undefined) {
         } else {
           //handle error
-          setError("Course Does Not Exist");
+          setError(t("courses.courseDoesNotExist"));
           setIsLoading(false);
         }
       }
@@ -111,7 +113,7 @@ export default function Modules(): JSX.Element {
             className="h-8 w-8 animate-spin text-primary"
             aria-hidden="true"
           />
-          <p className="text-muted-foreground">Loading Modules</p>
+          <p className="text-muted-foreground">{t("modules.loadingModules")}</p>
         </div>
       </div>
     );
@@ -133,8 +135,8 @@ export default function Modules(): JSX.Element {
               <div className="flex-1">
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   {course?.name
-                    ? `${course.name} Modules`
-                    : "Available Modules"}
+                    ? `${course.name} ${t("common.modules")}`
+                    : t("modules.availableModules")}
                 </h1>
               </div>
 
@@ -149,7 +151,7 @@ export default function Modules(): JSX.Element {
                       className="no-underline hover:text-white"
                     >
                       <ChartColumnBig className="w-4 h-4" aria-hidden="true" />
-                      View Reports
+                      {t("common.view")} {t("common.reports")}
                     </Link>
                   </Button>
                 )}
@@ -160,7 +162,7 @@ export default function Modules(): JSX.Element {
                       className="no-underline hover:text-white "
                     >
                       <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                      Create Module
+                      {t("common.create")} {t("common.module")}
                     </Link>
                   </Button>
                 )}
@@ -176,44 +178,27 @@ export default function Modules(): JSX.Element {
                       }`
                       : `${course.term ?? ""}${course.year ?? ""}`}
                   </p>
-                  <span className="text-sm text-muted-foreground m-0">Term</span>
+                  <span className="text-sm text-muted-foreground m-0">{t("modules.term")}</span>
                 </div>
                 <div className="mr-4">
                   <p className="text-md m-0">
                     {course.instructor.name}{" "}
                     {course.instructor.family_name}
                   </p>
-                  <span className="text-sm text-muted-foreground m-0">Instructor</span>
+                  <span className="text-sm text-muted-foreground m-0">{t("common.instructor")}</span>
                 </div>
                 <div className="mr-4">
                   <p className="text-md m-0">
                     {course.modules.filter(x => x.isPublished).length}
                   </p>
-                  <span className="text-sm text-muted-foreground m-0">Published Modules</span>
+                  <span className="text-sm text-muted-foreground m-0">{t("modules.publishedModules")}</span>
                 </div>
               </div>
             )}
 
             {course && course.modules.length > 0 && (
               <p className="text-muted-foreground text-sm max-w-3xl">
-                To access a module, click the "Begin Module" button for the
-                desired module.
-                {isInstructor && (
-                  <>
-                    {" "}
-                    For information on creating, editing, copying, or viewing
-                    activity for a module, please see the{" "}
-                    <a
-                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                    >
-                      "Modules" section of our instructor guide
-                    </a>
-                    .
-                  </>
-                )}
+                {t("modules.moduleListDescription")}
               </p>
             )}
           </div>
@@ -238,7 +223,7 @@ export default function Modules(): JSX.Element {
               <Input
                 id="module-content"
                 type="text"
-                placeholder="Search modules..."
+                placeholder={t("modules.searchModules")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -260,14 +245,13 @@ export default function Modules(): JSX.Element {
                 role="status"
               >
                 <GraduationCap className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">No modules available</p>
+                <p className="text-lg font-medium mb-2">{t("modules.noModulesAvailable")}</p>
                 <p className="text-sm">
-                  No modules in this course are currently available to you.
+                  {t("modules.noModulesAvailable")}
                   {isInstructor && (
                     <>
                       {" "}
-                      To create a module, go to the course in which you would
-                      like to create the module.
+                      {t("modules.createModulePrompt")}
                     </>
                   )}
                 </p>

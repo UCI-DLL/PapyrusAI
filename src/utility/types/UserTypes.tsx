@@ -7,6 +7,7 @@ export type UserType = {
   sub: string; //username
   "custom:theme": string;
   "custom:textSize": string;
+  "custom:language": string;
   username: string;
 };
 

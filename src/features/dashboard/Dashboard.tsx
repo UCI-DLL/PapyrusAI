@@ -12,21 +12,23 @@ import { Button } from "../../components/ui/button";
 import { useNavigate } from "react-router";
 import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
-import { CourseType } from "../../utility/types/CourseTypes";
+import type { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
-import AddCourseForm, {
+import AddCourseForm, { type
   AddCourseFormHandle,
 } from "../course-groups/AddCourseForm";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
-import { UserStarred } from "../../utility/types/UserTypes";
-import { ExternalLink, EyeIcon, Loader2, PlusIcon, Target } from "lucide-react";
+import type { UserStarred } from "../../utility/types/UserTypes";
+import { ExternalLink, EyeIcon, PlusIcon, Target } from "lucide-react";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { Link } from "react-router-dom";
+import { PageLoader, PageHeaderCard } from "../../components/Common";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function Dashboard(): JSX.Element {
-  let navigator = useNavigate();
+  const navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
@@ -117,43 +119,15 @@ export default function Dashboard(): JSX.Element {
     [user?.groups]
   );
 
-  if (isLoading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Loader2
-            className="h-8 w-8 animate-spin text-primary"
-            aria-hidden="true"
-          />
-          <p className="text-muted-foreground">Loading Dashboard</p>
-        </div>
-      </div>
-    );
-  }
+  const { t } = useTranslation();
 
+  if (isLoading) {
+    return <PageLoader pageName="Dashboard" />
+  }
+  
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      {/* Standard Page Header Pattern */}
-      <header className="animate-in slide-in-from-bottom-4 duration-700">
-        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
-          <div
-            className="absolute top-0 right-0 w-48 h-48 opacity-10"
-            aria-hidden="true"
-          >
-            <Target size={192} className="text-primary" />
-          </div>
-
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-              Welcome back, {user?.name}!
-            </h1>
-          </div>
-        </div>
-      </header>
+      <PageHeaderCard title={t("dashboard.welcome") + ", " + user?.name + "!"} icon={<Target size={192} className="text-primary" />} />
 
       {/* Courses Section */}
       <section aria-labelledby="courses-heading">
@@ -163,7 +137,7 @@ export default function Dashboard(): JSX.Element {
               id="courses-heading"
               className="text-2xl font-bold text-foreground mb-1"
             >
-              My Courses
+              {t("dashboard.myCourses")}
             </h2>
           </div>
           <nav
@@ -178,7 +152,7 @@ export default function Dashboard(): JSX.Element {
             >
               <Link to="/courses" className="no-underline">
                 <EyeIcon className="w-4 h-4" aria-hidden="true" />
-                View All
+                {t("common.viewAll")}
               </Link>
             </Button>
             {isInstructor && (
@@ -190,7 +164,7 @@ export default function Dashboard(): JSX.Element {
               >
                 <Link to="/createcourse" className="no-underline">
                   <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                  Create Course
+                  {t("dashboard.createCourse")}
                 </Link>
               </Button>
             )}
@@ -200,23 +174,23 @@ export default function Dashboard(): JSX.Element {
               onClick={() => setShowAddCourseModal(true)}
             >
               <ExternalLink className="w-4 h-4" aria-hidden="true" />
-              Join Course
+              {t("dashboard.joinCourse")}
             </Button>
 
             <DialogWrapper
               open={showAddCourseModal}
               onOpenChange={setShowAddCourseModal}
-              title="Join Course by Sign Up Code"
-              description="Enter the unique course sign up code associated with the course you want to join. Not sure what the sign up code is? Ask the instructor of the course!"
+              title={t("dashboard.joinCourseByCode")}
+              description={t("dashboard.joinCourseDescription")}
               contentClassName="sm:max-w-md"
               actions={[
                 {
-                  label: "Cancel",
+                  label: t("common.cancel"),
                   onClick: () => setShowAddCourseModal(false),
                   variant: "outline",
                 },
                 {
-                  label: isJoiningCourse ? "Joining..." : "Join Course",
+                  label: isJoiningCourse ? t("dashboard.joining") : t("dashboard.joinCourse"),
                   onClick: () => addCourseFormRef.current?.handleSubmit(),
                   disabled: isJoiningCourse,
                 },
@@ -244,10 +218,9 @@ export default function Dashboard(): JSX.Element {
               role="status"
             >
               <Target className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No courses found</p>
+              <p className="text-lg font-medium mb-2">{t("courses.noCoursesFound")}</p>
               <p className="text-sm">
-                No courses added yet. To join a course, click "Join Course"
-                above.
+                {t("courses.noCoursesAdded")}
               </p>
             </div>
           )}
@@ -262,7 +235,7 @@ export default function Dashboard(): JSX.Element {
               id="modules-heading"
               className="text-2xl font-bold text-foreground mb-1"
             >
-              Recent Modules
+              {t("dashboard.recentModules")}
             </h2>
           </div>
 
@@ -274,7 +247,7 @@ export default function Dashboard(): JSX.Element {
           >
             <Link to="/modules" className="no-underline">
               <EyeIcon className="w-4 h-4" aria-hidden="true" />
-              View All
+              {t("common.viewAll")}
             </Link>
           </Button>
         </header>
@@ -308,11 +281,11 @@ export default function Dashboard(): JSX.Element {
               role="status"
             >
               <Target className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No recent modules</p>
+              <p className="text-lg font-medium mb-2">{t("dashboard.recentModules")}</p>
               <p className="text-sm">
                 {courseList.length === 0
-                  ? "Join a course to access modules and start learning."
-                  : "No modules available in your courses yet."}
+                  ? t("dashboard.pickup")
+                  : t("modules.noModulesAvailable")}
               </p>
             </div>
           )}

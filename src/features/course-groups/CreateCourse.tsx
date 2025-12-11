@@ -54,6 +54,7 @@ import { CustomUserType, UserType } from "../../utility/types/UserTypes";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { cn } from "../../lib/utils";
+import { useTranslation } from "../../hooks/useTranslation";
 
 type CourseFormType = {
   name: string;
@@ -73,11 +74,7 @@ interface CourseFormProps {
   courseId?: string;
 }
 
-const options = [
-  "Save & Publish",
-  "Save without Publishing",
-  "Discard Changes",
-];
+// Options will be translated in the component
 
 export default function CreateCourse({
   mode = "create",
@@ -85,12 +82,20 @@ export default function CreateCourse({
 }: CourseFormProps = {}): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
+  const { t } = useTranslation();
 
   // Determine if we're in edit mode based on URL or props
   const isEditMode =
     mode === "edit" || location.pathname.includes("/editcourse/");
   const actualCourseId =
     courseId || (isEditMode ? location.pathname.split("/")[2] : undefined);
+
+  // Translated options
+  const options = [
+    t("createCourse.savePublish"),
+    t("createCourse.saveNoPublish"),
+    t("createCourse.discardChanges"),
+  ];
 
   const [session, setSession] = useState<CourseFormType>({
     name: "",
@@ -274,9 +279,9 @@ export default function CreateCourse({
 
   function handleSubmit(e: any, isActive = false, isDeleted = false) {
     if (session.name === "") {
-      setErrors((prev) => ({ ...prev, name: "Name missing" }));
+      setErrors((prev) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
     } else if (session.signUpCode === "") {
-      setErrors((prev) => ({ ...prev, signUpCode: "Sign up code missing" }));
+      setErrors((prev) => ({ ...prev, signUpCode: t("courses.signUpCodeMissing") }));
     } else {
       // set is loading
       setIsLoading(true);
@@ -301,7 +306,7 @@ export default function CreateCourse({
                 //redirect to course list
                 navigator("/courses");
                 //pop up notifying user of update
-                setAlert({ message: "Course Updated", type: "success" });
+                setAlert({ message: t("createCourse.courseUpdated"), type: "success" });
               }
             } else if (res && res.status === 401) {
               navigator("/login");
@@ -320,7 +325,7 @@ export default function CreateCourse({
                 //redirect to course list
                 navigator("/courses");
                 //pop up notifying user of update
-                setAlert({ message: "Course Updated", type: "success" });
+                setAlert({ message: t("createCourse.courseUpdated"), type: "success" });
               }
             } else if (res && res.status === 401) {
               navigator("/login");
@@ -358,7 +363,7 @@ export default function CreateCourse({
               //redirect to course list
               navigator("/courses");
               // pop up notifying user of creation
-              setAlert({ message: "Course Created", type: "success" });
+              setAlert({ message: t("createCourse.courseCreated"), type: "success" });
             }
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -409,27 +414,18 @@ export default function CreateCourse({
       <DialogWrapper
         open={showSavePublishTooltip}
         onOpenChange={setShowSavePublishTooltip}
-        title="What is Save & Publish?"
+        title={t("createCourse.whatIsSavePublish")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Got it",
+            label: t("common.gotIt"),
             onClick: () => setShowSavePublishTooltip(false),
           },
         ]}
       >
         <div className="space-y-3">
           <p>
-            To save and publish (i.e., make visible to students) your course,
-            select <strong>"Save & Publish"</strong>.
-          </p>
-          <p>
-            If you want to save your course without publishing the course,
-            select <strong>"Save without Publishing"</strong>.
-          </p>
-          <p className="text-amber-600 dark:text-amber-500 colorful-dark:text-amber-500 text-sm">
-            <strong>Note:</strong> Choosing this option after the course has
-            already been published will unpublish the course.
+            {t("createCourse.savePublishDescription")}
           </p>
         </div>
       </DialogWrapper>
@@ -437,17 +433,17 @@ export default function CreateCourse({
       <DialogWrapper
         open={openDiscardModal}
         onOpenChange={setOpenDiscardModal}
-        title="Discard Changes?"
-        description="Are you sure you would like to discard the changes to this course? This action cannot be undone."
+        title={t("createCourse.discardChangesTitle")}
+        description={t("createCourse.discardChangesDescription")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDiscardModal(false),
             variant: "outline",
           },
           {
-            label: "Discard Changes",
+            label: t("createCourse.discardChanges"),
             onClick: () => navigator(-1),
             variant: "destructive",
           },
@@ -460,17 +456,17 @@ export default function CreateCourse({
           <DialogWrapper
             open={openDeleteModal}
             onOpenChange={setOpenDeleteModal}
-            title="Delete Course?"
-            description="Are you sure you would like to permanently delete this course? This action cannot be undone."
+            title={t("createCourse.deleteCourse")}
+            description={t("createCourse.deleteCourseDescription")}
             contentClassName="sm:max-w-md"
             actions={[
               {
-                label: "Cancel",
+                label: t("common.cancel"),
                 onClick: () => setOpenDeleteModal(false),
                 variant: "outline",
               },
               {
-                label: "Delete Course",
+                label: t("createCourse.deleteCourse"),
                 onClick: () => handleSubmit(null, false, true),
                 variant: "destructive",
               },
@@ -480,17 +476,17 @@ export default function CreateCourse({
           <DialogWrapper
             open={openActiveModal}
             onOpenChange={setOpenActiveModal}
-            title="Unpublish Course?"
-            description="This course is currently published and available to the public. Continuing will make the course unavailable to students."
+            title={t("createCourse.unpublishCourse")}
+            description={t("createCourse.unpublishCourseDescription")}
             contentClassName="sm:max-w-md"
             actions={[
               {
-                label: "Cancel",
+                label: t("common.cancel"),
                 onClick: () => setOpenActiveModal(false),
                 variant: "outline",
               },
               {
-                label: "Continue",
+                label: t("common.continue"),
                 onClick: () => handleSubmit(null, false, false),
                 variant: "default",
               },
@@ -517,8 +513,8 @@ export default function CreateCourse({
                   <div>
                     <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                       {isEditMode
-                        ? `Edit ${prevSession?.name || "Course"}`
-                        : "Create Course"}
+                        ? t("createCourse.editCourse", { courseName: prevSession?.name || t("common.courses") })
+                        : t("createCourse.createCourse")}
                     </h1>
                     {isEditMode && (
                       <div className="flex items-center gap-2">
@@ -530,18 +526,13 @@ export default function CreateCourse({
                               className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-white 
                               colorful-dark:bg-green-900 colorful-dark:text-white pointer-events-none"
                             >
-                              Published
+                              {t("common.published")}
                             </Badge>
                           </>
                         ) : (
                           <>
                             <XCircle className="h-5 w-5 text-gray-500" />
-                            <Badge
-                              className="pointer-events-none"
-                              variant="secondary"
-                            >
-                              Unpublished
-                            </Badge>
+                            <Badge className="pointer-events-none" variant="secondary">{t("common.unpublished")}</Badge>
                           </>
                         )}
                       </div>
@@ -654,25 +645,17 @@ export default function CreateCourse({
                   Basic Information
                 </CardTitle>
                 <CardDescription>
-                  Enter the essential details for your course. Fields marked
-                  with * are required.
+                  {t("createCourse.enterCourseInfo")}. {t("common.required")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="name" className="text-sm font-medium">
-                      Course Name *
+                      {t("createCourse.courseName")} *
                     </Label>
-                    <TooltipWrapper
-                      content="The name for your course that users will see upon
-                            joining."
-                    >
-                      <button
-                        type="button"
-                        aria-label="The name for your course that users will see upon
-                            joining."
-                      >
+                    <TooltipWrapper content={t("createCourse.courseNameDescription")}>
+                      <button type="button" aria-label={t("createCourse.courseNameDescription")}>
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                       </button>
                     </TooltipWrapper>
@@ -705,19 +688,10 @@ export default function CreateCourse({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="signUpCode" className="text-sm font-medium">
-                      Course Sign Up Code *
+                      {t("createCourse.courseSignUpCode")} *
                     </Label>
-                    <TooltipWrapper
-                      content="The unique sign up code that users will use to join
-                            your course. You can use any combination of letters
-                            and numbers. This is case sensitive."
-                    >
-                      <button
-                        type="button"
-                        aria-label="The unique sign up code that users will use to join
-                            your course. You can use any combination of letters
-                            and numbers. This is case sensitive."
-                      >
+                    <TooltipWrapper content={t("createCourse.courseSignUpCodeDescription")}>
+                      <button type="button" aria-label={t("createCourse.courseSignUpCodeDescription")}>
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                       </button>
                     </TooltipWrapper>
@@ -755,11 +729,10 @@ export default function CreateCourse({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-green-600" />
-                  Schedule Information
+                  {t("createCourse.scheduleInformation")}
                 </CardTitle>
                 <CardDescription>
-                  Specify when this course takes place to help organize your
-                  curriculum.
+                  {t("createCourse.scheduleInformationDescription")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -767,13 +740,10 @@ export default function CreateCourse({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label htmlFor="year" className="text-sm font-medium">
-                        Year
+                        {t("common.year")}
                       </Label>
-                      <TooltipWrapper content="The year in which your course is taking place.">
-                        <button
-                          type="button"
-                          aria-label="The year in which your course is taking place."
-                        >
+                      <TooltipWrapper content={t("createCourse.yearDescription")}>
+                        <button type="button" aria-label={t("createCourse.yearDescription")}>
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>
@@ -810,13 +780,10 @@ export default function CreateCourse({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label htmlFor="term" className="text-sm font-medium">
-                        Term
+                        {t("common.term")}
                       </Label>
-                      <TooltipWrapper content="The term in which your course is taking place.">
-                        <button
-                          type="button"
-                          aria-label="The term in which your course is taking place."
-                        >
+                      <TooltipWrapper content={t("createCourse.termDescription")}>
+                        <button type="button" aria-label={t("createCourse.termDescription")}>
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>
@@ -832,16 +799,16 @@ export default function CreateCourse({
                           errors.term &&
                           "border-destructive focus-visible:ring-destructive"
                         )}
-                        aria-label="Select Term"
+                        aria-label={t("createCourse.selectTerm")}
                       >
                         <Clock className="h-4 w-4 text-muted-foreground" />
-                        <SelectValue placeholder="Select term" />
+                        <SelectValue placeholder={t("createCourse.selectTerm")} />
                       </SelectTrigger>
-                      <SelectContent aria-label="Select Term">
-                        <SelectItem value="spring">Spring</SelectItem>
-                        <SelectItem value="summer">Summer</SelectItem>
-                        <SelectItem value="fall">Fall</SelectItem>
-                        <SelectItem value="winter">Winter</SelectItem>
+                      <SelectContent aria-label={t("createCourse.selectTerm")}>
+                        <SelectItem value="spring">{t("common.spring")}</SelectItem>
+                        <SelectItem value="summer">{t("common.summer")}</SelectItem>
+                        <SelectItem value="fall">{t("common.fall")}</SelectItem>
+                        <SelectItem value="winter">{t("common.winter")}</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.term && (
@@ -859,13 +826,10 @@ export default function CreateCourse({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label htmlFor="section" className="text-sm font-medium">
-                        Section / Period
+                        {t("createCourse.sectionPeriod")}
                       </Label>
-                      <TooltipWrapper content="The section number or period for your course.">
-                        <button
-                          type="button"
-                          aria-label="The section number or period for your course."
-                        >
+                      <TooltipWrapper content={t("createCourse.sectionPeriodDescription")}>
+                        <button type="button" aria-label={t("createCourse.sectionPeriodDescription")}>
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </button>
                       </TooltipWrapper>
@@ -873,7 +837,7 @@ export default function CreateCourse({
                     <Input
                       id="section"
                       name="section"
-                      placeholder="Section 02"
+                      placeholder={t("createCourse.sectionPeriodHelpText")}
                       value={session.section}
                       onChange={handleChange}
                       disabled={isLoading}
@@ -903,19 +867,17 @@ export default function CreateCourse({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-purple-600" />
-                  Teaching Assistants
+                  {t("createCourse.teachingAssistants")}
                 </CardTitle>
                 <CardDescription>
-                  Add teaching assistants who can help manage your course. They
-                  can create and edit modules but cannot delete or unpublish the
-                  course.
+                  {t("createCourse.teachingAssistantsDescription")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {session.taList.length > 0 && (
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">
-                      Selected Teaching Assistants
+                      {t("createCourse.selectedTeachingAssistants")}
                     </Label>
                     <div className="flex flex-wrap gap-2">
                       {session.taList.map(
@@ -958,12 +920,8 @@ export default function CreateCourse({
                 )}
 
                 <div className="space-y-2">
-                  <Label
-                    id="taLabel"
-                    htmlFor="taSelect"
-                    className="text-sm font-medium"
-                  >
-                    Add Teaching Assistant
+                  <Label id="taLabel" htmlFor="taSelect" className="text-sm font-medium">
+                    {t("common.add")} {t("createCourse.teachingAssistants")}
                   </Label>
                   <Select
                     onValueChange={(value) => {
@@ -974,7 +932,7 @@ export default function CreateCourse({
                         if (session.taList.length >= 10) {
                           setErrors((prev) => ({
                             ...prev,
-                            taList: "Max 10 Teaching Assistants",
+                            taList: t("createCourse.maxTeachingAssistants"),
                           }));
                         } else if (
                           !session.taList.find(
@@ -993,7 +951,7 @@ export default function CreateCourse({
                   >
                     <SelectTrigger id="taSelect" aria-labelledby="taLabel">
                       <Users className="h-4 w-4 text-muted-foreground" />
-                      <SelectValue placeholder="Select a teaching assistant to add..." />
+                      <SelectValue placeholder={t("createCourse.selectTeachingAssistant")} />
                     </SelectTrigger>
                     <SelectContent>
                       {userList.filter(
@@ -1004,7 +962,7 @@ export default function CreateCourse({
                           )
                       ).length === 0 ? (
                         <div className="p-3 text-sm text-muted-foreground text-center">
-                          No more users available to add
+                          {t("createCourse.noMoreUsersAvailable")}
                         </div>
                       ) : (
                         userList

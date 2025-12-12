@@ -131,7 +131,7 @@ export default function ModuleList({
         if (res === undefined) {
         } else {
           setAlert({
-            message: "No Courses Found. Cannot copy module.",
+            message: t("components.noCoursesFoundCannotCopy"),
             type: "error",
           });
           setIsLoading(false);
@@ -154,7 +154,7 @@ export default function ModuleList({
         if (res.data && res.data) {
           setOpenCourseListModal(false);
           setAlert({
-            message: "Module copied to course",
+            message: t("components.moduleCopiedToCourse"),
             type: "success",
           });
           setDuplicateModuleData({
@@ -240,8 +240,7 @@ export default function ModuleList({
             navigator("/login");
           } else {
             setAlert({
-              message:
-                "Something went wrong creating a new conversation. Try again later",
+              message: t("components.somethingWentWrongCreatingConversation"),
               type: "error",
             });
           }
@@ -250,14 +249,13 @@ export default function ModuleList({
         navigator("/login");
       } else {
         setAlert({
-          message:
-            "Something went wrong loading conversations. Try again later",
+          message: t("components.somethingWentWrongLoadingConversations"),
           type: "error",
         });
       }
     } catch (error) {
       setAlert({
-        message: "Something went wrong. Try again later",
+        message: t("components.somethingWentWrong"),
         type: "error",
       });
     } finally {
@@ -275,14 +273,14 @@ export default function ModuleList({
         if (res.data && res.data.modules) {
           setStarredModules(res.data.modules);
           setAlert({
-            message: "Module added to favorites.",
+            message: t("components.moduleAddedToFavorites"),
             type: "success",
           });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to star module", type: "error" });
+        setAlert({ message: t("components.failedToStarModule"), type: "error" });
       }
       setIsLoading(false);
     });
@@ -298,14 +296,14 @@ export default function ModuleList({
         if (res.data && res.data.modules) {
           setStarredModules(res.data.modules);
           setAlert({
-            message: "Module removed from favorites.",
+            message: t("components.moduleRemovedFromFavorites"),
             type: "success",
           });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        setAlert({ message: "Failed to unstar module", type: "error" });
+        setAlert({ message: t("components.failedToUnstarModule"), type: "error" });
       }
       setIsLoading(false);
     });
@@ -340,12 +338,12 @@ export default function ModuleList({
           <DialogWrapper
             open={openCourseListModal}
             onOpenChange={setOpenCourseListModal}
-            title="Copy Module To?"
-            description="Please select a course you would like to copy this module to. Copying a module will copy over all module customizations, including the module name, description, added assets, and settings."
+            title={t("components.copyModuleTo")}
+            description={t("components.copyModuleToDescription")}
             contentClassName="sm:max-w-5xl max-h-[90vh] overflow-y-auto"
             actions={[
               {
-                label: "Close",
+                label: t("common.close"),
                 onClick: () => setOpenCourseListModal(false),
                 variant: "outline",
               },
@@ -390,8 +388,8 @@ export default function ModuleList({
                 copyCourseId: "",
               })
             }
-            title="Duplicate Module"
-            description="Please enter a unique name for your module. Duplicating the module will also copy over all settings within this module."
+            title={t("components.duplicateModule")}
+            description={t("components.duplicateModuleDescription")}
             contentClassName="sm:max-w-md"
             showFooter={false}
           >
@@ -403,11 +401,11 @@ export default function ModuleList({
               className="space-y-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="module-name">Module Name</Label>
+                <Label htmlFor="module-name">{t("components.moduleName")}</Label>
                 <Input
                   id="module-name"
                   name="name"
-                  placeholder="New Module Name"
+                  placeholder={t("components.newModuleName")}
                   value={duplicateModuleData.name}
                   onChange={handleChange}
                   required
@@ -432,7 +430,7 @@ export default function ModuleList({
                   htmlFor="publish-module"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Publish Module
+                  {t("components.publishModule")}
                 </label>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-end pt-4">
@@ -447,10 +445,10 @@ export default function ModuleList({
                     })
                   }
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button type="submit" disabled={isLoading}>
-                  Duplicate
+                  {t("common.duplicate")}
                 </Button>
               </div>
             </form>
@@ -674,7 +672,7 @@ export default function ModuleList({
                         <div className="flex items-center gap-1 ml-4 flex-shrink-0">
                           <TooltipWrapper
                             content={
-                              isStarred ? t("modules.unstarModule") : t("modules.starModule")
+                              isStarred ? t("common.unstarModule") : t("common.starModule")
                             }
                           >
                             <button
@@ -692,7 +690,7 @@ export default function ModuleList({
                                   : "text-muted hover:text-gold"
                               )}
                               aria-label={
-                                isStarred ? t("modules.unstarModule") : t("modules.starModule")
+                                isStarred ? t("common.unstarModule") : t("common.starModule")
                               }
                             >
                               <Star

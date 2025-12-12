@@ -21,6 +21,7 @@ import { onlyLettersAndNumbers } from "../../utility/Helpers";
 import ListFolders from "./ListFolders";
 import { Loader2, Tag, Folder, Trash2, Save } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -396,9 +397,11 @@ export default function Library(): JSX.Element {
                     )}
                 </nav>
               </div>
-              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+              <InfoAccordion>
+                <p className="text-muted-foreground max-w-2xl text-base leading-6">
                 {t("library.libraryDescription")}
               </p>
+              </InfoAccordion>
             </div>
           </div>
         </header>

@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from "react-router";
 import axios from "axios";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 
-
 interface LoginProps {
   setUser: (user: any) => void;
 }
@@ -18,10 +17,18 @@ export default function Login(props: LoginProps): JSX.Element {
     if (location.hash) {
       if (location.hash.split("#")[1].split("=")[0] === "error_description") {
         setTimeout(() => {
-          navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
+          navigator("/login-error", {
+            state: {
+              message: location.hash
+                .split("#")[1]
+                .split("=")[1]
+                .split("&")[0]
+                .replaceAll("+", " "),
+            },
+          });
         }, 500);
       } else {
-        const hash = location.hash.split("&")
+        const hash = location.hash.split("&");
         var token = "";
         if (hash[0].startsWith("#id")) {
           //get access token if normal login
@@ -30,33 +37,37 @@ export default function Login(props: LoginProps): JSX.Element {
           //get access token if google login
           token = location.hash.split("&")[0].split("=")[1];
         }
+        // const
         localStorage.setItem("papyrusai_access_token", token);
         setTimeout(() => {
-          getUserInfo(token)
+          getUserInfo(token);
         }, 500);
-
       }
     }
     // Place any token found in params into local storage
-    else if (new URLSearchParams(location.search).has("papyrusai_access_token")) {
+    else if (
+      new URLSearchParams(location.search).has("papyrusai_access_token")
+    ) {
       const params = new URLSearchParams(location.search);
       const token = params.get("papyrusai_access_token") as string;
       localStorage.setItem("papyrusai_access_token", token);
       setTimeout(() => {
         getUserInfo(token);
       }, 500);
-    }
-    else if (!localStorage.getItem("papyrusai_access_token")) {
-      window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-    }
-    else {
+    } else if (!localStorage.getItem("papyrusai_access_token")) {
+      window.location.replace(
+        process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : ""
+      );
+    } else {
       navigator("/");
     }
     // eslint-disable-next-line
   }, []);
 
   function getUserInfo(token: string) {
-    const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
+    const API_URL =
+      (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") +
+      getUserData();
     axios
       .get(API_URL, {
         headers: {
@@ -66,21 +77,29 @@ export default function Login(props: LoginProps): JSX.Element {
       .then((response) => {
         props.setUser(response.data);
         localStorage.setItem("papyrusai_user", JSON.stringify(response.data));
-        navigator("/")
+        navigator("/");
         // return response;
       })
       .catch(function (error) {
-        console.log("error", error)
+        console.log("error", error);
         if (error.code === "ERR_CANCELED") return;
         if (error.code === "ERR_NETWORK") {
-          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+          // window.location.replace(
+          //   process.env.REACT_APP_LOGIN_URL
+          //     ? process.env.REACT_APP_LOGIN_URL
+          //     : ""
+          // );
         }
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           // showMsg(Object.values(error.response.data), "error");
           if (error.response.status === 401) {
-            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+            window.location.replace(
+              process.env.REACT_APP_LOGIN_URL
+                ? process.env.REACT_APP_LOGIN_URL
+                : ""
+            );
           }
           return error.response;
         } else if (error.request) {
@@ -94,12 +113,7 @@ export default function Login(props: LoginProps): JSX.Element {
       });
   }
 
-  return (
-    <div>
-    </div>
-  )
-
-
+  return <div></div>;
 
   // NOTE: THIS IS THE NON AWS LOGIN PAGE
   // const [session, setSession] = useState({

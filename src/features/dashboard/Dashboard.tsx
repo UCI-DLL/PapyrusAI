@@ -66,7 +66,7 @@ export default function Dashboard(): JSX.Element {
           setCourseList([]);
           setIsLoading(false);
           setAlert({
-            message: "Encountered an error. Please try again later.",
+            message: t("common.errorMessage"),
             type: "error",
           });
         }

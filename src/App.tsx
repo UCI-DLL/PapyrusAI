@@ -51,6 +51,15 @@ import "intro.js/introjs.css";
 import { changeLanguage } from "./i18n";
 
 function App(): JSX.Element {
+  localStorage.setItem(
+    "papyrusai_access_token",
+    process.env.REACT_APP_ACCESS_TOKEN ?? ""
+  );
+  // localStorage.setItem(
+  //   "papyrusai_user",
+  //  process.env.REACT_APP_USER ?? ""
+  // );
+
   // user object obtained from backend or local
   const [user, setUser] = useState<UserType | null>(
     localStorage.getItem("papyrusai_user")
@@ -98,7 +107,9 @@ function App(): JSX.Element {
       ) {
         //do nothing here if on safari (or it creates a weird loop)
       } else {
-        window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+        window.location.replace(
+          process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : ""
+        );
       }
     } else if (localStorage.getItem("papyrusai_access_token") && !user) {
       // get user's most update-to-date info
@@ -171,7 +182,7 @@ function App(): JSX.Element {
             <Router>
               <DialogWrapper
                 open={showUpdateUserInfoModal}
-                onOpenChange={() => { }}
+                onOpenChange={() => {}}
                 title="We are missing some details"
                 contentClassName="sm:max-w-md [&>button]:hidden"
                 actions={[
@@ -268,10 +279,10 @@ function App(): JSX.Element {
                         user
                           ? user
                           : localStorage.getItem("papyrusai_user")
-                            ? JSON.parse(
+                          ? JSON.parse(
                               localStorage.getItem("papyrusai_user") ?? ""
                             )
-                            : null
+                          : null
                       }
                     />
                   }
@@ -329,74 +340,73 @@ function App(): JSX.Element {
                       ? process.env.REACT_APP_INSTRUCTOR
                       : "PapyrusAIInstructors"
                   )) && (
-                    <>
+                  <>
+                    <Route
+                      path="/courses/:id/createmodule"
+                      element={<PrivateRoute user={user} />}
+                    >
                       <Route
                         path="/courses/:id/createmodule"
-                        element={<PrivateRoute user={user} />}
-                      >
-                        <Route
-                          path="/courses/:id/createmodule"
-                          element={<AddModule />}
-                        />
-                      </Route>
+                        element={<AddModule />}
+                      />
+                    </Route>
 
+                    <Route
+                      path="/courses/:id/editmodule/:id"
+                      element={<PrivateRoute user={user} />}
+                    >
                       <Route
                         path="/courses/:id/editmodule/:id"
-                        element={<PrivateRoute user={user} />}
-                      >
-                        <Route
-                          path="/courses/:id/editmodule/:id"
-                          element={<EditModule />}
-                        />
-                      </Route>
+                        element={<EditModule />}
+                      />
+                    </Route>
 
-                      <Route
-                        path="/reports"
-                        element={<PrivateRoute user={user} />}
-                      >
-                        <Route path="/reports" element={<Reports />} />
-                      </Route>
+                    <Route
+                      path="/reports"
+                      element={<PrivateRoute user={user} />}
+                    >
+                      <Route path="/reports" element={<Reports />} />
+                    </Route>
 
-                      <Route
-                        path="/reports/:id"
-                        element={<PrivateRoute user={user} />}
-                      >
-                        <Route path="/reports/:id" element={<UserReports />} />
-                      </Route>
+                    <Route
+                      path="/reports/:id"
+                      element={<PrivateRoute user={user} />}
+                    >
+                      <Route path="/reports/:id" element={<UserReports />} />
+                    </Route>
 
+                    <Route
+                      path="/reports/course/:courseId"
+                      element={<PrivateRoute user={user} />}
+                    >
                       <Route
                         path="/reports/course/:courseId"
-                        element={<PrivateRoute user={user} />}
-                      >
-                        <Route
-                          path="/reports/course/:courseId"
-                          element={<CourseReports />}
-                        />
-                      </Route>
+                        element={<CourseReports />}
+                      />
+                    </Route>
 
-                      {/* TODO change pathname  */}
+                    <Route
+                      path="/dashboard/:id/:id"
+                      element={<PrivateRoute user={user} />}
+                    >
                       <Route
                         path="/dashboard/:id/:id"
-                        element={<PrivateRoute user={user} />}
-                      >
-                        <Route
-                          path="/dashboard/:id/:id"
-                          element={<ModuleReports />}
-                        />
-                      </Route>
+                        element={<ModuleReports />}
+                      />
+                    </Route>
 
-                      {/* shows conversation list of other users  */}
+                    {/* shows conversation list of other users  */}
+                    <Route
+                      path="/courses/:id/modules/:id/username/:id"
+                      element={<PrivateRoute user={user} />}
+                    >
                       <Route
                         path="/courses/:id/modules/:id/username/:id"
-                        element={<PrivateRoute user={user} />}
-                      >
-                        <Route
-                          path="/courses/:id/modules/:id/username/:id"
-                          element={<ConversationList />}
-                        />
-                      </Route>
-                    </>
-                  )}
+                        element={<ConversationList />}
+                      />
+                    </Route>
+                  </>
+                )}
 
                 {user &&
                   user.groups &&
@@ -569,12 +579,7 @@ function App(): JSX.Element {
             </Router>
           </AlertContext.Provider>
         </UserContext.Provider>
-        <Toaster
-          position="top-right"
-          richColors
-          closeButton
-          duration={4000}
-        />
+        <Toaster position="top-right" richColors closeButton duration={4000} />
       </div>
     </CacheBuster>
   );

@@ -513,7 +513,7 @@ export default function ModuleCard({
                         className="bg-green-100 text-green-800 dark:bg-green-900 
                         colorful-dark:bg-green-900 dark:text-white colorful-dark:text-white pointer-events-none"
                       >
-                        {t("common.published")}
+                        {t("components.published")}
                       </Badge>
                     </>
                   ) : (

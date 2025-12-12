@@ -70,7 +70,7 @@ export default function CourseCard({
         if (res.data && res.data) {
           setOpenDuplicateModal(false);
           setAlert({
-            message: "Course Duplicated",
+            message: t("courses.courseDuplicated"),
             type: "success",
           });
           setDuplicateCourseData({
@@ -97,14 +97,14 @@ export default function CourseCard({
 
   const ownerMenu = [
     {
-      label: "Edit Course",
+      label: t("courses.editCourse"),
       type: "link" as const,
       action: `/editcourse/${course.id}`,
     },
-    { label: "Duplicate", type: "function" as const, action: duplicateCourse },
+    { label: t("common.duplicate"), type: "function" as const, action: duplicateCourse },
   ];
   const nonOwnerMenu = [
-    { label: "Duplicate", type: "function" as const, action: duplicateCourse },
+    { label: t("common.duplicate"), type: "function" as const, action: duplicateCourse },
   ];
 
   function createStarredCourse(courseId: string) {
@@ -117,7 +117,7 @@ export default function CourseCard({
         if (res.data && res.data.courses) {
           setStarred(res.data.courses);
           setAlert({
-            message: "Course added to favorites.",
+            message: t("courses.courseAddedToFavorites"),
             type: "info",
           });
         }
@@ -140,7 +140,7 @@ export default function CourseCard({
         if (res.data && res.data.courses) {
           setStarred(res.data.courses);
           setAlert({
-            message: "Course removed from favorites.",
+            message: t("courses.courseRemovedFromFavorites"),
             type: "info",
           });
         }
@@ -156,7 +156,7 @@ export default function CourseCard({
   if (!course || !user) {
     return (
       <div className="text-center py-8 text-muted-foreground" role="status">
-        No available courses
+        {t("courses.noAvailableCourses")}
       </div>
     );
   }
@@ -166,17 +166,17 @@ export default function CourseCard({
       <DialogWrapper
         open={openDuplicateModal}
         onOpenChange={setOpenDuplicateModal}
-        title="Duplicate Course"
-        description="Enter a name and a unique sign up code for the duplicated course. Duplicating a course will also copy over all the modules and settings within this course."
+        title={t("courses.duplicateCourse")}
+        description={t("courses.duplicateCourseDescription")}
         showFooter={true}
         actions={[
           {
-            label: "Cancel",
+            label: t("common.cancel"),
             onClick: () => setOpenDuplicateModal(false),
             variant: "outline",
           },
           {
-            label: "Duplicate",
+            label: t("common.duplicate"),
             onClick: handleDuplicateCourse,
             variant: "default",
           },
@@ -185,12 +185,12 @@ export default function CourseCard({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="course-name" className="font-bold">
-              New Course Name
+              {t("courses.newCourseName")}
             </Label>
             <Input
               id="course-name"
               name="name"
-              placeholder="Enter new course name"
+              placeholder={t("courses.enterNewCourseName")}
               value={duplicateCourseData.name}
               onChange={handleChange}
               required
@@ -200,12 +200,12 @@ export default function CourseCard({
           </div>
           <div className="space-y-2">
             <Label htmlFor="signup-code" className="font-bold">
-              New Course Sign Up Code
+              {t("courses.newCourseSignUpCode")}
             </Label>
             <Input
               id="signup-code"
               name="signUpCode"
-              placeholder="Enter new sign up code"
+              placeholder={t("courses.enterNewSignUpCode")}
               value={duplicateCourseData.signUpCode}
               onChange={handleChange}
               required
@@ -227,7 +227,7 @@ export default function CourseCard({
               disabled={isLoading}
             />
             <Label id="publishCourseLabel" htmlFor="publish-course" className="font-bold leading-none">
-              Publish Course
+              {t("courses.publishCourse")}
             </Label>
           </div>
         </div>
@@ -279,7 +279,7 @@ export default function CourseCard({
               aria-label="Course actions"
             >
               <TooltipWrapper
-                content={starred ? "Unstar Course" : "Star Course"}
+                content={starred ? t("courses.unstarCourse") : t("courses.starCourse")}
                 side="top"
               >
                 <button
@@ -349,7 +349,7 @@ export default function CourseCard({
                     }))}
                     open={menuOpen}
                     onOpenChange={setMenuOpen}
-                    tooltipContent="Course Options"
+                    tooltipContent={t("courses.courseOptions")}
                     tooltipSide="top"
                   />
                 )}

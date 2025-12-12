@@ -10,6 +10,7 @@ import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { Loader2, BookOpen } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 export default function AllModules(): JSX.Element {
   let navigator = useNavigate();
@@ -123,9 +124,11 @@ export default function AllModules(): JSX.Element {
                 : "PapyrusAIInstructors"
             ) && (
                 <div className="mt-4">
-                  <p className="text-primary/80 text-sm leading-relaxed">
-                    {t("modules.allAvailableModulesDescription")}
-                  </p>
+                  <InfoAccordion>
+                    <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                      {t("modules.moduleListDescription")}
+                    </p>
+                  </InfoAccordion>
                 </div>
               )}
           </div>

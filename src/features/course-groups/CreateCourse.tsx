@@ -13,6 +13,7 @@ import {
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { Badge } from "../../components/ui/badge";
 import {
   Card,
@@ -174,7 +175,7 @@ export default function CreateCourse({
           if (res === undefined) {
           } else {
             //handle error
-            setError("Course Does Not Exist");
+            setError(t("courses.courseDoesNotExist"));
             setIsLoading(false);
           }
         }
@@ -400,8 +401,8 @@ export default function CreateCourse({
           />
           <p className="text-muted-foreground">
             {isEditMode
-              ? "Loading course..."
-              : "Loading course creation form..."}
+              ? t("courses.loadingCourses")
+              : t("createCourse.loadingCourseForm")}
           </p>
         </div>
       </div>
@@ -526,13 +527,13 @@ export default function CreateCourse({
                               className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-white 
                               colorful-dark:bg-green-900 colorful-dark:text-white pointer-events-none"
                             >
-                              {t("common.published")}
+                              {t("components.published")}
                             </Badge>
                           </>
                         ) : (
                           <>
                             <XCircle className="h-5 w-5 text-gray-500" />
-                            <Badge className="pointer-events-none" variant="secondary">{t("common.unpublished")}</Badge>
+                            <Badge className="pointer-events-none" variant="secondary">{t("components.unpublished")}</Badge>
                           </>
                         )}
                       </div>
@@ -543,13 +544,13 @@ export default function CreateCourse({
                     aria-label="Course creation actions"
                   >
                     {isEditMode && (
-                      <TooltipWrapper content="Delete Course">
+                      <TooltipWrapper content={t("createCourse.deleteCourse")}>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setOpenDeleteModal(true)}
                           className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          aria-label="Delete course"
+                          aria-label={t("createCourse.deleteCourse")}
                         >
                           <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
@@ -617,20 +618,20 @@ export default function CreateCourse({
                   </nav>
                 </div>
 
-                <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                  Courses are spaces in which instructors can create and
-                  organize modules that allow students to interact with the AI.
-                  For more information on creating a course, please see&nbsp;
-                  <a
-                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
-                  >
-                    "Creating a Course" section of our instructor guide
-                  </a>
-                  .
-                </p>
+                <InfoAccordion>
+                  <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                    {t("createCourse.courseDescriptionPart1")}&nbsp;
+                    <a
+                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                    >
+                      {t("createCourse.courseDescriptionLinkText")}
+                    </a>
+                    .
+                  </p>
+                </InfoAccordion>
               </div>
             </div>
           </header>
@@ -642,7 +643,7 @@ export default function CreateCourse({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-blue-600" />
-                  Basic Information
+                  {t("createCourse.basicInformation")}
                 </CardTitle>
                 <CardDescription>
                   {t("createCourse.enterCourseInfo")}. {t("common.required")}
@@ -663,7 +664,7 @@ export default function CreateCourse({
                   <Input
                     id="name"
                     name="name"
-                    placeholder="e.g., English 190W: Communications in the Professional World"
+                    placeholder={t("createCourse.courseNamePlaceholder")}
                     value={session.name}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -699,7 +700,7 @@ export default function CreateCourse({
                   <Input
                     id="signUpCode"
                     name="signUpCode"
-                    placeholder="e.g., FALL2025ENG190W"
+                    placeholder={t("createCourse.courseSignUpCodePlaceholder")}
                     value={session.signUpCode}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -740,7 +741,7 @@ export default function CreateCourse({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label htmlFor="year" className="text-sm font-medium">
-                        {t("common.year")}
+                        {t("createCourse.year")}
                       </Label>
                       <TooltipWrapper content={t("createCourse.yearDescription")}>
                         <button type="button" aria-label={t("createCourse.yearDescription")}>
@@ -780,7 +781,7 @@ export default function CreateCourse({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label htmlFor="term" className="text-sm font-medium">
-                        {t("common.term")}
+                        {t("createCourse.term")}
                       </Label>
                       <TooltipWrapper content={t("createCourse.termDescription")}>
                         <button type="button" aria-label={t("createCourse.termDescription")}>
@@ -805,10 +806,10 @@ export default function CreateCourse({
                         <SelectValue placeholder={t("createCourse.selectTerm")} />
                       </SelectTrigger>
                       <SelectContent aria-label={t("createCourse.selectTerm")}>
-                        <SelectItem value="spring">{t("common.spring")}</SelectItem>
-                        <SelectItem value="summer">{t("common.summer")}</SelectItem>
-                        <SelectItem value="fall">{t("common.fall")}</SelectItem>
-                        <SelectItem value="winter">{t("common.winter")}</SelectItem>
+                        <SelectItem value="spring">{t("components.spring")}</SelectItem>
+                        <SelectItem value="summer">{t("components.summer")}</SelectItem>
+                        <SelectItem value="fall">{t("components.fall")}</SelectItem>
+                        <SelectItem value="winter">{t("components.winter")}</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.term && (
@@ -989,7 +990,7 @@ export default function CreateCourse({
                                 </span>
                                 {user.email &&
                                   (user.name || user.family_name) && (
-                                    <span className="text-muted-foreground">
+                                    <span>
                                       ({user.email})
                                     </span>
                                   )}
@@ -1014,11 +1015,7 @@ export default function CreateCourse({
 
                 <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 colorful-dark:bg-gray-800 p-3 rounded-md">
                   <p className="text-xs">
-                    <strong>Note:</strong> Teaching assistants can create and
-                    edit modules for you, but not delete or unpublish the
-                    course. You can assign multiple people to this role. To add
-                    someone as a teaching assistant, they must already have a
-                    PapyrusAI account.
+                    <strong>{t("createCourse.note")}:</strong> {t("createCourse.teachingAssistantsNote")}
                   </p>
                 </div>
               </CardContent>
@@ -1037,16 +1034,16 @@ export default function CreateCourse({
               id="bottom-actions-heading"
             >
               {isEditMode && (
-                <TooltipWrapper content="Delete Course">
+                <TooltipWrapper content={t("createCourse.deleteCourse")}>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setOpenDeleteModal(true)}
                     className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    aria-label="Delete course"
+                    aria-label={t("createCourse.deleteCourse")}
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    Delete
+                    {t("common.delete")}
                   </Button>
                 </TooltipWrapper>
               )}
@@ -1055,10 +1052,10 @@ export default function CreateCourse({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowSavePublishTooltip(true)}
-                aria-label="Get help with Save & Publish options"
+                aria-label={t("createCourse.getSavePublishHelp")}
               >
                 <Info className="h-4 w-4" aria-hidden="true" />
-                Info
+                {t("common.info")}
               </Button>
               <div className="flex rounded-lg border">
                 <Button
@@ -1124,9 +1121,9 @@ export default function CreateCourse({
             role="status"
           >
             <XCircle className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">Course Not Found</p>
+            <p className="text-lg font-medium mb-2">{t("courses.courseNotFound")}</p>
             <p className="text-sm">
-              The course you're looking for doesn't exist or has been deleted.
+              {t("createCourse.courseNotFoundDescription")}
             </p>
           </div>
         </div>

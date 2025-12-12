@@ -48,6 +48,7 @@ import { FileType, PromptType } from "../../utility/types/CourseTypes";
 import { File } from "../../components/File";
 import { Badge } from "../../components/ui/badge";
 import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 type ModuleFormType = {
   name: string;
@@ -730,7 +731,7 @@ export default function AddModule({
                           className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-white 
                           colorful-dark:bg-green-900 colorful-dark:text-white pointer-events-none"
                         >
-                          {t("common.published")}
+                          {t("components.published")}
                         </Badge>
                       </>
                     ) : (
@@ -826,9 +827,12 @@ export default function AddModule({
               </nav>
             </div>
 
-            <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              {t("createModule.createModuleDescription")}
-            </p>
+            <InfoAccordion>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                {t("modules.createModuleDescription")}
+              </p>
+            </InfoAccordion>
+
           </div>
         </div>
       </header>
@@ -1049,26 +1053,19 @@ export default function AddModule({
                       className="text-md font-bold"
                       id="showInitialPromptLabel"
                     >
-                      Show Embedded Prompt
+                      {t("createModule.showEmbeddedPrompt")}
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground ml-6">
-                    Allows users to see the full text of the embedded prompt
-                    with which they begin their chat with the AI. Unchecking
-                    this will mean that the user will not be able to see the
-                    initial text of the prompt sent initially to the AI.
-                    <br />
-                    For more information on why you might choose one or the
-                    other, see the{" "}
+                    {t("createModule.showEmbeddedPromptDescription")} {" "}
                     <a
                       href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
                       target="_blank"
                       rel="noreferrer"
                       className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
                     >
-                      "Creating a Module" section of our instructor guide
+                      Link
                     </a>
-                    .
                   </p>
                 </div>
 
@@ -1087,18 +1084,11 @@ export default function AddModule({
                       disabled={isLoading}
                     />
                     <Label id="webSearchLabel" htmlFor="webSearch" className="text-md font-bold">
-                      Allow Web Search
+                      {t("createModule.allowWebSearch")}
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground ml-6">
-                    Allows PapyrusAI to search the internet in response to a
-                    query or question. Students can prompt the AI to search the
-                    web by using phrases like “Look up this topic. ”
-                    <br />
-                    In generating the web search output, PapyrusAI will collect
-                    sources from the internet, give a list of those sources to
-                    the students, and reference the content from each source in
-                    the conversation with the student.
+                    {t("createModule.allowWebSearchDescription")}
                   </p>
                 </div>
               </div>

@@ -75,6 +75,17 @@ export const DialogWrapper: React.FC<DialogWrapperProps> = ({
   footerClassName,
   showFooter = true,
 }) => {
+  const triggerElementRef = React.useRef<HTMLElement | null>(null);
+
+  React.useEffect(() => {
+    if (open) {
+      triggerElementRef.current = document.activeElement as HTMLElement;
+    } else if (triggerElementRef.current) {
+      triggerElementRef.current.focus();
+      triggerElementRef.current = null;
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={contentClassName}>

@@ -12,6 +12,7 @@ import { Loader2, PlusIcon, GraduationCap, ChartColumnBig, Search } from "lucide
 import { Link } from "react-router-dom";
 import { Input } from "../../components/ui/input";
 import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 export default function Modules(): JSX.Element {
   let location = useLocation();
@@ -197,9 +198,11 @@ export default function Modules(): JSX.Element {
             )}
 
             {course && course.modules.length > 0 && (
-              <p className="text-muted-foreground text-sm max-w-3xl">
-                {t("modules.moduleListDescription")}
-              </p>
+              <InfoAccordion>
+                <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                  {t("modules.moduleListDescription")}
+                </p>
+              </InfoAccordion>
             )}
           </div>
         </div>

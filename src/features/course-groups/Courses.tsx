@@ -8,6 +8,7 @@ import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import { UserContext } from "../../utility/context/UserContext";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import AddCourseForm, { AddCourseFormHandle } from "./AddCourseForm";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import {
@@ -17,12 +18,6 @@ import {
   BookOpen,
   Search,
 } from "lucide-react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "../../components/ui/accordion";
 import { useTranslation } from "../../hooks/useTranslation";
 
 export default function Courses(): JSX.Element {
@@ -195,32 +190,23 @@ export default function Courses(): JSX.Element {
                       setIsLoading={setIsJoiningCourse}
                     />
                   </DialogWrapper>
-                </nav>
-              </div>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="help-info" className="border-none">
-                  <AccordionTrigger className="text-sm text-muted-foreground hover:no-underline py-2">
-                    {t("courses.tapToLearnMore")}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
-                      <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                        {t("courses.createCourseDescription")}
-                      </p>
-
-                      {courseList.length > 0 && (
-                        <p className="text-muted-foreground text-sm max-w-3xl">
-                          {t("courses.courseListDescription")}
-                        </p>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+              </nav>
             </div>
+            <InfoAccordion>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                {t("courses.createCourseDescription")}
+              </p>
+
+              {courseList.length > 0 && (
+                <p className="text-muted-foreground text-sm max-w-3xl">
+                  {t("courses.courseListDescription")}
+                </p>
+              )}
+            </InfoAccordion>
           </div>
         </div>
-      </header>
+      </div>
+    </header>
 
       {error ? (
         <div

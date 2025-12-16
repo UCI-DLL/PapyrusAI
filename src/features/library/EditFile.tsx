@@ -42,6 +42,7 @@ import Put from "../../utility/Put";
 import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
 import CustomFileRender from "../../components/CustomFileRender";
 import { cn } from "../../lib/utils";
+import { useTranslation } from "../../hooks/useTranslation";
 
 const options = ["Save & Publish", "Discard Changes"];
 
@@ -80,6 +81,7 @@ export default function EditFile(): JSX.Element {
   const [openSaveTop, setOpenSaveTop] = useState(false);
   const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
+  const { t } = useTranslation();
 
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -1002,9 +1004,9 @@ export default function EditFile(): JSX.Element {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label className="text-sm font-medium">Tags</Label>
-                    <TooltipWrapper content="Tags describe a feature of the files and will be used to allow for sorting files by type.">
-                      <button aria-label="Tags describe a feature of the files and will be used to allow for sorting files by type.">
+                    <Label className="text-sm font-medium">{t("library.tags")}</Label>
+                    <TooltipWrapper content={t("library.tagsDescription")}>
+                      <button aria-label={t("library.tagsDescription")}>
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </button>
                     </TooltipWrapper>
@@ -1036,13 +1038,13 @@ export default function EditFile(): JSX.Element {
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">
-                        No tags available
+                        {t("library.noTags")}
                       </p>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Selected:{" "}
-                    {newFile.tags.length > 0 ? newFile.tags.join(", ") : "None"}
+                    {t("common.selected")}:{" "}
+                    {newFile.tags.length > 0 ? newFile.tags.join(", ") : t("common.none")}
                   </p>
                 </div>
               </form>

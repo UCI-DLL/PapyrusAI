@@ -33,7 +33,7 @@ export default function CreateFile(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
   const { t } = useTranslation();
-  
+
   // Translated options
   const options = [t("createFile.saveUpload"), t("createFile.discardChanges")];
   const [newFile, setNewFile] = useState<{
@@ -640,9 +640,9 @@ export default function CreateFile(): JSX.Element {
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm font-medium">Tags</Label>
-                  <TooltipWrapper content="Tags describe a feature of the files and will be used to allow for sorting files by type.">
-                    <button aria-label="Tags describe a feature of the files and will be used to allow for sorting files by type.">
+                  <Label className="text-sm font-medium">{t("library.tags")}</Label>
+                  <TooltipWrapper content={t("library.tagsDescription")}>
+                    <button aria-label={t("library.tagsDescription")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -674,13 +674,13 @@ export default function CreateFile(): JSX.Element {
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      No tags available
+                      {t("library.noTags")}
                     </p>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Selected:{" "}
-                  {newFile.tags.length > 0 ? newFile.tags.join(", ") : "None"}
+                  {t("common.selected")}:{" "}
+                  {newFile.tags.length > 0 ? newFile.tags.join(", ") : t("common.none")}
                 </p>
               </div>
             </form>

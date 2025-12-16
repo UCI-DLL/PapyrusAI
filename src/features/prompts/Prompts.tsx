@@ -1,3 +1,9 @@
+/**
+ * This is an old prompt page when we handled prompts differently 
+ * (before we had files)
+ * Don't do updates to this as this will be removed soon
+ */
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";

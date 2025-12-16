@@ -190,23 +190,26 @@ export default function Courses(): JSX.Element {
                       setIsLoading={setIsJoiningCourse}
                     />
                   </DialogWrapper>
-              </nav>
-            </div>
-            <InfoAccordion>
-              <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                {t("courses.createCourseDescription")}
-              </p>
-
-              {courseList.length > 0 && (
-                <p className="text-muted-foreground text-sm max-w-3xl">
-                  {t("courses.courseListDescription")}
+                </nav>
+              </div>
+              <InfoAccordion>
+                <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                  {t("courses.createCourseDescription")}&nbsp;
+                  <a
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                  >
+                    {t("courses.createCourseDescriptionLinkText")}
+                  </a>
+                  .
                 </p>
-              )}
-            </InfoAccordion>
+              </InfoAccordion>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
 
       {error ? (
         <div

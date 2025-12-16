@@ -231,8 +231,7 @@ export default function ModuleList({
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
               navigator(
-                `/chat/${user.username}/${courseId}/${moduleId}/${
-                  createRes.data.conversations.length - 1
+                `/chat/${user.username}/${courseId}/${moduleId}/${createRes.data.conversations.length - 1
                 }`
               );
             }
@@ -574,23 +573,23 @@ export default function ModuleList({
                                 : "PapyrusAIInstructors"
                             ) ||
                             user?.groups.includes(course.id + "-TA")) && (
-                            <TooltipWrapper content={t("common.copyModule")}>
-                              <button
-                                onClick={() => {
-                                  setOpenDuplicateModal({
-                                    courseId: course.id,
-                                    moduleId: module.id,
-                                    copyCourseId: "",
-                                  });
-                                  setOpenCourseListModal(true);
-                                }}
-                                className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-300"
-                                aria-label={t("common.copyModule")}
-                              >
-                                <Copy className="h-[1em] w-[1em]" />
-                              </button>
-                            </TooltipWrapper>
-                          )}
+                              <TooltipWrapper content={t("common.copyModule")}>
+                                <button
+                                  onClick={() => {
+                                    setOpenDuplicateModal({
+                                      courseId: course.id,
+                                      moduleId: module.id,
+                                      copyCourseId: "",
+                                    });
+                                    setOpenCourseListModal(true);
+                                  }}
+                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
+                                  aria-label={t("common.copyModule")}
+                                >
+                                  <Copy className="h-[1em] w-[1em]" />
+                                </button>
+                              </TooltipWrapper>
+                            )}
 
                           {(user?.groups.includes(
                             process.env.REACT_APP_INSTRUCTOR
@@ -608,7 +607,7 @@ export default function ModuleList({
                               <TooltipWrapper content={t("common.editModule")}>
                                 <button
                                   aria-label={t("common.editModule")}
-                                  className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-lg transition-all duration-300"
+                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
                                 >
                                   <Link
                                     to={`/courses/${course.id}/editmodule/${module.id}`}
@@ -741,23 +740,23 @@ export default function ModuleList({
                                 : "PapyrusAIInstructors"
                             ) ||
                             user?.groups.includes(course.id + "-TA")) && (
-                            <TooltipWrapper content={t("common.copyModule")}>
-                              <button
-                                onClick={() => {
-                                  setOpenDuplicateModal({
-                                    courseId: course.id,
-                                    moduleId: module.id,
-                                    copyCourseId: "",
-                                  });
-                                  setOpenCourseListModal(true);
-                                }}
-                                className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
-                                aria-label={t("common.copyModule")}
-                              >
-                                <Copy className="h-[1em] w-[1em]" />
-                              </button>
-                            </TooltipWrapper>
-                          )}
+                              <TooltipWrapper content={t("common.copyModule")}>
+                                <button
+                                  onClick={() => {
+                                    setOpenDuplicateModal({
+                                      courseId: course.id,
+                                      moduleId: module.id,
+                                      copyCourseId: "",
+                                    });
+                                    setOpenCourseListModal(true);
+                                  }}
+                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                                  aria-label={t("common.copyModule")}
+                                >
+                                  <Copy className="h-[1em] w-[1em]" />
+                                </button>
+                              </TooltipWrapper>
+                            )}
 
                           {(user?.groups.includes(
                             process.env.REACT_APP_INSTRUCTOR
@@ -775,7 +774,7 @@ export default function ModuleList({
                               <TooltipWrapper content={t("common.editModule")}>
                                 <button
                                   aria-label={t("common.editModule")}
-                                  className="p-1.5 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
+                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                                 >
                                   <Link
                                     to={`/courses/${course.id}/editmodule/${module.id}`}
@@ -799,13 +798,13 @@ export default function ModuleList({
                               `${course.id}-${module.id}`
                             }
                           >
-                              {isNavigatingToModule ===
+                            {isNavigatingToModule ===
                               `${course.id}-${module.id}` ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Play size={14} />
-                              )}
-                              {t("modules.beginModule")}
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Play size={14} />
+                            )}
+                            {t("modules.beginModule")}
                           </Button>
                         </div>
                       </div>
@@ -830,10 +829,10 @@ export default function ModuleList({
       {user?.groups.includes(
         process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
       ) && (
-        <p className="text-sm">
-          {t("modules.createModulePrompt")}
-        </p>
-      )}
+          <p className="text-sm">
+            {t("modules.createModulePrompt")}
+          </p>
+        )}
     </div>
   );
 }

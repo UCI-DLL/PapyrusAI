@@ -419,7 +419,7 @@ export default function CreateCourse({
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: t("common.gotIt"),
+            label: t("components.gotIt"),
             onClick: () => setShowSavePublishTooltip(false),
           },
         ]}
@@ -457,7 +457,7 @@ export default function CreateCourse({
           <DialogWrapper
             open={openDeleteModal}
             onOpenChange={setOpenDeleteModal}
-            title={t("createCourse.deleteCourse")}
+            title={t("createCourse.deleteCourseQuestion")}
             description={t("createCourse.deleteCourseDescription")}
             contentClassName="sm:max-w-md"
             actions={[
@@ -740,7 +740,7 @@ export default function CreateCourse({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="year" className="text-sm font-medium">
+                      <Label htmlFor="year" className="text-sm font-medium capitalize">
                         {t("createCourse.year")}
                       </Label>
                       <TooltipWrapper content={t("createCourse.yearDescription")}>

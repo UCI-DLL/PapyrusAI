@@ -200,7 +200,16 @@ export default function Modules(): JSX.Element {
             {course && course.modules.length > 0 && (
               <InfoAccordion>
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                  {t("modules.moduleListDescription")}
+                  {t("modules.moduleListDescription")}&nbsp;
+                  <a
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                  >
+                    {t("modules.moduleListDescriptionLinkText")}
+                  </a>
+                  .
                 </p>
               </InfoAccordion>
             )}

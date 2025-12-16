@@ -40,6 +40,7 @@ import {
   BreadcrumbSeparator,
 } from "../../components/ui/breadcrumb";
 import { Button } from "../../components/ui/button";
+import { useTranslation } from "react-i18next";
 
 // Icon mapping for menu items
 const menuIcons: Record<string, React.ComponentType<any>> = {
@@ -63,15 +64,16 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
   let navigator = useNavigate();
   const location = useLocation();
   const { state, openMobile, setOpenMobile } = useSidebar();
+  const { t } = useTranslation();
 
   // For the side drawer main nav menu
   // base this list off instructor, admin, student access, and TAs
   // tas dont have access to library
   const [mainMenuList, setMainMenuList] = useState([
-    "Dashboard",
-    "Courses",
-    "Account",
-    "About",
+    t("navigation.dashboard"),
+    t("navigation.courses"),
+    t("navigation.account"),
+    t("navigation.about"),
   ]);
   const [mainMenuLinks, setMainMenuLinks] = useState([
     "/",
@@ -86,11 +88,11 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
     if (user) {
       if (user.groups.find((a) => a.includes("-TA"))) {
         setMainMenuList([
-          "Dashboard",
-          "Courses",
-          "Reports",
-          "Account",
-          "About",
+          t("navigation.dashboard"),
+          t("navigation.courses"),
+          t("navigation.reports"),
+          t("navigation.account"),
+          t("navigation.about"),
         ]);
         setMainMenuLinks(["/", "/courses", "/reports", "/account", "/about"]);
       }
@@ -102,12 +104,12 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
         )
       ) {
         setMainMenuList([
-          "Dashboard",
-          "Courses",
-          "Reports",
-          "Library",
-          "Account",
-          "About",
+          t("navigation.dashboard"),
+          t("navigation.courses"),
+          t("navigation.reports"),
+          t("navigation.library"),
+          t("navigation.account"),
+          t("navigation.about"),
         ]);
         setMainMenuLinks([
           "/",
@@ -126,13 +128,13 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
         )
       ) {
         setMainMenuList([
-          "Dashboard",
-          "Courses",
-          "Reports",
-          "Library",
-          "Account",
-          "About",
-          "Settings",
+          t("navigation.dashboard"),
+          t("navigation.courses"),
+          t("navigation.reports"),
+          t("navigation.library"),
+          t("navigation.account"),
+          t("navigation.about"),
+          t("navigation.settings"),
         ]);
         setMainMenuLinks([
           "/",
@@ -145,7 +147,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
         ]);
       }
     }
-  }, [user]);
+  }, [user, t]);
 
   useEffect(() => {
     //set breadcrumb text based on the url location
@@ -153,15 +155,15 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
 
     // Handle root dashboard
     if (location.pathname === "/") {
-      setBreadcrumbText(["Dashboard", ""]);
+      setBreadcrumbText([t("navigation.dashboard"), ""]);
     }
     // Handle courses list
     else if (location.pathname === "/courses") {
-      setBreadcrumbText(["Courses", ""]);
+      setBreadcrumbText([t("navigation.courses"), ""]);
     }
     // Handle all modules
     else if (location.pathname === "/modules") {
-      setBreadcrumbText(["All Modules", ""]);
+      setBreadcrumbText([t("navigation.allModules"), ""]);
     }
     // Handle course-specific modules: /courses/:id/modules
     else if (
@@ -169,7 +171,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
       pathnameSplit[1] === "courses" &&
       pathnameSplit[3] === "modules"
     ) {
-      setBreadcrumbText(["Courses", "Modules"]);
+      setBreadcrumbText([t("navigation.courses"), t("common.modules")]);
     }
     // Handle conversations in a module: /courses/:id/modules/:id
     else if (
@@ -177,11 +179,11 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
       pathnameSplit[1] === "courses" &&
       pathnameSplit[3] === "modules"
     ) {
-      setBreadcrumbText(["Courses", "Conversations"]);
+      setBreadcrumbText([t("navigation.courses"), t("navigation.conversations")]);
     }
     // Handle chat: /chat/:id/:id/:id/:id
     else if (pathnameSplit[1] === "chat") {
-      setBreadcrumbText(["Courses", "Chat"]);
+      setBreadcrumbText([t("navigation.courses"), t("navigation.chat")]);
     }
     // Handle edit module: /courses/:id/editmodule/:id
     else if (
@@ -189,49 +191,49 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
       pathnameSplit[1] === "courses" &&
       pathnameSplit[3] === "editmodule"
     ) {
-      setBreadcrumbText(["Courses", "Edit Module"]);
+      setBreadcrumbText([t("navigation.courses"), t("common.editModule")]);
     }
     // Handle edit course: /editcourse/:id
     else if (pathnameSplit[1] === "editcourse") {
-      setBreadcrumbText(["Courses", "Edit Course"]);
+      setBreadcrumbText([t("navigation.courses"), t("courses.editCourse")]);
     }
     // Handle create course: /createcourse
     else if (pathnameSplit[1] === "createcourse") {
-      setBreadcrumbText(["Courses", "Create Course"]);
+      setBreadcrumbText([t("navigation.courses"), t("dashboard.createCourse")]);
     }
     // Handle add module: /addmodule
     else if (pathnameSplit[1] === "addmodule") {
-      setBreadcrumbText(["Modules", "Add Module"]);
+      setBreadcrumbText([t("common.modules"), t("createModule.createModule")]);
     }
     // Handle reports
     else if (pathnameSplit[1] === "reports") {
-      setBreadcrumbText(["Reports", ""]);
+      setBreadcrumbText([t("navigation.reports"), ""]);
     }
     // Handle account
     else if (location.pathname === "/account") {
-      setBreadcrumbText(["Account", ""]);
+      setBreadcrumbText([t("navigation.account"), ""]);
     }
     // Handle about
     else if (location.pathname === "/about") {
-      setBreadcrumbText(["About", ""]);
+      setBreadcrumbText([t("navigation.about"), ""]);
     }
     // Handle library
     else if (pathnameSplit[1] === "library") {
-      setBreadcrumbText(["Library", ""]);
+      setBreadcrumbText([t("navigation.library"), ""]);
     }
     // Handle prompts (hidden)
     else if (pathnameSplit[1] === "prompts") {
-      setBreadcrumbText(["Prompts", ""]);
+      setBreadcrumbText([t("library.prompts"), ""]);
     }
     // Handle organization settings
     else if (pathnameSplit[1] === "org-settings") {
-      setBreadcrumbText(["Organization Settings", ""]);
+      setBreadcrumbText([t("orgSettings.organizationSettings"), ""]);
     }
     // Default fallback
     else {
-      setBreadcrumbText(["Dashboard", ""]);
+      setBreadcrumbText([t("navigation.dashboard"), ""]);
     }
-  }, [location.pathname]);
+  }, [location.pathname, t]);
 
   function handleLogOut() {
     setUser(null);
@@ -307,10 +309,10 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                       )
                     }
                     className="h-10 rounded-lg px-3 text-sidebar-foreground hover:bg-sidebar-accent hover:bg-accent"
-                    tooltip="Resources"
+                    tooltip={t("navigation.resources")}
                   >
                     <ExternalLink className="h-4 w-4 shrink-0" />
-                    <span className="text-sm font-medium">Resources</span>
+                    <span className="text-sm font-medium">{t("navigation.resources")}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -324,10 +326,10 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
               <SidebarMenuButton
                 onClick={handleLogOut}
                 className="h-10 rounded-lg px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                tooltip="Log Out"
+                tooltip={t("navigation.logout")}
               >
                 <LogOut className="h-4 w-4 shrink-0" />
-                <span className="text-sm font-medium">Log Out</span>
+                <span className="text-sm font-medium">{t("navigation.logout")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -343,10 +345,10 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                   "_blank"
                 )
               }
-              title="Report Issue"
+              title={t("navigation.reportsIssue")}
             >
               <span className="text-xs font-medium group-data-[collapsible=icon]:hidden">
-                Report Issue
+                {t("navigation.reportsIssue")}
               </span>
               <HelpCircle className="h-4 w-4 hidden group-data-[collapsible=icon]:inline" />
             </Button>
@@ -368,25 +370,25 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
                       <button
                         onClick={() => {
                           // Navigate to appropriate parent page based on current context
-                          if (breadcrumbText[0] === "Dashboard") {
+                          if (breadcrumbText[0] === t("navigation.dashboard")) {
                             navigator("/");
-                          } else if (breadcrumbText[0] === "Courses") {
+                          } else if (breadcrumbText[0] === t("navigation.courses")) {
                             navigator("/courses");
-                          } else if (breadcrumbText[0] === "Modules") {
+                          } else if (breadcrumbText[0] === t("common.modules")) {
                             navigator("/modules");
-                          } else if (breadcrumbText[0] === "Reports") {
+                          } else if (breadcrumbText[0] === t("navigation.reports")) {
                             navigator("/reports");
-                          } else if (breadcrumbText[0] === "Library") {
+                          } else if (breadcrumbText[0] === t("navigation.library")) {
                             navigator("/library");
-                          } else if (breadcrumbText[0] === "Account") {
+                          } else if (breadcrumbText[0] === t("navigation.account")) {
                             navigator("/account");
-                          } else if (breadcrumbText[0] === "About") {
+                          } else if (breadcrumbText[0] === t("navigation.about")) {
                             navigator("/about");
                           } else if (
-                            breadcrumbText[0] === "Organization Settings"
+                            breadcrumbText[0] === t("orgSettings.organizationSettings")
                           ) {
                             navigator("/org-settings");
-                          } else if (breadcrumbText[0] === "Prompts") {
+                          } else if (breadcrumbText[0] === t("library.prompts")) {
                             navigator("/prompts");
                           }
                         }}

@@ -323,7 +323,7 @@ export default function CourseCard({
                   <DropdownWrapper
                     trigger={
                       <button
-                        className="p-1 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
+                        className="p-1 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                         onClick={(e) => {
                           e.stopPropagation();
                         }}

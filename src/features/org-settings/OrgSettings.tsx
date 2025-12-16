@@ -43,6 +43,7 @@ import Put from "../../utility/Put";
 import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { useTranslation } from "../../hooks/useTranslation";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 
 export enum PermissionsOptions {
   // Admin = "Admin",
@@ -88,6 +89,12 @@ export default function OrgSettings(): JSX.Element {
   const [filteredOrgPermissionList, setFilteredOrgPermissionList] = useState<
     Array<OrgPermissionType>
   >([]);
+  //If safari, use a different dropdown within dialog modal so that screen readers can read
+  const isSafari =
+    typeof window !== "undefined" &&
+    window.navigator.userAgent.includes("Safari") &&
+    !window.navigator.userAgent.includes("Chrome") &&
+    window.navigator.userAgent.includes("Mac OS");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -415,30 +422,52 @@ export default function OrgSettings(): JSX.Element {
                   }}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="permission-level">{t("orgSettings.permissionLevel")}</Label>
-                <Select
-                  value={showAddOrgPermissionModal.permission}
-                  onValueChange={(value) => {
-                    setShowAddOrgPermissionModal((prev) => ({
-                      ...prev,
-                      permission: value,
-                    }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
-                  </SelectTrigger>
-                  <SelectContent avoidCollisions={false} position="popper">
+              {isSafari ? (
+                <div className="space-y-2">
+                  <Label htmlFor="permission-level">{t("orgSettings.permissionLevel")}</Label>
+                  <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
+                    value={showAddOrgPermissionModal.permission}
+                    onChange={(value) => {
+                      setShowAddOrgPermissionModal((prev) => ({
+                        ...prev,
+                        permission: value.target.value,
+                      }));
+                    }}
+                    title={t("orgSettings.permissionLevel")}
+                  >
                     {Object.keys(PermissionsOptions).map((key) => (
-                      <SelectItem value={key} key={key}>
-                        {key}
-                      </SelectItem>
+                      <option value={key} key={key} className="capitalize">
+                        {t(`common.${key.toLowerCase()}`)}
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="permission-level">{t("orgSettings.permissionLevel")}</Label>
+                  <Select
+                    value={showAddOrgPermissionModal.permission}
+                    onValueChange={(value) => {
+                      setShowAddOrgPermissionModal((prev) => ({
+                        ...prev,
+                        permission: value,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
+                    </SelectTrigger>
+                    <SelectContent avoidCollisions={false} position="popper">
+                      {Object.keys(PermissionsOptions).map((key) => (
+                        <SelectItem value={key} key={key} className="capitalize">
+                          {t(`common.${key.toLowerCase()}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </DialogWrapper>
 
@@ -513,50 +542,56 @@ export default function OrgSettings(): JSX.Element {
                   {t("orgSettings.updatePermissionsFor", { email: showUpdateOrgPermissionModal.id })}
                 </p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="update-permission-level">
-                  {t("orgSettings.permissionLevel")}
-                </Label>
-                <Select
-                  value={showUpdateOrgPermissionModal.permission}
-                  onValueChange={(value) => {
-                    setShowUpdateOrgPermissionModal((prev) => ({
-                      ...prev,
-                      permission: value,
-                    }));
-                  }}
-                  dir="ltr"
-                  defaultOpen={false}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
-                  </SelectTrigger>
-                  <SelectContent aria-label="Permission level options" avoidCollisions={false} position="popper">
+              {isSafari ? (
+                <div className="space-y-2">
+                  <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
+                    value={showUpdateOrgPermissionModal.permission}
+                    onChange={(value) => {
+                      setShowUpdateOrgPermissionModal((prev) => ({
+                        ...prev,
+                        permission: value.target.value,
+                      }));
+                    }}
+                    title={t("orgSettings.permissionLevel")}
+                  >
                     {Object.keys(PermissionsOptions).map((key) => (
-                      <SelectItem value={key} key={key}>
-                        {key}
-                      </SelectItem>
+                      <option value={key} key={key} className="capitalize">
+                        {t(`common.${key.toLowerCase()}`)}
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="update-permission-level">
+                    {t("orgSettings.permissionLevel")}
+                  </Label>
+                  <Select
+                    value={showUpdateOrgPermissionModal.permission}
+                    onValueChange={(value) => {
+                      setShowUpdateOrgPermissionModal((prev) => ({
+                        ...prev,
+                        permission: value,
+                      }));
+                    }}
+                    dir="ltr"
+                    defaultOpen={false}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
+                    </SelectTrigger>
+                    <SelectContent aria-label="Permission level options" avoidCollisions={false} position="popper">
+                      {Object.keys(PermissionsOptions).map((key) => (
+                        <SelectItem value={key} key={key} className="capitalize">
+                          {t(`common.${key.toLowerCase()}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-                <select id="fruit-select"
-                  value={showUpdateOrgPermissionModal.permission}
-                  onChange={(value) => {
-                    setShowUpdateOrgPermissionModal((prev) => ({
-                      ...prev,
-                      permission: value.target.id,
-                    }));
-                  }}
-                >
-                  {Object.keys(PermissionsOptions).map((key) => (
-                    <option value={key} key={key}>
-                      {key}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
           </DialogWrapper>
 
@@ -692,7 +727,7 @@ export default function OrgSettings(): JSX.Element {
                             <TableCell className="text-right">
                               {permission.isAdmin ? (
                                 <Badge variant="default" className="bg-primary pointer-events-none">
-                                  {t("orgSettings.admin")}
+                                  {t("common.admin")}
                                 </Badge>
                               ) : permission.isInstructor ? (
                                 <Badge variant="secondary" className="pointer-events-none">{t("common.instructor")}</Badge>
@@ -713,40 +748,46 @@ export default function OrgSettings(): JSX.Element {
                               <div className="flex items-center justify-end gap-2">
                                 {!permission.isAdmin && (
                                   <>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() =>
-                                        setShowUpdateOrgPermissionModal({
-                                          id: permission.id,
-                                          permission: permission.isAdmin
-                                            ? "Admin"
-                                            : permission.isInstructor
-                                              ? "Instructor"
-                                              : "None",
-                                        })
-                                      }
-                                      aria-label={`Edit permissions for ${permission.id}`}
-                                    >
-                                      <Shield
-                                        className="h-4 w-4"
-                                        aria-hidden="true"
-                                      />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() =>
-                                        setOpenDeleteModal(permission)
-                                      }
-                                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                      aria-label={`Remove permissions for ${permission.id}`}
-                                    >
-                                      <Trash2
-                                        className="h-4 w-4"
-                                        aria-hidden="true"
-                                      />
-                                    </Button>
+                                    <TooltipWrapper content={t("orgSettings.updatePermissions")}>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          setShowUpdateOrgPermissionModal({
+                                            id: permission.id,
+                                            permission: permission.isAdmin
+                                              ? "Admin"
+                                              : permission.isInstructor
+                                                ? "Instructor"
+                                                : "None",
+                                          })
+                                        }
+                                        aria-label={`${t("orgSettings.updatePermissions")} ${permission.id}`}
+                                      >
+                                        <Shield
+                                          className="h-4 w-4"
+                                          aria-hidden="true"
+                                        />
+                                      </Button>
+
+                                    </TooltipWrapper>
+
+                                    <TooltipWrapper content={t("orgSettings.removePermissions")}>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          setOpenDeleteModal(permission)
+                                        }
+                                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                        aria-label={`${t("orgSettings.removePermissions")} ${permission.id}`}
+                                      >
+                                        <Trash2
+                                          className="h-4 w-4"
+                                          aria-hidden="true"
+                                        />
+                                      </Button>
+                                    </TooltipWrapper>
                                   </>
                                 )}
                               </div>

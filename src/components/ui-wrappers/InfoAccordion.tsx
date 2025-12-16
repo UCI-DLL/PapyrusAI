@@ -5,7 +5,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
-import { t } from "i18next";
 import { useTranslation } from "react-i18next";
 
 interface InfoAccordionProps {

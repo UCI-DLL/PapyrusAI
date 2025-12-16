@@ -76,6 +76,13 @@ export default function Reports(): JSX.Element {
   const [checked, setChecked] = useState<Array<number>>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  //If safari, use a different dropdown within dialog modal so that screen readers can read
+  const isSafari =
+    typeof window !== "undefined" &&
+    window.navigator.userAgent.includes("Safari") &&
+    !window.navigator.userAgent.includes("Chrome") &&
+    window.navigator.userAgent.includes("Mac OS");
+
   const handleToggle = (value: number) => () => {
     const currentIndex = checked.indexOf(value);
     const newChecked = [...checked];
@@ -756,20 +763,38 @@ export default function Reports(): JSX.Element {
                   </DialogDescription>
                 </DialogHeader>
 
+
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="download-format">Download Format</Label>
-                    <Select value={downloadType} onValueChange={setDownloadType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select format" />
-                      </SelectTrigger>
-                      <SelectContent avoidCollisions={false} position="popper">
-                        <SelectItem value="json">JSON</SelectItem>
-                        <SelectItem value="csv">CSV</SelectItem>
-                        <SelectItem value="txt">TXT</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* handle safari screen readers  */}
+                  {isSafari ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="download-format">Download Format</Label>
+                      <select
+                        className="h-10 w-full rounded-md border px-3 py-2 text-sm"
+                        value={downloadType}
+                        onChange={(e) => setDownloadType(e.target.value)}
+                      >
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                        <option value="txt">TXT</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="download-format">Download Format</Label>
+                      <Select value={downloadType} onValueChange={setDownloadType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select format" />
+                        </SelectTrigger>
+                        <SelectContent avoidCollisions={false} position="popper">
+                          <SelectItem value="json">JSON</SelectItem>
+                          <SelectItem value="csv">CSV</SelectItem>
+                          <SelectItem value="txt">TXT</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
 
                   <div className="space-y-3">
                     <h2 className="text-sm font-medium">Available Courses</h2>

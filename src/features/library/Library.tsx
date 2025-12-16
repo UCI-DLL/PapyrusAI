@@ -399,8 +399,17 @@ export default function Library(): JSX.Element {
               </div>
               <InfoAccordion>
                 <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                {t("library.libraryDescription")}
-              </p>
+                  {t("library.libraryDescription")}&nbsp;
+                  <a
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.i0aofs3p0aio"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                  >
+                    {t("library.libraryDescriptionLinkText")}
+                  </a>
+                  .
+                </p>
               </InfoAccordion>
             </div>
           </div>

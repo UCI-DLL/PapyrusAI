@@ -95,6 +95,12 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  //If safari, use a different dropdown within dialog modal so that screen readers can read
+  const isSafari =
+    typeof window !== "undefined" &&
+    window.navigator.userAgent.includes("Safari") &&
+    !window.navigator.userAgent.includes("Chrome") &&
+    window.navigator.userAgent.includes("Mac OS");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -516,106 +522,213 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
             showFooter={false}
           >
             <div className="space-y-6 max-h-96 overflow-y-auto">
-              <div className="space-y-2">
-                <Label htmlFor="sort-select">Sort</Label>
-                <Select
-                  value={filters.sort}
-                  onValueChange={(value) => {
-                    setFilters((prev) => ({
-                      ...prev,
-                      sort: SortOptions[value as keyof typeof SortOptions],
-                    }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select sort order" />
-                  </SelectTrigger>
-                  <SelectContent avoidCollisions={false} position="popper">
+              {/* handle safari screen readers  */}
+              {isSafari ? (
+                <div className="space-y-2">
+                  <Label htmlFor="sort-select">Sort</Label>
+                  <select
+                    value={filters.sort}
+                    onChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        sort: SortOptions[value.target.value as keyof typeof SortOptions],
+                      }));
+                    }}
+                    placeholder="Select sort order"
+                    title="Sort"
+                  >
                     {Object.keys(SortOptions).map((key) => (
-                      <SelectItem value={key} key={key}>
+                      <option value={key} key={key}>
                         {key}
-                      </SelectItem>
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="starred-select">Starred</Label>
-                <Select
-                  value={filters.starred}
-                  onValueChange={(value) => {
-                    setFilters((prev) => ({
-                      ...prev,
-                      starred:
-                        StarredOptions[value as keyof typeof StarredOptions],
-                    }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by starred status" />
-                  </SelectTrigger>
-                  <SelectContent avoidCollisions={false} position="popper">
-                    {Object.keys(StarredOptions).map((key) => (
-                      <SelectItem value={key} key={key}>
-                        {key}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="owner-select">Owner</Label>
-                <Select
-                  value={filters.owner}
-                  onValueChange={(value) => {
-                    setFilters((prev) => ({
-                      ...prev,
-                      owner:
-                        OwnerTypeOptions[
-                        value as keyof typeof OwnerTypeOptions
-                        ],
-                    }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by owner" />
-                  </SelectTrigger>
-                  <SelectContent avoidCollisions={false} position="popper">
-                    {Object.keys(OwnerTypeOptions).map((key) => (
-                      <SelectItem value={key} key={key}>
-                        {key}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="sort-select">Sort</Label>
+                  <Select
+                    value={filters.sort}
+                    onValueChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        sort: SortOptions[value as keyof typeof SortOptions],
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select sort order" />
+                    </SelectTrigger>
+                    <SelectContent avoidCollisions={false} position="popper">
+                      {Object.keys(SortOptions).map((key) => (
+                        <SelectItem value={key} key={key}>
+                          {key}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="tag-select">Tag</Label>
-                <Select
-                  value={filters.tags}
-                  onValueChange={(value) => {
-                    setFilters((prev) => ({
-                      ...prev,
-                      tags: value,
-                    }));
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by tag" />
-                  </SelectTrigger>
-                  <SelectContent avoidCollisions={false} position="popper">
-                    <SelectItem value="none" key="none">
-                      No filter
-                    </SelectItem>
-                    {tagList.map((tag, i) => (
-                      <SelectItem value={tag.id} key={i}>
-                        {tag.id}
-                      </SelectItem>
+              {/* handle safari screen readers  */}
+              {isSafari ? (
+                <div className="space-y-2">
+                  <Label htmlFor="starred-select">Starred</Label>
+                  <select
+                    value={filters.starred}
+                    onChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        starred:
+                          StarredOptions[value.target.value as keyof typeof StarredOptions],
+                      }));
+                    }}
+                    placeholder="Filter by starred status"
+                    title="Starred"
+                  >
+                    {Object.keys(StarredOptions).map((key) => (
+                      <option value={key} key={key}>
+                        {key}
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="starred-select">Starred</Label>
+                  <Select
+                    value={filters.starred}
+                    onValueChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        starred:
+                          StarredOptions[value as keyof typeof StarredOptions],
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by starred status" />
+                    </SelectTrigger>
+                    <SelectContent avoidCollisions={false} position="popper">
+                      {Object.keys(StarredOptions).map((key) => (
+                        <SelectItem value={key} key={key}>
+                          {key}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* handle safari screen readers  */}
+              {isSafari ? (
+                <div className="space-y-2">
+                  <Label htmlFor="owner-select">Owner</Label>
+                  <select
+                    value={filters.owner}
+                    onChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        owner:
+                          OwnerTypeOptions[
+                          value.target.value as keyof typeof OwnerTypeOptions
+                          ],
+                      }));
+                    }}
+                    placeholder="Filter by owner"
+                    title="Owner"
+                  >
+                    {Object.keys(OwnerTypeOptions).map((key) => (
+                      <option value={key} key={key}>
+                        {key}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="owner-select">Owner</Label>
+                  <Select
+                    value={filters.owner}
+                    onValueChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        owner:
+                          OwnerTypeOptions[
+                          value as keyof typeof OwnerTypeOptions
+                          ],
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by owner" />
+                    </SelectTrigger>
+                    <SelectContent avoidCollisions={false} position="popper">
+                      {Object.keys(OwnerTypeOptions).map((key) => (
+                        <SelectItem value={key} key={key}>
+                          {key}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* handle safari screen readers  */}
+              {isSafari ? (
+                <div className="space-y-2">
+                  <Label htmlFor="tag-select">Tag</Label>
+                  <select
+                    value={filters.tags}
+                    onChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        tags: value.target.value,
+                      }));
+                    }}
+                    placeholder="Fitler by tag"
+                    title="Tag"
+                  >
+
+                    <option value="none" key="none">
+                      No filter
+                    </option>
+                    {tagList.map((tag, i) => (
+                      <option value={tag.id} key={i}>
+                        {tag.id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="tag-select">Tag</Label>
+                  <Select
+                    value={filters.tags}
+                    onValueChange={(value) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        tags: value,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by tag" />
+                    </SelectTrigger>
+                    <SelectContent avoidCollisions={false} position="popper">
+                      <SelectItem value="none" key="none">
+                        No filter
+                      </SelectItem>
+                      {tagList.map((tag, i) => (
+                        <SelectItem value={tag.id} key={i}>
+                          {tag.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-4">
                 <Label className="text-sm font-medium">Date Created</Label>
 

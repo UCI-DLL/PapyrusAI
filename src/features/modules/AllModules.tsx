@@ -115,9 +115,6 @@ export default function AllModules(): JSX.Element {
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
               {t("modules.allAvailableModules")}
             </h1>
-            <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              {t("modules.createModuleDescription")}
-            </p>
             {user?.groups.includes(
               process.env.REACT_APP_INSTRUCTOR
                 ? process.env.REACT_APP_INSTRUCTOR
@@ -126,7 +123,28 @@ export default function AllModules(): JSX.Element {
                 <div className="mt-4">
                   <InfoAccordion>
                     <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                      {t("modules.moduleListDescription")}
+                      {t("modules.moduleListDescription")}&nbsp;
+                      <a
+                        href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                      >
+                        {t("modules.moduleListDescriptionLinkText")}
+                      </a>
+                      .
+                    </p>
+                    <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                      {t("modules.createModuleDescription")}&nbsp;
+                      <a
+                        href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.1lkc6zx0k17t"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                      >
+                        {t("modules.createModuleDescriptionLinkText")}
+                      </a>
+                      .
                     </p>
                   </InfoAccordion>
                 </div>

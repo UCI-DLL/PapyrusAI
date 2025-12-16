@@ -14,7 +14,6 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  Eye,
 } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
@@ -239,8 +238,7 @@ export default function ModuleCard({
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
               navigator(
-                `/chat/${user.username}/${course.id}/${module.id}/${
-                  createRes.data.conversations.length - 1
+                `/chat/${user.username}/${course.id}/${module.id}/${createRes.data.conversations.length - 1
                 }`
               );
             }
@@ -523,7 +521,7 @@ export default function ModuleCard({
                         className="pointer-events-none"
                         variant="secondary"
                       >
-                        {t("common.unpublished")}
+                        {t("components.unpublished")}
                       </Badge>
                     </>
                   )}
@@ -561,9 +559,9 @@ export default function ModuleCard({
                       ? "text-gold hover:text-muted"
                       : "text-muted hover:text-gold"
                   )}
-                    aria-label={
-                      isStarred ? t("common.removeFromFavorites") : t("common.addToFavorites")
-                    }
+                  aria-label={
+                    isStarred ? t("common.removeFromFavorites") : t("common.addToFavorites")
+                  }
                 >
                   <Star
                     size={12}
@@ -578,7 +576,7 @@ export default function ModuleCard({
                 </button>
               </TooltipWrapper>
 
-              {isInstructorOrTA && ( //TODO figure this out later
+              {/* {isInstructorOrTA && ( //TODO figure this out later
                 <TooltipWrapper content={t("common.view") + " " + t("common.reports")}>
                   <button
                     onClick={() =>
@@ -590,13 +588,13 @@ export default function ModuleCard({
                     <Eye className="h-[1em] w-[1em]" aria-hidden="true" />
                   </button>
                 </TooltipWrapper>
-              )}
+              )} */}
 
               {isInstructorOrTA && (
                 <DropdownWrapper
                   trigger={
                     <button
-                      className="p-1 text-lg text-primary hover:bg-primary/10 hover:text-primary rounded-full transition-all duration-300"
+                      className="p-1 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
@@ -609,11 +607,11 @@ export default function ModuleCard({
                     </button>
                   }
                   actions={(user?.groups.includes(course.id) &&
-                  (course.instructor.username === user.username ||
-                    (course.taList &&
-                      course.taList.find(
-                        (a: CustomUserType) => a.username === user?.username
-                      )))
+                    (course.instructor.username === user.username ||
+                      (course.taList &&
+                        course.taList.find(
+                          (a: CustomUserType) => a.username === user?.username
+                        )))
                     ? ownerMenu
                     : nonOwnerMenu
                   ).map((item) => ({

@@ -31,6 +31,7 @@ import {
 } from "../../utility/endpoints/FolderEndpoints";
 import Put from "../../utility/Put";
 import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 type PromptFormMode = "create" | "edit";
 
@@ -56,10 +57,10 @@ export default function CreatePrompt({
   let location = useLocation();
   let navigator = useNavigate();
   const { t } = useTranslation();
-  
+
   // Translated options
   const options = [t("createPrompt.savePublish"), t("createPrompt.discardChanges")];
-  
+
   // Determine if we're in edit mode based on URL or props
   const isEditMode =
     mode === "edit" || !location.pathname.includes("/createprompt")
@@ -540,9 +541,20 @@ export default function CreatePrompt({
               </nav>
             </div>
 
-            <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              {t("createPrompt.createPromptDescription")}
-            </p>
+            <InfoAccordion>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                {t("createPrompt.createPromptDescription")}&nbsp;
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                >
+                  {t("createPrompt.createPromptDescriptionLinkText")}
+                </a>
+                .
+              </p>
+            </InfoAccordion>
           </div>
         </div>
       </header>
@@ -637,7 +649,7 @@ export default function CreatePrompt({
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm font-medium">Tags</Label>
+                  <Label className="text-sm font-medium">{t("library.tags")}</Label>
                   <TooltipWrapper content="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type.">
                     <button aria-label="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type.">
                       <Info className="h-4 w-4 text-muted-foreground" />
@@ -671,15 +683,15 @@ export default function CreatePrompt({
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      No tags available
+                      {t("library.noTags")}
                     </p>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Selected:{" "}
+                  {t("common.selected")}:{" "}
                   {prompt.tags.length > 0
                     ? prompt.tags.join(", ")
-                    : "None"}
+                    : t("common.none")}
                 </p>
               </div>
             </form>

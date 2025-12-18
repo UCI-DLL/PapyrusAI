@@ -651,7 +651,7 @@ export default function ConversationList(): JSX.Element {
                                                 error: "",
                                               });
                                             }}
-                                            className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                            className="h-6 w-6 p-0 text-muted-foreground hover:bg-destructive hover:text-primary-foreground"
                                             aria-label={t("chat.archiveConversation")}
                                           >
                                             <EyeOff className="h-3 w-3" />
@@ -683,7 +683,7 @@ export default function ConversationList(): JSX.Element {
                                                 error: "",
                                               });
                                             }}
-                                            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                                            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary hover:bg-primary hover:text-primary-foreground"
                                             aria-label={t("chat.renameConversation")}
                                           >
                                             <Edit className="h-3 w-3" />
@@ -700,7 +700,7 @@ export default function ConversationList(): JSX.Element {
                                       >
                                         <Link
                                           to={link}
-                                          className="flex items-center gap-1 no-underline"
+                                          className="flex items-center gap-1 no-underline hover:bg-primary hover:text-primary-foreground"
                                         >
                                           <MessageSquare className="h-3 w-3" />
                                           {t("chat.chat")}

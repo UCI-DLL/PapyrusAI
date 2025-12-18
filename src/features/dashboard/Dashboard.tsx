@@ -161,7 +161,7 @@ export default function Dashboard(): JSX.Element {
                 size="sm"
                 variant="outline"
                 asChild
-                aria-label="Create new course" //TODO
+                aria-label={t("dashboard.createCourse")}
               >
                 <Link to="/createcourse" className="no-underline">
                   <PlusIcon className="w-4 h-4" aria-hidden="true" />

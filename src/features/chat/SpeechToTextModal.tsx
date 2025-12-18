@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import useSpeechRecognition from "../../utility/useSpeechRecognitionHook";
 import { Mic, MicOff, Send, MessageSquare } from 'lucide-react';
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface ChatWizardProps {
   returnSpeechText: (text: string) => void;
@@ -14,6 +15,7 @@ interface ChatWizardProps {
 export default function SpeechToTextModal({
   returnSpeechText,
 }: ChatWizardProps): JSX.Element {
+  const { t } = useTranslation();
   const [text, setText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { transcript, startListening, stopListening, hasRecognitionSupport, isListening } = useSpeechRecognition();
@@ -36,18 +38,16 @@ export default function SpeechToTextModal({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
-            Voice to Text
+            {t("chat.voiceToText")}
           </CardTitle>
           <CardDescription>
-            Record your message using voice recognition, then edit and send it to the AI
+            {t("chat.voiceToTextDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Alert>
             <AlertDescription className="text-sm">
-              When you are ready to record your message, click "Start Listening". 
-              When you are done recording, click "Stop Listening", then wait for your message to be transcribed. 
-              You can edit the transcribed message before sending it to the AI.
+              {t("chat.voiceToTextDescription2")}
             </AlertDescription>
           </Alert>
 
@@ -62,27 +62,27 @@ export default function SpeechToTextModal({
                     size="lg"
                   >
                     <MicOff className="mr-2 h-4 w-4" />
-                    Stop Listening
+                    {t("chat.stopListening")}
                   </Button>
                 ) : (
-                  <Button 
-                    variant="outline" 
-                    className="w-full" 
+                  <Button
+                    variant="outline"
+                    className="w-full"
                     size="lg"
                     onClick={startListening}
                   >
                     <Mic className="mr-2 h-4 w-4" />
-                    Start Listening
+                    {t("chat.startListening")}
                   </Button>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
+                <Label htmlFor="message">{t("chat.message")}</Label>
                 <Textarea
                   id="message"
                   name="text"
-                  placeholder="Your transcribed message will appear here..."
+                  placeholder={t("chat.transcribedMessageHere")}
                   className="min-h-[120px] resize-none"
                   value={text}
                   onChange={handleChange}
@@ -100,13 +100,13 @@ export default function SpeechToTextModal({
                 disabled={isLoading || !text.trim()}
               >
                 <Send className="mr-2 h-4 w-4" />
-                Send Message
+                {t("chat.sendMessage")}
               </Button>
             </div>
           ) : (
             <Alert variant="destructive">
               <AlertDescription>
-                Your browser does not support speech recognition. Please type your message manually or try using a different browser.
+                {t("chat.voiceError")}
               </AlertDescription>
             </Alert>
           )}

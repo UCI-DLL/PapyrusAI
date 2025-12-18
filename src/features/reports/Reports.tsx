@@ -786,7 +786,7 @@ export default function Reports(): JSX.Element {
                       <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
                       <Select value={downloadType} onValueChange={setDownloadType}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select format" />
+                          <SelectValue placeholder={t("reports.selectFormat")} />
                         </SelectTrigger>
                         <SelectContent avoidCollisions={false} position="popper">
                           <SelectItem value="json">JSON</SelectItem>

@@ -636,6 +636,28 @@
     "listConversations": "Ver conversaciones",
     "listConversationsDescription": "Haz clic en <<Ver conversacione>> para ver las interacciones detalladas."
   },
+  "chat": {
+    "chat": "Chat",
+    "archiveConversation": "Archivar conversación",
+    "archiveConversationQuestion": "¿Archivar conversación?",
+    "archiveConversationTooltip": "Archivar conversación (los instructores aún pueden verla)",
+    "archiveConversationDescription": "¿Está seguro de que desea archivar esta conversación? Esta conversación ya no será visible en su lista de conversaciones. Los instructores aún pueden ver las conversaciones archivadas.",
+    "renameConversation": "Cambiar nombre de la Conversación",
+    "renameConversationDescription": "Ingrese un nuevo nombre para esta conversación.",
+    "conversationName": "Nombre de la Conversación",
+    "updateName": "Actualizar Nombre",
+    "conversations": "Conversaciones",
+    "myConversations": "Mis Conversaciones",
+    "newConversation": "Nueva Conversación",
+    "conversationListDescription": "Esta página muestra todas las conversaciones iniciadas en este módulo. Para obtener más información sobre cómo ver, renombrar y ocultar conversaciones, consulte la ",
+    "conversationListDescriptionLinkText": "sección <<Iniciar una conversación>> de nuestra guía de usuario",
+    "conversationListNewConvoDescription": "Para iniciar una nueva conversación con la IA, haga clic en <<Nueva conversación>>. Para continuar una conversación existente con la IA, haga clic en <<Chat>> junto a la conversación deseada. (Si desea retomar una conversación existente, considere cambiarle el nombre para identificarla y acceder a ella más fácilmente en el futuro).",
+    "conversationList": "Lista de conversaciones",
+    "created": "Creada",
+    "deleted": "Eliminada",
+    "view": "Ver",
+    "startConversation": "Iniciar conversación"
+  },
   "errorMessage": {
     "promptNotExist": "La solicitud no existe",
     "fileNotExist": "El archivo no existe",
@@ -653,7 +675,11 @@
     "courseDataFailed": "No se pudieron cargar los datos del curso. Inténtelo de nuevo más tarde.",
     "courseNotFound": "Curso no encontrado",
     "downloadError": "No se pudieron descargar los datos. Inténtelo de nuevo más tarde.",
-    "userNotFound": "No se pudo encontrar al usuario."
+    "userNotFound": "No se pudo encontrar al usuario.",
+    "convoNotFound": "No se encontraron conversaciones",
+    "nameTooLong": "El nombre es demasiado largo",
+    "noConversationsYet": "Aún no hay conversaciones",
+    "noConversationsDescription": "Este usuario no ha iniciado ninguna conversación en este módulo."
   },
   "loadingMessage": {
     "loading": "Cargando",
@@ -669,6 +695,7 @@
     "prepAnalysis": "Preparando el análisis...",
     "reports": "Cargando informes",
     "students": "Cargando estudiantes...",
-    "userDataConversations": "Cargando datos de usuario y conversaciones..."
+    "userDataConversations": "Cargando datos de usuario y conversaciones...",
+    "conversations": "Cargando conversaciones"
   }
 }

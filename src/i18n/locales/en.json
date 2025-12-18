@@ -636,6 +636,28 @@
     "listConversations": "List Conversations",
     "listConversationsDescription": "Click \"List Conversations\" to view detailed interactions"
   },
+  "chat": {
+    "chat": "Chat",
+    "archiveConversation": "Archive Conversation",
+    "archiveConversationQuestion": "Archive Conversation?",
+    "archiveConversationTooltip": "Archive conversation (instructors can still view)",
+    "archiveConversationDescription": "Are you sure you would like to archive this conversation? This conversation will no longer be visible in your conversation list. Instructors can still view archived conversations.",
+    "renameConversation": "Rename Conversation",
+    "renameConversationDescription": "Enter a new name for this conversation.",
+    "conversationName": "Conversation Name",
+    "updateName": "Update Name",
+    "conversations": "Conversations",
+    "myConversations": "My Conversations",
+    "newConversation": "New Conversation",
+    "conversationListDescription": "This page lists all of the conversations started within this module. For more information on viewing, renaming, and hiding conversations, please see the ",
+    "conversationListDescriptionLinkText": "\"Starting a Conversation\" section of our user guide",
+    "conversationListNewConvoDescription": "To start a new conversation with the AI, click \"New Conversation\". To continue an existing conversation with the AI, click \"Chat\" next to the desired conversation. (If you wish to return to an existing conversation, consider renaming it to more easily identify and return to a particular conversation at a later time.)",
+    "conversationList": "Conversation List",
+    "created": "Created",
+    "deleted": "Deleted",
+    "view": "View",
+    "startConversation": "Start Conversation"
+  },
   "errorMessage": {
     "promptNotExist": "Prompt Does Not Exist",
     "fileNotExist": "File Does Not Exist",
@@ -653,7 +675,11 @@
     "courseDataFailed": "Unable to load course data. Try again later.",
     "courseNotFound": "Course Not Found",
     "downloadError": "Could not download data. Try again later.",
-    "userNotFound": "Could not find user."
+    "userNotFound": "Could not find user.",
+    "convoNotFound": "No Conversations Found",
+    "nameTooLong": "Name is too long",
+    "noConversationsYet": "No conversations yet",
+    "noConversationsDescription": "This user hasn't started any conversations in this module."
   },
   "loadingMessage": {
     "loading": "Loading",
@@ -669,6 +695,7 @@
     "prepAnalysis": "Preparing analysis...",
     "reports": "Loading Reports",
     "students": "Loading Students...",
-    "userDataConversations": "Loading user data and conversations..."
+    "userDataConversations": "Loading user data and conversations...",
+    "conversations": "Loading Conversations"
   }
 }

@@ -194,18 +194,18 @@ export const File = (props: FileProps) => {
       Put(putUpdateOrgFile(props.folder.id, props.file.id), dataToSend).then(
         (res) => {
           if (res.status && res.status < 300) {
-          setAlert({
-            message: t("components.fileDeletedSuccessfully"),
-            type: "success",
-          });
+            setAlert({
+              message: t("components.fileDeletedSuccessfully"),
+              type: "success",
+            });
             props.refreshList();
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
-          setAlert({
-            message: t("components.failedToDeleteFile"),
-            type: "error",
-          });
+            setAlert({
+              message: t("components.failedToDeleteFile"),
+              type: "error",
+            });
           }
           setOpenDeleteDialog(false);
         }
@@ -220,18 +220,18 @@ export const File = (props: FileProps) => {
       Put(putUpdateUserFile(props.folder.id, props.file.id), dataToSend).then(
         (res) => {
           if (res.status && res.status < 300) {
-          setAlert({
-            message: t("components.fileDeletedSuccessfully"),
-            type: "success",
-          });
+            setAlert({
+              message: t("components.fileDeletedSuccessfully"),
+              type: "success",
+            });
             props.refreshList();
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
-          setAlert({
-            message: t("components.failedToDeleteFile"),
-            type: "error",
-          });
+            setAlert({
+              message: t("components.failedToDeleteFile"),
+              type: "error",
+            });
           }
           setOpenDeleteDialog(false);
         }
@@ -394,7 +394,7 @@ export const File = (props: FileProps) => {
       case "png":
         return "IMG";
       default:
-        return "FILE";
+        return t("common.file").toUpperCase();
     }
   };
 

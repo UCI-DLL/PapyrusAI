@@ -8,6 +8,7 @@ import IndividualStudentStats from "./IndividualStudentStats";
 import * as Plot from "@observablehq/plot";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 import { parseLocalDate, formatDateForTooltip } from "../../utility/reports/date";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface StudentPageProps {
   students: Record<string, unknown>[];
@@ -136,6 +137,7 @@ function getStackedModuleUsageData(students: Record<string, unknown>[]) {
 }
 
 export default function StudentPage({ students }: StudentPageProps) {
+  const { t } = useTranslation();
   const { counts, lengths } = getStackedDailyData(students);
   const classificationData = getStackedClassificationData(students);
   const moduleData = getStackedModuleUsageData(students);
@@ -158,23 +160,21 @@ export default function StudentPage({ students }: StudentPageProps) {
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Stacked daily conversation counts chart showing number of conversations by student over time",
+      ariaLabel: t("reports.stackedDailyConvoCounts"),
       x: {
         type: "time",
-        label: "Date",
+        label: t("common.date"),
       },
-      y: { label: "Number of Conversations" },
-      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
+      y: { label: t("reports.numConvos") },
+      color: { legend: true, label: t("reports.student"), range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.rectY(counts, {
           x: "date",
           y: "value",
           fill: "studentName",
           title: (d: any) =>
-            `Date: ${formatDateForTooltip(d.date)}\nStudent: ${
-              d.studentName
-            }\nConversations: ${d.value}`,
+            `${t("common.date")}: ${formatDateForTooltip(d.date)}\n${t("reports.student")}: ${d.studentName
+            }\n ${t("reports.conversations")}: ${d.value}`,
           tip: {
             format: {
               x: (d: any) => formatDateForTooltip(d.date),
@@ -203,9 +203,8 @@ export default function StudentPage({ students }: StudentPageProps) {
             rect.setAttribute("role", "img");
             rect.setAttribute(
               "aria-label",
-              `Date ${data.date.toLocaleDateString()}, Student ${
-                data.studentName
-              }, ${data.value} conversations`
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.student")} ${data.studentName
+              }, ${data.value} ${t("reports.conversations")}`
             );
             rect.setAttribute("tabindex", "0");
             dataIndex++;
@@ -213,7 +212,7 @@ export default function StudentPage({ students }: StudentPageProps) {
         });
       }, 0);
     }
-  }, [counts, backgroundColor, foregroundColor]);
+  }, [counts, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
     if (!lengths.length) return;
@@ -222,23 +221,21 @@ export default function StudentPage({ students }: StudentPageProps) {
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Stacked daily conversation lengths chart showing average conversation length by student over time",
+      ariaLabel: t("reports.stackedDailyConvoLengths"),
       x: {
         type: "time",
-        label: "Date",
+        label: t("common.date"),
       },
-      y: { label: "Avg Conversation Length" },
-      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
+      y: { label: t("reports.avgConvoLength") },
+      color: { legend: true, label: t("reports.student"), range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.rectY(lengths, {
           x: "date",
           y: "value",
           fill: "studentName",
           title: (d: any) =>
-            `Date: ${formatDateForTooltip(d.date)}\nStudent: ${
-              d.studentName
-            }\nAvg Length: ${d.value.toFixed(1)}`,
+            `${t("common.date")}: ${formatDateForTooltip(d.date)}\n${t("reports.student")}: ${d.studentName
+            }\n${t("reports.avgConvoLength")}: ${d.value.toFixed(1)}`,
           tip: {
             format: {
               x: (d: any) => formatDateForTooltip(d.date),
@@ -266,9 +263,8 @@ export default function StudentPage({ students }: StudentPageProps) {
             rect.setAttribute("role", "img");
             rect.setAttribute(
               "aria-label",
-              `Date ${data.date.toLocaleDateString()}, Student ${
-                data.studentName
-              }, Average conversation length ${data.value.toFixed(1)}`
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.student")} ${data.studentName
+              }, ${t("reports.avgConvoLength")} ${data.value.toFixed(1)}`
             );
             rect.setAttribute("tabindex", "0");
             dataIndex++;
@@ -276,7 +272,7 @@ export default function StudentPage({ students }: StudentPageProps) {
         });
       }, 0);
     }
-  }, [lengths, backgroundColor, foregroundColor]);
+  }, [lengths, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
     if (!classificationData.length) return;
@@ -285,20 +281,18 @@ export default function StudentPage({ students }: StudentPageProps) {
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Stacked classification counts chart showing conversation classifications by student",
-      x: { label: "Classification" },
-      y: { label: "Count" },
-      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
+      ariaLabel: ("reports.stackedClassificationCounts"),
+      x: { label: t("reports.classification") },
+      y: { label: t("reports.count") },
+      color: { legend: true, label: t("reports.student"), range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.barY(classificationData, {
           x: "classification",
           y: "count",
           fill: "studentName",
           title: (d: any) =>
-            `Classification: ${
-              d.fullClassification || d.classification
-            }\nStudent: ${d.studentName}\nCount: ${d.count}`,
+            `${t("reports.classification")}: ${d.fullClassification || d.classification
+            }\n${t("reports.student")}: ${d.studentName}\n${t("reports.count")}: ${d.count}`,
           tip: {
             format: {
               x: (d: any) => d.fullClassification || d.classification,
@@ -326,7 +320,7 @@ export default function StudentPage({ students }: StudentPageProps) {
       classificationRef.current.innerHTML = "";
       classificationRef.current.appendChild(plot);
     }
-  }, [classificationData, backgroundColor, foregroundColor]);
+  }, [classificationData, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
     if (!moduleData.length) return;
@@ -335,20 +329,18 @@ export default function StudentPage({ students }: StudentPageProps) {
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Stacked module usage chart showing module usage counts by student",
-      x: { label: "Module" },
-      y: { label: "Count" },
-      color: { legend: true, label: "Student", range: PLOT_COLOR_PALETTE },
+      ariaLabel: t("reports.stackedModuleUseage"),
+      x: { label: t("common.modules") },
+      y: { label: t("reports.count") },
+      color: { legend: true, label: t("reports.student"), range: PLOT_COLOR_PALETTE },
       marks: [
         Plot.barY(moduleData, {
           x: "moduleName",
           y: "count",
           fill: "studentName",
           title: (d: any) =>
-            `Module: ${d.fullModuleName || d.moduleName}\nStudent: ${
-              d.studentName
-            }\nCount: ${d.count}`,
+            `${t("common.modules")}: ${d.fullModuleName || d.moduleName}\n${t("reports.student")}: ${d.studentName
+            }\n${t("reports.count")}: ${d.count}`,
           tip: {
             format: {
               x: (d: any) => d.fullModuleName || d.moduleName,
@@ -376,9 +368,8 @@ export default function StudentPage({ students }: StudentPageProps) {
             rect.setAttribute("role", "img");
             rect.setAttribute(
               "aria-label",
-              `Module ${data.fullModuleName || data.moduleName}, Student ${
-                data.studentName
-              }, Count ${data.count}`
+              `${t("common.modules")} ${data.fullModuleName || data.moduleName}, ${t("reports.student")} ${data.studentName
+              }, ${t("reports.count")} ${data.count}`
             );
             rect.setAttribute("tabindex", "0");
             dataIndex++;
@@ -386,7 +377,7 @@ export default function StudentPage({ students }: StudentPageProps) {
         });
       }, 0);
     }
-  }, [moduleData, backgroundColor, foregroundColor]);
+  }, [moduleData, backgroundColor, foregroundColor, t]);
 
   return (
     <div>
@@ -407,7 +398,7 @@ export default function StudentPage({ students }: StudentPageProps) {
               className="text-2xl font-bold text-foreground mb-2"
               id="stacked-lengths-chart-heading"
             >
-              Daily Conversation Lengths (Stacked by Student)
+              {t("reports.dailyConversationLengths")} ({t("reports.stackedByStudent")})
             </h4>
             <div
               ref={lengthsRef}
@@ -418,12 +409,12 @@ export default function StudentPage({ students }: StudentPageProps) {
             />
             <div className="sr-only">
               <table>
-                <caption>Daily Conversation Lengths Data Table</caption>
+                <caption>{t("reports.dailyConvoLengthTable")}</caption>
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Student</th>
-                    <th>Avg Length</th>
+                    <th>{t("common.date")}</th>
+                    <th>{t("reports.student")}</th>
+                    <th>{t("reports.avgConvoLength")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -443,7 +434,7 @@ export default function StudentPage({ students }: StudentPageProps) {
               className="text-2xl font-bold text-foreground mb-2"
               id="stacked-counts-chart-heading"
             >
-              Daily Conversation Counts (Stacked by Student)
+              {t("reports.dailyConversationCounts")} ({t("reports.stackedByStudent")})
             </h4>
             <div
               ref={countsRef}
@@ -454,12 +445,12 @@ export default function StudentPage({ students }: StudentPageProps) {
             />
             <div className="sr-only">
               <table>
-                <caption>Daily Conversation Counts Data Table</caption>
+                <caption>{t("reports.dailyConvoCountsTable")}</caption>
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Student</th>
-                    <th>Conversations</th>
+                    <th>{t("common.date")}</th>
+                    <th>{t("reports.student")}</th>
+                    <th>{t("reports.conversations")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -479,7 +470,7 @@ export default function StudentPage({ students }: StudentPageProps) {
               className="text-2xl font-bold text-foreground mb-2"
               id="stacked-module-usage-chart-heading"
             >
-              Module Usage (Stacked by Student)
+              {t("reports.moduleUsage")} ({t("reports.stackedByStudent")})
             </h4>
             <div
               ref={moduleUsageRef}
@@ -490,12 +481,12 @@ export default function StudentPage({ students }: StudentPageProps) {
             />
             <div className="sr-only">
               <table>
-                <caption>Module Usage Data Table</caption>
+                <caption>{t("reports.moduleUsageTable")}</caption>
                 <thead>
                   <tr>
-                    <th>Module</th>
-                    <th>Student</th>
-                    <th>Count</th>
+                    <th>{t("common.modules")}</th>
+                    <th>{t("reports.student")}</th>
+                    <th>{t("reports.count")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -520,7 +511,7 @@ export default function StudentPage({ students }: StudentPageProps) {
         className="text-2xl font-bold text-foreground mb-1"
         style={{ padding: "0 2rem" }}
       >
-        Individual Stats
+        {t("reports.individualStats")}
       </h2>
       {students.map((student, i) => (
         <div

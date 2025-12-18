@@ -430,7 +430,7 @@ export const Prompt = (props: PromptProps) => {
       if (firstTag.toLowerCase().includes("business")) return "BUSINESS";
       if (firstTag.toLowerCase().includes("academic")) return "ACADEMIC";
     }
-    return "PROMPT";
+    return t("common.prompt").toUpperCase();
   };
 
   const getPromptPreview = () => {

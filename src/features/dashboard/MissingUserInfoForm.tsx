@@ -130,7 +130,7 @@ export default function MissingUserInfoForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (session.name === "") {
-      setErrors((prev) => ({ ...prev, name: "Name missing" }));
+      setErrors((prev) => ({ ...prev, name: `${t("errorMessage.nameMissing")}` }));
     }
     // else if(session.family_name === "") {
     //   setErrors((prev) => ({...prev, family_name: "Family name missing"}))
@@ -198,14 +198,14 @@ export default function MissingUserInfoForm({
   function handleLanguageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedLanguage = e.target.value;
     setSession((prev) => ({ ...prev, [e.target.name]: selectedLanguage }));
-    
+
     // Update i18n language
     const languageCode = selectedLanguage === "spanish" ? "es" : "en";
     changeLanguage(languageCode as "en" | "es");
-    
+
     // Update HTML lang attribute
     document.documentElement.setAttribute("lang", languageCode);
-    
+
     if (user) {
       setUser({ ...user, "custom:language": selectedLanguage });
       localStorage.setItem(

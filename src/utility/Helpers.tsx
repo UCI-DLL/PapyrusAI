@@ -106,3 +106,24 @@ export function orderModuleRecentlyCreatedAndStarred(list: Array<ModuleType>, st
 export function removeSpecialCharacters(str: string) { //note: keep new lines
   return str.replace(/[^a-zA-Z0-9!@#$%^ÁáÉéÍíÓóÚúÑñäöü¡¿()"'.?\-_+=*~<>{},;:&|\s]/g, "");
 }
+
+//handle returning the course term in the current language
+export function handleCourseTermLanguage(currentLang: string, courseTerm: string): string {
+  if (currentLang === "english") {
+    return courseTerm
+  } else if (currentLang === "spanish") {
+    if (courseTerm === "spring") {
+      return "Primavera"
+    }
+    if (courseTerm === "summer") {
+      return "Verano"
+    }
+    if (courseTerm === "fall") {
+      return "Otoño"
+    }
+    if (courseTerm === "winter") {
+      return "Invierno"
+    }
+  }
+  return courseTerm
+}

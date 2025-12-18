@@ -206,7 +206,7 @@ export default function ListFolderContents(
             //redirect to prompt list
             navigator("/library");
             setAlert({
-              message: "Folder Does Not Exist",
+              message: t("errorMessage.folderNotExist"),
               type: "error",
             });
             setIsLoading(false);
@@ -231,7 +231,7 @@ export default function ListFolderContents(
             //redirect to prompt list
             // navigator("/library");
             setAlert({
-              message: "Folder Does Not Exist",
+              message: t("errorMessage.folderNotExist"),
               type: "error",
             });
             setIsLoading(false);
@@ -486,7 +486,7 @@ export default function ListFolderContents(
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search content..."
+              placeholder={t("library.searchContent")}
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -498,7 +498,7 @@ export default function ListFolderContents(
             onClick={() => setIsFilterPopoverOpen(true)}
           >
             <Filter className="h-4 w-4" />
-            Filters
+            {t("library.filters")}
             {getActiveFilterCount() > 0 && (
               <Badge variant="secondary" className="ml-1 px-1.5 py-0.5 text-xs">
                 {getActiveFilterCount()}
@@ -509,8 +509,8 @@ export default function ListFolderContents(
           <DialogWrapper
             open={isFilterPopoverOpen}
             onOpenChange={setIsFilterPopoverOpen}
-            title="Filters"
-            description="Filter content by various criteria"
+            title={t("library.filters")}
+            description={t("library.filtersDescription")}
             contentClassName="sm:max-w-xl"
             showFooter={false}
           >
@@ -518,8 +518,9 @@ export default function ListFolderContents(
               {/* handle safari screen readers  */}
               {isSafari ? (
                 <div className="space-y-2">
-                  <Label>Type</Label>
+                  <Label>{t("library.type")}</Label>
                   <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                     value={filters.type}
                     onChange={(value) =>
                       setFilters((prev) => ({
@@ -527,19 +528,23 @@ export default function ListFolderContents(
                         type: value.target.value as TypeOptions,
                       }))
                     }
-                    placeholder="Select asset type"
-                    title="Type"
+                    placeholder={t("library.type")}
+                    title={t("library.type")}
                   >
-                    {Object.values(TypeOptions).map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
+                    <option value={"All"} key={"All"}>
+                      {t("common.all")}
+                    </option>
+                    <option key={"Prompt"} value={"Prompt"}>
+                      {t("common.prompt")}
+                    </option>
+                    <option key={"File"} value={"File"}>
+                      {t("common.file")}
+                    </option>
                   </select>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label>Type</Label>
+                  <Label>{t("library.type")}</Label>
                   <Select
                     value={filters.type}
                     onValueChange={(value) =>
@@ -553,11 +558,15 @@ export default function ListFolderContents(
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent avoidCollisions={false} position="popper">
-                      {Object.values(TypeOptions).map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value={"All"} key={"All"}>
+                        {t("common.all")}
+                      </SelectItem>
+                      <SelectItem key={"Prompt"} value={"Prompt"}>
+                        {t("common.prompt")}
+                      </SelectItem>
+                      <SelectItem key={"File"} value={"File"}>
+                        {t("common.file")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -566,8 +575,9 @@ export default function ListFolderContents(
               {/* handle safari screen readers  */}
               {isSafari ? (
                 <div className="space-y-2">
-                  <Label>Sort</Label>
+                  <Label>{t("library.sort")}</Label>
                   <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                     value={filters.sort}
                     onChange={(value) =>
                       setFilters((prev) => ({
@@ -575,20 +585,20 @@ export default function ListFolderContents(
                         sort: value.target.value as SortOptions,
                       }))
                     }
-                    placeholder="Select Sort option"
-                    title="Sort"
+                    placeholder={t("library.sort")}
+                    title={t("library.sort")}
                   >
 
                     {Object.values(SortOptions).map((sort) => (
                       <option key={sort} value={sort}>
-                        {sort}
+                        {t(`library.${sort.toLowerCase()}`)}
                       </option>
                     ))}
                   </select>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label>Sort</Label>
+                  <Label>{t("library.sort")}</Label>
                   <Select
                     value={filters.sort}
                     onValueChange={(value) =>
@@ -604,7 +614,7 @@ export default function ListFolderContents(
                     <SelectContent avoidCollisions={false} position="popper">
                       {Object.values(SortOptions).map((sort) => (
                         <SelectItem key={sort} value={sort}>
-                          {sort}
+                          {t(`library.${sort.toLowerCase()}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -615,8 +625,9 @@ export default function ListFolderContents(
               {/* handle safari screen readers  */}
               {isSafari ? (
                 <div className="space-y-2">
-                  <Label>Starred</Label>
+                  <Label>{t("library.starred")}</Label>
                   <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                     value={filters.starred}
                     onChange={(value) =>
                       setFilters((prev) => ({
@@ -624,19 +635,23 @@ export default function ListFolderContents(
                         starred: value.target.value as StarredOptions,
                       }))
                     }
-                    placeholder="Select starred"
-                    title="Starred"
+                    placeholder={t("library.starred")}
+                    title={t("library.starred")}
                   >
-                    {Object.values(StarredOptions).map((starred) => (
-                      <option key={starred} value={starred}>
-                        {starred}
-                      </option>
-                    ))}
+                    <option value={"All"} key={"All"}>
+                      {t("common.all")}
+                    </option>
+                    <option value={"Starred"} key={"Starred"}>
+                      {t("library.starred")}
+                    </option>
+                    <option value={"Not Starred"} key={"Not Starred"}>
+                      {t("library.notStarred")}
+                    </option>
                   </select>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label>Starred</Label>
+                  <Label>{t("library.starred")}</Label>
                   <Select
                     value={filters.starred}
                     onValueChange={(value) =>
@@ -650,11 +665,15 @@ export default function ListFolderContents(
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent avoidCollisions={false} position="popper">
-                      {Object.values(StarredOptions).map((starred) => (
-                        <SelectItem key={starred} value={starred}>
-                          {starred}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value={"All"} key={"All"}>
+                        {t("common.all")}
+                      </SelectItem>
+                      <SelectItem value={"Starred"} key={"Starred"}>
+                        {t("library.starred")}
+                      </SelectItem>
+                      <SelectItem value={"Not Starred"} key={"Not Starred"}>
+                        {t("library.notStarred")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -665,6 +684,7 @@ export default function ListFolderContents(
                 <div className="space-y-2">
                   <Label>{t("library.tags")}</Label>
                   <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                     value={filters.tags}
                     onChange={(value) =>
                       setFilters((prev) => ({
@@ -672,11 +692,11 @@ export default function ListFolderContents(
                         tags: value.target.value,
                       }))
                     }
-                    placeholder="Select tag filter"
+                    placeholder={t("library.tags")}
                     title={t("library.tags")}
                   >
                     <option value="none" key="none">
-                      No filter
+                      {t("library.noFilter")}
                     </option>
                     {tagList.map((tag) => (
                       <option key={tag.id} value={tag.id}>
@@ -698,11 +718,11 @@ export default function ListFolderContents(
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a tag" />
+                      <SelectValue placeholder={t("library.tags")} />
                     </SelectTrigger>
                     <SelectContent avoidCollisions={false} position="popper">
                       <SelectItem value="none" key="none">
-                        No filter
+                        {t("library.noFilter")}
                       </SelectItem>
                       {tagList.map((tag) => (
                         <SelectItem key={tag.id} value={tag.id}>
@@ -716,10 +736,10 @@ export default function ListFolderContents(
 
 
               <div className="space-y-4">
-                <Label className="text-sm font-medium">Date Created</Label>
+                <Label className="text-sm font-medium">{t("library.dateCreated")}</Label>
 
                 <div className="space-y-2">
-                  <Label htmlFor="start-date">Start Date</Label>
+                  <Label htmlFor="start-date">{t("library.pickStartDate")}</Label>
                   <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -732,7 +752,7 @@ export default function ListFolderContents(
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {filters.startDate
                           ? format(filters.startDate, "PPP")
-                          : "Pick a start date"}
+                          : t("library.pickStartDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -753,7 +773,7 @@ export default function ListFolderContents(
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end-date">End Date</Label>
+                  <Label htmlFor="end-date">{t("library.pickEndDate")}</Label>
                   <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -766,7 +786,7 @@ export default function ListFolderContents(
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {filters.endDate
                           ? format(filters.endDate, "PPP")
-                          : "Pick an end date"}
+                          : t("library.pickEndDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -794,7 +814,7 @@ export default function ListFolderContents(
                 onClick={handleResetFilters}
                 className="flex-1"
               >
-                Clear Filters
+                {t("library.clearFilters")}
               </Button>
               <Button
                 onClick={(e) => {
@@ -803,7 +823,7 @@ export default function ListFolderContents(
                 }}
                 className="flex-1"
               >
-                Apply Filters
+                {t("library.applyFilters")}
               </Button>
             </div>
           </DialogWrapper>
@@ -875,9 +895,9 @@ export default function ListFolderContents(
             role="status"
           >
             <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No content found</p>
+            <p className="text-lg font-medium mb-2">{t("library.noContent")}</p>
             <p className="text-sm">
-              Get started by creating your first prompt or uploading a file.
+              {t("library.getStarted")}
             </p>
           </div>
         )}
@@ -893,7 +913,7 @@ export default function ListFolderContents(
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
         />
-        <p className="text-muted-foreground">Loading Content</p>
+        <p className="text-muted-foreground">{t("loadingMessage.content")}</p>
       </div>
     </div>
   );

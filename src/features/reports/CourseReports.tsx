@@ -21,8 +21,10 @@ import {
 } from "../../utility/endpoints/ConversationEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function CourseReports(): JSX.Element {
+  const { t } = useTranslation();
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -162,9 +164,10 @@ export default function CourseReports(): JSX.Element {
                   );
                   setIsLoading(false);
                   setAlert({
-                    message: `Unable to load course data${
-                      retryRes?.status ? ` (status ${retryRes.status})` : ""
-                    }.`,
+                    message: t("errorMessage.courseDataFailed"),
+                    // message: `Unable to load course data${
+                    //   retryRes?.status ? ` (status ${retryRes.status})` : ""
+                    // }.`,
                     type: "error",
                   });
                 }
@@ -176,7 +179,7 @@ export default function CourseReports(): JSX.Element {
     });
 
     return () => controller.abort();
-  }, [courseId, user, courseData, usersData, setAlert, navigate]);
+  }, [courseId, user, courseData, usersData, setAlert, navigate, t]);
 
   // Helper function to get conversation data
   const getConvo = React.useCallback(
@@ -352,7 +355,7 @@ export default function CourseReports(): JSX.Element {
       } catch (error) {
         console.error("Error fetching conversation data:", error);
         setAlert({
-          message: "Error loading course data. Please try again.",
+          message: t("errorMessage.courseDataFailed"),
           type: "error",
         });
       } finally {
@@ -361,14 +364,14 @@ export default function CourseReports(): JSX.Element {
     };
 
     runAnalysis();
-  }, [course, users, isLoading, setAlert, getConvoListForClick]);
+  }, [course, users, isLoading, setAlert, getConvoListForClick, t]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading Course Data</p>
+          <p className="text-muted-foreground">{t("loadingMessage.courseData")}</p>
         </div>
       </div>
     );
@@ -380,7 +383,7 @@ export default function CourseReports(): JSX.Element {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground text-lg">
-            Analyzing course data and generating reports...
+            {t("loadingMessage.analyzingCourseData")}
           </p>
         </div>
       </div>
@@ -393,7 +396,7 @@ export default function CourseReports(): JSX.Element {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground text-lg">Preparing analysis...</p>
+          <p className="text-muted-foreground text-lg">{t("loadingMessage.prepAnalysis")}</p>
         </div>
       </div>
     );
@@ -403,7 +406,7 @@ export default function CourseReports(): JSX.Element {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <p className="text-muted-foreground text-lg">Course not found</p>
+          <p className="text-muted-foreground text-lg">{t("errorMessage.courseNotFound")}</p>
         </div>
       </div>
     );

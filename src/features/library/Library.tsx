@@ -23,18 +23,6 @@ import { Loader2, Tag, Folder, Trash2, Save } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
-export enum SortOptions {
-  Ascending = "Ascending",
-  Descending = "Descending",
-  Newest = "Newest",
-  Oldest = "Oldest",
-}
-
-export enum OwnerTypeOptions {
-  Any = "Any",
-  "Me" = "Me",
-  "Organization" = "Organization",
-}
 
 export default function Library(): JSX.Element {
   let navigator = useNavigate();
@@ -229,7 +217,7 @@ export default function Library(): JSX.Element {
                         <Input
                           name={`${i}_tag`}
                           className="flex-1"
-                          aria-label="Tag"
+                          aria-label={t("library.tags")}
                           value={tag.name ? tag.name : tag.id}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             setTagList((prev) => {
@@ -363,7 +351,7 @@ export default function Library(): JSX.Element {
                 </div>
                 <nav
                   className="flex flex-col sm:flex-row gap-2"
-                  aria-label="Library management actions"
+                  aria-label={`${t("library.library")} ${t("common.actions")}}`}
                 >
                   {user?.groups.includes(
                     process.env.REACT_APP_ADMIN

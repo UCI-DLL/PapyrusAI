@@ -13,8 +13,10 @@ import { UserContext } from "../../utility/context/UserContext";
 import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function UserReports(): JSX.Element {
+  const { t } = useTranslation();
   let navigator = useNavigate();
   let location = useLocation();
   const [conversationList, setConversationList] = useState<
@@ -165,7 +167,7 @@ export default function UserReports(): JSX.Element {
         if (res === undefined) {
         } else {
           //handle error
-          setAlert({ message: "Could not find user", type: "error" });
+          setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
         }
       }
     });
@@ -202,16 +204,13 @@ export default function UserReports(): JSX.Element {
 
         <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
           <h2 className="text-2xl font-bold text-foreground mb-1">
-            Student:{" "}
+            {t("reports.student")}:{" "}
             {viewUser
               ? `${viewUser.name} ${viewUser.family_name}`
               : "User Reports"}
           </h2>
           <p style={{ fontSize: "1.1rem", color: "#666" }}>
-            The student report page summarizes a specific student's interactions
-            with AI in all of the courses of which you are an instructor. To
-            view a student's conversations within a given module, click "List
-            Conversations" on the row for your desired module.
+            {t("reports.studentReportDescription")}
           </p>
         </div>
 
@@ -224,10 +223,10 @@ export default function UserReports(): JSX.Element {
             }}
           >
             <h2 className="text-2xl font-bold text-foreground mb-1">
-              No Data Available
+              {t("reports.noData")}
             </h2>
             <p style={{ fontSize: "1.1rem" }}>
-              No conversation data available for this student. This could mean:
+              {t("reports.noDataStudentDescription")}:
             </p>
             <ul
               style={{
@@ -237,9 +236,9 @@ export default function UserReports(): JSX.Element {
                 fontSize: "1rem",
               }}
             >
-              <li>The student hasn't had any conversations yet</li>
-              <li>You don't have access to this student's data</li>
-              <li>The student hasn't been enrolled in any courses</li>
+              <li>{t("reports.noDataStudentDescription1")}</li>
+              <li>{t("reports.noDataStudentDescription2")}</li>
+              <li>{t("reports.noDataStudentDescription3")}</li>
             </ul>
           </div>
         ) : (
@@ -302,7 +301,7 @@ export default function UserReports(): JSX.Element {
                           </h2>
                           <div className="space-y-1">
                             <div className="text-sm text-muted-foreground">
-                              Module:{" "}
+                              {t("common.module")}:{" "}
                               {
                                 row.course.modules.find(
                                   (x) => x.id === row.moduleId
@@ -310,13 +309,13 @@ export default function UserReports(): JSX.Element {
                               }
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Last Accessed: {tempTime}
+                              {t("reports.lastAccessed")}: {tempTime}
                             </div>
                           </div>
                         </div>
                         <div className="text-right ml-4">
                           <div className="text-base font-semibold text-foreground mb-2">
-                            {row.conversations.length} Conversations
+                            {row.conversations.length} {t("reports.conversations")}
                           </div>
                           <Button
                             onClick={() =>
@@ -326,12 +325,12 @@ export default function UserReports(): JSX.Element {
                             }
                             className="bg-blue-600 hover:bg-blue-700 text-white"
                           >
-                            List Conversations
+                            {t("reports.listConversations")}
                           </Button>
                         </div>
                       </div>
                       <div className="text-xs text-muted-foreground italic">
-                        Click "List Conversations" to view detailed interactions
+                        {t("reports.listConversationsDescription")}
                       </div>
                     </CardContent>
                   </Card>
@@ -347,7 +346,7 @@ export default function UserReports(): JSX.Element {
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-muted-foreground text-lg">
-          Loading user data and conversations...
+          {t("loadingMessage.userDataConversations")}
         </p>
       </div>
     </div>

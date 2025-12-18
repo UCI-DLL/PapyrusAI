@@ -72,15 +72,15 @@ export default function ChatInput({
                 size="sm"
                 className="h-8 w-8 my-1 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={onOpenDocumentModal}
-                aria-label="Add file"
+                aria-label="Add file" //TODO
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
             </TooltipWrapper>
 
             <AutosizeTextarea
-              aria-label="Message Input"
-              placeholder="Enter message..."
+              aria-label="Message Input" //TODO
+              placeholder="Enter message..." //TODO
               value={message}
               disabled={isLoading}
               className="flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-6"
@@ -99,7 +99,7 @@ export default function ChatInput({
                   size="sm"
                   className="h-8 w-8 my-1 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={onOpenSpeechToTextModal}
-                  aria-label="Speech to text"
+                  aria-label="Speech to text" //TODO
                 >
                   <Mic className="h-4 w-4" />
                 </Button>
@@ -110,7 +110,7 @@ export default function ChatInput({
                 size="sm"
                 className="h-8 w-8 my-1 md:m-1 bg-primary hover:bg-primary/90 transition-colors"
                 disabled={isLoading || !message.trim()}
-                aria-label="Send message"
+                aria-label="Send message" //TODO
               >
                 <Send className="h-4 w-4" />
               </Button>

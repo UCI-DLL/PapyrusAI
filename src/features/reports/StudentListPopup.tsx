@@ -6,6 +6,7 @@ import React, { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, User } from "lucide-react";
 import { Button } from "../../components/ui/button";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface StudentListPopupProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function StudentListPopup({
   onClose,
   analysis,
 }: StudentListPopupProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -64,8 +66,8 @@ export default function StudentListPopup({
   const students =
     analysis && analysis.students
       ? Object.entries(
-          analysis.students as Record<string, Record<string, unknown>>
-        )
+        analysis.students as Record<string, Record<string, unknown>>
+      )
       : [];
 
   const handleStudentClick = (
@@ -96,14 +98,14 @@ export default function StudentListPopup({
               id="student-list-title"
               className="text-xl font-semibold text-foreground"
             >
-              Students in Class
+              {t("reports.studentsInClass")}
             </h2>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            aria-label="Close student list"
+            aria-label={t("common.close")}
             className="h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />
@@ -114,7 +116,7 @@ export default function StudentListPopup({
           {students.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No students found in this class.</p>
+              <p>{t("reports.noStudentsInClass")}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -123,9 +125,8 @@ export default function StudentListPopup({
                 const info = studentInfo.info as
                   | Record<string, unknown>
                   | undefined;
-                const studentName = `${info?.name as string} ${
-                  info?.family_name as string
-                }`;
+                const studentName = `${info?.name as string} ${info?.family_name as string
+                  }`;
                 const studentEmail = info?.email as string;
 
                 return (
@@ -133,7 +134,7 @@ export default function StudentListPopup({
                     key={id}
                     tabIndex={0}
                     role="button"
-                    aria-label={`View reports for ${studentName}`}
+                    aria-label={`${t("reports.viewReports")} ${studentName}`}
                     onClick={() => handleStudentClick(id, student)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -157,7 +158,7 @@ export default function StudentListPopup({
                       </div>
                     </div>
                     <div className="text-sm text-muted-foreground group-hover:text-primary dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors">
-                      View Reports →
+                      {t("reports.viewReports")} →
                     </div>
                   </div>
                 );
@@ -168,7 +169,7 @@ export default function StudentListPopup({
 
         <div className="p-4 border-t border-border">
           <div className="text-sm text-muted-foreground text-center">
-            Click on any student to view their individual reports
+            {t("reports.clickViewStudentReports")}
           </div>
         </div>
       </div>

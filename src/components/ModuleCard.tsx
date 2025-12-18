@@ -246,8 +246,7 @@ export default function ModuleCard({
             navigator("/login");
           } else {
             setAlert({
-              message:
-                "Something went wrong creating a new conversation. Try again later",
+              message: t("errorMessage.createConversationError"),
               type: "error",
             });
           }
@@ -256,14 +255,13 @@ export default function ModuleCard({
         navigator("/login");
       } else {
         setAlert({
-          message:
-            "Something went wrong loading conversations. Try again later",
+          message: t("errorMessage.loadCoversationError"),
           type: "error",
         });
       }
     } catch (error) {
       setAlert({
-        message: "Something went wrong. Try again later",
+        message: `${t("errorMessage.genericError")}`,
         type: "error",
       });
     } finally {
@@ -541,7 +539,7 @@ export default function ModuleCard({
 
             <nav
               className="flex items-center gap-1 ml-2 flex-shrink-0"
-              aria-label="Module actions"
+              aria-label={`${t("common.module")} ${t("common.actions")}}`}
             >
               <TooltipWrapper
                 content={isStarred ? t("common.unstarModule") : t("common.starModule")}
@@ -643,7 +641,7 @@ export default function ModuleCard({
             size="sm"
             className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2"
             disabled={isNavigatingToModule}
-            aria-label={`Begin ${module.name} module`}
+            aria-label={`${t("modules.beginModule")} ${module.name}`}
           >
             {isNavigatingToModule ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />

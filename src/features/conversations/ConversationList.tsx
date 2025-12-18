@@ -44,10 +44,13 @@ import { UserType } from "../../utility/types/UserTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
+import { useTranslation } from "../../hooks/useTranslation";
+import { handleCourseTermLanguage } from "../../utility/Helpers";
 
 export default function ConversationList(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
+  const { t } = useTranslation();
   const [moduleIds, setModuleIds] = useState<{
     courseId: string;
     moduleId: string;
@@ -117,7 +120,7 @@ export default function ConversationList(): JSX.Element {
           if (res === undefined) {
           } else {
             // handle error
-            setError("No Conversations Found");
+            setError("No Conversations Found"); //TODO
           }
         }
         setIsLoading(false);
@@ -135,7 +138,7 @@ export default function ConversationList(): JSX.Element {
           if (res === undefined) {
           } else {
             //handle error
-            setError("Course Does Not Exist");
+            setError("Course Does Not Exist"); //TODO
           }
         }
       });
@@ -153,7 +156,7 @@ export default function ConversationList(): JSX.Element {
             if (res === undefined) {
             } else {
               //handle error
-              setError("Could not find user");
+              setError("Could not find user"); //TODO
             }
           }
         });
@@ -193,7 +196,7 @@ export default function ConversationList(): JSX.Element {
         } else {
           // handle error
           setAlert({
-            message: "Something went wrong. Try again later",
+            message: `${t("errorMessage.genericError")}`,
             type: "error",
           });
         }
@@ -231,7 +234,7 @@ export default function ConversationList(): JSX.Element {
         } else {
           // handle error
           setAlert({
-            message: "Something went wrong. Try again later~~~",
+            message: `${t("errorMessage.genericError")}`,
             type: "error",
           });
         }
@@ -252,12 +255,12 @@ export default function ConversationList(): JSX.Element {
       if (convoUpdateObject.name.length > 260) {
         setOpenUpdateConvoModal((prev) => ({
           ...prev,
-          error: "Name is too long",
+          error: "Name is too long", //TODO
         }));
       } else if (convoUpdateObject.name.length === 0) {
         setOpenUpdateConvoModal((prev) => ({
           ...prev,
-          error: "Name cannot be empty",
+          error: "Name cannot be empty",//TODO
         }));
       } else {
         setIsLoading(true);
@@ -279,7 +282,7 @@ export default function ConversationList(): JSX.Element {
           } else {
             // handle error
             setAlert({
-              message: "Something went wrong. Try again later",
+              message: `${t("errorMessage.genericError")}`,
               type: "error",
             });
           }
@@ -329,6 +332,7 @@ export default function ConversationList(): JSX.Element {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
+                  {/* TODO  */}
                   <EyeOff className="h-5 w-5" />
                   Archive Conversation?
                 </DialogTitle>
@@ -354,7 +358,7 @@ export default function ConversationList(): JSX.Element {
                       error: "",
                     })
                   }
-                >
+                > {/* TODO  */}
                   Cancel
                 </Button>
                 <Button
@@ -365,7 +369,7 @@ export default function ConversationList(): JSX.Element {
                       isDeleted: true,
                     })
                   }
-                >
+                > {/* TODO  */}
                   Archive Conversation
                 </Button>
               </DialogFooter>
@@ -392,10 +396,10 @@ export default function ConversationList(): JSX.Element {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Edit className="h-5 w-5" />
+                  <Edit className="h-5 w-5" /> {/* TODO  */}
                   Rename Conversation
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription> {/* TODO  */}
                   Enter a new name for this conversation.
                 </DialogDescription>
               </DialogHeader>
@@ -442,7 +446,7 @@ export default function ConversationList(): JSX.Element {
                     })
                   }
                   disabled={isLoading}
-                >
+                >{/* TODO  */}
                   Cancel
                 </Button>
                 <Button
@@ -454,7 +458,7 @@ export default function ConversationList(): JSX.Element {
                 >
                   {isLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
+                  )}{/* TODO  */}
                   Update Name
                 </Button>
               </DialogFooter>
@@ -466,12 +470,12 @@ export default function ConversationList(): JSX.Element {
               <div className="space-y-2">
                 {viewUser ? (
                   <h1 className="text-2xl font-bold text-foreground">
-                    <User className="inline-block w-5 h-5 mr-2" />
+                    <User className="inline-block w-5 h-5 mr-2" />{/* TODO  */}
                     {viewUser.name} {viewUser.family_name} Conversations
                   </h1>
                 ) : (
                   <h1 className="text-2xl font-bold text-foreground">
-                    <MessageSquare className="inline-block w-5 h-5 mr-2" />
+                    <MessageSquare className="inline-block w-5 h-5 mr-2" />{/* TODO  */}
                     My Conversations
                   </h1>
                 )}
@@ -479,9 +483,9 @@ export default function ConversationList(): JSX.Element {
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground capitalize">
                       {course.section
-                        ? `${course.term ? course.term : ""}${course.year ? course.year : ""
+                        ? `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year ? course.year : ""
                         } - ${course.section}`
-                        : `${course.term ? course.term : ""}${course.year ? course.year : ""
+                        : `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year ? course.year : ""
                         }`}
                     </p>
                     <h2 className="text-lg font-semibold text-foreground">
@@ -491,7 +495,7 @@ export default function ConversationList(): JSX.Element {
                       }{" "}
                       - {course.name}
                     </h2>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">{/* TODO  */}
                       Instructor: {course.instructor.name}{" "}
                       {course.instructor.family_name}
                     </p>
@@ -510,7 +514,7 @@ export default function ConversationList(): JSX.Element {
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Plus className="h-4 w-4" />
-                    )}
+                    )}{/* TODO  */}
                     New Conversation
                   </Button>
                 )}
@@ -519,7 +523,7 @@ export default function ConversationList(): JSX.Element {
           </div>
 
           <div className="bg-card border rounded-lg p-4 space-y-3 mb-6">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">{/* TODO  */}
               This page lists all of the conversations started within this
               module. For more information on viewing, renaming, and hiding
               conversations, please see the{" "}
@@ -533,7 +537,7 @@ export default function ConversationList(): JSX.Element {
                   target="_blank"
                   rel="noreferrer"
                   className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                >
+                >{/* TODO  */}
                   "Starting a Conversation" section of our user guide
                 </a>
               ) : (
@@ -542,12 +546,12 @@ export default function ConversationList(): JSX.Element {
                   target="_blank"
                   rel="noreferrer"
                   className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                >
+                >{/* TODO  */}
                   "Starting a Conversation" section of our user guide
                 </a>
               )}
               .
-            </p>
+            </p>{/* TODO  */}
             <p className="text-sm text-muted-foreground">
               To start a new conversation with the AI, click "New Conversation".
               To continue an existing conversation with the AI, click "Chat"
@@ -556,6 +560,7 @@ export default function ConversationList(): JSX.Element {
               identify and return to a particular conversation at a later time.)
             </p>
           </div>
+          {/* TODO  */}
           <div className="space-y-2" aria-label="conversation list">
             {conversationList ? (
               <>
@@ -597,7 +602,7 @@ export default function ConversationList(): JSX.Element {
                                       {conversation.name}
                                     </p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1 no-underline">
-                                      <Clock className="h-3 w-3" />
+                                      <Clock className="h-3 w-3" />{/* TODO  */}
                                       Created: {time}
                                     </p>
                                   </div>
@@ -612,7 +617,7 @@ export default function ConversationList(): JSX.Element {
                                           variant="destructive"
                                           className="flex items-center gap-1 pointer-events-none"
                                         >
-                                          <Trash2 className="h-3 w-3" />
+                                          <Trash2 className="h-3 w-3" />{/* TODO  */}
                                           Deleted
                                         </Badge>
                                       )}
@@ -625,7 +630,7 @@ export default function ConversationList(): JSX.Element {
                                           to={link}
                                           className="flex items-center gap-1 no-underline"
                                         >
-                                          <Eye className="h-3 w-3" />
+                                          <Eye className="h-3 w-3" />{/* TODO  */}
                                           View
                                         </Link>
                                       </Button>
@@ -655,12 +660,12 @@ export default function ConversationList(): JSX.Element {
                                               });
                                             }}
                                             className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                            aria-label="Archive Conversation"
+                                            aria-label="Archive Conversation"  //TODO
                                           >
                                             <EyeOff className="h-3 w-3" />
                                           </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent side="top">
+                                        <TooltipContent side="top">{/* TODO  */}
                                           Archive conversation (instructors can
                                           still view)
                                         </TooltipContent>
@@ -688,12 +693,12 @@ export default function ConversationList(): JSX.Element {
                                               });
                                             }}
                                             className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-                                            aria-label="Rename Conversation"
+                                            aria-label="Rename Conversation" //TODO
                                           >
                                             <Edit className="h-3 w-3" />
                                           </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent side="top">
+                                        <TooltipContent side="top">{/* TODO  */}
                                           Rename conversation
                                         </TooltipContent>
                                       </Tooltip>
@@ -706,7 +711,7 @@ export default function ConversationList(): JSX.Element {
                                           to={link}
                                           className="flex items-center gap-1 no-underline"
                                         >
-                                          <MessageSquare className="h-3 w-3" />
+                                          <MessageSquare className="h-3 w-3" />{/* TODO  */}
                                           Chat
                                         </Link>
                                       </Button>
@@ -724,8 +729,8 @@ export default function ConversationList(): JSX.Element {
                     {viewUser ? (
                       <div className="text-muted-foreground">
                         <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                        <p className="text-lg mb-2">No conversations yet</p>
-                        <p className="text-sm">
+                        <p className="text-lg mb-2">No conversations yet</p>{/* TODO  */}
+                        <p className="text-sm">{/* TODO  */}
                           This user hasn't started any conversations in this
                           module.
                         </p>
@@ -733,7 +738,7 @@ export default function ConversationList(): JSX.Element {
                     ) : (
                       <div className="text-muted-foreground">
                         <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                        <p className="text-lg mb-4">No conversations yet</p>
+                        <p className="text-lg mb-4">No conversations yet</p>{/* TODO  */}
                         <Button
                           onClick={handleNewConversation}
                           disabled={creatingConvo}
@@ -743,7 +748,7 @@ export default function ConversationList(): JSX.Element {
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <Plus className="h-4 w-4" />
-                          )}
+                          )}{/* TODO  */}
                           Start a Conversation
                         </Button>
                       </div>
@@ -768,7 +773,7 @@ export default function ConversationList(): JSX.Element {
         <Loader2
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
-        />
+        />{/* TODO  */}
         <p className="text-muted-foreground">Loading Conversations</p>
       </div>
     </div>

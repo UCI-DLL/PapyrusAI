@@ -20,6 +20,7 @@ import RaterEssay from "./RaterEssay";
 import { truncateString } from "../utility/Helpers";
 import removeMarkdown from "markdown-to-text";
 import { toast } from "sonner";
+import { t } from "i18next";
 
 interface MessageProps {
   message: string;
@@ -52,7 +53,7 @@ const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm text-muted-foreground">
-                  Source {index + 1}
+                  {t("common.source")} {index + 1}
                 </CardTitle>
                 <Button
                   variant="ghost"
@@ -64,7 +65,7 @@ const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`Visit source: ${source.title}`}
+                    aria-label={`${t("common.visitSource")}: ${source.title}`}
                   >
                     <ExternalLink className="h-4 w-4" />
                   </a>
@@ -126,7 +127,7 @@ export const MessageLeft = (props: MessageProps) => {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(removeMarkdown(props.message));
-    toast.success("Message copied to clipboard");
+    toast.success(t("components.messageCopiedClipboard"));
   };
 
   function LinkRenderer(props: any) {
@@ -170,18 +171,18 @@ export const MessageLeft = (props: MessageProps) => {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm font-medium text-muted-foreground">
               {props.isInstructor && !props.visible && (
-                <span className="text-sm">Sources - </span>
+                <span className="text-sm">{t("common.source")} - </span>
               )}
               {displayName}
             </span>
             <div className="flex items-center gap-1">
-              <TooltipWrapper content={isPlaying ? "Stop" : "Read aloud"}>
+              <TooltipWrapper content={isPlaying ? t("common.stop") : t("common.readAloud")}>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
                   onClick={isPlaying ? handleStop : handlePlay}
-                  aria-label={isPlaying ? "Stop reading" : "Read message aloud"}
+                  aria-label={isPlaying ? t("common.stopReading") : t("common.readMessageAloud")}
                 >
                   {isPlaying ? (
                     <VolumeX className="h-4 w-4" />
@@ -191,13 +192,13 @@ export const MessageLeft = (props: MessageProps) => {
                 </Button>
               </TooltipWrapper>
 
-              <TooltipWrapper content="Copy message">
+              <TooltipWrapper content={t("common.copyMessage")}>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
                   onClick={handleCopy}
-                  aria-label="Copy message"
+                  aria-label={t("common.copyMessage")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -312,7 +313,7 @@ export const MessageRight = (props: MessageProps) => {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(removeMarkdown(props.message));
-    toast.success("Message copied to clipboard");
+    toast.success(t("components.messageCopiedClipboard"));
   };
 
   function LinkRenderer(props: any) {
@@ -334,13 +335,13 @@ export const MessageRight = (props: MessageProps) => {
         <div className="flex-1 flex flex-col items-end">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex items-center gap-1">
-              <TooltipWrapper content={isPlaying ? "Stop" : "Read aloud"}>
+              <TooltipWrapper content={isPlaying ? t("common.stop") : t("common.readAloud")}>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
                   onClick={isPlaying ? handleStop : handlePlay}
-                  aria-label={isPlaying ? "Stop reading" : "Read message aloud"}
+                  aria-label={isPlaying ? t("common.stopReading") : t("common.readMessageAloud")}
                 >
                   {isPlaying ? (
                     <VolumeX className="h-4 w-4" />
@@ -350,13 +351,13 @@ export const MessageRight = (props: MessageProps) => {
                 </Button>
               </TooltipWrapper>
 
-              <TooltipWrapper content="Copy message">
+              <TooltipWrapper content={t("common.copyMessage")}>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
                   onClick={handleCopy}
-                  aria-label="Copy message"
+                  aria-label={t("common.copyMessage")}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -364,7 +365,7 @@ export const MessageRight = (props: MessageProps) => {
             </div>
             <span className="text-sm font-medium text-muted-foreground">
               {props.isInstructor && !props.visible && (
-                <span className="text-destructive dark:text-orange colorful-dark:text-orange">Hidden Message - </span>
+                <span className="text-destructive dark:text-orange colorful-dark:text-orange">{t("common.hiddenMessage")} - </span>
               )}
               {props.displayName ? props.displayName : "You"}
             </span>
@@ -406,12 +407,12 @@ export const MessageRight = (props: MessageProps) => {
                       {expandFile ? (
                         <>
                           <ChevronUp className="h-4 w-4" />
-                          Collapse
+                          {t("common.collapse")}
                         </>
                       ) : (
                         <>
                           <ChevronDown className="h-4 w-4" />
-                          Expand
+                          {t("common.expand")}
                         </>
                       )}
                     </Button>
@@ -422,7 +423,7 @@ export const MessageRight = (props: MessageProps) => {
                       className="flex items-center gap-2"
                     >
                       <Maximize2 className="h-4 w-4" />
-                      Fullscreen
+                      {t("common.fullscreen")}
                     </Button>
                   </div>
                 </CardContent>

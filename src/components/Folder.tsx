@@ -502,7 +502,7 @@ export const FolderComponent = (props: FolderProps) => {
             <div className="flex items-center gap-2">
               <Folder className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                FOLDER
+                {t("common.folder")}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -524,9 +524,9 @@ export const FolderComponent = (props: FolderProps) => {
                       ? "text-gold hover:text-muted"
                       : "text-muted hover:text-gold"
                   )}
-                    aria-label={
-                      starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
-                    }
+                  aria-label={
+                    starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
+                  }
                 >
                   <Star
                     size={16}
@@ -624,10 +624,10 @@ export const FolderComponent = (props: FolderProps) => {
                 // disabled={props.noShowMenu}
                 aria-label={props.noShowMenu ? t("common.select") : t("common.view")}
               >
-                {props.noShowMenu ? t("common.select") : 
-                <Link to={getViewUrl()} className="no-underline">
-                  {t("common.view")}
-                </Link>}
+                {props.noShowMenu ? t("common.select") :
+                  <Link to={getViewUrl()} className="no-underline">
+                    {t("common.view")}
+                  </Link>}
               </Button>
             </div>
           </div>

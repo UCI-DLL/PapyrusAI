@@ -51,6 +51,9 @@ import {
 } from "../../components/ui/dialog";
 import { Loader2, Download, BarChart3, Search } from "lucide-react";
 import { Input } from "../../components/ui/input";
+import { handleCourseTermLanguage } from "../../utility/Helpers";
+import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 type DownloadType = CourseType & { users: Array<CustomUserType> } & {
   modules: Array<
@@ -61,6 +64,7 @@ type DownloadType = CourseType & { users: Array<CustomUserType> } & {
 };
 
 export default function Reports(): JSX.Element {
+  const { t } = useTranslation();
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
@@ -406,7 +410,7 @@ export default function Reports(): JSX.Element {
       default: {
         console.error("Invalid downloadType value");
         setAlert({
-          message: "Could not download data. Try again later.",
+          message: t("errorMessage.downloadError"),
           type: "error",
         });
       }
@@ -434,8 +438,8 @@ export default function Reports(): JSX.Element {
             if (converation.user) {
               fileData += "User: " + converation.user.email + "\n";
             }
-            fileData += "Conversation Index: " + convoIndex + "\n";
-            fileData += "Conversation ID: " + converation.id + "\n";
+            fileData += t("reports.convoIndex") + ": " + convoIndex + "\n";
+            fileData += t("reports.convoId") + ": " + converation.id + "\n";
             var sortedMessages = converation.messages.sort(
               (a: MessageType, b: MessageType) =>
                 parseInt(a.timestamp) - parseInt(b.timestamp)
@@ -702,7 +706,7 @@ export default function Reports(): JSX.Element {
               <div>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                   <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                    Reports
+                    {t("reports.reports")}
                   </h1>
                   {user?.groups.includes(
                     process.env.REACT_APP_ADMIN
@@ -715,27 +719,26 @@ export default function Reports(): JSX.Element {
                         className="flex items-center gap-2"
                       >
                         <Download className="h-4 w-4" />
-                        Download Course
+                        {t("reports.downloadCourse")}
                       </Button>
                     )}
 
                 </div>
                 <div>
-                  <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                    Reports summarize users' activity and interactions with the
-                    AI in your courses. For any course of which you are the
-                    instructor, you may view specific students' interactions
-                    with AI. For more information on reports please see the{" "}
-                    <a
-                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.bsxols4iy4zg"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                    >
-                      "Instructor Reports" section of our instructor guide
-                    </a>
-                    .
-                  </p>
+                  <InfoAccordion>
+                    <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                      {t("reports.reportsDescription")}&nbsp;
+                      <a
+                        href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.bsxols4iy4zg"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                      >
+                        {t("reports.reportsDescriptionLinkText")}
+                      </a>
+                      .
+                    </p>
+                  </InfoAccordion>
                 </div>
               </div>
             </div>
@@ -755,11 +758,10 @@ export default function Reports(): JSX.Element {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Download className="h-5 w-5" />
-                    Select Courses to Download
+                    {t("reports.downloadCourseTitle")}
                   </DialogTitle>
                   <DialogDescription>
-                    Choose the courses you want to download and select the format.
-                    Note: downloading multiple courses may take several minutes.
+                    {t("reports.downloadCourseDescription")}
                   </DialogDescription>
                 </DialogHeader>
 
@@ -768,7 +770,7 @@ export default function Reports(): JSX.Element {
                   {/* handle safari screen readers  */}
                   {isSafari ? (
                     <div className="space-y-2">
-                      <Label htmlFor="download-format">Download Format</Label>
+                      <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
                       <select
                         className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                         value={downloadType}
@@ -781,7 +783,7 @@ export default function Reports(): JSX.Element {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Label htmlFor="download-format">Download Format</Label>
+                      <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
                       <Select value={downloadType} onValueChange={setDownloadType}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select format" />
@@ -797,7 +799,7 @@ export default function Reports(): JSX.Element {
 
 
                   <div className="space-y-3">
-                    <h2 className="text-sm font-medium">Available Courses</h2>
+                    <h2 className="text-sm font-medium">{t("courses.availableCourses")}</h2>
                     <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
                       {filterCoursesBySearch(
                         sortCourseList(userList),
@@ -807,7 +809,8 @@ export default function Reports(): JSX.Element {
                         return (
                           <div
                             key={index}
-                            className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent"
+                            className="flex items-center space-x-2 p-2 rounded-md hover:text-primary
+                            dark:hover:bg-accent dark:hover:text-gold colorful-dark:hover:bg-accent colorful-dark:hover:text-gold"
                           >
                             <Checkbox
                               id={labelId}
@@ -820,7 +823,7 @@ export default function Reports(): JSX.Element {
                               htmlFor={labelId}
                               className="flex-1 cursor-pointer text-sm"
                             >
-                              {x.course.name} | Instructor:{" "}
+                              {x.course.name} | {t("common.instructor")}:{" "}
                               {x.course.instructor.name}{" "}
                               {x.course.instructor.family_name}
                             </Label>
@@ -836,11 +839,11 @@ export default function Reports(): JSX.Element {
                     variant="outline"
                     onClick={() => setOpenDownloadCourseModal(false)}
                   >
-                    Close
+                    {t("common.close")}
                   </Button>
                   <Button onClick={downloadCourses}>
                     <Download className="h-4 w-4 mr-2" />
-                    Download
+                    {t("common.download")}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -856,11 +859,11 @@ export default function Reports(): JSX.Element {
               />
               <Input
                 type="text"
-                placeholder="Search courses by name, instructor, section..."
+                placeholder={t("reports.courseReportsSearch")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 w-full"
-                aria-label="Search courses"
+                aria-label={t("courses.searchCourses")}
               />
             </div>
           </header>
@@ -869,19 +872,17 @@ export default function Reports(): JSX.Element {
             {userList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-                <p className="text-muted-foreground">Loading courses...</p>
+                <p className="text-muted-foreground">{t("courses.loadingCourses")}...</p>
               </div>
             ) : filterCoursesBySearch(sortCourseList(userList), searchTerm)
               .length === 0 ? (
               <div className="text-center py-12">
                 <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h2 className="text-lg font-medium text-foreground mb-2">
-                  No courses found
+                  {t("courses.noCoursesFound")}
                 </h2>
                 <p className="text-muted-foreground">
-                  {searchTerm.trim()
-                    ? `No courses match "${searchTerm}". Try adjusting your search terms.`
-                    : "No courses available."}
+                  {t("courses.noCoursesMatchSearch")}
                 </p>
               </div>
             ) : (
@@ -906,7 +907,7 @@ export default function Reports(): JSX.Element {
                       onClick={handleRowClick}
                       tabIndex={0}
                       role="button"
-                      aria-label={`View course reports for ${x.course.name ? x.course.name : "Unnamed Course"
+                      aria-label={`${t("common.view")} ${t("reports.reports")} ${x.course.name ? x.course.name : "Unnamed Course"
                         }`}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
@@ -924,29 +925,29 @@ export default function Reports(): JSX.Element {
                             </h2>
                             <div className="space-y-1">
                               <div className="text-sm text-muted-foreground">
-                                Instructor: {x.course.instructor.name}{" "}
+                                {t("common.instructor")}: {x.course.instructor.name}{" "}
                                 {x.course.instructor.family_name}
                               </div>
                               <div className="text-sm text-muted-foreground capitalize">
                                 {x.course.section
-                                  ? `${x.course.term ? x.course.term : ""} ${x.course.year ? x.course.year : ""
+                                  ? `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${x.course.year ? x.course.year : ""
                                   } - ${x.course.section}`
-                                  : `${x.course.term ? x.course.term : ""} ${x.course.year ? x.course.year : ""
+                                  : `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${x.course.year ? x.course.year : ""
                                   }`}
                               </div>
                             </div>
                           </div>
                           <div className="text-right ml-4">
                             <div className="text-sm text-muted-foreground mb-1">
-                              Sign up code: {x.course.signUpCode}
+                              {t("createCourse.courseSignUpCode")}: {x.course.signUpCode}
                             </div>
                             <div className="text-base font-semibold text-foreground">
-                              {x.users.length} Students
+                              {x.users.length} {t("reports.students")}
                             </div>
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground italic">
-                          Click to view course details
+                          {t("reports.clickViewCourse")}
                         </div>
                       </CardContent>
                     </Card>
@@ -962,7 +963,7 @@ export default function Reports(): JSX.Element {
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Loading Reports</p>
+        <p className="text-muted-foreground">{t("loadingMessage.reports")}</p>
       </div>
     </div>
   );

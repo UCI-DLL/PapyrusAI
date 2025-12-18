@@ -43,8 +43,8 @@ import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
 import CustomFileRender from "../../components/CustomFileRender";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
-const options = ["Save & Publish", "Discard Changes"];
 
 export default function EditFile(): JSX.Element {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -82,6 +82,7 @@ export default function EditFile(): JSX.Element {
   const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
   const { t } = useTranslation();
+  const options = [t("createFile.saveUpload"), t("createFile.discardChanges")];
 
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
@@ -128,7 +129,7 @@ export default function EditFile(): JSX.Element {
       if (file.size > MAX_FILE_SIZE) {
         setErrors((prev: any) => ({
           ...prev,
-          file: "File is too large. File must be smaller than 1GB.",
+          file: t("createFile.fileTooLarge"),
         }));
         setSelectedFiles(null);
       } else {
@@ -139,7 +140,7 @@ export default function EditFile(): JSX.Element {
         } else {
           setErrors((prev: any) => ({
             ...prev,
-            file: "Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.",
+            file: t("createFile.invalidFileType"),
           }));
           setSelectedFiles(null);
         }
@@ -256,7 +257,7 @@ export default function EditFile(): JSX.Element {
                     //handle error
                     //redirect to file list
                     navigator("/library");
-                    setAlert({ message: "File Does Not Exist", type: "error" });
+                    setAlert({ message: `${t("errorMessage.fileNotExist")}`, type: "error" });
                   }
                 }
                 setIsLoading(false);
@@ -279,7 +280,7 @@ export default function EditFile(): JSX.Element {
             //handle error
             //redirect to file list
             navigator("/library");
-            setAlert({ message: "File Does Not Exist", type: "error" });
+            setAlert({ message: `${t("errorMessage.fileNotExist")}`, type: "error" });
             setIsLoading(false);
           }
         }
@@ -327,7 +328,7 @@ export default function EditFile(): JSX.Element {
                     //handle error
                     //redirect to file list
                     navigator("/library");
-                    setAlert({ message: "File Does Not Exist", type: "error" });
+                    setAlert({ message: `${t("errorMessage.fileNotExist")}`, type: "error" });
                   }
                 }
                 setIsLoading(false);
@@ -350,7 +351,7 @@ export default function EditFile(): JSX.Element {
             //handle error
             //redirect to file list
             navigator("/library");
-            setAlert({ message: "File Does Not Exist", type: "error" });
+            setAlert({ message: `${t("errorMessage.fileNotExist")}`, type: "error" });
             setIsLoading(false);
           }
         }
@@ -438,7 +439,7 @@ export default function EditFile(): JSX.Element {
           // handle error
           if (res) {
             setAlert({
-              message: "File could not be updated. Try again later.",
+              message: t("createFile.fileCouldNotBeCreated"),
               type: "error",
             });
           }
@@ -462,7 +463,7 @@ export default function EditFile(): JSX.Element {
         } else {
           // set errors
           setAlert({
-            message: "File could not be updated. Try again later.",
+            message: t("createFile.fileCouldNotBeCreated"),
             type: "error",
           });
         }
@@ -494,7 +495,7 @@ export default function EditFile(): JSX.Element {
     e?.preventDefault();
     setIsLoading(true);
     if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }));
+      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
     }
     //if new file selected, then get the signed upload url
     //else just update the file information
@@ -519,7 +520,7 @@ export default function EditFile(): JSX.Element {
                 } else {
                   //handle error
                   setAlert({
-                    message: "Error updating file. Please try again later",
+                    message: t("errorMessage.createFileError"),
                     type: "error",
                   });
                 }
@@ -545,7 +546,7 @@ export default function EditFile(): JSX.Element {
               } else {
                 //handle error
                 setAlert({
-                  message: "Error updating file. Please try again later",
+                  message: t("errorMessage.createFileError"),
                   type: "error",
                 });
               }
@@ -609,7 +610,7 @@ export default function EditFile(): JSX.Element {
           return (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-lg font-medium">PDF Preview</h4>
+                <h4 className="text-lg font-medium">{`${t("createFile.pdf")} ${t("createFile.preview")}`}</h4>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
@@ -621,7 +622,7 @@ export default function EditFile(): JSX.Element {
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm text-muted-foreground">
-                    Page {pageNumber || (numPages ? 1 : "--")} of{" "}
+                    {t("createFile.page")} {" "} {pageNumber || (numPages ? 1 : "--")} /{" "}
                     {numPages || "--"}
                   </span>
                   <Button
@@ -654,7 +655,7 @@ export default function EditFile(): JSX.Element {
         case "jpeg":
           return (
             <div className="space-y-4">
-              <h4 className="text-lg font-medium">Image Preview</h4>
+              <h4 className="text-lg font-medium">{`${t("createFile.image")} ${t("createFile.preview")}`}</h4>
               <div className="border rounded-md overflow-hidden">
                 <img
                   className="w-full h-auto max-h-96 object-contain"
@@ -673,7 +674,7 @@ export default function EditFile(): JSX.Element {
           ];
           return (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Document Preview</h3>
+              <h3 className="text-lg font-medium">{`${t("createFile.document")} ${t("createFile.preview")}`}</h3>
               <div className="border rounded-md overflow-hidden">
                 <DocViewer
                   pluginRenderers={[CustomFileRender, ...DocViewerRenderers]}
@@ -706,17 +707,17 @@ export default function EditFile(): JSX.Element {
           <DialogWrapper
             open={openDeleteModal}
             onOpenChange={setOpenDeleteModal}
-            title="Delete File?"
-            description="Are you sure you would like to permanently delete this file? This action cannot be undone."
+            title={t("createFile.deleteFile")}
+            description={t("createFile.deleteFileMessage")}
             contentClassName="sm:max-w-md"
             actions={[
               {
-                label: "Cancel",
+                label: `${t("common.cancel")}`,
                 onClick: () => setOpenDeleteModal(false),
                 variant: "outline",
               },
               {
-                label: "Delete",
+                label: t("common.delete"),
                 onClick: () => handleUpload(undefined, true),
                 variant: "destructive",
               },
@@ -726,17 +727,17 @@ export default function EditFile(): JSX.Element {
           <DialogWrapper
             open={openDiscardModal}
             onOpenChange={setOpenDiscardModal}
-            title="Discard Changes?"
-            description="Are you sure you would like to discard the changes to this file? This action cannot be undone."
+            title={t("createFile.discardChanges")}
+            description={t("createFile.discardChangesDescription")}
             contentClassName="sm:max-w-md"
             actions={[
               {
-                label: "Cancel",
+                label: `${t("common.cancel")}`,
                 onClick: () => setOpenDiscardModal(false),
                 variant: "outline",
               },
               {
-                label: "Discard Changes",
+                label: t("createFile.discardChanges"),
                 onClick: () => navigator(-1),
                 variant: "destructive",
               },
@@ -746,23 +747,21 @@ export default function EditFile(): JSX.Element {
           <DialogWrapper
             open={showInfoTooltip}
             onOpenChange={setShowInfoTooltip}
-            title="Editing Files"
+            title={t("createFile.editingFilesTitle")}
             contentClassName="sm:max-w-md"
             actions={[
               {
-                label: "Got it",
+                label: t("components.gotIt"),
                 onClick: () => setShowInfoTooltip(false),
               },
             ]}
           >
             <div className="space-y-3">
               <p className="text-sm leading-6">
-                Update your file name, replace the file content, or modify tags
-                as needed. Click "Save & Publish" to save your changes.
+                {t("createFile.editingFilesDescription")}
               </p>
               <p className="text-sm text-muted-foreground italic">
-                Note: Choosing "Discard Changes" will return you to the previous
-                page without saving any modifications.
+                {t("createFile.editingFileDescriptionNote")}
               </p>
             </div>
           </DialogWrapper>
@@ -780,39 +779,42 @@ export default function EditFile(): JSX.Element {
               <div className="relative z-10">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                   <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                    Edit {file?.name}
+                    {t("common.edit")} {file?.name}
                   </h1>
                   <nav
                     className="flex flex-col md:flex-row gap-2"
-                    aria-label="File editing actions"
+                    aria-label={`${t("createFile.createFile")} ${t("common.actions")}`}
                   >
-                    <TooltipWrapper content="Delete File">
+                    <TooltipWrapper content={t("createFile.deleteFile")}>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setOpenDeleteModal(true)}
                         disabled={isLoading}
-                        aria-label="Delete file permanently"
+                        aria-label={t("createFile.deleteFile")}
                         className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </TooltipWrapper>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowInfoTooltip(true)}
-                      aria-label="Get help with file editing"
-                    >
-                      <Info className="h-4 w-4" aria-hidden="true" />
-                    </Button>
+                    <TooltipWrapper content={t("common.info")}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowInfoTooltip(true)}
+                        aria-label={t("createFile.fileInfoLabel")}
+                      >
+                        <Info className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </TooltipWrapper>
+
                     <div className="flex rounded-lg border">
                       <Button
                         size="sm"
                         onClick={handleClick}
                         className="rounded-none border-0 w-full rounded-l"
                         disabled={isLoading}
-                        aria-label={`${options[selectedIndexSave]} file`}
+                        aria-label={`${options[selectedIndexSave]} ${t("common.file")}`}
                       >
                         {options[selectedIndexSave]}
                       </Button>
@@ -825,7 +827,7 @@ export default function EditFile(): JSX.Element {
                             className="rounded-none border-0 border-l px-2 rounded-r"
                             variant="default"
                             disabled={isLoading}
-                            aria-label="Select file save strategy"
+                            aria-label={t("library.selectStrategy")}
                           >
                             <ChevronDown className="h-4 w-4" aria-hidden="true" />
                           </Button>
@@ -844,19 +846,20 @@ export default function EditFile(): JSX.Element {
                   </nav>
                 </div>
 
-                <p className="text-muted-foreground max-w-2xl text-base leading-6">
-                  Upload documents that will factor into generated AI output for
-                  your course. For more information on this system, please see the{" "}
-                  <a
-                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                  >
-                    "Uploading a Document" section of our instructor guide
-                  </a>
-                  .
-                </p>
+                <InfoAccordion>
+                  <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                    {t("createFile.createFileDescription")}&nbsp;
+                    <a
+                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                    >
+                      {t("createFile.createFileDescriptionLinkText")}
+                    </a>
+                    .
+                  </p>
+                </InfoAccordion>
               </div>
             </div>
           </header>
@@ -866,10 +869,10 @@ export default function EditFile(): JSX.Element {
             <Card className="mt-6 transition-all duration-300 hover:shadow-md">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-foreground">
-                  Current File Preview
+                  {`${t("createFile.current")} ${t("common.file")} ${t("createFile.preview")}`}
                 </CardTitle>
                 <p className="text-muted-foreground text-sm">
-                  Preview of your current file content.
+                  {t("createFile.currentPreviewDescription")}
                 </p>
               </CardHeader>
               <CardContent>{renderFile()}</CardContent>
@@ -879,11 +882,10 @@ export default function EditFile(): JSX.Element {
           <Card className="transition-all duration-300 hover:shadow-md pt-4">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-foreground">
-                File Information
+                {t("createFile.fileInformation")}
               </CardTitle>
               <p className="text-muted-foreground text-sm">
-                Enter the essential details for your file. Fields marked with *
-                are required.
+                {t("createFile.enterFileDetails")}. {t("common.required")}
               </p>
             </CardHeader>
             <CardContent>
@@ -894,10 +896,10 @@ export default function EditFile(): JSX.Element {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="name" className="text-sm font-medium">
-                      File Name *
+                      {t("createFile.fileName")} *
                     </Label>
-                    <TooltipWrapper content="The name for the document.">
-                      <button aria-label="The name for the document.">
+                    <TooltipWrapper content={t("createFile.fileNameTooltip")}>
+                      <button aria-label={t("createFile.fileNameTooltip")}>
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </button>
                     </TooltipWrapper>
@@ -905,7 +907,7 @@ export default function EditFile(): JSX.Element {
                   <Input
                     id="name"
                     name="name"
-                    placeholder="Enter file name"
+                    placeholder={t("createFile.fileNameHelptext")}
                     value={newFile.name}
                     onChange={handleChange}
                     disabled={isLoading}
@@ -930,9 +932,9 @@ export default function EditFile(): JSX.Element {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label className="text-sm font-medium">File Upload</Label>
-                    <TooltipWrapper content="Select a JPEG, PNG, PDF, TXT, DOCX file to replace the current file.">
-                      <button aria-label="Select a JPEG, PNG, PDF, TXT, DOCX file to replace the current file.">
+                    <Label className="text-sm font-medium">{t("createFile.fileUpload")}</Label>
+                    <TooltipWrapper content={t("createFile.fileTooltip")}>
+                      <button aria-label={t("createFile.fileTooltip")}>
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </button>
                     </TooltipWrapper>
@@ -956,10 +958,10 @@ export default function EditFile(): JSX.Element {
                       <div className="flex flex-col items-center gap-2">
                         <Upload className="h-8 w-8 text-muted-foreground" />
                         <span className="text-sm font-medium text-muted-foreground">
-                          Choose new file to upload
+                          {t("createFile.chooseFile")}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          JPEG, PNG, PDF, TXT, DOCX (max 1GB)
+                          {t("createFile.fileDescription")}
                         </span>
                       </div>
                     </Button>
@@ -979,7 +981,7 @@ export default function EditFile(): JSX.Element {
                           onClick={() => onUpdate("change")}
                           disabled={isLoading}
                         >
-                          Change
+                          {t("components.change")}
                         </Button>
                         <Button
                           type="button"
@@ -1055,30 +1057,28 @@ export default function EditFile(): JSX.Element {
           <section aria-labelledby="bottom-actions-heading" className="pt-4">
             <nav
               className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
-              aria-label="File editing actions"
+              aria-label={`${t("createFile.createFile")} ${t("common.actions")}}`}
               id="bottom-actions-heading"
             >
-              <TooltipWrapper content="Delete File">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setOpenDeleteModal(true)}
-                  disabled={isLoading}
-                  aria-label="Delete file permanently"
-                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Delete
-                </Button>
-              </TooltipWrapper>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setOpenDeleteModal(true)}
+                disabled={isLoading}
+                aria-label={t("createFile.deleteFile")}
+                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                {t("createFile.deleteFile")}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowInfoTooltip(true)}
-                aria-label="Get help with file editing"
+                aria-label={t("createFile.fileInfoLabel")}
               >
                 <Info className="h-4 w-4" aria-hidden="true" />
-                Info
+                {t("common.info")}
               </Button>
               <div className="flex rounded-lg border">
                 <Button
@@ -1086,7 +1086,7 @@ export default function EditFile(): JSX.Element {
                   onClick={handleClick}
                   className="rounded-none border-0 w-full rounded-l"
                   disabled={isLoading}
-                  aria-label={`${options[selectedIndexSave]} file`}
+                  aria-label={`${options[selectedIndexSave]} ${t("common.file")}`}
                 >
                   {options[selectedIndexSave]}
                 </Button>
@@ -1099,7 +1099,7 @@ export default function EditFile(): JSX.Element {
                       className="rounded-none border-0 border-l px-2 rounded-r"
                       variant="default"
                       disabled={isLoading}
-                      aria-label="Select file save strategy"
+                      aria-label={t("library.selectStrategy")}
                     >
                       <ChevronDown className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -1124,9 +1124,9 @@ export default function EditFile(): JSX.Element {
           role="status"
         >
           <Upload className="mx-auto h-12 w-12 mb-4 opacity-50" />
-          <p className="text-lg font-medium mb-2">File not found</p>
+          <p className="text-lg font-medium mb-2">{t("errorMessage.fileNotFound")}</p>
           <p className="text-sm">
-            The file you're looking for doesn't exist or has been deleted.
+            {t("errorMessage.fileNotFoundMessage")}
           </p>
         </div>
       )}
@@ -1142,7 +1142,7 @@ export default function EditFile(): JSX.Element {
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
         />
-        <p className="text-muted-foreground">Loading File Editor</p>
+        <p className="text-muted-foreground">{t("loadingMessage.fileEditForm")}</p>
       </div>
     </div>
   );

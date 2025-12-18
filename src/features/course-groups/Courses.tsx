@@ -141,14 +141,14 @@ export default function Courses(): JSX.Element {
                 </h1>
                 <nav
                   className="flex flex-col md:flex-row gap-2 md:shrink-0"
-                  aria-label="Course actions"
+                  aria-label={t("createCourse.courseActions")}
                 >
                   {isInstructor && (
                     <Button
                       size="sm"
                       variant="outline"
                       asChild
-                      aria-label="Create new course"
+                      aria-label={t("dashboard.createCourse")}
                     >
                       <Link to="/createcourse" className="no-underline">
                         <PlusIcon className="w-4 h-4" aria-hidden="true" />
@@ -158,7 +158,7 @@ export default function Courses(): JSX.Element {
                   )}
                   <Button
                     size="sm"
-                    aria-label="Join existing course"
+                    aria-label="Join existing course" //TODO
                     onClick={() => setShowAddCourseModal(true)}
                   >
                     <ExternalLink className="w-4 h-4" aria-hidden="true" />
@@ -233,7 +233,7 @@ export default function Courses(): JSX.Element {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
-                aria-label="Search courses"
+                aria-label={t("courses.searchCourses")}
               />
             </div>
           </div>

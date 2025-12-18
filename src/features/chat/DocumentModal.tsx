@@ -11,6 +11,7 @@ import Docxtemplater from "docxtemplater";
 import { pdfjs } from 'react-pdf';
 import { removeSpecialCharacters } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface ChatWizardProps {
   returnDocText: (docText: string) => void;
@@ -20,7 +21,7 @@ export default function DocumentModal({
   returnDocText,
 }: ChatWizardProps): JSX.Element {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
+  const { t } = useTranslation();
   const [docText, setDocText] = useState<string>("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -28,7 +29,7 @@ export default function DocumentModal({
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) {
-      setError("Something went wrong");
+      setError(t("errorMessage.genericError"));
       return;
     }
     setDocText("");
@@ -83,11 +84,11 @@ export default function DocumentModal({
           setIsLoading(false);
         };
       } else {
-        setError("File is unsupported. Please upload TXT, PDF, or DOCX files only.");
+        setError(t("errorMessage.fileNotSupportedDoc"));
         setIsLoading(false);
       }
     } catch (err) {
-      setError("Error processing file. Please try again.");
+      setError(t("errorMessage.processingFile"));
       setIsLoading(false);
     }
   };
@@ -102,10 +103,10 @@ export default function DocumentModal({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Upload Document
+            {t("chat.uploadDocument")}
           </CardTitle>
           <CardDescription>
-            Upload the document or copy and paste the text (e.g., a rubric) that you would like to send to the AI. See the{" "}
+            {t("chat.uploadDocumentDescription")}
             {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
               <a
                 href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
@@ -113,7 +114,7 @@ export default function DocumentModal({
                 rel="noreferrer"
                 className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
               >
-                "Starting a Conversation" section of our user guide
+                {t("chat.conversationListDescriptionLinkText")}
               </a>
             ) : (
               <a
@@ -122,16 +123,16 @@ export default function DocumentModal({
                 rel="noreferrer"
                 className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
               >
-                "Starting a Conversation" section of our user guide
+                {t("chat.conversationListDescriptionLinkText")}
               </a>
             )}
-            {" "}for more information on when and why you might want to use documents.
+            {t("chat.uploadDocumentDescription2")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="file-upload" className="sr-only">Upload File</Label>
+              <Label htmlFor="file-upload" className="sr-only">{t("chat.uploadFile")}</Label>
               <Button
                 variant="outline"
                 className="w-full h-20 border-dashed"
@@ -142,13 +143,13 @@ export default function DocumentModal({
                   {isLoading ? (
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   ) : (
-                    <Upload className="h-6 w-6 text-muted-foreground" />
+                    <Upload className="h-6 w-6" />
                   )}
                   <span className="text-sm font-medium">
-                    {isLoading ? "Processing..." : "Upload TXT, DOCX, PDF"}
+                    {isLoading ? t("loadingMessage.processing") : t("chat.uploadDocTypes")}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    Click to browse files
+                  <span className="text-xs ">
+                    {t("chat.clickBrowseFiles")}
                   </span>
                 </label>
               </Button>
@@ -163,11 +164,11 @@ export default function DocumentModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="document-text">Document Text</Label>
+              <Label htmlFor="document-text">{t("chat.docText")}</Label>
               <Textarea
                 id="document-text"
                 name="doctext"
-                placeholder="Document content will appear here, or you can paste text directly..."
+                placeholder={t("chat.docTextPlaceholder")}
                 className="min-h-[120px] resize-none"
                 value={docText}
                 onChange={handleChange}
@@ -190,7 +191,7 @@ export default function DocumentModal({
               disabled={isLoading || !docText.trim()}
             >
               <Send className="mr-2 h-4 w-4" />
-              Submit Document
+              {t("chat.submitDoc")}
             </Button>
           </div>
         </CardContent>

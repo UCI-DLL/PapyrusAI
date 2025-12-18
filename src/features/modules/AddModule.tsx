@@ -572,7 +572,7 @@ export default function AddModule({
             variant: "outline",
           },
           {
-            label: t("common.discard"),
+            label: t("components.discard"),
             onClick: () => navigator(-1),
             variant: "destructive",
           },
@@ -1123,7 +1123,7 @@ export default function AddModule({
               size="sm"
               onClick={() => setOpenDeleteModal(true)}
               className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-              aria-label="Delete module"
+              aria-label={t("common.delete")}
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               {t("common.delete")}

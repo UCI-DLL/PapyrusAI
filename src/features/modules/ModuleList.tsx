@@ -314,7 +314,7 @@ export default function ModuleList({
         <div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           role="list"
-          aria-label="Module cards" //TODO
+          aria-label={t("common.module")}
         >
           {orderModuleRecentlyCreatedAndStarred(
             course.modules,
@@ -351,7 +351,7 @@ export default function ModuleList({
             <section
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               role="list"
-              aria-label="Available courses" //TODO
+              aria-label={t("courses.availableCourses")}
             >
               {orderCourseRecentlyCreatedAndStarred(
                 courseList,
@@ -453,8 +453,7 @@ export default function ModuleList({
             </form>
           </DialogWrapper>
 
-          {/* TODO  */}
-          <div className="space-y-4" role="list" aria-label="Module list">
+          <div className="space-y-4" role="list" aria-label={t("modules.moduleList")}>
             {orderModuleRecentlyCreatedAndStarred(
               course.modules,
               starredModules

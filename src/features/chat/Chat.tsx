@@ -112,6 +112,7 @@ export default function Chat(): JSX.Element {
     ? process.env.REACT_APP_ADMIN
     : "PapyrusAIAdmin";
 
+
   useEffect(() => {
     setAlert({ message: "", type: "info" });
 
@@ -169,7 +170,7 @@ export default function Chat(): JSX.Element {
           } else {
             if (res === undefined) {
             } else {
-              setAlert({ message: "Could not find user", type: "error" });
+              setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
               navigator("/");
             }
           }
@@ -193,7 +194,7 @@ export default function Chat(): JSX.Element {
             navigator("/login");
           } else {
             if (res) {
-              setAlert({ message: "Course not found", type: "error" });
+              setAlert({ message: t("errorMessage.courseNotFound"), type: "error" });
               navigator("/");
             }
           }
@@ -263,7 +264,7 @@ export default function Chat(): JSX.Element {
           navigator("/login");
         } else {
           if (res && res.status === 400) {
-            setAlert({ message: "Conversation not found", type: "error" });
+            setAlert({ message: t("errorMessage.convoNotFound"), type: "error" });
             navigator(
               `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
               }`
@@ -337,14 +338,14 @@ export default function Chat(): JSX.Element {
   }, []);
 
   const onSocketClose = useCallback(() => {
-    setIsConnected(false);
-    if (user && viewUser && user.username === viewUser.username) {
-      onConnect(
-        location.pathname.split("/")[3],
-        location.pathname.split("/")[4],
-        location.pathname.split("/")[5]
-      );
-    }
+    // setIsConnected(false);
+    // if (user && viewUser && user.username === viewUser.username) {
+    //   onConnect(
+    //     location.pathname.split("/")[3],
+    //     location.pathname.split("/")[4],
+    //     location.pathname.split("/")[5]
+    //   );
+    // }
     // eslint-disable-next-line
   }, [location.pathname, user, viewUser]);
 
@@ -359,7 +360,7 @@ export default function Chat(): JSX.Element {
         const messageTempId = (Number(essayTempId) + 1).toString();
         var essayMessage: MessageType = {
           id: essayTempId,
-          content: "View your essay feedback by clicking on this message.",
+          content: t("chat.viewEssay"),
           messageType: "text",
           role: "assistant",
           sender: "ChatGPT",
@@ -482,7 +483,7 @@ export default function Chat(): JSX.Element {
         }
       }
     },
-    []
+    [t]
   );
 
   const onConnect = useCallback(
@@ -507,6 +508,25 @@ export default function Chat(): JSX.Element {
     [onSocketClose, onSocketMessage, onSocketOpen]
   );
 
+  const closeSocket = useCallback(() => {
+    if (socket.current) {
+      socket.current.removeEventListener("open", onSocketOpen);
+      socket.current.removeEventListener("close", onSocketClose);
+      socket.current.removeEventListener("message", (event) => {
+        onSocketMessage(event.data);
+      });
+
+      if (
+        socket.current.readyState === WebSocket.OPEN ||
+        socket.current.readyState === WebSocket.CONNECTING
+      ) {
+        socket.current.close(1000, "Reconnecting with new port");
+      }
+
+      socket.current = null;
+    }
+  }, [onSocketOpen, onSocketClose, onSocketMessage]);
+
   const onSendMessage = useCallback(
     (messageList: Array<MessageType>, autoCreateConvoName: any) => {
       setChatError(undefined);
@@ -514,7 +534,7 @@ export default function Chat(): JSX.Element {
         var messagesToSend: Array<{ role: string; content: string }> = [];
         messageList.map((message) => {
           if (message.content.length > 100000) {
-            setChatError("Message Too Long");
+            setChatError(t("chat.messageTooLong"));
             return "";
           } else {
             const tempTimestamp = Date.now();
@@ -561,11 +581,11 @@ export default function Chat(): JSX.Element {
       } else {
         setOpenErrorModal({
           open: true,
-          message: "Something went wrong. Please try again",
+          message: t("errorMessage.genericError"),
         });
       }
     },
-    [messages, isConnected]
+    [messages, isConnected, t]
   );
 
   const onSendEssay = useCallback(
@@ -573,9 +593,9 @@ export default function Chat(): JSX.Element {
       setChatError(undefined);
       if (isConnected) {
         if (essay.length > 100000) {
-          setChatError("Essay Too Long to Evaluate");
+          setChatError(t("chat.messageTooLong"));
         } else if (essay.length < 750) {
-          setChatError("Essay Too Short to Evaluate");
+          setChatError(t("chat.messageTooShort"));
         } else {
           var sendEssay: any = {
             action: "raterEssay",
@@ -593,11 +613,11 @@ export default function Chat(): JSX.Element {
       } else {
         setOpenErrorModal({
           open: true,
-          message: "Something went wrong. Please try again",
+          message: t("errorMessage.genericError"),
         });
       }
     },
-    [isConnected]
+    [isConnected, t]
   );
 
   function num_tokens_from_messages(messages: Array<any>) {
@@ -628,9 +648,9 @@ export default function Chat(): JSX.Element {
       };
       onSendMessage([responseMessage], autoCreateConvoName);
     } else if (message.length < 1) {
-      setChatError("Message Too Short");
+      setChatError(t("chat.messageTooShort"));
     } else {
-      setChatError("Message Too Long");
+      setChatError(t("chat.messageTooLong"));
     }
     setIsLoading(false);
   }
@@ -755,7 +775,7 @@ export default function Chat(): JSX.Element {
         promptId: null,
         userVisible: true,
         raterReference: "",
-        expandableMessage: "Loading...",
+        expandableMessage: t("loadingMessage.loading"),
       };
       if (messages && message && moduleInfo && moduleInfo.showInitialPrompt) {
         const tempTimestamp2 = Date.now();
@@ -788,9 +808,9 @@ export default function Chat(): JSX.Element {
         setMessages((prev) => [...prev, responseMessage]);
       }
     } else if (essay.length <= 150) {
-      setChatError("Message Too Short");
+      setChatError(t("chat.messageTooShort"));
     } else {
-      setChatError("Message Too Long");
+      setChatError(t("chat.messageTooLong"));
     }
     setIsLoading(false);
   }
@@ -810,6 +830,7 @@ export default function Chat(): JSX.Element {
             setCreatingConvo(false);
             setConversationList(res.data);
             if (res.data.conversations) {
+              closeSocket()
               navigator(
                 `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId
                 }/${res.data.conversations.length - 1}`
@@ -829,7 +850,6 @@ export default function Chat(): JSX.Element {
     }
   }
 
-
   function returnDocText(docText: string) {
     setOpenDocumentModal(false);
     if (docText.length < 100000 && docText.length > 0) {
@@ -847,9 +867,9 @@ export default function Chat(): JSX.Element {
       };
       onSendMessage([responseMessage], autoCreateConvoName);
     } else if (docText.length < 1) {
-      setChatError("Document Too Short");
+      setChatError(t("chat.messageTooShort"));
     } else {
-      setChatError("Document Too Long");
+      setChatError(t("chat.messageTooLong"));
     }
   }
 
@@ -870,9 +890,9 @@ export default function Chat(): JSX.Element {
       };
       onSendMessage([responseMessage], autoCreateConvoName);
     } else if (text.length < 1) {
-      setChatError("Message Too Short");
+      setChatError(t("chat.messageTooShort"));
     } else {
-      setChatError("Message Too Long");
+      setChatError(t("chat.messageTooLong"));
     }
   }
 
@@ -901,32 +921,13 @@ export default function Chat(): JSX.Element {
     moduleId: string,
     index: string
   ) {
-    setIsLoading(true);
-    Post(postUpdateConversation(courseId, moduleId, index), {
-      isDeleted: true,
-    }).then((res) => {
-      if (res && res.status && res.status < 300) {
-        if (res.data) {
-          setConversationList(res.data);
-          if (
-            conversationIds &&
-            conversationIds.courseId === courseId &&
-            conversationIds.moduleId === moduleId &&
-            conversationIds.conversationIndex === index
-          ) {
-            navigator(`/courses/${courseId}/modules/${moduleId}`);
-          }
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        setOpenErrorModal({
-          open: true,
-          message: `${t("errorMessage.genericError")}`,
-        });
-      }
-      setIsLoading(false);
-    });
+    setOpenUpdateConvoModal(prev => ({
+      ...prev,
+      deleteOpen: true,
+      courseId: courseId,
+      moduleId: moduleId,
+      index: index,
+    }));
   }
 
   function handleDownloadConversation(
@@ -997,7 +998,7 @@ export default function Chat(): JSX.Element {
       } else {
         setOpenErrorModal({
           open: true,
-          message: "Could not download conversation. Try again later",
+          message: t("errorMessage.downloadConversation"),
         });
       }
       setIsLoading(false);
@@ -1025,6 +1026,7 @@ export default function Chat(): JSX.Element {
       ).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
+            closeSocket()
             setOpenUpdateConvoModal({
               open: false,
               deleteOpen: false,
@@ -1043,10 +1045,6 @@ export default function Chat(): JSX.Element {
                 : false,
               error: "",
             });
-            navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
-              }`
-            );
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -1062,12 +1060,12 @@ export default function Chat(): JSX.Element {
       if (convoUpdateObject.name.length > 260) {
         setOpenUpdateConvoModal((prev) => ({
           ...prev,
-          error: "Name is too long",
+          error: t("errorMessage.nameTooLong"),
         }));
       } else if (convoUpdateObject.name.length === 0) {
         setOpenUpdateConvoModal((prev) => ({
           ...prev,
-          error: "Name cannot be empty",
+          error: t("errorMessage.nameMissing"),
         }));
       } else {
         setIsLoading(true);
@@ -1117,6 +1115,8 @@ export default function Chat(): JSX.Element {
     }
   }
 
+  const conversationArchived = conversationList ? conversationList.conversations.filter((_convo, index) => index.toString() === (conversationIds?.conversationIndex ?? 0))[0].isDeleted : false;
+
   const isChatInputVisible =
     isConnected &&
     user &&
@@ -1125,7 +1125,7 @@ export default function Chat(): JSX.Element {
     selectedPrompt !== undefined &&
     moduleInfo?.continuedInteraction &&
     !showWizard &&
-    !openUpdateConvoModal.completed;
+    !openUpdateConvoModal.completed && !conversationArchived;
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="flex bg-background text-foreground">
@@ -1138,13 +1138,13 @@ export default function Chat(): JSX.Element {
             message: open ? openErrorModal.message : "",
           })
         }
-        title="We ran into an error!"
+        title={t("errorMessage.ranIntoError")}
         description={openErrorModal.message}
         contentClassName="sm:max-w-md"
         footerClassName="flex-col gap-2 sm:flex-row"
         actions={[
           {
-            label: "Close",
+            label: t("common.close"),
             onClick: () => setOpenErrorModal({ open: false, message: "" }),
             variant: "outline",
           },
@@ -1158,7 +1158,7 @@ export default function Chat(): JSX.Element {
             to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`}
             className="no-underline"
           >
-            Back to Conversation List
+            {t("chat.backToConvoList")}
           </Link>
         </Button>
       </DialogWrapper>
@@ -1167,7 +1167,7 @@ export default function Chat(): JSX.Element {
       <DialogWrapper
         open={openDocumentModal}
         onOpenChange={setOpenDocumentModal}
-        title="Document Upload"
+        title={t("chat.uploadDocument")}
         contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
         actions={[
           {
@@ -1184,7 +1184,7 @@ export default function Chat(): JSX.Element {
       <DialogWrapper
         open={openSpeechToTextModal}
         onOpenChange={setOpenSpeechToTextModal}
-        title="Speech to Text"
+        title={t("chat.speechToText")}
         contentClassName="sm:max-w-md"
         actions={[
           {
@@ -1203,8 +1203,8 @@ export default function Chat(): JSX.Element {
         onOpenChange={(open) =>
           setOpenUpdateConvoModal((prev) => ({ ...prev, deleteOpen: open }))
         }
-        title="Archive Conversation?"
-        description="Are you sure you would like to archive this conversation? This conversation will no longer be visible in your conversation list. Instructors can still view archived conversations."
+        title={t("chat.archiveConversationQuestion")}
+        description={t("chat.archiveConversationDescription")}
         contentClassName="sm:max-w-md"
         footerClassName="flex-col gap-2 sm:flex-row"
         actions={[
@@ -1218,7 +1218,7 @@ export default function Chat(): JSX.Element {
             variant: "outline",
           },
           {
-            label: "Archive Conversation",
+            label: t("chat.archiveConversation"),
             onClick: () =>
               handleConverstionNameDeleteUpdate({
                 ...openUpdateConvoModal,
@@ -1235,7 +1235,7 @@ export default function Chat(): JSX.Element {
         onOpenChange={(open) =>
           setOpenUpdateConvoModal((prev) => ({ ...prev, open }))
         }
-        title="Rename Conversation"
+        title={t("chat.renameConversation")}
         contentClassName="sm:max-w-md"
         actions={[
           {
@@ -1245,7 +1245,7 @@ export default function Chat(): JSX.Element {
             variant: "outline",
           },
           {
-            label: "Submit",
+            label: t("chat.submit"),
             onClick: () =>
               handleConverstionNameDeleteUpdate(openUpdateConvoModal),
             disabled: isLoading,
@@ -1254,7 +1254,7 @@ export default function Chat(): JSX.Element {
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="conversation-name">Conversation Name</Label>
+            <Label htmlFor="conversation-name">{t("chat.conversationName")}</Label>
             <Input
               id="conversation-name"
               name="name"
@@ -1282,7 +1282,7 @@ export default function Chat(): JSX.Element {
       <div className="flex-1 flex flex-col min-w-0" style={sidebarOpen ? { height: "calc(100vh - 4rem)" } : {}}>
         {/* Chat Header */}
         <ChatHeader
-          conversationName={openUpdateConvoModal.name || "Chat Title"}
+          conversationName={openUpdateConvoModal.name || "Chat"}
           courseInfo={courseInfo}
           moduleInfo={moduleInfo}
           user={user}
@@ -1303,11 +1303,10 @@ export default function Chat(): JSX.Element {
           conversationCompleted={openUpdateConvoModal.completed}
           instructor={instructor}
           admin={admin}
+          conversationArchived={conversationArchived}
           onWizardReturnPrompts={handleWizardReturnPrompts}
           onWizardReturnEssay={handleWizardReturnEssay}
-          onBackToConversationList={() =>
-            navigator(`/courses/${courseInfo.id}/modules/${moduleInfo.id}`)
-          }
+          newConversation={handleNewConversation}
         />
 
         {/* Chat Input */}
@@ -1338,6 +1337,7 @@ export default function Chat(): JSX.Element {
         onSearchChange={setSearchTerm}
         onNewConversation={handleNewConversation}
         onConversationClick={(link) => {
+          closeSocket()
           navigator(link);
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}
@@ -1351,7 +1351,7 @@ export default function Chat(): JSX.Element {
     <div className="flex items-center justify-center min-h-screen">
       <div className="flex flex-col items-center gap-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p className="text-sm text-muted-foreground">Loading conversation...</p>
+        <p className="text-sm text-muted-foreground">{t("loadingMessage.loadingConversation")}</p>
       </div>
     </div>
   );

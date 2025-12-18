@@ -5,6 +5,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { ChevronDown, Users } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface StudentMenuProps {
   analysis: Record<string, unknown> | null;
@@ -25,6 +26,7 @@ export default function StudentMenu({
   isOpen: externalIsOpen,
   onOpenChange,
 }: StudentMenuProps) {
+  const { t } = useTranslation();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
 
   // Use external state if provided, otherwise use internal state
@@ -37,8 +39,8 @@ export default function StudentMenu({
   const students =
     analysis && analysis.students
       ? Object.entries(
-          analysis.students as Record<string, Record<string, unknown>>
-        )
+        analysis.students as Record<string, Record<string, unknown>>
+      )
       : [];
 
   // Close dropdown on Escape key
@@ -80,7 +82,7 @@ export default function StudentMenu({
   }, [isOpen, setIsOpen]);
 
   if (loading) {
-    return <div className="p-5 text-muted-foreground">Loading students...</div>;
+    return <div className="p-5 text-muted-foreground">{t("loadingMessage.students")}</div>;
   }
 
   const toggleStudent = (id: string) => {
@@ -106,7 +108,7 @@ export default function StudentMenu({
 
   const getSelectedStudentsText = () => {
     if (selectedStudentIds.length === 0) {
-      return "Select students";
+      return `${t("common.select")} ${t("reports.students")}`;
     } else if (selectedStudentIds.length === 1) {
       const student = students.find(([id]) => id === selectedStudentIds[0]);
       if (student) {
@@ -115,9 +117,9 @@ export default function StudentMenu({
         return `${info?.name as string} ${info?.family_name as string}`;
       }
     } else {
-      return `${selectedStudentIds.length} students selected`;
+      return `${selectedStudentIds.length} ${t("reports.students")} ${t("common.selected")}`;
     }
-    return "Select students";
+    return `${t("common.selected")} ${t("reports.students")}`;
   };
 
   return (
@@ -127,12 +129,11 @@ export default function StudentMenu({
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-label={`Student selection menu. ${getSelectedStudentsText()}`}
-        className={`flex items-center justify-between gap-2 ${
-          smallButtons
-            ? "px-3 py-1.5 text-sm min-w-[120px]"
-            : "px-4 py-2 text-base min-w-[150px]"
-        }`}
+        aria-label={`${t("common.selected")} ${t("reports.student")} ${getSelectedStudentsText()}`}
+        className={`flex items-center justify-between gap-2 ${smallButtons
+          ? "px-3 py-1.5 text-sm min-w-[120px]"
+          : "px-4 py-2 text-base min-w-[150px]"
+          }`}
       >
         <div className="flex items-center gap-2">
           <Users size={16} />
@@ -144,13 +145,13 @@ export default function StudentMenu({
       {isOpen && (
         <div
           role="listbox"
-          aria-label="Student selection list"
+          aria-label={`${t("reports.students")} ${t("common.selected")}`}
           className="absolute top-full left-0 min-w-[200px] max-h-[300px] overflow-y-auto bg-card border border-border rounded-md shadow-lg z-[1000] mt-1"
         >
           {/* Header */}
           <div className="px-3 py-2 border-b border-border">
             <div className="text-sm font-semibold text-foreground">
-              Students ({students.length})
+              {t("reports.students")} ({students.length})
             </div>
           </div>
 
@@ -162,7 +163,7 @@ export default function StudentMenu({
               onClick={selectAllStudents}
               className="flex-1 text-xs"
             >
-              Select All
+              {t("reports.selectAll")}
             </Button>
             <Button
               variant="outline"
@@ -170,7 +171,7 @@ export default function StudentMenu({
               onClick={clearAllStudents}
               className="flex-1 text-xs"
             >
-              Clear All
+              {t("reports.clearSelection")}
             </Button>
           </div>
 
@@ -181,9 +182,8 @@ export default function StudentMenu({
             const info = studentInfo.info as
               | Record<string, unknown>
               | undefined;
-            const studentName = `${info?.name as string} ${
-              info?.family_name as string
-            }`;
+            const studentName = `${info?.name as string} ${info?.family_name as string
+              }`;
 
             return (
               <div
@@ -191,7 +191,7 @@ export default function StudentMenu({
                 tabIndex={0}
                 role="checkbox"
                 aria-checked={selected}
-                aria-label={`Select ${studentName}`}
+                aria-label={`${t("common.selected")} ${studentName}`}
                 onClick={() => toggleStudent(id)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -202,11 +202,10 @@ export default function StudentMenu({
                 className="px-3 py-2 text-sm min-h-8 flex items-center gap-3 cursor-pointer hover:bg-muted focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 <div
-                  className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${
-                    selected
-                      ? "bg-primary border-primary"
-                      : "border-muted-foreground"
-                  }`}
+                  className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center flex-shrink-0 ${selected
+                    ? "bg-primary border-primary"
+                    : "border-muted-foreground"
+                    }`}
                 >
                   {selected && (
                     <svg

@@ -4,7 +4,7 @@ import { CourseType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
-import { orderCourseRecentlyCreated } from "../../utility/Helpers";
+import { handleCourseTermLanguage, orderCourseRecentlyCreated } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
@@ -175,9 +175,9 @@ export default function AllModules(): JSX.Element {
                         </h2>
                         <p className="text-sm text-muted-foreground capitalize">
                           {course.section
-                            ? `${course.term ? course.term : ""}${course.year ? course.year : ""
+                            ? `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year ? course.year : ""
                             } - ${course.section}`
-                            : `${course.term ? course.term : ""}${course.year ? course.year : ""
+                            : `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year ? course.year : ""
                             }`}
                         </p>
                       </div>

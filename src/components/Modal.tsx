@@ -1,3 +1,4 @@
+//Note: Not in use anymore
 import React, { useEffect } from "react";
 import clsx from "clsx";
 import ReactModal from "react-modal";

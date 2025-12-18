@@ -49,8 +49,10 @@ import CourseReports from "./features/reports/CourseReports";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
 import { changeLanguage } from "./i18n";
+import { useTranslation } from "./hooks/useTranslation";
 
 function App(): JSX.Element {
+  const { t } = useTranslation();
   // user object obtained from backend or local
   const [user, setUser] = useState<UserType | null>(
     localStorage.getItem("papyrusai_user")
@@ -155,7 +157,7 @@ function App(): JSX.Element {
       loadingComponent={
         <div className="flex items-center justify-center p-4">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span className="ml-2">Loading...</span>
+          <span className="ml-2">{t("loadingMessage.loading")}...</span>
         </div>
       } //If not pass, nothing appears at the time of new version check.
     >
@@ -164,7 +166,7 @@ function App(): JSX.Element {
           href="#main-content"
           className="skip-link"
         >
-          Skip to main content
+          {t("navigation.skipToMain")}
         </a>
         <UserContext.Provider value={value}>
           <AlertContext.Provider value={alertValue}>
@@ -176,7 +178,7 @@ function App(): JSX.Element {
                 contentClassName="sm:max-w-md [&>button]:hidden"
                 actions={[
                   {
-                    label: "Log Out",
+                    label: t("navigation.logout"),
                     onClick: () => handleLogOut(),
                     variant: "secondary",
                   },
@@ -201,6 +203,7 @@ function App(): JSX.Element {
                       setShowUpdateUserInfoModal(false);
 
                       //Handle new user tutorial
+                      //Note: not updating this with language since the default is english and can't be changed until after this
                       introJs()
                         .setOptions({
                           steps: [
@@ -257,7 +260,7 @@ function App(): JSX.Element {
                 {/* 
                 <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />
                 <Route path="/forgot-password" element={<ForgotPassword setUser={(u) => setUser(u)} />} /> */}
-                <Route path="*" element={<div>Page not found.</div>} />
+                <Route path="*" element={<div>{t("navigation.pageNotFound")}</div>} />
 
                 {/* Need to have start path here. Private route will redirect to login if no user  */}
                 <Route

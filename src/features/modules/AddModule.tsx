@@ -49,6 +49,7 @@ import { File } from "../../components/File";
 import { Badge } from "../../components/ui/badge";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 
 type ModuleFormType = {
   name: string;
@@ -183,7 +184,7 @@ export default function AddModule({
             } else {
               //handle error
               navigator("/courses");
-              setAlert({ message: "Module does not exist", type: "error" });
+              setAlert({ message: `${t("errorMessage.moduleNotExist")}`, type: "error" });
               setIsLoading(false);
             }
           }
@@ -381,7 +382,7 @@ export default function AddModule({
             if (res === undefined) {
             } else {
               //handle error
-              setAlert({ message: "Prompt Does Not Exist", type: "error" });
+              setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
               setIsLoading(false);
             }
           }
@@ -410,7 +411,7 @@ export default function AddModule({
             if (res === undefined) {
             } else {
               //handle error
-              setAlert({ message: "Prompt Does Not Exist", type: "error" });
+              setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
               setIsLoading(false);
             }
           }
@@ -442,7 +443,7 @@ export default function AddModule({
             if (res === undefined) {
             } else {
               //handle error
-              setAlert({ message: "File Does Not Exist", type: "error" });
+              setAlert({ message: `${t("errorMessage.fileNotExist")}`, type: "error" });
               setIsLoading(false);
             }
           }
@@ -471,7 +472,7 @@ export default function AddModule({
             if (res === undefined) {
             } else {
               //handle error
-              setAlert({ message: "File Does Not Exist", type: "error" });
+              setAlert({ message: `${t("errorMessage.fileNotExist")}`, type: "error" });
               setIsLoading(false);
             }
           }
@@ -501,7 +502,7 @@ export default function AddModule({
       setOpenConfirmationModal({ id: "", type: "" });
     } else {
       setAlert({
-        message: "Something went wrong. Try again later",
+        message: `${t("errorMessage.genericError")}`,
         type: "error",
       });
     }
@@ -530,8 +531,8 @@ export default function AddModule({
           />
           <p className="text-muted-foreground">
             {isEditMode
-              ? "Loading module..."
-              : "Loading module creation form..."}
+              ? `${t("loadingMessage.module")}`
+              : `${t("loadingMessage.moduleCreationForm")}`}
           </p>
         </div>
       </div>
@@ -680,16 +681,16 @@ export default function AddModule({
         onOpenChange={(open) =>
           !open && setOpenConfirmationModal({ id: "", type: "" })
         }
-        title="Remove Asset?"
-        description="Are you sure you would like to remove this asset from the module?"
+        title={t("createModule.removeAsset")}
+        description={t("createModule.removeAssetDescription")}
         actions={[
           {
-            label: "Cancel",
+            label: `${t("common.cancel")}`,
             onClick: () => setOpenConfirmationModal({ id: "", type: "" }),
             variant: "outline",
           },
           {
-            label: "Remove",
+            label: `${t("common.remove")}`,
             onClick: () =>
               removeAsset(openConfirmationModal.id, openConfirmationModal.type),
             variant: "destructive",
@@ -740,29 +741,35 @@ export default function AddModule({
                 className="flex flex-col md:flex-row gap-2"
                 aria-label={
                   isEditMode
-                    ? "Module management actions"
-                    : "Module creation actions"
+                    ? `${t("createModule.managementActions")}`
+                    : `${t("createModule.creationActions")}`
                 }
               >
                 {isEditMode && (
+                  <TooltipWrapper content={t("common.delete")}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOpenDeleteModal(true)}
+                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      aria-label={t("createModule.deleteModule")}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </TooltipWrapper>
+
+                )}
+                <TooltipWrapper content={t("common.info")}>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setOpenDeleteModal(true)}
-                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    aria-label="Delete module"
+                    onClick={() => setShowSavePublishTooltip(true)}
+                    aria-label={t("createCourse.getSavePublishHelp")}
                   >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    <Info className="h-4 w-4" aria-hidden="true" />
                   </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSavePublishTooltip(true)}
-                  aria-label="Get help with Save & Publish options"
-                >
-                  <Info className="h-4 w-4" aria-hidden="true" />
-                </Button>
+                </TooltipWrapper>
+
                 <div className="flex rounded-lg border">
                   <Button
                     size="sm"
@@ -781,7 +788,7 @@ export default function AddModule({
                     }}
                     className="rounded-none border-0 w-full rounded-l"
                     disabled={isLoading}
-                    aria-label={`${options[selectedIndexSave]} module`}
+                    aria-label={`${options[selectedIndexSave]} ${t("common.module")}`}
                   >
                     <Save className="h-4 w-4 mr-2" aria-hidden="true" />
                     {options[selectedIndexSave]}
@@ -795,7 +802,7 @@ export default function AddModule({
                         className="rounded-none border-0 border-l px-2 rounded-r"
                         variant="default"
                         disabled={isLoading}
-                        aria-label="Select save and publish strategy"
+                        aria-label={t("createModule.saveStrategy")}
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -929,7 +936,7 @@ export default function AddModule({
                 variant="outline"
                 onClick={() => setOpenSelectFolderModal(true)}
                 className="gap-2"
-                aria-label="Add asset to module"
+                aria-label={t("createModule.addAssetModule")}
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
                 {t("createModule.addAsset")}
@@ -948,8 +955,8 @@ export default function AddModule({
                     setOpenSelectFolderModal(true);
                   }
                 }}
-                aria-label="Click here to add an asset (including prompts and documents) to the module"
-                title="Click here to add an asset (including prompts and documents) to the module"
+                aria-label={t("createModule.clickToAddAsset")}
+                title={t("createModule.clickToAddAsset")}
               >
                 <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
                 <p className="text-lg font-medium mb-2">{t("createModule.noAssetsAdded")}</p>
@@ -1033,7 +1040,7 @@ export default function AddModule({
             <Separator />
 
             <div className="space-y-2">
-              <Label className="text-lg font-medium">Module Settings</Label>
+              <Label className="text-lg font-medium">{t("createModule.moduleSettings")}</Label>
 
               <div className="space-y-4">
                 <div className="space-y-1">
@@ -1066,8 +1073,9 @@ export default function AddModule({
                       rel="noreferrer"
                       className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
                     >
-                      Link
+                      {t("createModule.showEmbeddedPromptDescriptionLinkText")}
                     </a>
+                    .
                   </p>
                 </div>
 
@@ -1104,7 +1112,7 @@ export default function AddModule({
         <nav
           className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
           aria-label={
-            isEditMode ? "Module management actions" : "Module creation actions"
+            isEditMode ? `${t("createModule.managementActions")}` : `${t("createModule.creationActions")}`
           }
           id="bottom-actions-heading"
         >
@@ -1118,7 +1126,7 @@ export default function AddModule({
               aria-label="Delete module"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
-              Delete
+              {t("common.delete")}
             </Button>
           )}
           <Button
@@ -1126,10 +1134,10 @@ export default function AddModule({
             variant="outline"
             size="sm"
             onClick={() => setShowSavePublishTooltip(true)}
-            aria-label="Get help with Save & Publish options"
+            aria-label={t("createCourse.getSavePublishHelp")}
           >
             <Info className="h-4 w-4" aria-hidden="true" />
-            Info
+            {t("common.info")}
           </Button>
           <div className="flex rounded-lg border">
             <Button
@@ -1150,7 +1158,7 @@ export default function AddModule({
               }}
               className="rounded-none border-0 w-full rounded-l"
               disabled={isLoading}
-              aria-label={`${options[selectedIndexSave]} module`}
+              aria-label={`${options[selectedIndexSave]} ${t("common.module")}`}
             >
               <Save className="h-4 w-4 mr-2" aria-hidden="true" />
               {options[selectedIndexSave]}
@@ -1165,7 +1173,7 @@ export default function AddModule({
                   className="rounded-none border-0 border-l px-2 rounded-r"
                   variant="default"
                   disabled={isLoading}
-                  aria-label="Select save and publish strategy"
+                  aria-label={t("createModule.saveStrategy")}
                 >
                   <ChevronDown className="h-4 w-4" aria-hidden="true" />
                 </Button>

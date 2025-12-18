@@ -7,12 +7,14 @@ import { useNavigate } from "react-router-dom";
 import * as Plot from "@observablehq/plot";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 import { parseLocalDate, formatDateForTooltip } from "../../utility/reports/date";
+import { useTranslation } from "../../hooks/useTranslation";
 
 type StudentStatsProps = {
   student: Record<string, unknown>;
 };
 
 export default function IndividualStudentStats({ student }: StudentStatsProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const info = student.info as Record<string, unknown> | undefined;
   const dailyConvoLengths = student.dailyConvoLengths as
@@ -72,10 +74,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Individual student daily conversation lengths chart showing average conversation length over time",
-      x: { label: "Date", type: "time" },
-      y: { label: "Avg Conversation Length" },
+      ariaLabel: t("reports.individualDailyConvoLength"),
+      x: { label: t("common.date"), type: "time" },
+      y: { label: t("reports.avgConvoLength") },
       marks: [
         Plot.line(processedData, { x: "date", y: "avg_convo_length" }),
         Plot.dot(processedData, { x: "date", y: "avg_convo_length" }),
@@ -107,8 +108,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             dot.setAttribute("role", "img");
             dot.setAttribute(
               "aria-label",
-              `Date ${data.date.toLocaleDateString()}, Average conversation length ${
-                data.avg_convo_length
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.avgConvoLength")} ${data.avg_convo_length
               }`
             );
             dot.setAttribute("tabindex", "0");
@@ -117,7 +117,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         });
       }, 0);
     }
-  }, [dailyConvoLengths, backgroundColor, foregroundColor]);
+  }, [dailyConvoLengths, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
     if (!dailyConvoCounts || dailyConvoCounts.length === 0) return;
@@ -133,10 +133,9 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Individual student daily conversation counts chart showing number of conversations over time",
-      x: { label: "Date", type: "time" },
-      y: { label: "Number of Conversations" },
+      ariaLabel: t("common.individualDailyConvoCount"),
+      x: { label: t("common.date"), type: "time" },
+      y: { label: t("common.numConvos") },
       marks: [
         Plot.line(processedData, { x: "date", y: "num_convos" }),
         Plot.dot(processedData, { x: "date", y: "num_convos" }),
@@ -170,8 +169,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             dot.setAttribute("role", "img");
             dot.setAttribute(
               "aria-label",
-              `Date ${data.date.toLocaleDateString()}, Number of conversations ${
-                data.num_convos
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("common.numConvos")} ${data.num_convos
               }`
             );
             dot.setAttribute("tabindex", "0");
@@ -180,7 +178,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         });
       }, 0);
     }
-  }, [dailyConvoCounts, backgroundColor, foregroundColor]);
+  }, [dailyConvoCounts, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
     if (!classificationCounts || classificationCounts.length === 0) return;
@@ -199,8 +197,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Individual student classification counts chart showing conversation classifications",
+      ariaLabel: t("reports.individualClassification"),
       x: {
         label: "Classification",
         tickRotate: processedClassificationData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
@@ -221,8 +218,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           y: "count",
           fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
           title: (d: any) =>
-            `Classification: ${
-              d.fullClassification || d.classification
+            `${t("reports.classification")}: ${d.fullClassification || d.classification
             }\nCount: ${d.count}`,
           tip: {
             format: {
@@ -264,9 +260,8 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             rect.setAttribute("role", "img");
             rect.setAttribute(
               "aria-label",
-              `Classification ${
-                data.fullClassification || data.classification
-              }, Count ${data.count}`
+              `${t("reports.classification")} ${data.fullClassification || data.classification
+              }, ${t("reports.count")} ${data.count}`
             );
             rect.setAttribute("tabindex", "0");
             dataIndex++;
@@ -274,7 +269,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         });
       }, 0);
     }
-  }, [classificationCounts, truncateLabel, backgroundColor, foregroundColor]);
+  }, [classificationCounts, truncateLabel, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
     if (!moduleUsage || moduleUsage.length === 0) return;
@@ -293,15 +288,14 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Individual student module usage chart showing module usage counts",
+      ariaLabel: t("reports.individualStudentModuleUsage"),
       x: {
-        label: "Module",
+        label: t("common.module"),
         tickRotate: processedModuleData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
         tickSize: 6,
         padding: 0.1,
       },
-      y: { label: "Count" },
+      y: { label: t("reports.count") },
       color: {
         legend: true,
         range: PLOT_COLOR_PALETTE,
@@ -315,7 +309,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           y: "count",
           fill: (d: any) => d.fullModuleName || d.moduleName, // Use full names for color mapping
           title: (d: any) =>
-            `Module: ${d.fullModuleName || d.moduleName}\nCount: ${d.count}`,
+            `${t("common.module")}: ${d.fullModuleName || d.moduleName}\n${t("reports.count")}: ${d.count}`,
           tip: {
             format: {
               x: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
@@ -356,8 +350,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             rect.setAttribute("role", "img");
             rect.setAttribute(
               "aria-label",
-              `Module ${data.fullModuleName || data.moduleName}, Count ${
-                data.count
+              `${t("common.module")} ${data.fullModuleName || data.moduleName}, ${t("reports.count")} ${data.count
               }`
             );
             rect.setAttribute("tabindex", "0");
@@ -366,16 +359,16 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
         });
       }, 0);
     }
-  }, [moduleUsage, truncateLabel, backgroundColor, foregroundColor]);
+  }, [moduleUsage, truncateLabel, backgroundColor, foregroundColor, t]);
 
   if (!student) return null;
   return (
     <div style={{ padding: "0 2rem", marginBottom: "3rem" }}>
       <h2 className="text-2xl font-bold text-foreground mb-1">
-        Student: {info?.name as string} {info?.family_name as string}
+        {t("reports.student")}: {info?.name as string} {info?.family_name as string}
       </h2>
-      <p>Email: {info?.email as string}</p>
-      <p>Total Messages: {totalMessages}</p>
+      <p>{t("reports.email")}: {info?.email as string}</p>
+      <p>{t("reports.totalMessages")}: {totalMessages}</p>
       <button
         onClick={() => {
           const userId = info?.username || student.id || "unknown";
@@ -401,7 +394,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           e.currentTarget.style.backgroundColor = "#1976d2";
         }}
       >
-        View Detailed Reports
+        {t("reports.viewDetailedReports")}
       </button>
 
       <div
@@ -419,7 +412,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             className="text-2xl font-bold text-foreground mb-2"
             id="lengths-chart-heading"
           >
-            Daily Conversation Lengths
+            {t("reports.dailyConversationLengths")}
           </h2>
           <div
             ref={lengthsRef}
@@ -431,11 +424,11 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           {dailyConvoLengths && dailyConvoLengths.length > 0 && (
             <div className="sr-only">
               <table>
-                <caption>Daily Conversation Lengths Data Table</caption>
+                <caption>{t("reports.dailyConvoLengthTable")}</caption>
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Avg Length</th>
+                    <th>{t("common.date")}</th>
+                    <th>{t("reports.avgConvoLength")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -457,7 +450,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             className="text-2xl font-bold text-foreground mb-2"
             id="counts-chart-heading"
           >
-            Daily Conversation Counts
+            {t("reports.dailyConversationCounts")}
           </h2>
           <div
             ref={countsRef}
@@ -469,11 +462,11 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           {dailyConvoCounts && dailyConvoCounts.length > 0 && (
             <div className="sr-only">
               <table>
-                <caption>Daily Conversation Counts Data Table</caption>
+                <caption>{t("reports.dailyConvoCountsTable")}</caption>
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Count</th>
+                    <th>{t("common.date")}</th>
+                    <th>{t("reports.count")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -495,7 +488,7 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
             className="text-2xl font-bold text-foreground mb-2"
             id="module-usage-chart-heading"
           >
-            Module Usage
+            {t("reports.moduleUsage")}
           </h2>
           <div
             ref={moduleUsageRef}
@@ -507,11 +500,11 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
           {moduleUsage && moduleUsage.length > 0 && (
             <div className="sr-only">
               <table>
-                <caption>Module Usage Data Table</caption>
+                <caption>{t("reports.moduleUsageTable")}</caption>
                 <thead>
                   <tr>
-                    <th>Module</th>
-                    <th>Count</th>
+                    <th>{t("common.module")}</th>
+                    <th>{t("reports.count")}</th>
                   </tr>
                 </thead>
                 <tbody>

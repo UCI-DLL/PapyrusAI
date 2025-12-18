@@ -1,6 +1,8 @@
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "../hooks/useTranslation";
 
-export function PageLoader({pageName}: {pageName: string}) {
+export function PageLoader({ pageName }: { pageName: string }) {
+  const { t } = useTranslation();
   return (
     <div
       className="min-h-screen flex items-center justify-center"
@@ -11,7 +13,7 @@ export function PageLoader({pageName}: {pageName: string}) {
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
         />
-        <p className="text-muted-foreground">Loading {pageName}</p>
+        <p className="text-muted-foreground">{t("loadingMessage.loading")} {pageName}</p>
       </div>
     </div>
   );

@@ -14,8 +14,9 @@ import Get from "../../utility/Get";
 import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import type { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
-import AddCourseForm, { type
-  AddCourseFormHandle,
+import AddCourseForm, {
+  type
+    AddCourseFormHandle,
 } from "../course-groups/AddCourseForm";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
@@ -124,7 +125,7 @@ export default function Dashboard(): JSX.Element {
   if (isLoading) {
     return <PageLoader pageName="Dashboard" />
   }
-  
+
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
       <PageHeaderCard title={t("dashboard.welcome") + ", " + user?.name + "!"} icon={<Target size={192} className="text-primary" />} />
@@ -142,13 +143,13 @@ export default function Dashboard(): JSX.Element {
           </div>
           <nav
             className="flex flex-col md:flex-row gap-2"
-            aria-label="Course actions"
+            aria-label={t("createCourse.courseActions")}
           >
             <Button
               size="sm"
               variant="outline"
               asChild
-              aria-label="View all courses"
+              aria-label={t("common.viewAll") + " " + t("components.courses")}
             >
               <Link to="/courses" className="no-underline">
                 <EyeIcon className="w-4 h-4" aria-hidden="true" />
@@ -160,7 +161,7 @@ export default function Dashboard(): JSX.Element {
                 size="sm"
                 variant="outline"
                 asChild
-                aria-label="Create new course"
+                aria-label="Create new course" //TODO
               >
                 <Link to="/createcourse" className="no-underline">
                   <PlusIcon className="w-4 h-4" aria-hidden="true" />
@@ -170,7 +171,7 @@ export default function Dashboard(): JSX.Element {
             )}
             <Button
               size="sm"
-              aria-label="Join existing course"
+              aria-label={t("dashboard.joinCourse")}
               onClick={() => setShowAddCourseModal(true)}
             >
               <ExternalLink className="w-4 h-4" aria-hidden="true" />
@@ -243,7 +244,7 @@ export default function Dashboard(): JSX.Element {
             size="sm"
             variant="outline"
             asChild
-            aria-label="View all modules"
+            aria-label={`${t("common.viewAll")} ${t("common.modules")}`}
           >
             <Link to="/modules" className="no-underline">
               <EyeIcon className="w-4 h-4" aria-hidden="true" />

@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 import { Input } from "../../components/ui/input";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { handleCourseTermLanguage } from "../../utility/Helpers";
 
 export default function Modules(): JSX.Element {
   let location = useLocation();
@@ -143,12 +144,12 @@ export default function Modules(): JSX.Element {
 
               <nav
                 className="flex flex-col md:flex-row gap-2 md:shrink-0"
-                aria-label="Module actions"
+                aria-label={`${t("common.module")} ${t("common.actions")}}`}
               >
-                {isInstructorOrTA && (
+                {isInstructorOrTA && ( //TODO
                   <Button size="sm" asChild aria-label="Create new module" variant="outline">
                     <Link
-                      to={`/reports/course/${course?.id}`} //TODO have justin check this
+                      to={`/reports/course/${course?.id}`}
                       className="no-underline hover:text-white"
                     >
                       <ChartColumnBig className="w-4 h-4" aria-hidden="true" />
@@ -156,7 +157,7 @@ export default function Modules(): JSX.Element {
                     </Link>
                   </Button>
                 )}
-                {isInstructorOrTA && (
+                {isInstructorOrTA && ( //TODO
                   <Button size="sm" asChild aria-label="Create new module">
                     <Link
                       to={`/courses/${course?.id}/createmodule`}
@@ -175,9 +176,9 @@ export default function Modules(): JSX.Element {
                 <div className="mr-4">
                   <p className="text-md capitalize m-0">
                     {course.section
-                      ? `${course.term ?? ""}${course.year ?? ""} - ${course.section
+                      ? `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year ?? ""} - ${course.section
                       }`
-                      : `${course.term ?? ""}${course.year ?? ""}`}
+                      : `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year ?? ""}`}
                   </p>
                   <span className="text-sm text-muted-foreground m-0">{t("modules.term")}</span>
                 </div>
@@ -239,7 +240,7 @@ export default function Modules(): JSX.Element {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
-                aria-label="Search modules"
+                aria-label="Search modules" //TODO
               />
             </div>
           </div>

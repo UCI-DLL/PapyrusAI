@@ -38,10 +38,12 @@ import ChatHeader from "./components/ChatHeader";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
 import ChatSidebar from "./components/ChatSidebar";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function Chat(): JSX.Element {
   const location = useLocation();
   let navigator = useNavigate();
+  const { t } = useTranslation();
   const [conversationIds, setConversationIds] = useState<{
     courseId: string;
     moduleId: string;
@@ -684,7 +686,7 @@ export default function Chat(): JSX.Element {
           } else {
             setOpenErrorModal({
               open: true,
-              message: "Something went wrong. Try again later",
+              message: `${t("errorMessage.genericError")}`,
             });
           }
         });
@@ -818,7 +820,7 @@ export default function Chat(): JSX.Element {
           navigator("/login");
         } else {
           setAlert({
-            message: "Something went wrong. Try again later",
+            message: `${t("errorMessage.genericError")}`,
             type: "error",
           });
         }
@@ -920,7 +922,7 @@ export default function Chat(): JSX.Element {
       } else {
         setOpenErrorModal({
           open: true,
-          message: "Something went wrong. Try again later",
+          message: `${t("errorMessage.genericError")}`,
         });
       }
       setIsLoading(false);
@@ -1051,7 +1053,7 @@ export default function Chat(): JSX.Element {
         } else {
           setOpenErrorModal({
             open: true,
-            message: "Something went wrong. Try again later",
+            message: `${t("errorMessage.genericError")}`,
           });
         }
         setIsLoading(false);
@@ -1106,7 +1108,7 @@ export default function Chat(): JSX.Element {
           } else {
             setOpenErrorModal({
               open: true,
-              message: "Something went wrong. Try again later",
+              message: `${t("errorMessage.genericError")}`,
             });
           }
           setIsLoading(false);
@@ -1169,7 +1171,7 @@ export default function Chat(): JSX.Element {
         contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
         actions={[
           {
-            label: "Cancel",
+            label: `${t("common.cancel")}`,
             onClick: () => setOpenDocumentModal(false),
             variant: "outline",
           },
@@ -1186,7 +1188,7 @@ export default function Chat(): JSX.Element {
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Cancel",
+            label: `${t("common.cancel")}`,
             onClick: () => setOpenSpeechToTextModal(false),
             variant: "outline",
           },
@@ -1207,7 +1209,7 @@ export default function Chat(): JSX.Element {
         footerClassName="flex-col gap-2 sm:flex-row"
         actions={[
           {
-            label: "Cancel",
+            label: `${t("common.cancel")}`,
             onClick: () =>
               setOpenUpdateConvoModal((prev) => ({
                 ...prev,
@@ -1237,7 +1239,7 @@ export default function Chat(): JSX.Element {
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Cancel",
+            label: `${t("common.cancel")}`,
             onClick: () =>
               setOpenUpdateConvoModal((prev) => ({ ...prev, open: false })),
             variant: "outline",

@@ -36,6 +36,7 @@ import {
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export enum SortOptions {
   Ascending = "Ascending",
@@ -95,6 +96,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useTranslation();
   //If safari, use a different dropdown within dialog modal so that screen readers can read
   const isSafari =
     typeof window !== "undefined" &&
@@ -481,13 +483,11 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     <div className="space-y-6">
       {props.noShowMenu && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-          To add an asset (including prompts and documents) to your module,
-          navigate to the folder in which the asset is hosted.
+          {t("library.noAssetsAdded")}
           <br />
           <span className="italic text-sm">
             {" "}
-            Note: Assets must be created or uploaded in the Library before they
-            can be added to a module.
+            {t("library.noAssetsAddedNote")}
           </span>
         </div>
       )}
@@ -498,7 +498,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search library..."
+              placeholder={t("library.searchContent")}
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -510,14 +510,14 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
             onClick={() => setIsFilterPopoverOpen(true)}
           >
             <Filter className="h-4 w-4" />
-            Filters
+            {t("library.filters")}
           </Button>
 
           <DialogWrapper
             open={isFilterPopoverOpen}
             onOpenChange={setIsFilterPopoverOpen}
-            title="Filters"
-            description="Filter folders by date, tags, owner, and more."
+            title={t("library.filters")}
+            description={t("library.filtersDescription")}
             contentClassName="sm:max-w-xl"
             showFooter={false}
           >
@@ -525,8 +525,9 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               {/* handle safari screen readers  */}
               {isSafari ? (
                 <div className="space-y-2">
-                  <Label htmlFor="sort-select">Sort</Label>
+                  <Label htmlFor="sort-select">{t("library.sort")}</Label>
                   <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                     value={filters.sort}
                     onChange={(value) => {
                       setFilters((prev) => ({
@@ -534,19 +535,19 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                         sort: SortOptions[value.target.value as keyof typeof SortOptions],
                       }));
                     }}
-                    placeholder="Select sort order"
-                    title="Sort"
+                    placeholder={t("library.sort")}
+                    title={t("library.sort")}
                   >
                     {Object.keys(SortOptions).map((key) => (
                       <option value={key} key={key}>
-                        {key}
+                        {t(`library.${key.toLowerCase()}`)}
                       </option>
                     ))}
                   </select>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="sort-select">Sort</Label>
+                  <Label htmlFor="sort-select">{t("library.sort")}</Label>
                   <Select
                     value={filters.sort}
                     onValueChange={(value) => {
@@ -557,12 +558,12 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select sort order" />
+                      <SelectValue placeholder={t("library.sort")} />
                     </SelectTrigger>
                     <SelectContent avoidCollisions={false} position="popper">
                       {Object.keys(SortOptions).map((key) => (
                         <SelectItem value={key} key={key}>
-                          {key}
+                          {t(`library.${key.toLowerCase()}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -573,8 +574,9 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               {/* handle safari screen readers  */}
               {isSafari ? (
                 <div className="space-y-2">
-                  <Label htmlFor="starred-select">Starred</Label>
+                  <Label htmlFor="starred-select">{t("library.starred")}</Label>
                   <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                     value={filters.starred}
                     onChange={(value) => {
                       setFilters((prev) => ({
@@ -583,19 +585,23 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                           StarredOptions[value.target.value as keyof typeof StarredOptions],
                       }));
                     }}
-                    placeholder="Filter by starred status"
-                    title="Starred"
+                    placeholder={t("library.starred")}
+                    title={t("library.starred")}
                   >
-                    {Object.keys(StarredOptions).map((key) => (
-                      <option value={key} key={key}>
-                        {key}
-                      </option>
-                    ))}
+                    <option value={"All"} key={"All"}>
+                      {t("common.all")}
+                    </option>
+                    <option value={"Starred"} key={"Starred"}>
+                      {t("library.starred")}
+                    </option>
+                    <option value={"Not Starred"} key={"Not Starred"}>
+                      {t("library.notStarred")}
+                    </option>
                   </select>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="starred-select">Starred</Label>
+                  <Label htmlFor="starred-select">{t("library.starred")}</Label>
                   <Select
                     value={filters.starred}
                     onValueChange={(value) => {
@@ -607,14 +613,18 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Filter by starred status" />
+                      <SelectValue placeholder={t("library.starred")} />
                     </SelectTrigger>
                     <SelectContent avoidCollisions={false} position="popper">
-                      {Object.keys(StarredOptions).map((key) => (
-                        <SelectItem value={key} key={key}>
-                          {key}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value={"All"} key={"All"}>
+                        {t("common.all")}
+                      </SelectItem>
+                      <SelectItem value={"Starred"} key={"Starred"}>
+                        {t("library.starred")}
+                      </SelectItem>
+                      <SelectItem value={"Not Starred"} key={"Not Starred"}>
+                        {t("library.notStarred")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -623,8 +633,9 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               {/* handle safari screen readers  */}
               {isSafari ? (
                 <div className="space-y-2">
-                  <Label htmlFor="owner-select">Owner</Label>
+                  <Label htmlFor="owner-select">{t("library.owner")}</Label>
                   <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                     value={filters.owner}
                     onChange={(value) => {
                       setFilters((prev) => ({
@@ -635,19 +646,23 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                           ],
                       }));
                     }}
-                    placeholder="Filter by owner"
-                    title="Owner"
+                    placeholder={t("library.owner")}
+                    title={t("library.owner")}
                   >
-                    {Object.keys(OwnerTypeOptions).map((key) => (
-                      <option value={key} key={key}>
-                        {key}
-                      </option>
-                    ))}
+                    <option value={"All"} key={"All"}>
+                      {t("common.all")}
+                    </option>
+                    <option value={"Public"} key={"Public"}>
+                      {t("library.public")}
+                    </option>
+                    <option value={"Private"} key={"Private"}>
+                      {t("library.private")}
+                    </option>
                   </select>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="owner-select">Owner</Label>
+                  <Label htmlFor="owner-select">{t("library.owner")}</Label>
                   <Select
                     value={filters.owner}
                     onValueChange={(value) => {
@@ -661,14 +676,18 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Filter by owner" />
+                      <SelectValue placeholder={t("library.owner")} />
                     </SelectTrigger>
                     <SelectContent avoidCollisions={false} position="popper">
-                      {Object.keys(OwnerTypeOptions).map((key) => (
-                        <SelectItem value={key} key={key}>
-                          {key}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value={"Any"} key={"Any"}>
+                        {t("common.any")}
+                      </SelectItem>
+                      <SelectItem value={"Public"} key={"Public"}>
+                        {t("library.public")}
+                      </SelectItem>
+                      <SelectItem value={"Private"} key={"Private"}>
+                        {t("library.private")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -677,8 +696,9 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               {/* handle safari screen readers  */}
               {isSafari ? (
                 <div className="space-y-2">
-                  <Label htmlFor="tag-select">Tag</Label>
+                  <Label htmlFor="tag-select">{t("library.tags")}</Label>
                   <select
+                    className="h-10 w-full rounded-md border px-3 py-2 text-sm"
                     value={filters.tags}
                     onChange={(value) => {
                       setFilters((prev) => ({
@@ -686,12 +706,12 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                         tags: value.target.value,
                       }));
                     }}
-                    placeholder="Fitler by tag"
-                    title="Tag"
+                    placeholder={t("library.tags")}
+                    title={t("library.tags")}
                   >
 
                     <option value="none" key="none">
-                      No filter
+                      {t("library.noFilter")}
                     </option>
                     {tagList.map((tag, i) => (
                       <option value={tag.id} key={i}>
@@ -702,7 +722,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="tag-select">Tag</Label>
+                  <Label htmlFor="tag-select">{t("library.tags")}</Label>
                   <Select
                     value={filters.tags}
                     onValueChange={(value) => {
@@ -713,11 +733,11 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Filter by tag" />
+                      <SelectValue placeholder={t("library.tags")} />
                     </SelectTrigger>
                     <SelectContent avoidCollisions={false} position="popper">
                       <SelectItem value="none" key="none">
-                        No filter
+                        {t("library.noFilter")}
                       </SelectItem>
                       {tagList.map((tag, i) => (
                         <SelectItem value={tag.id} key={i}>
@@ -730,10 +750,10 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               )}
 
               <div className="space-y-4">
-                <Label className="text-sm font-medium">Date Created</Label>
+                <Label className="text-sm font-medium">{t("library.dateCreated")}</Label>
 
                 <div className="space-y-2">
-                  <Label htmlFor="start-date">Start Date</Label>
+                  <Label htmlFor="start-date">{t("library.pickStartDate")}</Label>
                   <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -747,7 +767,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {filters.startDate
                           ? format(filters.startDate, "PPP")
-                          : "Pick a start date"}
+                          : t("library.pickStartDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -768,7 +788,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="end-date">End Date</Label>
+                  <Label htmlFor="end-date">{t("library.pickEndDate")}</Label>
                   <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -782,7 +802,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {filters.endDate
                           ? format(filters.endDate, "PPP")
-                          : "Pick an end date"}
+                          : t("library.pickEndDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -810,7 +830,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                 onClick={handleResetFilters}
                 className="flex-1"
               >
-                Clear Filters
+                {t("library.clearFilters")}
               </Button>
               <Button
                 onClick={(e) => {
@@ -819,7 +839,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                 }}
                 className="flex-1"
               >
-                Apply Filters
+                {t("library.applyFilters")}
               </Button>
             </div>
           </DialogWrapper>
@@ -898,7 +918,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
             role="status"
           >
             <Folder className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No folders found</p>
+            <p className="text-lg font-medium mb-2">{t("errorMessage.noFolders")}</p>
             <p className="text-sm">
               {searchTerm ||
                 filters.tags !== "none" ||
@@ -912,7 +932,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   ) : (
     <div className="flex items-center justify-center py-8">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-muted-foreground">Loading Folders</p>
+      <p className="text-muted-foreground">{t("loadingMessage.folders")}</p>
     </div>
   );
 }

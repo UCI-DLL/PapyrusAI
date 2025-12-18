@@ -1,6 +1,7 @@
 /**
  * ModuleReports.tsx, component for displaying reports for a specific module
  */
+//TODO: update this to be generic
 
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
@@ -772,7 +773,7 @@ export default function ModuleReports(): JSX.Element {
                       size="sm"
                       onClick={() => handleChangePage(page - 1)}
                       disabled={page === 0}
-                      aria-label="Previous page"
+                      aria-label="Previous page" //TODO
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -784,7 +785,7 @@ export default function ModuleReports(): JSX.Element {
                       size="sm"
                       onClick={() => handleChangePage(page + 1)}
                       disabled={page >= totalPages - 1}
-                      aria-label="Next page"
+                      aria-label="Next page" //TODO
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>

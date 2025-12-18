@@ -18,6 +18,7 @@ import {
   formatDateForTooltip,
 } from "../../utility/reports/date";
 import { Users } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
@@ -28,6 +29,7 @@ export default function ClassCharts({
   analysis,
   setAnalysis,
 }: ClassChartsProps) {
+  const { t } = useTranslation();
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -300,17 +302,17 @@ export default function ClassCharts({
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel: "Module usage chart showing count of conversations per module",
+      ariaLabel: t("reports.moduleUsageDescription"),
       x: {
-        label: "Module",
+        label: t("common.module"),
         tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 modules
         tickSize: 6,
         padding: 0.1,
       },
-      y: { label: "Count", grid: true },
+      y: { label: t("reports.count"), grid: true },
       color: {
         legend: true,
-        label: "Module",
+        label: t("common.module"),
         range: PLOT_COLOR_PALETTE,
         domain: aggregatedData.map((d) => d.fullModuleName || d.moduleName), // Use full names in legend
       },
@@ -320,7 +322,7 @@ export default function ClassCharts({
           y: "count",
           fill: (d: any) => d.fullModuleName || d.moduleName, // Use full names for color mapping
           title: (d: any) =>
-            `Module: ${d.fullModuleName || d.moduleName}\nCount: ${d.count}`,
+            `${t("common.module")}: ${d.fullModuleName || d.moduleName}\n${t("reports.count")}: ${d.count}`,
           tip: {
             format: {
               x: (d: any) => d.fullModuleName || d.moduleName, // Show full name in tooltip
@@ -358,8 +360,7 @@ export default function ClassCharts({
             rect.setAttribute("role", "img");
             rect.setAttribute(
               "aria-label",
-              `Module ${data.fullModuleName || data.moduleName}, Count ${
-                data.count
+              `${t("common.module")} ${data.fullModuleName || data.moduleName}, ${t("reports.count")} ${data.count
               }`
             );
             rect.setAttribute("tabindex", "0");
@@ -376,6 +377,7 @@ export default function ClassCharts({
     getAggregatedModuleData,
     backgroundColor,
     foregroundColor,
+    t
   ]);
 
   useEffect(() => {
@@ -409,13 +411,12 @@ export default function ClassCharts({
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Daily conversation lengths chart showing average conversation length over time",
+      ariaLabel: t("reports.dailyConvoLengthDescription"),
       x: {
         type: "time",
-        label: "Date",
+        label: t("common.date"),
       },
-      y: { label: "Avg Conversation Length" },
+      y: { label: t("reports.avgConvoLength") },
       marks: [
         Plot.line(parsedData, { x: "date", y: "avg_convo_length" }),
         Plot.dot(parsedData, { x: "date", y: "avg_convo_length" }),
@@ -447,8 +448,7 @@ export default function ClassCharts({
             dot.setAttribute("role", "img");
             dot.setAttribute(
               "aria-label",
-              `Date ${data.date.toLocaleDateString()}, Average conversation length ${
-                data.avg_convo_length
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.avgConvoLength")} ${data.avg_convo_length
               }`
             );
             dot.setAttribute("tabindex", "0");
@@ -464,6 +464,7 @@ export default function ClassCharts({
     chartRefreshTrigger,
     backgroundColor,
     foregroundColor,
+    t
   ]);
 
   useEffect(() => {
@@ -497,13 +498,12 @@ export default function ClassCharts({
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Daily conversation counts chart showing number of conversations over time",
+      ariaLabel: t("reports.dailyConvoCountsDescription"),
       x: {
         type: "time",
-        label: "Date",
+        label: t("common.date"),
       },
-      y: { label: "Number of Conversations" },
+      y: { label: t("reports.numConvos") },
       marks: [
         Plot.line(parsedData, { x: "date", y: "num_convos" }),
         Plot.dot(parsedData, { x: "date", y: "num_convos" }),
@@ -535,8 +535,7 @@ export default function ClassCharts({
             dot.setAttribute("role", "img");
             dot.setAttribute(
               "aria-label",
-              `Date ${data.date.toLocaleDateString()}, Number of conversations ${
-                data.num_convos
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.numConvos")} ${data.num_convos
               }`
             );
             dot.setAttribute("tabindex", "0");
@@ -552,6 +551,7 @@ export default function ClassCharts({
     chartRefreshTrigger,
     backgroundColor,
     foregroundColor,
+    t
   ]);
 
   useEffect(() => {
@@ -570,18 +570,17 @@ export default function ClassCharts({
         background: "transparent",
         color: foregroundColor,
       },
-      ariaLabel:
-        "Chat classification chart showing count of conversations by classification type",
+      ariaLabel: t("reports.chatClassDescription"),
       x: {
         label: "Classification",
         tickRotate: aggregatedData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
         tickSize: 6,
         padding: 0.1,
       },
-      y: { label: "Count", grid: true },
+      y: { label: t("reports.count"), grid: true },
       color: {
         legend: true,
-        label: "Classification",
+        label: t("reports.classification"),
         range: PLOT_COLOR_PALETTE,
         domain: aggregatedData.map(
           (d) => d.fullClassification || d.classification
@@ -593,8 +592,7 @@ export default function ClassCharts({
           y: "count",
           fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
           title: (d: any) =>
-            `Classification: ${
-              d.fullClassification || d.classification
+            `${t("reports.classification")}: ${d.fullClassification || d.classification
             }\nCount: ${d.count}`,
           tip: {
             format: {
@@ -633,6 +631,7 @@ export default function ClassCharts({
     getAggregatedClassificationData,
     backgroundColor,
     foregroundColor,
+    t
   ]);
 
   // Placeholder component for empty charts
@@ -655,7 +654,7 @@ export default function ClassCharts({
       >
         <div style={{ textAlign: "center" }}>
           <div style={{ fontWeight: 600, marginBottom: "0.5rem" }}>{title}</div>
-          <div>Select a date range to view data</div>
+          <div>{t("reports.dateRangeDescription")}</div>
         </div>
       </div>
     );
@@ -670,7 +669,7 @@ export default function ClassCharts({
     return (
       <div style={{ marginLeft: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: "0.9rem" }}>Filter by students:</span>
+          <span style={{ fontSize: "0.9rem" }}>{t("reports.filterByStudent")}:</span>
           <StudentMenu
             analysis={analysis}
             selectedStudentIds={selectedStudentIds}
@@ -728,17 +727,17 @@ export default function ClassCharts({
               className="flex items-center gap-2"
             >
               <Users className="h-4 w-4" />
-              View All Students
+              {t("reports.viewAllStudents")}
             </Button>
           </div>
 
           <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
-            <h2 className="text-2xl font-bold text-foreground mb-1">Course:</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-1">{t("reports.course")}:</h2>
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
               {(analysis?.courseName as string) || "Course Reports"}
             </h1>
             <p>
-              Showing data for {selectedStudentIds.length} selected student
+              {t("reports.showingDataFor")} {selectedStudentIds.length} {t("reports.selectedStudent")}
               {selectedStudentIds.length !== 1 ? "s" : ""}
             </p>
           </div>
@@ -750,7 +749,7 @@ export default function ClassCharts({
                 className="text-2xl font-bold text-foreground mb-1"
                 style={{ padding: "0 2rem" }}
               >
-                Combined Statistics
+                {t("reports.combinedStatistics")}
               </h2>
             )}
             <StudentPage students={selectedStudents} />
@@ -804,7 +803,7 @@ export default function ClassCharts({
             className="flex items-center gap-2"
           >
             <Users className="h-4 w-4" />
-            View All Students
+            {t("reports.viewAllStudents")}
           </Button>
         </div>
 
@@ -817,10 +816,10 @@ export default function ClassCharts({
             }}
           >
             <h2 className="text-2xl font-bold text-foreground mb-1">
-              No Data Available
+              {t("reports.noData")}
             </h2>
             <p style={{ fontSize: "1.1rem" }}>
-              No data available for this course. This could mean:
+              {t("reports.noDataDescription")}:
             </p>
             <ul
               style={{
@@ -830,9 +829,9 @@ export default function ClassCharts({
                 fontSize: "1rem",
               }}
             >
-              <li>No conversations have been recorded yet</li>
-              <li>No modules have been created</li>
-              <li>No students have interacted with the course</li>
+              <li>{t("reports.noDataDescription1")}</li>
+              <li>{t("reports.noDataDescription2")}</li>
+              <li>{t("reports.noDataDescription3")}</li>
             </ul>
           </div>
         ) : (
@@ -841,7 +840,7 @@ export default function ClassCharts({
             {availableDates.length > 0 && (
               <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
                 <h2 className="text-2xl font-bold text-foreground mb-1">
-                  Course:
+                  {t("reports.course")}:
                 </h2>
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   {(analysis?.courseName as string) || "Course Reports"}
@@ -852,7 +851,7 @@ export default function ClassCharts({
                     marginBottom: "1rem",
                   }}
                 >
-                  Showing overall course data from:
+                  {t("reports.showingOverallCourseData")}:
                 </p>
                 <div
                   style={{
@@ -868,7 +867,7 @@ export default function ClassCharts({
                       htmlFor="startDate"
                       className="mb-2 font-medium text-foreground"
                     >
-                      Start Date:
+                      {t("reports.startDate")}:
                     </label>
                     <input
                       type="date"
@@ -883,7 +882,7 @@ export default function ClassCharts({
                       htmlFor="endDate"
                       className="mb-2 font-medium text-foreground"
                     >
-                      End Date:
+                      {t("reports.startDate")}:
                     </label>
                     <input
                       type="date"
@@ -920,7 +919,7 @@ export default function ClassCharts({
                       cursor: "pointer",
                     }}
                   >
-                    Select All Dates
+                    {t("reports.selectAllDates")}
                   </button>
                   <Button
                     variant="outline"
@@ -931,7 +930,7 @@ export default function ClassCharts({
                     size="sm"
                     className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   >
-                    Clear Selection
+                    {t("reports.clearSelection")}
                   </Button>
                 </div>
               </div>
@@ -953,7 +952,7 @@ export default function ClassCharts({
                     className="text-2xl font-bold text-foreground mb-2"
                     id="class-lengths-chart-heading"
                   >
-                    Daily Conversation Lengths
+                    {t("reports.dailyConversationLengths")}
                   </h2>
                   <div
                     ref={lengthsRef}
@@ -969,7 +968,7 @@ export default function ClassCharts({
                     className="text-2xl font-bold text-foreground mb-2"
                     id="class-counts-chart-heading"
                   >
-                    Daily Conversation Counts
+                    {t("reports.dailyConversationCounts")}
                   </h2>
                   <div
                     ref={countsRef}
@@ -1000,7 +999,7 @@ export default function ClassCharts({
                     className="text-2xl font-bold text-foreground mb-2"
                     id="class-module-usage-chart-heading"
                   >
-                    Module Usage
+                    {t("reports.moduleUsage")}
                   </h2>
                   {startDate && endDate ? (
                     <div
@@ -1011,7 +1010,7 @@ export default function ClassCharts({
                       className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
                     />
                   ) : (
-                    <EmptyChartPlaceholder title="Module Usage Data" />
+                    <EmptyChartPlaceholder title={t("reports.moduleUsage")} />
                   )}
                 </div>
 

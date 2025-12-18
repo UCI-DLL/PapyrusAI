@@ -541,7 +541,7 @@ export default function CreateCourse({
                   </div>
                   <nav
                     className="flex flex-col md:flex-row gap-2"
-                    aria-label="Course creation actions"
+                    aria-label={`${t("createCourse.createCourse")} ${t("common.actions")}}`}
                   >
                     {isEditMode && (
                       <TooltipWrapper content={t("createCourse.deleteCourse")}>
@@ -556,21 +556,24 @@ export default function CreateCourse({
                         </Button>
                       </TooltipWrapper>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowSavePublishTooltip(true)}
-                      aria-label="Get help with Save & Publish options"
-                    >
-                      <Info className="h-4 w-4" aria-hidden="true" />
-                    </Button>
+                    <TooltipWrapper content={t("common.info")}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowSavePublishTooltip(true)}
+                        aria-label={t("createCourse.getSavePublishHelp")}
+                      >
+                        <Info className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </TooltipWrapper>
+
                     <div className="flex rounded-lg border">
                       <Button
                         size="sm"
                         onClick={handleClick}
                         className="rounded-none border-0 w-full rounded-l"
                         disabled={isLoading}
-                        aria-label={`${options[selectedIndexSave]} course`}
+                        aria-label={`${options[selectedIndexSave]} ${t("components.courses")}`}
                       >
                         {options[selectedIndexSave]}
                       </Button>
@@ -584,7 +587,7 @@ export default function CreateCourse({
                             className="rounded-none border-0 border-l px-2 rounded-r"
                             variant="default"
                             disabled={isLoading}
-                            aria-label="Select save and activation strategy"
+                            aria-label={t("createModule.saveStrategy")}
                           >
                             <ChevronDown
                               className="h-4 w-4"
@@ -753,12 +756,12 @@ export default function CreateCourse({
                       id="year"
                       name="year"
                       type="number"
-                      placeholder="2025"
+                      placeholder="2026"
                       value={session.year}
                       onChange={handleChange}
                       disabled={isLoading}
                       min={2020}
-                      max={2030}
+                      max={2040}
                       inputMode="numeric"
                       className={cn(
                         "transition-colors",
@@ -886,8 +889,7 @@ export default function CreateCourse({
                           <Badge
                             key={index}
                             variant="secondary"
-                            className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-100 text-purple-800 
-                            dark:bg-purple-900 dark:text-purple-200 colorful-dark:bg-purple-900 colorful-dark:text-purple-200"
+                            className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-900 text-purple-100 hover:bg-purple-900 hover:text-white"
                           >
                             {ta.name && ta.family_name
                               ? `${ta.name} ${ta.family_name}`
@@ -899,8 +901,8 @@ export default function CreateCourse({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="h-4 w-4 p-0 ml-1 hover:bg-red-500 hover:text-white rounded-full"
-                              aria-label="Remove TA"
+                              className="h-6 w-6 p-0 ml-1 hover:bg-red-500 hover:text-white rounded-full"
+                              aria-label={t("createCourse.removeTA")}
                               onClick={() => {
                                 const newTaList = session.taList.filter(
                                   (_: CustomUserType, i: number) => i !== index
@@ -911,7 +913,7 @@ export default function CreateCourse({
                                 }));
                               }}
                             >
-                              <X className="h-3 w-3" />
+                              <X className="h-5 w-5" />
                             </Button>
                           </Badge>
                         )
@@ -1028,8 +1030,8 @@ export default function CreateCourse({
               className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
               aria-label={
                 isEditMode
-                  ? "Course editing actions"
-                  : "Course creation actions"
+                  ? `${t("courses.editCourse")} ${t("common.actions")}}`
+                  : `${t("createCourse.createCourse")} ${t("common.actions")}}`
               }
               id="bottom-actions-heading"
             >
@@ -1075,7 +1077,7 @@ export default function CreateCourse({
                   }}
                   className="rounded-none border-0 w-full rounded-l"
                   disabled={isLoading}
-                  aria-label={`${options[selectedIndexSave]} course`}
+                  aria-label={`${options[selectedIndexSave]} ${t("components.courses")}`}
                 >
                   {options[selectedIndexSave]}
                 </Button>
@@ -1088,7 +1090,7 @@ export default function CreateCourse({
                       className="rounded-none border-0 border-l px-2 rounded-r"
                       variant="default"
                       disabled={isLoading}
-                      aria-label="Select save and activation strategy"
+                      aria-label={t("createModule.saveStrategy")}
                     >
                       <ChevronDown className="h-4 w-4" aria-hidden="true" />
                     </Button>

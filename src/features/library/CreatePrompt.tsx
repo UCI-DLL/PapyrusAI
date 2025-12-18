@@ -151,7 +151,7 @@ export default function CreatePrompt({
             //handle error
             //redirect to prompt list
             navigator("/library");
-            setAlert({ message: "Prompt Does Not Exist", type: "error" });
+            setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
             setIsLoading(false);
           }
         }
@@ -172,7 +172,7 @@ export default function CreatePrompt({
             //handle error
             //redirect to prompt list
             navigator("/library");
-            setAlert({ message: "Prompt Does Not Exist", type: "error" });
+            setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
             setIsLoading(false);
           }
         }
@@ -284,14 +284,14 @@ export default function CreatePrompt({
             if (res.status && res.status < 300) {
               if (res.data && res.data) {
                 //pop up notifying user of updated
-                setAlert({ message: "Prompt updated", type: "success" });
+                setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
               }
             } else if (res && res.status === 401) {
               navigator("/login");
             } else {
               // set errors
               setAlert({
-                message: "Prompt could not be updated. Try again later.",
+                message: t("createPrompt.promptCouldNotBeUpdated"),
                 type: "error",
               });
             }
@@ -386,31 +386,25 @@ export default function CreatePrompt({
       <DialogWrapper
         open={showSavePublishTooltip}
         onOpenChange={setShowSavePublishTooltip}
-        title="About Prompts"
+        title={t("library.aboutPromptCreation")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Got it",
+            label: t("components.gotIt"),
             onClick: () => setShowSavePublishTooltip(false),
           },
         ]}
       >
         <div className="space-y-3">
           <p>
-            Prompts function in PapyrusAI as the first set of instructions sent
-            to the AI that will guide students' interactions with the AI. When
-            you click <strong>"Save & Publish"</strong>, your prompt will be
-            saved to your library.
-          </p>
-          <p className="text-sm">
-            For more information on creating a prompt, please see the{" "}
+            {t("createPrompt.promptInfoDescription")}
             <a
-              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
               target="_blank"
               rel="noreferrer"
               className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
             >
-              "Creating a Prompt" section of our instructor guide
+              {t("createPrompt.promptInfoDescriptionLinkText")}
             </a>
             .
           </p>
@@ -479,7 +473,7 @@ export default function CreatePrompt({
               </h1>
               <nav
                 className="flex flex-col md:flex-row gap-2"
-                aria-label="Prompt creation actions"
+                aria-label={`${t("createPrompt.createPrompt")} ${t("common.actions")}}`}
               >
                 {isEditMode && (
                   <TooltipWrapper content={t("createPrompt.deletePrompt")}>
@@ -488,28 +482,31 @@ export default function CreatePrompt({
                       size="sm"
                       onClick={() => setOpenDeleteModal(true)}
                       disabled={isLoading}
-                      aria-label="Delete prompt permanently"
+                      aria-label={t("createPrompt.deletePrompt")}
                       className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </TooltipWrapper>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSavePublishTooltip(true)}
-                  aria-label="Get help with prompt creation"
-                >
-                  <Info className="h-4 w-4" aria-hidden="true" />
-                </Button>
+                <TooltipWrapper content={t("common.info")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSavePublishTooltip(true)}
+                    aria-label={t("createPrompt.promptInfoLabel")}
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </TooltipWrapper>
+
                 <div className="flex rounded-lg border">
                   <Button
                     size="sm"
                     onClick={handleClick}
                     className="rounded-none border-0 w-full rounded-l"
                     disabled={isLoading}
-                    aria-label={`${options[selectedIndexSave]} prompt`}
+                    aria-label={`${options[selectedIndexSave]} ${t("common.prompt")}`}
                   >
                     {options[selectedIndexSave]}
                   </Button>
@@ -522,7 +519,7 @@ export default function CreatePrompt({
                         className="rounded-none border-0 border-l px-2 rounded-r"
                         variant="default"
                         disabled={isLoading}
-                        aria-label="Select prompt save strategy"
+                        aria-label={t("library.selectStrategy")}
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -650,8 +647,8 @@ export default function CreatePrompt({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium">{t("library.tags")}</Label>
-                  <TooltipWrapper content="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type.">
-                    <button aria-label="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type.">
+                  <TooltipWrapper content={t("library.tagsDescription")}>
+                    <button aria-label={t("library.tagsDescription")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -702,32 +699,30 @@ export default function CreatePrompt({
         <section aria-labelledby="bottom-actions-heading" className="pt-4">
           <nav
             className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
-            aria-label="Prompt creation actions"
+            aria-label={`${t("createPrompt.createPrompt")} ${t("common.actions")}}`}
             id="bottom-actions-heading"
           >
             {isEditMode && (
-              <TooltipWrapper content="Delete Prompt">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setOpenDeleteModal(true)}
-                  disabled={isLoading}
-                  aria-label="Delete prompt permanently"
-                  className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Delete
-                </Button>
-              </TooltipWrapper>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setOpenDeleteModal(true)}
+                disabled={isLoading}
+                aria-label={t("common.delete")}
+                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                {t("common.delete")}
+              </Button>
             )}
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowSavePublishTooltip(true)}
-              aria-label="Get help with prompt creation"
+              aria-label={t("createPrompt.promptInfoLabel")}
             >
               <Info className="h-4 w-4" aria-hidden="true" />
-              Info
+              {t("common.info")}
             </Button>
             <div className="flex rounded-lg border">
               <Button
@@ -735,7 +730,7 @@ export default function CreatePrompt({
                 onClick={handleClick}
                 className="rounded-none border-0 w-full rounded-l"
                 disabled={isLoading}
-                aria-label={`${options[selectedIndexSave]} prompt`}
+                aria-label={`${options[selectedIndexSave]} ${t("common.prompt")}`}
               >
                 {options[selectedIndexSave]}
               </Button>
@@ -748,7 +743,7 @@ export default function CreatePrompt({
                     className="rounded-none border-0 border-l px-2 rounded-r"
                     variant="default"
                     disabled={isLoading}
-                    aria-label="Select prompt save strategy"
+                    aria-label={t("library.selectStrategy")}
                   >
                     <ChevronDown className="h-4 w-4" aria-hidden="true" />
                   </Button>
@@ -779,7 +774,7 @@ export default function CreatePrompt({
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
         />
-        <p className="text-muted-foreground">Loading prompt creation form...</p>
+        <p className="text-muted-foreground">{t("loadingMessage.promptCreationForm")}</p>
       </div>
     </div>
   );

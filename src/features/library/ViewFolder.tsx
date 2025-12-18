@@ -14,13 +14,6 @@ import { Plus, MessageSquare, FileText, Folder, Loader2 } from "lucide-react";
 import ListFolderContents from "./ListFolderContents";
 import { useTranslation } from "../../hooks/useTranslation";
 
-export enum SortOptions {
-  Ascending = "Ascending",
-  Descending = "Descending",
-  Newest = "Newest",
-  Oldest = "Oldest",
-}
-
 export default function ViewFolder(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
@@ -148,7 +141,7 @@ export default function ViewFolder(): JSX.Element {
                 </div>
                 <nav
                   className="flex flex-col sm:flex-row gap-2"
-                  aria-label="Content management actions"
+                  aria-label={`${t("library.contentManagement")} ${t("common.actions")}}`}
                 >
                   {user?.groups.includes(
                     process.env.REACT_APP_INSTRUCTOR
@@ -160,7 +153,7 @@ export default function ViewFolder(): JSX.Element {
                           <Button
                             variant="default"
                             className="flex items-center gap-2"
-                            aria-label="Add new content to folder"
+                            aria-label={t("library.addContent")}
                           >
                             <Plus className="h-4 w-4" aria-hidden="true" />
                             {t("library.addContent")}
@@ -203,7 +196,7 @@ export default function ViewFolder(): JSX.Element {
         <div
           className="flex gap-2 mb-6"
           role="tablist"
-          aria-label="Content filter tabs"
+          aria-label={t("library.contentFilterTabs")}
         >
           <Button
             variant={activeTab === "all" ? "default" : "outline"}

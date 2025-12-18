@@ -63,6 +63,7 @@ export default function ChatSidebar({
       {/* Sidebar Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
+          {/* TODO  */}
           <h2 className="text-sm font-semibold">Conversations</h2>
           <TooltipWrapper content="Create New Conversation">
             <Button
@@ -70,7 +71,7 @@ export default function ChatSidebar({
               onClick={onNewConversation}
               disabled={creatingConvo}
               className="h-7 px-2 text-xs"
-              aria-label="Create new conversation"
+              aria-label="Create new conversation" //TODO
             >
               {creatingConvo ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -124,8 +125,8 @@ export default function ChatSidebar({
               {filteredConversations.map((conversation) => {
                 const conversationIndex = conversationList?.conversations
                   ? conversationList.conversations.findIndex(
-                      (c) => c.id === conversation.id
-                    )
+                    (c) => c.id === conversation.id
+                  )
                   : 0;
                 const isCurrentConversation =
                   conversationIndex.toString() === currentConversationIndex;
@@ -174,14 +175,14 @@ export default function ChatSidebar({
                                 e.preventDefault();
                                 e.stopPropagation();
                               }}
-                              aria-label="Conversation options"
+                              aria-label="Conversation options"  //TODO
                             >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           }
                           actions={[
                             {
-                              label: "Rename",
+                              label: "Rename", //TODO
                               onClick: () => {
                                 onRenameConversation(
                                   courseInfo.id,
@@ -193,7 +194,7 @@ export default function ChatSidebar({
                               },
                             },
                             {
-                              label: "Download",
+                              label: "Download", //TODO
                               onClick: () => {
                                 onDownloadConversation(
                                   courseInfo.id,
@@ -205,19 +206,19 @@ export default function ChatSidebar({
                             },
                             ...(canModifyConversation
                               ? [
-                                  {
-                                    label: "Archive Conversation",
-                                    onClick: () => {
-                                      onArchiveConversation(
-                                        courseInfo.id,
-                                        moduleInfo.id,
-                                        conversationIndex.toString()
-                                      );
-                                      if (isMobile && onClose) onClose();
-                                    },
-                                    className: "text-destructive",
+                                {
+                                  label: "Archive Conversation", //TODO
+                                  onClick: () => {
+                                    onArchiveConversation(
+                                      courseInfo.id,
+                                      moduleInfo.id,
+                                      conversationIndex.toString()
+                                    );
+                                    if (isMobile && onClose) onClose();
                                   },
-                                ]
+                                  className: "text-destructive",
+                                },
+                              ]
                               : []),
                           ]}
                           align="end"

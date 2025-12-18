@@ -28,6 +28,7 @@ import {
 } from "../../utility/endpoints/FolderEndpoints";
 import axios from "axios";
 import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 export default function CreateFile(): JSX.Element {
   let location = useLocation();
@@ -260,7 +261,7 @@ export default function CreateFile(): JSX.Element {
         } else {
           // set errors
           setAlert({
-            message: "File could not be created. Try again later.",
+            message: t("errorMessage.createFileError"),
             type: "error",
           });
         }
@@ -289,7 +290,7 @@ export default function CreateFile(): JSX.Element {
   function handleUpload(e?: React.FormEvent) {
     e?.preventDefault();
     if (!selectedFiles) {
-      setAlert({ message: "Missing File information", type: "error" });
+      setAlert({ message: t("errorMessage.missingFileInfo"), type: "error" });
       return;
     }
     if (newFile.name === "") {
@@ -314,7 +315,7 @@ export default function CreateFile(): JSX.Element {
               } else {
                 //handle error
                 setAlert({
-                  message: "Error creating file. Please try again later",
+                  message: t("errorMessage.createFileError"),
                   type: "error",
                 });
               }
@@ -340,7 +341,7 @@ export default function CreateFile(): JSX.Element {
               } else {
                 //handle error
                 setAlert({
-                  message: "Error creating file. Please try again later",
+                  message: t("errorMessage.createFileError"),
                   type: "error",
                 });
               }
@@ -392,50 +393,46 @@ export default function CreateFile(): JSX.Element {
       <DialogWrapper
         open={showSavePublishTooltip}
         onOpenChange={setShowSavePublishTooltip}
-        title="About File Upload"
+        title={t("library.aboutFileUpload")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Got it",
+            label: t("components.gotIt"),
             onClick: () => setShowSavePublishTooltip(false),
           },
         ]}
       >
         <div className="space-y-3">
           <p>
-            You can upload documents for your course that will factor into
-            generated AI output. When you click <strong>"Save & Upload"</strong>
-            , your file will be uploaded and saved to your library.
-          </p>
-          <p className="text-sm">
-            For more information on this system, please see the{" "}
+            {t("createFile.fileInfoDescription")}
             <a
               href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
               target="_blank"
               rel="noreferrer"
               className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
             >
-              "Uploading a Document" section of our instructor guide
+              {t("createFile.fileInfoDescriptionLinkText")}
             </a>
             .
           </p>
         </div>
+
       </DialogWrapper>
 
       <DialogWrapper
         open={openDiscardModal}
         onOpenChange={setOpenDiscardModal}
-        title="Discard Changes?"
-        description="Are you sure you would like to discard the changes to this file? This action cannot be undone."
+        title={t("createFile.discardChanges")}
+        description={t("createFile.discardChangesDescription")}
         contentClassName="sm:max-w-md"
         actions={[
           {
-            label: "Cancel",
+            label: `${t("common.cancel")}`,
             onClick: () => setOpenDiscardModal(false),
             variant: "outline",
           },
           {
-            label: "Discard Changes",
+            label: t("createFile.discardChanges"),
             onClick: () => navigator(-1),
             variant: "destructive",
           },
@@ -454,28 +451,30 @@ export default function CreateFile(): JSX.Element {
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
               <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                Create File
+                {t("createFile.createFile")}
               </h1>
               <nav
                 className="flex flex-col md:flex-row gap-2"
-                aria-label="File creation actions"
+                aria-label={`${t("createFile.createFile")} ${t("common.actions")}}`}
               >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSavePublishTooltip(true)}
-                  aria-label="Get help with file upload"
-                >
-                  <Info className="h-4 w-4" aria-hidden="true" />
-                  Info
-                </Button>
+                <TooltipWrapper content={t("common.info")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSavePublishTooltip(true)}
+                    aria-label={t("createFile.fileInfoLabel")}
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </TooltipWrapper>
+
                 <div className="flex rounded-lg border">
                   <Button
                     size="sm"
                     onClick={handleClick}
                     className="rounded-none border-0 w-full rounded-l"
                     disabled={isLoading}
-                    aria-label={`${options[selectedIndexSave]} file`}
+                    aria-label={`${options[selectedIndexSave]} ${t("common.file")}`}
                   >
                     {options[selectedIndexSave]}
                   </Button>
@@ -488,7 +487,7 @@ export default function CreateFile(): JSX.Element {
                         className="rounded-none border-0 border-l px-2 rounded-r"
                         variant="default"
                         disabled={isLoading}
-                        aria-label="Select file upload strategy"
+                        aria-label={t("library.selectStrategy")}
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -507,9 +506,20 @@ export default function CreateFile(): JSX.Element {
               </nav>
             </div>
 
-            <p className="text-muted-foreground max-w-2xl text-base leading-6">
-              {t("createFile.createFileDescription")}
-            </p>
+            <InfoAccordion>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                {t("createFile.createFileDescription")}&nbsp;
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                >
+                  {t("createFile.createFileDescriptionLinkText")}
+                </a>
+                .
+              </p>
+            </InfoAccordion>
           </div>
         </div>
       </header>
@@ -566,9 +576,9 @@ export default function CreateFile(): JSX.Element {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm font-medium">File Upload *</Label>
-                  <TooltipWrapper content="Select a JPEG, PNG, PDF, TXT, DOCX file.">
-                    <button aria-label="Select a JPEG, PNG, PDF, TXT, DOCX file.">
+                  <Label className="text-sm font-medium">{t("createFile.fileUpload")}*</Label>
+                  <TooltipWrapper content={t("createFile.fileTooltip")}>
+                    <button aria-label={t("createFile.fileTooltip")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -592,10 +602,10 @@ export default function CreateFile(): JSX.Element {
                     <div className="flex flex-col items-center gap-2">
                       <Upload className="h-8 w-8 text-muted-foreground" />
                       <span className="text-sm font-medium text-muted-foreground">
-                        Choose file to upload
+                        {t("createFile.chooseFile")}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        JPEG, PNG, PDF, TXT, DOCX (max 1GB)
+                        {t("createFile.fileDescription")}
                       </span>
                     </div>
                   </Button>
@@ -615,7 +625,7 @@ export default function CreateFile(): JSX.Element {
                         onClick={() => onUpdate("change")}
                         disabled={isLoading}
                       >
-                        Change
+                        {t("components.change")}
                       </Button>
                       <Button
                         type="button"
@@ -691,17 +701,17 @@ export default function CreateFile(): JSX.Element {
         <section aria-labelledby="bottom-actions-heading" className="pt-4">
           <nav
             className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
-            aria-label="File creation actions"
+            aria-label={`${t("createFile.createFile")} ${t("common.actions")}}`}
             id="bottom-actions-heading"
           >
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowSavePublishTooltip(true)}
-              aria-label="Get help with file upload"
+              aria-label={t("createFile.fileInfoLabel")}
             >
               <Info className="h-4 w-4" aria-hidden="true" />
-              Info
+              {t("common.info")}
             </Button>
             <div className="flex rounded-lg border">
               <Button
@@ -709,7 +719,7 @@ export default function CreateFile(): JSX.Element {
                 onClick={handleClick}
                 className="rounded-none border-0 w-full rounded-l"
                 disabled={isLoading}
-                aria-label={`${options[selectedIndexSave]} file`}
+                aria-label={`${options[selectedIndexSave]} ${t("common.file")}`}
               >
                 {options[selectedIndexSave]}
               </Button>
@@ -722,7 +732,7 @@ export default function CreateFile(): JSX.Element {
                     className="rounded-none border-0 border-l px-2 rounded-r"
                     variant="default"
                     disabled={isLoading}
-                    aria-label="Select file upload strategy"
+                    aria-label={t("library.selectStrategy")}
                   >
                     <ChevronDown className="h-4 w-4" aria-hidden="true" />
                   </Button>
@@ -753,7 +763,7 @@ export default function CreateFile(): JSX.Element {
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
         />
-        <p className="text-muted-foreground">Loading file creation form...</p>
+        <p className="text-muted-foreground">{t("loadingMessage.fileCreationForm")}</p>
       </div>
     </div>
   );

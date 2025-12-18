@@ -27,7 +27,7 @@ export default function CourseList({
     }, [starredList]);
 
     return list.length > 0 ? (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full" role="list" aria-label="Course list">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full" role="list" aria-label={t("courses.courseList")}>
             {orderCourseRecentlyCreatedAndStarred(list, starred).map(
                 (course) => (
                     <div key={course.id} role="listitem">
@@ -43,8 +43,8 @@ export default function CourseList({
             )}
         </section>
     ) : (
-        <div 
-            className="text-center py-12 text-muted-foreground bg-card border rounded-lg" 
+        <div
+            className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
             role="status"
         >
             <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />

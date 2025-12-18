@@ -4,6 +4,7 @@ import Navigation from "../features/navigation/Navigation";
 import { UserType } from "./types/UserTypes";
 import { AlertContext, AlertType } from "./context/AlertContext";
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { useTranslation } from "../hooks/useTranslation";
 
 /**
  * Show the appropriate screens if the user is logged in
@@ -23,6 +24,7 @@ const Alert = ({
     children: React.ReactNode;
     onClose: () => void;
 }) => {
+    const { t } = useTranslation();
     const bgColor =
         severity === "error"
             ? "bg-red-50 border-red-200 text-red-800 dark:bg-red-900 dark:border-red-800 dark:text-red-200 colorful-dark:bg-red-900 colorful-dark:border-red-800 colorful-dark:text-red-200"
@@ -67,7 +69,7 @@ const Alert = ({
             <button
                 onClick={onClose}
                 className="flex-shrink-0 rounded-full p-1 hover:bg-black/5 dark:hover:bg-white/10 colorful-dark:hover:bg-white/10 transition-colors"
-                aria-label="Close alert"
+                aria-label={t("common.close")}
             >
                 <X className="h-4 w-4" />
             </button>

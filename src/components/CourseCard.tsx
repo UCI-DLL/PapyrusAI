@@ -20,6 +20,7 @@ import {
 import { Label } from "./ui/label";
 import { cn } from "../lib/utils";
 import { useTranslation } from "../hooks/useTranslation";
+import { handleCourseTermLanguage } from "../utility/Helpers";
 
 interface CourseListProps {
   course: CourseType;
@@ -255,9 +256,9 @@ export default function CourseCard({
                   <Calendar size={10} aria-hidden="true" />
                   <span className="font-medium text-sm capitalize">
                     {course.section
-                      ? `${course.term || ""} ${course.year || ""} - ${course.section
+                      ? `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year || ""} - ${course.section
                       }`
-                      : `${course.term || ""} ${course.year || ""}`}
+                      : `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year || ""}`}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -276,7 +277,7 @@ export default function CourseCard({
 
             <nav
               className="flex items-center gap-1 ml-2 flex-shrink-0"
-              aria-label="Course actions"
+              aria-label={t("createCourse.courseActions")}
             >
               <TooltipWrapper
                 content={starred ? t("courses.unstarCourse") : t("courses.starCourse")}
@@ -297,7 +298,7 @@ export default function CourseCard({
                       : "text-muted hover:text-gold"
                   )}
                   aria-label={
-                    starred ? "Remove from favorites" : "Add to favorites"
+                    starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
                   }
                 >
                   <Star
@@ -327,7 +328,7 @@ export default function CourseCard({
                         onClick={(e) => {
                           e.stopPropagation();
                         }}
-                        aria-label="Course options menu"
+                        aria-label={t("courses.optionsMenu")}
                       >
                         <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
                       </button>
@@ -356,15 +357,13 @@ export default function CourseCard({
             </nav>
           </header>
 
-          <div className="flex-1" aria-hidden="true"></div>
-
           {onClick ? (
             <Button
               onClick={() => onClick(course.id)}
               variant="default"
               size="sm"
               className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2"
-              aria-label={`Select ${course.name}`}
+              aria-label={`${t("common.select")} ${course.name}`}
             >
               <BookOpen size={14} aria-hidden="true" />
               {t("common.select")}
@@ -375,7 +374,7 @@ export default function CourseCard({
               variant="default"
               asChild
               className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
-              aria-label={`View modules for ${course.name}`}
+              aria-label={`${t("courses.viewModules")} ${course.name}`}
             >
               <Link
                 to={`/courses/${course.id}/modules`}

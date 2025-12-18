@@ -581,7 +581,7 @@ export default function OrgSettings(): JSX.Element {
                     <SelectTrigger>
                       <SelectValue placeholder={t("orgSettings.selectPermissionLevel")} />
                     </SelectTrigger>
-                    <SelectContent aria-label="Permission level options" avoidCollisions={false} position="popper">
+                    <SelectContent aria-label={`${t("orgSettings.selectPermissionLevel")} ${t("common.moreOptions")}`} avoidCollisions={false} position="popper">
                       {Object.keys(PermissionsOptions).map((key) => (
                         <SelectItem value={key} key={key} className="capitalize">
                           {t(`common.${key.toLowerCase()}`)}
@@ -612,7 +612,7 @@ export default function OrgSettings(): JSX.Element {
                   </h1>
                   <nav
                     className="flex flex-col md:flex-row gap-2"
-                    aria-label="Permission actions"
+                    aria-label={`${t("orgSettings.permissionLevel")} ${t("common.actions")}}`}
                   >
                     <Button
                       onClick={() =>
@@ -622,7 +622,7 @@ export default function OrgSettings(): JSX.Element {
                         }))
                       }
                       className="flex items-center gap-2"
-                      aria-label="Add new user permission"
+                      aria-label={`${t("orgSettings.addPermission")}}`}
                     >
                       <UserPlus className="h-4 w-4" aria-hidden="true" />
                       {t("orgSettings.addPermission")}
@@ -652,7 +652,7 @@ export default function OrgSettings(): JSX.Element {
                       value={filter.search}
                       onChange={handleSearchOrgPermissionList}
                       className="pl-10"
-                      aria-label="Search users by email"
+                      aria-label={t("orgSettings.searchByEmail")}
                     />
                   </div>
                   <Button variant="outline" onClick={clearFilters}>
@@ -714,7 +714,7 @@ export default function OrgSettings(): JSX.Element {
                                     })
                                   }
                                   className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
-                                  aria-label={`Update permissions for ${permission.id}`}
+                                  aria-label={`${t("orgSettings.updatePermissions")} ${permission.id}`}
                                 >
                                   <Shield
                                     className="h-4 w-4"

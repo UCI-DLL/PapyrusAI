@@ -28,6 +28,7 @@ export type MessageType = {
   expandableMessage?: string,
   stream?: Array<StreamMessageType>,
   sources?: string,
+  finished?: boolean
 }
 
 export type MessageTypeType = "text" | "file"

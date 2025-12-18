@@ -1,8 +1,13 @@
 import React, { useState } from "react";
-import { Button, Box, TextField, FormLabel } from "@mui/material";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import Post from "../../utility/Post";
 import { postCreatePrompt } from "../../utility/endpoints/PromptEndpoints";
 import { useNavigate } from "react-router";
+import { cn } from "../../lib/utils";
 
 /**
  * This form is to update user's missing data
@@ -64,50 +69,81 @@ export default function CreatePromptForm({
     }
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
   return (
-    <div className="addpromptform">
-      <Box className="addpromptform__add">
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
-          <FormLabel>Enter Prompt Information</FormLabel>
-          <TextField
-            name="name"
-            label="Prompt Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={session.name}
-            onChange={handleChange}
-            error={errors.name !== ""}
-            helperText={errors.name}
-            disabled={isLoading}
-          />
-          <TextField
-            name="prompt"
-            label="Prompt"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            multiline
-            maxRows={6}
-            value={session.prompt}
-            onChange={handleChange}
-            error={errors.prompt !== ""}
-            helperText={errors.prompt}
-            disabled={isLoading}
-          />
-          &nbsp;&nbsp;&nbsp;
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            type="submit"
-            disabled={isLoading}
-          >
-            Create Prompt
-          </Button>
+    <Card>
+      <CardHeader>
+        <CardTitle>Enter Prompt Information</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-medium">
+              Prompt Name *
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              placeholder="Enter a descriptive name for your prompt"
+              value={session.name}
+              onChange={handleChange}
+              disabled={isLoading}
+              required
+              className={cn(
+                "transition-colors",
+                errors.name && "border-destructive focus-visible:ring-destructive"
+              )}
+            />
+            {errors.name && (
+              <p
+                className="text-sm text-destructive"
+                role="alert"
+                aria-live="assertive"
+              >{errors.name}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="prompt" className="text-sm font-medium">
+              Prompt *
+            </Label>
+            <Textarea
+              id="prompt"
+              name="prompt"
+              placeholder="Enter your prompt text here..."
+              value={session.prompt}
+              onChange={handleChange}
+              disabled={isLoading}
+              required
+              rows={6}
+              className={cn(
+                "transition-colors resize-none",
+                errors.prompt && "border-destructive focus-visible:ring-destructive"
+              )}
+            />
+            {errors.prompt && (
+              <p
+                className="text-sm text-destructive"
+                role="alert"
+                aria-live="assertive"
+              >{errors.prompt}</p>
+            )}
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="min-w-[120px]"
+            >
+              {isLoading ? "Creating..." : "Create Prompt"}
+            </Button>
+          </div>
         </form>
-      </Box>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

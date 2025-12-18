@@ -1,23 +1,17 @@
-import { PromptType } from "../../utility/types/CourseTypes"
+import { PromptType } from "../../utility/types/CourseTypes";
 import { useState } from "react";
+import { Button } from "../../components/ui/button";
+import { Label } from "../../components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Alert, AlertDescription } from "../../components/ui/alert";
 import {
-  Button,
   Select,
-  MenuItem,
-  ListItemText,
-  SelectChangeEvent
-} from "@mui/material";
-
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-    },
-  },
-};
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { MessageSquare, Wand2 } from "lucide-react";
 
 interface ChatWizardProps {
   prompts: Array<PromptType> | undefined;
@@ -31,58 +25,74 @@ export default function ChatWizard({
   const [selectedPrompt, setSelectedPrompt] = useState<string>("");
   const [error, setError] = useState("");
 
-  const handleSelectChange = (event: SelectChangeEvent) => {
-    setSelectedPrompt(event.target.value as string);
+  const handleSelectChange = (value: string) => {
+    setSelectedPrompt(value);
+    setError("");
   };
 
   return prompts && prompts.length > 0 ? (
-    <div className="chat__wizard">
-      <h6>Select prompt option</h6>
-      <div>Select the prompt with which you would like to begin your conversation with the AI.</div>
-      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
-        {/* add dropdown to handle prompts  */}
-        <Select
-          labelId="wizard-prompt-select"
-          id="wizard-prompt-select"
-          value={selectedPrompt}
-          onChange={handleSelectChange}
-          MenuProps={MenuProps}
-          fullWidth
-          required
-        >
-          {prompts.map((prompt, index) => (
-            <MenuItem key={index} value={prompt.id}>
-              <ListItemText primary={prompt.name} />
-            </MenuItem>
-          ))}
-        </Select>
-      </div>
-      {error.length > 0 ? (
-        <div className="error">{error}</div>
-      ) : null}
+    <div className="p-4 space-y-4">
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            Select Prompt Option
+          </CardTitle>
+          <CardDescription>
+            Choose the prompt with which you would like to begin your conversation with the AI
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="prompt-select">Available Prompts</Label>
+            <Select value={selectedPrompt} onValueChange={handleSelectChange}>
+              <SelectTrigger id="prompt-select">
+                <SelectValue placeholder="Select a prompt to get started..." />
+              </SelectTrigger>
+              <SelectContent avoidCollisions={false} position="popper">
+                {prompts.map((prompt, index) => (
+                  <SelectItem key={index} value={prompt.id}>
+                    {prompt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div style={{ marginTop: "1rem", width: "100%", justifyContent: "flex-end", display: "flex" }}>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setError("");
-            //check that all required fields are filled out
-            if (!selectedPrompt) {
-              setError("Select prompt");
-            }
-            else {
-              returnPrompt(selectedPrompt); //disable button after click
-              setSelectedPrompt("");
-            }
-          }}
-          disabled={!selectedPrompt}
-        >
-          Ask Papyrus
-        </Button>
-      </div>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <Button
+              onClick={() => {
+                setError("");
+                if (!selectedPrompt) {
+                  setError("Please select a prompt to continue");
+                } else {
+                  returnPrompt(selectedPrompt);
+                  setSelectedPrompt("");
+                }
+              }}
+              disabled={!selectedPrompt}
+              className="min-w-[140px]"
+            >
+              <Wand2 className="mr-2 h-4 w-4" />
+              Ask Papyrus
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   ) : (
-    //Return nothing when we don't have prompts
-    <div></div>
-  )
+    <div className="p-4">
+      <Alert>
+        <AlertDescription>
+          No prompts are available for this module.
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
 }

@@ -1,87 +1,143 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import React, { useContext, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
-  Button,
-  Box,
-  TextField,
-  FormLabel,
-  InputLabel,
   Select,
-  MenuItem,
-  SelectChangeEvent,
-  FormControl,
-  Autocomplete,
-  Chip,
-  ButtonGroup,
-  Popper,
-  Grow,
-  Paper,
-  ClickAwayListener,
-  MenuList,
-  Tooltip
-} from "@mui/material";
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import { postCreateCourse } from "../../utility/endpoints/CourseEndpoints";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { Badge } from "../../components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  ChevronDown,
+  Info,
+  Loader2,
+  X,
+  BookOpen,
+  Users,
+  Calendar,
+  Clock,
+  Trash2,
+  XCircle,
+  CheckCircle,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import {
+  postCreateCourse,
+  getCourse,
+  putUpdateCourse,
+} from "../../utility/endpoints/CourseEndpoints";
 import Post from "../../utility/Post";
+import Put from "../../utility/Put";
 import { AlertContext } from "../../utility/context/AlertContext";
-import LinearProgress from '@mui/material/LinearProgress';
 import Get from "../../utility/Get";
 import { getUserList } from "../../utility/endpoints/UserEndpoints";
 import { CustomUserType, UserType } from "../../utility/types/UserTypes";
+import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
-import { Modal } from "../../components/Modal";
-import InfoIcon from '@mui/icons-material/Info';
+import { cn } from "../../lib/utils";
+import { useTranslation } from "../../hooks/useTranslation";
 
-type AddCourseType = {
-  name: string,
-  signUpCode: string,
-  isActive: boolean,
-  year: string,
-  section: string,
-  term: string,
-  taList: any,
+type CourseFormType = {
+  name: string;
+  signUpCode: string;
+  isActive: boolean;
+  isDeleted?: boolean;
+  year: string;
+  section: string;
+  term: string;
+  taList: any;
+};
+
+type CourseFormMode = "create" | "edit";
+
+interface CourseFormProps {
+  mode?: CourseFormMode;
+  courseId?: string;
 }
 
-const options = ['Save & Publish', 'Save without Publishing', 'Discard Changes'];
+// Options will be translated in the component
 
-export default function CreateCourse(): JSX.Element {
+export default function CreateCourse({
+  mode = "create",
+  courseId,
+}: CourseFormProps = {}): JSX.Element {
+  let location = useLocation();
   let navigator = useNavigate();
-  const [session, setSession] = useState<AddCourseType>({
+  const { t } = useTranslation();
+
+  // Determine if we're in edit mode based on URL or props
+  const isEditMode =
+    mode === "edit" || location.pathname.includes("/editcourse/");
+  const actualCourseId =
+    courseId || (isEditMode ? location.pathname.split("/")[2] : undefined);
+
+  // Translated options
+  const options = [
+    t("createCourse.savePublish"),
+    t("createCourse.saveNoPublish"),
+    t("createCourse.discardChanges"),
+  ];
+
+  const [session, setSession] = useState<CourseFormType>({
     name: "",
     signUpCode: "",
     isActive: false,
+    isDeleted: false,
     year: "",
     section: "",
     term: "",
     taList: [],
   });
-  const [errors, setErrors] = useState<AddCourseType>({
+  const [prevSession, setPrevSession] = useState<CourseType | undefined>();
+  const [errors, setErrors] = useState<CourseFormType>({
     name: "",
     signUpCode: "",
     isActive: false,
+    isDeleted: false,
     year: "",
     section: "",
     term: "",
     taList: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>();
   const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<CustomUserType>>([]);
   const { user, setUser } = useContext(UserContext);
-  const [openSave, setOpenSave] = useState(false);
-  const anchorRefSave = useRef<HTMLDivElement>(null);
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
+  const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
-  const [showSavePublishTooltip, setShowSavePublishTooltip] = useState<boolean>(false);
+  const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
+  const [showSavePublishTooltip, setShowSavePublishTooltip] =
+    useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    setIsLoading(true);
 
     if (userList.length === 0) {
       getUsers("", controller.signal);
-    } else {
-      setIsLoading(false);
     }
 
     return () => {
@@ -90,70 +146,118 @@ export default function CreateCourse(): JSX.Element {
     // eslint-disable-next-line
   }, []);
 
-  function handleClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and publish
-      handleSubmit(e, true);
-    } else if (selectedIndexSave === 1) { //save and not publish
-      handleSubmit(e, false);
-    } else if (selectedIndexSave === 2) { //discard changes
-      setOpenDiscardModal(true);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    if (isEditMode && actualCourseId) {
+      // Load existing course data for edit mode
+      Get(getCourse(actualCourseId), controller.signal).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            //set prev course data
+            setPrevSession(res.data);
+            //also set session
+            setSession({
+              name: res.data.name,
+              signUpCode: res.data.signUpCode,
+              isDeleted: res.data.isDeleted,
+              isActive: res.data.isActive,
+              year: res.data.year ? res.data.year : "",
+              term: res.data.term ? res.data.term : "",
+              section: res.data.section ? res.data.section : "",
+              taList: res.data.taList ? res.data.taList : [],
+            });
+            setIsLoading(false);
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          if (res === undefined) {
+          } else {
+            //handle error
+            setError(t("courses.courseDoesNotExist"));
+            setIsLoading(false);
+          }
+        }
+      });
+    } else if (!isEditMode) {
+      // For create mode, just set loading to false
+      setIsLoading(false);
     }
-  };
+
+    return () => {
+      controller.abort();
+    };
+    // eslint-disable-next-line
+  }, [isEditMode, actualCourseId]);
 
   const handleMenuItemClick = (
-    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
-    index: number,
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    index: number
   ) => {
-    if (index === 0) { //Save and publish
-      handleSubmit(e, true);
-    } else if (index === 1) { //save and not publish
-      handleSubmit(e, false);
-    } else if (index === 2) { //discard changes
+    if (index === 0) {
+      //Save and publish
+      handleSubmit(e, true, false);
+    } else if (index === 1) {
+      //save and not publish
+      if (isEditMode && session.isActive) {
+        //handle case that course is already active and they are switching it
+        setOpenActiveModal(true);
+      } else {
+        handleSubmit(e, false, false);
+      }
+    } else if (index === 2) {
+      //discard changes
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
-    setOpenSave(false);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
 
-  const handleToggle = () => {
-    setOpenSave((prevOpen) => !prevOpen);
-  };
-
-  const handleClose = (event: Event) => {
-    if (
-      anchorRefSave.current &&
-      anchorRefSave.current.contains(event.target as HTMLElement)
-    ) {
-      return;
+  const handleClick = (e: React.MouseEvent) => {
+    if (selectedIndexSave === 0) {
+      handleSubmit(e, true, false);
+    } else if (selectedIndexSave === 1) {
+      if (isEditMode && session.isActive) {
+        setOpenActiveModal(true);
+      } else {
+        handleSubmit(e, false, false);
+      }
+    } else if (selectedIndexSave === 2) {
+      setOpenDiscardModal(true);
     }
-
-    setOpenSave(false);
   };
 
   function getUsers(PaginationToken: string, signal: AbortSignal) {
     var limit = 50;
 
-    Get(getUserList(limit, PaginationToken), signal).then(res => {
+    Get(getUserList(limit, PaginationToken), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data["Users"]) {
-          //filter out current user and email_verified 
+          //filter out current user and email_verified
           var tempUserList = res.data["Users"].map((u: CustomUserType) => {
             return {
               name: u.name,
               family_name: u.family_name,
               email: u.email,
               sub: u.sub,
-              username: u.username
-            }
+              username: u.username,
+            };
           });
           if (user) {
-            tempUserList = tempUserList.filter((x: CustomUserType) => x.username !== user.username);
+            tempUserList = tempUserList.filter(
+              (x: CustomUserType) => x.username !== user.username
+            );
           }
           setUserList((prev) => [...prev, ...tempUserList]);
 
           //handle pages
           //note: PaginationToken will also come back as "undefined" if there are no more pages
-          if (res.data["Users"].length >= limit && res.data["PaginationToken"]) {
+          if (
+            res.data["Users"].length >= limit &&
+            res.data["PaginationToken"]
+          ) {
             getUsers(res.data["PaginationToken"], signal);
           } else {
             setIsLoading(false);
@@ -167,55 +271,111 @@ export default function CreateCourse(): JSX.Element {
           // handle error
         }
       }
-      setIsLoading(false);
+      // Only set loading to false if we're not in edit mode or if course data is already loaded
+      if (!isEditMode || prevSession) {
+        setIsLoading(false);
+      }
     });
   }
 
-
-  function handleSubmit(e: any, isActive = false) {
-    e.preventDefault();
+  function handleSubmit(e: any, isActive = false, isDeleted = false) {
     if (session.name === "") {
-      setErrors((prev) => ({ ...prev, name: "Name missing" }))
-    }
-    else if (session.signUpCode === "") {
-      setErrors((prev) => ({ ...prev, signUpCode: "Sign up code missing" }))
+      setErrors((prev) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+    } else if (session.signUpCode === "") {
+      setErrors((prev) => ({ ...prev, signUpCode: t("courses.signUpCodeMissing") }));
     } else {
-      //create course
       // set is loading
       setIsLoading(true);
-      const dataToSend = {
-        name: session.name,
-        signUpCode: session.signUpCode,
-        isActive: isActive,
-        year: session.year,
-        section: session.section,
-        term: session.term,
-        taList: session.taList,
-      }
-      // post data back
-      Post(postCreateCourse(), dataToSend).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data && res.data) {
-            // update user and group list
-            var newGroups = user?.groups;
-            newGroups?.push(res.data.id)
-            setUser(({ ...user, groups: newGroups }) as UserType)
-            localStorage.setItem("papyrusai_user", JSON.stringify({ ...user, groups: newGroups }));
-            //redirect to course list
-            navigator("/courses");
-            // pop up notifying user of creation
-            setAlert({ message: "Course Created", type: "success" });
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          // set errors
-          setAlert({ message: res.data, type: "error" })
-        }
-        // set is loading back 
-        setIsLoading(false);
-      });
 
+      if (isEditMode && prevSession) {
+        // Update course
+        //dont send signupcode if it didnt change
+        if (prevSession.signUpCode === session.signUpCode) {
+          const dataToSend = {
+            name: session.name,
+            isActive: isActive,
+            isDeleted: isDeleted,
+            year: session.year,
+            section: session.section,
+            term: session.term,
+            taList: session.taList,
+          };
+          // put data back
+          Put(putUpdateCourse(prevSession.id), dataToSend).then((res) => {
+            if (res && res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //redirect to course list
+                navigator("/courses");
+                //pop up notifying user of update
+                setAlert({ message: t("createCourse.courseUpdated"), type: "success" });
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              // set errors
+              setAlert({ message: res.data, type: "error" });
+            }
+            // set is loading back
+            setIsLoading(false);
+          });
+        } else {
+          // put data back
+          Put(putUpdateCourse(prevSession.id), session).then((res) => {
+            if (res && res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //redirect to course list
+                navigator("/courses");
+                //pop up notifying user of update
+                setAlert({ message: t("createCourse.courseUpdated"), type: "success" });
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              // set errors
+              setAlert({ message: res.data, type: "error" });
+            }
+            // set is loading back
+            setIsLoading(false);
+          });
+        }
+      } else {
+        // Create course
+        const dataToSend = {
+          name: session.name,
+          signUpCode: session.signUpCode,
+          isActive: isActive,
+          year: session.year,
+          section: session.section,
+          term: session.term,
+          taList: session.taList,
+        };
+        // post data back
+        Post(postCreateCourse(), dataToSend).then((res) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data && res.data) {
+              // update user and group list
+              var newGroups = user?.groups;
+              newGroups?.push(res.data.id);
+              setUser({ ...user, groups: newGroups } as UserType);
+              localStorage.setItem(
+                "papyrusai_user",
+                JSON.stringify({ ...user, groups: newGroups })
+              );
+              //redirect to course list
+              navigator("/courses");
+              // pop up notifying user of creation
+              setAlert({ message: t("createCourse.courseCreated"), type: "success" });
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            // set errors
+            setAlert({ message: res.data, type: "error" });
+          }
+          // set is loading back
+          setIsLoading(false);
+        });
+      }
     }
   }
 
@@ -223,269 +383,753 @@ export default function CreateCourse(): JSX.Element {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleTermChange(e: SelectChangeEvent) {
-    setSession((prev) => ({ ...prev, term: e.target.value as string }))
+  function handleTermChange(value: string) {
+    setSession((prev) => ({ ...prev, term: value }));
   }
 
-  return !isLoading ? (
-    <div className="courses">
-      <Modal
-        isOpen={showSavePublishTooltip}
-        title={"What is Save & Publish?"}
-        onRequestClose={() => setShowSavePublishTooltip(false)}
-        actions={
-          <>
-            <Button variant="contained" onClick={() => setShowSavePublishTooltip(false)}>
-              Close
-            </Button>
-          </>
-        }
+  if (isLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        role="status"
+        aria-live="polite"
       >
-        <div>
-          To save and publish (i.e., make visible to students) your course, select “Save & Publish”.
-          If you want to save your course without publishing the course, select “Save without Publishing”.
-          <span style={{ fontStyle: "italic" }}> Note: Choosing this option after the course has already been published will unpublish the course.</span>
-        </div>
-      </Modal>
-      <Modal
-        isOpen={openDiscardModal}
-        title={"Discard Changes?"}
-        onRequestClose={() => setOpenDiscardModal(false)}
-        actions={
-          <>
-            <Button variant="contained" color="primary" onClick={() => navigator(-1)}>
-              Discard
-            </Button>
-            <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>
-              Cancel
-            </Button>
-          </>
-        }
-      >
-        <div>Are you sure you would like to discard the changes to this course?</div>
-      </Modal>
-      <div className="courses__section-header">
-        <h3>Create Course</h3>
-        <div className="form-tooltips">
-          <button onClick={() => setShowSavePublishTooltip(true)}>
-            <InfoIcon />
-          </button>
-          <ButtonGroup
-            variant="contained"
-            ref={anchorRefSave}
-            aria-label="Button group with a nested menu"
-          >
-            <Button onClick={handleClick}>{options[selectedIndexSave]}</Button>
-            <Button
-              size="small"
-              aria-controls={openSave ? 'split-button-menu' : undefined}
-              aria-expanded={openSave ? 'true' : undefined}
-              aria-label="select save and ativation strategy"
-              aria-haspopup="menu"
-              onClick={handleToggle}
-            >
-              <ArrowDropDownIcon />
-            </Button>
-          </ButtonGroup>
-          <Popper
-            sx={{
-              zIndex: 1,
-            }}
-            open={openSave}
-            anchorEl={anchorRefSave.current}
-            role={undefined}
-            transition
-            disablePortal
-          >
-            {({ TransitionProps, placement }) => (
-              <Grow
-                {...TransitionProps}
-                style={{
-                  transformOrigin:
-                    placement === 'bottom' ? 'center top' : 'center bottom',
-                }}
-              >
-                <Paper>
-                  <ClickAwayListener onClickAway={handleClose}>
-                    <MenuList id="split-button-menu" autoFocusItem>
-                      {options.map((option, index) => (
-                        <MenuItem
-                          key={option}
-                          selected={index === selectedIndexSave}
-                          onClick={(event) => handleMenuItemClick(event, index)}
-                          className={index === 2 ? "courses__discard_background" : ""}
-                        >
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </MenuList>
-                  </ClickAwayListener>
-                </Paper>
-              </Grow>
-            )}
-          </Popper>
-        </div>
-      </div>
-      <div>
-        Courses are spaces in which instructors can create and organize modules that allow students to interact with the AI.
-        For more information on creating a course, please see the <a
-          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
-          target="_blank" rel="noreferrer">“Creating a Course” section of our instructor guide
-        </a>.
-      </div>
-      <hr />
-      <span>* indicates a required field</span>
-      <Box className="courses__add">
-        <form onSubmit={(e) => handleSubmit(e, true)}>
-          <FormLabel>Enter Course Information</FormLabel>
-          <div className="form-tooltips">
-            <TextField
-              name="name"
-              label="Course Name"
-              placeholder="Eng190W Communications in the Professional World"
-              fullWidth
-              sx={{ margin: ".5rem 0" }}
-              value={session.name}
-              onChange={handleChange}
-              error={errors.name !== ""}
-              helperText={errors.name}
-              disabled={isLoading}
-              required
-            />
-            <Tooltip title="The name for your course that users will see upon joining." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
-          </div>
-          <div className="form-tooltips">
-            <TextField
-              name="signUpCode"
-              label="Course Sign Up Code"
-              fullWidth
-              sx={{ margin: ".5rem 0" }}
-              placeholder="FALLCSE100ISCOOL"
-              value={session.signUpCode}
-              onChange={handleChange}
-              error={errors.signUpCode !== ""}
-              helperText={errors.signUpCode}
-              disabled={isLoading}
-              required
-            />
-            <Tooltip
-              title="The unique sign up code that users will use to join your course. You can use any combination of letters and numbers. This is case sensitive."
-              enterTouchDelay={0}
-            >
-              <InfoIcon />
-            </Tooltip>
-          </div>
-          <div className="form-tooltips">
-            <TextField
-              name="year"
-              label="Year"
-              fullWidth
-              placeholder="2023"
-              sx={{ margin: ".5rem 0" }}
-              value={session.year}
-              onChange={handleChange}
-              error={errors.year !== ""}
-              helperText={errors.year}
-              disabled={isLoading}
-              inputProps={{ min: 0, inputMode: 'numeric', pattern: '[0-9]' }}
-              type="number"
-            />
-            <Tooltip title="The year in which your course is taking place." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
-          </div>
-          <div className="form-tooltips">
-            <FormControl fullWidth>
-              <InputLabel id="select-term">Term</InputLabel>
-              <Select
-                labelId="select-term"
-                id="course-select-term"
-                value={session.term}
-                fullWidth
-                name="term"
-                label="Term"
-                onChange={handleTermChange}
-                error={errors.term !== ""}
-                disabled={isLoading}
-              >
-                <MenuItem value={"spring"}>Spring</MenuItem>
-                <MenuItem value={"summer"}>Summer</MenuItem>
-                <MenuItem value={"fall"}>Fall</MenuItem>
-                <MenuItem value={"winter"}>Winter</MenuItem>
-              </Select>
-            </FormControl>
-            <Tooltip title="The term in which your course is taking place." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
-          </div>
-          <div className="form-tooltips">
-            <TextField
-              name="section"
-              label="Section / Period"
-              fullWidth
-              placeholder="Section 02"
-              sx={{ margin: ".5rem 0" }}
-              value={session.section}
-              onChange={handleChange}
-              error={errors.section !== ""}
-              helperText={errors.section}
-              disabled={isLoading}
-            />
-            <Tooltip title="The section number or period for your course." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
-          </div>
-          <Autocomplete
-            value={session.taList}
-            onChange={(event, newValue) => {
-              if (newValue.length >= 10) {
-                setErrors((prev) => ({ ...prev, taList: "Max 10 Teaching Assistants" }))
-              } else {
-                setSession(prev => {
-                  return { ...prev, taList: newValue }
-                })
-                setErrors((prev) => ({ ...prev, taList: "" }))
-              }
-            }}
-            multiple
-            id="tags-filled"
-            options={userList ? userList : []}
-            getOptionLabel={(option) => option.name + " " + option.family_name + " - " + option.email}
-            fullWidth
-            renderTags={(value: CustomUserType[], getTagProps) =>
-              value.map((option: CustomUserType, index: number) => {
-                return (
-                  <Chip
-                    variant="outlined"
-                    label={option.name + " " + option.family_name + " - " + option.email}
-                    {...getTagProps({ index })}
-                  />
-                )
-              })
-            }
-            renderInput={(params) => {
-              return (
-                <TextField
-                  {...params}
-                  label="Teaching Assistant"
-                />
-              )
-            }}
+        <div className="flex flex-col items-center gap-4">
+          <Loader2
+            className="h-8 w-8 animate-spin text-primary"
+            aria-hidden="true"
           />
-          {errors.taList !== "" && (
-            <span className="error">{errors.taList}</span>
-          )}
-          <span>
-            The name and email address of the teaching assistant(s) assigned to your course. Teaching assistants can
-            create and edit modules for you, but not delete or unpublish the course. You can assign multiple people to this role.
-            <span style={{ fontStyle: "italic" }}> In order to add someone as a teaching assistant, they must already have a PapyrusAI account.</span>
-          </span>
-        </form>
-      </Box>
+          <p className="text-muted-foreground">
+            {isEditMode
+              ? t("courses.loadingCourses")
+              : t("createCourse.loadingCourseForm")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen">
+      {/* Dialogs */}
+      <DialogWrapper
+        open={showSavePublishTooltip}
+        onOpenChange={setShowSavePublishTooltip}
+        title={t("createCourse.whatIsSavePublish")}
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: t("components.gotIt"),
+            onClick: () => setShowSavePublishTooltip(false),
+          },
+        ]}
+      >
+        <div className="space-y-3">
+          <p>
+            {t("createCourse.savePublishDescription")}
+          </p>
+        </div>
+      </DialogWrapper>
+
+      <DialogWrapper
+        open={openDiscardModal}
+        onOpenChange={setOpenDiscardModal}
+        title={t("createCourse.discardChangesTitle")}
+        description={t("createCourse.discardChangesDescription")}
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: t("common.cancel"),
+            onClick: () => setOpenDiscardModal(false),
+            variant: "outline",
+          },
+          {
+            label: t("createCourse.discardChanges"),
+            onClick: () => navigator(-1),
+            variant: "destructive",
+          },
+        ]}
+      />
+
+      {/* Edit-specific dialogs */}
+      {isEditMode && (
+        <>
+          <DialogWrapper
+            open={openDeleteModal}
+            onOpenChange={setOpenDeleteModal}
+            title={t("createCourse.deleteCourseQuestion")}
+            description={t("createCourse.deleteCourseDescription")}
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: t("common.cancel"),
+                onClick: () => setOpenDeleteModal(false),
+                variant: "outline",
+              },
+              {
+                label: t("createCourse.deleteCourse"),
+                onClick: () => handleSubmit(null, false, true),
+                variant: "destructive",
+              },
+            ]}
+          />
+
+          <DialogWrapper
+            open={openActiveModal}
+            onOpenChange={setOpenActiveModal}
+            title={t("createCourse.unpublishCourse")}
+            description={t("createCourse.unpublishCourseDescription")}
+            contentClassName="sm:max-w-md"
+            actions={[
+              {
+                label: t("common.cancel"),
+                onClick: () => setOpenActiveModal(false),
+                variant: "outline",
+              },
+              {
+                label: t("common.continue"),
+                onClick: () => handleSubmit(null, false, false),
+                variant: "default",
+              },
+            ]}
+          />
+        </>
+      )}
+
+      {/* Main Content */}
+      {!error ? (
+        <div className="bg-background text-foreground p-4 space-y-6">
+          {/* Standard Page Header Pattern */}
+          <header className="animate-in slide-in-from-bottom-4 duration-700">
+            <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+              <div
+                className="absolute top-0 right-0 w-48 h-48 opacity-10"
+                aria-hidden="true"
+              >
+                <BookOpen size={192} className="text-primary" />
+              </div>
+
+              <div className="relative z-10">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                      {isEditMode
+                        ? t("createCourse.editCourse", { courseName: prevSession?.name || t("common.courses") })
+                        : t("createCourse.createCourse")}
+                    </h1>
+                    {isEditMode && (
+                      <div className="flex items-center gap-2">
+                        {session.isActive ? (
+                          <>
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                            <Badge
+                              variant="default"
+                              className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-white 
+                              colorful-dark:bg-green-900 colorful-dark:text-white pointer-events-none"
+                            >
+                              {t("components.published")}
+                            </Badge>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-5 w-5 text-gray-500" />
+                            <Badge className="pointer-events-none" variant="secondary">{t("components.unpublished")}</Badge>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <nav
+                    className="flex flex-col md:flex-row gap-2"
+                    aria-label={`${t("createCourse.createCourse")} ${t("common.actions")}}`}
+                  >
+                    {isEditMode && (
+                      <TooltipWrapper content={t("createCourse.deleteCourse")}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setOpenDeleteModal(true)}
+                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          aria-label={t("createCourse.deleteCourse")}
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </TooltipWrapper>
+                    )}
+                    <TooltipWrapper content={t("common.info")}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowSavePublishTooltip(true)}
+                        aria-label={t("createCourse.getSavePublishHelp")}
+                      >
+                        <Info className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </TooltipWrapper>
+
+                    <div className="flex rounded-lg border">
+                      <Button
+                        size="sm"
+                        onClick={handleClick}
+                        className="rounded-none border-0 w-full rounded-l"
+                        disabled={isLoading}
+                        aria-label={`${options[selectedIndexSave]} ${t("components.courses")}`}
+                      >
+                        {options[selectedIndexSave]}
+                      </Button>
+                      <DropdownMenu
+                        open={openSaveTop}
+                        onOpenChange={setOpenSaveTop}
+                      >
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="sm"
+                            className="rounded-none border-0 border-l px-2 rounded-r"
+                            variant="default"
+                            disabled={isLoading}
+                            aria-label={t("createModule.saveStrategy")}
+                          >
+                            <ChevronDown
+                              className="h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {options.map((option, index) => (
+                            <DropdownMenuItem
+                              key={option}
+                              onClick={() => {
+                                const fakeEvent = {} as React.MouseEvent<
+                                  HTMLDivElement,
+                                  MouseEvent
+                                >;
+                                handleMenuItemClick(fakeEvent, index);
+                              }}
+                              className={cn(
+                                index === selectedIndexSave && "bg-primary/30",
+                                index === 2 &&
+                                "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                              )}
+                            >
+                              {option}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </nav>
+                </div>
+
+                <InfoAccordion>
+                  <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                    {t("createCourse.courseDescriptionPart1")}&nbsp;
+                    <a
+                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.y2e0cshr9a50"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                    >
+                      {t("createCourse.courseDescriptionLinkText")}
+                    </a>
+                    .
+                  </p>
+                </InfoAccordion>
+              </div>
+            </div>
+          </header>
+
+          {/* Form */}
+          <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-6">
+            {/* Basic Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-blue-600" />
+                  {t("createCourse.basicInformation")}
+                </CardTitle>
+                <CardDescription>
+                  {t("createCourse.enterCourseInfo")}. {t("common.required")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="name" className="text-sm font-medium">
+                      {t("createCourse.courseName")} *
+                    </Label>
+                    <TooltipWrapper content={t("createCourse.courseNameDescription")}>
+                      <button type="button" aria-label={t("createCourse.courseNameDescription")}>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </button>
+                    </TooltipWrapper>
+                  </div>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder={t("createCourse.courseNamePlaceholder")}
+                    value={session.name}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    required
+                    className={cn(
+                      "transition-colors",
+                      errors.name &&
+                      "border-destructive focus-visible:ring-destructive"
+                    )}
+                  />
+                  {errors.name !== "" && (
+                    <p
+                      className="text-sm text-destructive flex items-center gap-1"
+                      role="alert"
+                      aria-live="assertive"
+                    >
+                      <X className="h-3 w-3" />
+                      {errors.name}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="signUpCode" className="text-sm font-medium">
+                      {t("createCourse.courseSignUpCode")} *
+                    </Label>
+                    <TooltipWrapper content={t("createCourse.courseSignUpCodeDescription")}>
+                      <button type="button" aria-label={t("createCourse.courseSignUpCodeDescription")}>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </button>
+                    </TooltipWrapper>
+                  </div>
+                  <Input
+                    id="signUpCode"
+                    name="signUpCode"
+                    placeholder={t("createCourse.courseSignUpCodePlaceholder")}
+                    value={session.signUpCode}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    required
+                    className={cn(
+                      "transition-colors",
+                      errors.signUpCode &&
+                      "border-destructive focus-visible:ring-destructive"
+                    )}
+                  />
+                  {errors.signUpCode && (
+                    <p
+                      className="text-sm text-destructive flex items-center gap-1"
+                      role="alert"
+                      aria-live="assertive"
+                    >
+                      <X className="h-3 w-3" />
+                      {errors.signUpCode}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Schedule Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-green-600" />
+                  {t("createCourse.scheduleInformation")}
+                </CardTitle>
+                <CardDescription>
+                  {t("createCourse.scheduleInformationDescription")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="year" className="text-sm font-medium capitalize">
+                        {t("createCourse.year")}
+                      </Label>
+                      <TooltipWrapper content={t("createCourse.yearDescription")}>
+                        <button type="button" aria-label={t("createCourse.yearDescription")}>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </button>
+                      </TooltipWrapper>
+                    </div>
+                    <Input
+                      id="year"
+                      name="year"
+                      type="number"
+                      placeholder="2026"
+                      value={session.year}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      min={2020}
+                      max={2040}
+                      inputMode="numeric"
+                      className={cn(
+                        "transition-colors",
+                        errors.year &&
+                        "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                    {errors.year && (
+                      <p
+                        className="text-sm text-destructive flex items-center gap-1"
+                        role="alert"
+                        aria-live="assertive"
+                      >
+                        <X className="h-3 w-3" />
+                        {errors.year}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="term" className="text-sm font-medium">
+                        {t("createCourse.term")}
+                      </Label>
+                      <TooltipWrapper content={t("createCourse.termDescription")}>
+                        <button type="button" aria-label={t("createCourse.termDescription")}>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </button>
+                      </TooltipWrapper>
+                    </div>
+                    <Select
+                      value={session.term}
+                      onValueChange={handleTermChange}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          "transition-colors",
+                          errors.term &&
+                          "border-destructive focus-visible:ring-destructive"
+                        )}
+                        aria-label={t("createCourse.selectTerm")}
+                      >
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder={t("createCourse.selectTerm")} />
+                      </SelectTrigger>
+                      <SelectContent aria-label={t("createCourse.selectTerm")}>
+                        <SelectItem value="spring">{t("components.spring")}</SelectItem>
+                        <SelectItem value="summer">{t("components.summer")}</SelectItem>
+                        <SelectItem value="fall">{t("components.fall")}</SelectItem>
+                        <SelectItem value="winter">{t("components.winter")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.term && (
+                      <p
+                        className="text-sm text-destructive flex items-center gap-1"
+                        role="alert"
+                        aria-live="assertive"
+                      >
+                        <X className="h-3 w-3" />
+                        {errors.term}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="section" className="text-sm font-medium">
+                        {t("createCourse.sectionPeriod")}
+                      </Label>
+                      <TooltipWrapper content={t("createCourse.sectionPeriodDescription")}>
+                        <button type="button" aria-label={t("createCourse.sectionPeriodDescription")}>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </button>
+                      </TooltipWrapper>
+                    </div>
+                    <Input
+                      id="section"
+                      name="section"
+                      placeholder={t("createCourse.sectionPeriodHelpText")}
+                      value={session.section}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className={cn(
+                        "transition-colors",
+                        errors.section &&
+                        "border-destructive focus-visible:ring-destructive"
+                      )}
+                    />
+                    {errors.section && (
+                      <p
+                        className="text-sm text-destructive flex items-center gap-1"
+                        role="alert"
+                        aria-live="assertive"
+                      >
+                        <X className="h-3 w-3" />
+                        {errors.section}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Teaching Assistants */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  {t("createCourse.teachingAssistants")}
+                </CardTitle>
+                <CardDescription>
+                  {t("createCourse.teachingAssistantsDescription")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {session.taList.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">
+                      {t("createCourse.selectedTeachingAssistants")}
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {session.taList.map(
+                        (ta: CustomUserType, index: number) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-sm py-2 px-3 flex items-center gap-2 bg-purple-900 text-purple-100 hover:bg-purple-900 hover:text-white"
+                          >
+                            {ta.name && ta.family_name
+                              ? `${ta.name} ${ta.family_name}`
+                              : ta.name ||
+                              ta.family_name ||
+                              ta.email ||
+                              ta.username}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 ml-1 hover:bg-red-500 hover:text-white rounded-full"
+                              aria-label={t("createCourse.removeTA")}
+                              onClick={() => {
+                                const newTaList = session.taList.filter(
+                                  (_: CustomUserType, i: number) => i !== index
+                                );
+                                setSession((prev) => ({
+                                  ...prev,
+                                  taList: newTaList,
+                                }));
+                              }}
+                            >
+                              <X className="h-5 w-5" />
+                            </Button>
+                          </Badge>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label id="taLabel" htmlFor="taSelect" className="text-sm font-medium">
+                    {t("common.add")} {t("createCourse.teachingAssistants")}
+                  </Label>
+                  <Select
+                    onValueChange={(value) => {
+                      const selectedUser = userList.find(
+                        (user) => user.username === value
+                      );
+                      if (selectedUser) {
+                        if (session.taList.length >= 10) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            taList: t("createCourse.maxTeachingAssistants"),
+                          }));
+                        } else if (
+                          !session.taList.find(
+                            (ta: CustomUserType) =>
+                              ta.username === selectedUser.username
+                          )
+                        ) {
+                          setSession((prev) => ({
+                            ...prev,
+                            taList: [...prev.taList, selectedUser],
+                          }));
+                          setErrors((prev) => ({ ...prev, taList: "" }));
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="taSelect" aria-labelledby="taLabel">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder={t("createCourse.selectTeachingAssistant")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userList.filter(
+                        (user) =>
+                          !session.taList.find(
+                            (ta: CustomUserType) =>
+                              ta.username === user.username
+                          )
+                      ).length === 0 ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          {t("createCourse.noMoreUsersAvailable")}
+                        </div>
+                      ) : (
+                        userList
+                          .filter(
+                            (user) =>
+                              !session.taList.find(
+                                (ta: CustomUserType) =>
+                                  ta.username === user.username
+                              )
+                          )
+                          .map((user) => (
+                            <SelectItem
+                              key={user.username}
+                              value={user.username}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>
+                                  {user.name && user.family_name
+                                    ? `${user.name} ${user.family_name}`
+                                    : user.name ||
+                                    user.family_name ||
+                                    user.email ||
+                                    user.username}
+                                </span>
+                                {user.email &&
+                                  (user.name || user.family_name) && (
+                                    <span>
+                                      ({user.email})
+                                    </span>
+                                  )}
+                              </div>
+                            </SelectItem>
+                          ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {errors.taList !== "" && (
+                  <p
+                    className="text-sm text-destructive flex items-center gap-1"
+                    role="alert"
+                    aria-live="assertive"
+                  >
+                    <X className="h-3 w-3" />
+                    {errors.taList}
+                  </p>
+                )}
+
+                <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 colorful-dark:bg-gray-800 p-3 rounded-md">
+                  <p className="text-xs">
+                    <strong>{t("createCourse.note")}:</strong> {t("createCourse.teachingAssistantsNote")}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </form>
+
+          {/* Bottom Actions */}
+          <section aria-labelledby="bottom-actions-heading" className="pt-4">
+            <nav
+              className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+              aria-label={
+                isEditMode
+                  ? `${t("courses.editCourse")} ${t("common.actions")}}`
+                  : `${t("createCourse.createCourse")} ${t("common.actions")}}`
+              }
+              id="bottom-actions-heading"
+            >
+              {isEditMode && (
+                <TooltipWrapper content={t("createCourse.deleteCourse")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setOpenDeleteModal(true)}
+                    className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    aria-label={t("createCourse.deleteCourse")}
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    {t("common.delete")}
+                  </Button>
+                </TooltipWrapper>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSavePublishTooltip(true)}
+                aria-label={t("createCourse.getSavePublishHelp")}
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+                {t("common.info")}
+              </Button>
+              <div className="flex rounded-lg border">
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    if (selectedIndexSave === 0) {
+                      handleSubmit(e, true, false);
+                    } else if (selectedIndexSave === 1) {
+                      if (isEditMode && session.isActive) {
+                        setOpenActiveModal(true);
+                      } else {
+                        handleSubmit(e, false, false);
+                      }
+                    } else if (selectedIndexSave === 2) {
+                      setOpenDiscardModal(true);
+                    }
+                  }}
+                  className="rounded-none border-0 w-full rounded-l"
+                  disabled={isLoading}
+                  aria-label={`${options[selectedIndexSave]} ${t("components.courses")}`}
+                >
+                  {options[selectedIndexSave]}
+                </Button>
+                <DropdownWrapper
+                  open={openSaveBottom}
+                  onOpenChange={setOpenSaveBottom}
+                  trigger={
+                    <Button
+                      size="sm"
+                      className="rounded-none border-0 border-l px-2 rounded-r"
+                      variant="default"
+                      disabled={isLoading}
+                      aria-label={t("createModule.saveStrategy")}
+                    >
+                      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  }
+                  actions={options.map((option, index) => ({
+                    label: option,
+                    onClick: () => {
+                      const fakeEvent = {} as React.MouseEvent<
+                        HTMLDivElement,
+                        MouseEvent
+                      >;
+                      handleMenuItemClick(fakeEvent, index);
+                    },
+                    className: cn(
+                      index === selectedIndexSave && "bg-primary/30",
+                      index === 2 &&
+                      "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                    ),
+                  }))}
+                  align="end"
+                />
+              </div>
+            </nav>
+          </section>
+        </div>
+      ) : (
+        <div className="bg-background text-foreground p-4">
+          <div
+            className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
+            role="status"
+          >
+            <XCircle className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">{t("courses.courseNotFound")}</p>
+            <p className="text-sm">
+              {t("createCourse.courseNotFoundDescription")}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
-  ) : (
-    <LinearProgress />
-  )
+  );
 }

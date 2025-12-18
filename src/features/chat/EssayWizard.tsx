@@ -1,30 +1,26 @@
 import React, { useState } from "react";
+import { Button } from "../../components/ui/button";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
 import {
-  Button,
-  FormControl,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  ListItemText,
-  MenuItem,
-  OutlinedInput,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import {
   Select,
-  SelectChangeEvent,
-} from "@mui/material";
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import { Modal } from "../../components/Modal";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { PenTool, Paperclip, Send } from "lucide-react";
 import DocumentModal from "./DocumentModal";
 import { PromptType } from "../../utility/types/CourseTypes";
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-    },
-  },
-};
 
 interface EssayWizardProps {
   prompts?: Array<PromptType> | undefined;
@@ -39,20 +35,15 @@ export default function EssayWizard({
   const [selectedPrompt, setSelectedPrompt] = useState<string>("");
   const [error, setError] = useState("");
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
-  //add file menu
-  const [addAnchorEl, setAddAnchorEl] = React.useState<null | HTMLElement>(null);
-  const addOpen = Boolean(addAnchorEl);
-  const handleAddClose = () => {
-    setAddAnchorEl(null);
-  };
 
   function returnDocText(docText: string) {
     setOpenDocumentModal(false);
-    setEssay(docText)
+    setEssay(docText);
   }
 
-  const handleSelectChange = (event: SelectChangeEvent) => {
-    setSelectedPrompt(event.target.value as string);
+  const handleSelectChange = (value: string) => {
+    setSelectedPrompt(value);
+    setError("");
   };
 
   function handleSubmit(e: React.FormEvent) {
@@ -61,126 +52,125 @@ export default function EssayWizard({
       setError("");
       if (prompts) {
         if (selectedPrompt) {
-          returnEssay(essay, selectedPrompt)
+          returnEssay(essay, selectedPrompt);
         } else {
-          setError("Select a prompt")
+          setError("Please select a prompt to continue");
         }
       } else {
-        returnEssay(essay)
+        returnEssay(essay);
       }
     } else {
-      setError("Essay Missing")
+      setError("Please enter your essay content");
+    }
+  }
+
+  function handleEssayChange(value: string) {
+    setError("");
+    if (value.length < 100000) {
+      setEssay(value);
+    } else {
+      setError("Essay is too long. Please keep it under 100,000 characters.");
     }
   }
 
   return (
-    <div className="chat__wizard">
-      <Modal
-        isOpen={openDocumentModal}
-        title={"Document Upload"}
-        onRequestClose={() => setOpenDocumentModal(false)}
-        actions={
-          <Button sx={{ width: "100%" }} variant="contained" color="secondary" onClick={() => setOpenDocumentModal(false)}>
-            Cancel
-          </Button>
-        }
+    <div className="p-4 space-y-4">
+      <DialogWrapper
+        open={openDocumentModal}
+        onOpenChange={setOpenDocumentModal}
+        title="Upload Document"
+        description="Upload a document to use as your essay content"
+        contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        showFooter={false}
       >
         <DocumentModal returnDocText={returnDocText} />
-      </Modal>
-      {prompts ? (
-        <div>
-          <h6>Select prompt option</h6>
-          <div>Select the prompt with which you would like to begin your conversation with the AI.</div>
-          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
-            {/* add dropdown to handle prompts  */}
-            <Select
-              labelId="wizard-prompt-select"
-              id="wizard-prompt-select"
-              value={selectedPrompt}
-              onChange={handleSelectChange}
-              MenuProps={MenuProps}
-              fullWidth
-              required
-            >
-              {prompts.map((prompt, index) => (
-                <MenuItem key={index} value={prompt.id}>
-                  <ListItemText primary={prompt.name} />
-                </MenuItem>
-              ))}
-            </Select>
-          </div>
-        </div>
-      ) : <></>}
-      <h6>Enter Essay</h6>
-      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-evenly", alignContent: "center" }}>
-        <form onSubmit={handleSubmit}>
-          <FormControl sx={{ m: 1, width: '100%', margin: "0" }} variant="outlined">
-            <InputLabel htmlFor="outlined-adornment-message">Send a message</InputLabel>
-            <OutlinedInput
-              id="outlined-adornment-message"
-              label="Send a message"
-              sx={{ width: "100%" }}
+      </DialogWrapper>
+
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PenTool className="h-5 w-5 text-primary" />
+            Submit Your Essay
+          </CardTitle>
+          <CardDescription>
+            Enter or upload your essay content to get feedback from the AI
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {prompts && prompts.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="prompt-select">Select Prompt Option</Label>
+              <Select value={selectedPrompt} onValueChange={handleSelectChange}>
+                <SelectTrigger id="prompt-select">
+                  <SelectValue placeholder="Choose the prompt for AI feedback..." />
+                </SelectTrigger>
+                <SelectContent avoidCollisions={false} position="popper">
+                  {prompts.map((prompt, index) => (
+                    <SelectItem key={index} value={prompt.id}>
+                      {prompt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Select the prompt with which you would like to begin your
+                conversation with the AI.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="essay-content">Essay Content</Label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setOpenDocumentModal(true)}
+              >
+                <Paperclip className="mr-2 h-4 w-4" />
+                Upload File
+              </Button>
+            </div>
+            <Textarea
+              id="essay-content"
+              placeholder="Enter your essay content here, or upload a document using the button above..."
               value={essay}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                //check that message length is less that 100000
-                setError("");
-                if (e.target.value.length < 100000) {
-                  setEssay(e.target.value)
-                } else {
-                  setError("Message Too Long");
-                }
-              }}
-              startAdornment={
-                <>
-                  <InputAdornment position="start">
-                    <IconButton
-                      aria-label="add file"
-                      edge="start"
-                      type="button"
-                      id="add-button"
-                      aria-controls={addOpen ? 'add-menu' : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={addOpen ? 'true' : undefined}
-                      onClick={() => {
-                        handleAddClose()
-                        setOpenDocumentModal(true)
-                      }}
-                    >
-                      {<AttachFileIcon />}
-                    </IconButton>
-                  </InputAdornment>
-                </>
-              }
-              multiline
-              maxRows={6}
-              onKeyDown={(e: any) => {
-                if (e.keyCode === 13 && e.shiftKey) {
+              onChange={(e) => handleEssayChange(e.target.value)}
+              className="min-h-[200px] resize-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.shiftKey) {
                   e.preventDefault();
-                  setEssay(prev => prev + "\n");
-                } else if (e.keyCode === 13 && !e.shiftKey) {
+                  setEssay((prev) => prev + "\n");
+                } else if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handleSubmit(e);
                 }
               }}
             />
-          </FormControl>
-        </form>
-      </div>
-      {error.length > 0 ? (
-        <div className="error">{error}</div>
-      ) : null}
+            <p className="text-xs text-muted-foreground">
+              {essay.length.toLocaleString()} / 100,000 characters • Press
+              Shift+Enter for new line, Enter to submit
+            </p>
+          </div>
 
-      <div style={{ marginTop: "1rem", width: "100%", justifyContent: "flex-end", display: "flex" }}>
-        <Button
-          variant="contained"
-          type="submit"
-          onClick={handleSubmit}
-          disabled={essay.length < 1 || (prompts && !selectedPrompt)}
-        //disabled if no essay OR if we have prompts but non selected
-        >
-          Send Essay
-        </Button>
-      </div>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <Button
+              onClick={handleSubmit}
+              disabled={essay.length < 1 || (prompts && !selectedPrompt)}
+              className="min-w-[140px]"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              Send Essay
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

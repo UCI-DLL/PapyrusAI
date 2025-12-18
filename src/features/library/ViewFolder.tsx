@@ -1,26 +1,18 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import {
-  Button,
-  Menu,
-  MenuItem,
-} from "@mui/material";
+import { Button } from "../../components/ui/button";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { FolderType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import LinearProgress from '@mui/material/LinearProgress';
 import { UserContext } from "../../utility/context/UserContext";
-import { getOrgFolder, getUserFolder } from "../../utility/endpoints/FolderEndpoints";
+import {
+  getOrgFolder,
+  getUserFolder,
+} from "../../utility/endpoints/FolderEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
-import AddIcon from '@mui/icons-material/Add';
+import { Plus, MessageSquare, FileText, Folder, Loader2 } from "lucide-react";
 import ListFolderContents from "./ListFolderContents";
-
-
-export enum SortOptions {
-  Ascending = "Ascending",
-  Descending = "Descending",
-  Newest = "Newest",
-  Oldest = "Oldest",
-}
+import { useTranslation } from "../../hooks/useTranslation";
 
 export default function ViewFolder(): JSX.Element {
   let location = useLocation();
@@ -29,18 +21,12 @@ export default function ViewFolder(): JSX.Element {
   const [folder, setFolder] = useState<FolderType>();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   useEffect(() => {
     const controller = new AbortController();
-    //get pathname to figure out if we are editing 
+    //get pathname to figure out if we are editing
     if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -50,7 +36,7 @@ export default function ViewFolder(): JSX.Element {
       location.pathname.split("/")[2] !== "org"
     ) {
       //get user folder data
-      getFolder(false, location.pathname.split("/")[2], controller.signal)
+      getFolder(false, location.pathname.split("/")[2], controller.signal);
     } else if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -61,7 +47,7 @@ export default function ViewFolder(): JSX.Element {
       location.pathname.split("/")[3]
     ) {
       //get org folder
-      getFolder(true, location.pathname.split("/")[3], controller.signal)
+      getFolder(true, location.pathname.split("/")[3], controller.signal);
     }
 
     return () => {
@@ -72,7 +58,7 @@ export default function ViewFolder(): JSX.Element {
 
   function getFolder(isOrg: boolean, folderId: string, signal: AbortSignal) {
     if (!isOrg) {
-      Get(getUserFolder(folderId), signal).then(res => {
+      Get(getUserFolder(folderId), signal).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //also set session
@@ -87,13 +73,16 @@ export default function ViewFolder(): JSX.Element {
             //handle error
             //redirect to prompt list
             navigator("/library");
-            setAlert({ message: "Folder Does Not Exist", type: "error" });
+            setAlert({
+              message: t("library.folderDoesNotExist"),
+              type: "error",
+            });
             setIsLoading(false);
           }
         }
       });
     } else {
-      Get(getOrgFolder(folderId), signal).then(res => {
+      Get(getOrgFolder(folderId), signal).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //also set session
@@ -108,7 +97,10 @@ export default function ViewFolder(): JSX.Element {
             //handle error
             //redirect to prompt list
             // navigator("/library");
-            setAlert({ message: "Folder Does Not Exist", type: "error" });
+            setAlert({
+              message: t("library.folderDoesNotExist"),
+              type: "error",
+            });
             setIsLoading(false);
           }
         }
@@ -116,56 +108,156 @@ export default function ViewFolder(): JSX.Element {
     }
   }
 
+  const getTotalItems = () => {
+    if (!folder) return 0;
+    return (folder.prompts?.length || 0) + (folder.files?.length || 0);
+  };
+
+  const getPromptCount = () => {
+    return folder?.prompts?.length || 0;
+  };
+
+  const getFileCount = () => {
+    return folder?.files?.length || 0;
+  };
+
   return !isLoading && folder ? (
-    <div className="library">
-      <div className="library__section-header">
-        <h3>{folder?.name}</h3>
-        <div>
-          {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") && (
-            <>
-              <Button
-                id="basic-button"
-                aria-controls={open ? 'basic-menu' : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? 'true' : undefined}
-                onClick={handleClick}
-                variant="contained"
-              >
-                <AddIcon />
-                &nbsp;
-                New
-              </Button>
-              <Menu
-                id="basic-menu"
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-                MenuListProps={{
-                  'aria-labelledby': 'basic-button',
-                }}
-              >
-                <MenuItem onClick={() => {
-                  navigator(location.pathname.split("/")[2] !== "org" ?
-                    `/library/${folder.id}/createprompt` : //user prompt
-                    `/library/org/${folder.id}/createprompt`) //is org prompt
-                }}>Create Prompt</MenuItem>
-                <MenuItem onClick={() => {
-                  navigator(location.pathname.split("/")[2] !== "org" ?
-                    `/library/${folder.id}/createfile` : //user file
-                    `/library/org/${folder.id}/createfile`) //is org file
-                }}>Create File</MenuItem>
-              </Menu>
-            </>
-          )}
+    <main className="bg-background text-foreground min-h-screen">
+      <div className="mx-auto px-6 py-8">
+        <header className="animate-in slide-in-from-bottom-4 duration-700">
+          <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg mb-8">
+            <div
+              className="absolute top-0 right-0 w-48 h-48 opacity-10"
+              aria-hidden="true"
+            >
+              <Folder size={192} className="text-primary" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                    {folder?.name}
+                  </h1>
+                </div>
+                <nav
+                  className="flex flex-col sm:flex-row gap-2"
+                  aria-label={`${t("library.contentManagement")} ${t("common.actions")}}`}
+                >
+                  {user?.groups.includes(
+                    process.env.REACT_APP_INSTRUCTOR
+                      ? process.env.REACT_APP_INSTRUCTOR
+                      : "PapyrusAIInstructors"
+                  ) && (
+                      <DropdownWrapper
+                        trigger={
+                          <Button
+                            variant="default"
+                            className="flex items-center gap-2"
+                            aria-label={t("library.addContent")}
+                          >
+                            <Plus className="h-4 w-4" aria-hidden="true" />
+                            {t("library.addContent")}
+                          </Button>
+                        }
+                        actions={[
+                          {
+                            label: t("library.addPrompt"),
+                            onClick: () => {
+                              const basePath =
+                                location.pathname.split("/")[2] !== "org"
+                                  ? `/library/${folder.id}/createprompt`
+                                  : `/library/org/${folder.id}/createprompt`;
+                              navigator(basePath);
+                            },
+                          },
+                          {
+                            label: t("library.addFile"),
+                            onClick: () => {
+                              const basePath =
+                                location.pathname.split("/")[2] !== "org"
+                                  ? `/library/${folder.id}/createfile`
+                                  : `/library/org/${folder.id}/createfile`;
+                              navigator(basePath);
+                            },
+                          },
+                        ]}
+                        align="end"
+                      />
+                    )}
+                </nav>
+              </div>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                {t("library.addContentDescription")}
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <div
+          className="flex gap-2 mb-6"
+          role="tablist"
+          aria-label={t("library.contentFilterTabs")}
+        >
+          <Button
+            variant={activeTab === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("all")}
+            className="flex items-center gap-2"
+            role="tab"
+            aria-selected={activeTab === "all"}
+            aria-controls="folder-content"
+          >
+            <Folder className="h-4 w-4" aria-hidden="true" />
+            {t("library.allItems")} ({getTotalItems()})
+          </Button>
+          <Button
+            variant={activeTab === "prompts" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("prompts")}
+            className="flex items-center gap-2"
+            role="tab"
+            aria-selected={activeTab === "prompts"}
+            aria-controls="folder-content"
+          >
+            <MessageSquare className="h-4 w-4" aria-hidden="true" />
+            {t("library.prompts")} ({getPromptCount()})
+          </Button>
+          <Button
+            variant={activeTab === "files" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("files")}
+            className="flex items-center gap-2"
+            role="tab"
+            aria-selected={activeTab === "files"}
+            aria-controls="folder-content"
+          >
+            <FileText className="h-4 w-4" aria-hidden="true" />
+            {t("library.files")} ({getFileCount()})
+          </Button>
+        </div>
+
+        <div id="folder-content" role="tabpanel">
+          <ListFolderContents
+            folderId={folder.id}
+            isOrgFolder={location.pathname.split("/")[2] === "org"}
+            activeTab={activeTab}
+          />
         </div>
       </div>
-      <div>
-        To create a custom prompt or upload a document, click “New” at the top right.
-      </div>
-
-      <ListFolderContents folderId={folder.id} isOrgFolder={location.pathname.split("/")[2] === "org"} />
-    </div>
+    </main>
   ) : (
-    <LinearProgress />
-  )
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">{t("library.loadingFolder")}</p>
+      </div>
+    </div>
+  );
 }

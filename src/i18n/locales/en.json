@@ -26,7 +26,13 @@
     "joinCourse": "Join Course",
     "joinCourseByCode": "Join Course by Sign Up Code",
     "joinCourseDescription": "Enter the unique course sign up code associated with the course you want to join. Not sure what the sign up code is? Ask the instructor of the course!",
-    "joining": "Joining..."
+    "joining": "Joining...",
+    "missingDetails": "We are missing some details",
+    "tutorial1": "Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.",
+    "tutorial2": "For help with navigating PapyrusAI and other resources, see \"Resources\" in the left sidebar.",
+    "tutorial3": "If you encounter any bugs or issues while using PapyrusAI, click \"Report Issue\" on the bottom left of the navigation to report to the development team.",
+    "tutorial4Instructors": "To join a course, click \"Join Course\" at the top right. To create a course, click \"Create Course\" at the top right.",
+    "tutorial4Students": "To join a course, click \"Join Course\" at the top right. Your instructor will give you the course code."
   },
   "courses": {
     "viewModules": "View Modules",
@@ -82,7 +88,8 @@
     "noModulesMatchSearch": "No courses match your search. Try a different search term.",
     "publishedModules": "Published Modules",
     "term": "Term",
-    "noModulesFound": "No Modules Found"
+    "noModulesFound": "No Modules Found",
+    "moduleList": "Module List"
   },
   "account": {
     "accountSettings": "Account Settings",
@@ -634,7 +641,8 @@
     "noDataStudentDescription3": "The student hasn't been enrolled in any courses",
     "lastAccessed": "Last Accessed",
     "listConversations": "List Conversations",
-    "listConversationsDescription": "Click \"List Conversations\" to view detailed interactions"
+    "listConversationsDescription": "Click \"List Conversations\" to view detailed interactions",
+    "selectFormat": "Select Format"
   },
   "chat": {
     "chat": "Chat",
@@ -656,7 +664,50 @@
     "created": "Created",
     "deleted": "Deleted",
     "view": "View",
-    "startConversation": "Start Conversation"
+    "startConversation": "Start Conversation",
+    "addFile": "Add File",
+    "messageInput": "Message Input",
+    "enterMessage": "Enter Message...",
+    "speechToText": "Speech to Text",
+    "sendMessage": "Send Message",
+    "startConversationDescription": "For more information on how to converse with the AI, please see the ",
+    "inContext": "In Context",
+    "flaggedConvoDescription": "This conversation has been flagged as inappropriate for this setting. Please start a new conversation.",
+    "backToConvoList": "Back to Conversation List",
+    "course": "Course",
+    "conversationOptions": "Conversation Options",
+    "selectPromptOption": "Select Prompt Option",
+    "selectPromptOptionDescription": "Choose the prompt with which you would like to begin your conversation with the AI",
+    "availablePrompts": "Available Prompts",
+    "selectPromptStarted": "Select a prompt to get started...",
+    "selectPromptContinue": "Please select a prompt to continue",
+    "askPapyrus": "Ask Papyrus",
+    "noPromptsInModule": "No prompts are available for this module.",
+    "uploadDocument": "Upload Document",
+    "uploadDocumentDescription": "Upload the document or copy and paste the text (e.g., a rubric) that you would like to send to the AI. See the ",
+    "uploadDocumentDescription2": " for more information on when and why you might want to use documents.",
+    "uploadFile": "Upload File",
+    "uploadDocTypes": "Upload TXT, DOCX, PDF",
+    "clickBrowseFiles": "Click to browse files",
+    "docText": "Document Text",
+    "docTextPlaceholder": "Document content will appear here, or you can paste text directly...",
+    "submitDoc": "Submit Document",
+    "voiceToText": "Voice to Text",
+    "voiceToTextDescription": "Record your message using voice recognition, then edit and send it to the AI",
+    "voiceToTextDescription2": "When you are ready to record your message, click \"Start Listening\". When you are done recording, click \"Stop Listening\", then wait for your message to be transcribed. You can edit the transcribed message before sending it to the AI.",
+    "stopListening": "Stop Listening",
+    "startListening": "Start Listening",
+    "message": "Message",
+    "transcribedMessageHere": "Your transcribed message will appear here...",
+    "voiceError": "Your browser does not support speech recognition. Please type your message manually or try using a different browser.",
+    "viewEssay": "View your essay feedback by clicking on this message.",
+    "messageTooLong": "Message Too Long",
+    "messageTooShort": "Message Too Short",
+    "searchConversation": "Search conversations...",
+    "submit": "Submit",
+    "essayFeedback": "Essay Feedback",
+    "fileContent": "File Content",
+    "archived": "Archived"
   },
   "errorMessage": {
     "promptNotExist": "Prompt Does Not Exist",
@@ -679,7 +730,11 @@
     "convoNotFound": "No Conversations Found",
     "nameTooLong": "Name is too long",
     "noConversationsYet": "No conversations yet",
-    "noConversationsDescription": "This user hasn't started any conversations in this module."
+    "noConversationsDescription": "This user hasn't started any conversations in this module.",
+    "fileNotSupportedDoc": "File is unsupported. Please upload TXT, PDF, or DOCX files only.",
+    "processingFile": "Error processing file. Please try again.",
+    "downloadConversation": "Could not download conversation. Try again later",
+    "ranIntoError": "We ran into an error!"
   },
   "loadingMessage": {
     "loading": "Loading",
@@ -696,6 +751,8 @@
     "reports": "Loading Reports",
     "students": "Loading Students...",
     "userDataConversations": "Loading user data and conversations...",
-    "conversations": "Loading Conversations"
+    "conversations": "Loading Conversations",
+    "processing": "Processing...",
+    "loadingConversation": "Loading Conversation..."
   }
 }

@@ -158,7 +158,7 @@ export default function Courses(): JSX.Element {
                   )}
                   <Button
                     size="sm"
-                    aria-label="Join existing course" //TODO
+                    aria-label={t("dashboard.joinCourse")}
                     onClick={() => setShowAddCourseModal(true)}
                   >
                     <ExternalLink className="w-4 h-4" aria-hidden="true" />

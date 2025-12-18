@@ -5,6 +5,7 @@ import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
 import { Send, Paperclip, Mic, AlertCircle } from "lucide-react";
 import { removeSpecialCharacters } from "../../../utility/Helpers";
 import { AutosizeTextarea } from '../../../components/ui/autosize-textarea';
+import { useTranslation } from "../../../hooks/useTranslation";
 
 interface ChatInputProps {
   isConnected: boolean;
@@ -25,6 +26,7 @@ export default function ChatInput({
   onOpenSpeechToTextModal,
   disabled = false,
 }: ChatInputProps): JSX.Element | null {
+  const { t } = useTranslation();
   const [message, setMessage] = useState<string>("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,22 +67,22 @@ export default function ChatInput({
       <div className="p-4 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div className="relative flex lg:items-start gap-2 p-2 border rounded-lg bg-background shadow-sm md:pb-1 items-center">
-            <TooltipWrapper content="Add file" side="top">
+            <TooltipWrapper content={t("chat.addFile")} side="top">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 my-1 text-muted-foreground hover:text-foreground transition-colors"
+                className="h-8 w-8 my-1 text-muted-foreground dark:hover:text-foreground colorful-dark:hover:text-foreground transition-colors"
                 onClick={onOpenDocumentModal}
-                aria-label="Add file" //TODO
+                aria-label={t("chat.addFile")}
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
             </TooltipWrapper>
 
             <AutosizeTextarea
-              aria-label="Message Input" //TODO
-              placeholder="Enter message..." //TODO
+              aria-label={t("chat.messageInput")}
+              placeholder={t("chat.enterMessage")}
               value={message}
               disabled={isLoading}
               className="flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-6"
@@ -92,14 +94,14 @@ export default function ChatInput({
             />
 
             <div className="flex flex-col md:flex-row">
-              <TooltipWrapper content="Speech to text" side="top">
+              <TooltipWrapper content={t("chat.speechToText")} side="top">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 my-1 text-muted-foreground hover:text-foreground transition-colors"
+                  className="h-8 w-8 my-1 text-muted-foreground dark:hover:text-foreground colorful-dark:hover:text-foreground transition-colors"
                   onClick={onOpenSpeechToTextModal}
-                  aria-label="Speech to text" //TODO
+                  aria-label={t("chat.speechToText")}
                 >
                   <Mic className="h-4 w-4" />
                 </Button>
@@ -110,7 +112,7 @@ export default function ChatInput({
                 size="sm"
                 className="h-8 w-8 my-1 md:m-1 bg-primary hover:bg-primary/90 transition-colors"
                 disabled={isLoading || !message.trim()}
-                aria-label="Send message" //TODO
+                aria-label={t("chat.sendMessage")}
               >
                 <Send className="h-4 w-4" />
               </Button>

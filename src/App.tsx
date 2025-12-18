@@ -174,7 +174,7 @@ function App(): JSX.Element {
               <DialogWrapper
                 open={showUpdateUserInfoModal}
                 onOpenChange={() => { }}
-                title="We are missing some details"
+                title={t("dashboard.missingDetails")}
                 contentClassName="sm:max-w-md [&>button]:hidden"
                 actions={[
                   {
@@ -208,16 +208,13 @@ function App(): JSX.Element {
                         .setOptions({
                           steps: [
                             {
-                              intro:
-                                "Welcome to PapyrusAI! This dashboard provides a quick overview of the courses you have joined and modules to which you have access.",
+                              intro: t("dashboard.tutorial1"),
                             },
                             {
-                              intro:
-                                'For help with navigating PapyrusAI and other resources, see "Resources" in the left sidebar.',
+                              intro: t("dashboard.tutorial2"),
                             },
                             {
-                              intro:
-                                'If you encounter any bugs or issues while using PapyrusAI, click "Report Issue" on the bottom left of the navigation to report to the development team.',
+                              intro: t("dashboard.tutorial3"),
                             },
                             {
                               intro: user.groups.includes(
@@ -225,8 +222,8 @@ function App(): JSX.Element {
                                   ? process.env.REACT_APP_INSTRUCTOR
                                   : "PapyrusAIInstructors"
                               )
-                                ? 'To join a course, click "Join Course" at the top right. To create a course, click "Create Course" at the top right.'
-                                : 'To join a course, click "Join Course" at the top right. Your instructor will give you the course code.',
+                                ? t("dashboard.tutorial4Instructors")
+                                : t("dashboard.tutorial4Students"),
                             },
                           ],
                         })

@@ -154,7 +154,7 @@ export const MessageLeft = (props: MessageProps) => {
         <DialogWrapper
           open={showExpandableMessage}
           onOpenChange={setShowExpandableMessage}
-          title="Essay Feedback"
+          title={t("chat.essayFeedback")}
           contentClassName="max-w-4xl max-h-[80vh] overflow-y-auto"
           showFooter={false}
         >
@@ -381,7 +381,7 @@ export const MessageRight = (props: MessageProps) => {
               <DialogWrapper
                 open={openFileModal}
                 onOpenChange={setOpenFileModal}
-                title="File Content"
+                title={t("chat.fileContent")}
                 contentClassName="max-w-4xl max-h-[80vh] overflow-y-auto"
                 showFooter={false}
               >

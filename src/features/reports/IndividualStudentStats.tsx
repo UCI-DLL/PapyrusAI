@@ -199,12 +199,12 @@ export default function IndividualStudentStats({ student }: StudentStatsProps) {
       },
       ariaLabel: t("reports.individualClassification"),
       x: {
-        label: "Classification",
+        label: t("reports.classification"),
         tickRotate: processedClassificationData.length > 5 ? -45 : 0, // Rotate labels if more than 5 classifications
         tickSize: 6,
         padding: 0.1,
       },
-      y: { label: "Count" },
+      y: { label: t("reports.count") },
       color: {
         legend: true,
         range: PLOT_COLOR_PALETTE,

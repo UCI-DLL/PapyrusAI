@@ -1,16 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Sheet, SheetContent } from "../../../components/ui/sheet";
 import { Search, Plus, Loader2, MessageCircle, MoreVertical } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
-import { ConversationListType } from "../../../utility/types/ConversationTypes";
+import { ConversationListType, ConversationType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import { cn } from "../../../lib/utils";
 import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "../../../components/ui-wrappers/DropdownWrapper";
 import { Link } from "react-router-dom";
+import { useTranslation } from "../../../hooks/useTranslation";
 
 interface ChatSidebarProps {
   courseInfo: CourseType;
@@ -51,27 +52,36 @@ export default function ChatSidebar({
   onDownloadConversation,
   onClose,
 }: ChatSidebarProps): JSX.Element | null {
-  const filteredConversations =
-    conversationList?.conversations
-      ?.filter((conv) =>
-        conv.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .reverse() || [];
+  const { t } = useTranslation();
+  const instructor = process.env.REACT_APP_INSTRUCTOR
+    ? process.env.REACT_APP_INSTRUCTOR
+    : "PapyrusAIInstructors";
+  const admin = process.env.REACT_APP_ADMIN
+    ? process.env.REACT_APP_ADMIN
+    : "PapyrusAIAdmin";
+  const [filteredConversations, setFilteredConversations] = useState<ConversationType[]>([]);
+  useEffect(() => {
+    setFilteredConversations(
+      conversationList?.conversations
+        ?.filter((conv) =>
+          conv.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .reverse() || [])
+  }, [conversationList, searchTerm])
 
   const sidebarContent = (
     <div className="flex flex-col h-full w-full">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
-          {/* TODO  */}
-          <h2 className="text-sm font-semibold">Conversations</h2>
-          <TooltipWrapper content="Create New Conversation">
+          <h2 className="text-sm font-semibold">{t("chat.conversations")}</h2>
+          <TooltipWrapper content={t("chat.newConversation")}>
             <Button
               size="sm"
               onClick={onNewConversation}
               disabled={creatingConvo}
               className="h-7 px-2 text-xs"
-              aria-label="Create new conversation" //TODO
+              aria-label={t("chat.newConversation")}
             >
               {creatingConvo ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -92,10 +102,10 @@ export default function ChatSidebar({
           </p>
           <div className="text-xs text-muted-foreground">
             <p>
-              <span className="font-medium">Course:</span> {courseInfo.name}
+              <span className="font-medium">{t("chat.course")}:</span> {courseInfo.name}
             </p>
             <p>
-              <span className="font-medium">Instructor:</span>{" "}
+              <span className="font-medium">{t("common.instructor")}:</span>{" "}
               {courseInfo.instructor.name +
                 " " +
                 courseInfo.instructor.family_name}
@@ -109,7 +119,7 @@ export default function ChatSidebar({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search conversations..."
+            placeholder={t("chat.searchConversation")}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9 text-sm h-8"
@@ -134,14 +144,19 @@ export default function ChatSidebar({
                 const canModifyConversation =
                   user && viewUser && user.username === viewUser.username;
 
+                // handle archiving/deleted conversations based on user permissions
+                if ((!user?.groups.includes(instructor) || !user?.groups.includes(admin)) && conversation.isDeleted) {
+                  return <></>
+                }
+
                 return (
                   <div
                     key={conversation.id}
                     className={cn(
                       "rounded-lg border transition-colors group",
                       isCurrentConversation
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "hover:bg-accent hover:text-secondary-foreground border-transparent"
+                        ? conversation.isDeleted ? "bg-destructive text-primary-foreground border-primary" : "bg-primary text-primary-foreground border-primary"
+                        : conversation.isDeleted ? "hover:bg-destructive hover:text-secondary-foreground border-transparent" : "hover:bg-accent hover:text-secondary-foreground border-transparent"
                     )}
                   >
                     <div className="flex items-center gap-2 p-3">
@@ -159,71 +174,76 @@ export default function ChatSidebar({
                               parseInt(conversation.id.substring(0, 13))
                             ).toLocaleDateString()}
                           </p>
+                          {conversation.isDeleted && (
+                            <p className={"text-xs truncate "}>{t("chat.archived")}</p>
+                          )}
                         </div>
                       </Link>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <DropdownWrapper
-                          trigger={
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={cn(
-                                "h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
-                                isCurrentConversation && "opacity-100"
-                              )}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                              aria-label="Conversation options"  //TODO
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          }
-                          actions={[
-                            {
-                              label: "Rename", //TODO
-                              onClick: () => {
-                                onRenameConversation(
-                                  courseInfo.id,
-                                  moduleInfo.id,
-                                  conversationIndex.toString(),
-                                  conversation.name
-                                );
-                                if (isMobile && onClose) onClose();
-                              },
-                            },
-                            {
-                              label: "Download", //TODO
-                              onClick: () => {
-                                onDownloadConversation(
-                                  courseInfo.id,
-                                  moduleInfo.id,
-                                  conversationIndex.toString()
-                                );
-                                if (isMobile && onClose) onClose();
-                              },
-                            },
-                            ...(canModifyConversation
-                              ? [
-                                {
-                                  label: "Archive Conversation", //TODO
-                                  onClick: () => {
-                                    onArchiveConversation(
-                                      courseInfo.id,
-                                      moduleInfo.id,
-                                      conversationIndex.toString()
-                                    );
-                                    if (isMobile && onClose) onClose();
-                                  },
-                                  className: "text-destructive",
+                      {isCurrentConversation && ( //show conversation options if it is selected (better accessibility)
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <DropdownWrapper
+                            trigger={
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                  "h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
+                                  isCurrentConversation && "opacity-100"
+                                )}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                                aria-label={t("chat.conversationOptions")}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            }
+                            actions={[
+                              {
+                                label: t("common.rename"),
+                                onClick: () => {
+                                  onRenameConversation(
+                                    courseInfo.id,
+                                    moduleInfo.id,
+                                    conversationIndex.toString(),
+                                    conversation.name
+                                  );
+                                  if (isMobile && onClose) onClose();
                                 },
-                              ]
-                              : []),
-                          ]}
-                          align="end"
-                        />
-                      </div>
+                              },
+                              {
+                                label: t("common.download"),
+                                onClick: () => {
+                                  onDownloadConversation(
+                                    courseInfo.id,
+                                    moduleInfo.id,
+                                    conversationIndex.toString()
+                                  );
+                                  if (isMobile && onClose) onClose();
+                                },
+                              },
+                              ...(canModifyConversation
+                                ? [
+                                  {
+                                    label: t("chat.archiveConversation"),
+                                    onClick: () => {
+                                      onArchiveConversation(
+                                        courseInfo.id,
+                                        moduleInfo.id,
+                                        conversationIndex.toString()
+                                      );
+                                      if (isMobile && onClose) onClose();
+                                    },
+                                    className: "text-destructive",
+                                  },
+                                ]
+                                : []),
+                            ]}
+                            align="end"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -234,8 +254,8 @@ export default function ChatSidebar({
               <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">
                 {searchTerm
-                  ? "No matching conversations"
-                  : "No conversations yet"}
+                  ? t("errorMessage.convoNotFound")
+                  : t("errorMessage.noConversationsYet")}
               </p>
               {!searchTerm && (
                 <Button
@@ -252,7 +272,7 @@ export default function ChatSidebar({
                   ) : (
                     <Plus className="mr-1 h-3 w-3" />
                   )}
-                  Start conversation
+                  {t("chat.startConversation")}
                 </Button>
               )}
             </div>

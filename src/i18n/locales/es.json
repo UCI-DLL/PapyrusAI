@@ -26,7 +26,13 @@
     "joinCourse": "Unirse al curso",
     "joinCourseByCode": "Unirse al curso por código de registro",
     "joinCourseDescription": "Ingrese el código de registro único del curso asociado con el curso al que desea unirse. ¿No está seguro de cuál es el código de registro? ¡Pregúntele al instructor del curso!",
-    "joining": "Uniéndose..."
+    "joining": "Uniéndose...",
+    "missingDetails": "Nos faltan algunos detalles",
+    "tutorial1": "¡Bienvenido a PapyrusAI! Este panel de control ofrece una descripción general rápida de los cursos a los que te has unido y los módulos a los que tienes acceso.",
+    "tutorial2": "Para obtener ayuda sobre cómo navegar por PapyrusAI y otros recursos, consulta la sección «Recursos» en la barra lateral izquierda.",
+    "tutorial3": "Si encuentras algún error o problema al usar PapyrusAI, haz clic en «Informar de un problema» en la parte inferior izquierda de la navegación para informarlo al equipo de desarrollo.",
+    "tutorial4Instructors": "Para unirte a un curso, haz clic en «Unirse a un curso» en la parte superior derecha. Para crear un curso, haz clic en «Crear curso» en la parte superior derecha.",
+    "tutorial4Students": "Para unirte a un curso, haz clic en «Unirse a un curso» en la parte superior derecha. Tu instructor te proporcionará el código del curso."
   },
   "courses": {
     "viewModules": "Ver módulos",
@@ -82,7 +88,8 @@
     "noModulesMatchSearch": "No hay módulos que coincidan con tu búsqueda. Prueba con un término de búsqueda diferente.",
     "publishedModules": "Módulos publicados",
     "term": "Ciclo",
-    "noModulesFound": "No se encontraron módulos"
+    "noModulesFound": "No se encontraron módulos",
+    "moduleList": "Lista de módulos"
   },
   "account": {
     "accountSettings": "Configuraciones de cuenta",
@@ -634,7 +641,8 @@
     "noDataStudentDescription3": "El estudiante no está matriculado en ningún curso.",
     "lastAccessed": "Último acceso",
     "listConversations": "Ver conversaciones",
-    "listConversationsDescription": "Haz clic en <<Ver conversacione>> para ver las interacciones detalladas."
+    "listConversationsDescription": "Haz clic en <<Ver conversacione>> para ver las interacciones detalladas.",
+    "selectFormat": "Seleccionar formato"
   },
   "chat": {
     "chat": "Chat",
@@ -656,7 +664,50 @@
     "created": "Creada",
     "deleted": "Eliminada",
     "view": "Ver",
-    "startConversation": "Iniciar conversación"
+    "startConversation": "Iniciar conversación",
+    "addFile": "Agregar archivo",
+    "messageInput": "Entrada de mensaje",
+    "enterMessage": "Escriba un mensaje...",
+    "speechToText": "Voz a texto",
+    "sendMessage": "Enviar mensaje",
+    "startConversationDescription": "Para obtener más información sobre cómo conversar con la IA, consulte ",
+    "inContext": "En contexto",
+    "flaggedConvoDescription": "Esta conversación se ha marcado como inapropiada para este entorno. Inicie una nueva conversación.",
+    "backToConvoList": "Volver a la lista de conversaciones",
+    "course": "Curso",
+    "conversationOptions": "Opciones de conversación",
+    "selectPromptOption": "Seleccionar opción de mensaje",
+    "selectPromptOptionDescription": "Elija el mensaje con el que desea comenzar su conversación con la IA",
+    "availablePrompts": "Mensajes disponibles",
+    "selectPromptStarted": "Seleccione un mensaje para comenzar...",
+    "selectPromptContinue": "Seleccione un mensaje para continuar",
+    "askPapyrus": "Preguntar a Papyrus",
+    "noPromptsInModule": "No hay mensajes disponibles para este módulo.",
+    "uploadDocument": "Subir documento",
+    "uploadDocumentDescription": "Suba el documento o copie y pegue el texto (por ejemplo, una rúbrica) que desea enviar a la IA. Consulte la ",
+    "uploadDocumentDescription2": " para obtener más información sobre cuándo y por qué podría ser útil usar documentos.",
+    "uploadFile": "Subir archivo",
+    "uploadDocTypes": "Subir archivos TXT, DOCX, PDF",
+    "clickBrowseFiles": "Haga clic para buscar archivos",
+    "docText": "Texto del documento",
+    "docTextPlaceholder": "El contenido del documento aparecerá aquí, o puede pegar el texto directamente...",
+    "submitDoc": "Enviar documento",
+    "voiceToText": "Voz a texto",
+    "voiceToTextDescription": "Graba tu mensaje usando reconocimiento de voz, luego edítalo y envíalo a la IA",
+    "voiceToTextDescription2": "Cuando estés listo para grabar tu mensaje, haz clic en «Comenzar a escuchar». Cuando hayas terminado de grabar, haz clic en «Dejar de escuchar» y espera a que se transcriba tu mensaje. Puedes editar el mensaje transcrito antes de enviarlo a la IA.",
+    "stopListening": "Dejar de escuchar",
+    "startListening": "Comenzar a escuchar",
+    "message": "Mensaje",
+    "transcribedMessageHere": "Tu mensaje transcrito aparecerá aquí...",
+    "voiceError": "Tu navegador no es compatible con el reconocimiento de voz. Escribe tu mensaje manualmente o prueba con otro navegador.",
+    "viewEssay": "Consulta los comentarios sobre tu ensayo haciendo clic en este mensaje.",
+    "messageTooLong": "Mensaje demasiado largo",
+    "messageTooShort": "Mensaje demasiado corto",
+    "searchConversation": "Buscar conversaciones...",
+    "submit": "Enviar",
+    "essayFeedback": "Comentarios sobre el ensayo",
+    "fileContent": "Contenido del archivo",
+    "archived": "Archivado"
   },
   "errorMessage": {
     "promptNotExist": "La solicitud no existe",
@@ -679,7 +730,11 @@
     "convoNotFound": "No se encontraron conversaciones",
     "nameTooLong": "El nombre es demasiado largo",
     "noConversationsYet": "Aún no hay conversaciones",
-    "noConversationsDescription": "Este usuario no ha iniciado ninguna conversación en este módulo."
+    "noConversationsDescription": "Este usuario no ha iniciado ninguna conversación en este módulo.",
+    "fileNotSupportedDoc": "El archivo no es compatible. Solo se admiten archivos TXT, PDF o DOCX.",
+    "processingFile": "Error al procesar el archivo. Inténtelo de nuevo.",
+    "downloadConversation": "No se pudo descargar la conversación. Inténtelo de nuevo más tarde.",
+    "ranIntoError": "¡Se produjo un error!"
   },
   "loadingMessage": {
     "loading": "Cargando",
@@ -696,6 +751,8 @@
     "reports": "Cargando informes",
     "students": "Cargando estudiantes...",
     "userDataConversations": "Cargando datos de usuario y conversaciones...",
-    "conversations": "Cargando conversaciones"
+    "conversations": "Cargando conversaciones",
+    "processing": "Procesando...",
+    "loadingConversation": "Cargando conversación..."
   }
 }

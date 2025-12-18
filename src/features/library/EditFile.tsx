@@ -431,7 +431,7 @@ export default function EditFile(): JSX.Element {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of update
-            setAlert({ message: "File Updated", type: "success" });
+            setAlert({ message: t("createFile.fileUpdated"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -456,7 +456,7 @@ export default function EditFile(): JSX.Element {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of updated
-            setAlert({ message: "File updated", type: "success" });
+            setAlert({ message: t("createFile.fileUpdated"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");

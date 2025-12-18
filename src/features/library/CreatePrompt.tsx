@@ -1,106 +1,107 @@
-
-
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Checkbox } from "../../components/ui/checkbox";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import {
-  Button,
-  Box,
-  TextField,
-  FormLabel,
-  Select,
-  MenuItem,
-  ListItemText,
-  SelectChangeEvent,
-  LinearProgress,
-  FormControl,
-  InputLabel,
-  ButtonGroup,
-  Popper,
-  Grow,
-  Paper,
-  ClickAwayListener,
-  MenuList,
-  Tooltip
-} from "@mui/material";
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { ChevronDown, Info, Loader2, MessageSquare, Trash2 } from "lucide-react";
 import Get from "../../utility/Get";
 import { TagType } from "../../utility/types/CourseTypes";
-import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { Modal } from "../../components/Modal";
+import { cn } from "../../lib/utils";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import Post from "../../utility/Post";
-import { postCreateOrgPrompt, postCreateUserPrompt } from "../../utility/endpoints/FolderEndpoints";
-import InfoIcon from '@mui/icons-material/Info';
+import {
+  getOrgPrompt,
+  getUserPrompt,
+  postCreateOrgPrompt,
+  postCreateUserPrompt,
+  postUpdateOrgPrompt,
+  postUpdateUserPrompt,
+} from "../../utility/endpoints/FolderEndpoints";
+import Put from "../../utility/Put";
+import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-    },
-  },
+type PromptFormMode = "create" | "edit";
+
+type PromptFormType = {
+  name: string;
+  prompt: string;
+  tags: Array<string>;
 };
 
-const options = ['Save & Publish', 'Discard Changes'];
+interface PromptFormProps {
+  mode?: PromptFormMode;
+  orgFolder?: boolean;
+  folderId?: string;
+  promptId?: string;
+}
 
-export default function CreatePrompt(): JSX.Element {
+export default function CreatePrompt({
+  mode = "create",
+  orgFolder = false,
+  folderId,
+  promptId,
+}: PromptFormProps = {}): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
-  const [newPrompt, setNewPrompt] = useState<{
-    name: string, prompt: string, tags: Array<string>
-  }>({
-    name: "", prompt: "", tags: []
+  const { t } = useTranslation();
+
+  // Translated options
+  const options = [t("createPrompt.savePublish"), t("createPrompt.discardChanges")];
+
+  // Determine if we're in edit mode based on URL or props
+  const isEditMode =
+    mode === "edit" || !location.pathname.includes("/createprompt")
+  const isOrgFolder = orgFolder || location.pathname.split("/")[2] === "org";
+  const actualFolderId =
+    folderId ||
+    (isOrgFolder
+      ? location.pathname.split("/")[3]
+      : location.pathname.split("/")[2]);
+  const actualPromptId = isEditMode ?
+    (promptId || (isOrgFolder ? location.pathname.split("/")[5] : location.pathname.split("/")[4])) : undefined;
+  const [prompt, setPrompt] = useState<PromptFormType>({
+    name: "",
+    prompt: "",
+    tags: [],
   });
   const [errors, setErrors] = useState<any>({
     name: "",
     prompt: "",
-    tags: ""
+    tags: "",
   });
   const [promptInfo, setPromptInfo] = useState<{
-    isOrgFolder: boolean,
-    folderId: string
+    isOrgFolder: boolean;
+    folderId: string;
+    promptId: string | undefined;
   }>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
-  const [openSave, setOpenSave] = useState(false);
-  const anchorRefSave = useRef<HTMLDivElement>(null);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
+  const [showSavePublishTooltip, setShowSavePublishTooltip] =
+    useState<boolean>(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
-
 
   useEffect(() => {
     const controller = new AbortController();
-    //get pathname to figure out if we are editing 
-    if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[2] === "org" &&
-      location.pathname.split("/")[3] &&
-      location.pathname.split("/")[4] === "createprompt"
-    ) {
-      //get prev prompt data
-      const folderId = location.pathname.split("/")[3];
-      //save the ids
-      setPromptInfo({ isOrgFolder: true, folderId: folderId });
-    } else if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[2] !== "org" &&
-      location.pathname.split("/")[3] === "createprompt"
-    ) {
-      //get prev prompt data
-      const folderId = location.pathname.split("/")[2];
-      //save the ids
-      setPromptInfo({ isOrgFolder: false, folderId: folderId });
-    }
-
     if (tagList.length === 0) {
-      getTags("", controller.signal)
+      getTags("", controller.signal);
     }
 
     return () => {
@@ -109,10 +110,80 @@ export default function CreatePrompt(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (isEditMode && actualFolderId && actualPromptId) {
+      // Load existing module data for edit mode
+      const controller = new AbortController();
+      setPromptInfo({ isOrgFolder: isOrgFolder, folderId: actualFolderId, promptId: actualPromptId });
+
+      getPrompt(isOrgFolder, actualFolderId, actualPromptId, controller.signal)
+
+      return () => {
+        controller.abort();
+      };
+    } else if (!isEditMode) {
+      // For create mode, just set loading to false
+      setIsLoading(false);
+      setPromptInfo({ isOrgFolder: isOrgFolder, folderId: actualFolderId, promptId: undefined });
+    }
+    // eslint-disable-next-line
+  }, [isEditMode, actualFolderId, actualPromptId, isOrgFolder])
+
+  function getPrompt(
+    isOrg: boolean,
+    folderId: string,
+    promptId: string,
+    signal: AbortSignal
+  ) {
+    if (!isOrg) {
+      Get(getUserPrompt(folderId, promptId), signal).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            //also set session
+            setPrompt(res.data);
+            setIsLoading(false);
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          if (res === undefined) {
+          } else {
+            //handle error
+            //redirect to prompt list
+            navigator("/library");
+            setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
+            setIsLoading(false);
+          }
+        }
+      });
+    } else {
+      Get(getOrgPrompt(folderId, promptId), signal).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            //also set session
+            setPrompt(res.data);
+            setIsLoading(false);
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          if (res === undefined) {
+          } else {
+            //handle error
+            //redirect to prompt list
+            navigator("/library");
+            setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
+            setIsLoading(false);
+          }
+        }
+      });
+    }
+  }
+
 
   function getTags(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getTagList(limit, startKey), signal).then(res => {
+    Get(getTagList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
@@ -142,282 +213,569 @@ export default function CreatePrompt(): JSX.Element {
     });
   }
 
-  function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and publish
-      handleSubmit(e);
-    } else if (selectedIndexSave === 1) { //discard changes
-      setOpenDiscardModal(true);
-    }
-  };
-
-  const handleMenuItemClick = (
-    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
-    index: number,
-  ) => {
-    if (index === 0) { //Save and publish
-      handleSubmit(e,);
-    } else if (index === 1) { //discard changes
+  const handleMenuItemClick = (index: number) => {
+    if (index === 0) {
+      //Save and publish
+      handleSubmit(null);
+    } else if (index === 1) {
+      //discard changes
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
-    setOpenSave(false);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
 
-  const handleToggle = () => {
-    setOpenSave((prevOpen) => !prevOpen);
-  };
-
-  const handleSaveClose = (event: Event) => {
-    if (
-      anchorRefSave.current &&
-      anchorRefSave.current.contains(event.target as HTMLElement)
-    ) {
-      return;
-    }
-
-    setOpenSave(false);
-  };
-
-  function handleSubmit(e: any) {
-    e.preventDefault();
-    if (newPrompt.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
-    }
-    else if (newPrompt.prompt === "") {
-      setErrors((prev: any) => ({ ...prev, prompt: "Prompt is too short" }))
-    }
-    else if (promptInfo?.isOrgFolder) {
-      setIsLoading(true)
-      const dataToSend = {
-        name: newPrompt.name,
-        prompt: newPrompt.prompt,
-        isDeleted: false,
-        tags: newPrompt.tags
-      }
-      // post data back
-      Post(postCreateOrgPrompt(promptInfo.folderId), dataToSend).then((res) => {
-        if (res.status && res.status < 300) {
-          if (res.data && res.data) {
-            //pop up notifying user of created
-            setAlert({ message: "Prompt Created", type: "success" })
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          // handle error
-          if (res) {
-            setAlert({ message: "Prompt could not be created. Try again later.", type: "error" });
-          }
-        }
-        navigator(`/library/org/${promptInfo.folderId}`);
-      });
-    } else if (promptInfo) {
-      setIsLoading(true)
-      const dataToSend = {
-        name: newPrompt.name,
-        prompt: newPrompt.prompt,
-        isDeleted: false,
-        tags: newPrompt.tags
-      }
-      // post data back
-      Post(postCreateUserPrompt(promptInfo.folderId), dataToSend).then((res) => {
-        if (res.status && res.status < 300) {
-          if (res.data && res.data) {
-            //pop up notifying user of Created
-            setAlert({ message: "Prompt Created", type: "success" })
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          // set errors
-          setAlert({ message: "Prompt could not be created. Try again later.", type: "error" })
-        }
-        navigator(`/library/${promptInfo.folderId}`);
-      });
+  function handleClick(e: any) {
+    if (selectedIndexSave === 0) {
+      //Save and publish
+      handleSubmit(e);
+    } else if (selectedIndexSave === 1) {
+      //discard changes
+      setOpenDiscardModal(true);
     }
   }
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setNewPrompt((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  function handleSubmit(e: any, isDeleted = false) {
+    setIsLoading(true);
+    if (prompt.name === "") {
+      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+    } else if (prompt.prompt === "") {
+      setErrors((prev: any) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("common.missing") }));
+    } else {
+      if (isEditMode && promptInfo && promptInfo.promptId) { //editing prompt
+        const dataToSend = {
+          name: prompt.name,
+          prompt: prompt.prompt,
+          isDeleted: isDeleted,
+          tags: prompt.tags,
+        };
+        if (promptInfo && promptInfo.isOrgFolder) {
+          //       // post data back
+          Put(
+            postUpdateOrgPrompt(promptInfo.folderId, promptInfo.promptId),
+            dataToSend
+          ).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of update
+                setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              // handle error
+              if (res) {
+                setAlert({
+                  message: t("createPrompt.promptCouldNotBeUpdated"),
+                  type: "error",
+                });
+              }
+            }
+            navigator(`/library/org/${promptInfo.folderId}`);
+            setIsLoading(false);
+          });
+        } else if (promptInfo) {
+          // post data back
+          Put(
+            postUpdateUserPrompt(promptInfo.folderId, promptInfo.promptId),
+            dataToSend
+          ).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of updated
+                setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              // set errors
+              setAlert({
+                message: t("createPrompt.promptCouldNotBeUpdated"),
+                type: "error",
+              });
+            }
+            navigator(`/library/${promptInfo.folderId}`);
+            setIsLoading(false);
+          });
+        }
+      } else { //creating new prompt
+        if (promptInfo?.isOrgFolder) {
+          setIsLoading(true);
+          const dataToSend = {
+            name: prompt.name,
+            prompt: prompt.prompt,
+            isDeleted: false,
+            tags: prompt.tags,
+          };
+          // post data back
+          Post(postCreateOrgPrompt(promptInfo.folderId), dataToSend).then((res) => {
+            if (res.status && res.status < 300) {
+              if (res.data && res.data) {
+                //pop up notifying user of created
+                setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              // handle error
+              if (res) {
+                setAlert({
+                  message: t("createPrompt.promptCouldNotBeCreated"),
+                  type: "error",
+                });
+              }
+            }
+            navigator(`/library/org/${promptInfo.folderId}`);
+          });
+        } else if (promptInfo) {
+          setIsLoading(true);
+          const dataToSend = {
+            name: prompt.name,
+            prompt: prompt.prompt,
+            isDeleted: false,
+            tags: prompt.tags,
+          };
+          // post data back
+          Post(postCreateUserPrompt(promptInfo.folderId), dataToSend).then(
+            (res) => {
+              if (res.status && res.status < 300) {
+                if (res.data && res.data) {
+                  //pop up notifying user of Created
+                  setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
+                }
+              } else if (res && res.status === 401) {
+                navigator("/login");
+              } else {
+                // set errors
+                setAlert({
+                  message: t("createPrompt.promptCouldNotBeCreated"),
+                  type: "error",
+                });
+              }
+              navigator(`/library/${promptInfo.folderId}`);
+            }
+          );
+        }
+      }
+
+    }
   }
 
-  const handleSelectChange = (event: SelectChangeEvent<typeof newPrompt.tags>) => {
-    const {
-      target: { value },
-    } = event;
-    setNewPrompt((prev) => ({
-      ...prev,
-      tags: typeof value === 'string' ? value.split(',') : value
-    }))
-  };
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
+    setPrompt((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
 
+  const handleTagToggle = (tagId: string) => {
+    setPrompt((prev) => {
+      const isSelected = prev.tags.includes(tagId);
+      return {
+        ...prev,
+        tags: isSelected
+          ? prev.tags.filter((id) => id !== tagId)
+          : [...prev.tags, tagId],
+      };
+    });
+  };
 
   return promptInfo && !isLoading ? (
-    <div className="prompt">
-      <Modal
-        isOpen={openDiscardModal}
-        title={"Discard Changes?"}
-        onRequestClose={() => setOpenDiscardModal(false)}
-        actions={
-          <>
-            <Button variant="contained" color="primary" onClick={() => navigator(-1)}>
-              Discard
-            </Button>
-            <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>
-              Cancel
-            </Button>
-          </>
-        }
+    <main className="bg-background text-foreground p-4 space-y-6">
+      {/* Dialogs */}
+      <DialogWrapper
+        open={showSavePublishTooltip}
+        onOpenChange={setShowSavePublishTooltip}
+        title={t("library.aboutPromptCreation")}
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: t("components.gotIt"),
+            onClick: () => setShowSavePublishTooltip(false),
+          },
+        ]}
       >
-        <div>Are you sure you would like to discard the changes to this prompt?</div>
-      </Modal>
-      <div className="prompt__section-header">
-        <div>
-          <h3>Create Prompt</h3>
-        </div>
-        <div>
-          <ButtonGroup
-            variant="contained"
-            ref={anchorRefSave}
-            aria-label="Button group with a nested menu"
-          >
-            <Button onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
-            <Button
-              size="small"
-              aria-controls={openSave ? 'split-button-menu' : undefined}
-              aria-expanded={openSave ? 'true' : undefined}
-              aria-label="select save and activation strategy"
-              aria-haspopup="menu"
-              onClick={handleToggle}
+        <div className="space-y-3">
+          <p>
+            {t("createPrompt.promptInfoDescription")}
+            <a
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
             >
-              <ArrowDropDownIcon />
-            </Button>
-          </ButtonGroup>
-          <Popper
-            sx={{
-              zIndex: 1,
-            }}
-            open={openSave}
-            anchorEl={anchorRefSave.current}
-            role={undefined}
-            transition
-            disablePortal
-          >
-            {({ TransitionProps, placement }) => (
-              <Grow
-                {...TransitionProps}
-                style={{
-                  transformOrigin:
-                    placement === 'bottom' ? 'center top' : 'center bottom',
-                }}
-              >
-                <Paper>
-                  <ClickAwayListener onClickAway={handleSaveClose}>
-                    <MenuList id="split-button-menu" autoFocusItem>
-                      {options.map((option, index) => (
-                        <MenuItem
-                          key={option}
-                          selected={index === selectedIndexSave}
-                          onClick={(event) => handleMenuItemClick(event, index)}
-                          className={index === 2 ? "prompt__discard_background" : ""}
-                        >
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </MenuList>
-                  </ClickAwayListener>
-                </Paper>
-              </Grow>
-            )}
-          </Popper>
+              {t("createPrompt.promptInfoDescriptionLinkText")}
+            </a>
+            .
+          </p>
         </div>
-      </div>
-      <div>
-        Prompts function in PapyrusAI as the first set of instructions sent to the AI that will guide
-        students’ interactions with the AI. For more information on creating a prompt, please see the <a
-          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
-          target="_blank" rel="noreferrer">“Creating a Prompt” section of our instructor guide
-        </a>.
-      </div>
-      <hr />
-      <div className="prompt__section-header">
-        <span>* indicates a required field</span>
-      </div>
-      <Box className="prompt__add">
-        <form onSubmit={(e) => handleSubmit(e)}>
-          <FormLabel>Enter Prompt Information</FormLabel>
-          <div className="form-tooltips">
-            <TextField
-              name="name"
-              label="Prompt Name"
-              fullWidth
-              sx={{ margin: ".5rem 0" }}
-              value={newPrompt.name}
-              onChange={handleChange}
-              error={errors.name !== ""}
-              helperText={errors.name}
-              disabled={isLoading}
-              required
-            />
-            <Tooltip title="The name for the prompt that users will see. We recommend choosing a name that makes 
-            it easy for students to understand what the prompt will do or help them with." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
+      </DialogWrapper>
+
+      <DialogWrapper
+        open={openDiscardModal}
+        onOpenChange={setOpenDiscardModal}
+        title={t("createPrompt.discardChangesTitle")}
+        description={t("createPrompt.discardChangesDescription")}
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: t("common.cancel"),
+            onClick: () => setOpenDiscardModal(false),
+            variant: "outline",
+            disabled: isLoading
+          },
+          {
+            label: t("createPrompt.discardChanges"),
+            onClick: () => navigator(-1),
+            variant: "destructive",
+            disabled: isLoading
+          },
+        ]}
+      />
+
+      <DialogWrapper
+        open={openDeleteModal}
+        onOpenChange={setOpenDeleteModal}
+        title={t("createPrompt.deletePrompt")}
+        description={t("createPrompt.deletePromptMessage")}
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: t("common.cancel"),
+            onClick: () => setOpenDeleteModal(false),
+            variant: "outline",
+            disabled: isLoading
+          },
+          {
+            label: t("common.delete"),
+            onClick: () => handleSubmit(null, true),
+            variant: "destructive",
+            disabled: isLoading
+          },
+        ]}
+      />
+
+      {/* Standard Page Header Pattern */}
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
+          >
+            <MessageSquare size={192} className="text-primary" />
           </div>
-          <div className="form-tooltips">
-            <TextField
-              name="prompt"
-              label="Prompt"
-              fullWidth
-              sx={{ margin: ".5rem 0" }}
-              value={newPrompt.prompt}
-              onChange={handleChange}
-              error={errors.prompt !== ""}
-              multiline
-              maxRows={5}
-              helperText={errors.prompt}
-              disabled={isLoading}
-              required
-            />
-            <Tooltip title="The instructions that will be sent to the AI (i.e., the first message sent to 
-            the AI that will guide the interaction)." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
-          </div>
-          {/* add dropdown to handle tags  */}
-          <div className="form-tooltips">
-            <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
-              <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
-              <Select
-                labelId="multiple-tag-checkbox-select"
-                id="multiple-tag-checkbox-select"
-                multiple
-                value={newPrompt.tags}
-                onChange={handleSelectChange}
-                renderValue={(selected) => {//find the name for the prompt id
-                  return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
-                }}
-                label="Tags"
-                MenuProps={MenuProps}
-                fullWidth
-                disabled={isLoading}
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                {isEditMode
+                  ? t("createPrompt.editPrompt")
+                  : t("createPrompt.createPrompt")}
+              </h1>
+              <nav
+                className="flex flex-col md:flex-row gap-2"
+                aria-label={`${t("createPrompt.createPrompt")} ${t("common.actions")}}`}
               >
-                {tagList.map((tag, index) => (
-                  <MenuItem key={index} value={tag.id}>
-                    <Checkbox checked={newPrompt.tags.indexOf(tag.id) > -1} />
-                    <ListItemText primary={tag.id} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Tooltip title="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
+                {isEditMode && (
+                  <TooltipWrapper content={t("createPrompt.deletePrompt")}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOpenDeleteModal(true)}
+                      disabled={isLoading}
+                      aria-label={t("createPrompt.deletePrompt")}
+                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </TooltipWrapper>
+                )}
+                <TooltipWrapper content={t("common.info")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSavePublishTooltip(true)}
+                    aria-label={t("createPrompt.promptInfoLabel")}
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </TooltipWrapper>
+
+                <div className="flex rounded-lg border">
+                  <Button
+                    size="sm"
+                    onClick={handleClick}
+                    className="rounded-none border-0 w-full rounded-l"
+                    disabled={isLoading}
+                    aria-label={`${options[selectedIndexSave]} ${t("common.prompt")}`}
+                  >
+                    {options[selectedIndexSave]}
+                  </Button>
+                  <DropdownWrapper
+                    open={openSaveTop}
+                    onOpenChange={setOpenSaveTop}
+                    trigger={
+                      <Button
+                        size="sm"
+                        className="rounded-none border-0 border-l px-2 rounded-r"
+                        variant="default"
+                        disabled={isLoading}
+                        aria-label={t("library.selectStrategy")}
+                      >
+                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    }
+                    actions={options.map((option, index) => ({
+                      label: option,
+                      onClick: () => handleMenuItemClick(index),
+                      className: cn(
+                        index === selectedIndexSave && "bg-primary/30",
+                        index === 1 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                      ),
+                    }))}
+                    align="end"
+                  />
+                </div>
+              </nav>
+            </div>
+
+            <InfoAccordion>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                {t("createPrompt.createPromptDescription")}&nbsp;
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9dbj73hbtf5k"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                >
+                  {t("createPrompt.createPromptDescriptionLinkText")}
+                </a>
+                .
+              </p>
+            </InfoAccordion>
           </div>
-        </form>
-      </Box>
-    </div>
+        </div>
+      </header>
+
+      {/* Actions Section */}
+      <section aria-labelledby="actions-heading">
+        <Card className="transition-all duration-300 hover:shadow-md" id="actions-heading">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              {t("createPrompt.promptInformation")}
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              {t("createPrompt.enterPromptDetails")}. {t("common.required")}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    {t("createPrompt.promptName")} *
+                  </Label>
+                  <TooltipWrapper content={t("createPrompt.promptNameTooltip")}>
+                    <button aria-label={t("createPrompt.promptNameTooltip")}>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipWrapper>
+                </div>
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder={t("createPrompt.promptNameHelptext")}
+                  value={prompt.name}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                  className={
+                    errors.name
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }
+                  aria-describedby={errors.name ? "name-error" : undefined}
+                />
+                {errors.name && (
+                  <p
+                    id="name-error"
+                    className="text-sm text-destructive"
+                    role="alert"
+                    aria-live="assertive"
+                  >
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="prompt" className="text-sm font-medium">
+                    {t("common.prompt")} *
+                  </Label>
+                  <TooltipWrapper content={t("createPrompt.promptTooltip")}>
+                    <button aria-label={t("createPrompt.promptTooltip")}>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipWrapper>
+                </div>
+                <Textarea
+                  id="prompt"
+                  name="prompt"
+                  placeholder={t("createPrompt.promptHelptext")}
+                  value={prompt.prompt}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                  rows={5}
+                  className={
+                    errors.prompt
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }
+                  aria-describedby={errors.prompt ? "prompt-error" : undefined}
+                />
+                {errors.prompt && (
+                  <p
+                    id="prompt-error"
+                    className="text-sm text-destructive"
+                    role="alert"
+                    aria-live="assertive"
+                  >
+                    {errors.prompt}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">{t("library.tags")}</Label>
+                  <TooltipWrapper content={t("library.tagsDescription")}>
+                    <button aria-label={t("library.tagsDescription")}>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipWrapper>
+                </div>
+                <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
+                  {tagList.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2">
+                      {tagList.map((tag) => (
+                        <div
+                          key={tag.id}
+                          className="flex items-center space-x-2"
+                        >
+                          <Checkbox
+                            id={`tag-${tag.id}`}
+                            aria-labelledby={`tag-${tag.id}label`}
+                            checked={prompt.tags.includes(tag.id)}
+                            onCheckedChange={() => handleTagToggle(tag.id)}
+                            disabled={isLoading}
+                          />
+                          <Label
+                            id={`tag-${tag.id}label`}
+                            htmlFor={`tag-${tag.id}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {tag.id}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {t("library.noTags")}
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("common.selected")}:{" "}
+                  {prompt.tags.length > 0
+                    ? prompt.tags.join(", ")
+                    : t("common.none")}
+                </p>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Bottom Actions */}
+        <section aria-labelledby="bottom-actions-heading" className="pt-4">
+          <nav
+            className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+            aria-label={`${t("createPrompt.createPrompt")} ${t("common.actions")}}`}
+            id="bottom-actions-heading"
+          >
+            {isEditMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setOpenDeleteModal(true)}
+                disabled={isLoading}
+                aria-label={t("common.delete")}
+                className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                {t("common.delete")}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSavePublishTooltip(true)}
+              aria-label={t("createPrompt.promptInfoLabel")}
+            >
+              <Info className="h-4 w-4" aria-hidden="true" />
+              {t("common.info")}
+            </Button>
+            <div className="flex rounded-lg border">
+              <Button
+                size="sm"
+                onClick={handleClick}
+                className="rounded-none border-0 w-full rounded-l"
+                disabled={isLoading}
+                aria-label={`${options[selectedIndexSave]} ${t("common.prompt")}`}
+              >
+                {options[selectedIndexSave]}
+              </Button>
+              <DropdownWrapper
+                open={openSaveBottom}
+                onOpenChange={setOpenSaveBottom}
+                trigger={
+                  <Button
+                    size="sm"
+                    className="rounded-none border-0 border-l px-2 rounded-r"
+                    variant="default"
+                    disabled={isLoading}
+                    aria-label={t("library.selectStrategy")}
+                  >
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                }
+                actions={options.map((option, index) => ({
+                  label: option,
+                  onClick: () => handleMenuItemClick(index),
+                  className: cn(
+                    index === selectedIndexSave && "bg-primary/30",
+                    index === 1 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                  ),
+                }))}
+                align="end"
+              />
+            </div>
+          </nav>
+        </section>
+      </section>
+    </main>
   ) : (
-    <LinearProgress />
-  )
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">{t("loadingMessage.promptCreationForm")}</p>
+      </div>
+    </div>
+  );
 }

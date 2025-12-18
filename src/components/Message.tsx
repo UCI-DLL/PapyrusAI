@@ -1,89 +1,109 @@
-//reference: https://codesandbox.io/s/material-ui-chat-drh4l?file=/src/Message.js:0-4329
-//reference: https://edvins.io/react-text-to-speech
-
 import React, { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
 import { MessageTypeType } from "../utility/types/ConversationTypes";
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
-import StopIcon from '@mui/icons-material/Stop';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CloseIcon from '@mui/icons-material/Close';
-import { Tooltip, SnackbarCloseReason, Snackbar, IconButton, Button, CardContent, Typography, CardActions, Link, Box } from "@mui/material";
-import { Modal } from "./Modal";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
+import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
+import {
+  ChevronUp,
+  ChevronDown,
+  Maximize2,
+  Volume2,
+  VolumeX,
+  Copy,
+  ExternalLink,
+} from "lucide-react";
 import RaterEssay from "./RaterEssay";
 import { truncateString } from "../utility/Helpers";
 import removeMarkdown from "markdown-to-text";
+import { toast } from "sonner";
+import { t } from "i18next";
 
 interface MessageProps {
   message: string;
   displayName?: string;
   typing?: boolean;
-  messageType?: MessageTypeType,
-  outOfContext?: boolean,
-  visible?: boolean, // visible to user?
-  expandableMessage?: string, //message is clickable and shows extra text in modal
-  isInstructor?: boolean, //show the message if not user visible and is an instructor
-  sources?: Array<any> //web access sources
+  messageType?: MessageTypeType;
+  outOfContext?: boolean;
+  visible?: boolean; // visible to user?
+  expandableMessage?: string; //message is clickable and shows extra text in modal
+  isInstructor?: boolean; //show the message if not user visible and is an instructor
+  sources?: Array<any>; //web access sources
 }
 
 interface ViewSourcesProps {
-  sources: Array<{ url: string, title: string, summary?: string }>; // An array of Source objects
+  sources: Array<{ url: string; title: string; summary?: string }>; // An array of Source objects
 }
 
 const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
-  // console.log("sources", sources)
   return (
-    <div >
-      {sources.map((source: { url: string, title: string, summary?: string }, index: number) => { // Use the Source interface for type safety
-        return (
-          <Box component="span"
-            sx={{
-              display: 'inline-block',
-              transform: 'scale(0.8)',
-              width: '75%',
-              backgroundColor: '#fafafa',
-              border: '1px solid #f7f7f7',
-              borderRadius: "0.4rem",
-              color: "#222"
-            }}
+    <div className="space-y-3 mt-4">
+      {sources.map(
+        (
+          source: { url: string; title: string; summary?: string },
+          index: number
+        ) => (
+          <Card
+            key={index}
+            className="transition-all duration-200 hover:shadow-md border-l-4 border-l-primary/20"
           >
-            <CardContent>
-              <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
-                Source {index + 1} {/* Start numbering from 1 for user-friendliness */}
-              </Typography>
-              <Typography variant="h6" component="div">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm text-muted-foreground">
+                  {t("common.source")} {index + 1}
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-8 w-8 p-0"
+                >
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${t("common.visitSource")}: ${source.title}`}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <h4 className="font-semibold text-sm mb-2 line-clamp-2">
                 {truncateString(source.title, 50)}
-              </Typography>
-              <Typography variant="body2">
-                {truncateString(source.summary ? source.summary : "", 200)}
-              </Typography>
+              </h4>
+              {source.summary && (
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {truncateString(source.summary, 200)}
+                </p>
+              )}
             </CardContent>
-            <CardActions sx={{ marginLeft: "0.4rem" }}>
-              <Link href={source.url} underline="hover" target="_blank" rel="noopener" color="inherit">Visit</Link>
-            </CardActions>
-          </Box>
-        );
-      })}
+          </Card>
+        )
+      )}
     </div>
   );
 };
 
 export const MessageLeft = (props: MessageProps) => {
-  const displayName = props.displayName ? props.displayName : "Displayname";
+  const displayName = props.displayName ? props.displayName : "Assistant";
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState<any>(null);
-  const [open, setOpen] = React.useState(false); //open snackbar
-  const [showExpandableMessage, setShowExpandableMessage] = useState<boolean>(false);
-  const [expandableMessage] = useState(props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined);
+  const [showExpandableMessage, setShowExpandableMessage] =
+    useState<boolean>(false);
+  const [expandableMessage] = useState(
+    props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined
+  );
 
   useEffect(() => {
     const synth = window.speechSynthesis;
-    const u = new SpeechSynthesisUtterance(props.message);
+    const u = new SpeechSynthesisUtterance(removeMarkdown(props.message));
+    u.rate = 0.9;
+    u.pitch = 1;
     setUtterance(u);
     return () => {
       synth.cancel();
@@ -92,8 +112,11 @@ export const MessageLeft = (props: MessageProps) => {
 
   const handlePlay = () => {
     const synth = window.speechSynthesis;
-    synth.speak(utterance);
-    setIsPlaying(true)
+    if (utterance) {
+      synth.speak(utterance);
+      setIsPlaying(true);
+      utterance.onend = () => setIsPlaying(false);
+    }
   };
 
   const handleStop = () => {
@@ -102,147 +125,171 @@ export const MessageLeft = (props: MessageProps) => {
     setIsPlaying(false);
   };
 
-  const handleClick = () => { //snackbar
-    setOpen(true);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(removeMarkdown(props.message));
+    toast.success(t("components.messageCopiedClipboard"));
   };
 
-  const handleClose = ( //snackbar
-    event: React.SyntheticEvent | Event,
-    reason?: SnackbarCloseReason,
-  ) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setOpen(false);
-  };
-
-  const action = (
-    <React.Fragment>
-      <IconButton
-        size="small"
-        aria-label="close"
-        color="inherit"
-        onClick={handleClose}
+  function LinkRenderer(props: any) {
+    return (
+      <a
+        href={props.href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-primary dark:text-gold colorful-dark:text-gold hover:text-primary/80 underline underline-offset-2 transition-colors"
       >
-        <CloseIcon fontSize="small" />
-      </IconButton>
-    </React.Fragment>
-  );
+        {props.children}
+      </a>
+    );
+  }
 
   //if empty message
   if ((props.message === "" || props.message === null) && !props.typing) {
     return <></>;
   }
 
-  return (props.visible === undefined || props.visible || props.isInstructor) ? (
-    <div
-      className={"message__row-left"}
-    >
-      {props.expandableMessage && expandableMessage ? (
-        <Modal
-          isOpen={showExpandableMessage}
-          title={"Essay Feedback"}
-          onRequestClose={() => setShowExpandableMessage(false)}
-          actions={
-            <>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => setShowExpandableMessage(false)}>
-                Back to Conversation
-              </Button>
-            </>
-          }
+  return props.visible === undefined || props.visible || props.isInstructor ? (
+    <div className="flex flex-col gap-2 mb-6">
+      {props.expandableMessage && expandableMessage && (
+        <DialogWrapper
+          open={showExpandableMessage}
+          onOpenChange={setShowExpandableMessage}
+          title="Essay Feedback"
+          contentClassName="max-w-4xl max-h-[80vh] overflow-y-auto"
+          showFooter={false}
         >
-          <RaterEssay message={expandableMessage.message} raterArray={expandableMessage.rater} essay={expandableMessage.essay} />
-        </Modal>
-      ) : <></>}
-      <div className={"message__left-display-name"}>
-        {props.isInstructor && !props.visible ? "Hidden Message - " : ""}
-        {displayName}
-        &nbsp;
-        <div className="message__left-controls" style={{ display: 'block' }}>
-          {isPlaying ? (
-            <Tooltip
-              title="Stop"
+          <RaterEssay
+            message={expandableMessage.message}
+            raterArray={expandableMessage.rater}
+            essay={expandableMessage.essay}
+          />
+        </DialogWrapper>
+      )}
+
+      <div className="flex items-start gap-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              {props.isInstructor && !props.visible && (
+                <span className="text-sm">{t("common.source")} - </span>
+              )}
+              {displayName}
+            </span>
+            <div className="flex items-center gap-1">
+              <TooltipWrapper content={isPlaying ? t("common.stop") : t("common.readAloud")}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={isPlaying ? handleStop : handlePlay}
+                  aria-label={isPlaying ? t("common.stopReading") : t("common.readMessageAloud")}
+                >
+                  {isPlaying ? (
+                    <VolumeX className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipWrapper>
+
+              <TooltipWrapper content={t("common.copyMessage")}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={handleCopy}
+                  aria-label={t("common.copyMessage")}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipWrapper>
+            </div>
+          </div>
+
+          {props.expandableMessage ? (
+            <Button
+              variant="outline"
+              onClick={() => setShowExpandableMessage(true)}
+              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-80 border-dashed"
+                : ""
+                }`}
             >
-              <button onClick={handleStop}>
-                <StopIcon />
-              </button>
-            </Tooltip>
+              {props.typing ? (
+                <div aria-live="polite">
+                  <CustomTypingIndicator />
+                </div>
+              ) : (
+                <Markdown
+                  remarkPlugins={[remarkGfm]}
+                  className="prose prose-sm max-w-none dark:prose-invert 
+                  colorful-dark:prose-invert prose-headings:font-semibold 
+                  prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted 
+                  prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 
+                  prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-sm 
+                  prose-strong:font-semibold prose-blockquote:border-l-4 prose-blockquote:border-primary 
+                  prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse prose-th:border 
+                  prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold 
+                  prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc 
+                  prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
+                  components={{ a: LinkRenderer }}
+                >
+                  {props.message}
+                </Markdown>
+              )}
+            </Button>
           ) : (
-            <Tooltip
-              title="Play"
+            <div
+              className={`bg-muted rounded-lg p-4 ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-80 border border-dashed"
+                : ""
+                }`}
             >
-              <button onClick={handlePlay}>
-                <RecordVoiceOverIcon />
-              </button>
-            </Tooltip>
+              {props.typing ? (
+                <div aria-live="polite">
+                  <CustomTypingIndicator />
+                </div>
+              ) : (
+                <Markdown
+                  remarkPlugins={[remarkGfm]}
+                  className="prose prose-sm max-w-none dark:prose-invert colorful-dark:prose-invert 
+                  prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed 
+                  prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted 
+                  prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono 
+                  prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 
+                  prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic 
+                  prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted 
+                  prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border 
+                  prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal 
+                  prose-li:marker:text-muted-foreground markdown-content"
+                  components={{ a: LinkRenderer }}
+                >
+                  {props.message}
+                </Markdown>
+              )}
+            </div>
           )}
-          &nbsp;&nbsp;
-          <Tooltip
-            title="Copy"
-          >
-            <button onClick={() => {
-              handleClick()
-              navigator.clipboard.writeText(removeMarkdown(props.message))
-            }}>
-              <ContentCopyIcon />
-            </button>
-          </Tooltip>
         </div>
       </div>
-      {props.expandableMessage ? (
-        <Button
-          onClick={() => setShowExpandableMessage(true)}
-          className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__left-message message__out-context" : "message__left-message"}
-          variant="outlined"
-        >
-          {props.typing ? (
-            <CustomTypingIndicator />
-          ) : (
-            <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
-          )}
-        </Button>
-      ) : (
-        <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__left-message message__out-context" : "message__left-message"}>
-          {props.typing ? (
-            <CustomTypingIndicator />
-          ) : (
-            <Markdown remarkPlugins={[remarkGfm]} className={""}>{props.message}</Markdown>
-          )}
-        </div>
-      )}
-      {props.sources && (
-        <ViewSources sources={props.sources} />
-      )}
 
-      <Snackbar
-        open={open}
-        autoHideDuration={6000}
-        onClose={handleClose}
-        message="Message copied to clipboard"
-        action={action}
-      />
+      {props.sources && <ViewSources sources={props.sources} />}
     </div>
   ) : props.sources ? (
-    <div>
-      <ViewSources sources={props.sources} />
-    </div>
-  ) : (<></>);
+    <ViewSources sources={props.sources} />
+  ) : null;
 };
-
 
 export const MessageRight = (props: MessageProps) => {
   const [openFileModal, setOpenFileModal] = useState<boolean>(false);
   const [expandFile, setExpandFile] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState<any>(null);
-  const [open, setOpen] = React.useState(false); //snackbar
 
   useEffect(() => {
     const synth = window.speechSynthesis;
-    const u = new SpeechSynthesisUtterance(props.message);
+    const u = new SpeechSynthesisUtterance(removeMarkdown(props.message));
+    u.rate = 0.9;
+    u.pitch = 1;
     setUtterance(u);
     return () => {
       synth.cancel();
@@ -251,8 +298,11 @@ export const MessageRight = (props: MessageProps) => {
 
   const handlePlay = () => {
     const synth = window.speechSynthesis;
-    synth.speak(utterance);
-    setIsPlaying(true)
+    if (utterance) {
+      synth.speak(utterance);
+      setIsPlaying(true);
+      utterance.onend = () => setIsPlaying(false);
+    }
   };
 
   const handleStop = () => {
@@ -261,129 +311,149 @@ export const MessageRight = (props: MessageProps) => {
     setIsPlaying(false);
   };
 
-  const handleClick = () => { //snackbar
-    setOpen(true);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(removeMarkdown(props.message));
+    toast.success(t("components.messageCopiedClipboard"));
   };
-
-  const handleClose = ( //snackbar
-    event: React.SyntheticEvent | Event,
-    reason?: SnackbarCloseReason,
-  ) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setOpen(false);
-  };
-
-  const action = (
-    <React.Fragment>
-      <IconButton
-        size="small"
-        aria-label="close"
-        color="inherit"
-        onClick={handleClose}
-      >
-        <CloseIcon fontSize="small" />
-      </IconButton>
-    </React.Fragment>
-  );
 
   function LinkRenderer(props: any) {
     return (
-      <a href={props.href} target="_blank" rel="noreferrer">
+      <a
+        href={props.href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-primary dark:text-gold colorful-dark:text-gold hover:text-primary/80 underline underline-offset-2 transition-colors"
+      >
         {props.children}
       </a>
     );
   }
   //Note: replace new lines with double new line for markdown
-  return (props.visible === undefined || props.visible || props.isInstructor) ? (
-    <div
-      className={"message__row-right"}
-    >
-      <div className={"message__right-display-name"}>
-        {props.isInstructor && !props.visible ? "Hidden Message - " : ""}
-        {props.displayName ? props.displayName : "You"}
-        &nbsp;
-        <div className="message__right-controls" style={{ display: 'block' }}>
-          {isPlaying ? (
-            <Tooltip
-              title="Stop"
+  return props.visible === undefined || props.visible || props.isInstructor ? (
+    <div className="flex flex-col gap-2 mb-6">
+      <div className="flex items-start gap-3 justify-end">
+        <div className="flex-1 flex flex-col items-end">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-1">
+              <TooltipWrapper content={isPlaying ? t("common.stop") : t("common.readAloud")}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={isPlaying ? handleStop : handlePlay}
+                  aria-label={isPlaying ? t("common.stopReading") : t("common.readMessageAloud")}
+                >
+                  {isPlaying ? (
+                    <VolumeX className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipWrapper>
+
+              <TooltipWrapper content={t("common.copyMessage")}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={handleCopy}
+                  aria-label={t("common.copyMessage")}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipWrapper>
+            </div>
+            <span className="text-sm font-medium text-muted-foreground">
+              {props.isInstructor && !props.visible && (
+                <span className="text-destructive dark:text-orange colorful-dark:text-orange">{t("common.hiddenMessage")} - </span>
+              )}
+              {props.displayName ? props.displayName : "You"}
+            </span>
+          </div>
+
+          {props.messageType && props.messageType === "file" ? (
+            <div
+              className={`max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-80 border border-dashed"
+                : ""
+                }`}
             >
-              <button onClick={handleStop}>
-                <StopIcon />
-              </button>
-            </Tooltip>
+              <DialogWrapper
+                open={openFileModal}
+                onOpenChange={setOpenFileModal}
+                title="File Content"
+                contentClassName="max-w-4xl max-h-[80vh] overflow-y-auto"
+                showFooter={false}
+              >
+                <Markdown className="whitespace-pre-wrap font-mono text-sm p-4 rounded-lg">
+                  {props.message.replace(/\n/g, "\n\n")}
+                </Markdown>
+              </DialogWrapper>
+
+              <Card className="transition-all duration-200">
+                <CardContent className="p-4">
+                  <Markdown className="whitespace-pre-wrap font-mono text-sm mb-4 overflow-hidden">
+                    {expandFile
+                      ? props.message.replace(/\n/g, "\n\n")
+                      : props.message.substring(0, 200) + "..."}
+                  </Markdown>
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandFile(!expandFile)}
+                      className="flex items-center gap-2"
+                    >
+                      {expandFile ? (
+                        <>
+                          <ChevronUp className="h-4 w-4" />
+                          {t("common.collapse")}
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4" />
+                          {t("common.expand")}
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOpenFileModal(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                      {t("common.fullscreen")}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           ) : (
-            <Tooltip
-              title="Play"
+            <div
+              className={`bg-primary/20 colorful-dark:bg-card rounded-lg p-4 max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-80 border border-dashed"
+                : ""
+                }`}
             >
-              <button onClick={handlePlay}>
-                <RecordVoiceOverIcon />
-              </button>
-            </Tooltip>
+              <Markdown
+                className="prose prose-sm max-w-none dark:prose-invert colorful-dark:prose-invert 
+                prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed 
+                prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted 
+                prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono 
+                prose-code:text-sm prose-strong:font-semibold prose-blockquote:border-l-4 
+                prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic 
+                prose-table:border-collapse prose-th:border prose-th:border-border prose-th:bg-muted 
+                prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border 
+                prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-muted-foreground"
+                components={{ a: LinkRenderer }}
+              >
+                {props.message.replace(/\n/g, "\n\n")}
+              </Markdown>
+            </div>
           )}
-          &nbsp;&nbsp;
-          <Tooltip
-            title="Copy"
-          >
-            <button onClick={() => {
-              handleClick()
-              navigator.clipboard.writeText(removeMarkdown(props.message))
-            }}>
-              <ContentCopyIcon />
-            </button>
-          </Tooltip>
         </div>
       </div>
-      {props.messageType && props.messageType === "file" ? (
-        <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__right-message message__out-context" : "message__right-message"}>
-          <Modal
-            isOpen={openFileModal}
-            onRequestClose={() => setOpenFileModal(false)}
-          >
-            <Markdown>{props.message.replace(/\n/g, "\n\n")}</Markdown>
-          </Modal>
-          <div className="message__file">
-            <Markdown>{expandFile ? props.message.replace(/\n/g, "\n\n") : props.message.substring(0, 200) + "..."}</Markdown>
-            <hr />
-            <div style={{ display: "flex" }}>
-              <button
-                onClick={() => setExpandFile(!expandFile)}
-              >
-                {expandFile ? (
-                  <>
-                    <ExpandLessIcon />
-                    Collapse
-                  </>
-                ) : (
-                  <>
-                    <ExpandMoreIcon />
-                    Expand
-                  </>
-                )}
-              </button>
-              &nbsp;&nbsp;&nbsp;
-              <button onClick={() => setOpenFileModal(!openFileModal)}>
-                <Tooltip title={"Fullscreen"}>
-                  <OpenInFullIcon fontSize="small" />
-                </Tooltip>
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className={(props.outOfContext || (!props.visible && props.isInstructor)) ? "message__right-message message__out-context" : "message__right-message"}>
-          <Markdown className={""} components={{ a: LinkRenderer }}>{props.message.replace(/\n/g, "\n\n")}</Markdown>
-        </div>
-      )}
-      <Snackbar
-        open={open}
-        autoHideDuration={6000}
-        onClose={handleClose}
-        message="Message copied to clipboard"
-        action={action}
-      />
     </div>
-  ) : <></>;
+  ) : null;
 };
-

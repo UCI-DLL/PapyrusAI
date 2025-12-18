@@ -1,35 +1,30 @@
-import React, { useContext, useEffect, useState } from "react";
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import Button from '@mui/material/Button';
-import {
-  CardHeader,
-  IconButton,
-  Menu,
-  MenuItem,
-  TextField,
-  Tooltip,
-  Typography
-} from "@mui/material";
-import { useNavigate } from "react-router";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { useContext, useEffect, useState } from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
+import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
+import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
+import { useNavigate, Link } from "react-router-dom";
+import { Star, BookOpen, Calendar, User, MoreHorizontal } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType } from "../utility/types/CourseTypes";
 import Post from "../utility/Post";
 import { postCopyCourse } from "../utility/endpoints/CourseEndpoints";
-import { Modal } from "./Modal";
-import { Checkbox } from "./Checkbox";
-import StarBorderIcon from '@mui/icons-material/StarBorder';
-import StarIcon from '@mui/icons-material/Star';
+import { Checkbox } from "./ui/checkbox";
 import Put from "../utility/Put";
-import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
-
+import {
+  postCreateUserFavoritingData,
+  putUpdateUserFavoritingData,
+} from "../utility/endpoints/UserEndpoints";
+import { Label } from "./ui/label";
+import { cn } from "../lib/utils";
+import { useTranslation } from "../hooks/useTranslation";
+import { handleCourseTermLanguage } from "../utility/Helpers";
 
 interface CourseListProps {
   course: CourseType;
   refreshList: () => void;
-  keyy: number | string;
   onClick?: (courseId: string) => void;
   isStarred?: boolean;
 }
@@ -37,331 +32,361 @@ interface CourseListProps {
 export default function CourseCard({
   course,
   refreshList,
-  keyy,
   onClick,
   isStarred,
 }: CourseListProps): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [openDuplicateModal, setOpenDuplicateModal] = useState<string>("");
+  const [openDuplicateModal, setOpenDuplicateModal] = useState<boolean>(false);
   const [duplicateCourseData, setDuplicateCourseData] = useState<{
-    name: string,
-    signUpCode: string,
-    isActive: boolean
+    name: string;
+    signUpCode: string;
+    isActive: boolean;
   }>({
     name: "",
     signUpCode: "",
-    isActive: false
+    isActive: false,
   });
-  const [starred, setStarred] = useState<boolean>(isStarred ? isStarred : false)
-  const [menuAnchorEl, setAddAnchorEl] = React.useState<null | HTMLElement>(null);
-  const menuOpen = Boolean(menuAnchorEl);
-  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAddAnchorEl(event.currentTarget);
-  };
-  const handleMenuClose = () => {
-    setAddAnchorEl(null);
-  };
+  const [starred, setStarred] = useState<boolean>(
+    isStarred ? isStarred : false
+  );
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    setStarred(isStarred ? isStarred : false)
-  }, [isStarred])
-
-  function editCourse(courseId: string) {
-    navigator(`/editcourse/${courseId}`)
-  }
+    setStarred(isStarred ? isStarred : false);
+  }, [isStarred]);
 
   function duplicateCourse(courseId: string) {
-    handleMenuClose();
-    setOpenDuplicateModal(courseId)
+    setMenuOpen(false);
+    setOpenDuplicateModal(true);
   }
 
   function handleDuplicateCourse() {
     setIsLoading(true);
-    Post(postCopyCourse(openDuplicateModal), duplicateCourseData).then((res) => {
+    Post(postCopyCourse(course.id), duplicateCourseData).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
-          //pop up notifying user of Duplicated
-          setOpenDuplicateModal("");
-          setAlert({ message: "Course Duplicated", type: "success" })
+          setOpenDuplicateModal(false);
+          setAlert({
+            message: t("courses.courseDuplicated"),
+            type: "success",
+          });
           setDuplicateCourseData({
             name: "",
             signUpCode: "",
-            isActive: false
-          })
+            isActive: false,
+          });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        // set errors
-        setAlert({ message: res.data, type: "error" })
+        setAlert({ message: res.data, type: "error" });
       }
       refreshList();
     });
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDuplicateCourseData({ ...duplicateCourseData, [e.target.name]: e.target.value });
+    setDuplicateCourseData({
+      ...duplicateCourseData,
+      [e.target.name]: e.target.value,
+    });
   }
 
-  const ownerMenu = ["Edit Course", "Duplicate"]
-  const ownerMenuFunctions = [editCourse, duplicateCourse]
-  const nonOwnerMenu = ["Duplicate"]
-  const nonOwnerMenuFunctions = [duplicateCourse]
+  const ownerMenu = [
+    {
+      label: t("courses.editCourse"),
+      type: "link" as const,
+      action: `/editcourse/${course.id}`,
+    },
+    { label: t("common.duplicate"), type: "function" as const, action: duplicateCourse },
+  ];
+  const nonOwnerMenu = [
+    { label: t("common.duplicate"), type: "function" as const, action: duplicateCourse },
+  ];
 
   function createStarredCourse(courseId: string) {
     setIsLoading(true);
-    Post(postCreateUserFavoritingData(), { id: { courseId: courseId }, type: "courses" }).then((res) => {
+    Post(postCreateUserFavoritingData(), {
+      id: { courseId: courseId },
+      type: "courses",
+    }).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data.courses) {
-          //update course lists as needed
-          setStarred(res.data.courses)
-          setAlert({ message: "Course added to favorites.", type: "info" })
+          setStarred(res.data.courses);
+          setAlert({
+            message: t("courses.courseAddedToFavorites"),
+            type: "info",
+          });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        // set errors
-        setAlert({ message: res.data, type: "error" })
+        setAlert({ message: res.data, type: "error" });
       }
-      refreshList()
+      refreshList();
     });
   }
 
   function removeStarredCourse(courseId: string) {
     setIsLoading(true);
-    Put(putUpdateUserFavoritingData(), { id: { courseId: courseId }, type: "courses" }).then((res) => {
+    Put(putUpdateUserFavoritingData(), {
+      id: { courseId: courseId },
+      type: "courses",
+    }).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data.courses) {
-          //update course lists as needed
-          setStarred(res.data.courses)
-          setAlert({ message: "Course removed from favorites.", type: "info" })
+          setStarred(res.data.courses);
+          setAlert({
+            message: t("courses.courseRemovedFromFavorites"),
+            type: "info",
+          });
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        // set errors
-        setAlert({ message: res.data, type: "error" })
+        setAlert({ message: res.data, type: "error" });
       }
-      refreshList()
+      refreshList();
     });
   }
 
-  const StarredComponents = () => (
-    starred ? (
-      <Tooltip title={"Unstar Course"}>
-        <IconButton
-          className="courses__button__menu-btn"
-          aria-label="favorite course"
-          id={`${course.id}favorite-button`}
-          disabled={isLoading}
-          onClick={(e: any) => {
-            e.stopPropagation()
-            removeStarredCourse(course.id)
-          }}
-        >
-          <StarIcon />
-        </IconButton>
-      </Tooltip>
-    ) : (
-      <Tooltip title={"Star Course"}>
-        <IconButton
-          className="courses__button__menu-btn"
-          aria-label="favorite course"
-          id={`${course.id}favorite-button`}
-          disabled={isLoading}
-          onClick={(e: any) => {
-            e.stopPropagation()
-            createStarredCourse(course.id)
-          }}
-        >
-          <StarBorderIcon />
-        </IconButton>
-      </Tooltip>
-    )
-  )
+  if (!course || !user) {
+    return (
+      <div className="text-center py-8 text-muted-foreground" role="status">
+        {t("courses.noAvailableCourses")}
+      </div>
+    );
+  }
 
-  return course && user ? (
-    <div className="courses__list">
-      <Modal
-        isOpen={openDuplicateModal !== ""}
-        title={"Duplicate Course"}
-        onRequestClose={() => setOpenDuplicateModal("")}
-        actions={
-          <>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={(e) => {
-                handleDuplicateCourse()
+  return (
+    <>
+      <DialogWrapper
+        open={openDuplicateModal}
+        onOpenChange={setOpenDuplicateModal}
+        title={t("courses.duplicateCourse")}
+        description={t("courses.duplicateCourseDescription")}
+        showFooter={true}
+        actions={[
+          {
+            label: t("common.cancel"),
+            onClick: () => setOpenDuplicateModal(false),
+            variant: "outline",
+          },
+          {
+            label: t("common.duplicate"),
+            onClick: handleDuplicateCourse,
+            variant: "default",
+          },
+        ]}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="course-name" className="font-bold">
+              {t("courses.newCourseName")}
+            </Label>
+            <Input
+              id="course-name"
+              name="name"
+              placeholder={t("courses.enterNewCourseName")}
+              value={duplicateCourseData.name}
+              onChange={handleChange}
+              required
+              disabled={isLoading}
+              aria-describedby="course-name-description"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-code" className="font-bold">
+              {t("courses.newCourseSignUpCode")}
+            </Label>
+            <Input
+              id="signup-code"
+              name="signUpCode"
+              placeholder={t("courses.enterNewSignUpCode")}
+              value={duplicateCourseData.signUpCode}
+              onChange={handleChange}
+              required
+              disabled={isLoading}
+              aria-describedby="signup-code-description"
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="publish-course"
+              aria-labelledby="publishCourseLabel"
+              checked={duplicateCourseData.isActive}
+              onCheckedChange={(checked) => {
+                setDuplicateCourseData((prev) => ({
+                  ...prev,
+                  isActive: checked === true,
+                }));
               }}
-            >
-              Duplicate
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => setOpenDuplicateModal("")}>
-              Close
-            </Button>
-          </>
-        }
-      >
-        <div>
-          <div>Enter a name and a unique sign up code for the duplicated course. Duplicating a course will also copy over all the modules and settings within this course.</div>
-          <div>If you wish to publish (i.e., make visible to students) the new course immediately, check the “Publish Course” button.</div>
-          <TextField
-            name="name"
-            label="New Course Name"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={duplicateCourseData.name}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-          />
-          <TextField
-            name="signUpCode"
-            label="New Course Sign Up Code"
-            fullWidth
-            sx={{ margin: ".5rem 0" }}
-            value={duplicateCourseData.signUpCode}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-          />
-          <Checkbox
-            onClick={() => {
-              setDuplicateCourseData((prev) => ({
-                ...prev,
-                isActive: !duplicateCourseData.isActive
-              }))
-            }}
-            checked={duplicateCourseData.isActive}
-            isDisabled={isLoading}
-          >
-            <span>
-              Publish Course
-            </span>
-          </Checkbox>
-          &nbsp;
+              disabled={isLoading}
+            />
+            <Label id="publishCourseLabel" htmlFor="publish-course" className="font-bold leading-none">
+              {t("courses.publishCourse")}
+            </Label>
+          </div>
         </div>
-      </Modal>
+      </DialogWrapper>
 
-      <Menu
-        id={`${keyy}${user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? "admin" : "instructor"}-menu`}
-        anchorEl={menuAnchorEl}
-        open={menuOpen}
-        onClose={handleMenuClose}
-        MenuListProps={{
-          'aria-labelledby': 'course-menu-button',
-        }}
-      >
-        {
-          user?.groups.includes(course.id) && (
-            user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
-            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-            user?.groups.includes(course.id + "-TA") //handle tas
-          ) && (
-            course.instructor.username === user.username ? (
-              ownerMenu.map((item: string, index: number) => {
-                return (
-                  <MenuItem key={index} onClick={(e: any) => {
-                    ownerMenuFunctions[index](course.id)
-                  }}>
-                    {item}
-                  </MenuItem>
-                )
-              })
-            ) : (
-              nonOwnerMenu.map((item: string, index: number) => {
-                return (
-                  <MenuItem key={index} onClick={(e: any) => {
-                    nonOwnerMenuFunctions[index](course.id)
-                  }}>
-                    {item}
-                  </MenuItem>
-                )
-              })
-            )
-          )
-        }
-      </Menu>
-      <Card>
-        <CardHeader
-          action={ //if user in course and has more permissions than a normal user
-            user.groups.includes(course.id) && (!onClick) && (
-              user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmins") ||
-              user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ||
-              user?.groups.includes(course.id + "-TA") //handle tas
-            ) ? (
-              <>
-                <StarredComponents />
-                <Tooltip title={"Course Options"}>
-                  <IconButton
-                    className="courses__button__menu-btn"
-                    aria-label="course menu"
-                    id={`${keyy}${user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? "admin" : "instructor"}-button`}
-                    aria-controls={menuOpen ? `${keyy}${user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ? "admin" : "instructor"}-menu` : ""}
-                    aria-haspopup="true"
-                    aria-expanded={menuOpen ? 'true' : undefined}
-                    onClick={(e: any) => {
-                      e.stopPropagation()
-                      handleMenuClick(e)
-                    }}
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </Tooltip>
-              </>
-            ) : (
-              <>
-                <StarredComponents />
-              </>
-            )
-          }
-          title={course.name}
-          subheader={
-            <>
-              <Typography sx={{ fontSize: 14 }} color="text.secondary">
-                {course.section ?
-                  `${course.term ? course.term : ""} ${course.year ? course.year : ""} - ${course.section}` :
-                  `${course.term ? course.term : ""} ${course.year ? course.year : ""}`}
-              </Typography>
-              <Typography sx={{ fontSize: 14 }} color="text.secondary" >
-                {`Instructor: ${course.instructor.name} ${course.instructor.family_name}`}
-              </Typography>
-            </>
-          }
-        />
-        <CardActions sx={{ justifyContent: "space-between" }}>
+      <article className="group bg-card border rounded-xl hover-lift shadow-sm relative h-50 flex flex-col">
+        <div
+          className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl"
+          aria-hidden="true"
+        >
+          <BookOpen size={80} className="transform rotate-12" />
+        </div>
+
+        <div className="p-4 flex flex-col flex-1 relative z-10">
+          <header className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold 
+              text-foreground mb-1 line-clamp-2 
+              group-hover:text-primary dark:group-hover:text-gold 
+              colorful-dark:group-hover:text-gold transition-colors duration-300">
+                {course.name}
+              </h2>
+              <div className="flex flex-col my-2 gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar size={10} aria-hidden="true" />
+                  <span className="font-medium text-sm capitalize">
+                    {course.section
+                      ? `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year || ""} - ${course.section
+                      }`
+                      : `${user && course.term ? handleCourseTermLanguage(user["custom:language"], course.term) : ""} ${course.year || ""}`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <User size={10} aria-hidden="true" />
+                  <span className="font-medium text-sm truncate-text">
+                    {t("common.instructor")}:{" "}
+                    {`${course.instructor.name} ${course.instructor.family_name}`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  {course.modules.length}{" "}
+                  {course.modules.length === 1 ? t("common.module") : t("common.modules")}
+                </div>
+              </div>
+            </div>
+
+            <nav
+              className="flex items-center gap-1 ml-2 flex-shrink-0"
+              aria-label={t("createCourse.courseActions")}
+            >
+              <TooltipWrapper
+                content={starred ? t("courses.unstarCourse") : t("courses.starCourse")}
+                side="top"
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    starred
+                      ? removeStarredCourse(course.id)
+                      : createStarredCourse(course.id);
+                  }}
+                  disabled={isLoading}
+                  className={cn(
+                    "p-1 rounded-full transition-all duration-300 text-lg",
+                    starred
+                      ? "text-gold hover:text-muted"
+                      : "text-muted hover:text-gold"
+                  )}
+                  aria-label={
+                    starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
+                  }
+                >
+                  <Star
+                    size={12}
+                    fill={starred ? "currentColor" : "none"}
+                    className={cn(
+                      starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
+                    )}
+                    aria-hidden="true"
+                  />
+                </button>
+              </TooltipWrapper>
+
+              {user.groups.includes(course.id) &&
+                !onClick &&
+                (user?.groups.includes(
+                  process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmins"
+                ) ||
+                  user?.groups.includes(
+                    process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
+                  ) ||
+                  user?.groups.includes(course.id + "-TA")) && (
+                  <DropdownWrapper
+                    trigger={
+                      <button
+                        className="p-1 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        aria-label={t("courses.optionsMenu")}
+                      >
+                        <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
+                      </button>
+                    }
+                    actions={(course.instructor.username === user.username
+                      ? ownerMenu
+                      : nonOwnerMenu
+                    ).map((item) => ({
+                      label: item.label,
+                      onClick: () => {
+                        if (item.type === "link") {
+                          navigator(item.action);
+                        } else {
+                          item.action(course.id);
+                        }
+                      },
+                      type: item.type === "link" ? "link" : "button",
+                      href: item.type === "link" ? item.action : undefined,
+                    }))}
+                    open={menuOpen}
+                    onOpenChange={setMenuOpen}
+                    tooltipContent={t("courses.courseOptions")}
+                    tooltipSide="top"
+                  />
+                )}
+            </nav>
+          </header>
+
           {onClick ? (
             <Button
-              size="small"
-              variant="contained"
               onClick={() => onClick(course.id)}
-              style={{ width: "100%" }}
+              variant="default"
+              size="sm"
+              className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2"
+              aria-label={`${t("common.select")} ${course.name}`}
             >
-              Select
+              <BookOpen size={14} aria-hidden="true" />
+              {t("common.select")}
             </Button>
           ) : (
             <Button
-              size="small"
-              variant="contained"
-              onClick={() => navigator(`/courses/${course.id}/modules`)}
-              style={{ width: "100%" }}
+              size="sm"
+              variant="default"
+              asChild
+              className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
+              aria-label={`${t("courses.viewModules")} ${course.name}`}
             >
-              Modules
+              <Link
+                to={`/courses/${course.id}/modules`}
+                className="flex items-center justify-center gap-2 no-underline"
+              >
+                <BookOpen size={14} aria-hidden="true" />
+                {t("courses.viewModules")}
+              </Link>
             </Button>
           )}
-
-        </CardActions>
-      </Card>
-
-    </div>
-  ) : (
-    <div>No available courses</div>
-  )
+        </div>
+      </article>
+    </>
+  );
 }

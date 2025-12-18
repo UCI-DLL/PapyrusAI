@@ -1,0 +1,850 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* UCI Primary Colors */
+    --color-primary: #204c86;
+    --color-primary-foreground: #ffffff;
+
+    /* UCI Secondary Colors */
+    --color-secondary: #1b3d6d;
+    --color-secondary-foreground: #ffffff;
+    --color-darkest-blue: #002244;
+    --color-teal-blue: #0083b3;
+    --color-turquoise: #00b0ca;
+    --color-orange: #f78d2d;
+    --color-gold: #f0ab00;
+    --color-light-gray: #c6beb5;
+
+    /* UCI Accent Colors */
+    --color-accent: #404449;
+    --color-accent-foreground: #ffffff;
+    --color-athletics-gold: #f8cf56;
+    --color-light-yellow: #f7eb5f;
+    --color-green: #3f9c35;
+    --color-lime-green: #7ab800;
+    --color-royal-blue: #00639e;
+    --color-bright-purple: #7c109a;
+    --color-magenta: #d462ad;
+
+    /* Additional UI Colors */
+    --color-background: #f8fafc;
+    --color-card: #ffffff;
+    --color-border: #e2e8f0;
+    --color-muted: #dddddd;
+    --color-muted-foreground: #29323d;
+
+    /* Shadcn UI Compatibility */
+    --background: 248 250 252;
+    --foreground: 71 85 105;
+    --card: 0 0% 100%;
+    --card-foreground: 71 85 105;
+    --popover: 0 0% 100%;
+    --primary: 212 59% 37%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 27 59% 21%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 200 50% 57%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 35%;
+    --destructive-hover: 0 84% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 212 59% 37%;
+    --radius: 0.5rem;
+    --sidebar-background: 210 20% 98%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 210 60% 27%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 60% 27%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 210 60% 27%;
+  }
+
+  .dark {
+    /* Modern Dark Theme with subtle UCI accents */
+    --color-background: #0a0a0b;
+    --color-card: #1a1a1b;
+    --color-border: #2d2d30;
+    --color-muted: #333538;
+    --color-muted-foreground: #f7f8fa;
+
+    /* Keep some UCI colors as accents */
+    --color-primary: #255799; /* UCI primary blue */
+    --color-secondary: #1b3d6d; /* UCI secondary blue */
+    --color-accent: #002244;
+    --color-gold: #f0ab00; /* UCI gold */
+    --color-orange: #f78d2d; /* UCI orange */
+    --color-light-yellow: #fef3c7; /* Soft yellow background */
+
+    /* Shadcn UI Dark Mode - Modern */
+    --background: 240 10% 4%; /* Very dark with slight warmth */
+    --foreground: 210 40% 98%; /* High contrast white */
+    --card: 240 10% 10%; /* Dark cards with subtle warmth */
+    --card-foreground: 210 40% 98%;
+    --popover: 240 10% 10%;
+    --primary: 212 59% 37%; /* UCI primary blue */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 4.9% 83.9%; /* Light gray for secondary */
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 3.7% 15.9%; /* Subtle muted backgrounds */
+    --muted-foreground: 240 5% 64.9%; /* Readable muted text */
+    --accent: 210 100% 13.3%; /* UCI accent blue */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 351 100% 54.6%; /* Bright red for visibility */
+    --destructive-hover: 0 84% 35%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 3.7% 15.9%; /* Subtle borders */
+    --input: 240 3.7% 15.9%;
+    --ring: 212 59% 37%; /* UCI blue ring */
+    --sidebar-background: 240 10% 4%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 212 59% 37%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 212 59% 37%;
+  }
+
+  .colorful-light {
+    /* Calm, accessible light theme – Emerald & Mint */
+    --color-background: #f8fafc;
+    --color-card: #ffffff;
+    --color-border: #e2e8f0;
+    --color-muted: #dddddd;
+    --color-muted-foreground: #29323d;
+
+    /* Brand accents */
+    --color-primary: #165e1a;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #15534e;
+    --color-accent: #183b41;
+    --color-gold: #f0ab00;
+    --color-orange: #f78d2d;
+    --color-light-yellow: #f7eb5f;
+
+    /* Shadcn tokens (HSL) – tuned for WCAG contrast */
+    --background: 150 45% 95%; /* deeper mint backdrop */
+    --foreground: 210 34% 14%;
+    --card: 150 20% 98%; /* light mint surface */
+    --card-foreground: 210 34% 14%;
+    --popover: 0 0% 100%;
+    --primary: 123 62.1% 22.7%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 277 62.1% 22.8%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 150 22% 88%;
+    --muted-foreground: 210 22% 30%;
+    --accent: 28 75% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 35%;
+    --destructive-hover: 0 84% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 150 18% 76%;
+    --input: 150 18% 76%;
+    --ring: 123 62.1% 22.7%;
+    --radius: 0.5rem;
+    --sidebar-background: 257 42% 95%;
+    --sidebar-foreground: 210 34% 14%;
+    --sidebar-primary: 123 62.1% 22.7%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 277 62.1% 22.8%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 150 18% 76%;
+    --sidebar-ring: 123 62.1% 22.7%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
+    color: var(--color-muted-foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body {
+    background: linear-gradient(135deg, #0a0a0b 0%, #111113 50%, #0a0a0b 100%);
+  }
+
+  .colorful-light body {
+    background: linear-gradient(135deg, #f0fbf5 0%, #e4f7ea 50%, #f0fbf5 100%);
+  }
+
+  .colorful-dark {
+    /* Soothing, accessible dark theme */
+    --color-background: #280119;
+    --color-card: #1a1a1b;
+    --color-border: #2d2d30;
+    --color-muted: #333538;
+    --color-muted-foreground: #f7f8fa;
+
+    /* Keep some UCI colors as accents */
+    --color-primary: #165e4e;
+    --color-secondary: #011628;
+    --color-accent: #011628;
+    --color-gold: #f0ab00; /* UCI gold */
+    --color-orange: #f78d2d; /* UCI orange */
+    --color-light-yellow: #fef3c7; /* Soft yellow background */
+
+    /* Shadcn UI Dark Mode - Modern */
+    --background: 240 10% 4%; /* Very dark with slight warmth */
+    --foreground: 210 40% 98%; /* High contrast white */
+    --card: 240 10% 10%; /* Dark cards with subtle warmth */
+    --card-foreground: 210 40% 98%;
+    --popover: 240 10% 10%;
+    --primary: 123 62.1% 14.5%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 240 4.9% 83.9%; /* Light gray for secondary */
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 3.7% 15.9%; /* Subtle muted backgrounds */
+    --muted-foreground: 240 5% 64.9%; /* Readable muted text */
+    --accent: 210 100% 13.3%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 351 100% 54.6%; /* Bright red for visibility */
+    --destructive-hover: 0 84% 35%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 148 15.8% 15.9%; /* Subtle borders */
+    --input: 148 15.8% 15.9%;
+    --ring: 123 62.1% 14.5%; /* UCI blue ring */
+    --sidebar-background: 20 3.8% 9.4%;
+    --sidebar-foreground: 29 4.8% 95.9%;
+    --sidebar-primary: 148 15.8% 15.9%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 167 62.1% 22.7%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 148 15.8% 15.9%;
+    --sidebar-ring: 123 62.1% 14.5%;
+  }
+
+  .colorful-dark body {
+    background: linear-gradient(135deg, #091713 0%, #0e1f1a 50%, #091713 100%);
+  }
+}
+
+@layer utilities {
+  /* Text Size Variants */
+  :root[data-text-size="xs"] {
+    font-size: 12px;
+  }
+
+  :root[data-text-size="sm"] {
+    font-size: 14px;
+  }
+
+  :root[data-text-size="md"] {
+    font-size: 16px;
+  }
+
+  :root[data-text-size="lg"] {
+    font-size: 18px;
+  }
+
+  :root[data-text-size="xl"] {
+    font-size: 20px;
+  }
+
+  /* Text Colors */
+  .text-primary {
+    color: var(--color-primary);
+  }
+
+  .text-primary-foreground {
+    color: var(--color-primary-foreground);
+  }
+
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+
+  .text-secondary-foreground {
+    color: var(--color-secondary-foreground);
+  }
+
+  .text-accent {
+    color: var(--color-accent);
+  }
+
+  .text-accent-foreground {
+    color: var(--color-accent-foreground);
+  }
+
+  .text-background {
+    color: var(--color-background);
+  }
+
+  .text-foreground {
+    color: var(--color-muted-foreground);
+  }
+
+  .text-muted {
+    color: var(--color-muted);
+  }
+
+  .text-muted-foreground {
+    color: var(--color-muted-foreground);
+  }
+
+  .text-card {
+    color: var(--color-card);
+  }
+
+  .text-card-foreground {
+    color: var(--color-muted-foreground);
+  }
+
+  .text-border {
+    color: var(--color-border);
+  }
+
+  /* UCI Brand Colors */
+  .text-darkest-blue {
+    color: var(--color-darkest-blue);
+  }
+
+  .text-teal-blue {
+    color: var(--color-teal-blue);
+  }
+
+  .text-turquoise {
+    color: var(--color-turquoise);
+  }
+
+  .text-orange {
+    color: var(--color-orange);
+  }
+
+  .text-gold {
+    color: var(--color-gold);
+  }
+
+  .text-green {
+    color: var(--color-green);
+  }
+
+  .text-lime-green {
+    color: var(--color-lime-green);
+  }
+
+  .text-royal-blue {
+    color: var(--color-royal-blue);
+  }
+
+  .text-bright-purple {
+    color: var(--color-bright-purple);
+  }
+
+  .text-magenta {
+    color: var(--color-magenta);
+  }
+
+  .text-athletics-gold {
+    color: var(--color-athletics-gold);
+  }
+
+  .text-light-yellow {
+    color: var(--color-light-yellow);
+  }
+
+  .text-light-gray {
+    color: var(--color-light-gray);
+  }
+
+  /* Background Colors */
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+
+  .bg-primary-foreground {
+    background-color: var(--color-primary-foreground);
+  }
+
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+
+  .bg-secondary-foreground {
+    background-color: var(--color-secondary-foreground);
+  }
+
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+
+  .bg-accent-foreground {
+    background-color: var(--color-accent-foreground);
+  }
+
+  .bg-background {
+    background-color: var(--color-background);
+  }
+
+  .bg-foreground {
+    background-color: var(--color-muted-foreground);
+  }
+
+  .bg-card {
+    background-color: var(--color-card);
+  }
+
+  .bg-card-foreground {
+    background-color: var(--color-muted-foreground);
+  }
+
+  .bg-muted {
+    background-color: var(--color-muted);
+  }
+
+  .bg-muted-foreground {
+    background-color: var(--color-muted-foreground);
+  }
+
+  .bg-border {
+    background-color: var(--color-border);
+  }
+
+  .bg-primary\/90:hover {
+    background-color: var(--color-secondary);
+  }
+
+  /* UCI Brand Backgrounds */
+  .bg-darkest-blue {
+    background-color: var(--color-darkest-blue);
+  }
+
+  .bg-teal-blue {
+    background-color: var(--color-teal-blue);
+  }
+
+  .bg-turquoise {
+    background-color: var(--color-turquoise);
+  }
+
+  .bg-orange {
+    background-color: var(--color-orange);
+  }
+
+  .bg-gold {
+    background-color: var(--color-gold);
+  }
+
+  .bg-green {
+    background-color: var(--color-green);
+  }
+
+  .bg-lime-green {
+    background-color: var(--color-lime-green);
+  }
+
+  .bg-royal-blue {
+    background-color: var(--color-royal-blue);
+  }
+
+  .bg-bright-purple {
+    background-color: var(--color-bright-purple);
+  }
+
+  .bg-magenta {
+    background-color: var(--color-magenta);
+  }
+
+  .bg-athletics-gold {
+    background-color: var(--color-athletics-gold);
+  }
+
+  .bg-light-yellow {
+    background-color: var(--color-light-yellow);
+  }
+
+  .bg-light-gray {
+    background-color: var(--color-light-gray);
+  }
+
+  /* Border Colors */
+  .border-primary {
+    border-color: var(--color-primary);
+  }
+
+  .border-primary-foreground {
+    border-color: var(--color-primary-foreground);
+  }
+
+  .border-secondary {
+    border-color: var(--color-secondary);
+  }
+
+  .border-secondary-foreground {
+    border-color: var(--color-secondary-foreground);
+  }
+
+  .border-accent {
+    border-color: var(--color-accent);
+  }
+
+  .border-accent-foreground {
+    border-color: var(--color-accent-foreground);
+  }
+
+  .border-background {
+    border-color: var(--color-background);
+  }
+
+  .border-foreground {
+    border-color: var(--color-muted-foreground);
+  }
+
+  .border-card {
+    border-color: var(--color-card);
+  }
+
+  .border-card-foreground {
+    border-color: var(--color-muted-foreground);
+  }
+
+  .border-muted {
+    border-color: var(--color-muted);
+  }
+
+  .border-muted-foreground {
+    border-color: var(--color-muted-foreground);
+  }
+
+  .border-border {
+    border-color: var(--color-border);
+  }
+
+  /* UCI Brand Borders */
+  .border-darkest-blue {
+    border-color: var(--color-darkest-blue);
+  }
+
+  .border-teal-blue {
+    border-color: var(--color-teal-blue);
+  }
+
+  .border-turquoise {
+    border-color: var(--color-turquoise);
+  }
+
+  .border-orange {
+    border-color: var(--color-orange);
+  }
+
+  .border-gold {
+    border-color: var(--color-gold);
+  }
+
+  .border-green {
+    border-color: var(--color-green);
+  }
+
+  .border-lime-green {
+    border-color: var(--color-lime-green);
+  }
+
+  .border-royal-blue {
+    border-color: var(--color-royal-blue);
+  }
+
+  .border-bright-purple {
+    border-color: var(--color-bright-purple);
+  }
+
+  .border-magenta {
+    border-color: var(--color-magenta);
+  }
+
+  .border-athletics-gold {
+    border-color: var(--color-athletics-gold);
+  }
+
+  .border-light-yellow {
+    border-color: var(--color-light-yellow);
+  }
+
+  .border-light-gray {
+    border-color: var(--color-light-gray);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, var(--color-teal-blue) 0%, var(--color-turquoise) 100%);
+  }
+
+  .gradient-warm {
+    background: linear-gradient(135deg, var(--color-orange) 0%, var(--color-gold) 100%);
+  }
+
+  .gradient-purple {
+    background: linear-gradient(135deg, var(--color-bright-purple) 0%, var(--color-magenta) 100%);
+  }
+
+  .gradient-green {
+    background: linear-gradient(135deg, var(--color-green) 0%, var(--color-lime-green) 100%);
+  }
+
+  .gradient-royal {
+    background: linear-gradient(135deg, var(--color-royal-blue) 0%, var(--color-primary) 100%);
+  }
+
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .hover-lift {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(37, 87, 153, 0.15);
+  }
+
+  .floating-animation {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite alternate;
+  }
+
+  .slide-in-left {
+    animation: slideInLeft 0.6s ease-out;
+  }
+
+  .slide-in-up {
+    animation: slideInUp 0.8s ease-out;
+  }
+
+  .fade-in {
+    animation: fadeIn 1s ease-out;
+  }
+
+  .stagger-1 {
+    animation-delay: 0.1s;
+  }
+  .stagger-2 {
+    animation-delay: 0.2s;
+  }
+  .stagger-3 {
+    animation-delay: 0.3s;
+  }
+  .stagger-4 {
+    animation-delay: 0.4s;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 20px rgba(37, 87, 153, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 40px rgba(37, 87, 153, 0.6);
+  }
+}
+
+@keyframes slideInLeft {
+  0% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes bounceGentle {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(1deg);
+  }
+  75% {
+    transform: rotate(-1deg);
+  }
+}
+
+@keyframes rainbowText {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1a1a1b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* Dark mode component styles - Modern dark theme */
+.dark .bg-white {
+  background-color: var(--color-card);
+}
+
+.dark .bg-gray-50 {
+  background-color: #1f1f23;
+}
+
+.dark .bg-gray-100 {
+  background-color: #2d2d30;
+}
+
+.dark .text-gray-900 {
+  color: #f9fafb;
+}
+
+.dark .text-gray-700 {
+  color: #d1d5db;
+}
+
+.dark .text-gray-600 {
+  color: #9ca3af;
+}
+
+.dark .text-gray-500 {
+  color: #6b7280;
+}
+
+.dark .border-gray-200 {
+  border-color: var(--color-border);
+}
+
+.dark .border-gray-100 {
+  border-color: #2d2d30;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: #1f1f23;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: #2d2d30;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Ensure dark theme applies properly */
+  html.dark,
+  html.dark body,
+  .dark {
+    color-scheme: dark;
+  }
+
+  html.light,
+  html.light body {
+    color-scheme: light;
+  }
+}
+
+/* Responsive chart grids */
+@media (max-width: 768px) {
+  .chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.skip-link {
+  @apply absolute left-2 top-2 z-50 bg-white text-blue-600 
+         p-2 rounded shadow outline-none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}

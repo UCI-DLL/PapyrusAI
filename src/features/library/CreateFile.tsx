@@ -1,106 +1,101 @@
-
-
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Checkbox } from "../../components/ui/checkbox";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
+import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import {
-  Button,
-  Box,
-  TextField,
-  FormLabel,
-  Select,
-  MenuItem,
-  ListItemText,
-  SelectChangeEvent,
-  LinearProgress,
-  FormControl,
-  InputLabel,
-  ButtonGroup,
-  Popper,
-  Grow,
-  Paper,
-  ClickAwayListener,
-  MenuList,
-  Tooltip
-} from "@mui/material";
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { ChevronDown, Info, Loader2, Upload, X } from "lucide-react";
 import Get from "../../utility/Get";
 import { TagType } from "../../utility/types/CourseTypes";
-import { Checkbox } from "../../components/Checkbox";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { Modal } from "../../components/Modal";
+import { cn } from "../../lib/utils";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import Post from "../../utility/Post";
 import {
   getSignedS3BucketUploadOrgFolder,
   getSignedS3BucketUploadUserFolder,
   postCreateOrgFile,
-  postCreateUserFile
+  postCreateUserFile,
 } from "../../utility/endpoints/FolderEndpoints";
 import axios from "axios";
-import InfoIcon from '@mui/icons-material/Info';
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-    },
-  },
-};
-
-const options = ['Save & Upload', 'Discard Changes'];
+import { useTranslation } from "../../hooks/useTranslation";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 export default function CreateFile(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
+  const { t } = useTranslation();
+
+  // Translated options
+  const options = [t("createFile.saveUpload"), t("createFile.discardChanges")];
   const [newFile, setNewFile] = useState<{
-    name: string, id: string, tags: Array<string>
+    name: string;
+    id: string;
+    tags: Array<string>;
   }>({
-    name: "", id: "", tags: []
+    name: "",
+    id: "",
+    tags: [],
   });
   const [errors, setErrors] = useState<any>({
     name: "",
     file: "",
-    tags: ""
+    tags: "",
   });
   const [fileInfo, setFileInfo] = useState<{
-    isOrgFolder: boolean,
-    folderId: string
+    isOrgFolder: boolean;
+    folderId: string;
   }>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
-  const [openSave, setOpenSave] = useState(false);
-  const anchorRefSave = useRef<HTMLDivElement>(null);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
+  const [openSaveTop, setOpenSaveTop] = useState(false);
+  const [openSaveBottom, setOpenSaveBottom] = useState(false);
+  const [showSavePublishTooltip, setShowSavePublishTooltip] =
+    useState<boolean>(false);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
-  const fileRef = React.useRef<any>();
+  const fileRef = React.useRef<HTMLInputElement>(null);
   const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
   const [selectedFiles, setSelectedFiles] = React.useState<any>();
 
-  const handleFileSelect = (event: any) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event?.target?.files?.[0];
     if (file) {
       const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'application/pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', //docx
-        "text/plain"
+        "image/jpeg",
+        "image/png",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", //docx
+        "text/plain",
       ];
       //handle file size
       if (file.size > MAX_FILE_SIZE) {
-        setErrors((prev: any) => ({ ...prev, file: 'File is too large. File must be smaller than 1GB.' }));
+        setErrors((prev: any) => ({
+          ...prev,
+          file: t("createFile.fileTooLarge"),
+        }));
         setSelectedFiles(null);
       } else {
         //handle file formats
         if (allowedTypes.includes(file.type)) {
-          setErrors((prev: any) => ({ ...prev, file: '' }));
+          setErrors((prev: any) => ({ ...prev, file: "" }));
           setSelectedFiles(file);
         } else {
-          setErrors((prev: any) => ({ ...prev, file: 'Invalid file type. Please select a JPEG, PNG, PDF, TXT, DOCX file.' }));
+          setErrors((prev: any) => ({
+            ...prev,
+            file: t("createFile.invalidFileType"),
+          }));
           setSelectedFiles(null);
         }
       }
@@ -111,13 +106,13 @@ export default function CreateFile(): JSX.Element {
     setSelectedFiles(undefined);
   };
 
-  const onUpdate = (event: any) => {
-    if (event.target.textContent.trim().toLowerCase() === 'change' && fileRef.current) {
+  const onUpdate = (action: "change" | "clear") => {
+    if (action === "change" && fileRef.current) {
       onClear();
       fileRef.current.click();
       return;
     }
-    if (event.target.textContent.trim().toLowerCase() === 'clear') {
+    if (action === "clear") {
       onClear();
       return;
     }
@@ -125,7 +120,7 @@ export default function CreateFile(): JSX.Element {
 
   useEffect(() => {
     const controller = new AbortController();
-    //get pathname to figure out if we are editing 
+    //get pathname to figure out if we are editing
     if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -152,7 +147,7 @@ export default function CreateFile(): JSX.Element {
     }
 
     if (tagList.length === 0) {
-      getTags("", controller.signal)
+      getTags("", controller.signal);
     }
 
     return () => {
@@ -161,10 +156,9 @@ export default function CreateFile(): JSX.Element {
     // eslint-disable-next-line
   }, [location.pathname]);
 
-
   function getTags(startKey: string, signal: AbortSignal) {
     var limit = 20;
-    Get(getTagList(limit, startKey), signal).then(res => {
+    Get(getTagList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
@@ -194,41 +188,28 @@ export default function CreateFile(): JSX.Element {
     });
   }
 
-  function handleSaveClick(e: any) {
-    if (selectedIndexSave === 0) { //Save and upload
-      handleUpload(e);
-    } else if (selectedIndexSave === 1) { //discard changes
-      setOpenDiscardModal(true);
-    }
-  };
-
-  const handleMenuItemClick = (
-    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
-    index: number,
-  ) => {
-    if (index === 0) { //Save and upload
-      handleUpload(e);
-    } else if (index === 1) { //discard changes
+  const handleMenuItemClick = (index: number) => {
+    if (index === 0) {
+      //Save and upload
+      handleUpload();
+    } else if (index === 1) {
+      //discard changes
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
-    setOpenSave(false);
+    setOpenSaveTop(false);
+    setOpenSaveBottom(false);
   };
 
-  const handleToggle = () => {
-    setOpenSave((prevOpen) => !prevOpen);
-  };
-
-  const handleSaveClose = (event: Event) => {
-    if (
-      anchorRefSave.current &&
-      anchorRefSave.current.contains(event.target as HTMLElement)
-    ) {
-      return;
+  function handleClick(e: any) {
+    if (selectedIndexSave === 0) {
+      //Save and upload
+      handleUpload(e);
+    } else if (selectedIndexSave === 1) {
+      //discard changes
+      setOpenDiscardModal(true);
     }
-
-    setOpenSave(false);
-  };
+  }
 
   function handleSubmit(id: string) {
     if (fileInfo && fileInfo.isOrgFolder) {
@@ -237,24 +218,27 @@ export default function CreateFile(): JSX.Element {
         name: newFile.name,
         isDeleted: false,
         tags: newFile.tags,
-        id: id
-      }
+        id: id,
+      };
       // post data back
       Post(postCreateOrgFile(fileInfo.folderId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of created
-            setAlert({ message: "File Created", type: "success" })
+            setAlert({ message: t("createFile.fileCreated"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // handle error
           if (res) {
-            setAlert({ message: "File could not be created. Try again later.", type: "error" });
+            setAlert({
+              message: t("createFile.fileCouldNotBeCreated"),
+              type: "error",
+            });
           }
         }
-        setIsLoading(false)
+        setIsLoading(false);
         navigator(`/library/org/${fileInfo.folderId}`);
       });
     } else if (fileInfo) {
@@ -263,22 +247,25 @@ export default function CreateFile(): JSX.Element {
         name: newFile.name,
         isDeleted: false,
         tags: newFile.tags,
-        id: id
-      }
+        id: id,
+      };
       // post data back
       Post(postCreateUserFile(fileInfo.folderId), dataToSend).then((res) => {
         if (res.status && res.status < 300) {
           if (res.data && res.data) {
             //pop up notifying user of Created
-            setAlert({ message: "File Created", type: "success" })
+            setAlert({ message: t("createFile.fileCreated"), type: "success" });
           }
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           // set errors
-          setAlert({ message: "File could not be created. Try again later.", type: "error" })
+          setAlert({
+            message: t("errorMessage.createFileError"),
+            type: "error",
+          });
         }
-        setIsLoading(false)
+        setIsLoading(false);
         navigator(`/library/${fileInfo.folderId}`);
       });
     }
@@ -288,291 +275,496 @@ export default function CreateFile(): JSX.Element {
     setNewFile((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  const handleSelectChange = (event: SelectChangeEvent<typeof newFile.tags>) => {
-    const {
-      target: { value },
-    } = event;
-    setNewFile((prev) => ({
-      ...prev,
-      tags: typeof value === 'string' ? value.split(',') : value
-    }))
+  const handleTagToggle = (tagId: string) => {
+    setNewFile((prev) => {
+      const isSelected = prev.tags.includes(tagId);
+      return {
+        ...prev,
+        tags: isSelected
+          ? prev.tags.filter((id) => id !== tagId)
+          : [...prev.tags, tagId],
+      };
+    });
   };
 
-  function handleUpload(e: any) {
-    e.preventDefault();
+  function handleUpload(e?: React.FormEvent) {
+    e?.preventDefault();
     if (!selectedFiles) {
-      setAlert({ message: "Missing File information", type: "error" });
-      return
+      setAlert({ message: t("errorMessage.missingFileInfo"), type: "error" });
+      return;
     }
     if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: "Name is too short" }))
+      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
     }
     // Handle here
     if (fileInfo) {
-      setIsLoading(true)
-      const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split('.').pop() : "";
-      const fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
+      setIsLoading(true);
+      const ext = selectedFiles.name.includes(".")
+        ? "." + selectedFiles.name.split(".").pop()
+        : "";
+      const fileId =
+        Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
       //if is org folder, then upload to org folder
       if (fileInfo?.isOrgFolder) {
-        Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileId)).then(res => {
-          if (res && res.status && res.status < 300) {
-            //handle upload to s3 -> handleUploadToS3
-            if (res.data) {
-              handleUploadToS3(res.data.url, res.data.id);
+        Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileId)).then(
+          (res) => {
+            if (res && res.status && res.status < 300) {
+              //handle upload to s3 -> handleUploadToS3
+              if (res.data) {
+                handleUploadToS3(res.data.url, res.data.id);
+              } else {
+                //handle error
+                setAlert({
+                  message: t("errorMessage.createFileError"),
+                  type: "error",
+                });
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
-              //handle error
-              setAlert({ message: "Error creating file. Please try again later", type: "error" })
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              // handle error
-              setIsLoading(false);
-            }
-          }
-        });
-
-      } else {//else an user folder
-        Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileId)).then(res => {
-          if (res && res.status && res.status < 300) {
-            //handle upload to s3 -> handleUploadToS3
-            if (res.data) {
-              handleUploadToS3(res.data.url, fileId);
-            } else {
-              //handle error
-              setAlert({ message: "Error creating file. Please try again later", type: "error" })
-            }
-
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              // handle error
-              setIsLoading(false);
+              if (res === undefined) {
+              } else {
+                // handle error
+                setIsLoading(false);
+              }
             }
           }
-        });
+        );
+      } else {
+        //else an user folder
+        Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileId)).then(
+          (res) => {
+            if (res && res.status && res.status < 300) {
+              //handle upload to s3 -> handleUploadToS3
+              if (res.data) {
+                handleUploadToS3(res.data.url, fileId);
+              } else {
+                //handle error
+                setAlert({
+                  message: t("errorMessage.createFileError"),
+                  type: "error",
+                });
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              if (res === undefined) {
+              } else {
+                // handle error
+                setIsLoading(false);
+              }
+            }
+          }
+        );
       }
-
     }
   }
 
   async function handleUploadToS3(url: string, id: string) {
     try {
       // Upload original file directly to s3
-      await axios.put(url, selectedFiles, {
-        headers: {
-          'Content-Type': selectedFiles.type
-        }
-      }).then(res => {
-        if (res && res.status && res.status < 300) {
-          handleSubmit(id);
-
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
+      await axios
+        .put(url, selectedFiles, {
+          headers: {
+            "Content-Type": selectedFiles.type,
+          },
+        })
+        .then((res) => {
+          if (res && res.status && res.status < 300) {
+            handleSubmit(id);
+          } else if (res && res.status === 401) {
+            navigator("/login");
           } else {
-            // handle error
-            setIsLoading(false);
+            if (res === undefined) {
+            } else {
+              // handle error
+              setIsLoading(false);
+            }
           }
-        }
-      });
-
+        });
     } catch (error) {
       console.error((error as Error).message);
     }
   }
 
   return fileInfo && !isLoading ? (
-    <div className="prompt">
-      <Modal
-        isOpen={openDiscardModal}
-        title={"Discard Changes?"}
-        onRequestClose={() => setOpenDiscardModal(false)}
-        actions={
-          <>
-            <Button variant="contained" color="primary" onClick={() => navigator(-1)}>
-              Discard
-            </Button>
-            <Button variant="contained" color="secondary" onClick={() => setOpenDiscardModal(false)}>
-              Cancel
-            </Button>
-          </>
-        }
+    <main className="bg-background text-foreground p-4 space-y-6">
+      {/* Dialogs */}
+      <DialogWrapper
+        open={showSavePublishTooltip}
+        onOpenChange={setShowSavePublishTooltip}
+        title={t("library.aboutFileUpload")}
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: t("components.gotIt"),
+            onClick: () => setShowSavePublishTooltip(false),
+          },
+        ]}
       >
-        <div>Are you sure you would like to discard the changes to this file?</div>
-      </Modal>
-      <div className="prompt__section-header">
-        <div>
-          <h3>Create File</h3>
-        </div>
-        <div>
-          <ButtonGroup
-            variant="contained"
-            ref={anchorRefSave}
-            aria-label="Button group with a nested menu"
-          >
-            <Button disabled={isLoading} onClick={handleSaveClick}>{options[selectedIndexSave]}</Button>
-            <Button
-              size="small"
-              aria-controls={openSave ? 'split-button-menu' : undefined}
-              aria-expanded={openSave ? 'true' : undefined}
-              aria-label="select save and activation strategy"
-              aria-haspopup="menu"
-              onClick={handleToggle}
-              disabled={isLoading}
+        <div className="space-y-3">
+          <p>
+            {t("createFile.fileInfoDescription")}
+            <a
+              href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
             >
-              <ArrowDropDownIcon />
-            </Button>
-          </ButtonGroup>
-          <Popper
-            sx={{
-              zIndex: 1,
-            }}
-            open={openSave}
-            anchorEl={anchorRefSave.current}
-            role={undefined}
-            transition
-            disablePortal
-          >
-            {({ TransitionProps, placement }) => (
-              <Grow
-                {...TransitionProps}
-                style={{
-                  transformOrigin:
-                    placement === 'bottom' ? 'center top' : 'center bottom',
-                }}
-              >
-                <Paper>
-                  <ClickAwayListener onClickAway={handleSaveClose}>
-                    <MenuList id="split-button-menu" autoFocusItem>
-                      {options.map((option, index) => (
-                        <MenuItem
-                          key={option}
-                          selected={index === selectedIndexSave}
-                          onClick={(event) => handleMenuItemClick(event, index)}
-                          className={index === 2 ? "file__discard_background" : ""}
-                        >
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </MenuList>
-                  </ClickAwayListener>
-                </Paper>
-              </Grow>
-            )}
-          </Popper>
+              {t("createFile.fileInfoDescriptionLinkText")}
+            </a>
+            .
+          </p>
         </div>
-      </div>
-      <div>
-        You can upload documents for your course that will factor into generated AI output.
-        For more information on this system, please see the <a
-          href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
-          target="_blank" rel="noreferrer">“Uploading a Document” section of our instructor guide
-        </a>.
-      </div>
-      <hr />
-      <div className="prompt__section-header">
-        <span>* indicates a required field</span>
-      </div>
-      <Box className="prompt__add">
-        <form onSubmit={(e) => handleUpload(e)}>
-          <FormLabel>Enter File Information</FormLabel>
-          <div className="form-tooltips">
-            <TextField
-              name="name"
-              label="File Name"
-              fullWidth
-              sx={{ margin: ".5rem 0" }}
-              value={newFile.name}
-              onChange={handleChange}
-              error={errors.name !== ""}
-              helperText={errors.name}
-              disabled={isLoading}
-              required
-            />
-            <Tooltip title="The name for the document." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
-          </div>
-          <div className="form-tooltips">
-            <input
-              ref={fileRef}
-              hidden
-              type="file"
-              disabled={isLoading}
-              onChange={handleFileSelect}
-            />
-            {!selectedFiles?.name && (
-              <Button
-                variant="contained"
-                component="label"
-                style={{ textTransform: 'none' }}
-                onClick={() => fileRef.current?.click()}
-                disabled={isLoading}
-              >
-                Choose file to upload
-              </Button>
-            )}
-            {selectedFiles?.name && (
-              <Button
-                variant="contained"
-                component="label"
-                style={{ textTransform: 'none' }}
-                onClick={onUpdate}
-                disabled={isLoading}
-              >
-                <span style={{ float: 'left' }}> {selectedFiles?.name}</span>
-                <span style={{ padding: '10px' }}> Change</span>
-                <span>Clear</span>
-              </Button>
-            )}
-            {errors.file && errors.file !== "" && (
-              <span className="error">&nbsp;{errors.file}</span>
-            )}
-            <Tooltip title="Select a JPEG, PNG, PDF, TXT, DOCX file." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
-          </div>
 
-          {/* add dropdown to handle tags  */}
-          <div className="form-tooltips">
-            <FormControl fullWidth sx={{ margin: ".5rem 0" }}>
-              <InputLabel id="multiple-tag-checkbox-select">Tags</InputLabel>
-              <Select
-                labelId="multiple-tag-checkbox-select"
-                id="multiple-tag-checkbox-select"
-                multiple
-                value={newFile.tags}
-                onChange={handleSelectChange}
-                renderValue={(selected) => {//find the name for the file id
-                  return selected.map((id) => tagList.find((p) => p.id === id)?.id).join(', ');
-                }}
-                label="Tags"
-                MenuProps={MenuProps}
-                fullWidth
-                disabled={isLoading}
-              >
-                {tagList.map((tag, index) => (
-                  <MenuItem key={index} value={tag.id}>
-                    <Checkbox checked={newFile.tags.indexOf(tag.id) > -1} />
-                    <ListItemText primary={tag.id} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Tooltip title="Tags describe a feature of the prompts and will be used to allow for sorting prompts by type." enterTouchDelay={0}>
-              <InfoIcon />
-            </Tooltip>
+      </DialogWrapper>
+
+      <DialogWrapper
+        open={openDiscardModal}
+        onOpenChange={setOpenDiscardModal}
+        title={t("createFile.discardChanges")}
+        description={t("createFile.discardChangesDescription")}
+        contentClassName="sm:max-w-md"
+        actions={[
+          {
+            label: `${t("common.cancel")}`,
+            onClick: () => setOpenDiscardModal(false),
+            variant: "outline",
+          },
+          {
+            label: t("createFile.discardChanges"),
+            onClick: () => navigator(-1),
+            variant: "destructive",
+          },
+        ]}
+      />
+
+      {/* Standard Page Header Pattern */}
+      <header className="animate-in slide-in-from-bottom-4 duration-700">
+        <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
+          <div
+            className="absolute top-0 right-0 w-48 h-48 opacity-10"
+            aria-hidden="true"
+          >
+            <Upload size={192} className="text-primary" />
           </div>
-        </form>
-      </Box>
-    </div>
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+              <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
+                {t("createFile.createFile")}
+              </h1>
+              <nav
+                className="flex flex-col md:flex-row gap-2"
+                aria-label={`${t("createFile.createFile")} ${t("common.actions")}}`}
+              >
+                <TooltipWrapper content={t("common.info")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSavePublishTooltip(true)}
+                    aria-label={t("createFile.fileInfoLabel")}
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </TooltipWrapper>
+
+                <div className="flex rounded-lg border">
+                  <Button
+                    size="sm"
+                    onClick={handleClick}
+                    className="rounded-none border-0 w-full rounded-l"
+                    disabled={isLoading}
+                    aria-label={`${options[selectedIndexSave]} ${t("common.file")}`}
+                  >
+                    {options[selectedIndexSave]}
+                  </Button>
+                  <DropdownWrapper
+                    open={openSaveTop}
+                    onOpenChange={setOpenSaveTop}
+                    trigger={
+                      <Button
+                        size="sm"
+                        className="rounded-none border-0 border-l px-2 rounded-r"
+                        variant="default"
+                        disabled={isLoading}
+                        aria-label={t("library.selectStrategy")}
+                      >
+                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    }
+                    actions={options.map((option, index) => ({
+                      label: option,
+                      onClick: () => handleMenuItemClick(index),
+                      className: cn(
+                        index === selectedIndexSave && "bg-primary/30",
+                        index === 1 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                      ),
+                    }))}
+                    align="end"
+                  />
+                </div>
+              </nav>
+            </div>
+
+            <InfoAccordion>
+              <p className="text-muted-foreground max-w-2xl text-base leading-6">
+                {t("createFile.createFileDescription")}&nbsp;
+                <a
+                  href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7pexnnplkzu2"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold transition-colors duration-200"
+                >
+                  {t("createFile.createFileDescriptionLinkText")}
+                </a>
+                .
+              </p>
+            </InfoAccordion>
+          </div>
+        </div>
+      </header>
+
+      {/* Actions Section */}
+      <section aria-labelledby="actions-heading">
+        <Card className="transition-all duration-300 hover:shadow-md" id="actions-heading">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              {t("createFile.fileInformation")}
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              {t("createFile.enterFileDetails")}. {t("common.required")}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpload} className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="name" className="text-sm font-medium">
+                    {t("createFile.fileName")} *
+                  </Label>
+                  <TooltipWrapper content={t("createFile.fileNameTooltip")}>
+                    <button aria-label={t("createFile.fileNameTooltip")}>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipWrapper>
+                </div>
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder={t("createFile.fileNameHelptext")}
+                  value={newFile.name}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  required
+                  className={
+                    errors.name
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }
+                  aria-describedby={errors.name ? "name-error" : undefined}
+                />
+                {errors.name && (
+                  <p
+                    id="name-error"
+                    className="text-sm text-destructive"
+                    role="alert"
+                    aria-live="assertive"
+                  >
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">{t("createFile.fileUpload")}*</Label>
+                  <TooltipWrapper content={t("createFile.fileTooltip")}>
+                    <button aria-label={t("createFile.fileTooltip")}>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipWrapper>
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  disabled={isLoading}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept=".jpg,.jpeg,.png,.pdf,.docx,.txt"
+                />
+                {!selectedFiles?.name ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={isLoading}
+                    className="w-full h-32 border-dashed border-2 hover:border-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {t("createFile.chooseFile")}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {t("createFile.fileDescription")}
+                      </span>
+                    </div>
+                  </Button>
+                ) : (
+                  <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Upload className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm font-medium truncate-text">
+                        {selectedFiles?.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onUpdate("change")}
+                        disabled={isLoading}
+                      >
+                        {t("components.change")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onUpdate("clear")}
+                        disabled={isLoading}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {errors.file && (
+                  <p
+                    className="text-sm text-destructive"
+                    role="alert"
+                    aria-live="assertive"
+                  >{errors.file}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">{t("library.tags")}</Label>
+                  <TooltipWrapper content={t("library.tagsDescription")}>
+                    <button aria-label={t("library.tagsDescription")}>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipWrapper>
+                </div>
+                <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
+                  {tagList.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2">
+                      {tagList.map((tag) => (
+                        <div
+                          key={tag.id}
+                          className="flex items-center space-x-2"
+                        >
+                          <Checkbox
+                            id={`tag-${tag.id}`}
+                            aria-labelledby={`tag-${tag.id}label`}
+                            checked={newFile.tags.includes(tag.id)}
+                            onCheckedChange={() => handleTagToggle(tag.id)}
+                            disabled={isLoading}
+                          />
+                          <Label
+                            id={`tag-${tag.id}label`}
+                            htmlFor={`tag-${tag.id}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {tag.id}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {t("library.noTags")}
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("common.selected")}:{" "}
+                  {newFile.tags.length > 0 ? newFile.tags.join(", ") : t("common.none")}
+                </p>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Bottom Actions */}
+        <section aria-labelledby="bottom-actions-heading" className="pt-4">
+          <nav
+            className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
+            aria-label={`${t("createFile.createFile")} ${t("common.actions")}}`}
+            id="bottom-actions-heading"
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSavePublishTooltip(true)}
+              aria-label={t("createFile.fileInfoLabel")}
+            >
+              <Info className="h-4 w-4" aria-hidden="true" />
+              {t("common.info")}
+            </Button>
+            <div className="flex rounded-lg border">
+              <Button
+                size="sm"
+                onClick={handleClick}
+                className="rounded-none border-0 w-full rounded-l"
+                disabled={isLoading}
+                aria-label={`${options[selectedIndexSave]} ${t("common.file")}`}
+              >
+                {options[selectedIndexSave]}
+              </Button>
+              <DropdownWrapper
+                open={openSaveBottom}
+                onOpenChange={setOpenSaveBottom}
+                trigger={
+                  <Button
+                    size="sm"
+                    className="rounded-none border-0 border-l px-2 rounded-r"
+                    variant="default"
+                    disabled={isLoading}
+                    aria-label={t("library.selectStrategy")}
+                  >
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                }
+                actions={options.map((option, index) => ({
+                  label: option,
+                  onClick: () => handleMenuItemClick(index),
+                  className: cn(
+                    index === selectedIndexSave && "bg-primary/30",
+                    index === 1 && "text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                  ),
+                }))}
+                align="end"
+              />
+            </div>
+          </nav>
+        </section>
+      </section>
+    </main>
   ) : (
-    <LinearProgress />
-  )
+    <div
+      className="min-h-screen flex items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <Loader2
+          className="h-8 w-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="text-muted-foreground">{t("loadingMessage.fileCreationForm")}</p>
+      </div>
+    </div>
+  );
 }

@@ -46,6 +46,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
 import { handleCourseTermLanguage } from "../../utility/Helpers";
+import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 
 export default function ConversationList(): JSX.Element {
   let location = useLocation();
@@ -120,7 +121,7 @@ export default function ConversationList(): JSX.Element {
           if (res === undefined) {
           } else {
             // handle error
-            setError("No Conversations Found"); //TODO
+            setError(t("errorMessage.convoNotFound"));
           }
         }
         setIsLoading(false);
@@ -138,7 +139,7 @@ export default function ConversationList(): JSX.Element {
           if (res === undefined) {
           } else {
             //handle error
-            setError("Course Does Not Exist"); //TODO
+            setError(t("errorMessage.courseNotFound"));
           }
         }
       });
@@ -156,7 +157,7 @@ export default function ConversationList(): JSX.Element {
             if (res === undefined) {
             } else {
               //handle error
-              setError("Could not find user"); //TODO
+              setError(t("errorMessage.userNotFound"));
             }
           }
         });
@@ -255,12 +256,12 @@ export default function ConversationList(): JSX.Element {
       if (convoUpdateObject.name.length > 260) {
         setOpenUpdateConvoModal((prev) => ({
           ...prev,
-          error: "Name is too long", //TODO
+          error: t("errorMessage.nameTooLong"),
         }));
       } else if (convoUpdateObject.name.length === 0) {
         setOpenUpdateConvoModal((prev) => ({
           ...prev,
-          error: "Name cannot be empty",//TODO
+          error: t("errorMessage.nameMissing"),
         }));
       } else {
         setIsLoading(true);
@@ -332,14 +333,11 @@ export default function ConversationList(): JSX.Element {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  {/* TODO  */}
                   <EyeOff className="h-5 w-5" />
-                  Archive Conversation?
+                  {t("chat.archiveConversationQuestion")}
                 </DialogTitle>
                 <DialogDescription>
-                  Are you sure you would like to archive this conversation?
-                  This conversation will no longer be visible in your conversation list.
-                  Instructors can still view archived conversations.
+                  {t("chat.archiveConversationDescription")}
                 </DialogDescription>
               </DialogHeader>
 
@@ -358,8 +356,8 @@ export default function ConversationList(): JSX.Element {
                       error: "",
                     })
                   }
-                > {/* TODO  */}
-                  Cancel
+                >
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -369,8 +367,8 @@ export default function ConversationList(): JSX.Element {
                       isDeleted: true,
                     })
                   }
-                > {/* TODO  */}
-                  Archive Conversation
+                >
+                  {t("chat.archiveConversation")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -396,11 +394,11 @@ export default function ConversationList(): JSX.Element {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Edit className="h-5 w-5" /> {/* TODO  */}
-                  Rename Conversation
+                  <Edit className="h-5 w-5" />
+                  {t("chat.renameConversation")}
                 </DialogTitle>
-                <DialogDescription> {/* TODO  */}
-                  Enter a new name for this conversation.
+                <DialogDescription>
+                  {t("chat.renameConversationDescription")}
                 </DialogDescription>
               </DialogHeader>
 
@@ -408,7 +406,7 @@ export default function ConversationList(): JSX.Element {
                 <div className="space-y-2">
                   <Input
                     name="name"
-                    placeholder="Conversation Name"
+                    placeholder={t("chat.conversationName")}
                     value={openUpdateConvoModal.name}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       setOpenUpdateConvoModal((prev) => ({
@@ -446,8 +444,8 @@ export default function ConversationList(): JSX.Element {
                     })
                   }
                   disabled={isLoading}
-                >{/* TODO  */}
-                  Cancel
+                >
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={() =>
@@ -458,8 +456,8 @@ export default function ConversationList(): JSX.Element {
                 >
                   {isLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}{/* TODO  */}
-                  Update Name
+                  )}
+                  {t("chat.updateName")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -470,13 +468,13 @@ export default function ConversationList(): JSX.Element {
               <div className="space-y-2">
                 {viewUser ? (
                   <h1 className="text-2xl font-bold text-foreground">
-                    <User className="inline-block w-5 h-5 mr-2" />{/* TODO  */}
-                    {viewUser.name} {viewUser.family_name} Conversations
+                    <User className="inline-block w-5 h-5 mr-2" />
+                    {viewUser.name} {viewUser.family_name} {t("chat.conversations")}
                   </h1>
                 ) : (
                   <h1 className="text-2xl font-bold text-foreground">
-                    <MessageSquare className="inline-block w-5 h-5 mr-2" />{/* TODO  */}
-                    My Conversations
+                    <MessageSquare className="inline-block w-5 h-5 mr-2" />
+                    {t("chat.myConversations")}
                   </h1>
                 )}
                 {course && (
@@ -495,8 +493,8 @@ export default function ConversationList(): JSX.Element {
                       }{" "}
                       - {course.name}
                     </h2>
-                    <p className="text-sm text-muted-foreground">{/* TODO  */}
-                      Instructor: {course.instructor.name}{" "}
+                    <p className="text-sm text-muted-foreground">
+                      {t("common.instructor")}: {course.instructor.name}{" "}
                       {course.instructor.family_name}
                     </p>
                   </div>
@@ -514,19 +512,17 @@ export default function ConversationList(): JSX.Element {
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Plus className="h-4 w-4" />
-                    )}{/* TODO  */}
-                    New Conversation
+                    )}
+                    {t("chat.newConversation")}
                   </Button>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="bg-card border rounded-lg p-4 space-y-3 mb-6">
-            <p className="text-sm text-muted-foreground">{/* TODO  */}
-              This page lists all of the conversations started within this
-              module. For more information on viewing, renaming, and hiding
-              conversations, please see the{" "}
+          <InfoAccordion>
+            <p className="text-sm text-muted-foreground">
+              {t("chat.conversationListDescription")}
               {user?.groups.includes(
                 process.env.REACT_APP_INSTRUCTOR
                   ? process.env.REACT_APP_INSTRUCTOR
@@ -537,8 +533,8 @@ export default function ConversationList(): JSX.Element {
                   target="_blank"
                   rel="noreferrer"
                   className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                >{/* TODO  */}
-                  "Starting a Conversation" section of our user guide
+                >
+                  {t("chat.conversationListDescriptionLinkText")}
                 </a>
               ) : (
                 <a
@@ -546,22 +542,17 @@ export default function ConversationList(): JSX.Element {
                   target="_blank"
                   rel="noreferrer"
                   className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                >{/* TODO  */}
-                  "Starting a Conversation" section of our user guide
+                >
+                  {t("chat.conversationListDescriptionLinkText")}
                 </a>
               )}
               .
-            </p>{/* TODO  */}
-            <p className="text-sm text-muted-foreground">
-              To start a new conversation with the AI, click "New Conversation".
-              To continue an existing conversation with the AI, click "Chat"
-              next to the desired conversation. (If you wish to return to an
-              existing conversation, consider renaming it to more easily
-              identify and return to a particular conversation at a later time.)
             </p>
-          </div>
-          {/* TODO  */}
-          <div className="space-y-2" aria-label="conversation list">
+            <p className="text-sm text-muted-foreground">
+              {t("chat.conversationListNewConvoDescription")}
+            </p>
+          </InfoAccordion>
+          <div className="space-y-2" aria-label={t("chat.conversationList")}>
             {conversationList ? (
               <>
                 {moduleIds &&
@@ -602,8 +593,8 @@ export default function ConversationList(): JSX.Element {
                                       {conversation.name}
                                     </p>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1 no-underline">
-                                      <Clock className="h-3 w-3" />{/* TODO  */}
-                                      Created: {time}
+                                      <Clock className="h-3 w-3" />
+                                      {t("chat.created")}: {time}
                                     </p>
                                   </div>
                                 </Link>
@@ -617,21 +608,22 @@ export default function ConversationList(): JSX.Element {
                                           variant="destructive"
                                           className="flex items-center gap-1 pointer-events-none"
                                         >
-                                          <Trash2 className="h-3 w-3" />{/* TODO  */}
-                                          Deleted
+                                          <Trash2 className="h-3 w-3" />
+                                          {t("chat.deleted")}
                                         </Badge>
                                       )}
                                       <Button
                                         size="sm"
                                         asChild
-                                        className="text-xs font-medium"
+                                        variant="ghost"
+                                        className="flex items-center gap-1 text-muted-foreground text-xs font-medium w-full p-2 hover:bg-primary hover:text-primary-foreground"
                                       >
                                         <Link
                                           to={link}
                                           className="flex items-center gap-1 no-underline"
                                         >
-                                          <Eye className="h-3 w-3" />{/* TODO  */}
-                                          View
+                                          <Eye className="h-3 w-3" />
+                                          {t("chat.view")}
                                         </Link>
                                       </Button>
                                     </>
@@ -660,14 +652,13 @@ export default function ConversationList(): JSX.Element {
                                               });
                                             }}
                                             className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                                            aria-label="Archive Conversation"  //TODO
+                                            aria-label={t("chat.archiveConversation")}
                                           >
                                             <EyeOff className="h-3 w-3" />
                                           </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent side="top">{/* TODO  */}
-                                          Archive conversation (instructors can
-                                          still view)
+                                        <TooltipContent side="top">
+                                          {t("chat.archiveConversationTooltip")}
                                         </TooltipContent>
                                       </Tooltip>
                                       <Tooltip>
@@ -693,13 +684,13 @@ export default function ConversationList(): JSX.Element {
                                               });
                                             }}
                                             className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-                                            aria-label="Rename Conversation" //TODO
+                                            aria-label={t("chat.renameConversation")}
                                           >
                                             <Edit className="h-3 w-3" />
                                           </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent side="top">{/* TODO  */}
-                                          Rename conversation
+                                        <TooltipContent side="top">
+                                          {t("chat.renameConversation")}
                                         </TooltipContent>
                                       </Tooltip>
                                       <Button
@@ -711,8 +702,8 @@ export default function ConversationList(): JSX.Element {
                                           to={link}
                                           className="flex items-center gap-1 no-underline"
                                         >
-                                          <MessageSquare className="h-3 w-3" />{/* TODO  */}
-                                          Chat
+                                          <MessageSquare className="h-3 w-3" />
+                                          {t("chat.chat")}
                                         </Link>
                                       </Button>
                                     </>
@@ -729,16 +720,15 @@ export default function ConversationList(): JSX.Element {
                     {viewUser ? (
                       <div className="text-muted-foreground">
                         <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                        <p className="text-lg mb-2">No conversations yet</p>{/* TODO  */}
-                        <p className="text-sm">{/* TODO  */}
-                          This user hasn't started any conversations in this
-                          module.
+                        <p className="text-lg mb-2">{t("errorMessage.noConversationsYet")}</p>
+                        <p className="text-sm">
+                          {t("errorMessage.noConversationsDescription")}
                         </p>
                       </div>
                     ) : (
                       <div className="text-muted-foreground">
                         <MessageSquare className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                        <p className="text-lg mb-4">No conversations yet</p>{/* TODO  */}
+                        <p className="text-lg mb-4">{t("errorMessage.noConversationsYet")}</p>
                         <Button
                           onClick={handleNewConversation}
                           disabled={creatingConvo}
@@ -748,8 +738,8 @@ export default function ConversationList(): JSX.Element {
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <Plus className="h-4 w-4" />
-                          )}{/* TODO  */}
-                          Start a Conversation
+                          )}
+                          {t("chat.startConversation")}
                         </Button>
                       </div>
                     )}
@@ -773,8 +763,8 @@ export default function ConversationList(): JSX.Element {
         <Loader2
           className="h-8 w-8 animate-spin text-primary"
           aria-hidden="true"
-        />{/* TODO  */}
-        <p className="text-muted-foreground">Loading Conversations</p>
+        />
+        <p className="text-muted-foreground">{t("loadingMessage.conversations")}</p>
       </div>
     </div>
   );

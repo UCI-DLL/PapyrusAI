@@ -146,8 +146,8 @@ export default function Modules(): JSX.Element {
                 className="flex flex-col md:flex-row gap-2 md:shrink-0"
                 aria-label={`${t("common.module")} ${t("common.actions")}}`}
               >
-                {isInstructorOrTA && ( //TODO
-                  <Button size="sm" asChild aria-label="Create new module" variant="outline">
+                {isInstructorOrTA && (
+                  <Button size="sm" asChild aria-label={`${t("common.view")} ${t("common.reports")}`} variant="outline">
                     <Link
                       to={`/reports/course/${course?.id}`}
                       className="no-underline hover:text-white"
@@ -157,8 +157,8 @@ export default function Modules(): JSX.Element {
                     </Link>
                   </Button>
                 )}
-                {isInstructorOrTA && ( //TODO
-                  <Button size="sm" asChild aria-label="Create new module">
+                {isInstructorOrTA && (
+                  <Button size="sm" asChild aria-label={`${t("common.create")} ${t("common.module")}`}>
                     <Link
                       to={`/courses/${course?.id}/createmodule`}
                       className="no-underline hover:text-white "
@@ -240,7 +240,7 @@ export default function Modules(): JSX.Element {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
-                aria-label="Search modules" //TODO
+                aria-label={t("modules.searchModules")}
               />
             </div>
           </div>

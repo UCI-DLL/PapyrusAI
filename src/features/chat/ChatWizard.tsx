@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { MessageSquare, Wand2 } from "lucide-react";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface ChatWizardProps {
   prompts: Array<PromptType> | undefined;
@@ -22,6 +23,7 @@ export default function ChatWizard({
   prompts,
   returnPrompt,
 }: ChatWizardProps): JSX.Element {
+  const { t } = useTranslation();
   const [selectedPrompt, setSelectedPrompt] = useState<string>("");
   const [error, setError] = useState("");
 
@@ -36,18 +38,18 @@ export default function ChatWizard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
-            Select Prompt Option
+            {t("chat.selectPromptOption")}
           </CardTitle>
           <CardDescription>
-            Choose the prompt with which you would like to begin your conversation with the AI
+            {t("chat.selectPromptOptionDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="prompt-select">Available Prompts</Label>
+            <Label htmlFor="prompt-select">{t("chat.availablePrompts")}</Label>
             <Select value={selectedPrompt} onValueChange={handleSelectChange}>
               <SelectTrigger id="prompt-select">
-                <SelectValue placeholder="Select a prompt to get started..." />
+                <SelectValue placeholder={t("chat.selectPromptStarted")} />
               </SelectTrigger>
               <SelectContent avoidCollisions={false} position="popper">
                 {prompts.map((prompt, index) => (
@@ -70,7 +72,7 @@ export default function ChatWizard({
               onClick={() => {
                 setError("");
                 if (!selectedPrompt) {
-                  setError("Please select a prompt to continue");
+                  setError(t("chat.selectPromptContinue"));
                 } else {
                   returnPrompt(selectedPrompt);
                   setSelectedPrompt("");
@@ -80,7 +82,7 @@ export default function ChatWizard({
               className="min-w-[140px]"
             >
               <Wand2 className="mr-2 h-4 w-4" />
-              Ask Papyrus
+              {t("chat.askPapyrus")}
             </Button>
           </div>
         </CardContent>
@@ -90,7 +92,7 @@ export default function ChatWizard({
     <div className="p-4">
       <Alert>
         <AlertDescription>
-          No prompts are available for this module.
+          {t("chat.noPromptsInModule")}
         </AlertDescription>
       </Alert>
     </div>

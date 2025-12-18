@@ -6,6 +6,7 @@ import { ModuleType } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import ChatWizard from "../ChatWizard";
 import EssayWizard from "../EssayWizard";
+import { useTranslation } from "../../../hooks/useTranslation";
 
 interface ChatMessagesProps {
   messages: MessageType[];
@@ -18,9 +19,10 @@ interface ChatMessagesProps {
   conversationCompleted: boolean;
   instructor: string;
   admin: string;
+  conversationArchived: boolean;
   onWizardReturnPrompts: (selectedPrompt: string) => void;
   onWizardReturnEssay: (essay: string, message?: string) => void;
-  onBackToConversationList: () => void;
+  newConversation: () => void;
 }
 
 export default function ChatMessages({
@@ -34,10 +36,12 @@ export default function ChatMessages({
   conversationCompleted,
   instructor,
   admin,
+  conversationArchived,
   onWizardReturnPrompts,
   onWizardReturnEssay,
-  onBackToConversationList,
+  newConversation,
 }: ChatMessagesProps): JSX.Element {
+  const { t } = useTranslation();
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -46,7 +50,24 @@ export default function ChatMessages({
   //screen reader new message announcement
   const [srAnnouncement, setSrAnnouncement] = React.useState("");
 
-  React.useEffect(() => { //handles new message announcement
+  const isCurrentUser = user && viewUser && user.username === viewUser.username;
+  const isInstructor = user?.groups.includes(instructor) || user?.groups.includes(admin);
+
+  // Show essay wizard for rater enabled modules
+  const showEssayWizard = isCurrentUser &&
+    messages.length < 1 &&
+    moduleInfo?.raterEnabled;
+
+  // Show regular wizard for prompt-based modules
+  const showPromptWizard = showWizard && !showEssayWizard;
+
+  // Show empty state when no messages and no wizards
+  const showEmptyState = (messages.length === 0 &&
+    !showPromptWizard &&
+    !showEssayWizard) ||
+    (!isInstructor && conversationArchived);
+
+  useEffect(() => { //handles new message announcement
     const last = messages[messages.length - 1];
     if (!last || last.role !== "assistant") return;
 
@@ -61,22 +82,6 @@ export default function ChatMessages({
   useEffect(() => {
     scrollToBottom();
   }, [messages, showTypingIndicator]);
-
-  const isCurrentUser = user && viewUser && user.username === viewUser.username;
-  const isInstructor = user?.groups.includes(instructor) || user?.groups.includes(admin);
-
-  // Show essay wizard for rater enabled modules
-  const showEssayWizard = isCurrentUser &&
-    messages.length < 1 &&
-    moduleInfo?.raterEnabled;
-
-  // Show regular wizard for prompt-based modules
-  const showPromptWizard = showWizard && !showEssayWizard;
-
-  // Show empty state when no messages and no wizards
-  const showEmptyState = messages.length === 0 &&
-    !showPromptWizard &&
-    !showEssayWizard;
 
   return (
     <div className="flex-1 lg:overflow-y-auto">
@@ -106,16 +111,16 @@ export default function ChatMessages({
         )}
 
         {/* Empty State */}
-        {showEmptyState && (
+        {showEmptyState ? (
           <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
             <div className="bg-card border border-border rounded-lg p-8 max-w-md text-center">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-              <h2 className="text-lg font-semibold mb-2">Start the conversation</h2>
+              <h2 className="text-lg font-semibold mb-2">{t("chat.startConversation")}</h2>
               <p className="text-sm text-muted-foreground mb-4">
                 {moduleInfo.moduleDescription}
               </p>
               <p className="text-xs text-muted-foreground">
-                For more information on how to converse with the AI, please see the{" "}
+                {t("chat.startConversationDescription")}
                 {isInstructor ? (
                   <a
                     href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
@@ -123,7 +128,7 @@ export default function ChatMessages({
                     rel="noreferrer"
                     className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
                   >
-                    "Starting a Conversation" section of our user guide
+                    {t("chat.conversationListDescriptionLinkText")}
                   </a>
                 ) : (
                   <a
@@ -132,168 +137,161 @@ export default function ChatMessages({
                     rel="noreferrer"
                     className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
                   >
-                    "Starting a Conversation" section of our user guide
+                    {t("chat.conversationListDescriptionLinkText")}
                   </a>
                 )}
                 .
               </p>
             </div>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Messages */}
+            {messages.length > 0 && (
+              <div className="space-y-4">
+                {messages.map((message, index) => {
+                  const isContextDivider =
+                    index ===
+                    messages.findIndex((message: MessageType) => !message.inContext);
 
-        {/* Messages */}
-        {messages.length > 0 && (
-          <div className="space-y-4">
-            {messages.map((message, index) => {
-              const isContextDivider =
-                index ===
-                messages.findIndex((message: MessageType) => !message.inContext);
+                  const isLastMessage = index === messages.length - 1;
+                  const isStreamingAssistant = message.role === "assistant" && isLastMessage && message.finished ? false : true;
 
-              const isLastMessage = index === messages.length - 1;
-              if (isLastMessage && message.role === "assistant" && message.finished) {
-                console.log("message", message.content)
-              }
+                  return (
+                    <React.Fragment>
+                      {isContextDivider && (
+                        <div className="relative flex items-center justify-center my-6">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-border" />
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-background px-2 text-muted-foreground font-medium">
+                              {t("chat.inContext")}
+                            </span>
+                          </div>
+                        </div>
+                      )}
 
-              const isStreamingAssistant =
-                message.role === "assistant" &&
-                  isLastMessage &&
-                  message.finished ? false : true; // <-- use whatever your streaming flag is
+                      {/* wrap message with aria-hidden when streaming message  */}
+                      {message.role === "assistant" ? isStreamingAssistant ? (
+                        <div aria-hidden="true">
+                          <MessageLeft
+                            message={message.content}
+                            displayName={
+                              message.sender === "ChatGPT" ? "Papyrus" : message.sender
+                            }
+                            messageType={message.messageType}
+                            outOfContext={message.inContext ? true : false}
+                            visible={
+                              message.userVisible === undefined || message.userVisible
+                                ? true
+                                : false
+                            }
+                            expandableMessage={
+                              message.expandableMessage && message.expandableMessage !== ""
+                                ? message.expandableMessage
+                                : undefined
+                            }
+                            isInstructor={isInstructor}
+                            sources={
+                              message.sources
+                                ? typeof message.sources === "string"
+                                  ? JSON.parse(message.sources)
+                                  : message.sources
+                                : []
+                            }
+                          />
+                        </div>
+                      ) : (
+                        <MessageLeft
+                          message={message.content}
+                          displayName={
+                            message.sender === "ChatGPT" ? "Papyrus" : message.sender
+                          }
+                          messageType={message.messageType}
+                          outOfContext={message.inContext ? true : false}
+                          visible={
+                            message.userVisible === undefined || message.userVisible
+                              ? true
+                              : false
+                          }
+                          expandableMessage={
+                            message.expandableMessage && message.expandableMessage !== ""
+                              ? message.expandableMessage
+                              : undefined
+                          }
+                          isInstructor={isInstructor}
+                          sources={
+                            message.sources
+                              ? typeof message.sources === "string"
+                                ? JSON.parse(message.sources)
+                                : message.sources
+                              : []
+                          }
+                        />
+                      ) : !moduleInfo.showInitialPrompt && message.promptId ? null : (
+                        <MessageRight
+                          message={message.content}
+                          displayName={viewUser?.name}
+                          messageType={message.messageType}
+                          outOfContext={message.inContext ? true : false}
+                          visible={
+                            message.userVisible === undefined || message.userVisible
+                              ? true
+                              : false
+                          }
+                          isInstructor={isInstructor}
+                        />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
 
+                {/* Typing Indicator */}
+                {showTypingIndicator && (
+                  <MessageLeft message={""} displayName={"Papyrus"} typing />
+                )}
 
-              return (
-                <React.Fragment>
-                  {isContextDivider && (
-                    <div className="relative flex items-center justify-center my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-border" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground font-medium">
-                          In Context
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* wrap message with aria-hidden when streaming message  */}
-                  {message.role === "assistant" ? isStreamingAssistant ? (
-                    <div aria-hidden="true">
-                      <MessageLeft
-                        message={message.content}
-                        displayName={
-                          message.sender === "ChatGPT" ? "Papyrus" : message.sender
-                        }
-                        messageType={message.messageType}
-                        outOfContext={message.inContext ? true : false}
-                        visible={
-                          message.userVisible === undefined || message.userVisible
-                            ? true
-                            : false
-                        }
-                        expandableMessage={
-                          message.expandableMessage && message.expandableMessage !== ""
-                            ? message.expandableMessage
-                            : undefined
-                        }
-                        isInstructor={isInstructor}
-                        sources={
-                          message.sources
-                            ? typeof message.sources === "string"
-                              ? JSON.parse(message.sources)
-                              : message.sources
-                            : []
-                        }
-                      />
-                    </div>
-                  ) : (
-                    <MessageLeft
-                      message={message.content}
-                      displayName={
-                        message.sender === "ChatGPT" ? "Papyrus" : message.sender
-                      }
-                      messageType={message.messageType}
-                      outOfContext={message.inContext ? true : false}
-                      visible={
-                        message.userVisible === undefined || message.userVisible
-                          ? true
-                          : false
-                      }
-                      expandableMessage={
-                        message.expandableMessage && message.expandableMessage !== ""
-                          ? message.expandableMessage
-                          : undefined
-                      }
-                      isInstructor={isInstructor}
-                      sources={
-                        message.sources
-                          ? typeof message.sources === "string"
-                            ? JSON.parse(message.sources)
-                            : message.sources
-                          : []
-                      }
-                    />
-                  ) : !moduleInfo.showInitialPrompt && message.promptId ? null : (
-                    <MessageRight
-                      message={message.content}
-                      displayName={viewUser?.name}
-                      messageType={message.messageType}
-                      outOfContext={message.inContext ? true : false}
-                      visible={
-                        message.userVisible === undefined || message.userVisible
-                          ? true
-                          : false
-                      }
-                      isInstructor={isInstructor}
-                    />
-                  )}
-                </React.Fragment>
-              );
-            })}
-
-            {/* Typing Indicator */}
-            {showTypingIndicator && (
-              <MessageLeft message={""} displayName={"Papyrus"} typing />
-            )}
-
-            {/* screen reader announcement  */}
-            <div
-              aria-live="polite"
-              aria-atomic="true"
-              style={{ //sr-only messes up the styling of everything else
-                position: 'absolute',
-                left: '-9999px',
-                width: '1px',
-                height: '1px',
-                overflow: 'hidden'
-              }}
-            >
-              {srAnnouncement}
-            </div>
-
-
-            {/* Message Note */}
-            {messageNote && (
-              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
-                <p className="text-sm text-primary/80">{messageNote}</p>
-              </div>
-            )}
-
-            {/* Conversation Completed Message */}
-            {conversationCompleted && (
-              <div className="text-center py-8 border-t border-border mt-6">
-                <div className="pb-4 text-muted-foreground text-sm max-w-md mx-auto">
-                  This conversation has been flagged as inappropriate for this setting.
-                  Please start a new conversation.
-                </div>
-                <button
-                  onClick={onBackToConversationList}
-                  className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                {/* screen reader announcement  */}
+                <div
+                  aria-live="polite"
+                  aria-atomic="true"
+                  style={{ //sr-only messes up the styling of everything else
+                    position: 'absolute',
+                    left: '-9999px',
+                    width: '1px',
+                    height: '1px',
+                    overflow: 'hidden'
+                  }}
                 >
-                  Back to Conversation List
-                </button>
+                  {srAnnouncement}
+                </div>
+
+
+                {/* Message Note */}
+                {messageNote && (
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-primary/80">{messageNote}</p>
+                  </div>
+                )}
+
+                {/* Conversation Completed Message */}
+                {conversationCompleted && (
+                  <div className="text-center py-8 border-t border-border mt-6">
+                    <div className="pb-4 text-muted-foreground text-sm max-w-md mx-auto">
+                      {t("chat.flaggedConvoDescription")}
+                    </div>
+                    <button
+                      onClick={newConversation}
+                      className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                    >
+                      {t("chat.newConversation")}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
         )}
 
         {/* Scroll anchor */}

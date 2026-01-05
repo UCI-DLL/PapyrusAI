@@ -13,6 +13,10 @@ import StudentListPopup from "./StudentListPopup";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
+import {
+  parseLocalDate,
+  formatDateForTooltip,
+} from "../../utility/reports/date";
 import { Users } from "lucide-react";
 
 interface ClassChartsProps {

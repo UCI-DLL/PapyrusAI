@@ -36,13 +36,13 @@ export default function RepeatingPromptWizard({
               Module Prompts
             </Label>
             <Select value={selectedPrompt} onValueChange={handleSelectChange}>
-              <SelectTrigger 
+              <SelectTrigger
                 id="repeating-prompt-select"
                 className="h-9"
               >
                 <SelectValue placeholder="Select a prompt..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent avoidCollisions={false} position="popper">
                 {prompts.map((prompt, index) => (
                   <SelectItem key={index} value={prompt.id}>
                     {prompt.name}

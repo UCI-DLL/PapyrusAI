@@ -274,7 +274,7 @@ export default function OldPrompts(): JSX.Element {
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent avoidCollisions={false} position="popper">
             {Object.keys(SortOptions).map((key) => (
               <SelectItem value={key} key={key}>
                 {key}
@@ -303,7 +303,7 @@ export default function OldPrompts(): JSX.Element {
                   <SelectTrigger>
                     <SelectValue placeholder="All creators" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent avoidCollisions={false} position="popper">
                     <SelectItem value="">All creators</SelectItem>
                     {creatorList.map((creator, index) => (
                       <SelectItem value={creator.username} key={index}>

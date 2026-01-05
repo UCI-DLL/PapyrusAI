@@ -431,6 +431,7 @@ export default function Chat(): JSX.Element {
                 temp[temp.length - 1].content =
                   reconstructed || temp[temp.length - 1].content;
               }
+              temp[temp.length - 1].finished = true;
               return temp;
             } else return prev;
           });

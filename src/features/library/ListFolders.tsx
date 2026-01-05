@@ -3,36 +3,17 @@ import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
 import { Calendar } from "../../components/ui/calendar";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { FolderType, TagType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import {
-  Search,
-  Filter,
-  Calendar as CalendarIcon,
-  Loader2,
-  Folder,
-} from "lucide-react";
+import { Search, Filter, Calendar as CalendarIcon, Loader2, Folder } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "../../lib/utils";
 import { FolderComponent } from "../../components/Folder";
-import {
-  getOrgFolderList,
-  getUserFolderList,
-} from "../../utility/endpoints/FolderEndpoints";
+import { getOrgFolderList, getUserFolderList } from "../../utility/endpoints/FolderEndpoints";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
@@ -69,12 +50,8 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [orgFolderList, setOrgFolderList] = useState<Array<FolderType>>([]);
   const [userFolderList, setUserFolderList] = useState<Array<FolderType>>([]);
-  const [orgFilteredFolderList, setOrgFilteredFolderList] = useState<
-    Array<FolderType>
-  >([]);
-  const [userFilteredFolderList, setUserFilteredFolderList] = useState<
-    Array<FolderType>
-  >([]);
+  const [orgFilteredFolderList, setOrgFilteredFolderList] = useState<Array<FolderType>>([]);
+  const [userFilteredFolderList, setUserFilteredFolderList] = useState<Array<FolderType>>([]);
   const [tagList, setTagList] = useState<Array<TagType>>([]);
   const [starred, setStarred] = useState<UserStarred | undefined>();
   const [filters, setFilters] = useState<{
@@ -129,28 +106,16 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     if (starred && starred.folders) {
       //Default Sort by newest and starred
       setOrgFolderList((prev) => {
-        return orderFolderNewestCreatedAndStarred(
-          prev,
-          starred && starred.folders ? starred.folders : []
-        );
+        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : []);
       });
       setOrgFilteredFolderList((prev) => {
-        return orderFolderNewestCreatedAndStarred(
-          prev,
-          starred && starred.folders ? starred.folders : []
-        );
+        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : []);
       });
       setUserFolderList((prev) => {
-        return orderFolderNewestCreatedAndStarred(
-          prev,
-          starred && starred.folders ? starred.folders : []
-        );
+        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : []);
       });
       setUserFilteredFolderList((prev) => {
-        return orderFolderNewestCreatedAndStarred(
-          prev,
-          starred && starred.folders ? starred.folders : []
-        );
+        return orderFolderNewestCreatedAndStarred(prev, starred && starred.folders ? starred.folders : []);
       });
     }
     //Note: only these ones cause they don't change that often
@@ -159,7 +124,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
 
   // Handle search filtering
   useEffect(() => {
-    const syntheticEvent = { preventDefault: () => { } } as React.FormEvent;
+    const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
     handleFilter(syntheticEvent);
     // eslint-disable-next-line
   }, [searchTerm]);
@@ -168,11 +133,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     var limit = 20;
     Get(getOrgFolderList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
-        if (
-          res.data &&
-          res.data.folders &&
-          res.data.ScannedCount !== undefined
-        ) {
+        if (res.data && res.data.folders && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
           setOrgFolderList((prev) => [...prev, ...res.data.folders]);
           setOrgFilteredFolderList((prev) => [...prev, ...res.data.folders]);
@@ -205,11 +166,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     var limit = 20;
     Get(getUserFolderList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
-        if (
-          res.data &&
-          res.data.folders &&
-          res.data.ScannedCount !== undefined
-        ) {
+        if (res.data && res.data.folders && res.data.ScannedCount !== undefined) {
           //Get the list of all folders
           setUserFolderList((prev) => [...prev, ...res.data.folders]);
           setUserFilteredFolderList((prev) => [...prev, ...res.data.folders]);
@@ -323,31 +280,19 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
     //handle starred filter
     if ((filters.starred as string) === StarredOptions.All) {
       //Do nothing
-    } else if (
-      (filters.starred as string) === StarredOptions.Starred &&
-      starred &&
-      starred.folders
-    ) {
+    } else if ((filters.starred as string) === StarredOptions.Starred && starred && starred.folders) {
       orgFilteredFolderList = orgFilteredFolderList.filter(
-        (x: FolderType) =>
-          starred.folders && starred.folders.some((y) => y.folderId === x.id)
+        (x: FolderType) => starred.folders && starred.folders.some((y) => y.folderId === x.id)
       );
       userFilteredFolderList = userFilteredFolderList.filter(
-        (x: FolderType) =>
-          starred.folders && starred.folders.some((y) => y.folderId === x.id)
+        (x: FolderType) => starred.folders && starred.folders.some((y) => y.folderId === x.id)
       );
-    } else if (
-      (filters.starred as string) === StarredOptions["Not Starred"] &&
-      starred &&
-      starred.folders
-    ) {
+    } else if ((filters.starred as string) === StarredOptions["Not Starred"] && starred && starred.folders) {
       orgFilteredFolderList = orgFilteredFolderList.filter(
-        (x: FolderType) =>
-          starred.folders && !starred.folders.some((y) => y.folderId === x.id)
+        (x: FolderType) => starred.folders && !starred.folders.some((y) => y.folderId === x.id)
       );
       userFilteredFolderList = userFilteredFolderList.filter(
-        (x: FolderType) =>
-          starred.folders && !starred.folders.some((y) => y.folderId === x.id)
+        (x: FolderType) => starred.folders && !starred.folders.some((y) => y.folderId === x.id)
       );
     }
 
@@ -356,59 +301,45 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
       orgFilteredFolderList = orgFilteredFolderList.filter(
         (folder: FolderType) =>
           folder.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          folder.prompts.some((prompt) =>
-            prompt.prompt.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          folder.prompts.some((prompt) => prompt.prompt.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       userFilteredFolderList = userFilteredFolderList.filter(
         (folder: FolderType) =>
           folder.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          folder.prompts.some((prompt) =>
-            prompt.prompt.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          folder.prompts.some((prompt) => prompt.prompt.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
     //handle tag
     if (filters.tags && filters.tags !== "none") {
-      orgFilteredFolderList = orgFilteredFolderList.filter(
-        (folder: FolderType) =>
-          folder.prompts.some((p) => p.tags.includes(filters.tags))
+      orgFilteredFolderList = orgFilteredFolderList.filter((folder: FolderType) =>
+        folder.prompts.some((p) => p.tags.includes(filters.tags))
       );
-      userFilteredFolderList = userFilteredFolderList.filter(
-        (folder: FolderType) =>
-          folder.prompts.some((p) => p.tags.includes(filters.tags))
+      userFilteredFolderList = userFilteredFolderList.filter((folder: FolderType) =>
+        folder.prompts.some((p) => p.tags.includes(filters.tags))
       );
     }
 
     // handle date filtering
     if (filters.startDate) {
-      orgFilteredFolderList = orgFilteredFolderList.filter(
-        (folder: FolderType) => {
-          var date = new Date(parseInt(folder.id.substring(0, 13), 10));
-          return filters.startDate ? date > filters.startDate : true;
-        }
-      );
-      userFilteredFolderList = userFilteredFolderList.filter(
-        (folder: FolderType) => {
-          var date = new Date(parseInt(folder.id.substring(0, 13), 10));
-          return filters.startDate ? date > filters.startDate : true;
-        }
-      );
+      orgFilteredFolderList = orgFilteredFolderList.filter((folder: FolderType) => {
+        var date = new Date(parseInt(folder.id.substring(0, 13), 10));
+        return filters.startDate ? date > filters.startDate : true;
+      });
+      userFilteredFolderList = userFilteredFolderList.filter((folder: FolderType) => {
+        var date = new Date(parseInt(folder.id.substring(0, 13), 10));
+        return filters.startDate ? date > filters.startDate : true;
+      });
     }
     if (filters.endDate) {
-      orgFilteredFolderList = orgFilteredFolderList.filter(
-        (folder: FolderType) => {
-          var date = new Date(parseInt(folder.id.substring(0, 13), 10));
-          return filters.endDate ? date < filters.endDate : true;
-        }
-      );
-      userFilteredFolderList = userFilteredFolderList.filter(
-        (folder: FolderType) => {
-          var date = new Date(parseInt(folder.id.substring(0, 13), 10));
-          return filters.endDate ? date < filters.endDate : true;
-        }
-      );
+      orgFilteredFolderList = orgFilteredFolderList.filter((folder: FolderType) => {
+        var date = new Date(parseInt(folder.id.substring(0, 13), 10));
+        return filters.endDate ? date < filters.endDate : true;
+      });
+      userFilteredFolderList = userFilteredFolderList.filter((folder: FolderType) => {
+        var date = new Date(parseInt(folder.id.substring(0, 13), 10));
+        return filters.endDate ? date < filters.endDate : true;
+      });
     }
 
     // handle sorting
@@ -485,10 +416,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
           {t("library.noAssetsAdded")}
           <br />
-          <span className="italic text-sm">
-            {" "}
-            {t("library.noAssetsAddedNote")}
-          </span>
+          <span className="italic text-sm"> {t("library.noAssetsAddedNote")}</span>
         </div>
       )}
 
@@ -504,11 +432,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => setIsFilterPopoverOpen(true)}
-          >
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => setIsFilterPopoverOpen(true)}>
             <Filter className="h-4 w-4" />
             {t("library.filters")}
           </Button>
@@ -535,7 +459,6 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                         sort: SortOptions[value.target.value as keyof typeof SortOptions],
                       }));
                     }}
-                    placeholder={t("library.sort")}
                     title={t("library.sort")}
                   >
                     {Object.keys(SortOptions).map((key) => (
@@ -581,11 +504,9 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                     onChange={(value) => {
                       setFilters((prev) => ({
                         ...prev,
-                        starred:
-                          StarredOptions[value.target.value as keyof typeof StarredOptions],
+                        starred: StarredOptions[value.target.value as keyof typeof StarredOptions],
                       }));
                     }}
-                    placeholder={t("library.starred")}
                     title={t("library.starred")}
                   >
                     <option value={"All"} key={"All"}>
@@ -607,8 +528,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                     onValueChange={(value) => {
                       setFilters((prev) => ({
                         ...prev,
-                        starred:
-                          StarredOptions[value as keyof typeof StarredOptions],
+                        starred: StarredOptions[value as keyof typeof StarredOptions],
                       }));
                     }}
                   >
@@ -640,13 +560,9 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                     onChange={(value) => {
                       setFilters((prev) => ({
                         ...prev,
-                        owner:
-                          OwnerTypeOptions[
-                          value.target.value as keyof typeof OwnerTypeOptions
-                          ],
+                        owner: OwnerTypeOptions[value.target.value as keyof typeof OwnerTypeOptions],
                       }));
                     }}
-                    placeholder={t("library.owner")}
                     title={t("library.owner")}
                   >
                     <option value={"All"} key={"All"}>
@@ -668,10 +584,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                     onValueChange={(value) => {
                       setFilters((prev) => ({
                         ...prev,
-                        owner:
-                          OwnerTypeOptions[
-                          value as keyof typeof OwnerTypeOptions
-                          ],
+                        owner: OwnerTypeOptions[value as keyof typeof OwnerTypeOptions],
                       }));
                     }}
                   >
@@ -706,10 +619,8 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                         tags: value.target.value,
                       }));
                     }}
-                    placeholder={t("library.tags")}
                     title={t("library.tags")}
                   >
-
                     <option value="none" key="none">
                       {t("library.noFilter")}
                     </option>
@@ -765,9 +676,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                         disabled={isLoading}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.startDate
-                          ? format(filters.startDate, "PPP")
-                          : t("library.pickStartDate")}
+                        {filters.startDate ? format(filters.startDate, "PPP") : t("library.pickStartDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -800,9 +709,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
                         disabled={isLoading}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.endDate
-                          ? format(filters.endDate, "PPP")
-                          : t("library.pickEndDate")}
+                        {filters.endDate ? format(filters.endDate, "PPP") : t("library.pickEndDate")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -825,11 +732,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
             </div>
 
             <div className="flex gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={handleResetFilters}
-                className="flex-1"
-              >
+              <Button variant="outline" onClick={handleResetFilters} className="flex-1">
                 {t("library.clearFilters")}
               </Button>
               <Button
@@ -850,9 +753,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
       <div
         className={cn(
           "grid gap-6",
-          props.compactGrid
-            ? "grid-cols-1 sm:grid-cols-1 md:grid-cols-2"
-            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          props.compactGrid ? "grid-cols-1 sm:grid-cols-1 md:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
         )}
       >
         {orgFilteredFolderList.map((folder: FolderType, i) => {
@@ -864,20 +765,12 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
               key={`${i}org`}
               isOrganizationFolder
               displayName={folder.name}
-              onClick={() =>
-                props.onClick
-                  ? props.onClick(folder.id, true)
-                  : navigator(`/library/org/${folder.id}`)
-              }
+              onClick={() => (props.onClick ? props.onClick(folder.id, true) : navigator(`/library/org/${folder.id}`))}
               folder={folder}
               keyy={`${i}org`}
               refreshList={refreshList}
               loading={loading}
-              isStarred={
-                starred &&
-                starred.folders &&
-                starred.folders.some((c) => c.folderId === folder.id)
-              }
+              isStarred={starred && starred.folders && starred.folders.some((c) => c.folderId === folder.id)}
               noShowMenu={props.noShowMenu}
             />
           );
@@ -890,20 +783,12 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
             <FolderComponent
               key={`${i}user`}
               displayName={folder.name}
-              onClick={() =>
-                props.onClick
-                  ? props.onClick(folder.id, false)
-                  : navigator(`/library/${folder.id}`)
-              }
+              onClick={() => (props.onClick ? props.onClick(folder.id, false) : navigator(`/library/${folder.id}`))}
               folder={folder}
               keyy={`${i}`}
               refreshList={refreshList}
               loading={loading}
-              isStarred={
-                starred &&
-                starred.folders &&
-                starred.folders.some((c) => c.folderId === folder.id)
-              }
+              isStarred={starred && starred.folders && starred.folders.some((c) => c.folderId === folder.id)}
               noShowMenu={props.noShowMenu}
             />
           );
@@ -911,23 +796,17 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
       </div>
 
       {/* Empty State */}
-      {orgFilteredFolderList.length === 0 &&
-        userFilteredFolderList.length === 0 && (
-          <div
-            className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
-            role="status"
-          >
-            <Folder className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">{t("errorMessage.noFolders")}</p>
-            <p className="text-sm">
-              {searchTerm ||
-                filters.tags !== "none" ||
-                filters.starred !== StarredOptions.All
-                ? "Try adjusting your search or filters"
-                : "Create your first folder to get started organizing your content"}
-            </p>
-          </div>
-        )}
+      {orgFilteredFolderList.length === 0 && userFilteredFolderList.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground bg-card border rounded-lg" role="status">
+          <Folder className="mx-auto h-12 w-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium mb-2">{t("errorMessage.noFolders")}</p>
+          <p className="text-sm">
+            {searchTerm || filters.tags !== "none" || filters.starred !== StarredOptions.All
+              ? "Try adjusting your search or filters"
+              : "Create your first folder to get started organizing your content"}
+          </p>
+        </div>
+      )}
     </div>
   ) : (
     <div className="flex items-center justify-center py-8">
@@ -937,10 +816,7 @@ export default function ListFolders(props: ListFoldersProps): JSX.Element {
   );
 }
 
-export function orderFolderAscendingNameAndStarred(
-  list: Array<FolderType>,
-  starred: Array<{ folderId: string }>
-) {
+export function orderFolderAscendingNameAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
   return list.sort((a, b) => {
     const aIsFavorite = starred.some((m) => m.folderId === a.id);
     const bIsFavorite = starred.some((m) => m.folderId === b.id);
@@ -954,10 +830,7 @@ export function orderFolderAscendingNameAndStarred(
   });
 }
 
-export function orderFolderDescendingNameAndStarred(
-  list: Array<FolderType>,
-  starred: Array<{ folderId: string }>
-) {
+export function orderFolderDescendingNameAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
   return list.sort((a, b) => {
     const aIsFavorite = starred.some((m) => m.folderId === a.id);
     const bIsFavorite = starred.some((m) => m.folderId === b.id);
@@ -971,10 +844,7 @@ export function orderFolderDescendingNameAndStarred(
   });
 }
 
-export function orderFolderOldestCreatedAndStarred(
-  list: Array<FolderType>,
-  starred: Array<{ folderId: string }>
-) {
+export function orderFolderOldestCreatedAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
   return list.sort((a, b) => {
     const aIsFavorite = starred.some((m) => m.folderId === a.id);
     const bIsFavorite = starred.some((m) => m.folderId === b.id);
@@ -988,10 +858,7 @@ export function orderFolderOldestCreatedAndStarred(
   });
 }
 
-export function orderFolderNewestCreatedAndStarred(
-  list: Array<FolderType>,
-  starred: Array<{ folderId: string }>
-) {
+export function orderFolderNewestCreatedAndStarred(list: Array<FolderType>, starred: Array<{ folderId: string }>) {
   return list.sort((a, b) => {
     const aIsFavorite = starred.some((m) => m.folderId === a.id);
     const bIsFavorite = starred.some((m) => m.folderId === b.id);

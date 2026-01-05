@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useContext,
-} from "react";
+import React, { useEffect, useState, useCallback, useRef, useContext } from "react";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
@@ -19,11 +13,7 @@ import {
   postUpdateConversation,
 } from "../../utility/endpoints/ConversationEndpoints";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
-import {
-  ConversationListType,
-  MessageType,
-  StreamMessageType,
-} from "../../utility/types/ConversationTypes";
+import { ConversationListType, MessageType, StreamMessageType } from "../../utility/types/ConversationTypes";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { UserContext } from "../../utility/context/UserContext";
@@ -63,15 +53,14 @@ export default function Chat(): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const { user } = useContext(UserContext);
   const [viewUser, setViewUser] = useState<UserType>();
-  const [showTypingIndicator, setShowTypingIndicator] =
-    useState<boolean>(false);
+  const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const [showWizard, setShowWizard] = useState(false);
   const [chatError, setChatError] = useState<string | undefined>();
-  const [conversationList, setConversationList] =
-    useState<ConversationListType>();
+  const [conversationList, setConversationList] = useState<ConversationListType>();
   const [creatingConvo, setCreatingConvo] = useState<boolean>(false);
   const [messageNote, setMessageNote] = useState<string>();
-  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{ //used for autonaming also
+  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
+    //used for autonaming also
     open: boolean;
     deleteOpen: boolean;
     courseId: string;
@@ -93,8 +82,7 @@ export default function Chat(): JSX.Element {
     error: "",
   });
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
-  const [openSpeechToTextModal, setOpenSpeechToTextModal] =
-    useState<boolean>(false);
+  const [openSpeechToTextModal, setOpenSpeechToTextModal] = useState<boolean>(false);
   const [openErrorModal, setOpenErrorModal] = useState<{
     open: boolean;
     message: string;
@@ -105,13 +93,8 @@ export default function Chat(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  const instructor = process.env.REACT_APP_INSTRUCTOR
-    ? process.env.REACT_APP_INSTRUCTOR
-    : "PapyrusAIInstructors";
-  const admin = process.env.REACT_APP_ADMIN
-    ? process.env.REACT_APP_ADMIN
-    : "PapyrusAIAdmin";
-
+  const instructor = process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors";
+  const admin = process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin";
 
   useEffect(() => {
     setAlert({ message: "", type: "info" });
@@ -152,61 +135,49 @@ export default function Chat(): JSX.Element {
       setIsLoading(true);
 
       // Load user data
-      Get(getUserData(location.pathname.split("/")[2]), controller.signal).then(
-        (res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              setViewUser(res.data);
-              if (user && user.username === res.data.username) {
-                onConnect(
-                  location.pathname.split("/")[3],
-                  location.pathname.split("/")[4],
-                  location.pathname.split("/")[5]
-                );
-              }
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
-              navigator("/");
-            }
-          }
-        }
-      );
-
-      // Load course data
-      Get(getCourse(location.pathname.split("/")[3]), controller.signal).then(
-        (res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              setCourseInfo(res.data);
-              setModuleInfo(
-                res.data.modules.find(
-                  (module: ModuleType) =>
-                    module.id === location.pathname.split("/")[4]
-                )
+      Get(getUserData(location.pathname.split("/")[2]), controller.signal).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            setViewUser(res.data);
+            if (user && user.username === res.data.username) {
+              onConnect(
+                location.pathname.split("/")[3],
+                location.pathname.split("/")[4],
+                location.pathname.split("/")[5]
               );
             }
-          } else if (res && res.status === 401) {
-            navigator("/login");
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          if (res === undefined) {
           } else {
-            if (res) {
-              setAlert({ message: t("errorMessage.courseNotFound"), type: "error" });
-              navigator("/");
-            }
+            setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
+            navigator("/");
           }
         }
-      );
+      });
+
+      // Load course data
+      Get(getCourse(location.pathname.split("/")[3]), controller.signal).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data) {
+            setCourseInfo(res.data);
+            setModuleInfo(res.data.modules.find((module: ModuleType) => module.id === location.pathname.split("/")[4]));
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          if (res) {
+            setAlert({ message: t("errorMessage.courseNotFound"), type: "error" });
+            navigator("/");
+          }
+        }
+      });
 
       // Load conversation list
       Get(
-        getConversationList(
-          location.pathname.split("/")[3],
-          location.pathname.split("/")[4]
-        ),
+        getConversationList(location.pathname.split("/")[3], location.pathname.split("/")[4]),
         controller.signal
       ).then((res) => {
         if (res && res.status && res.status < 300) {
@@ -232,8 +203,7 @@ export default function Chat(): JSX.Element {
               setSelectedPrompt("");
             }
             var sortedMessages = res.data.messages.sort(
-              (a: MessageType, b: MessageType) =>
-                parseInt(b.timestamp) - parseInt(a.timestamp)
+              (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp)
             );
             var contextCounter = 0;
             var reverse = sortedMessages.map((message: MessageType) => {
@@ -265,10 +235,7 @@ export default function Chat(): JSX.Element {
         } else {
           if (res && res.status === 400) {
             setAlert({ message: t("errorMessage.convoNotFound"), type: "error" });
-            navigator(
-              `/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]
-              }`
-            );
+            navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
           }
         }
         setIsLoading(false);
@@ -290,16 +257,10 @@ export default function Chat(): JSX.Element {
   }, [moduleInfo, repeatingPrompts, selectedPrompt, messages]);
 
   useEffect(() => {
-    if (
-      moduleInfo &&
-      moduleInfo.raterEnabled !== undefined &&
-      moduleInfo.raterEnabled
-    ) {
+    if (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled) {
       setShowWizard(false);
     } else {
-      var visibleMessages = messages.filter(
-        (m) => m.userVisible !== undefined && m.userVisible
-      );
+      var visibleMessages = messages.filter((m) => m.userVisible !== undefined && m.userVisible);
       if (
         viewUser &&
         user &&
@@ -355,8 +316,7 @@ export default function Chat(): JSX.Element {
       setShowTypingIndicator(false);
       if (returnData.essay && returnData.status < 300 && returnData.rater) {
         const tempTimestamp = Date.now();
-        const essayTempId =
-          tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        const essayTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
         const messageTempId = (Number(essayTempId) + 1).toString();
         var essayMessage: MessageType = {
           id: essayTempId,
@@ -390,10 +350,7 @@ export default function Chat(): JSX.Element {
           setMessageNote(returnMessage.note);
           setShowTypingIndicator(true);
         }
-        if (
-          returnMessage.messageType === "streamMessage" &&
-          !returnMessage.finished
-        ) {
+        if (returnMessage.messageType === "streamMessage" && !returnMessage.finished) {
           if (returnMessage.message !== null && !returnMessage.note) {
             setMessageNote(undefined);
           }
@@ -405,8 +362,7 @@ export default function Chat(): JSX.Element {
               messagesRef.current.length > 0 &&
               messagesRef.current[messagesRef.current.length - 1].role === "assistant" &&
               messagesRef.current[messagesRef.current.length - 1].stream &&
-              messagesRef.current[messagesRef.current.length - 1].stream?.[0]
-                .id === returnMessage.id);
+              messagesRef.current[messagesRef.current.length - 1].stream?.[0].id === returnMessage.id);
 
           if (shouldAppendToExisting) {
             setMessages((prev) => {
@@ -417,19 +373,13 @@ export default function Chat(): JSX.Element {
                   const stream = temp[temp.length - 1].stream || [];
                   const filteredArray: StreamMessageType[] = stream.filter(
                     (obj, index, self) =>
-                      index ===
-                      self.findIndex(
-                        (t) =>
-                          t.timestamp === obj.timestamp &&
-                          t.message === obj.message
-                      )
+                      index === self.findIndex((t) => t.timestamp === obj.timestamp && t.message === obj.message)
                   );
                   const reconstructed = filteredArray
                     .sort((a, b) => a.timestamp - b.timestamp)
                     .map((m) => m.message)
                     .join("");
-                  temp[temp.length - 1].content =
-                    reconstructed || temp[temp.length - 1].content;
+                  temp[temp.length - 1].content = reconstructed || temp[temp.length - 1].content;
                 }
                 return temp;
               } else return prev;
@@ -439,8 +389,7 @@ export default function Chat(): JSX.Element {
               setMessageNote(undefined);
             }
             const tempTimestamp = Date.now();
-            const messageTempId =
-              tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+            const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
             var responseMessage: MessageType = {
               id: messageTempId,
               content: returnMessage.message,
@@ -458,10 +407,7 @@ export default function Chat(): JSX.Element {
             currentStreamIdRef.current = returnMessage.id;
             setMessages((prev) => [...prev, responseMessage]);
           }
-        } else if (
-          returnMessage.finished &&
-          returnMessage.messageType === "finalMessage"
-        ) {
+        } else if (returnMessage.finished && returnMessage.messageType === "finalMessage") {
           // Clear the stream ID when finished
           currentStreamIdRef.current = null;
           setMessages((prev) => {
@@ -488,10 +434,7 @@ export default function Chat(): JSX.Element {
 
   const onConnect = useCallback(
     (courseId: string, moduleId: string, conversationIndex: string) => {
-      if (
-        socket.current?.readyState !== WebSocket.OPEN &&
-        process.env.REACT_APP_WEBSOCKET_URL
-      ) {
+      if (socket.current?.readyState !== WebSocket.OPEN && process.env.REACT_APP_WEBSOCKET_URL) {
         var URL = process.env.REACT_APP_WEBSOCKET_URL;
         URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
         URL =
@@ -516,10 +459,7 @@ export default function Chat(): JSX.Element {
         onSocketMessage(event.data);
       });
 
-      if (
-        socket.current.readyState === WebSocket.OPEN ||
-        socket.current.readyState === WebSocket.CONNECTING
-      ) {
+      if (socket.current.readyState === WebSocket.OPEN || socket.current.readyState === WebSocket.CONNECTING) {
         socket.current.close(1000, "Reconnecting with new port");
       }
 
@@ -538,8 +478,7 @@ export default function Chat(): JSX.Element {
             return "";
           } else {
             const tempTimestamp = Date.now();
-            const messageTempId =
-              tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+            const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
             var responseMessage: MessageType = {
               id: tempTimestamp.toString(),
               content: message.content,
@@ -562,19 +501,15 @@ export default function Chat(): JSX.Element {
           JSON.stringify({
             action: "sendMessage",
             messages: messagesToSend,
-            organization: process.env.REACT_APP_ORGANIZATION
-              ? process.env.REACT_APP_ORGANIZATION
-              : "UCI",
+            organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
           })
         );
         setShowTypingIndicator(true);
         if (
           messages
             .concat(messageList)
-            .filter(
-              (m) =>
-                (m.promptId === null || m.promptId === "") && m.role === "user" && m.userVisible
-            ).length === 1
+            .filter((m) => (m.promptId === null || m.promptId === "") && m.role === "user" && m.userVisible).length ===
+          1
         ) {
           autoCreateConvoName(messagesToSend);
         }
@@ -600,9 +535,7 @@ export default function Chat(): JSX.Element {
           var sendEssay: any = {
             action: "raterEssay",
             essay: essay,
-            organization: process.env.REACT_APP_ORGANIZATION
-              ? process.env.REACT_APP_ORGANIZATION
-              : "UCI",
+            organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
           };
           if (message) {
             sendEssay["message"] = message;
@@ -634,8 +567,7 @@ export default function Chat(): JSX.Element {
     setChatError(undefined);
     if (message.length < 100000 && message.length > 0) {
       const tempTimestamp = Date.now();
-      const messageTempId =
-        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
         id: tempTimestamp.toString(),
         content: message,
@@ -655,11 +587,9 @@ export default function Chat(): JSX.Element {
     setIsLoading(false);
   }
 
-  function autoCreateConvoName(
-    messages: Array<{ role: string; content: string }>
-  ) {
+  function autoCreateConvoName(messages: Array<{ role: string; content: string }>) {
     if (user) {
-      //set a timeout so that we aren't updating the same conversation 
+      //set a timeout so that we aren't updating the same conversation
       // on the backend at the same time and overwritting
       setTimeout(() => {
         Post(
@@ -677,10 +607,10 @@ export default function Chat(): JSX.Element {
               setConversationList((prev) => {
                 if (prev) {
                   var convos = prev.conversations;
-                  const index = parseInt(conversationIds ? conversationIds.conversationIndex : "")
-                  convos[index].name = res.data.conversations[index].name
-                  return { ...prev, conversations: convos }
-                } else return prev
+                  const index = parseInt(conversationIds ? conversationIds.conversationIndex : "");
+                  convos[index].name = res.data.conversations[index].name;
+                  return { ...prev, conversations: convos };
+                } else return prev;
               });
               setOpenUpdateConvoModal({
                 open: false,
@@ -688,18 +618,13 @@ export default function Chat(): JSX.Element {
                 courseId: location.pathname.split("/")[3],
                 moduleId: location.pathname.split("/")[4],
                 index: location.pathname.split("/")[5],
-                name: res.data.conversations[location.pathname.split("/")[5]]
-                  .name,
-                isDeleted:
-                  res.data.conversations[location.pathname.split("/")[5]]
-                    .isDeleted,
-                completed: res.data.conversations[location.pathname.split("/")[5]]
-                  .completed
-                  ? res.data.conversations[location.pathname.split("/")[5]]
-                    .completed
+                name: res.data.conversations[location.pathname.split("/")[5]].name,
+                isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
+                completed: res.data.conversations[location.pathname.split("/")[5]].completed
+                  ? res.data.conversations[location.pathname.split("/")[5]].completed
                   : false,
                 error: "",
-              })
+              });
             }
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -710,7 +635,7 @@ export default function Chat(): JSX.Element {
             });
           }
         });
-      }, 15000)
+      }, 15000);
     }
   }
 
@@ -720,25 +645,14 @@ export default function Chat(): JSX.Element {
     if (courseInfo && moduleInfo) {
       var messagesToSend = [];
       if (moduleInfo.prompts.length !== 0) {
-        const actualPrompt = moduleInfo.prompts.filter(
-          (x) => x.id === selectedPrompt
-        );
+        const actualPrompt = moduleInfo.prompts.filter((x) => x.id === selectedPrompt);
         const tempTimestamp = Date.now();
-        const messageTempId =
-          tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
         var responseMessage: MessageType = {
           id: tempTimestamp.toString(),
-          content:
-            actualPrompt && actualPrompt.length > 0
-              ? actualPrompt[0].prompt
-              : "",
+          content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
           messageType:
-            (actualPrompt && actualPrompt.length > 0
-              ? actualPrompt[0].prompt
-              : ""
-            ).length < 1000
-              ? "text"
-              : "file",
+            (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
           role: "user",
           sender: "username",
           timestamp: messageTempId,
@@ -758,13 +672,9 @@ export default function Chat(): JSX.Element {
       actualPrompt = moduleInfo.prompts.filter((x) => x.id === message);
     }
     if (essay.length < 100000 && essay.length > 150) {
-      onSendEssay(
-        essay,
-        actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : ""
-      );
+      onSendEssay(essay, actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "");
       const tempTimestamp = Date.now();
-      const messageTempId =
-        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
         id: tempTimestamp.toString(),
         content: essay,
@@ -779,21 +689,12 @@ export default function Chat(): JSX.Element {
       };
       if (messages && message && moduleInfo && moduleInfo.showInitialPrompt) {
         const tempTimestamp2 = Date.now();
-        const messageTempId2 =
-          tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        const messageTempId2 = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
         var responseMessage2: MessageType = {
           id: tempTimestamp2.toString(),
-          content:
-            actualPrompt && actualPrompt.length > 0
-              ? actualPrompt[0].prompt
-              : "",
+          content: actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "",
           messageType:
-            (actualPrompt && actualPrompt.length > 0
-              ? actualPrompt[0].prompt
-              : ""
-            ).length < 1000
-              ? "text"
-              : "file",
+            (actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "").length < 1000 ? "text" : "file",
           role: "user",
           sender: user ? user.name : "You",
           timestamp: messageTempId2,
@@ -818,22 +719,17 @@ export default function Chat(): JSX.Element {
   function handleNewConversation() {
     if (conversationIds) {
       setCreatingConvo(true);
-      Post(
-        postCreateConversation(
-          conversationIds.courseId,
-          conversationIds.moduleId
-        ),
-        {}
-      ).then((res) => {
+      Post(postCreateConversation(conversationIds.courseId, conversationIds.moduleId), {}).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             setCreatingConvo(false);
             setConversationList(res.data);
             if (res.data.conversations) {
-              closeSocket()
+              closeSocket();
               navigator(
-                `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId
-                }/${res.data.conversations.length - 1}`
+                `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId}/${
+                  res.data.conversations.length - 1
+                }`
               );
             }
           }
@@ -854,8 +750,7 @@ export default function Chat(): JSX.Element {
     setOpenDocumentModal(false);
     if (docText.length < 100000 && docText.length > 0) {
       const tempTimestamp = Date.now();
-      const messageTempId =
-        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
         id: tempTimestamp.toString(),
         content: docText,
@@ -877,8 +772,7 @@ export default function Chat(): JSX.Element {
     setOpenSpeechToTextModal(false);
     if (text.length < 100000 && text.length > 0) {
       const tempTimestamp = Date.now();
-      const messageTempId =
-        tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
         id: tempTimestamp.toString(),
         content: text,
@@ -897,12 +791,7 @@ export default function Chat(): JSX.Element {
   }
 
   // Handlers for sidebar conversation actions
-  function handleRenameConversation(
-    courseId: string,
-    moduleId: string,
-    index: string,
-    name: string
-  ) {
+  function handleRenameConversation(courseId: string, moduleId: string, index: string, name: string) {
     setOpenUpdateConvoModal({
       open: true,
       deleteOpen: false,
@@ -916,12 +805,8 @@ export default function Chat(): JSX.Element {
     });
   }
 
-  function handleArchiveConversation(
-    courseId: string,
-    moduleId: string,
-    index: string
-  ) {
-    setOpenUpdateConvoModal(prev => ({
+  function handleArchiveConversation(courseId: string, moduleId: string, index: string) {
+    setOpenUpdateConvoModal((prev) => ({
       ...prev,
       deleteOpen: true,
       courseId: courseId,
@@ -930,25 +815,17 @@ export default function Chat(): JSX.Element {
     }));
   }
 
-  function handleDownloadConversation(
-    courseId: string,
-    moduleId: string,
-    index: string
-  ) {
+  function handleDownloadConversation(courseId: string, moduleId: string, index: string) {
     if (!courseInfo || !moduleInfo || !viewUser || !user) return;
 
     setIsLoading(true);
     const controller = new AbortController();
 
-    Get(
-      getConversation(courseId, moduleId, index, viewUser.username),
-      controller.signal
-    ).then((res: any) => {
+    Get(getConversation(courseId, moduleId, index, viewUser.username), controller.signal).then((res: any) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.messages) {
           const conversationMessages = res.data.messages.sort(
-            (a: MessageType, b: MessageType) =>
-              parseInt(b.timestamp) - parseInt(a.timestamp)
+            (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp)
           );
           const sortedMessages = conversationMessages.reverse();
 
@@ -964,26 +841,14 @@ export default function Chat(): JSX.Element {
           if (user) {
             fileData += "User: " + user.email + "\n";
           }
-          const isInstructor =
-            user &&
-            (user.groups.includes(admin) || user.groups.includes(instructor));
+          const isInstructor = user && (user.groups.includes(admin) || user.groups.includes(instructor));
           sortedMessages.forEach((message: MessageType, index: number) => {
             if (!moduleInfo.showInitialPrompt && index === 0 && !isInstructor) {
-            } else if (
-              message.userVisible !== undefined &&
-              !message.userVisible &&
-              !isInstructor
-            ) {
+            } else if (message.userVisible !== undefined && !message.userVisible && !isInstructor) {
             } else {
-              var dateTime = new Date(
-                parseInt(message.id.substring(0, 13), 10)
-              ).toLocaleString();
-              var sender =
-                message.sender === "ChatGPT"
-                  ? "Papyrus"
-                  : viewUser.name + " " + viewUser.family_name;
-              fileData +=
-                sender + " - " + dateTime + "\n" + message.content + "\n\n";
+              var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
+              var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
+              fileData += sender + " - " + dateTime + "\n" + message.content + "\n\n";
             }
           });
           const blob = new Blob([fileData], { type: "text/plain" });
@@ -1026,22 +891,17 @@ export default function Chat(): JSX.Element {
       ).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
-            closeSocket()
+            closeSocket();
             setOpenUpdateConvoModal({
               open: false,
               deleteOpen: false,
               courseId: location.pathname.split("/")[3],
               moduleId: location.pathname.split("/")[4],
               index: location.pathname.split("/")[5],
-              name: res.data.conversations[location.pathname.split("/")[5]]
-                .name,
-              isDeleted:
-                res.data.conversations[location.pathname.split("/")[5]]
-                  .isDeleted,
-              completed: res.data.conversations[location.pathname.split("/")[5]]
-                .completed
-                ? res.data.conversations[location.pathname.split("/")[5]]
-                  .completed
+              name: res.data.conversations[location.pathname.split("/")[5]].name,
+              isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
+              completed: res.data.conversations[location.pathname.split("/")[5]].completed
+                ? res.data.conversations[location.pathname.split("/")[5]].completed
                 : false,
               error: "",
             });
@@ -1087,16 +947,10 @@ export default function Chat(): JSX.Element {
                 courseId: location.pathname.split("/")[3],
                 moduleId: location.pathname.split("/")[4],
                 index: location.pathname.split("/")[5],
-                name: res.data.conversations[location.pathname.split("/")[5]]
-                  .name,
-                isDeleted:
-                  res.data.conversations[location.pathname.split("/")[5]]
-                    .isDeleted,
-                completed: res.data.conversations[
-                  location.pathname.split("/")[5]
-                ].completed
-                  ? res.data.conversations[location.pathname.split("/")[5]]
-                    .completed
+                name: res.data.conversations[location.pathname.split("/")[5]].name,
+                isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
+                completed: res.data.conversations[location.pathname.split("/")[5]].completed
+                  ? res.data.conversations[location.pathname.split("/")[5]].completed
                   : false,
                 error: "",
               });
@@ -1115,7 +969,12 @@ export default function Chat(): JSX.Element {
     }
   }
 
-  const conversationArchived = conversationList ? conversationList.conversations.filter((_convo, index) => index.toString() === (conversationIds?.conversationIndex ?? 0))[0].isDeleted : false;
+  const conversationArchived =
+    conversationList && conversationList?.conversations
+      ? conversationList.conversations.filter(
+          (_convo, index) => index.toString() === (conversationIds?.conversationIndex ?? 0)
+        )[0].isDeleted
+      : false;
 
   const isChatInputVisible =
     isConnected &&
@@ -1125,7 +984,8 @@ export default function Chat(): JSX.Element {
     selectedPrompt !== undefined &&
     moduleInfo?.continuedInteraction &&
     !showWizard &&
-    !openUpdateConvoModal.completed && !conversationArchived;
+    !openUpdateConvoModal.completed &&
+    !conversationArchived;
 
   return !isLoading && courseInfo && conversationIds && moduleInfo ? (
     <div className="flex bg-background text-foreground">
@@ -1150,14 +1010,8 @@ export default function Chat(): JSX.Element {
           },
         ]}
       >
-        <Button
-          asChild
-          onClick={() => setOpenErrorModal({ open: false, message: "" })}
-        >
-          <Link
-            to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`}
-            className="no-underline"
-          >
+        <Button asChild onClick={() => setOpenErrorModal({ open: false, message: "" })}>
+          <Link to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`} className="no-underline">
             {t("chat.backToConvoList")}
           </Link>
         </Button>
@@ -1200,9 +1054,7 @@ export default function Chat(): JSX.Element {
       {/* Delete Conversation Modal */}
       <DialogWrapper
         open={openUpdateConvoModal.deleteOpen}
-        onOpenChange={(open) =>
-          setOpenUpdateConvoModal((prev) => ({ ...prev, deleteOpen: open }))
-        }
+        onOpenChange={(open) => setOpenUpdateConvoModal((prev) => ({ ...prev, deleteOpen: open }))}
         title={t("chat.archiveConversationQuestion")}
         description={t("chat.archiveConversationDescription")}
         contentClassName="sm:max-w-md"
@@ -1232,22 +1084,18 @@ export default function Chat(): JSX.Element {
       {/* Rename Conversation Modal */}
       <DialogWrapper
         open={openUpdateConvoModal.open}
-        onOpenChange={(open) =>
-          setOpenUpdateConvoModal((prev) => ({ ...prev, open }))
-        }
+        onOpenChange={(open) => setOpenUpdateConvoModal((prev) => ({ ...prev, open }))}
         title={t("chat.renameConversation")}
         contentClassName="sm:max-w-md"
         actions={[
           {
             label: `${t("common.cancel")}`,
-            onClick: () =>
-              setOpenUpdateConvoModal((prev) => ({ ...prev, open: false })),
+            onClick: () => setOpenUpdateConvoModal((prev) => ({ ...prev, open: false })),
             variant: "outline",
           },
           {
             label: t("chat.submit"),
-            onClick: () =>
-              handleConverstionNameDeleteUpdate(openUpdateConvoModal),
+            onClick: () => handleConverstionNameDeleteUpdate(openUpdateConvoModal),
             disabled: isLoading,
           },
         ]}
@@ -1269,11 +1117,7 @@ export default function Chat(): JSX.Element {
               disabled={isLoading}
               autoFocus
             />
-            {openUpdateConvoModal.error && (
-              <p className="text-sm text-destructive">
-                {openUpdateConvoModal.error}
-              </p>
-            )}
+            {openUpdateConvoModal.error && <p className="text-sm text-destructive">{openUpdateConvoModal.error}</p>}
           </div>
         </div>
       </DialogWrapper>
@@ -1337,7 +1181,7 @@ export default function Chat(): JSX.Element {
         onSearchChange={setSearchTerm}
         onNewConversation={handleNewConversation}
         onConversationClick={(link) => {
-          closeSocket()
+          closeSocket();
           navigator(link);
           if (window.innerWidth < 1024) setSidebarOpen(false);
         }}

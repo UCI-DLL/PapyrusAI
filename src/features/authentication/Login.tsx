@@ -14,6 +14,8 @@ export default function Login(props: LoginProps): JSX.Element {
   let navigator = useNavigate();
 
   useEffect(() => {
+    //Clear localstorage before redirecting or anything else
+    localStorage.clear()
     //Currently, this page just saves the token and then navigates to the home page
     if (location.hash) {
       if (location.hash.split("#")[1].split("=")[0] === "error_description") {

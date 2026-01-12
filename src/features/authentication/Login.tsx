@@ -18,6 +18,7 @@ export default function Login(props: LoginProps): JSX.Element {
     localStorage.clear()
     //Currently, this page just saves the token and then navigates to the home page
     if (location.hash) {
+      console.log("hash", location.hash)
       if (location.hash.split("#")[1].split("=")[0] === "error_description") {
         setTimeout(() => {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
@@ -31,11 +32,13 @@ export default function Login(props: LoginProps): JSX.Element {
         } else {
           //get access token if google login
           token = location.hash.split("&")[0].split("=")[1];
+          console.log("google", token)
         }
         localStorage.setItem("papyrusai_access_token", token);
-        setTimeout(() => {
-          getUserInfo(token)
-        }, 500);
+        // setTimeout(() => {
+        console.log("get info start")
+        getUserInfo(token)
+        // }, 500);
 
       }
     }
@@ -43,6 +46,7 @@ export default function Login(props: LoginProps): JSX.Element {
     else if (new URLSearchParams(location.search).has("papyrusai_access_token")) {
       const params = new URLSearchParams(location.search);
       const token = params.get("papyrusai_access_token") as string;
+      console.log("here?", token)
       localStorage.setItem("papyrusai_access_token", token);
       setTimeout(() => {
         getUserInfo(token);
@@ -66,6 +70,7 @@ export default function Login(props: LoginProps): JSX.Element {
         },
       })
       .then((response) => {
+        console.log("got user info", response.data)
         props.setUser(response.data);
         localStorage.setItem("papyrusai_user", JSON.stringify(response.data));
         navigator("/")

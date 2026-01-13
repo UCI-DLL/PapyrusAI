@@ -528,7 +528,6 @@ export default function ListFolderContents(
                         type: value.target.value as TypeOptions,
                       }))
                     }
-                    placeholder={t("library.type")}
                     title={t("library.type")}
                   >
                     <option value={"All"} key={"All"}>
@@ -585,7 +584,6 @@ export default function ListFolderContents(
                         sort: value.target.value as SortOptions,
                       }))
                     }
-                    placeholder={t("library.sort")}
                     title={t("library.sort")}
                   >
 
@@ -635,7 +633,6 @@ export default function ListFolderContents(
                         starred: value.target.value as StarredOptions,
                       }))
                     }
-                    placeholder={t("library.starred")}
                     title={t("library.starred")}
                   >
                     <option value={"All"} key={"All"}>
@@ -692,7 +689,6 @@ export default function ListFolderContents(
                         tags: value.target.value,
                       }))
                     }
-                    placeholder={t("library.tags")}
                     title={t("library.tags")}
                   >
                     <option value="none" key="none">

@@ -13,10 +13,7 @@ import StudentListPopup from "./StudentListPopup";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
-import {
-  parseLocalDate,
-  formatDateForTooltip,
-} from "../../utility/reports/date";
+import { parseLocalDate, formatDateForTooltip } from "../../utility/reports/date";
 import { Users } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
 
@@ -25,10 +22,7 @@ interface ClassChartsProps {
   setAnalysis: any;
 }
 
-export default function ClassCharts({
-  analysis,
-  setAnalysis,
-}: ClassChartsProps) {
+export default function ClassCharts({ analysis, setAnalysis }: ClassChartsProps) {
   const { t } = useTranslation();
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -37,18 +31,13 @@ export default function ClassCharts({
   //   useState<boolean>(false); // Unused state variable, for when classification is implemented
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState<number>(0);
   const [studentMenuOpen, setStudentMenuOpen] = useState<boolean>(false);
-  const [studentListPopupOpen, setStudentListPopupOpen] =
-    useState<boolean>(false);
+  const [studentListPopupOpen, setStudentListPopupOpen] = useState<boolean>(false);
   const lengthsRef = useRef<HTMLDivElement>(null);
   const chatClassificationRef = useRef<HTMLDivElement>(null);
   const countsRef = useRef<HTMLDivElement>(null);
   const moduleUsageRef = useRef<HTMLDivElement>(null);
-  const backgroundColor = colorToHex(
-    getComputedStyle(document.documentElement).getPropertyValue("--background")
-  );
-  const foregroundColor = colorToHex(
-    getComputedStyle(document.documentElement).getPropertyValue("--foreground")
-  );
+  const backgroundColor = colorToHex(getComputedStyle(document.documentElement).getPropertyValue("--background"));
+  const foregroundColor = colorToHex(getComputedStyle(document.documentElement).getPropertyValue("--foreground"));
 
   // Get available dates from the data and convert to proper date format
   const getAvailableDates = useCallback(() => {
@@ -61,9 +50,7 @@ export default function ClassCharts({
     const dailyConvoLengths = analysis.dailyConvoLengths as
       | Array<{ date: string; avg_convo_length: number }>
       | undefined;
-    const dailyConvoCounts = analysis.dailyConvoCounts as
-      | Array<{ date: string; num_convos: number }>
-      | undefined;
+    const dailyConvoCounts = analysis.dailyConvoCounts as Array<{ date: string; num_convos: number }> | undefined;
     const dailyClassificationCounts = analysis.dailyClassificationCounts as
       | Array<{ date: string; classification: string; count: number }>
       | undefined;
@@ -96,18 +83,10 @@ export default function ClassCharts({
     if (!analysis) return true;
 
     // Check if any of the main data categories have content
-    const dailyConvoLengths = analysis.dailyConvoLengths as
-      | Array<any>
-      | undefined;
-    const dailyConvoCounts = analysis.dailyConvoCounts as
-      | Array<any>
-      | undefined;
-    const dailyModuleUsage = analysis.dailyModuleUsage as
-      | Array<any>
-      | undefined;
-    const dailyClassificationCounts = analysis.dailyClassificationCounts as
-      | Array<any>
-      | undefined;
+    const dailyConvoLengths = analysis.dailyConvoLengths as Array<any> | undefined;
+    const dailyConvoCounts = analysis.dailyConvoCounts as Array<any> | undefined;
+    const dailyModuleUsage = analysis.dailyModuleUsage as Array<any> | undefined;
+    const dailyClassificationCounts = analysis.dailyClassificationCounts as Array<any> | undefined;
 
     return (
       (!dailyConvoLengths || dailyConvoLengths.length === 0) &&
@@ -121,9 +100,7 @@ export default function ClassCharts({
   const getStudents = useCallback(() => {
     if (!analysis || !analysis.students) return [];
 
-    return Object.entries(
-      analysis.students as Record<string, Record<string, unknown>>
-    );
+    return Object.entries(analysis.students as Record<string, Record<string, unknown>>);
   }, [analysis]);
 
   // Helper function to truncate long labels
@@ -227,15 +204,12 @@ export default function ClassCharts({
     if (!dailyModuleUsage) return [];
 
     // Filter data for selected date range
-    const dateData = dailyModuleUsage.filter((item) =>
-      isDateInRange(item.date)
-    );
+    const dateData = dailyModuleUsage.filter((item) => isDateInRange(item.date));
 
     // Aggregate counts by module name
     const moduleMap: Record<string, number> = {};
     dateData.forEach((item) => {
-      moduleMap[item.moduleName] =
-        (moduleMap[item.moduleName] || 0) + item.count;
+      moduleMap[item.moduleName] = (moduleMap[item.moduleName] || 0) + item.count;
     });
 
     return Object.entries(moduleMap).map(([moduleName, count]) => ({
@@ -255,15 +229,12 @@ export default function ClassCharts({
     if (!chatClassificationData) return [];
 
     // Filter data for selected date range
-    const dateData = chatClassificationData.filter((item) =>
-      isDateInRange(item.date as string)
-    );
+    const dateData = chatClassificationData.filter((item) => isDateInRange(item.date as string));
 
     // Aggregate counts by classification
     const classificationMap: Record<string, number> = {};
     dateData.forEach((item) => {
-      classificationMap[item.classification] =
-        (classificationMap[item.classification] || 0) + item.count;
+      classificationMap[item.classification] = (classificationMap[item.classification] || 0) + item.count;
     });
 
     return Object.entries(classificationMap).map(([classification, count]) => ({
@@ -275,8 +246,7 @@ export default function ClassCharts({
 
   // Get responsive chart dimensions based on container size
   const getChartDimensions = () => {
-    const containerWidth =
-      moduleUsageRef.current?.parentElement?.offsetWidth || 700;
+    const containerWidth = moduleUsageRef.current?.parentElement?.offsetWidth || 700;
     const maxWidth = Math.min(containerWidth - 40, 700); // Account for padding
     const maxHeight = Math.min(maxWidth * 0.6, 400); // Maintain aspect ratio
     return { width: maxWidth, height: maxHeight };
@@ -284,8 +254,7 @@ export default function ClassCharts({
 
   // Get chart dimensions specifically for module usage (taller to accommodate rotated labels)
   const getModuleChartDimensions = () => {
-    const containerWidth =
-      moduleUsageRef.current?.parentElement?.offsetWidth || 700;
+    const containerWidth = moduleUsageRef.current?.parentElement?.offsetWidth || 700;
     const maxWidth = Math.min(containerWidth - 40, 700);
     const maxHeight = Math.min(maxWidth * 0.8, 500);
     return { width: maxWidth, height: maxHeight };
@@ -360,8 +329,7 @@ export default function ClassCharts({
             rect.setAttribute("role", "img");
             rect.setAttribute(
               "aria-label",
-              `${t("common.module")} ${data.fullModuleName || data.moduleName}, ${t("reports.count")} ${data.count
-              }`
+              `${t("common.module")} ${data.fullModuleName || data.moduleName}, ${t("reports.count")} ${data.count}`
             );
             rect.setAttribute("tabindex", "0");
             dataIndex++;
@@ -369,22 +337,11 @@ export default function ClassCharts({
         });
       }, 0);
     }
-  }, [
-    analysis,
-    startDate,
-    endDate,
-    chartRefreshTrigger,
-    getAggregatedModuleData,
-    backgroundColor,
-    foregroundColor,
-    t
-  ]);
+  }, [analysis, startDate, endDate, chartRefreshTrigger, getAggregatedModuleData, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
     if (!analysis) return;
-    const lengthsData = analysis.dailyConvoLengths as
-      | Array<{ date: string; avg_convo_length: number }>
-      | undefined;
+    const lengthsData = analysis.dailyConvoLengths as Array<{ date: string; avg_convo_length: number }> | undefined;
     if (!lengthsData) return;
 
     // Filter data based on selected date range
@@ -448,7 +405,8 @@ export default function ClassCharts({
             dot.setAttribute("role", "img");
             dot.setAttribute(
               "aria-label",
-              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.avgConvoLength")} ${data.avg_convo_length
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.avgConvoLength")} ${
+                data.avg_convo_length
               }`
             );
             dot.setAttribute("tabindex", "0");
@@ -457,21 +415,11 @@ export default function ClassCharts({
         });
       }, 0);
     }
-  }, [
-    analysis,
-    startDate,
-    endDate,
-    chartRefreshTrigger,
-    backgroundColor,
-    foregroundColor,
-    t
-  ]);
+  }, [analysis, startDate, endDate, chartRefreshTrigger, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
     if (!analysis) return;
-    const countsData = analysis.dailyConvoCounts as
-      | Array<{ date: string; num_convos: number }>
-      | undefined;
+    const countsData = analysis.dailyConvoCounts as Array<{ date: string; num_convos: number }> | undefined;
     if (!countsData) return;
 
     // Filter data based on selected date range
@@ -535,8 +483,7 @@ export default function ClassCharts({
             dot.setAttribute("role", "img");
             dot.setAttribute(
               "aria-label",
-              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.numConvos")} ${data.num_convos
-              }`
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.numConvos")} ${data.num_convos}`
             );
             dot.setAttribute("tabindex", "0");
             dataIndex++;
@@ -544,24 +491,10 @@ export default function ClassCharts({
         });
       }, 0);
     }
-  }, [
-    analysis,
-    startDate,
-    endDate,
-    chartRefreshTrigger,
-    backgroundColor,
-    foregroundColor,
-    t
-  ]);
+  }, [analysis, startDate, endDate, chartRefreshTrigger, backgroundColor, foregroundColor, t]);
 
   useEffect(() => {
-    if (
-      !analysis ||
-      !startDate ||
-      !endDate ||
-      /*!showClassificationChart*/ false
-    )
-      return;
+    if (!analysis || !startDate || !endDate || /*!showClassificationChart*/ false) return;
 
     const aggregatedData = getAggregatedClassificationData();
     const { width, height } = getModuleChartDimensions();
@@ -582,9 +515,7 @@ export default function ClassCharts({
         legend: true,
         label: t("reports.classification"),
         range: PLOT_COLOR_PALETTE,
-        domain: aggregatedData.map(
-          (d) => d.fullClassification || d.classification
-        ), // Use full names in legend
+        domain: aggregatedData.map((d) => d.fullClassification || d.classification), // Use full names in legend
       },
       marks: [
         Plot.barY(aggregatedData, {
@@ -592,8 +523,7 @@ export default function ClassCharts({
           y: "count",
           fill: (d: any) => d.fullClassification || d.classification, // Use full names for color mapping
           title: (d: any) =>
-            `${t("reports.classification")}: ${d.fullClassification || d.classification
-            }\nCount: ${d.count}`,
+            `${t("reports.classification")}: ${d.fullClassification || d.classification}\nCount: ${d.count}`,
           tip: {
             format: {
               x: (d: any) => d.fullClassification || d.classification, // Show full name in tooltip
@@ -631,7 +561,7 @@ export default function ClassCharts({
     getAggregatedClassificationData,
     backgroundColor,
     foregroundColor,
-    t
+    t,
   ]);
 
   // Placeholder component for empty charts
@@ -721,11 +651,7 @@ export default function ClassCharts({
               </div>
               <StudentFilter />
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setStudentListPopupOpen(true)}
-              className="flex items-center gap-2"
-            >
+            <Button variant="outline" onClick={() => setStudentListPopupOpen(true)} className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               {t("reports.viewAllStudents")}
             </Button>
@@ -745,10 +671,7 @@ export default function ClassCharts({
           {/* Collective Stats Section */}
           <div style={{ marginBottom: "3rem" }}>
             {selectedStudents.length > 1 && (
-              <h2
-                className="text-2xl font-bold text-foreground mb-1"
-                style={{ padding: "0 2rem" }}
-              >
+              <h2 className="text-2xl font-bold text-foreground mb-1" style={{ padding: "0 2rem" }}>
                 {t("reports.combinedStatistics")}
               </h2>
             )}
@@ -797,11 +720,7 @@ export default function ClassCharts({
             </div>
             <StudentFilter />
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setStudentListPopupOpen(true)}
-            className="flex items-center gap-2"
-          >
+          <Button variant="outline" onClick={() => setStudentListPopupOpen(true)} className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             {t("reports.viewAllStudents")}
           </Button>
@@ -815,12 +734,8 @@ export default function ClassCharts({
               color: "#666",
             }}
           >
-            <h2 className="text-2xl font-bold text-foreground mb-1">
-              {t("reports.noData")}
-            </h2>
-            <p style={{ fontSize: "1.1rem" }}>
-              {t("reports.noDataDescription")}:
-            </p>
+            <h2 className="text-2xl font-bold text-foreground mb-1">{t("reports.noData")}</h2>
+            <p style={{ fontSize: "1.1rem" }}>{t("reports.noDataDescription")}:</p>
             <ul
               style={{
                 textAlign: "left",
@@ -839,9 +754,7 @@ export default function ClassCharts({
             {/* Date Range Selector */}
             {availableDates.length > 0 && (
               <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
-                <h2 className="text-2xl font-bold text-foreground mb-1">
-                  {t("reports.course")}:
-                </h2>
+                <h2 className="text-2xl font-bold text-foreground mb-1">{t("reports.course")}:</h2>
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   {(analysis?.courseName as string) || "Course Reports"}
                 </h1>
@@ -863,10 +776,7 @@ export default function ClassCharts({
                   }}
                 >
                   <div className="flex flex-col items-start">
-                    <label
-                      htmlFor="startDate"
-                      className="mb-2 font-medium text-foreground"
-                    >
+                    <label htmlFor="startDate" className="mb-2 font-medium text-foreground">
                       {t("reports.startDate")}:
                     </label>
                     <input
@@ -878,11 +788,8 @@ export default function ClassCharts({
                     />
                   </div>
                   <div className="flex flex-col items-start">
-                    <label
-                      htmlFor="endDate"
-                      className="mb-2 font-medium text-foreground"
-                    >
-                      {t("reports.startDate")}:
+                    <label htmlFor="endDate" className="mb-2 font-medium text-foreground">
+                      {t("reports.endDate")}:
                     </label>
                     <input
                       type="date"
@@ -903,8 +810,7 @@ export default function ClassCharts({
                     onClick={() => {
                       if (availableDates.length > 0) {
                         const firstDate = availableDates[0];
-                        const lastDate =
-                          availableDates[availableDates.length - 1];
+                        const lastDate = availableDates[availableDates.length - 1];
                         setStartDate(firstDate);
                         setEndDate(lastDate);
                       }
@@ -948,10 +854,7 @@ export default function ClassCharts({
                 className="chart-grid"
               >
                 <div style={{ marginBottom: "1rem" }}>
-                  <h2
-                    className="text-2xl font-bold text-foreground mb-2"
-                    id="class-lengths-chart-heading"
-                  >
+                  <h2 className="text-2xl font-bold text-foreground mb-2" id="class-lengths-chart-heading">
                     {t("reports.dailyConversationLengths")}
                   </h2>
                   <div
@@ -964,10 +867,7 @@ export default function ClassCharts({
                 </div>
 
                 <div style={{ marginBottom: "1rem" }}>
-                  <h2
-                    className="text-2xl font-bold text-foreground mb-2"
-                    id="class-counts-chart-heading"
-                  >
+                  <h2 className="text-2xl font-bold text-foreground mb-2" id="class-counts-chart-heading">
                     {t("reports.dailyConversationCounts")}
                   </h2>
                   <div
@@ -995,10 +895,7 @@ export default function ClassCharts({
                 className="chart-grid"
               >
                 <div style={{ marginBottom: "1rem" }}>
-                  <h2
-                    className="text-2xl font-bold text-foreground mb-2"
-                    id="class-module-usage-chart-heading"
-                  >
+                  <h2 className="text-2xl font-bold text-foreground mb-2" id="class-module-usage-chart-heading">
                     {t("reports.moduleUsage")}
                   </h2>
                   {startDate && endDate ? (

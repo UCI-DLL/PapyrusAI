@@ -25,6 +25,7 @@ export default function Login(props: LoginProps): JSX.Element {
         }, 500);
       } else {
         const hash = location.hash.split("&")
+        console.log("else hash", hash)
         var token = "";
         if (hash[0].startsWith("#id")) {
           //get access token if normal login
@@ -36,7 +37,7 @@ export default function Login(props: LoginProps): JSX.Element {
         }
         localStorage.setItem("papyrusai_access_token", token);
         // setTimeout(() => {
-        console.log("get info start")
+        console.log("get info start", token)
         getUserInfo(token)
         // }, 500);
 
@@ -56,6 +57,7 @@ export default function Login(props: LoginProps): JSX.Element {
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
     else {
+      console.log("end else?")
       navigator("/");
     }
     // eslint-disable-next-line

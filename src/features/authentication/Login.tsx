@@ -23,8 +23,10 @@ export default function Login(props: LoginProps): JSX.Element {
           },
         })
         .then((response) => {
+          console.log("login user", response.data)
           props.setUser(response.data);
           localStorage.setItem("papyrusai_user", JSON.stringify(response.data));
+          console.log("login nav to home")
           navigator("/")
           // return response;
         })
@@ -56,6 +58,7 @@ export default function Login(props: LoginProps): JSX.Element {
     localStorage.clear()
     //Currently, this page just saves the token and then navigates to the home page
     if (location.hash) {
+      console.log("location hash", location.hash)
       if (location.hash.split("#")[1].split("=")[0] === "error_description") {
         setTimeout(() => {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
@@ -63,6 +66,7 @@ export default function Login(props: LoginProps): JSX.Element {
       } else {
         const hash = location.hash.split("&")
         var token = "";
+        console.log("hash", hash)
         if (hash[0].startsWith("#id")) {
           //get access token if normal login
           token = location.hash.split("&")[1].split("=")[1];
@@ -80,6 +84,7 @@ export default function Login(props: LoginProps): JSX.Element {
     // Place any token found in params into local storage
     else if (new URLSearchParams(location.search).has("papyrusai_access_token")) {
       const params = new URLSearchParams(location.search);
+      console.log("here1", params)
       const token = params.get("papyrusai_access_token") as string;
       localStorage.setItem("papyrusai_access_token", token);
       setTimeout(() => {
@@ -87,9 +92,11 @@ export default function Login(props: LoginProps): JSX.Element {
       }, 500);
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {
+      console.log("here2 login window.replace login")
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
     else {
+      console.log("here3, nav to home")
       navigator("/");
     }
     // eslint-disable-next-line

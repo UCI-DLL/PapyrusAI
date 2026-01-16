@@ -54,6 +54,7 @@ export default function Login(props: LoginProps): JSX.Element {
           return error;
         });
     }
+    console.log("login current token", localStorage.getItem("papyrusai_access_token"))
     //Clear localstorage before redirecting or anything else
     localStorage.clear()
     //Currently, this page just saves the token and then navigates to the home page

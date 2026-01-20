@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import "./styles/index.scss";
 import { AlertType } from "./utility/context/AlertContext";
 import { PrivateRoute } from "./utility/PrivateRoute";
@@ -52,6 +52,7 @@ import { changeLanguage } from "./i18n";
 import { useTranslation } from "./hooks/useTranslation";
 
 function App(): JSX.Element {
+  const location = useLocation();
   const { t } = useTranslation();
   // user object obtained from backend or local
   const [user, setUser] = useState<UserType | null>(
@@ -92,59 +93,64 @@ function App(): JSX.Element {
   }, [user]);
 
   useEffect(() => {
-    // Check if we have an access token, if not, redirect to aws cognito login page
-    if (!localStorage.getItem("papyrusai_access_token") && !user) {
-      console.log("app here1 no local no user", navigator.userAgent)
-      if (
-        navigator.userAgent.indexOf("Chrome") < 0 &&
-        navigator.userAgent.indexOf("Safari") > -1
-      ) {
-        //do nothing here if on safari (or it creates a weird loop)
-        console.log("app here2, weird loop")
-      } else {
-        console.log("app here3, window.replace login")
-        window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-      }
-    } else if (localStorage.getItem("papyrusai_access_token") && !user) {
-      console.log("app here4, local yes, user no")
-      // get user's most update-to-date info
-      //If access denied, then update the access token
-      Get(getUserData()).then((res) => {
-        console.log("app res", res)
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            console.log("app user data", res.data)
-            //update our version of user
-            setUser(res.data);
-            localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-            //if user is missing name, then open the modal
-            //NOTE: family_name optional (aka can be empty string)
-            if (
-              !res.data.name ||
-              !res.data.family_name ||
-              res.data.name === ""
-            ) {
-              setShowUpdateUserInfoModal(true);
-            }
-          }
+    //Timeout so that login can possibly get token and save before this check
+    setTimeout(() => {
+      console.log("app location hash", location.hash)
+      // Check if we have an access token, if not, redirect to aws cognito login page
+      if (!localStorage.getItem("papyrusai_access_token") && !user) {
+        console.log("app here1 no local no user", navigator.userAgent)
+        if (
+          navigator.userAgent.indexOf("Chrome") < 0 &&
+          navigator.userAgent.indexOf("Safari") > -1
+        ) {
+          //do nothing here if on safari (or it creates a weird loop)
+          console.log("app here2, weird loop")
         } else {
-          console.log("app remove everything")
-          //remove user data
-          localStorage.removeItem("papyrusai_access_token");
-          localStorage.removeItem("papyrusai_user");
-          setUser(null);
-          window.location.replace(
-            process.env.REACT_APP_LOGIN_URL
-              ? process.env.REACT_APP_LOGIN_URL
-              : ""
-          );
+          console.log("app here3, window.replace login")
+          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
-      });
-    } else if (user && (!user.name || !user.family_name || user.name === "")) {
-      //if user is missing name, then open the modal
-      //NOTE: family_name optional (aka can be empty string)
-      setShowUpdateUserInfoModal(true);
-    } //else all is good
+      } else if (localStorage.getItem("papyrusai_access_token") && !user) {
+        console.log("app here4, local yes, user no")
+        // get user's most update-to-date info
+        //If access denied, then update the access token
+        Get(getUserData()).then((res) => {
+          console.log("app res", res)
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              console.log("app user data", res.data)
+              //update our version of user
+              setUser(res.data);
+              localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+              //if user is missing name, then open the modal
+              //NOTE: family_name optional (aka can be empty string)
+              if (
+                !res.data.name ||
+                !res.data.family_name ||
+                res.data.name === ""
+              ) {
+                setShowUpdateUserInfoModal(true);
+              }
+            }
+          } else {
+            console.log("app remove everything")
+            //remove user data
+            localStorage.removeItem("papyrusai_access_token");
+            localStorage.removeItem("papyrusai_user");
+            setUser(null);
+            window.location.replace(
+              process.env.REACT_APP_LOGIN_URL
+                ? process.env.REACT_APP_LOGIN_URL
+                : ""
+            );
+          }
+        });
+      } else if (user && (!user.name || !user.family_name || user.name === "")) {
+        //if user is missing name, then open the modal
+        //NOTE: family_name optional (aka can be empty string)
+        setShowUpdateUserInfoModal(true);
+      } //else all is good
+    }, 500);
+
   }, [user]);
 
   //handle log out

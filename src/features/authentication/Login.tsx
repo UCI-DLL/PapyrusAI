@@ -14,49 +14,7 @@ export default function Login(props: LoginProps): JSX.Element {
   let navigator = useNavigate();
 
   useEffect(() => {
-    function getUserInfo(token: string) {
-      const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
-      axios
-        .get(API_URL, {
-          headers: {
-            Authorization: token,
-          },
-        })
-        .then((response) => {
-          console.log("login user", response.data)
-          props.setUser(response.data);
-          localStorage.setItem("papyrusai_user", JSON.stringify(response.data));
-          console.log("login nav to home")
-          navigator("/")
-          // return response;
-        })
-        .catch(function (error) {
-          console.log("error", error)
-          if (error.code === "ERR_CANCELED") return;
-          if (error.code === "ERR_NETWORK") {
-            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-          }
-          if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            // showMsg(Object.values(error.response.data), "error");
-            if (error.response.status === 401) {
-              window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-            }
-            return error.response;
-          } else if (error.request) {
-            // The request was made but no response was received
-            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-            // http.ClientRequest in node.js
-          } else {
-            // Something happened in setting up the request that triggered an Error
-          }
-          return error;
-        });
-    }
     console.log("login current token", localStorage.getItem("papyrusai_access_token"))
-    //Clear localstorage before redirecting or anything else
-    localStorage.clear()
     //Currently, this page just saves the token and then navigates to the home page
     if (location.hash) {
       console.log("location hash", location.hash)
@@ -65,6 +23,8 @@ export default function Login(props: LoginProps): JSX.Element {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
         }, 500);
       } else {
+        //Clear localstorage before redirecting or anything else
+        localStorage.clear()
         const hash = location.hash.split("&")
         var token = "";
         console.log("hash", hash)
@@ -84,6 +44,8 @@ export default function Login(props: LoginProps): JSX.Element {
     }
     // Place any token found in params into local storage
     else if (new URLSearchParams(location.search).has("papyrusai_access_token")) {
+      //Clear localstorage before redirecting or anything else
+      localStorage.clear()
       const params = new URLSearchParams(location.search);
       console.log("here1", params)
       const token = params.get("papyrusai_access_token") as string;
@@ -93,6 +55,8 @@ export default function Login(props: LoginProps): JSX.Element {
       }, 500);
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {
+      //Clear localstorage before redirecting or anything else
+      localStorage.clear()
       console.log("here2 login window.replace login")
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
     }
@@ -103,6 +67,46 @@ export default function Login(props: LoginProps): JSX.Element {
     // eslint-disable-next-line
   }, []);
 
+  function getUserInfo(token: string) {
+    const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
+    axios
+      .get(API_URL, {
+        headers: {
+          Authorization: token,
+        },
+      })
+      .then((response) => {
+        console.log("login user", response.data)
+        props.setUser(response.data);
+        localStorage.setItem("papyrusai_user", JSON.stringify(response.data));
+        console.log("login nav to home")
+        navigator("/")
+        // return response;
+      })
+      .catch(function (error) {
+        console.log("error", error)
+        if (error.code === "ERR_CANCELED") return;
+        if (error.code === "ERR_NETWORK") {
+          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+        }
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          // showMsg(Object.values(error.response.data), "error");
+          if (error.response.status === 401) {
+            window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+          }
+          return error.response;
+        } else if (error.request) {
+          // The request was made but no response was received
+          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+          // http.ClientRequest in node.js
+        } else {
+          // Something happened in setting up the request that triggered an Error
+        }
+        return error;
+      });
+  }
 
   return (
     <div>

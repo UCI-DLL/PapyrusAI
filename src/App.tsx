@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./styles/index.scss";
 import { AlertType } from "./utility/context/AlertContext";
 import { PrivateRoute } from "./utility/PrivateRoute";
@@ -52,7 +52,6 @@ import { changeLanguage } from "./i18n";
 import { useTranslation } from "./hooks/useTranslation";
 
 function App(): JSX.Element {
-  const location = useLocation();
   const { t } = useTranslation();
   // user object obtained from backend or local
   const [user, setUser] = useState<UserType | null>(
@@ -95,7 +94,6 @@ function App(): JSX.Element {
   useEffect(() => {
     //Timeout so that login can possibly get token and save before this check
     setTimeout(() => {
-      console.log("app location hash", location.hash)
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token") && !user) {
         console.log("app here1 no local no user", navigator.userAgent)

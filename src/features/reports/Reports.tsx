@@ -6,7 +6,7 @@
  * StudentListPopup (view all students, views user's conversations -> UserReports)
  */
 
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { useNavigate } from "react-router";
 import { UserContext } from "../../utility/context/UserContext";
 import Get from "../../utility/Get";
@@ -76,6 +76,7 @@ export default function Reports(): JSX.Element {
     useState<boolean>(false);
   const [downloadType, setDownloadType] = useState<string>("json");
   var promiseArray: any[] = [];
+  const retryAttemptedRef = useRef<boolean>(false);
 
   const [checked, setChecked] = useState<Array<number>>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -100,8 +101,33 @@ export default function Reports(): JSX.Element {
     setChecked(newChecked);
   };
 
+  // Helper function to check if error is a network error (ERR_NETWORK)
+  const isNetworkError = (res: any): boolean => {
+    return res?.code === "ERR_NETWORK";
+  };
+
+  // Helper function to handle network errors with retry logic
+  const handleNetworkError = (res: any, retryFn: () => void) => {
+    if (isNetworkError(res) && !retryAttemptedRef.current) {
+      retryAttemptedRef.current = true;
+      setTimeout(() => {
+        retryFn();
+      }, 500);
+    } else if (isNetworkError(res) && retryAttemptedRef.current) {
+      // Second network error, navigate back with error alert
+      setAlert({
+        message: t("errorMessage.networkError") || "Network error: Unable to load reports. Please try again later.",
+        type: "error",
+      });
+      navigator(-1);
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
+    retryAttemptedRef.current = false;
+
     // for each course that the cuurent user is in, get the list of users
     if (user) {
       setIsLoading(true);
@@ -117,7 +143,10 @@ export default function Reports(): JSX.Element {
           )
         )
       ) {
-        getAllCourses("", controller.signal);
+        const loadAllCourses = () => {
+          getAllCourses("", controller.signal, loadAllCourses, handleNetworkError);
+        };
+        loadAllCourses();
       } else {
         user.groups.forEach((group) => {
           //skip instructor or student or admin groups
@@ -135,30 +164,33 @@ export default function Reports(): JSX.Element {
           ) {
             return "";
           }
-          Get(getCourse(group), controller.signal).then((res1) => {
-            if (res1 && res1.status && res1.status < 300) {
-              if (
-                res1.data &&
-                res1.data.instructor &&
-                (res1.data.instructor.username === user.username ||
-                  (res1.data.taList &&
-                    res1.data.taList.find(
-                      (a: CustomUserType) => a.username === user.username
-                    ))) //handle tas too
-              ) {
-                //only get the rest of the information if current user is instructor
-                getUsersInCourseList(res1.data, controller.signal);
+          const loadCourse = () => {
+            // Reports flag true
+            Get(getCourse(group), controller.signal, true).then((res1) => {
+              if (res1 && res1.status && res1.status < 300) {
+                if (
+                  res1.data &&
+                  res1.data.instructor &&
+                  (res1.data.instructor.username === user.username ||
+                    (res1.data.taList &&
+                      res1.data.taList.find(
+                        (a: CustomUserType) => a.username === user.username
+                      ))) //handle tas too
+                ) {
+                  //only get the rest of the information if current user is instructor
+                  getUsersInCourseList(res1.data, controller.signal);
+                }
+              } else if (res1 && res1.status === 401) {
+                navigator("/login");
+              } else {
+                // Check for network error (ERR_NETWORK)
+                handleNetworkError(res1, loadCourse);
               }
-            } else if (res1 && res1.status === 401) {
-              navigator("/login");
-            } else {
-              //handle errors
-            }
-          });
+            });
+          };
+          loadCourse();
         });
       }
-
-      setIsLoading(false);
     }
 
     return () => {
@@ -169,9 +201,15 @@ export default function Reports(): JSX.Element {
     // eslint-disable-next-line
   }, []);
 
-  function getAllCourses(startKey: string, signal: AbortSignal) {
+  function getAllCourses(
+    startKey: string,
+    signal: AbortSignal,
+    retryFn: () => void,
+    handleNetworkErrorFn: (res: any, retryFn: () => void) => void
+  ) {
     var limit = 20;
-    Get(getAllCourseList(limit, startKey), signal).then((res) => {
+    // Reports flag true
+    Get(getAllCourseList(limit, startKey), signal, true).then((res) => {
       if (res && res.status && res.status < 300) {
         if (
           res.data &&
@@ -191,7 +229,7 @@ export default function Reports(): JSX.Element {
             res.data.LastEvaluatedKey &&
             res.data.LastEvaluatedKey.id
           ) {
-            getAllCourses(res.data.LastEvaluatedKey.id, signal);
+            getAllCourses(res.data.LastEvaluatedKey.id, signal, retryFn, handleNetworkErrorFn);
           } else {
             setIsLoading(false);
           }
@@ -199,10 +237,17 @@ export default function Reports(): JSX.Element {
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        if (res === undefined) {
-        } else {
-          // handle error
-          setIsLoading(false);
+        // Use shared network error handler
+        handleNetworkErrorFn(res, () => {
+          getAllCourses(startKey, signal, retryFn, handleNetworkErrorFn);
+        });
+        // If it's not a network error (ERR_NETWORK), handle other errors
+        if (res?.code !== "ERR_NETWORK") {
+          if (res === undefined) {
+          } else {
+            // handle error
+            setIsLoading(false);
+          }
         }
       }
     });

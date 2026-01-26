@@ -29,6 +29,7 @@ export default function UserReports(): JSX.Element {
   >([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const retryCountRef = useRef<number>(0);
+  const retryAttemptedRef = useRef<boolean>(false);
 
   // Track loading status (no console output)
   useEffect(() => {
@@ -38,8 +39,41 @@ export default function UserReports(): JSX.Element {
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
 
+  // Helper function to check if error is a network error (ERR_NETWORK)
+  const isNetworkError = (res: any): boolean => {
+    return res?.code === "ERR_NETWORK";
+  };
+
+  // Helper function to handle network errors with retry logic
+  const handleNetworkError = (res: any, retryFn: () => void) => {
+    if (isNetworkError(res) && !retryAttemptedRef.current) {
+      console.log("[UserReports] Network error (ERR_NETWORK) detected, attempting retry in 500ms", {
+        error: res,
+        timestamp: new Date().toISOString(),
+      });
+      retryAttemptedRef.current = true;
+      setTimeout(() => {
+        console.log("[UserReports] Retrying after network error...");
+        retryFn();
+      }, 500);
+    } else if (isNetworkError(res) && retryAttemptedRef.current) {
+      // Second network error, navigate back with error alert
+      console.error("[UserReports] Network error retry failed, navigating back", {
+        error: res,
+        timestamp: new Date().toISOString(),
+      });
+      setAlert({
+        message: t("errorMessage.networkError") || "Network error: Unable to load user reports. Please try again later.",
+        type: "error",
+      });
+      navigator(-1);
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
+    retryAttemptedRef.current = false;
     if (
       location.pathname.split("/")[1] === "reports" &&
       location.pathname.split("/")[2] &&
@@ -54,6 +88,12 @@ export default function UserReports(): JSX.Element {
       const fetchConversations = () => {
         Get(getUserConversationList(username), controller.signal, true).then(
           (res) => {
+            // Check for network error first
+            if (isNetworkError(res)) {
+              handleNetworkError(res, fetchConversations);
+              return;
+            }
+
             if (res === undefined) {
               if (retryCountRef.current < 3) {
                 retryCountRef.current += 1;
@@ -70,6 +110,13 @@ export default function UserReports(): JSX.Element {
 
             // Reset retry count on successful response
             retryCountRef.current = 0;
+            if (retryAttemptedRef.current) {
+              console.log("[UserReports] fetchConversations retry succeeded", {
+                username,
+                timestamp: new Date().toISOString(),
+              });
+              retryAttemptedRef.current = false;
+            }
 
             if (res && res.status && res.status < 300) {
               if (res.data) {
@@ -80,49 +127,65 @@ export default function UserReports(): JSX.Element {
                 //Get the list of all conversations
                 //for each courseid, get the course data
                 res.data.map((conversation: any) => {
-                  Get(getCourse(conversation.courseId), controller.signal).then(
-                    (res1) => {
-                      completedFetches++;
-
-                      if (res1 && res1.status && res1.status < 300) {
-                        if (
-                          res1.data &&
-                          res1.data.instructor &&
-                          (res1.data.instructor.username === user.username ||
-                            (res1.data.taList &&
-                              res1.data.taList.find(
-                                (a: CustomUserType) =>
-                                  a.username === user.username
-                              )) || //handle tas too
-                            user.groups.includes(
-                              process.env.REACT_APP_ADMIN
-                                ? process.env.REACT_APP_ADMIN
-                                : "PapyrusAIAdmin"
-                            )) //or if an admin
-                        ) {
-                          //set conversation data
-                          setConversationList((prev) => [
-                            ...prev,
-                            {
-                              conversations: conversation.conversations,
-                              course: res1.data,
-                              courseId: conversation.courseId,
-                              moduleId: conversation.moduleId,
-                            },
-                          ]);
+                  const loadCourse = () => {
+                    Get(getCourse(conversation.courseId), controller.signal, true).then(
+                      (res1) => {
+                        // Check for network error
+                        if (isNetworkError(res1)) {
+                          handleNetworkError(res1, loadCourse);
+                          return;
                         }
-                      } else if (res1 && res1.status === 401) {
-                        navigator("/login");
-                      } else {
-                        //handle errors
-                      }
 
-                      // Only set loading to false when all course fetches are complete
-                      if (completedFetches === totalFetches) {
-                        setIsLoading(false);
+                        completedFetches++;
+
+                        if (res1 && res1.status && res1.status < 300) {
+                          if (retryAttemptedRef.current) {
+                            console.log("[UserReports] getCourse retry succeeded", {
+                              courseId: conversation.courseId,
+                              timestamp: new Date().toISOString(),
+                            });
+                            retryAttemptedRef.current = false;
+                          }
+                          if (
+                            res1.data &&
+                            res1.data.instructor &&
+                            (res1.data.instructor.username === user.username ||
+                              (res1.data.taList &&
+                                res1.data.taList.find(
+                                  (a: CustomUserType) =>
+                                    a.username === user.username
+                                )) || //handle tas too
+                              user.groups.includes(
+                                process.env.REACT_APP_ADMIN
+                                  ? process.env.REACT_APP_ADMIN
+                                  : "PapyrusAIAdmin"
+                              )) //or if an admin
+                          ) {
+                            //set conversation data
+                            setConversationList((prev) => [
+                              ...prev,
+                              {
+                                conversations: conversation.conversations,
+                                course: res1.data,
+                                courseId: conversation.courseId,
+                                moduleId: conversation.moduleId,
+                              },
+                            ]);
+                          }
+                        } else if (res1 && res1.status === 401) {
+                          navigator("/login");
+                        } else {
+                          //handle errors
+                        }
+
+                        // Only set loading to false when all course fetches are complete
+                        if (completedFetches === totalFetches) {
+                          setIsLoading(false);
+                        }
                       }
-                    }
-                  );
+                    );
+                  };
+                  loadCourse();
                   return "";
                 });
 
@@ -155,22 +218,38 @@ export default function UserReports(): JSX.Element {
   }, [location]);
 
   function getSpecificUser(username: string, signal: AbortSignal) {
-    //get user details
-    Get(getUserData(username), signal).then((res) => {
-      if (res && res.status && res.status < 300) {
-        if (res.data) {
-          setViewUser(res.data);
+    const loadUser = () => {
+      //get user details
+      Get(getUserData(username), signal, true).then((res) => {
+        // Check for network error
+        if (isNetworkError(res)) {
+          handleNetworkError(res, loadUser);
+          return;
         }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        if (res === undefined) {
+
+        if (res && res.status && res.status < 300) {
+          if (retryAttemptedRef.current) {
+            console.log("[UserReports] getSpecificUser retry succeeded", {
+              username,
+              timestamp: new Date().toISOString(),
+            });
+            retryAttemptedRef.current = false;
+          }
+          if (res.data) {
+            setViewUser(res.data);
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
         } else {
-          //handle error
-          setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
+          if (res === undefined) {
+          } else {
+            //handle error
+            setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
+          }
         }
-      }
-    });
+      });
+    };
+    loadUser();
   }
 
   return !isLoading ? (

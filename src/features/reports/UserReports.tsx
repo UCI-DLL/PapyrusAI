@@ -14,6 +14,7 @@ import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import { isNetworkError, createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
 
 export default function UserReports(): JSX.Element {
   const { t } = useTranslation();
@@ -39,46 +40,13 @@ export default function UserReports(): JSX.Element {
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
 
-  // Helper function to check if error is a network error (ERR_NETWORK)
-  const isNetworkError = (res: any): boolean => {
-    return res?.code === "ERR_NETWORK";
-  };
-
   // Helper function to handle network errors with retry logic
-  const handleNetworkError = (res: any, retryFn: () => void) => {
-    if (isNetworkError(res) && !retryAttemptedRef.current) {
-      console.log("[UserReports] Network error (ERR_NETWORK) detected, attempting retry in 500ms", {
-        error: res,
-        timestamp: new Date().toISOString(),
-      });
-      retryAttemptedRef.current = true;
-      setTimeout(() => {
-        console.log("[UserReports] Retrying after network error...");
-        retryFn();
-      }, 500);
-    } else if (isNetworkError(res) && retryAttemptedRef.current) {
-      // Second network error, navigate back with error alert
-      console.error("[UserReports] Network error retry failed, navigating back", {
-        error: res,
-        timestamp: new Date().toISOString(),
-      });
-      setAlert({
-        message: t("errorMessage.networkError") || "Network error: Unable to load user reports. Please try again later.",
-        type: "error",
-      });
-      navigator(-1);
-      setIsLoading(false);
-    }
-  };
+  const handleNetworkError = createNetworkErrorHandler(retryAttemptedRef, setAlert, navigator, t, setIsLoading);
 
   useEffect(() => {
     const controller = new AbortController();
     retryAttemptedRef.current = false;
-    if (
-      location.pathname.split("/")[1] === "reports" &&
-      location.pathname.split("/")[2] &&
-      user
-    ) {
+    if (location.pathname.split("/")[1] === "reports" && location.pathname.split("/")[2] && user) {
       //Get viewUser information
       const username = location.pathname.split("/")[2];
       getSpecificUser(username, controller.signal);
@@ -86,125 +54,122 @@ export default function UserReports(): JSX.Element {
       //get list of conversation
       //TODO handle pagination of conversation lists later when reports is more defined
       const fetchConversations = () => {
-        Get(getUserConversationList(username), controller.signal, true).then(
-          (res) => {
-            // Check for network error first
-            if (isNetworkError(res)) {
-              handleNetworkError(res, fetchConversations);
+        Get(getUserConversationList(username), controller.signal, true).then((res) => {
+          // Check for network error first
+          if (isNetworkError(res)) {
+            handleNetworkError(res, fetchConversations);
+            return;
+          }
+
+          if (res === undefined) {
+            if (retryCountRef.current < 3) {
+              retryCountRef.current += 1;
+
+              setTimeout(() => {
+                fetchConversations();
+              }, 2000);
+              return;
+            } else {
+              setIsLoading(false);
               return;
             }
+          }
 
-            if (res === undefined) {
-              if (retryCountRef.current < 3) {
-                retryCountRef.current += 1;
+          // Reset retry count on successful response
+          retryCountRef.current = 0;
+          if (retryAttemptedRef.current) {
+            console.log("[UserReports] fetchConversations retry succeeded", {
+              username,
+              timestamp: new Date().toISOString(),
+            });
+            retryAttemptedRef.current = false;
+          }
 
-                setTimeout(() => {
-                  fetchConversations();
-                }, 2000);
-                return;
-              } else {
-                setIsLoading(false);
-                return;
-              }
-            }
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              // Track how many course fetches we need to complete
+              let completedFetches = 0;
+              const totalFetches = res.data.length;
 
-            // Reset retry count on successful response
-            retryCountRef.current = 0;
-            if (retryAttemptedRef.current) {
-              console.log("[UserReports] fetchConversations retry succeeded", {
-                username,
-                timestamp: new Date().toISOString(),
-              });
-              retryAttemptedRef.current = false;
-            }
+              //Get the list of all conversations
+              //for each courseid, get the course data
+              res.data.map((conversation: any) => {
+                const loadCourse = () => {
+                  Get(getCourse(conversation.courseId), controller.signal, true).then((res1) => {
+                    // Check for network error
+                    if (isNetworkError(res1)) {
+                      handleNetworkError(res1, () => {
+                        console.log("[UserReports] loadCourse retry attempt", {
+                          courseId: conversation.courseId,
+                          timestamp: new Date().toISOString(),
+                        });
+                        loadCourse();
+                      });
+                      return;
+                    }
 
-            if (res && res.status && res.status < 300) {
-              if (res.data) {
-                // Track how many course fetches we need to complete
-                let completedFetches = 0;
-                const totalFetches = res.data.length;
+                    completedFetches++;
 
-                //Get the list of all conversations
-                //for each courseid, get the course data
-                res.data.map((conversation: any) => {
-                  const loadCourse = () => {
-                    Get(getCourse(conversation.courseId), controller.signal, true).then(
-                      (res1) => {
-                        // Check for network error
-                        if (isNetworkError(res1)) {
-                          handleNetworkError(res1, loadCourse);
-                          return;
-                        }
-
-                        completedFetches++;
-
-                        if (res1 && res1.status && res1.status < 300) {
-                          if (retryAttemptedRef.current) {
-                            console.log("[UserReports] getCourse retry succeeded", {
-                              courseId: conversation.courseId,
-                              timestamp: new Date().toISOString(),
-                            });
-                            retryAttemptedRef.current = false;
-                          }
-                          if (
-                            res1.data &&
-                            res1.data.instructor &&
-                            (res1.data.instructor.username === user.username ||
-                              (res1.data.taList &&
-                                res1.data.taList.find(
-                                  (a: CustomUserType) =>
-                                    a.username === user.username
-                                )) || //handle tas too
-                              user.groups.includes(
-                                process.env.REACT_APP_ADMIN
-                                  ? process.env.REACT_APP_ADMIN
-                                  : "PapyrusAIAdmin"
-                              )) //or if an admin
-                          ) {
-                            //set conversation data
-                            setConversationList((prev) => [
-                              ...prev,
-                              {
-                                conversations: conversation.conversations,
-                                course: res1.data,
-                                courseId: conversation.courseId,
-                                moduleId: conversation.moduleId,
-                              },
-                            ]);
-                          }
-                        } else if (res1 && res1.status === 401) {
-                          navigator("/login");
-                        } else {
-                          //handle errors
-                        }
-
-                        // Only set loading to false when all course fetches are complete
-                        if (completedFetches === totalFetches) {
-                          setIsLoading(false);
-                        }
+                    if (res1 && res1.status && res1.status < 300) {
+                      if (retryAttemptedRef.current) {
+                        console.log("[UserReports] getCourse retry succeeded", {
+                          courseId: conversation.courseId,
+                          timestamp: new Date().toISOString(),
+                        });
+                        retryAttemptedRef.current = false;
                       }
-                    );
-                  };
-                  loadCourse();
-                  return "";
-                });
+                      if (
+                        res1.data &&
+                        res1.data.instructor &&
+                        (res1.data.instructor.username === user.username ||
+                          (res1.data.taList &&
+                            res1.data.taList.find((a: CustomUserType) => a.username === user.username)) || //handle tas too
+                          user.groups.includes(
+                            process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin",
+                          )) //or if an admin
+                      ) {
+                        //set conversation data
+                        setConversationList((prev) => [
+                          ...prev,
+                          {
+                            conversations: conversation.conversations,
+                            course: res1.data,
+                            courseId: conversation.courseId,
+                            moduleId: conversation.moduleId,
+                          },
+                        ]);
+                      }
+                    } else if (res1 && res1.status === 401) {
+                      navigator("/login");
+                    } else {
+                      //handle errors
+                    }
 
-                // If no conversations to process, set loading to false immediately
-                if (totalFetches === 0) {
-                  setIsLoading(false);
-                }
-              } else {
+                    // Only set loading to false when all course fetches are complete
+                    if (completedFetches === totalFetches) {
+                      setIsLoading(false);
+                    }
+                  });
+                };
+                loadCourse();
+                return "";
+              });
+
+              // If no conversations to process, set loading to false immediately
+              if (totalFetches === 0) {
                 setIsLoading(false);
               }
-            } else if (res && res.status === 401) {
-              navigator("/login");
             } else {
-              // handle error
-
               setIsLoading(false);
             }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            // handle error
+
+            setIsLoading(false);
           }
-        );
+        });
       };
 
       fetchConversations();
@@ -218,38 +183,38 @@ export default function UserReports(): JSX.Element {
   }, [location]);
 
   function getSpecificUser(username: string, signal: AbortSignal) {
-    const loadUser = () => {
-      //get user details
-      Get(getUserData(username), signal, true).then((res) => {
-        // Check for network error
-        if (isNetworkError(res)) {
-          handleNetworkError(res, loadUser);
-          return;
-        }
+    //get user details
+    Get(getUserData(username), signal, true).then((res) => {
+      // Check for network error
+      if (isNetworkError(res)) {
+        handleNetworkError(res, () => {
+          console.log("[UserReports] getSpecificUser retry attempt", { username, timestamp: new Date().toISOString() });
+          getSpecificUser(username, signal);
+        });
+        return;
+      }
 
-        if (res && res.status && res.status < 300) {
-          if (retryAttemptedRef.current) {
-            console.log("[UserReports] getSpecificUser retry succeeded", {
-              username,
-              timestamp: new Date().toISOString(),
-            });
-            retryAttemptedRef.current = false;
-          }
-          if (res.data) {
-            setViewUser(res.data);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            //handle error
-            setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
-          }
+      if (res && res.status && res.status < 300) {
+        if (retryAttemptedRef.current) {
+          console.log("[UserReports] getSpecificUser retry succeeded", {
+            username,
+            timestamp: new Date().toISOString(),
+          });
+          retryAttemptedRef.current = false;
         }
-      });
-    };
-    loadUser();
+        if (res.data) {
+          setViewUser(res.data);
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        if (res === undefined) {
+        } else {
+          //handle error
+          setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
+        }
+      }
+    });
   }
 
   return !isLoading ? (
@@ -283,14 +248,9 @@ export default function UserReports(): JSX.Element {
 
         <div style={{ marginBottom: "2rem", padding: "0 2rem" }}>
           <h2 className="text-2xl font-bold text-foreground mb-1">
-            {t("reports.student")}:{" "}
-            {viewUser
-              ? `${viewUser.name} ${viewUser.family_name}`
-              : "User Reports"}
+            {t("reports.student")}: {viewUser ? `${viewUser.name} ${viewUser.family_name}` : "User Reports"}
           </h2>
-          <p style={{ fontSize: "1.1rem", color: "#666" }}>
-            {t("reports.studentReportDescription")}
-          </p>
+          <p style={{ fontSize: "1.1rem", color: "#666" }}>{t("reports.studentReportDescription")}</p>
         </div>
 
         {conversationList.length === 0 ? (
@@ -301,12 +261,8 @@ export default function UserReports(): JSX.Element {
               color: "#666",
             }}
           >
-            <h2 className="text-2xl font-bold text-foreground mb-1">
-              {t("reports.noData")}
-            </h2>
-            <p style={{ fontSize: "1.1rem" }}>
-              {t("reports.noDataStudentDescription")}:
-            </p>
+            <h2 className="text-2xl font-bold text-foreground mb-1">{t("reports.noData")}</h2>
+            <p style={{ fontSize: "1.1rem" }}>{t("reports.noDataStudentDescription")}:</p>
             <ul
               style={{
                 textAlign: "left",
@@ -328,40 +284,29 @@ export default function UserReports(): JSX.Element {
                 var tempTime =
                   row.conversations && row.conversations.length > 0
                     ? row.conversations
-                      .reduce(
-                        (x, y) =>
-                          x.messages.length > 0 &&
+                        .reduce(
+                          (x, y) =>
+                            x.messages.length > 0 &&
                             y.messages.length > 0 &&
                             x.messages.reduce(
-                              (largest, current) =>
-                                parseInt(current) > parseInt(largest)
-                                  ? current
-                                  : largest,
-                              row.conversations[0].messages[0]
+                              (largest, current) => (parseInt(current) > parseInt(largest) ? current : largest),
+                              row.conversations[0].messages[0],
                             ) >
-                            y.messages.reduce(
-                              (largest, current) =>
-                                parseInt(current) > parseInt(largest)
-                                  ? current
-                                  : largest,
-                              row.conversations[0].messages[0]
-                            )
-                            ? x
-                            : y,
-                        row.conversations[0]
-                      )
-                      .messages.reduce(
-                        (largest, current) =>
-                          parseInt(current) > parseInt(largest)
-                            ? current
-                            : largest,
-                        row.conversations[0].messages[0]
-                      )
+                              y.messages.reduce(
+                                (largest, current) => (parseInt(current) > parseInt(largest) ? current : largest),
+                                row.conversations[0].messages[0],
+                              )
+                              ? x
+                              : y,
+                          row.conversations[0],
+                        )
+                        .messages.reduce(
+                          (largest, current) => (parseInt(current) > parseInt(largest) ? current : largest),
+                          row.conversations[0].messages[0],
+                        )
                     : "";
                 if (tempTime) {
-                  tempTime = new Date(
-                    parseInt(tempTime.substring(0, 13), 10)
-                  ).toLocaleString();
+                  tempTime = new Date(parseInt(tempTime.substring(0, 13), 10)).toLocaleString();
                 } else {
                   tempTime = "N/A";
                 }
@@ -374,18 +319,15 @@ export default function UserReports(): JSX.Element {
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1 min-w-0">
-                          <h2 className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary dark:group-hover:text-gold 
-                          colorful-dark:group-hover:text-gold transition-colors duration-300">
+                          <h2
+                            className="text-lg font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary dark:group-hover:text-gold 
+                          colorful-dark:group-hover:text-gold transition-colors duration-300"
+                          >
                             {row.course.name}
                           </h2>
                           <div className="space-y-1">
                             <div className="text-sm text-muted-foreground">
-                              {t("common.module")}:{" "}
-                              {
-                                row.course.modules.find(
-                                  (x) => x.id === row.moduleId
-                                )?.name
-                              }
+                              {t("common.module")}: {row.course.modules.find((x) => x.id === row.moduleId)?.name}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {t("reports.lastAccessed")}: {tempTime}
@@ -399,7 +341,7 @@ export default function UserReports(): JSX.Element {
                           <Button
                             onClick={() =>
                               navigator(
-                                `/courses/${row.courseId}/modules/${row.moduleId}/username/${viewUser?.username}`
+                                `/courses/${row.courseId}/modules/${row.moduleId}/username/${viewUser?.username}`,
                               )
                             }
                             className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -424,9 +366,7 @@ export default function UserReports(): JSX.Element {
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground text-lg">
-          {t("loadingMessage.userDataConversations")}
-        </p>
+        <p className="text-muted-foreground text-lg">{t("loadingMessage.userDataConversations")}</p>
       </div>
     </div>
   );

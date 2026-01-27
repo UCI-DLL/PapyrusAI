@@ -98,6 +98,39 @@ export default function Reports(): JSX.Element {
     const controller = new AbortController();
     retryAttemptedRef.current = false;
 
+    const loadCourse = (group: string) => {
+      // Reports flag true
+      Get(getCourse(group), controller.signal, true).then((res1) => {
+        if (res1 && res1.status && res1.status < 300) {
+          if (retryAttemptedRef.current) {
+            console.log("[Reports] loadCourse retry succeeded", {
+              group,
+              courseId: res1.data?.id,
+              timestamp: new Date().toISOString(),
+            });
+            retryAttemptedRef.current = false;
+          }
+          if (
+            res1.data &&
+            res1.data.instructor &&
+            (res1.data.instructor.username === user?.username ||
+              (res1.data.taList && res1.data.taList.find((a: CustomUserType) => a.username === user?.username))) //handle tas too
+          ) {
+            //only get the rest of the information if current user is instructor
+            getUsersInCourseList(res1.data, controller.signal);
+          }
+        } else if (res1 && res1.status === 401) {
+          navigator("/login");
+        } else {
+          // Check for network error (ERR_NETWORK)
+          handleNetworkError(res1, () => {
+            console.log("[Reports] loadCourse retry attempt", { group, timestamp: new Date().toISOString() });
+            loadCourse(group);
+          });
+        }
+      });
+    };
+
     // for each course that the cuurent user is in, get the list of users
     if (user) {
       setIsLoading(true);
@@ -124,39 +157,7 @@ export default function Reports(): JSX.Element {
           ) {
             return "";
           }
-          const loadCourse = () => {
-            // Reports flag true
-            Get(getCourse(group), controller.signal, true).then((res1) => {
-              if (res1 && res1.status && res1.status < 300) {
-                if (retryAttemptedRef.current) {
-                  console.log("[Reports] loadCourse retry succeeded", {
-                    group,
-                    courseId: res1.data?.id,
-                    timestamp: new Date().toISOString(),
-                  });
-                  retryAttemptedRef.current = false;
-                }
-                if (
-                  res1.data &&
-                  res1.data.instructor &&
-                  (res1.data.instructor.username === user.username ||
-                    (res1.data.taList && res1.data.taList.find((a: CustomUserType) => a.username === user.username))) //handle tas too
-                ) {
-                  //only get the rest of the information if current user is instructor
-                  getUsersInCourseList(res1.data, controller.signal);
-                }
-              } else if (res1 && res1.status === 401) {
-                navigator("/login");
-              } else {
-                // Check for network error (ERR_NETWORK)
-                handleNetworkError(res1, () => {
-                  console.log("[Reports] loadCourse retry attempt", { group, timestamp: new Date().toISOString() });
-                  loadCourse();
-                });
-              }
-            });
-          };
-          loadCourse();
+          loadCourse(group);
         });
       }
     }

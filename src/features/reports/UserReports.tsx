@@ -91,67 +91,68 @@ export default function UserReports(): JSX.Element {
               let completedFetches = 0;
               const totalFetches = res.data.length;
 
+              const loadCourse = (conversation: any) => {
+                Get(getCourse(conversation.courseId), controller.signal, true).then((res1) => {
+                  // Check for network error
+                  if (isNetworkError(res1)) {
+                    handleNetworkError(res1, () => {
+                      console.log("[UserReports] loadCourse retry attempt", {
+                        courseId: conversation.courseId,
+                        timestamp: new Date().toISOString(),
+                      });
+                      loadCourse(conversation);
+                    });
+                    return;
+                  }
+
+                  completedFetches++;
+
+                  if (res1 && res1.status && res1.status < 300) {
+                    if (retryAttemptedRef.current) {
+                      console.log("[UserReports] getCourse retry succeeded", {
+                        courseId: conversation.courseId,
+                        timestamp: new Date().toISOString(),
+                      });
+                      retryAttemptedRef.current = false;
+                    }
+                    if (
+                      res1.data &&
+                      res1.data.instructor &&
+                      (res1.data.instructor.username === user.username ||
+                        (res1.data.taList &&
+                          res1.data.taList.find((a: CustomUserType) => a.username === user.username)) || //handle tas too
+                        user.groups.includes(
+                          process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin",
+                        )) //or if an admin
+                    ) {
+                      //set conversation data
+                      setConversationList((prev) => [
+                        ...prev,
+                        {
+                          conversations: conversation.conversations,
+                          course: res1.data,
+                          courseId: conversation.courseId,
+                          moduleId: conversation.moduleId,
+                        },
+                      ]);
+                    }
+                  } else if (res1 && res1.status === 401) {
+                    navigator("/login");
+                  } else {
+                    //handle errors
+                  }
+
+                  // Only set loading to false when all course fetches are complete
+                  if (completedFetches === totalFetches) {
+                    setIsLoading(false);
+                  }
+                });
+              };
+
               //Get the list of all conversations
               //for each courseid, get the course data
               res.data.map((conversation: any) => {
-                const loadCourse = () => {
-                  Get(getCourse(conversation.courseId), controller.signal, true).then((res1) => {
-                    // Check for network error
-                    if (isNetworkError(res1)) {
-                      handleNetworkError(res1, () => {
-                        console.log("[UserReports] loadCourse retry attempt", {
-                          courseId: conversation.courseId,
-                          timestamp: new Date().toISOString(),
-                        });
-                        loadCourse();
-                      });
-                      return;
-                    }
-
-                    completedFetches++;
-
-                    if (res1 && res1.status && res1.status < 300) {
-                      if (retryAttemptedRef.current) {
-                        console.log("[UserReports] getCourse retry succeeded", {
-                          courseId: conversation.courseId,
-                          timestamp: new Date().toISOString(),
-                        });
-                        retryAttemptedRef.current = false;
-                      }
-                      if (
-                        res1.data &&
-                        res1.data.instructor &&
-                        (res1.data.instructor.username === user.username ||
-                          (res1.data.taList &&
-                            res1.data.taList.find((a: CustomUserType) => a.username === user.username)) || //handle tas too
-                          user.groups.includes(
-                            process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin",
-                          )) //or if an admin
-                      ) {
-                        //set conversation data
-                        setConversationList((prev) => [
-                          ...prev,
-                          {
-                            conversations: conversation.conversations,
-                            course: res1.data,
-                            courseId: conversation.courseId,
-                            moduleId: conversation.moduleId,
-                          },
-                        ]);
-                      }
-                    } else if (res1 && res1.status === 401) {
-                      navigator("/login");
-                    } else {
-                      //handle errors
-                    }
-
-                    // Only set loading to false when all course fetches are complete
-                    if (completedFetches === totalFetches) {
-                      setIsLoading(false);
-                    }
-                  });
-                };
-                loadCourse();
+                loadCourse(conversation);
                 return "";
               });
 

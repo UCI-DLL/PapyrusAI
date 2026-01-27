@@ -161,7 +161,17 @@ export function getStudentList(data: Course[]): User[] {
       }
     }
   }
-  return Object.values(students);
+  const list = Object.values(students);
+  list.sort((a, b) => {
+    const lastA = (a.family_name ?? "").trim().toLowerCase();
+    const lastB = (b.family_name ?? "").trim().toLowerCase();
+    const cmp = lastA.localeCompare(lastB);
+    if (cmp !== 0) return cmp;
+    const firstA = (a.name ?? "").trim().toLowerCase();
+    const firstB = (b.name ?? "").trim().toLowerCase();
+    return firstA.localeCompare(firstB);
+  });
+  return list;
 }
 
 export function getStudentConversations(

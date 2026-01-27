@@ -40,6 +40,7 @@ import { Input } from "../../components/ui/input";
 import { handleCourseTermLanguage } from "../../utility/Helpers";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
 
 type DownloadType = CourseType & { users: Array<CustomUserType> } & {
   modules: Array<
@@ -84,37 +85,14 @@ export default function Reports(): JSX.Element {
     setChecked(newChecked);
   };
 
-  // Helper function to check if error is a network error (ERR_NETWORK)
-  const isNetworkError = (res: any): boolean => {
-    return res?.code === "ERR_NETWORK";
-  };
-
   // Helper function to handle network errors with retry logic
-  const handleNetworkError = (res: any, retryFn: () => void) => {
-    if (isNetworkError(res) && !retryAttemptedRef.current) {
-      console.log("[Reports] Network error (ERR_NETWORK) detected, attempting retry in 500ms", {
-        error: res,
-        timestamp: new Date().toISOString(),
-      });
-      retryAttemptedRef.current = true;
-      setTimeout(() => {
-        console.log("[Reports] Retrying after network error...");
-        retryFn();
-      }, 500);
-    } else if (isNetworkError(res) && retryAttemptedRef.current) {
-      // Second network error, navigate back with error alert
-      console.error("[Reports] Network error retry failed, navigating back", {
-        error: res,
-        timestamp: new Date().toISOString(),
-      });
-      setAlert({
-        message: t("errorMessage.networkError") || "Network error: Unable to load reports. Please try again later.",
-        type: "error",
-      });
-      navigator(-1);
-      setIsLoading(false);
-    }
-  };
+  const handleNetworkError = createNetworkErrorHandler(
+    retryAttemptedRef,
+    setAlert,
+    navigator,
+    t,
+    setIsLoading
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -150,6 +128,14 @@ export default function Reports(): JSX.Element {
             // Reports flag true
             Get(getCourse(group), controller.signal, true).then((res1) => {
               if (res1 && res1.status && res1.status < 300) {
+                if (retryAttemptedRef.current) {
+                  console.log("[Reports] loadCourse retry succeeded", {
+                    group,
+                    courseId: res1.data?.id,
+                    timestamp: new Date().toISOString(),
+                  });
+                  retryAttemptedRef.current = false;
+                }
                 if (
                   res1.data &&
                   res1.data.instructor &&
@@ -163,7 +149,10 @@ export default function Reports(): JSX.Element {
                 navigator("/login");
               } else {
                 // Check for network error (ERR_NETWORK)
-                handleNetworkError(res1, loadCourse);
+                handleNetworkError(res1, () => {
+                  console.log("[Reports] loadCourse retry attempt", { group, timestamp: new Date().toISOString() });
+                  loadCourse();
+                });
               }
             });
           };

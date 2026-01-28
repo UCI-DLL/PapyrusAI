@@ -5,52 +5,42 @@
 
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import {
-  buildStyles,
-  CircularProgressbarWithChildren,
-} from "react-circular-progressbar";
-import { CheckCircle2, X, ChevronLeft, ChevronRight, BarChart3 } from "lucide-react";
+import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
+import { CheckCircle2, X, ChevronLeft, ChevronRight, BarChart3, MessageSquare, Users, Loader2 } from "lucide-react";
 import { UserContext } from "../../utility/context/UserContext";
 import Get from "../../utility/Get";
-import {
-  getCourse,
-  getRaterModuleData,
-  getUsersInCourse,
-} from "../../utility/endpoints/CourseEndpoints";
+import { getCourse, getRaterModuleData, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
-import { getUserConversationList } from "../../utility/endpoints/ConversationEndpoints";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+  getUserConversationList,
+  getConversationList,
+  getConversation,
+} from "../../utility/endpoints/ConversationEndpoints";
+import {
+  calculateModuleStatistics,
+  processStudentConversationData,
+  StudentConversationData,
+  ModuleStatistics,
+} from "../../utility/reports/moduleAnalysis";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
 
 interface Column {
   id:
-  | "name"
-  | "convos"
-  | "essays"
-  | "lead"
-  | "position"
-  | "claim"
-  | "counterclaim"
-  | "rebuttal"
-  | "evidence"
-  | "conclude";
+    | "name"
+    | "convos"
+    | "essays"
+    | "lead"
+    | "position"
+    | "claim"
+    | "counterclaim"
+    | "rebuttal"
+    | "evidence"
+    | "conclude";
   label: string;
   minWidth?: number;
   align?: "right";
@@ -115,7 +105,7 @@ function createData(
   rebuttal: boolean,
   evidence: boolean,
   conclude: boolean,
-  username: string
+  username: string,
 ): Data {
   return {
     name,
@@ -152,9 +142,7 @@ export default function ModuleReports(): JSX.Element {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [raterData, setRaterData] = useState<Array<RaterDataType>>([]);
   const [error, setError] = useState<string>();
-  const [userList, setUserList] = useState<
-    Array<CustomUserType & { numConvos: number }>
-  >([]);
+  const [userList, setUserList] = useState<Array<CustomUserType & { numConvos: number }>>([]);
   const [courseData, setCourseData] = useState<CourseType>();
   const [moduleData, setModuleData] = useState<ModuleType>();
   const [rows, setRows] = useState<Array<Data>>([]);
@@ -167,20 +155,20 @@ export default function ModuleReports(): JSX.Element {
     evidence: number;
     conclude: number;
   }>();
+  const [moduleStatistics, setModuleStatistics] = useState<ModuleStatistics | null>(null);
+  const [studentConversationData, setStudentConversationData] = useState<StudentConversationData[]>([]);
+  const [conversationDataMap, setConversationDataMap] = useState<
+    Record<string, Array<{ conversations: Array<{ messages?: Array<{ timestamp?: number | string }> }> }>>
+  >({});
 
   useEffect(() => {
     const controller = new AbortController();
     if (user) {
       setIsLoading(true);
-      if (
-        location.pathname &&
-        location.pathname.split("/") &&
-        location.pathname.split("/")[1] &&
-        location.pathname.split("/")[2] &&
-        location.pathname.split("/")[3]
-      ) {
-        const courseId = location.pathname.split("/")[2];
-        const moduleId = location.pathname.split("/")[3];
+      const pathParts = location.pathname.split("/");
+      if (pathParts[1] === "reports" && pathParts[2] === "module" && pathParts[3] && pathParts[4]) {
+        const courseId = pathParts[3];
+        const moduleId = pathParts[4];
 
         //Get user list
         if (userList.length === 0) {
@@ -192,9 +180,7 @@ export default function ModuleReports(): JSX.Element {
           if (res && res.status && res.status < 300) {
             if (res.data && res.data.modules) {
               setCourseData(res.data);
-              const module = res.data.modules.find(
-                (mod: ModuleType) => mod.id === moduleId
-              );
+              const module = res.data.modules.find((mod: ModuleType) => mod.id === moduleId);
               setModuleData(module);
             }
           } else if (res && res.status === 401) {
@@ -210,34 +196,27 @@ export default function ModuleReports(): JSX.Element {
         });
 
         //Get rater data for module
-        Get(getRaterModuleData(courseId, moduleId), controller.signal).then(
-          (res) => {
-            if (res && res.status && res.status < 300) {
-              if (res.data) {
-                //Get rater data for the module
-                res.data.forEach((item: any) => {
-                  //convert the rater info to 2d array
-                  const rater = item.content
-                    .split("\n")
-                    .map((row: string) => row.split(","));
-                  setRaterData((prev) => [
-                    ...prev,
-                    { ...item, content: rater },
-                  ]);
-                });
-              } else if (res && res.status === 401) {
-                navigator("/login");
+        Get(getRaterModuleData(courseId, moduleId), controller.signal).then((res) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data) {
+              //Get rater data for the module
+              res.data.forEach((item: any) => {
+                //convert the rater info to 2d array
+                const rater = item.content.split("\n").map((row: string) => row.split(","));
+                setRaterData((prev) => [...prev, { ...item, content: rater }]);
+              });
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              if (res === undefined) {
               } else {
-                if (res === undefined) {
-                } else {
-                  // handle error
-                  setError("No Data Found");
-                }
+                // handle error
+                setError("No Data Found");
               }
-              setIsLoading(false);
             }
+            setIsLoading(false);
           }
-        );
+        });
       }
       setIsLoading(false);
     }
@@ -267,15 +246,13 @@ export default function ModuleReports(): JSX.Element {
           userRater.some((e) => e.content.some((c) => c[4] === "4")),
           userRater.some((e) => e.content.some((c) => c[4] === "5")),
           userRater.some((e) => e.content.some((c) => c[4] === "6")),
-          user.username
+          user.username,
         );
         setRows((prev) => {
           const newArray = [...prev];
           if (newArray.some((p) => p.username === row.username)) {
             //if user is in the list already, just update it
-            const index = newArray.findIndex(
-              (p) => p.username === row.username
-            );
+            const index = newArray.findIndex((p) => p.username === row.username);
             newArray[index] = row;
             return newArray;
           } else {
@@ -298,15 +275,13 @@ export default function ModuleReports(): JSX.Element {
           false,
           false,
           false,
-          user.username
+          user.username,
         );
         setRows((prev) => {
           const newArray = [...prev];
           if (newArray.some((p) => p.username === row.username)) {
             //if user is in the list already, just update it
-            const index = newArray.findIndex(
-              (p) => p.username === row.username
-            );
+            const index = newArray.findIndex((p) => p.username === row.username);
             newArray[index] = row;
             return newArray;
           } else {
@@ -325,9 +300,7 @@ export default function ModuleReports(): JSX.Element {
         lead: Math.round(getAverageOfDiscourseType(raterData, "0") * 100),
         position: Math.round(getAverageOfDiscourseType(raterData, "1") * 100),
         claim: Math.round(getAverageOfDiscourseType(raterData, "2") * 100),
-        counterClaim: Math.round(
-          getAverageOfDiscourseType(raterData, "3") * 100
-        ),
+        counterClaim: Math.round(getAverageOfDiscourseType(raterData, "3") * 100),
         rebuttal: Math.round(getAverageOfDiscourseType(raterData, "4") * 100),
         evidence: Math.round(getAverageOfDiscourseType(raterData, "5") * 100),
         conclude: Math.round(getAverageOfDiscourseType(raterData, "6") * 100),
@@ -335,10 +308,47 @@ export default function ModuleReports(): JSX.Element {
     }
   }, [raterData]);
 
-  function getAverageOfDiscourseType(
-    raterArray: Array<RaterDataType>,
-    type: string
-  ) {
+  // Calculate module statistics when user list and conversation data are available
+  useEffect(() => {
+    if (userList.length > 0 && Object.keys(conversationDataMap).length > 0) {
+      const processedData = processStudentConversationData(userList, conversationDataMap);
+      // Sort by last name (family_name) first, then first name
+      const sortedData = [...processedData].sort((a, b) => {
+        const lastNameA = (a.family_name || "").toLowerCase();
+        const lastNameB = (b.family_name || "").toLowerCase();
+        if (lastNameA !== lastNameB) {
+          return lastNameA.localeCompare(lastNameB);
+        }
+        // If last names are the same, sort by first name
+        const firstNameA = (a.name || "").toLowerCase();
+        const firstNameB = (b.name || "").toLowerCase();
+        return firstNameA.localeCompare(firstNameB);
+      });
+      setStudentConversationData(sortedData);
+      const stats = calculateModuleStatistics(sortedData);
+      setModuleStatistics(stats);
+    } else if (userList.length > 0 && Object.keys(conversationDataMap).length === 0) {
+      // If no conversation data yet, still process with what we have
+      const processedData = processStudentConversationData(userList, {});
+      // Sort by last name (family_name) first, then first name
+      const sortedData = [...processedData].sort((a, b) => {
+        const lastNameA = (a.family_name || "").toLowerCase();
+        const lastNameB = (b.family_name || "").toLowerCase();
+        if (lastNameA !== lastNameB) {
+          return lastNameA.localeCompare(lastNameB);
+        }
+        // If last names are the same, sort by first name
+        const firstNameA = (a.name || "").toLowerCase();
+        const firstNameB = (b.name || "").toLowerCase();
+        return firstNameA.localeCompare(firstNameB);
+      });
+      setStudentConversationData(sortedData);
+      const stats = calculateModuleStatistics(sortedData);
+      setModuleStatistics(stats);
+    }
+  }, [userList, conversationDataMap]);
+
+  function getAverageOfDiscourseType(raterArray: Array<RaterDataType>, type: string) {
     let totalCount = 0;
     let arrayLength = raterArray.length;
 
@@ -350,49 +360,95 @@ export default function ModuleReports(): JSX.Element {
     return totalCount > 0 ? totalCount / arrayLength : 0;
   }
 
-  function getUsersInCourseList(
-    course: string,
-    module: string,
+  const fetchConversationDataForStudents = async (
+    courseId: string,
+    moduleId: string,
+    students: Array<CustomUserType & { numConvos: number }>,
     signal: AbortSignal,
-    nextToken?: string
-  ) {
+  ) => {
+    const conversationMap: Record<
+      string,
+      Array<{ conversations: Array<{ messages?: Array<{ timestamp?: number | string }> }> }>
+    > = {};
+
+    // Fetch conversation list and then fetch each conversation with messages
+    for (const student of students) {
+      if (student.numConvos > 0) {
+        try {
+          const convoListRes = await Get(getConversationList(courseId, moduleId, student.username), signal, true);
+          if (convoListRes && convoListRes.status && convoListRes.status < 300 && convoListRes.data?.conversations) {
+            const conversationsWithMessages = await Promise.all(
+              convoListRes.data.conversations.map(async (_: any, index: number) => {
+                try {
+                  const convoRes = await Get(
+                    getConversation(courseId, moduleId, index.toString(), student.username),
+                    signal,
+                    true,
+                  );
+                  if (convoRes && convoRes.status && convoRes.status < 300 && convoRes.data) {
+                    return {
+                      messages: convoRes.data.messages || [],
+                    };
+                  }
+                  return { messages: [] };
+                } catch (error) {
+                  return { messages: [] };
+                }
+              }),
+            );
+
+            conversationMap[student.username] = [
+              {
+                conversations: conversationsWithMessages,
+              },
+            ];
+          }
+        } catch (error) {
+          // Handle error silently
+        }
+      }
+    }
+
+    setConversationDataMap(conversationMap);
+  };
+
+  function getUsersInCourseList(course: string, module: string, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
-    Get(getUsersInCourse(course, limit, nextToken), signal).then((res) => {
+    Get(getUsersInCourse(course, limit, nextToken), signal).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.users) {
+          const usersWithConvos: Array<CustomUserType & { numConvos: number }> = [];
+
           //filter out current user and email_verified
-          res.data.users.map(async (u: CustomUserType) => {
-            await Get(getUserConversationList(u.username), signal).then(
-              (res) => {
-                if (res && res.status && res.status < 300) {
-                  if (res.data) {
-                    //Get the list of all conversations
-                    //for the specific courseid and moduleid, get the number of conversations for the user
-                    const temp = res.data.find(
-                      (con: any) =>
-                        con.courseId === course && con.moduleId === module
-                    );
-                    const tempObj = {
-                      name: u.name,
-                      family_name: u.family_name,
-                      email: u.email,
-                      sub: u.sub,
-                      username: u.username,
-                      numConvos:
-                        temp && temp.conversations
-                          ? temp.conversations.length
-                          : 0,
-                    };
-                    setUserList((prev) => [...prev, tempObj]);
-                  }
-                } else if (res && res.status === 401) {
-                  navigator("/login");
-                } else {
-                  // handle error
+          await Promise.all(
+            res.data.users.map(async (u: CustomUserType) => {
+              const convoRes = await Get(getUserConversationList(u.username), signal);
+              if (convoRes && convoRes.status && convoRes.status < 300) {
+                if (convoRes.data) {
+                  //Get the list of all conversations
+                  //for the specific courseid and moduleid, get the number of conversations for the user
+                  const temp = convoRes.data.find((con: any) => con.courseId === course && con.moduleId === module);
+                  const tempObj = {
+                    name: u.name,
+                    family_name: u.family_name,
+                    email: u.email,
+                    sub: u.sub,
+                    username: u.username,
+                    numConvos: temp && temp.conversations ? temp.conversations.length : 0,
+                  };
+                  usersWithConvos.push(tempObj);
+                  setUserList((prev) => [...prev, tempObj]);
                 }
+              } else if (convoRes && convoRes.status === 401) {
+                navigator("/login");
               }
-            );
-          });
+            }),
+          );
+
+          // Fetch conversation data with messages for statistics
+          if (usersWithConvos.length > 0) {
+            await fetchConversationDataForStudents(course, module, usersWithConvos, signal);
+          }
 
           //if the we get a nexttoken, then call for the next page
           //handle pages
@@ -418,18 +474,32 @@ export default function ModuleReports(): JSX.Element {
     setPage(0);
   };
 
-  const totalPages = Math.ceil(rows.length / rowsPerPage);
+  // Sort rows by last name (extracted from name field which is "firstName lastName")
+  const sortedRows = [...rows].sort((a, b) => {
+    // Extract last name from "firstName lastName" format
+    const namePartsA = a.name.split(" ");
+    const namePartsB = b.name.split(" ");
+    const lastNameA = (namePartsA[namePartsA.length - 1] || "").toLowerCase();
+    const lastNameB = (namePartsB[namePartsB.length - 1] || "").toLowerCase();
+    if (lastNameA !== lastNameB) {
+      return lastNameA.localeCompare(lastNameB);
+    }
+    // If last names are the same, sort by first name
+    const firstNameA = (namePartsA[0] || "").toLowerCase();
+    const firstNameB = (namePartsB[0] || "").toLowerCase();
+    return firstNameA.localeCompare(firstNameB);
+  });
+
+  const totalRows = moduleData?.raterEnabled ? sortedRows.length : studentConversationData.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
   const startIndex = page * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const paginatedRows = rows.slice(startIndex, endIndex);
+  const paginatedRows = sortedRows.slice(startIndex, endIndex);
 
   return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
       {error ? (
-        <div
-          className="bg-destructive/15 border border-destructive rounded-lg p-4"
-          role="alert"
-        >
+        <div className="bg-destructive/15 border border-destructive rounded-lg p-4" role="alert">
           <p className="text-destructive font-medium text-center">{error}</p>
         </div>
       ) : (
@@ -440,10 +510,51 @@ export default function ModuleReports(): JSX.Element {
           />
 
           <div className="text-muted-foreground max-w-2xl">
-            On this page, you can view the overall usage within this module. If
-            you wish to view a specific user's activity, click on their name to
-            access their conversations.
+            On this page, you can view the overall usage within this module. If you wish to view a specific user's
+            activity, click on their name to access their conversations.
           </div>
+
+          {/* Overall Statistics Cards */}
+          {moduleStatistics && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="transition-all duration-300 hover:shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Total Conversations</p>
+                      <p className="text-3xl font-bold mt-2">{moduleStatistics.totalConversations}</p>
+                    </div>
+                    <MessageSquare className="h-12 w-12 text-primary opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="transition-all duration-300 hover:shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Avg Messages per Conversation</p>
+                      <p className="text-3xl font-bold mt-2">{moduleStatistics.averageMessagesPerConversation}</p>
+                    </div>
+                    <BarChart3 className="h-12 w-12 text-primary opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="transition-all duration-300 hover:shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Students with Conversations</p>
+                      <p className="text-3xl font-bold mt-2">{moduleStatistics.studentsWithConversations}</p>
+                    </div>
+                    <Users className="h-12 w-12 text-primary opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {stats && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -605,10 +716,7 @@ export default function ModuleReports(): JSX.Element {
                 <h3 className="text-lg font-semibold">Student Reports</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">Rows per page:</span>
-                  <Select
-                    value={rowsPerPage.toString()}
-                    onValueChange={handleChangeRowsPerPage}
-                  >
+                  <Select value={rowsPerPage.toString()} onValueChange={handleChangeRowsPerPage}>
                     <SelectTrigger className="w-20">
                       <SelectValue />
                     </SelectTrigger>
@@ -640,21 +748,28 @@ export default function ModuleReports(): JSX.Element {
                     ) : (
                       <TableRow>
                         <TableHead style={{ minWidth: 170 }}>Name</TableHead>
-                        <TableHead style={{ minWidth: 170 }}>Num Convos</TableHead>
-                        <TableHead style={{ minWidth: 170 }}>Num Essays</TableHead>
+                        <TableHead style={{ minWidth: 100 }}>Has Conversations</TableHead>
+                        <TableHead style={{ minWidth: 150 }}># of Conversations</TableHead>
+                        <TableHead style={{ minWidth: 150 }}>Actions</TableHead>
                       </TableRow>
                     )}
                   </TableHeader>
                   <TableBody>
-                    {paginatedRows.length === 0 ? (
+                    {paginatedRows.length === 0 && studentConversationData.length === 0 ? (
                       <TableRow>
-                        <TableCell
-                          colSpan={moduleData?.raterEnabled ? columns.length : 3}
-                          className="text-center py-8"
-                        >
+                        <TableCell colSpan={moduleData?.raterEnabled ? columns.length : 4} className="text-center py-8">
                           <div className="flex flex-col items-center gap-2">
-                            <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
-                            <p className="text-muted-foreground">No data available</p>
+                            {isLoading ? (
+                              <>
+                                <Loader2 className="h-8 w-8 text-muted-foreground opacity-50 animate-spin" />
+                                <p className="text-muted-foreground">Loading data...</p>
+                              </>
+                            ) : (
+                              <>
+                                <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
+                                <p className="text-muted-foreground">No data available</p>
+                              </>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -665,18 +780,13 @@ export default function ModuleReports(): JSX.Element {
                             key={row.name}
                             className="cursor-pointer hover:bg-muted/50"
                             onClick={() =>
-                              navigator(
-                                `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                              )
+                              navigator(`/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`)
                             }
                           >
                             {columns.map((column) => {
                               const value = row[column.id];
                               return (
-                                <TableCell
-                                  key={column.id}
-                                  className={column.align === "right" ? "text-right" : ""}
-                                >
+                                <TableCell key={column.id} className={column.align === "right" ? "text-right" : ""}>
                                   {typeof value === "boolean" ? (
                                     value ? (
                                       <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -689,7 +799,7 @@ export default function ModuleReports(): JSX.Element {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         navigator(
-                                          `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
+                                          `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`,
                                         );
                                       }}
                                     >
@@ -702,56 +812,73 @@ export default function ModuleReports(): JSX.Element {
                           </TableRow>
                         );
                       })
+                    ) : studentConversationData.length > 0 ? (
+                      studentConversationData
+                        .slice(startIndex, Math.min(endIndex, studentConversationData.length))
+                        .map((student) => {
+                          return (
+                            <TableRow key={student.username} className="hover:bg-muted/50">
+                              <TableCell className="font-medium">
+                                {student.name} {student.family_name}
+                              </TableCell>
+                              <TableCell>
+                                {student.hasConversations ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                ) : (
+                                  <X className="h-5 w-5 text-destructive" />
+                                )}
+                              </TableCell>
+                              <TableCell>{student.numConversations}</TableCell>
+                              <TableCell>
+                                {student.numConversations > 0 ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      navigator(
+                                        `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${student.username}`,
+                                      )
+                                    }
+                                  >
+                                    View Conversations
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">No conversations</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                     ) : (
                       paginatedRows.map((row) => {
+                        const student = studentConversationData.find((s) => s.username === row.username);
                         return (
-                          <TableRow
-                            key={row.name}
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() =>
-                              navigator(
-                                `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                              )
-                            }
-                          >
+                          <TableRow key={row.name} className="hover:bg-muted/50">
+                            <TableCell className="font-medium">{row.name}</TableCell>
                             <TableCell>
-                              <button
-                                className="hover:text-primary transition-colors font-medium"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator(
-                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                                  );
-                                }}
-                              >
-                                {row.name}
-                              </button>
+                              {student?.hasConversations ? (
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <X className="h-5 w-5 text-destructive" />
+                              )}
                             </TableCell>
+                            <TableCell>{row.convos}</TableCell>
                             <TableCell>
-                              <button
-                                className="hover:text-primary transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator(
-                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                                  );
-                                }}
-                              >
-                                {row.convos}
-                              </button>
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                className="hover:text-primary transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator(
-                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                                  );
-                                }}
-                              >
-                                {row.essays}
-                              </button>
+                              {row.convos > 0 ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    navigator(
+                                      `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`,
+                                    )
+                                  }
+                                >
+                                  View Conversations
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">No conversations</span>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
@@ -761,11 +888,12 @@ export default function ModuleReports(): JSX.Element {
                 </Table>
               </div>
 
-              {rows.length > 0 && (
+              {(rows.length > 0 || studentConversationData.length > 0) && (
                 <div className="flex items-center justify-between px-2 py-4">
                   <div className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to {Math.min(endIndex, rows.length)} of{" "}
-                    {rows.length} entries
+                    Showing {startIndex + 1} to{" "}
+                    {Math.min(endIndex, moduleData?.raterEnabled ? rows.length : studentConversationData.length)} of{" "}
+                    {moduleData?.raterEnabled ? rows.length : studentConversationData.length} entries
                   </div>
                   <div className="flex items-center gap-2">
                     <Button

@@ -379,13 +379,12 @@ function App(): JSX.Element {
                         />
                       </Route>
 
-                      {/* TODO change pathname  */}
                       <Route
-                        path="/dashboard/:id/:id"
+                        path="/reports/module/:id/:id"
                         element={<PrivateRoute user={user} />}
                       >
                         <Route
-                          path="/dashboard/:id/:id"
+                          path="/reports/module/:id/:id"
                           element={<ModuleReports />}
                         />
                       </Route>

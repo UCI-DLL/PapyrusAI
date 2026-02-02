@@ -3,11 +3,12 @@
  */
 //TODO: update this to be generic
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import { CheckCircle2, X, ChevronLeft, ChevronRight, BarChart3, MessageSquare, Users, Loader2 } from "lucide-react";
 import { UserContext } from "../../utility/context/UserContext";
+import { AlertContext } from "../../utility/context/AlertContext";
 import Get from "../../utility/Get";
 import { getCourse, getRaterModuleData, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
 import { CustomUserType } from "../../utility/types/UserTypes";
@@ -27,7 +28,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Input } from "../../components/ui/input";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
+import { useTranslation } from "../../hooks/useTranslation";
+import { isNetworkError, createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
 
 interface Column {
   id:
@@ -105,7 +109,7 @@ function createData(
   rebuttal: boolean,
   evidence: boolean,
   conclude: boolean,
-  username: string,
+  username: string
 ): Data {
   return {
     name,
@@ -136,7 +140,10 @@ type RaterDataType = {
 export default function ModuleReports(): JSX.Element {
   let navigator = useNavigate();
   let location = useLocation();
+  const { t } = useTranslation();
   const { user } = useContext(UserContext);
+  const { setAlert } = useContext(AlertContext);
+  const retryAttemptedRef = useRef<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -160,9 +167,22 @@ export default function ModuleReports(): JSX.Element {
   const [conversationDataMap, setConversationDataMap] = useState<
     Record<string, Array<{ conversations: Array<{ messages?: Array<{ timestamp?: number | string }> }> }>>
   >({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [conversationFilter, setConversationFilter] = useState<"all" | "has" | "none">("all");
+  const [convoCountFilter, setConvoCountFilter] = useState<"none" | "leq" | "geq">("none");
+  const [convoCountValue, setConvoCountValue] = useState<string>("");
+
+  const handleNetworkError = createNetworkErrorHandler(
+    retryAttemptedRef,
+    setAlert,
+    navigator,
+    t,
+    setIsLoading
+  );
 
   useEffect(() => {
     const controller = new AbortController();
+    retryAttemptedRef.current = false;
     if (user) {
       setIsLoading(true);
       const pathParts = location.pathname.split("/");
@@ -175,48 +195,58 @@ export default function ModuleReports(): JSX.Element {
           getUsersInCourseList(courseId, moduleId, controller.signal);
         }
 
-        //Get course and module data
-        Get(getCourse(courseId), controller.signal).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data && res.data.modules) {
-              setCourseData(res.data);
-              const module = res.data.modules.find((mod: ModuleType) => mod.id === moduleId);
-              setModuleData(module);
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              //handle error
-              setError("Course Does Not Exist");
-              setIsLoading(false);
-            }
-          }
-        });
-
-        //Get rater data for module
-        Get(getRaterModuleData(courseId, moduleId), controller.signal).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              //Get rater data for the module
-              res.data.forEach((item: any) => {
-                //convert the rater info to 2d array
-                const rater = item.content.split("\n").map((row: string) => row.split(","));
-                setRaterData((prev) => [...prev, { ...item, content: rater }]);
-              });
+        const loadCourse = () => {
+          Get(getCourse(courseId), controller.signal, true).then((res) => {
+            if (res && res.status && res.status < 300) {
+              if (res.data && res.data.modules) {
+                setCourseData(res.data);
+                const module = res.data.modules.find((mod: ModuleType) => mod.id === moduleId);
+                setModuleData(module);
+              }
             } else if (res && res.status === 401) {
               navigator("/login");
             } else {
+              if (isNetworkError(res)) {
+                handleNetworkError(res, loadCourse);
+                return;
+              }
               if (res === undefined) {
               } else {
-                // handle error
-                setError("No Data Found");
+                setError("Course Does Not Exist");
+                setIsLoading(false);
               }
             }
-            setIsLoading(false);
-          }
-        });
+          });
+        };
+
+        const loadRaterData = () => {
+          Get(getRaterModuleData(courseId, moduleId), controller.signal, true).then((res) => {
+            if (res && res.status && res.status < 300) {
+              if (res.data) {
+                res.data.forEach((item: any) => {
+                  const rater = item.content.split("\n").map((row: string) => row.split(","));
+                  setRaterData((prev) => [...prev, { ...item, content: rater }]);
+                });
+              }
+              setIsLoading(false);
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              if (isNetworkError(res)) {
+                handleNetworkError(res, loadRaterData);
+                return;
+              }
+              if (res === undefined) {
+              } else {
+                setError("No Data Found");
+              }
+              setIsLoading(false);
+            }
+          });
+        };
+
+        loadCourse();
+        loadRaterData();
       }
       setIsLoading(false);
     }
@@ -246,7 +276,7 @@ export default function ModuleReports(): JSX.Element {
           userRater.some((e) => e.content.some((c) => c[4] === "4")),
           userRater.some((e) => e.content.some((c) => c[4] === "5")),
           userRater.some((e) => e.content.some((c) => c[4] === "6")),
-          user.username,
+          user.username
         );
         setRows((prev) => {
           const newArray = [...prev];
@@ -275,7 +305,7 @@ export default function ModuleReports(): JSX.Element {
           false,
           false,
           false,
-          user.username,
+          user.username
         );
         setRows((prev) => {
           const newArray = [...prev];
@@ -364,7 +394,7 @@ export default function ModuleReports(): JSX.Element {
     courseId: string,
     moduleId: string,
     students: Array<CustomUserType & { numConvos: number }>,
-    signal: AbortSignal,
+    signal: AbortSignal
   ) => {
     const conversationMap: Record<
       string,
@@ -376,6 +406,12 @@ export default function ModuleReports(): JSX.Element {
       if (student.numConvos > 0) {
         try {
           const convoListRes = await Get(getConversationList(courseId, moduleId, student.username), signal, true);
+          if (isNetworkError(convoListRes)) {
+            handleNetworkError(convoListRes, () =>
+              fetchConversationDataForStudents(courseId, moduleId, students, signal)
+            );
+            return;
+          }
           if (convoListRes && convoListRes.status && convoListRes.status < 300 && convoListRes.data?.conversations) {
             const conversationsWithMessages = await Promise.all(
               convoListRes.data.conversations.map(async (_: any, index: number) => {
@@ -383,8 +419,14 @@ export default function ModuleReports(): JSX.Element {
                   const convoRes = await Get(
                     getConversation(courseId, moduleId, index.toString(), student.username),
                     signal,
-                    true,
+                    true
                   );
+                  if (isNetworkError(convoRes)) {
+                    handleNetworkError(convoRes, () =>
+                      fetchConversationDataForStudents(courseId, moduleId, students, signal)
+                    );
+                    return { messages: [] };
+                  }
                   if (convoRes && convoRes.status && convoRes.status < 300 && convoRes.data) {
                     return {
                       messages: convoRes.data.messages || [],
@@ -394,7 +436,7 @@ export default function ModuleReports(): JSX.Element {
                 } catch (error) {
                   return { messages: [] };
                 }
-              }),
+              })
             );
 
             conversationMap[student.username] = [
@@ -414,7 +456,7 @@ export default function ModuleReports(): JSX.Element {
 
   function getUsersInCourseList(course: string, module: string, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
-    Get(getUsersInCourse(course, limit, nextToken), signal).then(async (res) => {
+    Get(getUsersInCourse(course, limit, nextToken), signal, true).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.users) {
           const usersWithConvos: Array<CustomUserType & { numConvos: number }> = [];
@@ -422,7 +464,7 @@ export default function ModuleReports(): JSX.Element {
           //filter out current user and email_verified
           await Promise.all(
             res.data.users.map(async (u: CustomUserType) => {
-              const convoRes = await Get(getUserConversationList(u.username), signal);
+              const convoRes = await Get(getUserConversationList(u.username), signal, true);
               if (convoRes && convoRes.status && convoRes.status < 300) {
                 if (convoRes.data) {
                   //Get the list of all conversations
@@ -441,8 +483,10 @@ export default function ModuleReports(): JSX.Element {
                 }
               } else if (convoRes && convoRes.status === 401) {
                 navigator("/login");
+              } else if (isNetworkError(convoRes)) {
+                handleNetworkError(convoRes, () => getUsersInCourseList(course, module, signal, nextToken));
               }
-            }),
+            })
           );
 
           // Fetch conversation data with messages for statistics
@@ -459,6 +503,10 @@ export default function ModuleReports(): JSX.Element {
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
+        if (isNetworkError(res)) {
+          handleNetworkError(res, () => getUsersInCourseList(course, module, signal, nextToken));
+          return;
+        }
         // handle error
       }
       setIsLoading(false);
@@ -476,7 +524,6 @@ export default function ModuleReports(): JSX.Element {
 
   // Sort rows by last name (extracted from name field which is "firstName lastName")
   const sortedRows = [...rows].sort((a, b) => {
-    // Extract last name from "firstName lastName" format
     const namePartsA = a.name.split(" ");
     const namePartsB = b.name.split(" ");
     const lastNameA = (namePartsA[namePartsA.length - 1] || "").toLowerCase();
@@ -484,17 +531,48 @@ export default function ModuleReports(): JSX.Element {
     if (lastNameA !== lastNameB) {
       return lastNameA.localeCompare(lastNameB);
     }
-    // If last names are the same, sort by first name
     const firstNameA = (namePartsA[0] || "").toLowerCase();
     const firstNameB = (namePartsB[0] || "").toLowerCase();
     return firstNameA.localeCompare(firstNameB);
   });
 
-  const totalRows = moduleData?.raterEnabled ? sortedRows.length : studentConversationData.length;
+  // Filter student conversation data (non-rater mode): search, has/none conversation, leq/geq count
+  const filteredStudentData = studentConversationData.filter((student) => {
+    const fullName = `${student.name} ${student.family_name}`.toLowerCase();
+    if (searchTerm.trim() && !fullName.includes(searchTerm.trim().toLowerCase())) {
+      return false;
+    }
+    if (conversationFilter === "has" && !student.hasConversations) return false;
+    if (conversationFilter === "none" && student.hasConversations) return false;
+    const num = convoCountValue.trim() === "" ? null : parseInt(convoCountValue, 10);
+    if (num !== null && !Number.isNaN(num)) {
+      if (convoCountFilter === "leq" && student.numConversations > num) return false;
+      if (convoCountFilter === "geq" && student.numConversations < num) return false;
+    }
+    return true;
+  });
+
+  // Filter rows (rater-enabled mode): search by name, convos count filter
+  const filteredRows = sortedRows.filter((row) => {
+    if (searchTerm.trim() && !row.name.toLowerCase().includes(searchTerm.trim().toLowerCase())) {
+      return false;
+    }
+    if (conversationFilter === "has" && row.convos === 0) return false;
+    if (conversationFilter === "none" && row.convos > 0) return false;
+    const num = convoCountValue.trim() === "" ? null : parseInt(convoCountValue, 10);
+    if (num !== null && !Number.isNaN(num)) {
+      if (convoCountFilter === "leq" && row.convos > num) return false;
+      if (convoCountFilter === "geq" && row.convos < num) return false;
+    }
+    return true;
+  });
+
+  const totalRows = moduleData?.raterEnabled ? filteredRows.length : filteredStudentData.length;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
   const startIndex = page * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const paginatedRows = sortedRows.slice(startIndex, endIndex);
+  const paginatedRows = filteredRows.slice(startIndex, endIndex);
+  const paginatedStudentData = filteredStudentData.slice(startIndex, endIndex);
 
   return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
@@ -507,12 +585,8 @@ export default function ModuleReports(): JSX.Element {
           <PageHeaderCard
             title={`${courseData?.name || "Course"} - ${moduleData?.name || "Module"}`}
             icon={<BarChart3 size={192} className="text-primary" />}
+            description="On this page, you can view the overall usage within this module. If you wish to view a specific user's activity, click on their name to access their conversations."
           />
-
-          <div className="text-muted-foreground max-w-2xl">
-            On this page, you can view the overall usage within this module. If you wish to view a specific user's
-            activity, click on their name to access their conversations.
-          </div>
 
           {/* Overall Statistics Cards */}
           {moduleStatistics && (
@@ -712,20 +786,78 @@ export default function ModuleReports(): JSX.Element {
 
           <Card className="transition-all duration-300 hover:shadow-md">
             <CardHeader>
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <h3 className="text-lg font-semibold">Student Reports</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Rows per page:</span>
-                  <Select value={rowsPerPage.toString()} onValueChange={handleChangeRowsPerPage}>
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                  <h3 className="text-lg font-semibold">Student Reports</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Rows per page:</span>
+                    <Select value={rowsPerPage.toString()} onValueChange={handleChangeRowsPerPage}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-muted z-[100]">
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 flex-wrap p-3 rounded-lg bg-muted/50">
+                  <Input
+                    placeholder="Search by name..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setPage(0);
+                    }}
+                    className="max-w-xs bg-background"
+                  />
+                  <Select
+                    value={conversationFilter}
+                    onValueChange={(v: "all" | "has" | "none") => {
+                      setConversationFilter(v);
+                      setPage(0);
+                    }}
+                  >
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder="Conversation status" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
+                    <SelectContent className="bg-muted z-[100]">
+                      <SelectItem value="all">All students</SelectItem>
+                      <SelectItem value="has">Has conversation</SelectItem>
+                      <SelectItem value="none">Does not have conversation</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select
+                    value={convoCountFilter}
+                    onValueChange={(v: "none" | "leq" | "geq") => {
+                      setConvoCountFilter(v);
+                      setPage(0);
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="# conversations" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-muted z-[100]">
+                      <SelectItem value="none">No filter</SelectItem>
+                      <SelectItem value="leq">≤ (less or equal)</SelectItem>
+                      <SelectItem value="geq">≥ (greater or equal)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {convoCountFilter !== "none" && (
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="Number"
+                      value={convoCountValue}
+                      onChange={(e) => {
+                        setConvoCountValue(e.target.value);
+                        setPage(0);
+                      }}
+                      className="w-24 bg-background"
+                    />
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -755,7 +887,7 @@ export default function ModuleReports(): JSX.Element {
                     )}
                   </TableHeader>
                   <TableBody>
-                    {paginatedRows.length === 0 && studentConversationData.length === 0 ? (
+                    {(moduleData?.raterEnabled ? paginatedRows.length === 0 : paginatedStudentData.length === 0) ? (
                       <TableRow>
                         <TableCell colSpan={moduleData?.raterEnabled ? columns.length : 4} className="text-center py-8">
                           <div className="flex flex-col items-center gap-2">
@@ -763,6 +895,13 @@ export default function ModuleReports(): JSX.Element {
                               <>
                                 <Loader2 className="h-8 w-8 text-muted-foreground opacity-50 animate-spin" />
                                 <p className="text-muted-foreground">Loading data...</p>
+                              </>
+                            ) : totalRows === 0 &&
+                              (moduleData?.raterEnabled ? rows.length > 0 : studentConversationData.length > 0) &&
+                              (searchTerm || conversationFilter !== "all" || convoCountFilter !== "none") ? (
+                              <>
+                                <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
+                                <p className="text-muted-foreground">No students match your filters</p>
                               </>
                             ) : (
                               <>
@@ -799,7 +938,7 @@ export default function ModuleReports(): JSX.Element {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         navigator(
-                                          `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`,
+                                          `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
                                         );
                                       }}
                                     >
@@ -812,43 +951,41 @@ export default function ModuleReports(): JSX.Element {
                           </TableRow>
                         );
                       })
-                    ) : studentConversationData.length > 0 ? (
-                      studentConversationData
-                        .slice(startIndex, Math.min(endIndex, studentConversationData.length))
-                        .map((student) => {
-                          return (
-                            <TableRow key={student.username} className="hover:bg-muted/50">
-                              <TableCell className="font-medium">
-                                {student.name} {student.family_name}
-                              </TableCell>
-                              <TableCell>
-                                {student.hasConversations ? (
-                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                                ) : (
-                                  <X className="h-5 w-5 text-destructive" />
-                                )}
-                              </TableCell>
-                              <TableCell>{student.numConversations}</TableCell>
-                              <TableCell>
-                                {student.numConversations > 0 ? (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                      navigator(
-                                        `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${student.username}`,
-                                      )
-                                    }
-                                  >
-                                    View Conversations
-                                  </Button>
-                                ) : (
-                                  <span className="text-muted-foreground text-sm">No conversations</span>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
+                    ) : paginatedStudentData.length > 0 ? (
+                      paginatedStudentData.map((student) => {
+                        return (
+                          <TableRow key={student.username} className="hover:bg-muted/50">
+                            <TableCell className="font-medium">
+                              {student.name} {student.family_name}
+                            </TableCell>
+                            <TableCell>
+                              {student.hasConversations ? (
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <X className="h-5 w-5 text-destructive" />
+                              )}
+                            </TableCell>
+                            <TableCell>{student.numConversations}</TableCell>
+                            <TableCell>
+                              {student.numConversations > 0 ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    navigator(
+                                      `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${student.username}`
+                                    )
+                                  }
+                                >
+                                  View Conversations
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">No conversations</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     ) : (
                       paginatedRows.map((row) => {
                         const student = studentConversationData.find((s) => s.username === row.username);
@@ -870,7 +1007,7 @@ export default function ModuleReports(): JSX.Element {
                                   size="sm"
                                   onClick={() =>
                                     navigator(
-                                      `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`,
+                                      `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
                                     )
                                   }
                                 >
@@ -888,12 +1025,10 @@ export default function ModuleReports(): JSX.Element {
                 </Table>
               </div>
 
-              {(rows.length > 0 || studentConversationData.length > 0) && (
+              {(filteredRows.length > 0 || filteredStudentData.length > 0) && (
                 <div className="flex items-center justify-between px-2 py-4">
                   <div className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to{" "}
-                    {Math.min(endIndex, moduleData?.raterEnabled ? rows.length : studentConversationData.length)} of{" "}
-                    {moduleData?.raterEnabled ? rows.length : studentConversationData.length} entries
+                    Showing {startIndex + 1} to {Math.min(endIndex, totalRows)} of {totalRows} entries
                   </div>
                   <div className="flex items-center gap-2">
                     <Button

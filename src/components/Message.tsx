@@ -40,7 +40,7 @@ interface ViewSourcesProps {
 
 const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
   return (
-    <div className="space-y-3 mt-4">
+    <div className="flex flex-row gap-4 overflow-x-auto pb-4 no-scrollbar">
       {sources.map(
         (
           source: { url: string; title: string; summary?: string },
@@ -48,13 +48,20 @@ const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
         ) => (
           <Card
             key={index}
-            className="transition-all duration-200 hover:shadow-md border-l-4 border-l-primary/20"
+            className="flex-shrink-0 w-[280px] transition-all duration-200 hover:shadow-md border-t-4 border-t-primary/20"
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-muted-foreground">
-                  {t("common.source")} {index + 1}
-                </CardTitle>
+            <CardContent className="flex flex-row gap-2">
+              <div className="w-4/5 p-2">
+                <h4 className="font-semibold text-sm mb-2 line-clamp-3 min-h-[2.5rem]">
+                  {source.title}
+                </h4>
+                {source.summary && (
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {truncateString(source.summary, 200)}
+                  </p>
+                )}
+              </div>
+              <div className="w-1/5 flex items-start justify-end">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -71,16 +78,6 @@ const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
                   </a>
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <h4 className="font-semibold text-sm mb-2 line-clamp-2">
-                {truncateString(source.title, 50)}
-              </h4>
-              {source.summary && (
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {truncateString(source.summary, 200)}
-                </p>
-              )}
             </CardContent>
           </Card>
         )
@@ -147,6 +144,7 @@ export const MessageLeft = (props: MessageProps) => {
   if ((props.message === "" || props.message === null) && !props.typing) {
     return <></>;
   }
+  console.log(props.sources)
 
   return props.visible === undefined || props.visible || props.isInstructor ? (
     <div className="flex flex-col gap-2 mb-6">
@@ -166,7 +164,7 @@ export const MessageLeft = (props: MessageProps) => {
         </DialogWrapper>
       )}
 
-      <div className="flex items-start gap-3">
+      {props.sources?.length === 0 && <div className="flex items-start gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm font-medium text-muted-foreground">
@@ -270,7 +268,7 @@ export const MessageLeft = (props: MessageProps) => {
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {props.sources && <ViewSources sources={props.sources} />}
     </div>

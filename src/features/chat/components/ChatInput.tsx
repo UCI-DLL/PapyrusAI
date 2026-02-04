@@ -10,6 +10,7 @@ import { useTranslation } from "../../../hooks/useTranslation";
 interface ChatInputProps {
   isConnected: boolean;
   isLoading: boolean;
+  isNewChat: boolean;
   chatError?: string;
   onSubmit: (message: string) => void;
   onOpenDocumentModal: () => void;
@@ -20,6 +21,7 @@ interface ChatInputProps {
 export default function ChatInput({
   isConnected,
   isLoading,
+  isNewChat,
   chatError,
   onSubmit,
   onOpenDocumentModal,
@@ -32,7 +34,7 @@ export default function ChatInput({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!message.trim() || disabled || !isConnected) return;
+    if (!message.trim() || (!isNewChat && ( disabled || !isConnected))) return;
 
     if (message.length > 100000) {
       return;
@@ -58,7 +60,17 @@ export default function ChatInput({
     }
   };
 
-  if (!isConnected || disabled) {
+  //  in  ic  d   r
+  //  f   f   f   t
+  //  f   f   t   t
+  //  f   t   f   f
+  //  f   t   t   t
+  //  t   f   f   t
+  //  t   f   t   t
+  //  t   t   f   t
+  //  t   t   t   t
+  
+  if (!isNewChat && (!isConnected || disabled)) {
     return null;
   }
 

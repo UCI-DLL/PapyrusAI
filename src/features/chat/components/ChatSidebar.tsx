@@ -21,7 +21,6 @@ interface ChatSidebarProps {
   conversationList?: ConversationListType;
   currentConversationIndex?: string;
   searchTerm: string;
-  creatingConvo: boolean;
   isOpen: boolean;
   isMobile?: boolean;
   onSearchChange: (term: string) => void;
@@ -41,7 +40,6 @@ export default function ChatSidebar({
   conversationList,
   currentConversationIndex,
   searchTerm,
-  creatingConvo,
   isOpen,
   isMobile = false,
   onSearchChange,
@@ -79,15 +77,10 @@ export default function ChatSidebar({
             <Button
               size="sm"
               onClick={onNewConversation}
-              disabled={creatingConvo}
               className="h-7 px-2 text-xs"
               aria-label={t("chat.newConversation")}
             >
-              {creatingConvo ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Plus className="h-3 w-3" />
-              )}
+              <Plus className="h-3 w-3" />
             </Button>
           </TooltipWrapper>
         </div>
@@ -167,7 +160,7 @@ export default function ChatSidebar({
                       >
                         <div className="space-y-1">
                           <p className={"text-sm font-medium truncate"}>
-                            {conversation.name}
+                            {conversation.name.length > 20 ? conversation.name.substring(0, 20) + "..." : conversation.name}
                           </p>
                           <p className={"text-xs truncate"}>
                             {new Date(
@@ -264,14 +257,9 @@ export default function ChatSidebar({
                     onNewConversation();
                     if (isMobile && onClose) onClose();
                   }}
-                  disabled={creatingConvo}
                   className="mt-3 text-xs"
                 >
-                  {creatingConvo ? (
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                  ) : (
-                    <Plus className="mr-1 h-3 w-3" />
-                  )}
+                  <Plus className="mr-1 h-3 w-3" />
                   {t("chat.startConversation")}
                 </Button>
               )}

@@ -840,7 +840,7 @@ export default function ModuleReports(): JSX.Element {
                       <SelectValue placeholder="# conversations" />
                     </SelectTrigger>
                     <SelectContent className="bg-muted z-[100]">
-                      <SelectItem value="none">No filter</SelectItem>
+                      <SelectItem value="none">Any</SelectItem>
                       <SelectItem value="leq">≤ (less or equal)</SelectItem>
                       <SelectItem value="geq">≥ (greater or equal)</SelectItem>
                     </SelectContent>

@@ -13,6 +13,7 @@ import "./fonts/OpenSans/OpenSans-Regular.ttf";
 // import Registration from "./features/authentication/Registration";
 // import ForgotPassword from "./features/authentication/ForgotPassword";
 import Chat from "./features/chat/Chat";
+import ChatLayout from "./features/chat/ChatLayout";
 import Reports from "./features/reports/Reports";
 import Courses from "./features/course-groups/Courses";
 import CreateCourse from "./features/course-groups/CreateCourse";
@@ -310,11 +311,12 @@ function App(): JSX.Element {
                 </Route>
 
                 <Route
-                  path="/chat/:id/:id/:id/:id"
+                  path="/chat/:username/:courseId/:moduleId"
                   element={<PrivateRoute user={user} />}
                 >
-                  {/* username/courseid/moduleid/conversation index  */}
-                  <Route path="/chat/:id/:id/:id/:id" element={<Chat />} />
+                  <Route element={<ChatLayout />}>
+                    <Route path=":conversationIndex" element={<Chat />} />
+                  </Route>
                 </Route>
 
                 <Route path="/account" element={<PrivateRoute user={user} />}>

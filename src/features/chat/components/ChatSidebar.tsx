@@ -3,7 +3,7 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Sheet, SheetContent } from "../../../components/ui/sheet";
-import { Search, Plus, Loader2, MessageCircle, MoreVertical } from "lucide-react";
+import { Search, Plus, MessageCircle, MoreVertical } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { ConversationListType, ConversationType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";

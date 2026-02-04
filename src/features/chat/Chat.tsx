@@ -145,7 +145,7 @@ export default function Chat(): JSX.Element {
   }, []);
 
   const onSocketClose = useCallback(() => {
-    // Logic for reconnecting handled by dependency on params?
+    // Logic for reconnecting is  now handled by dependency on params
   }, []);
 
   const onSocketMessage = useCallback(
@@ -638,7 +638,6 @@ export default function Chat(): JSX.Element {
             if (res && res.status && res.status < 300) {
               if (res.data && res.data.conversations) {
                 const newIndex = res.data.conversations.length - 1;
-                // closeSocket(); // No need, handled by useEffect and navigation
                 
                 // Update Conversation List in Context
                 setConversationList(res.data);
@@ -884,7 +883,7 @@ export default function Chat(): JSX.Element {
         <SpeechToTextModal returnSpeechText={returnSpeakingText} />
       </DialogWrapper>
 
-      {/* Main Chat Area - We don't render Sidebar here anymore */}
+      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0" style={{ height: "calc(100vh - 4rem)" }}> 
         {/* Chat Header */}
         {courseInfo && moduleInfo ? (

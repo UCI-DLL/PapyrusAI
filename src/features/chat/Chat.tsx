@@ -57,7 +57,6 @@ export default function Chat(): JSX.Element {
   const [showWizard, setShowWizard] = useState(false);
   const [chatError, setChatError] = useState<string | undefined>();
   const [conversationList, setConversationList] = useState<ConversationListType>();
-  const [creatingConvo, setCreatingConvo] = useState<boolean>(false);
   const [messageNote, setMessageNote] = useState<string>();
   const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
     //used for autonaming also
@@ -92,6 +91,9 @@ export default function Chat(): JSX.Element {
   });
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [pendingMessageContent, setPendingMessageContent] = useState<string | null>(null);
+  const [pendingPromptId, setPendingPromptId] = useState<string | null>(null);
+
 
   const instructor = process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors";
   const admin = process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin";
@@ -187,63 +189,82 @@ export default function Chat(): JSX.Element {
         }
       });
 
-      // Load conversation
-      Get(
-        getConversation(
-          location.pathname.split("/")[3],
-          location.pathname.split("/")[4],
-          location.pathname.split("/")[5],
-          location.pathname.split("/")[2]
-        ),
-        controller.signal
-      ).then((res: any) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data && res.data.messages) {
-            if (res.data.messages.length > 0) {
-              setSelectedPrompt("");
-            }
-            var sortedMessages = res.data.messages.sort(
-              (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp)
-            );
-            var contextCounter = 0;
-            var reverse = sortedMessages.map((message: MessageType) => {
-              contextCounter += num_tokens_from_messages([message]);
-              if (contextCounter < 64000) {
-                message["inContext"] = false;
-              } else {
-                message["inContext"] = true;
+      // Handle "new" conversation state or load existing one
+      if (location.pathname.split("/")[5] === "new") {
+        setMessages([]); // Clear messages for new chat
+        setSelectedPrompt(""); // Reset prompt selection
+        setIsLoading(false); // No need to fetch conversation
+        setOpenUpdateConvoModal((prev) => ({
+          ...prev,
+          name: t("chat.newConversation"), // Placeholder title
+          completed: false,
+          isDeleted: false,
+        }));
+      } else {
+        // Load existing conversation
+        Get(
+          getConversation(
+            location.pathname.split("/")[3],
+            location.pathname.split("/")[4],
+            location.pathname.split("/")[5],
+            location.pathname.split("/")[2]
+          ),
+          controller.signal
+        ).then((res: any) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data && res.data.messages) {
+              if (res.data.messages.length > 0) {
+                setSelectedPrompt("");
               }
-              return message;
-            });
-            setMessages(reverse.reverse());
+              var sortedMessages = res.data.messages.sort(
+                (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp)
+              );
+              var contextCounter = 0;
+              var reverse = sortedMessages.map((message: MessageType) => {
+                contextCounter += num_tokens_from_messages([message]);
+                if (contextCounter < 64000) {
+                  message["inContext"] = false;
+                } else {
+                  message["inContext"] = true;
+                }
+                return message;
+              });
+              setMessages(reverse.reverse());
+            }
+            if (res.data && res.data.name) {
+              setOpenUpdateConvoModal({
+                open: false,
+                deleteOpen: false,
+                courseId: location.pathname.split("/")[3],
+                moduleId: location.pathname.split("/")[4],
+                index: location.pathname.split("/")[5],
+                name: res.data.name,
+                isDeleted: res.data.isDeleted,
+                completed: res.data.completed ? res.data.completed : false,
+                error: "",
+              });
+            }
+            // Check for pending message from redirection
+            if (location.state && location.state.pendingMessageContent) {
+              setPendingMessageContent(location.state.pendingMessageContent);
+              setPendingPromptId(location.state.pendingPromptId || null);
+              // Clear location state to prevent re-sending on refresh
+              window.history.replaceState({}, "");
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res && res.status === 400) {
+              setAlert({ message: t("errorMessage.convoNotFound"), type: "error" });
+              navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
+            }
           }
-          if (res.data && res.data.name) {
-            setOpenUpdateConvoModal({
-              open: false,
-              deleteOpen: false,
-              courseId: location.pathname.split("/")[3],
-              moduleId: location.pathname.split("/")[4],
-              index: location.pathname.split("/")[5],
-              name: res.data.name,
-              isDeleted: res.data.isDeleted,
-              completed: res.data.completed ? res.data.completed : false,
-              error: "",
-            });
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res && res.status === 400) {
-            setAlert({ message: t("errorMessage.convoNotFound"), type: "error" });
-            navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
-          }
-        }
-        setIsLoading(false);
-      });
+          setIsLoading(false);
+        });
+      }
     } else {
       navigator("/courses");
     }
-
     return () => {
       controller.abort();
     };
@@ -464,6 +485,7 @@ export default function Chat(): JSX.Element {
       }
 
       socket.current = null;
+      setIsConnected(false);
     }
   }, [onSocketOpen, onSocketClose, onSocketMessage]);
 
@@ -553,6 +575,26 @@ export default function Chat(): JSX.Element {
     [isConnected, t]
   );
 
+  useEffect(() => {
+    if (isConnected && pendingMessageContent && conversationIds?.conversationIndex !== "new") {
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: pendingMessageContent,
+        messageType: pendingMessageContent.length < 1000 ? "text" : "file",
+        role: "user",
+        sender: "username",
+        timestamp: messageTempId,
+        promptId: pendingPromptId,
+        userVisible: true,
+      };
+      onSendMessage([responseMessage], autoCreateConvoName);
+      setPendingMessageContent(null);
+      setPendingPromptId(null);
+    }
+  }, [isConnected, pendingMessageContent, conversationIds, pendingPromptId, onSendMessage]);
+
   function num_tokens_from_messages(messages: Array<any>) {
     var num_tokens = 0;
     messages.forEach((message) => {
@@ -565,26 +607,51 @@ export default function Chat(): JSX.Element {
   function handleSubmit(message: string) {
     setIsLoading(true);
     setChatError(undefined);
-    if (message.length < 100000 && message.length > 0) {
-      const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-      var responseMessage: MessageType = {
-        id: tempTimestamp.toString(),
-        content: message,
-        messageType: message.length < 1000 ? "text" : "file",
-        role: "user",
-        sender: "username",
-        timestamp: messageTempId,
-        promptId: null,
-        userVisible: true,
-      };
-      onSendMessage([responseMessage], autoCreateConvoName);
-    } else if (message.length < 1) {
-      setChatError(t("chat.messageTooShort"));
+
+    if (conversationIds?.conversationIndex === "new") {
+      if (message.length < 1 && message.length > 0) {
+         setChatError(t("chat.messageTooShort"));
+         setIsLoading(false);
+         return;
+      }
+      // Create new conversation
+      Post(postCreateConversation(conversationIds.courseId, conversationIds.moduleId), {}).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data && res.data.conversations) {
+            const newIndex = res.data.conversations.length - 1;
+            // Navigate to the new conversation and pass the message in state
+             navigator(
+                 `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId}/${newIndex}`,
+                 { state: { pendingMessageContent: message, pendingPromptId: null } }
+             );
+          }
+        } else {
+             setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
+             setIsLoading(false);
+        }
+      });
     } else {
-      setChatError(t("chat.messageTooLong"));
+      if (message.length < 100000 && message.length > 0) {
+        const tempTimestamp = Date.now();
+        const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        var responseMessage: MessageType = {
+          id: tempTimestamp.toString(),
+          content: message,
+          messageType: message.length < 1000 ? "text" : "file",
+          role: "user",
+          sender: "username",
+          timestamp: messageTempId,
+          promptId: null,
+          userVisible: true,
+        };
+        onSendMessage([responseMessage], autoCreateConvoName);
+      } else if (message.length < 1) {
+        setChatError(t("chat.messageTooShort"));
+      } else {
+        setChatError(t("chat.messageTooLong"));
+      }
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   function autoCreateConvoName(messages: Array<{ role: string; content: string }>) {
@@ -643,9 +710,33 @@ export default function Chat(): JSX.Element {
     setSelectedPrompt(selectedPrompt);
     setRepeatingPrompts([selectedPrompt]);
     if (courseInfo && moduleInfo) {
-      var messagesToSend = [];
       if (moduleInfo.prompts.length !== 0) {
         const actualPrompt = moduleInfo.prompts.filter((x) => x.id === selectedPrompt);
+        
+        if (conversationIds?.conversationIndex === "new") {
+          const promptContent = actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "";
+          if (!promptContent) return;
+
+          setIsLoading(true);
+          Post(postCreateConversation(conversationIds.courseId, conversationIds.moduleId), {}).then((res) => {
+            if (res && res.status && res.status < 300) {
+              if (res.data && res.data.conversations) {
+                const newIndex = res.data.conversations.length - 1;
+                closeSocket();
+                navigator(
+                  `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId}/${newIndex}`,
+                  { state: { pendingMessageContent: promptContent, pendingPromptId: actualPrompt[0].id } }
+                );
+              }
+            } else {
+              setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
+              setIsLoading(false);
+            }
+          });
+          return;
+        }
+
+        var messagesToSend = [];
         const tempTimestamp = Date.now();
         const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
         var responseMessage: MessageType = {
@@ -659,8 +750,8 @@ export default function Chat(): JSX.Element {
           promptId: actualPrompt[0].id,
         };
         messagesToSend.unshift(responseMessage);
+        onSendMessage(messagesToSend, autoCreateConvoName);
       }
-      onSendMessage(messagesToSend, autoCreateConvoName);
     }
   }
 
@@ -718,36 +809,42 @@ export default function Chat(): JSX.Element {
 
   function handleNewConversation() {
     if (conversationIds) {
-      setCreatingConvo(true);
-      Post(postCreateConversation(conversationIds.courseId, conversationIds.moduleId), {}).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            setCreatingConvo(false);
-            setConversationList(res.data);
-            if (res.data.conversations) {
-              closeSocket();
-              navigator(
-                `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId}/${
-                  res.data.conversations.length - 1
-                }`
-              );
-            }
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          setAlert({
-            message: `${t("errorMessage.genericError")}`,
-            type: "error",
-          });
-        }
-        setCreatingConvo(false);
-      });
+      closeSocket();
+      navigator(
+        `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId}/new`
+      );
+      if (window.innerWidth < 1024) setSidebarOpen(false);
     }
   }
 
   function returnDocText(docText: string) {
     setOpenDocumentModal(false);
+    
+    if (conversationIds?.conversationIndex === "new") {
+      if (docText.length < 1 && docText.length > 0) {
+        setChatError(t("chat.messageTooShort"));
+        return;
+      }
+      setIsLoading(true);
+      // Create new conversation
+      Post(postCreateConversation(conversationIds.courseId, conversationIds.moduleId), {}).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data && res.data.conversations) {
+            const newIndex = res.data.conversations.length - 1;
+            // Navigate to the new conversation and pass the message in state
+             navigator(
+                 `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId}/${newIndex}`,
+                 { state: { pendingMessageContent: docText, pendingPromptId: null } }
+             );
+          }
+        } else {
+             setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
+             setIsLoading(false);
+        }
+      });
+      return;
+    }
+
     if (docText.length < 100000 && docText.length > 0) {
       const tempTimestamp = Date.now();
       const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
@@ -970,19 +1067,24 @@ export default function Chat(): JSX.Element {
   }
 
   const conversationArchived =
-    conversationList && conversationList?.conversations
+    conversationList &&
+    conversationList?.conversations &&
+    conversationIds?.conversationIndex !== "new" &&
+    conversationList.conversations.filter(
+      (_convo, index) => index.toString() === (conversationIds?.conversationIndex ?? 0)
+    ).length > 0
       ? conversationList.conversations.filter(
           (_convo, index) => index.toString() === (conversationIds?.conversationIndex ?? 0)
         )[0].isDeleted
       : false;
 
   const isChatInputVisible =
-    isConnected &&
+    (isConnected || conversationIds?.conversationIndex === "new") &&
     user &&
     viewUser &&
     user.username === viewUser.username &&
     selectedPrompt !== undefined &&
-    moduleInfo?.continuedInteraction &&
+    (moduleInfo?.continuedInteraction ?? true) &&
     !showWizard &&
     !openUpdateConvoModal.completed &&
     !conversationArchived;
@@ -1158,6 +1260,7 @@ export default function Chat(): JSX.Element {
           <ChatInput
             isConnected={isConnected}
             isLoading={isLoading}
+            isNewChat={conversationIds?.conversationIndex === "new"}
             chatError={chatError}
             onSubmit={handleSubmit}
             onOpenDocumentModal={() => setOpenDocumentModal(true)}
@@ -1175,7 +1278,6 @@ export default function Chat(): JSX.Element {
         conversationList={conversationList}
         currentConversationIndex={conversationIds?.conversationIndex}
         searchTerm={searchTerm}
-        creatingConvo={creatingConvo}
         isOpen={sidebarOpen}
         isMobile={window.innerWidth < 1024}
         onSearchChange={setSearchTerm}

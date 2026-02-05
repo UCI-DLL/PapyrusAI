@@ -305,7 +305,7 @@ export default function Chat(): JSX.Element {
         socket.current.addEventListener("message", messageListener);
       }
     },
-    [onSocketClose, onSocketMessage, onSocketOpen] // Dependencies
+    [onSocketClose, onSocketMessage, onSocketOpen] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const closeSocket = useCallback(() => {
@@ -516,7 +516,7 @@ export default function Chat(): JSX.Element {
       setPendingMessageContent(null);
       setPendingPromptId(null);
     }
-  }, [isConnected, pendingMessageContent, conversationIndex, pendingPromptId, onSendMessage]);
+  }, [isConnected, pendingMessageContent, conversationIndex, pendingPromptId, onSendMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 

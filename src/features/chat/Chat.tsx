@@ -63,17 +63,14 @@ export default function Chat(): JSX.Element {
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const { setAlert } = useContext(AlertContext);
   const { user } = useContext(UserContext);
-  
+
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const [showWizard, setShowWizard] = useState(false);
   const [chatError, setChatError] = useState<string | undefined>();
   const [messageNote, setMessageNote] = useState<string>();
-  
 
-  
   const [conversationCompleted, setConversationCompleted] = useState<boolean>(false);
   const [conversationIsDeleted, setConversationIsDeleted] = useState<boolean>(false);
-
 
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
   const [openSpeechToTextModal, setOpenSpeechToTextModal] = useState<boolean>(false);
@@ -84,9 +81,9 @@ export default function Chat(): JSX.Element {
     open: false,
     message: "",
   });
-  
 
-  
+
+
   const [pendingMessageContent, setPendingMessageContent] = useState<string | null>(null);
   const [pendingPromptId, setPendingPromptId] = useState<string | null>(null);
 
@@ -123,21 +120,19 @@ export default function Chat(): JSX.Element {
   }, [viewUser, user, moduleInfo, messages]);
 
   // WebSocket functions
-  function ping() {
+  const ping = useCallback(() => {
     if (isConnected) {
       setTimeout(() => {
         socket.current?.send(JSON.stringify({ action: "pong" }));
         ping();
       }, 120000);
     }
-  }
+  }, [isConnected]);
 
   useEffect(() => {
     if (isConnected) {
       ping();
     }
-    // eslint-disable-next-line
-    // eslint-disable-next-line
   }, [isConnected, ping]);
 
   const onSocketOpen = useCallback(() => {
@@ -221,7 +216,7 @@ export default function Chat(): JSX.Element {
                   temp[temp.length - 1] = {
                       ...lastMsg,
                       content: reconstructed || lastMsg.content,
-                      stream: stream 
+                      stream: stream
                   };
                 }
                 return temp;
@@ -258,12 +253,12 @@ export default function Chat(): JSX.Element {
               var temp = [...prev];
               const lastIndex = temp.length - 1;
               const lastMsg = temp[lastIndex];
-              
+
               var newMsgSource = lastMsg.sources;
               if (returnMessage.sources && returnMessage.sources.sources) {
                 newMsgSource = returnMessage.sources.sources;
               }
-              
+
               temp[lastIndex] = {
                   ...lastMsg,
                   content: returnMessage.message,
@@ -297,11 +292,11 @@ export default function Chat(): JSX.Element {
         URL =
           URL +
           `&courseId=${cId}&moduleId=${mId}&index=${idx}&organization=${process.env.REACT_APP_ORGANIZATION}`;
-        
+
         socket.current = new WebSocket(URL);
         socket.current.addEventListener("open", onSocketOpen);
         socket.current.addEventListener("close", onSocketClose);
-        
+
         // Define the listener wrapper and store it ref
         const messageListener = (event: MessageEvent) => {
             onSocketMessage(event.data);
@@ -317,7 +312,7 @@ export default function Chat(): JSX.Element {
     if (socket.current) {
       socket.current.removeEventListener("open", onSocketOpen);
       socket.current.removeEventListener("close", onSocketClose);
-      
+
       // Use the stored ref to remove the exact listener function
       if (socketListenerRef.current) {
           socket.current.removeEventListener("message", socketListenerRef.current);
@@ -345,7 +340,7 @@ export default function Chat(): JSX.Element {
 
   useEffect(() => {
     const controller = new AbortController();
-    
+
     if (username && courseId && moduleId && conversationIndex) {
       setIsLoading(true);
 
@@ -544,7 +539,7 @@ export default function Chat(): JSX.Element {
 
             // Update conversation list in Context
             setConversationList(res.data);
-            
+
             // Navigate to the new conversation and pass the message in state
              navigator(
                  `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
@@ -628,7 +623,7 @@ export default function Chat(): JSX.Element {
     if (courseInfo && moduleInfo) {
       if (moduleInfo.prompts.length !== 0) {
         const actualPrompt = moduleInfo.prompts.filter((x) => x.id === selectedPrompt);
-        
+
         if (conversationIndex === "new") {
           const promptContent = actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "";
           if (!promptContent) return;
@@ -638,7 +633,7 @@ export default function Chat(): JSX.Element {
             if (res && res.status && res.status < 300) {
               if (res.data && res.data.conversations) {
                 const newIndex = res.data.conversations.length - 1;
-                
+
                 // Update Conversation List in Context
                 setConversationList(res.data);
 
@@ -736,7 +731,7 @@ export default function Chat(): JSX.Element {
 
   function returnDocText(docText: string) {
     setOpenDocumentModal(false);
-    
+
     if (conversationIndex === "new") {
       if (docText.length < 1 && docText.length > 0) {
         setChatError(t("chat.messageTooShort"));
@@ -748,7 +743,7 @@ export default function Chat(): JSX.Element {
         if (res && res.status && res.status < 300) {
           if (res.data && res.data.conversations) {
             const newIndex = res.data.conversations.length - 1;
-            
+
             setConversationList(res.data);
 
             // Navigate to the new conversation and pass the message in state
@@ -810,8 +805,8 @@ export default function Chat(): JSX.Element {
   const conversationArchived = conversationIsDeleted;
 
 
-  const currentConvoName = conversationList && conversationIndex !== "new" && conversationList.conversations[parseInt(conversationIndex)] 
-      ? conversationList.conversations[parseInt(conversationIndex)].name 
+  const currentConvoName = conversationList && conversationIndex !== "new" && conversationList.conversations[parseInt(conversationIndex)]
+      ? conversationList.conversations[parseInt(conversationIndex)].name
       : t("chat.newConversation");
 
 
@@ -884,7 +879,7 @@ export default function Chat(): JSX.Element {
       </DialogWrapper>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0" style={{ height: "calc(100vh - 4rem)" }}> 
+      <div className="flex-1 flex flex-col min-w-0" style={{ height: "calc(100vh - 4rem)" }}>
         {/* Chat Header */}
         {courseInfo && moduleInfo ? (
             <ChatHeader
@@ -893,7 +888,7 @@ export default function Chat(): JSX.Element {
             moduleInfo={moduleInfo}
             user={user}
             viewUser={viewUser}
-            onToggleSidebar={() => { 
+            onToggleSidebar={() => {
 
                 window.dispatchEvent(new CustomEvent('toggleSidebar'));
             }}
@@ -904,7 +899,7 @@ export default function Chat(): JSX.Element {
         )}
 
         {/* Chat Messages */}
-        {courseInfo && moduleInfo ? (
+        {courseInfo && moduleInfo && !isLoading ? (
           <>
             <ChatMessages
               messages={messages}
@@ -937,8 +932,11 @@ export default function Chat(): JSX.Element {
             )}
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex flex-col items-center justify-center gap-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground animate-pulse italic">
+              {t("loadingMessage.loadingConversation")}
+            </p>
           </div>
         )}
       </div>

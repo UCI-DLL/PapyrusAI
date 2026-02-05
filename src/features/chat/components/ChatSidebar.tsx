@@ -77,7 +77,7 @@ export default function ChatSidebar({
             <Button
               size="sm"
               onClick={onNewConversation}
-              className="h-7 px-2 text-xs"
+              className={`h-6 px-2 text-xs ${isMobile && "mr-6"}`}
               aria-label={t("chat.newConversation")}
             >
               <Plus className="h-3 w-3" />

@@ -46,6 +46,11 @@ const AddCourseForm = forwardRef<AddCourseFormHandle, AddCourseFormProps>(
                 message: t("courses.addedToCourse"),
                 type: "info",
               });
+              setTimeout(() => {
+                //reload the page so that the course shows up in the list
+                window.location.reload()
+              }, 1000)
+
             }
           } else {
             setErrors({ signUpCode: t("courses.courseNotFound") });

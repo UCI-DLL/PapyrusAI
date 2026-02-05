@@ -59,7 +59,7 @@ export default function ChatMessages({
     moduleInfo?.raterEnabled;
 
   // Show regular wizard for prompt-based modules
-  const showPromptWizard = showWizard && !showEssayWizard;
+  const showPromptWizard = showWizard && !showEssayWizard && !showTypingIndicator;
 
   // Show empty state when no messages and no wizards
   const showEmptyState = (messages.length === 0 &&

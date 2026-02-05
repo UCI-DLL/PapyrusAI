@@ -180,7 +180,7 @@ function App(): JSX.Element {
                 open={showUpdateUserInfoModal}
                 onOpenChange={() => { }}
                 title={t("dashboard.missingDetails")}
-                contentClassName="sm:max-w-md [&>button]:hidden"
+                contentClassName="sm:max-w-md max-h-[90vh] flex flex-col [&>button]:hidden"
                 actions={[
                   {
                     label: t("navigation.logout"),
@@ -190,7 +190,8 @@ function App(): JSX.Element {
                 ]}
                 footerClassName="w-full"
               >
-                <MissingUserInfoForm
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <MissingUserInfoForm
                   user={user ? user : undefined}
                   closeForm={(updatedUser) => {
                     //Set user with new information
@@ -252,6 +253,7 @@ function App(): JSX.Element {
                     setShowUpdateUserInfoModal(false);
                   }}
                 />
+                </div>
               </DialogWrapper>
               <Routes>
                 <Route

@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
 import { MessageTypeType } from "../utility/types/ConversationTypes";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import {

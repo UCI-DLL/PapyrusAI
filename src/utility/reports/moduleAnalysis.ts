@@ -3,6 +3,7 @@ export interface StudentConversationData {
   username: string;
   name: string;
   family_name: string;
+  email: string;
   numConversations: number;
   totalMessages: number;
   hasConversations: boolean; // true if at least one conversation with at least one message
@@ -33,6 +34,7 @@ export function processStudentConversationData(
     username: string;
     name: string;
     family_name: string;
+    email?: string;
     numConvos: number;
   }>,
   conversationData: Record<
@@ -66,6 +68,7 @@ export function processStudentConversationData(
       username: user.username,
       name: user.name,
       family_name: user.family_name,
+      email: user.email ?? "",
       numConversations: user.numConvos,
       totalMessages,
       hasConversations: hasConversations || user.numConvos > 0,

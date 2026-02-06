@@ -33,9 +33,12 @@ import { PageLoader, PageHeaderCard } from "../../components/Common";
 import { useTranslation } from "../../hooks/useTranslation";
 import { isNetworkError, createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
 
+const CONVO_COUNT_CAP = 999999;
+
 interface Column {
   id:
     | "name"
+    | "email"
     | "convos"
     | "essays"
     | "lead"
@@ -45,47 +48,29 @@ interface Column {
     | "rebuttal"
     | "evidence"
     | "conclude";
-  label: string;
+  labelKey: string;
   minWidth?: number;
   align?: "right";
   format?: (value: number) => string;
 }
 
 const columns: readonly Column[] = [
-  { id: "name", label: "Name", minWidth: 100 },
-  { id: "convos", label: "Num Convos", minWidth: 75 },
-  { id: "essays", label: "Num Essays", minWidth: 75 },
-  { id: "lead", label: "Lead", minWidth: 100 },
-  {
-    id: "position",
-    label: "Position",
-    minWidth: 100,
-  },
-  { id: "claim", label: "Claim", minWidth: 100 },
-  {
-    id: "counterclaim",
-    label: "Counterclaim",
-    minWidth: 100,
-  },
-  {
-    id: "rebuttal",
-    label: "Rebuttal",
-    minWidth: 100,
-  },
-  {
-    id: "evidence",
-    label: "Evidence",
-    minWidth: 100,
-  },
-  {
-    id: "conclude",
-    label: "Concluding Summary",
-    minWidth: 100,
-  },
+  { id: "name", labelKey: "reports.name", minWidth: 100 },
+  { id: "email", labelKey: "reports.email", minWidth: 140 },
+  { id: "convos", labelKey: "reports.numConvosColumn", minWidth: 75 },
+  { id: "essays", labelKey: "reports.numEssays", minWidth: 75 },
+  { id: "lead", labelKey: "reports.lead", minWidth: 100 },
+  { id: "position", labelKey: "reports.position", minWidth: 100 },
+  { id: "claim", labelKey: "reports.claim", minWidth: 100 },
+  { id: "counterclaim", labelKey: "reports.counterclaim", minWidth: 100 },
+  { id: "rebuttal", labelKey: "reports.rebuttal", minWidth: 100 },
+  { id: "evidence", labelKey: "reports.evidence", minWidth: 100 },
+  { id: "conclude", labelKey: "reports.concludingSummary", minWidth: 100 },
 ];
 
 interface Data {
   name: string;
+  email: string;
   convos: number;
   essays: number;
   lead: boolean;
@@ -100,6 +85,7 @@ interface Data {
 
 function createData(
   name: string,
+  email: string,
   convos: number,
   essays: number,
   lead: boolean,
@@ -113,6 +99,7 @@ function createData(
 ): Data {
   return {
     name,
+    email,
     convos,
     essays,
     lead,
@@ -171,6 +158,7 @@ export default function ModuleReports(): JSX.Element {
   const [conversationFilter, setConversationFilter] = useState<"all" | "has" | "none">("all");
   const [convoCountFilter, setConvoCountFilter] = useState<"none" | "leq" | "geq">("none");
   const [convoCountValue, setConvoCountValue] = useState<string>("");
+  const [showEmptyStateMessage, setShowEmptyStateMessage] = useState(false);
 
   const handleNetworkError = createNetworkErrorHandler(
     retryAttemptedRef,
@@ -267,6 +255,7 @@ export default function ModuleReports(): JSX.Element {
         const userRater = raterData.filter((e) => e.username === user.username);
         const row = createData(
           user.name + " " + user.family_name,
+          user.email ?? "",
           user.numConvos,
           userRater.length,
           userRater.some((e) => e.content.some((c) => c[4] === "0")),
@@ -296,6 +285,7 @@ export default function ModuleReports(): JSX.Element {
       userList.forEach((user) => {
         const row = createData(
           user.name + " " + user.family_name,
+          user.email ?? "",
           user.numConvos,
           0,
           false,
@@ -536,36 +526,69 @@ export default function ModuleReports(): JSX.Element {
     return firstNameA.localeCompare(firstNameB);
   });
 
-  // Filter student conversation data (non-rater mode): search, has/none conversation, leq/geq count
+  // Parse and cap conversation count filter value (max 1M)
+  const convoCountNum =
+    convoCountValue.trim() === ""
+      ? null
+      : (() => {
+          const parsed = parseInt(convoCountValue, 10);
+          return Number.isNaN(parsed) ? null : Math.min(Math.max(0, parsed), CONVO_COUNT_CAP);
+        })();
+
+  // Filter student conversation data (non-rater mode): search by name/email, has/none conversation, leq/geq count
   const filteredStudentData = studentConversationData.filter((student) => {
-    const fullName = `${student.name} ${student.family_name}`.toLowerCase();
-    if (searchTerm.trim() && !fullName.includes(searchTerm.trim().toLowerCase())) {
-      return false;
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      const fullName = `${student.name} ${student.family_name}`.toLowerCase();
+      const email = (student.email ?? "").toLowerCase();
+      if (!fullName.includes(term) && !email.includes(term)) return false;
     }
     if (conversationFilter === "has" && !student.hasConversations) return false;
     if (conversationFilter === "none" && student.hasConversations) return false;
-    const num = convoCountValue.trim() === "" ? null : parseInt(convoCountValue, 10);
-    if (num !== null && !Number.isNaN(num)) {
-      if (convoCountFilter === "leq" && student.numConversations > num) return false;
-      if (convoCountFilter === "geq" && student.numConversations < num) return false;
+    if (convoCountNum !== null) {
+      if (convoCountFilter === "leq" && student.numConversations > convoCountNum) return false;
+      if (convoCountFilter === "geq" && student.numConversations < convoCountNum) return false;
     }
     return true;
   });
 
-  // Filter rows (rater-enabled mode): search by name, convos count filter
+  // Filter rows (rater-enabled mode): search by name/email, convos count filter
   const filteredRows = sortedRows.filter((row) => {
-    if (searchTerm.trim() && !row.name.toLowerCase().includes(searchTerm.trim().toLowerCase())) {
-      return false;
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      const nameMatch = row.name.toLowerCase().includes(term);
+      const emailMatch = (row.email ?? "").toLowerCase().includes(term);
+      if (!nameMatch && !emailMatch) return false;
     }
     if (conversationFilter === "has" && row.convos === 0) return false;
     if (conversationFilter === "none" && row.convos > 0) return false;
-    const num = convoCountValue.trim() === "" ? null : parseInt(convoCountValue, 10);
-    if (num !== null && !Number.isNaN(num)) {
-      if (convoCountFilter === "leq" && row.convos > num) return false;
-      if (convoCountFilter === "geq" && row.convos < num) return false;
+    if (convoCountNum !== null) {
+      if (convoCountFilter === "leq" && row.convos > convoCountNum) return false;
+      if (convoCountFilter === "geq" && row.convos < convoCountNum) return false;
     }
     return true;
   });
+
+  // Show table loading when initial data is still being computed (avoids empty-then-populate flash)
+  const tableLoading =
+    isLoading ||
+    (!!courseData &&
+      !!moduleData &&
+      userList.length > 0 &&
+      ((!!moduleData.raterEnabled && rows.length === 0) ||
+        (!moduleData.raterEnabled && studentConversationData.length === 0)));
+
+  const tableIsEmpty = moduleData?.raterEnabled ? filteredRows.length === 0 : filteredStudentData.length === 0;
+
+  // Delay showing "No data" / "No students match" so we don't flash it before data has a chance to load
+  useEffect(() => {
+    if (tableLoading || !tableIsEmpty) {
+      setShowEmptyStateMessage(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowEmptyStateMessage(true), 1500);
+    return () => clearTimeout(timer);
+  }, [tableLoading, tableIsEmpty]);
 
   const totalRows = moduleData?.raterEnabled ? filteredRows.length : filteredStudentData.length;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
@@ -583,9 +606,9 @@ export default function ModuleReports(): JSX.Element {
       ) : (
         <>
           <PageHeaderCard
-            title={`${courseData?.name || "Course"} - ${moduleData?.name || "Module"}`}
+            title={`${courseData?.name || t("reports.course")} - ${moduleData?.name || t("common.module")}`}
             icon={<BarChart3 size={192} className="text-primary" />}
-            description="On this page, you can view the overall usage within this module. If you wish to view a specific user's activity, click on their name to access their conversations."
+            description={t("reports.moduleReportsPageDescription")}
           />
 
           {/* Overall Statistics Cards */}
@@ -595,7 +618,7 @@ export default function ModuleReports(): JSX.Element {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Conversations</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t("reports.totalConversations")}</p>
                       <p className="text-3xl font-bold mt-2">{moduleStatistics.totalConversations}</p>
                     </div>
                     <MessageSquare className="h-12 w-12 text-primary opacity-50" />
@@ -607,7 +630,7 @@ export default function ModuleReports(): JSX.Element {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Avg Messages per Conversation</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t("reports.avgMessagesPerConvo")}</p>
                       <p className="text-3xl font-bold mt-2">{moduleStatistics.averageMessagesPerConversation}</p>
                     </div>
                     <BarChart3 className="h-12 w-12 text-primary opacity-50" />
@@ -619,7 +642,7 @@ export default function ModuleReports(): JSX.Element {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Students with Conversations</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t("reports.studentsWithConversations")}</p>
                       <p className="text-3xl font-bold mt-2">{moduleStatistics.studentsWithConversations}</p>
                     </div>
                     <Users className="h-12 w-12 text-primary opacity-50" />
@@ -648,7 +671,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.lead}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Lead`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.lead")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -669,7 +692,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.position}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Position`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.position")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -690,7 +713,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.claim}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Claim`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.claim")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -711,7 +734,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.counterClaim}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Counterclaim`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.counterclaim")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -732,7 +755,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.rebuttal}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Rebuttal`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.rebuttal")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -753,7 +776,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.evidence}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Evidence`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.evidence")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -774,7 +797,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.conclude}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Concluding Summary`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.concludingSummary")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -788,9 +811,9 @@ export default function ModuleReports(): JSX.Element {
             <CardHeader>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                  <h3 className="text-lg font-semibold">Student Reports</h3>
+                  <h3 className="text-lg font-semibold">{t("reports.studentReports")}</h3>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Rows per page:</span>
+                    <span className="text-sm text-muted-foreground">{t("reports.rowsPerPage")}</span>
                     <Select value={rowsPerPage.toString()} onValueChange={handleChangeRowsPerPage}>
                       <SelectTrigger className="w-20">
                         <SelectValue />
@@ -805,7 +828,7 @@ export default function ModuleReports(): JSX.Element {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 flex-wrap p-3 rounded-lg bg-muted/50">
                   <Input
-                    placeholder="Search by name..."
+                    placeholder={t("reports.searchByNameOrEmail")}
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
@@ -821,12 +844,12 @@ export default function ModuleReports(): JSX.Element {
                     }}
                   >
                     <SelectTrigger className="w-[220px]">
-                      <SelectValue placeholder="Conversation status" />
+                      <SelectValue placeholder={t("reports.conversationStatus")} />
                     </SelectTrigger>
                     <SelectContent className="bg-muted z-[100]">
-                      <SelectItem value="all">All students</SelectItem>
-                      <SelectItem value="has">Has conversation</SelectItem>
-                      <SelectItem value="none">Does not have conversation</SelectItem>
+                      <SelectItem value="all">{t("reports.allStudents")}</SelectItem>
+                      <SelectItem value="has">{t("reports.hasConversation")}</SelectItem>
+                      <SelectItem value="none">{t("reports.doesNotHaveConversation")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select
@@ -837,22 +860,30 @@ export default function ModuleReports(): JSX.Element {
                     }}
                   >
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="# conversations" />
+                      <SelectValue placeholder={t("reports.numConversationsFilter")} />
                     </SelectTrigger>
                     <SelectContent className="bg-muted z-[100]">
-                      <SelectItem value="none">Any</SelectItem>
-                      <SelectItem value="leq">≤ (less or equal)</SelectItem>
-                      <SelectItem value="geq">≥ (greater or equal)</SelectItem>
+                      <SelectItem value="none">{t("reports.any")}</SelectItem>
+                      <SelectItem value="leq">{t("reports.lessOrEqual")}</SelectItem>
+                      <SelectItem value="geq">{t("reports.greaterOrEqual")}</SelectItem>
                     </SelectContent>
                   </Select>
                   {convoCountFilter !== "none" && (
                     <Input
                       type="number"
                       min={0}
-                      placeholder="Number"
+                      max={CONVO_COUNT_CAP}
+                      placeholder={t("reports.number")}
                       value={convoCountValue}
                       onChange={(e) => {
-                        setConvoCountValue(e.target.value);
+                        const v = e.target.value;
+                        if (v === "" || v === "-") {
+                          setConvoCountValue(v);
+                        } else {
+                          const n = parseInt(v, 10);
+                          if (!Number.isNaN(n) && n >= 0)
+                            setConvoCountValue(String(Math.min(n, CONVO_COUNT_CAP)));
+                        }
                         setPage(0);
                       }}
                       className="w-24 bg-background"
@@ -873,40 +904,41 @@ export default function ModuleReports(): JSX.Element {
                             className={column.align === "right" ? "text-right" : ""}
                             style={{ minWidth: column.minWidth }}
                           >
-                            {column.label}
+                            {t(column.labelKey)}
                           </TableHead>
                         ))}
                       </TableRow>
                     ) : (
                       <TableRow>
-                        <TableHead style={{ minWidth: 170 }}>Name</TableHead>
-                        <TableHead style={{ minWidth: 100 }}>Has Conversations</TableHead>
-                        <TableHead style={{ minWidth: 150 }}># of Conversations</TableHead>
-                        <TableHead style={{ minWidth: 150 }}>Actions</TableHead>
+                        <TableHead style={{ minWidth: 170 }}>{t("reports.name")}</TableHead>
+                        <TableHead style={{ minWidth: 140 }}>{t("reports.email")}</TableHead>
+                        <TableHead style={{ minWidth: 100 }}>{t("reports.hasConversations")}</TableHead>
+                        <TableHead style={{ minWidth: 150 }}>{t("reports.numOfConversations")}</TableHead>
+                        <TableHead style={{ minWidth: 150 }}>{t("common.actions")}</TableHead>
                       </TableRow>
                     )}
                   </TableHeader>
                   <TableBody>
                     {(moduleData?.raterEnabled ? paginatedRows.length === 0 : paginatedStudentData.length === 0) ? (
                       <TableRow>
-                        <TableCell colSpan={moduleData?.raterEnabled ? columns.length : 4} className="text-center py-8">
+                        <TableCell colSpan={moduleData?.raterEnabled ? columns.length : 5} className="text-center py-8">
                           <div className="flex flex-col items-center gap-2">
-                            {isLoading ? (
+                            {tableLoading || !showEmptyStateMessage ? (
                               <>
                                 <Loader2 className="h-8 w-8 text-muted-foreground opacity-50 animate-spin" />
-                                <p className="text-muted-foreground">Loading data...</p>
+                                <p className="text-muted-foreground">{t("reports.loadingData")}</p>
                               </>
                             ) : totalRows === 0 &&
                               (moduleData?.raterEnabled ? rows.length > 0 : studentConversationData.length > 0) &&
                               (searchTerm || conversationFilter !== "all" || convoCountFilter !== "none") ? (
                               <>
                                 <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
-                                <p className="text-muted-foreground">No students match your filters</p>
+                                <p className="text-muted-foreground">{t("reports.noStudentsMatchFilters")}</p>
                               </>
                             ) : (
                               <>
                                 <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
-                                <p className="text-muted-foreground">No data available</p>
+                                <p className="text-muted-foreground">{t("reports.noDataAvailable")}</p>
                               </>
                             )}
                           </div>
@@ -932,6 +964,8 @@ export default function ModuleReports(): JSX.Element {
                                     ) : (
                                       <X className="h-5 w-5 text-destructive" />
                                     )
+                                  ) : column.id === "email" ? (
+                                    <span className="text-muted-foreground">{value}</span>
                                   ) : (
                                     <button
                                       className="hover:text-primary transition-colors"
@@ -958,6 +992,7 @@ export default function ModuleReports(): JSX.Element {
                             <TableCell className="font-medium">
                               {student.name} {student.family_name}
                             </TableCell>
+                            <TableCell className="text-muted-foreground">{student.email ?? ""}</TableCell>
                             <TableCell>
                               {student.hasConversations ? (
                                 <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -977,10 +1012,10 @@ export default function ModuleReports(): JSX.Element {
                                     )
                                   }
                                 >
-                                  View Conversations
+                                  {t("reports.viewConversations")}
                                 </Button>
                               ) : (
-                                <span className="text-muted-foreground text-sm">No conversations</span>
+                                <span className="text-muted-foreground text-sm">{t("reports.noConversations")}</span>
                               )}
                             </TableCell>
                           </TableRow>
@@ -992,6 +1027,7 @@ export default function ModuleReports(): JSX.Element {
                         return (
                           <TableRow key={row.name} className="hover:bg-muted/50">
                             <TableCell className="font-medium">{row.name}</TableCell>
+                            <TableCell className="text-muted-foreground">{row.email ?? ""}</TableCell>
                             <TableCell>
                               {student?.hasConversations ? (
                                 <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -1011,10 +1047,10 @@ export default function ModuleReports(): JSX.Element {
                                     )
                                   }
                                 >
-                                  View Conversations
+                                  {t("reports.viewConversations")}
                                 </Button>
                               ) : (
-                                <span className="text-muted-foreground text-sm">No conversations</span>
+                                <span className="text-muted-foreground text-sm">{t("reports.noConversations")}</span>
                               )}
                             </TableCell>
                           </TableRow>
@@ -1028,7 +1064,11 @@ export default function ModuleReports(): JSX.Element {
               {(filteredRows.length > 0 || filteredStudentData.length > 0) && (
                 <div className="flex items-center justify-between px-2 py-4">
                   <div className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to {Math.min(endIndex, totalRows)} of {totalRows} entries
+                    {t("reports.showingEntries", {
+                      start: startIndex + 1,
+                      end: Math.min(endIndex, totalRows),
+                      total: totalRows,
+                    })}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -1036,12 +1076,12 @@ export default function ModuleReports(): JSX.Element {
                       size="sm"
                       onClick={() => handleChangePage(page - 1)}
                       disabled={page === 0}
-                      aria-label="Previous page" //TODO
+                      aria-label="Previous page"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <div className="text-sm text-muted-foreground">
-                      Page {page + 1} of {totalPages}
+                      {t("reports.pageOf", { current: page + 1, total: totalPages })}
                     </div>
                     <Button
                       variant="outline"
@@ -1061,6 +1101,6 @@ export default function ModuleReports(): JSX.Element {
       )}
     </main>
   ) : (
-    <PageLoader pageName="Module Reports" />
+    <PageLoader pageName={t("reports.moduleReports")} />
   );
 }

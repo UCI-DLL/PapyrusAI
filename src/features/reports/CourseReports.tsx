@@ -294,10 +294,42 @@ export default function CourseReports(): JSX.Element {
         // Wait for all conversations to be fetched
         await Promise.all(promiseArray);
 
+        // Build conversation count per user (all students in course, including those with 0)
+        const countByUsername: Record<string, number> = {};
+        courseData.users.forEach((u: CustomUserType) => {
+          countByUsername[u.username] = 0;
+        });
+        courseData.modules.forEach((module: { conversations?: Array<{ user?: { username?: string } }> }) => {
+          (module.conversations || []).forEach((convo) => {
+            const un = convo.user?.username;
+            if (un) countByUsername[un] = (countByUsername[un] ?? 0) + 1;
+          });
+        });
+        const allStudentsWithCounts = courseData.users.map((u: CustomUserType) => ({
+          username: u.username,
+          name: u.name ?? "",
+          family_name: u.family_name ?? "",
+          email: u.email ?? "",
+          numConversations: countByUsername[u.username] ?? 0,
+        }));
+        allStudentsWithCounts.sort((a, b) => {
+          const lastA = (a.family_name ?? "").trim().toLowerCase();
+          const lastB = (b.family_name ?? "").trim().toLowerCase();
+          const cmp = lastA.localeCompare(lastB);
+          if (cmp !== 0) return cmp;
+          const firstA = (a.name ?? "").trim().toLowerCase();
+          const firstB = (b.name ?? "").trim().toLowerCase();
+          return firstA.localeCompare(firstB);
+        });
+
         const analysisResult = analyzeCourse(courseData);
-        setAnalysis(analysisResult);
+        const analysisWithAllStudents = {
+          ...analysisResult,
+          allStudentsWithCounts,
+        };
+        setAnalysis(analysisWithAllStudents);
         if (courseId && user?.username) {
-          setCourseAnalysis(courseId, user.username, analysisResult);
+          setCourseAnalysis(courseId, user.username, analysisWithAllStudents);
         }
       } catch (error) {
         console.error("Error fetching conversation data:", error);

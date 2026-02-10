@@ -16,6 +16,12 @@ import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { Badge } from "../../components/ui/badge";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../components/ui/popover";
+import { ScrollArea } from "../../components/ui/scroll-area";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -34,6 +40,7 @@ import {
   Trash2,
   XCircle,
   CheckCircle,
+  Search,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -132,6 +139,8 @@ export default function CreateCourse({
   const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
   const [showSavePublishTooltip, setShowSavePublishTooltip] =
     useState<boolean>(false);
+  const [taSearchQuery, setTaSearchQuery] = useState<string>("");
+  const [openTaPopover, setOpenTaPopover] = useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -926,82 +935,111 @@ export default function CreateCourse({
                   <Label id="taLabel" htmlFor="taSelect" className="text-sm font-medium">
                     {t("common.add")} {t("createCourse.teachingAssistants")}
                   </Label>
-                  <Select
-                    onValueChange={(value) => {
-                      const selectedUser = userList.find(
-                        (user) => user.username === value
-                      );
-                      if (selectedUser) {
-                        if (session.taList.length >= 10) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            taList: t("createCourse.maxTeachingAssistants"),
-                          }));
-                        } else if (
-                          !session.taList.find(
-                            (ta: CustomUserType) =>
-                              ta.username === selectedUser.username
-                          )
-                        ) {
-                          setSession((prev) => ({
-                            ...prev,
-                            taList: [...prev.taList, selectedUser],
-                          }));
-                          setErrors((prev) => ({ ...prev, taList: "" }));
-                        }
-                      }
-                    }}
-                  >
-                    <SelectTrigger id="taSelect" aria-labelledby="taLabel">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <SelectValue placeholder={t("createCourse.selectTeachingAssistant")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {userList.filter(
-                        (user) =>
-                          !session.taList.find(
-                            (ta: CustomUserType) =>
-                              ta.username === user.username
-                          )
-                      ).length === 0 ? (
-                        <div className="p-3 text-sm text-muted-foreground text-center">
-                          {t("createCourse.noMoreUsersAvailable")}
+                  <Popover open={openTaPopover} onOpenChange={setOpenTaPopover}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="taSelect"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openTaPopover}
+                        aria-labelledby="taLabel"
+                        className="group w-full justify-between font-normal hover:bg-accent hover:text-accent-foreground h-10 px-3"
+                        disabled={isLoading}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <Users className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground shrink-0 transition-colors" />
+                          <span className="truncate">
+                            {t("createCourse.selectTeachingAssistant")}
+                          </span>
                         </div>
-                      ) : (
-                        userList
-                          .filter(
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[var(--radix-popover-trigger-width)] p-0"
+                      align="start"
+                    >
+                      <div className="flex items-center border-b px-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <input
+                          className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder={t("common.search")}
+                          value={taSearchQuery}
+                          onChange={(e) => setTaSearchQuery(e.target.value)}
+                        />
+                      </div>
+                      <ScrollArea className="h-72">
+                        <div className="p-1">
+                          {userList.filter(
                             (user) =>
                               !session.taList.find(
                                 (ta: CustomUserType) =>
                                   ta.username === user.username
+                              ) &&
+                              (`${user.name || ""} ${user.family_name || ""} ${user.email || ""} ${user.username || ""}`
+                                .toLowerCase()
+                                .includes(taSearchQuery.toLowerCase()))
+                          ).length === 0 ? (
+                            <div className="p-3 text-sm text-muted-foreground text-center">
+                              {t("createCourse.noMoreUsersAvailable")}
+                            </div>
+                          ) : (
+                            userList
+                              .filter(
+                                (user) =>
+                                  !session.taList.find(
+                                    (ta: CustomUserType) =>
+                                      ta.username === user.username
+                                  ) &&
+                                  (`${user.name || ""} ${user.family_name || ""} ${user.email || ""} ${user.username || ""}`
+                                    .toLowerCase()
+                                    .includes(taSearchQuery.toLowerCase()))
                               )
-                          )
-                          .map((user) => (
-                            <SelectItem
-                              key={user.username}
-                              value={user.username}
-                            >
-                              <div className="flex items-center gap-2">
-                                <span>
-                                  {user.name && user.family_name
-                                    ? `${user.name} ${user.family_name}`
-                                    : user.name ||
-                                    user.family_name ||
-                                    user.email ||
-                                    user.username}
-                                </span>
-                                {user.email &&
-                                  (user.name || user.family_name) && (
+                              .map((user) => (
+                                <button
+                                  key={user.username}
+                                  type="button"
+                                  className="group relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                                  onClick={() => {
+                                    if (session.taList.length >= 10) {
+                                      setErrors((prev) => ({
+                                        ...prev,
+                                        taList: t("createCourse.maxTeachingAssistants"),
+                                      }));
+                                    } else {
+                                      setSession((prev) => ({
+                                        ...prev,
+                                        taList: [...prev.taList, user],
+                                      }));
+                                      setErrors((prev) => ({ ...prev, taList: "" }));
+                                    }
+                                    setOpenTaPopover(false);
+                                    setTaSearchQuery("");
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2">
                                     <span>
-                                      ({user.email})
+                                      {user.name && user.family_name
+                                        ? `${user.name} ${user.family_name}`
+                                        : user.name ||
+                                        user.family_name ||
+                                        user.email ||
+                                        user.username}
                                     </span>
-                                  )}
-                              </div>
-                            </SelectItem>
-                          ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                                    {user.email &&
+                                      (user.name || user.family_name) && (
+                                        <span>
+                                          ({user.email})
+                                        </span>
+                                      )}
+                                  </div>
+                                </button>
+                              ))
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 {errors.taList !== "" && (

@@ -51,7 +51,7 @@ export default function ChatWizard({
               <SelectTrigger id="prompt-select">
                 <SelectValue placeholder={t("chat.selectPromptStarted")} />
               </SelectTrigger>
-              <SelectContent avoidCollisions={false} position="popper">
+              <SelectContent avoidCollisions={true} position="popper">
                 {prompts.map((prompt, index) => (
                   <SelectItem key={index} value={prompt.id}>
                     {prompt.name}

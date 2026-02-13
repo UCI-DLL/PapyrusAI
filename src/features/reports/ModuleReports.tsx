@@ -159,6 +159,7 @@ export default function ModuleReports(): JSX.Element {
   const [convoCountFilter, setConvoCountFilter] = useState<"none" | "leq" | "geq">("none");
   const [convoCountValue, setConvoCountValue] = useState<string>("");
   const [showEmptyStateMessage, setShowEmptyStateMessage] = useState(false);
+  const [conversationStatsReady, setConversationStatsReady] = useState(false);
 
   const handleNetworkError = createNetworkErrorHandler(
     retryAttemptedRef,
@@ -243,6 +244,8 @@ export default function ModuleReports(): JSX.Element {
       setRaterData([]);
       setUserList([]);
       setRows([]);
+      setConversationStatsReady(false);
+      setConversationDataMap({});
       controller.abort();
     };
 
@@ -441,7 +444,7 @@ export default function ModuleReports(): JSX.Element {
       }
     }
 
-    setConversationDataMap(conversationMap);
+    setConversationDataMap((prev) => ({ ...prev, ...conversationMap }));
   };
 
   function getUsersInCourseList(course: string, module: string, signal: AbortSignal, nextToken?: string) {
@@ -483,6 +486,7 @@ export default function ModuleReports(): JSX.Element {
           if (usersWithConvos.length > 0) {
             await fetchConversationDataForStudents(course, module, usersWithConvos, signal);
           }
+          setConversationStatsReady(true);
 
           //if the we get a nexttoken, then call for the next page
           //handle pages
@@ -569,9 +573,10 @@ export default function ModuleReports(): JSX.Element {
     return true;
   });
 
-  // Show table loading when initial data is still being computed (avoids empty-then-populate flash)
+  // Show table loading when initial data is still being computed (avoids empty-then-populate flash and "no data" while loading)
   const tableLoading =
     isLoading ||
+    (!moduleData?.raterEnabled && !conversationStatsReady) ||
     (!!courseData &&
       !!moduleData &&
       userList.length > 0 &&
@@ -611,15 +616,23 @@ export default function ModuleReports(): JSX.Element {
             description={t("reports.moduleReportsPageDescription")}
           />
 
-          {/* Overall Statistics Cards */}
-          {moduleStatistics && (
+          {/* Overall Statistics Cards - show loading until conversation data is ready to avoid flashing 0 / no data */}
+          {(conversationStatsReady && moduleStatistics) || (!conversationStatsReady && courseData && moduleData) ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="transition-all duration-300 hover:shadow-md">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">{t("reports.totalConversations")}</p>
-                      <p className="text-3xl font-bold mt-2">{moduleStatistics.totalConversations}</p>
+                      <p className="text-3xl font-bold mt-2">
+                        {conversationStatsReady && moduleStatistics ? (
+                          moduleStatistics.totalConversations
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </span>
+                        )}
+                      </p>
                     </div>
                     <MessageSquare className="h-12 w-12 text-primary opacity-50" />
                   </div>
@@ -631,7 +644,15 @@ export default function ModuleReports(): JSX.Element {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">{t("reports.avgMessagesPerConvo")}</p>
-                      <p className="text-3xl font-bold mt-2">{moduleStatistics.averageMessagesPerConversation}</p>
+                      <p className="text-3xl font-bold mt-2">
+                        {conversationStatsReady && moduleStatistics ? (
+                          moduleStatistics.averageMessagesPerConversation
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </span>
+                        )}
+                      </p>
                     </div>
                     <BarChart3 className="h-12 w-12 text-primary opacity-50" />
                   </div>
@@ -643,14 +664,22 @@ export default function ModuleReports(): JSX.Element {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">{t("reports.studentsWithConversations")}</p>
-                      <p className="text-3xl font-bold mt-2">{moduleStatistics.studentsWithConversations}</p>
+                      <p className="text-3xl font-bold mt-2">
+                        {conversationStatsReady && moduleStatistics ? (
+                          moduleStatistics.studentsWithConversations
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </span>
+                        )}
+                      </p>
                     </div>
                     <Users className="h-12 w-12 text-primary opacity-50" />
                   </div>
                 </CardContent>
               </Card>
             </div>
-          )}
+          ) : null}
 
           {stats && (
             <>

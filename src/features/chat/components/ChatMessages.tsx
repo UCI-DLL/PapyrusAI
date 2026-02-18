@@ -1,12 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MessageLeft, MessageRight } from "../../../components/Message";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ArrowDown } from "lucide-react";
 import { MessageType } from "../../../utility/types/ConversationTypes";
 import { ModuleType } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import ChatWizard from "../ChatWizard";
 import EssayWizard from "../EssayWizard";
 import { useTranslation } from "../../../hooks/useTranslation";
+import { Button } from "../../../components/ui/button";
 
 interface ChatMessagesProps {
   messages: MessageType[];
@@ -43,10 +44,20 @@ export default function ChatMessages({
 }: ChatMessagesProps): JSX.Element {
   const { t } = useTranslation();
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const containerRef = useRef<null | HTMLDivElement>(null);
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const handleScroll = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    setIsScrolledUp(scrollHeight - scrollTop - clientHeight > 300);
+  };
+
   //screen reader new message announcement
   const [srAnnouncement, setSrAnnouncement] = React.useState("");
 
@@ -79,12 +90,8 @@ export default function ChatMessages({
     return () => clearTimeout(timeout);
   }, [messages]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, showTypingIndicator]);
-
   return (
-    <div className="flex-1 lg:overflow-y-auto">
+    <div ref={containerRef} onScroll={handleScroll} className="flex-1 lg:overflow-y-auto relative">
       <div className="p-4 max-w-4xl mx-auto">
         {/* Essay Wizard */}
         {showEssayWizard && (
@@ -297,6 +304,19 @@ export default function ChatMessages({
         {/* Scroll anchor */}
         <div ref={messagesEndRef} className="h-1" />
       </div>
+
+      {/* Scroll to bottom button */}
+      {isScrolledUp && (
+        <Button
+          onClick={scrollToBottom}
+          variant="outline"
+          aria-label="Scroll to bottom"
+          className="sticky bottom-4 float-right mr-4 "
+          size="icon"
+        >
+          <ArrowDown className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }

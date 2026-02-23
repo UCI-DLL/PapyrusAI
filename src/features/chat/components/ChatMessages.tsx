@@ -46,16 +46,22 @@ export default function ChatMessages({
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const containerRef = useRef<null | HTMLDivElement>(null);
   const [isScrolledUp, setIsScrolledUp] = useState(false);
+  const shouldAutoScroll = useRef(true);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = containerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
   };
 
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
     const { scrollTop, scrollHeight, clientHeight } = container;
-    setIsScrolledUp(scrollHeight - scrollTop - clientHeight > 300);
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    const scrolledUp = distanceFromBottom > 100;
+    setIsScrolledUp(scrolledUp);
+    shouldAutoScroll.current = !scrolledUp;
   };
 
   //screen reader new message announcement
@@ -88,6 +94,26 @@ export default function ChatMessages({
     }, last.finished ? 600 : 200);
 
     return () => clearTimeout(timeout);
+  }, [messages]);
+
+  // Scroll to bottom on mount
+  useEffect(() => {
+    scrollToBottom();
+  }, []);
+
+  // Auto-scroll when messages update; reset auto-scroll flag when streaming finishes
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    const streamingFinished = lastMessage?.role === "assistant" && lastMessage?.finished;
+
+    if (shouldAutoScroll.current) {
+      scrollToBottom();
+    }
+
+    // Once streaming finishes, re-enable auto-scroll so the next message scrolls down
+    if (streamingFinished) {
+      shouldAutoScroll.current = true;
+    }
   }, [messages]);
 
   return (
@@ -308,7 +334,11 @@ export default function ChatMessages({
       {/* Scroll to bottom button */}
       {isScrolledUp && (
         <Button
-          onClick={scrollToBottom}
+          onClick={() => {
+            shouldAutoScroll.current = true;
+            setIsScrolledUp(false);
+            scrollToBottom();
+          }}
           variant="outline"
           aria-label="Scroll to bottom"
           className="sticky bottom-4 float-right mr-4 "

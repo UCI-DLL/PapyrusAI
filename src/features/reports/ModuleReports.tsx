@@ -3,95 +3,74 @@
  */
 //TODO: update this to be generic
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import {
-  buildStyles,
-  CircularProgressbarWithChildren,
-} from "react-circular-progressbar";
-import { CheckCircle2, X, ChevronLeft, ChevronRight, BarChart3 } from "lucide-react";
+import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
+import { CheckCircle2, X, ChevronLeft, ChevronRight, BarChart3, MessageSquare, Users, Loader2 } from "lucide-react";
 import { UserContext } from "../../utility/context/UserContext";
+import { AlertContext } from "../../utility/context/AlertContext";
 import Get from "../../utility/Get";
-import {
-  getCourse,
-  getRaterModuleData,
-  getUsersInCourse,
-} from "../../utility/endpoints/CourseEndpoints";
+import { getCourse, getRaterModuleData, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
-import { getUserConversationList } from "../../utility/endpoints/ConversationEndpoints";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+  getUserConversationList,
+  getConversationList,
+  getConversation,
+} from "../../utility/endpoints/ConversationEndpoints";
+import {
+  calculateModuleStatistics,
+  processStudentConversationData,
+  StudentConversationData,
+  ModuleStatistics,
+} from "../../utility/reports/moduleAnalysis";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../../components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Input } from "../../components/ui/input";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
+import { useTranslation } from "../../hooks/useTranslation";
+import { isNetworkError, createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
+
+const CONVO_COUNT_CAP = 999999;
 
 interface Column {
   id:
-  | "name"
-  | "convos"
-  | "essays"
-  | "lead"
-  | "position"
-  | "claim"
-  | "counterclaim"
-  | "rebuttal"
-  | "evidence"
-  | "conclude";
-  label: string;
+    | "name"
+    | "email"
+    | "convos"
+    | "essays"
+    | "lead"
+    | "position"
+    | "claim"
+    | "counterclaim"
+    | "rebuttal"
+    | "evidence"
+    | "conclude";
+  labelKey: string;
   minWidth?: number;
   align?: "right";
   format?: (value: number) => string;
 }
 
 const columns: readonly Column[] = [
-  { id: "name", label: "Name", minWidth: 100 },
-  { id: "convos", label: "Num Convos", minWidth: 75 },
-  { id: "essays", label: "Num Essays", minWidth: 75 },
-  { id: "lead", label: "Lead", minWidth: 100 },
-  {
-    id: "position",
-    label: "Position",
-    minWidth: 100,
-  },
-  { id: "claim", label: "Claim", minWidth: 100 },
-  {
-    id: "counterclaim",
-    label: "Counterclaim",
-    minWidth: 100,
-  },
-  {
-    id: "rebuttal",
-    label: "Rebuttal",
-    minWidth: 100,
-  },
-  {
-    id: "evidence",
-    label: "Evidence",
-    minWidth: 100,
-  },
-  {
-    id: "conclude",
-    label: "Concluding Summary",
-    minWidth: 100,
-  },
+  { id: "name", labelKey: "reports.name", minWidth: 100 },
+  { id: "email", labelKey: "reports.email", minWidth: 140 },
+  { id: "convos", labelKey: "reports.numConvosColumn", minWidth: 75 },
+  { id: "essays", labelKey: "reports.numEssays", minWidth: 75 },
+  { id: "lead", labelKey: "reports.lead", minWidth: 100 },
+  { id: "position", labelKey: "reports.position", minWidth: 100 },
+  { id: "claim", labelKey: "reports.claim", minWidth: 100 },
+  { id: "counterclaim", labelKey: "reports.counterclaim", minWidth: 100 },
+  { id: "rebuttal", labelKey: "reports.rebuttal", minWidth: 100 },
+  { id: "evidence", labelKey: "reports.evidence", minWidth: 100 },
+  { id: "conclude", labelKey: "reports.concludingSummary", minWidth: 100 },
 ];
 
 interface Data {
   name: string;
+  email: string;
   convos: number;
   essays: number;
   lead: boolean;
@@ -106,6 +85,7 @@ interface Data {
 
 function createData(
   name: string,
+  email: string,
   convos: number,
   essays: number,
   lead: boolean,
@@ -119,6 +99,7 @@ function createData(
 ): Data {
   return {
     name,
+    email,
     convos,
     essays,
     lead,
@@ -146,15 +127,16 @@ type RaterDataType = {
 export default function ModuleReports(): JSX.Element {
   let navigator = useNavigate();
   let location = useLocation();
+  const { t } = useTranslation();
   const { user } = useContext(UserContext);
+  const { setAlert } = useContext(AlertContext);
+  const retryAttemptedRef = useRef<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [raterData, setRaterData] = useState<Array<RaterDataType>>([]);
   const [error, setError] = useState<string>();
-  const [userList, setUserList] = useState<
-    Array<CustomUserType & { numConvos: number }>
-  >([]);
+  const [userList, setUserList] = useState<Array<CustomUserType & { numConvos: number }>>([]);
   const [courseData, setCourseData] = useState<CourseType>();
   const [moduleData, setModuleData] = useState<ModuleType>();
   const [rows, setRows] = useState<Array<Data>>([]);
@@ -167,77 +149,93 @@ export default function ModuleReports(): JSX.Element {
     evidence: number;
     conclude: number;
   }>();
+  const [moduleStatistics, setModuleStatistics] = useState<ModuleStatistics | null>(null);
+  const [studentConversationData, setStudentConversationData] = useState<StudentConversationData[]>([]);
+  const [conversationDataMap, setConversationDataMap] = useState<
+    Record<string, Array<{ conversations: Array<{ messages?: Array<{ timestamp?: number | string }> }> }>>
+  >({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [conversationFilter, setConversationFilter] = useState<"all" | "has" | "none">("all");
+  const [convoCountFilter, setConvoCountFilter] = useState<"none" | "leq" | "geq">("none");
+  const [convoCountValue, setConvoCountValue] = useState<string>("");
+  const [showEmptyStateMessage, setShowEmptyStateMessage] = useState(false);
+  const [conversationStatsReady, setConversationStatsReady] = useState(false);
+
+  const handleNetworkError = createNetworkErrorHandler(
+    retryAttemptedRef,
+    setAlert,
+    navigator,
+    t,
+    setIsLoading
+  );
 
   useEffect(() => {
     const controller = new AbortController();
+    retryAttemptedRef.current = false;
     if (user) {
       setIsLoading(true);
-      if (
-        location.pathname &&
-        location.pathname.split("/") &&
-        location.pathname.split("/")[1] &&
-        location.pathname.split("/")[2] &&
-        location.pathname.split("/")[3]
-      ) {
-        const courseId = location.pathname.split("/")[2];
-        const moduleId = location.pathname.split("/")[3];
+      const pathParts = location.pathname.split("/");
+      if (pathParts[1] === "reports" && pathParts[2] === "module" && pathParts[3] && pathParts[4]) {
+        const courseId = pathParts[3];
+        const moduleId = pathParts[4];
 
         //Get user list
         if (userList.length === 0) {
           getUsersInCourseList(courseId, moduleId, controller.signal);
         }
 
-        //Get course and module data
-        Get(getCourse(courseId), controller.signal).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data && res.data.modules) {
-              setCourseData(res.data);
-              const module = res.data.modules.find(
-                (mod: ModuleType) => mod.id === moduleId
-              );
-              setModuleData(module);
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
+        const loadCourse = () => {
+          Get(getCourse(courseId), controller.signal, true).then((res) => {
+            if (res && res.status && res.status < 300) {
+              if (res.data && res.data.modules) {
+                setCourseData(res.data);
+                const module = res.data.modules.find((mod: ModuleType) => mod.id === moduleId);
+                setModuleData(module);
+              }
+            } else if (res && res.status === 401) {
+              navigator("/login");
             } else {
-              //handle error
-              setError("Course Does Not Exist");
-              setIsLoading(false);
+              if (isNetworkError(res)) {
+                handleNetworkError(res, loadCourse);
+                return;
+              }
+              if (res === undefined) {
+              } else {
+                setError("Course Does Not Exist");
+                setIsLoading(false);
+              }
             }
-          }
-        });
+          });
+        };
 
-        //Get rater data for module
-        Get(getRaterModuleData(courseId, moduleId), controller.signal).then(
-          (res) => {
+        const loadRaterData = () => {
+          Get(getRaterModuleData(courseId, moduleId), controller.signal, true).then((res) => {
             if (res && res.status && res.status < 300) {
               if (res.data) {
-                //Get rater data for the module
                 res.data.forEach((item: any) => {
-                  //convert the rater info to 2d array
-                  const rater = item.content
-                    .split("\n")
-                    .map((row: string) => row.split(","));
-                  setRaterData((prev) => [
-                    ...prev,
-                    { ...item, content: rater },
-                  ]);
+                  const rater = item.content.split("\n").map((row: string) => row.split(","));
+                  setRaterData((prev) => [...prev, { ...item, content: rater }]);
                 });
-              } else if (res && res.status === 401) {
-                navigator("/login");
+              }
+              setIsLoading(false);
+            } else if (res && res.status === 401) {
+              navigator("/login");
+            } else {
+              if (isNetworkError(res)) {
+                handleNetworkError(res, loadRaterData);
+                return;
+              }
+              if (res === undefined) {
               } else {
-                if (res === undefined) {
-                } else {
-                  // handle error
-                  setError("No Data Found");
-                }
+                setError("No Data Found");
               }
               setIsLoading(false);
             }
-          }
-        );
+          });
+        };
+
+        loadCourse();
+        loadRaterData();
       }
       setIsLoading(false);
     }
@@ -246,6 +244,8 @@ export default function ModuleReports(): JSX.Element {
       setRaterData([]);
       setUserList([]);
       setRows([]);
+      setConversationStatsReady(false);
+      setConversationDataMap({});
       controller.abort();
     };
 
@@ -258,6 +258,7 @@ export default function ModuleReports(): JSX.Element {
         const userRater = raterData.filter((e) => e.username === user.username);
         const row = createData(
           user.name + " " + user.family_name,
+          user.email ?? "",
           user.numConvos,
           userRater.length,
           userRater.some((e) => e.content.some((c) => c[4] === "0")),
@@ -273,9 +274,7 @@ export default function ModuleReports(): JSX.Element {
           const newArray = [...prev];
           if (newArray.some((p) => p.username === row.username)) {
             //if user is in the list already, just update it
-            const index = newArray.findIndex(
-              (p) => p.username === row.username
-            );
+            const index = newArray.findIndex((p) => p.username === row.username);
             newArray[index] = row;
             return newArray;
           } else {
@@ -289,6 +288,7 @@ export default function ModuleReports(): JSX.Element {
       userList.forEach((user) => {
         const row = createData(
           user.name + " " + user.family_name,
+          user.email ?? "",
           user.numConvos,
           0,
           false,
@@ -304,9 +304,7 @@ export default function ModuleReports(): JSX.Element {
           const newArray = [...prev];
           if (newArray.some((p) => p.username === row.username)) {
             //if user is in the list already, just update it
-            const index = newArray.findIndex(
-              (p) => p.username === row.username
-            );
+            const index = newArray.findIndex((p) => p.username === row.username);
             newArray[index] = row;
             return newArray;
           } else {
@@ -325,9 +323,7 @@ export default function ModuleReports(): JSX.Element {
         lead: Math.round(getAverageOfDiscourseType(raterData, "0") * 100),
         position: Math.round(getAverageOfDiscourseType(raterData, "1") * 100),
         claim: Math.round(getAverageOfDiscourseType(raterData, "2") * 100),
-        counterClaim: Math.round(
-          getAverageOfDiscourseType(raterData, "3") * 100
-        ),
+        counterClaim: Math.round(getAverageOfDiscourseType(raterData, "3") * 100),
         rebuttal: Math.round(getAverageOfDiscourseType(raterData, "4") * 100),
         evidence: Math.round(getAverageOfDiscourseType(raterData, "5") * 100),
         conclude: Math.round(getAverageOfDiscourseType(raterData, "6") * 100),
@@ -335,10 +331,47 @@ export default function ModuleReports(): JSX.Element {
     }
   }, [raterData]);
 
-  function getAverageOfDiscourseType(
-    raterArray: Array<RaterDataType>,
-    type: string
-  ) {
+  // Calculate module statistics when user list and conversation data are available
+  useEffect(() => {
+    if (userList.length > 0 && Object.keys(conversationDataMap).length > 0) {
+      const processedData = processStudentConversationData(userList, conversationDataMap);
+      // Sort by last name (family_name) first, then first name
+      const sortedData = [...processedData].sort((a, b) => {
+        const lastNameA = (a.family_name || "").toLowerCase();
+        const lastNameB = (b.family_name || "").toLowerCase();
+        if (lastNameA !== lastNameB) {
+          return lastNameA.localeCompare(lastNameB);
+        }
+        // If last names are the same, sort by first name
+        const firstNameA = (a.name || "").toLowerCase();
+        const firstNameB = (b.name || "").toLowerCase();
+        return firstNameA.localeCompare(firstNameB);
+      });
+      setStudentConversationData(sortedData);
+      const stats = calculateModuleStatistics(sortedData);
+      setModuleStatistics(stats);
+    } else if (userList.length > 0 && Object.keys(conversationDataMap).length === 0) {
+      // If no conversation data yet, still process with what we have
+      const processedData = processStudentConversationData(userList, {});
+      // Sort by last name (family_name) first, then first name
+      const sortedData = [...processedData].sort((a, b) => {
+        const lastNameA = (a.family_name || "").toLowerCase();
+        const lastNameB = (b.family_name || "").toLowerCase();
+        if (lastNameA !== lastNameB) {
+          return lastNameA.localeCompare(lastNameB);
+        }
+        // If last names are the same, sort by first name
+        const firstNameA = (a.name || "").toLowerCase();
+        const firstNameB = (b.name || "").toLowerCase();
+        return firstNameA.localeCompare(firstNameB);
+      });
+      setStudentConversationData(sortedData);
+      const stats = calculateModuleStatistics(sortedData);
+      setModuleStatistics(stats);
+    }
+  }, [userList, conversationDataMap]);
+
+  function getAverageOfDiscourseType(raterArray: Array<RaterDataType>, type: string) {
     let totalCount = 0;
     let arrayLength = raterArray.length;
 
@@ -350,49 +383,110 @@ export default function ModuleReports(): JSX.Element {
     return totalCount > 0 ? totalCount / arrayLength : 0;
   }
 
-  function getUsersInCourseList(
-    course: string,
-    module: string,
-    signal: AbortSignal,
-    nextToken?: string
-  ) {
+  const fetchConversationDataForStudents = async (
+    courseId: string,
+    moduleId: string,
+    students: Array<CustomUserType & { numConvos: number }>,
+    signal: AbortSignal
+  ) => {
+    const conversationMap: Record<
+      string,
+      Array<{ conversations: Array<{ messages?: Array<{ timestamp?: number | string }> }> }>
+    > = {};
+
+    // Fetch conversation list and then fetch each conversation with messages
+    for (const student of students) {
+      if (student.numConvos > 0) {
+        try {
+          const convoListRes = await Get(getConversationList(courseId, moduleId, student.username), signal, true);
+          if (isNetworkError(convoListRes)) {
+            handleNetworkError(convoListRes, () =>
+              fetchConversationDataForStudents(courseId, moduleId, students, signal)
+            );
+            return;
+          }
+          if (convoListRes && convoListRes.status && convoListRes.status < 300 && convoListRes.data?.conversations) {
+            const conversationsWithMessages = await Promise.all(
+              convoListRes.data.conversations.map(async (_: any, index: number) => {
+                try {
+                  const convoRes = await Get(
+                    getConversation(courseId, moduleId, index.toString(), student.username),
+                    signal,
+                    true
+                  );
+                  if (isNetworkError(convoRes)) {
+                    handleNetworkError(convoRes, () =>
+                      fetchConversationDataForStudents(courseId, moduleId, students, signal)
+                    );
+                    return { messages: [] };
+                  }
+                  if (convoRes && convoRes.status && convoRes.status < 300 && convoRes.data) {
+                    return {
+                      messages: convoRes.data.messages || [],
+                    };
+                  }
+                  return { messages: [] };
+                } catch (error) {
+                  return { messages: [] };
+                }
+              })
+            );
+
+            conversationMap[student.username] = [
+              {
+                conversations: conversationsWithMessages,
+              },
+            ];
+          }
+        } catch (error) {
+          // Handle error silently
+        }
+      }
+    }
+
+    setConversationDataMap((prev) => ({ ...prev, ...conversationMap }));
+  };
+
+  function getUsersInCourseList(course: string, module: string, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
-    Get(getUsersInCourse(course, limit, nextToken), signal).then((res) => {
+    Get(getUsersInCourse(course, limit, nextToken), signal, true).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.users) {
+          const usersWithConvos: Array<CustomUserType & { numConvos: number }> = [];
+
           //filter out current user and email_verified
-          res.data.users.map(async (u: CustomUserType) => {
-            await Get(getUserConversationList(u.username), signal).then(
-              (res) => {
-                if (res && res.status && res.status < 300) {
-                  if (res.data) {
-                    //Get the list of all conversations
-                    //for the specific courseid and moduleid, get the number of conversations for the user
-                    const temp = res.data.find(
-                      (con: any) =>
-                        con.courseId === course && con.moduleId === module
-                    );
-                    const tempObj = {
-                      name: u.name,
-                      family_name: u.family_name,
-                      email: u.email,
-                      sub: u.sub,
-                      username: u.username,
-                      numConvos:
-                        temp && temp.conversations
-                          ? temp.conversations.length
-                          : 0,
-                    };
-                    setUserList((prev) => [...prev, tempObj]);
-                  }
-                } else if (res && res.status === 401) {
-                  navigator("/login");
-                } else {
-                  // handle error
+          await Promise.all(
+            res.data.users.map(async (u: CustomUserType) => {
+              const convoRes = await Get(getUserConversationList(u.username), signal, true);
+              if (convoRes && convoRes.status && convoRes.status < 300) {
+                if (convoRes.data) {
+                  //Get the list of all conversations
+                  //for the specific courseid and moduleid, get the number of conversations for the user
+                  const temp = convoRes.data.find((con: any) => con.courseId === course && con.moduleId === module);
+                  const tempObj = {
+                    name: u.name,
+                    family_name: u.family_name,
+                    email: u.email,
+                    sub: u.sub,
+                    username: u.username,
+                    numConvos: temp && temp.conversations ? temp.conversations.length : 0,
+                  };
+                  usersWithConvos.push(tempObj);
+                  setUserList((prev) => [...prev, tempObj]);
                 }
+              } else if (convoRes && convoRes.status === 401) {
+                navigator("/login");
+              } else if (isNetworkError(convoRes)) {
+                handleNetworkError(convoRes, () => getUsersInCourseList(course, module, signal, nextToken));
               }
-            );
-          });
+            })
+          );
+
+          // Fetch conversation data with messages for statistics
+          if (usersWithConvos.length > 0) {
+            await fetchConversationDataForStudents(course, module, usersWithConvos, signal);
+          }
+          setConversationStatsReady(true);
 
           //if the we get a nexttoken, then call for the next page
           //handle pages
@@ -403,6 +497,10 @@ export default function ModuleReports(): JSX.Element {
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
+        if (isNetworkError(res)) {
+          handleNetworkError(res, () => getUsersInCourseList(course, module, signal, nextToken));
+          return;
+        }
         // handle error
       }
       setIsLoading(false);
@@ -418,32 +516,171 @@ export default function ModuleReports(): JSX.Element {
     setPage(0);
   };
 
-  const totalPages = Math.ceil(rows.length / rowsPerPage);
+  // Sort rows by last name (extracted from name field which is "firstName lastName")
+  const sortedRows = [...rows].sort((a, b) => {
+    const namePartsA = a.name.split(" ");
+    const namePartsB = b.name.split(" ");
+    const lastNameA = (namePartsA[namePartsA.length - 1] || "").toLowerCase();
+    const lastNameB = (namePartsB[namePartsB.length - 1] || "").toLowerCase();
+    if (lastNameA !== lastNameB) {
+      return lastNameA.localeCompare(lastNameB);
+    }
+    const firstNameA = (namePartsA[0] || "").toLowerCase();
+    const firstNameB = (namePartsB[0] || "").toLowerCase();
+    return firstNameA.localeCompare(firstNameB);
+  });
+
+  // Parse and cap conversation count filter value (max 1M)
+  const convoCountNum =
+    convoCountValue.trim() === ""
+      ? null
+      : (() => {
+          const parsed = parseInt(convoCountValue, 10);
+          return Number.isNaN(parsed) ? null : Math.min(Math.max(0, parsed), CONVO_COUNT_CAP);
+        })();
+
+  // Filter student conversation data (non-rater mode): search by name/email, has/none conversation, leq/geq count
+  const filteredStudentData = studentConversationData.filter((student) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      const fullName = `${student.name} ${student.family_name}`.toLowerCase();
+      const email = (student.email ?? "").toLowerCase();
+      if (!fullName.includes(term) && !email.includes(term)) return false;
+    }
+    if (conversationFilter === "has" && !student.hasConversations) return false;
+    if (conversationFilter === "none" && student.hasConversations) return false;
+    if (convoCountNum !== null) {
+      if (convoCountFilter === "leq" && student.numConversations > convoCountNum) return false;
+      if (convoCountFilter === "geq" && student.numConversations < convoCountNum) return false;
+    }
+    return true;
+  });
+
+  // Filter rows (rater-enabled mode): search by name/email, convos count filter
+  const filteredRows = sortedRows.filter((row) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      const nameMatch = row.name.toLowerCase().includes(term);
+      const emailMatch = (row.email ?? "").toLowerCase().includes(term);
+      if (!nameMatch && !emailMatch) return false;
+    }
+    if (conversationFilter === "has" && row.convos === 0) return false;
+    if (conversationFilter === "none" && row.convos > 0) return false;
+    if (convoCountNum !== null) {
+      if (convoCountFilter === "leq" && row.convos > convoCountNum) return false;
+      if (convoCountFilter === "geq" && row.convos < convoCountNum) return false;
+    }
+    return true;
+  });
+
+  // Show table loading when initial data is still being computed (avoids empty-then-populate flash and "no data" while loading)
+  const tableLoading =
+    isLoading ||
+    (!moduleData?.raterEnabled && !conversationStatsReady) ||
+    (!!courseData &&
+      !!moduleData &&
+      userList.length > 0 &&
+      ((!!moduleData.raterEnabled && rows.length === 0) ||
+        (!moduleData.raterEnabled && studentConversationData.length === 0)));
+
+  const tableIsEmpty = moduleData?.raterEnabled ? filteredRows.length === 0 : filteredStudentData.length === 0;
+
+  // Delay showing "No data" / "No students match" so we don't flash it before data has a chance to load
+  useEffect(() => {
+    if (tableLoading || !tableIsEmpty) {
+      setShowEmptyStateMessage(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowEmptyStateMessage(true), 1500);
+    return () => clearTimeout(timer);
+  }, [tableLoading, tableIsEmpty]);
+
+  const totalRows = moduleData?.raterEnabled ? filteredRows.length : filteredStudentData.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
   const startIndex = page * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const paginatedRows = rows.slice(startIndex, endIndex);
+  const paginatedRows = filteredRows.slice(startIndex, endIndex);
+  const paginatedStudentData = filteredStudentData.slice(startIndex, endIndex);
 
   return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
       {error ? (
-        <div
-          className="bg-destructive/15 border border-destructive rounded-lg p-4"
-          role="alert"
-        >
+        <div className="bg-destructive/15 border border-destructive rounded-lg p-4" role="alert">
           <p className="text-destructive font-medium text-center">{error}</p>
         </div>
       ) : (
         <>
           <PageHeaderCard
-            title={`${courseData?.name || "Course"} - ${moduleData?.name || "Module"}`}
+            title={`${courseData?.name || t("reports.course")} - ${moduleData?.name || t("common.module")}`}
             icon={<BarChart3 size={192} className="text-primary" />}
+            description={t("reports.moduleReportsPageDescription")}
           />
 
-          <div className="text-muted-foreground max-w-2xl">
-            On this page, you can view the overall usage within this module. If
-            you wish to view a specific user's activity, click on their name to
-            access their conversations.
-          </div>
+          {/* Overall Statistics Cards - show loading until conversation data is ready to avoid flashing 0 / no data */}
+          {(conversationStatsReady && moduleStatistics) || (!conversationStatsReady && courseData && moduleData) ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="transition-all duration-300 hover:shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{t("reports.totalConversations")}</p>
+                      <p className="text-3xl font-bold mt-2">
+                        {conversationStatsReady && moduleStatistics ? (
+                          moduleStatistics.totalConversations
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <MessageSquare className="h-12 w-12 text-primary opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="transition-all duration-300 hover:shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{t("reports.avgMessagesPerConvo")}</p>
+                      <p className="text-3xl font-bold mt-2">
+                        {conversationStatsReady && moduleStatistics ? (
+                          moduleStatistics.averageMessagesPerConversation
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <BarChart3 className="h-12 w-12 text-primary opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="transition-all duration-300 hover:shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{t("reports.studentsWithConversations")}</p>
+                      <p className="text-3xl font-bold mt-2">
+                        {conversationStatsReady && moduleStatistics ? (
+                          moduleStatistics.studentsWithConversations
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <Users className="h-12 w-12 text-primary opacity-50" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : null}
+
           {stats && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -463,7 +700,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.lead}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Lead`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.lead")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -484,7 +721,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.position}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Position`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.position")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -505,7 +742,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.claim}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Claim`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.claim")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -526,7 +763,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.counterClaim}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Counterclaim`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.counterclaim")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -547,7 +784,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.rebuttal}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Rebuttal`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.rebuttal")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -568,7 +805,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.evidence}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Evidence`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.evidence")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -589,7 +826,7 @@ export default function ModuleReports(): JSX.Element {
                       })}
                     >
                       <div className="text-lg font-bold">{`${stats.conclude}%`}</div>
-                      <div className="text-sm text-muted-foreground">{`Concluding Summary`}</div>
+                      <div className="text-sm text-muted-foreground">{t("reports.concludingSummary")}</div>
                     </CircularProgressbarWithChildren>
                   </div>
                 </div>
@@ -601,23 +838,86 @@ export default function ModuleReports(): JSX.Element {
 
           <Card className="transition-all duration-300 hover:shadow-md">
             <CardHeader>
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <h3 className="text-lg font-semibold">Student Reports</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                  <h3 className="text-lg font-semibold">{t("reports.studentReports")}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">{t("reports.rowsPerPage")}</span>
+                    <Select value={rowsPerPage.toString()} onValueChange={handleChangeRowsPerPage}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-muted z-[100]">
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 flex-wrap p-3 rounded-lg bg-muted/50">
+                  <Input
+                    placeholder={t("reports.searchByNameOrEmail")}
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setPage(0);
+                    }}
+                    className="max-w-xs bg-background"
+                  />
                   <Select
-                    value={rowsPerPage.toString()}
-                    onValueChange={handleChangeRowsPerPage}
+                    value={conversationFilter}
+                    onValueChange={(v: "all" | "has" | "none") => {
+                      setConversationFilter(v);
+                      setPage(0);
+                    }}
                   >
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder={t("reports.conversationStatus")} />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
+                    <SelectContent className="bg-muted z-[100]">
+                      <SelectItem value="all">{t("reports.allStudents")}</SelectItem>
+                      <SelectItem value="has">{t("reports.hasConversation")}</SelectItem>
+                      <SelectItem value="none">{t("reports.doesNotHaveConversation")}</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select
+                    value={convoCountFilter}
+                    onValueChange={(v: "none" | "leq" | "geq") => {
+                      setConvoCountFilter(v);
+                      setPage(0);
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder={t("reports.numConversationsFilter")} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-muted z-[100]">
+                      <SelectItem value="none">{t("reports.any")}</SelectItem>
+                      <SelectItem value="leq">{t("reports.lessOrEqual")}</SelectItem>
+                      <SelectItem value="geq">{t("reports.greaterOrEqual")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {convoCountFilter !== "none" && (
+                    <Input
+                      type="number"
+                      min={0}
+                      max={CONVO_COUNT_CAP}
+                      placeholder={t("reports.number")}
+                      value={convoCountValue}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === "" || v === "-") {
+                          setConvoCountValue(v);
+                        } else {
+                          const n = parseInt(v, 10);
+                          if (!Number.isNaN(n) && n >= 0)
+                            setConvoCountValue(String(Math.min(n, CONVO_COUNT_CAP)));
+                        }
+                        setPage(0);
+                      }}
+                      className="w-24 bg-background"
+                    />
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -633,28 +933,43 @@ export default function ModuleReports(): JSX.Element {
                             className={column.align === "right" ? "text-right" : ""}
                             style={{ minWidth: column.minWidth }}
                           >
-                            {column.label}
+                            {t(column.labelKey)}
                           </TableHead>
                         ))}
                       </TableRow>
                     ) : (
                       <TableRow>
-                        <TableHead style={{ minWidth: 170 }}>Name</TableHead>
-                        <TableHead style={{ minWidth: 170 }}>Num Convos</TableHead>
-                        <TableHead style={{ minWidth: 170 }}>Num Essays</TableHead>
+                        <TableHead style={{ minWidth: 170 }}>{t("reports.name")}</TableHead>
+                        <TableHead style={{ minWidth: 140 }}>{t("reports.email")}</TableHead>
+                        <TableHead style={{ minWidth: 100 }}>{t("reports.hasConversations")}</TableHead>
+                        <TableHead style={{ minWidth: 150 }}>{t("reports.numOfConversations")}</TableHead>
+                        <TableHead style={{ minWidth: 150 }}>{t("common.actions")}</TableHead>
                       </TableRow>
                     )}
                   </TableHeader>
                   <TableBody>
-                    {paginatedRows.length === 0 ? (
+                    {(moduleData?.raterEnabled ? paginatedRows.length === 0 : paginatedStudentData.length === 0) ? (
                       <TableRow>
-                        <TableCell
-                          colSpan={moduleData?.raterEnabled ? columns.length : 3}
-                          className="text-center py-8"
-                        >
+                        <TableCell colSpan={moduleData?.raterEnabled ? columns.length : 5} className="text-center py-8">
                           <div className="flex flex-col items-center gap-2">
-                            <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
-                            <p className="text-muted-foreground">No data available</p>
+                            {tableLoading || !showEmptyStateMessage ? (
+                              <>
+                                <Loader2 className="h-8 w-8 text-muted-foreground opacity-50 animate-spin" />
+                                <p className="text-muted-foreground">{t("reports.loadingData")}</p>
+                              </>
+                            ) : totalRows === 0 &&
+                              (moduleData?.raterEnabled ? rows.length > 0 : studentConversationData.length > 0) &&
+                              (searchTerm || conversationFilter !== "all" || convoCountFilter !== "none") ? (
+                              <>
+                                <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
+                                <p className="text-muted-foreground">{t("reports.noStudentsMatchFilters")}</p>
+                              </>
+                            ) : (
+                              <>
+                                <BarChart3 className="h-8 w-8 text-muted-foreground opacity-50" />
+                                <p className="text-muted-foreground">{t("reports.noDataAvailable")}</p>
+                              </>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -665,24 +980,21 @@ export default function ModuleReports(): JSX.Element {
                             key={row.name}
                             className="cursor-pointer hover:bg-muted/50"
                             onClick={() =>
-                              navigator(
-                                `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                              )
+                              navigator(`/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`)
                             }
                           >
                             {columns.map((column) => {
                               const value = row[column.id];
                               return (
-                                <TableCell
-                                  key={column.id}
-                                  className={column.align === "right" ? "text-right" : ""}
-                                >
+                                <TableCell key={column.id} className={column.align === "right" ? "text-right" : ""}>
                                   {typeof value === "boolean" ? (
                                     value ? (
                                       <CheckCircle2 className="h-5 w-5 text-green-600" />
                                     ) : (
                                       <X className="h-5 w-5 text-destructive" />
                                     )
+                                  ) : column.id === "email" ? (
+                                    <span className="text-muted-foreground">{value}</span>
                                   ) : (
                                     <button
                                       className="hover:text-primary transition-colors"
@@ -702,56 +1014,73 @@ export default function ModuleReports(): JSX.Element {
                           </TableRow>
                         );
                       })
+                    ) : paginatedStudentData.length > 0 ? (
+                      paginatedStudentData.map((student) => {
+                        return (
+                          <TableRow key={student.username} className="hover:bg-muted/50">
+                            <TableCell className="font-medium">
+                              {student.name} {student.family_name}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">{student.email ?? ""}</TableCell>
+                            <TableCell>
+                              {student.hasConversations ? (
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <X className="h-5 w-5 text-destructive" />
+                              )}
+                            </TableCell>
+                            <TableCell>{student.numConversations}</TableCell>
+                            <TableCell>
+                              {student.numConversations > 0 ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    navigator(
+                                      `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${student.username}`
+                                    )
+                                  }
+                                >
+                                  {t("reports.viewConversations")}
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">{t("reports.noConversations")}</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     ) : (
                       paginatedRows.map((row) => {
+                        const student = studentConversationData.find((s) => s.username === row.username);
                         return (
-                          <TableRow
-                            key={row.name}
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() =>
-                              navigator(
-                                `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                              )
-                            }
-                          >
+                          <TableRow key={row.name} className="hover:bg-muted/50">
+                            <TableCell className="font-medium">{row.name}</TableCell>
+                            <TableCell className="text-muted-foreground">{row.email ?? ""}</TableCell>
                             <TableCell>
-                              <button
-                                className="hover:text-primary transition-colors font-medium"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator(
-                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                                  );
-                                }}
-                              >
-                                {row.name}
-                              </button>
+                              {student?.hasConversations ? (
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <X className="h-5 w-5 text-destructive" />
+                              )}
                             </TableCell>
+                            <TableCell>{row.convos}</TableCell>
                             <TableCell>
-                              <button
-                                className="hover:text-primary transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator(
-                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                                  );
-                                }}
-                              >
-                                {row.convos}
-                              </button>
-                            </TableCell>
-                            <TableCell>
-                              <button
-                                className="hover:text-primary transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigator(
-                                    `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
-                                  );
-                                }}
-                              >
-                                {row.essays}
-                              </button>
+                              {row.convos > 0 ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    navigator(
+                                      `/courses/${courseData?.id}/modules/${moduleData?.id}/username/${row.username}`
+                                    )
+                                  }
+                                >
+                                  {t("reports.viewConversations")}
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">{t("reports.noConversations")}</span>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
@@ -761,11 +1090,14 @@ export default function ModuleReports(): JSX.Element {
                 </Table>
               </div>
 
-              {rows.length > 0 && (
+              {(filteredRows.length > 0 || filteredStudentData.length > 0) && (
                 <div className="flex items-center justify-between px-2 py-4">
                   <div className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to {Math.min(endIndex, rows.length)} of{" "}
-                    {rows.length} entries
+                    {t("reports.showingEntries", {
+                      start: startIndex + 1,
+                      end: Math.min(endIndex, totalRows),
+                      total: totalRows,
+                    })}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -773,12 +1105,12 @@ export default function ModuleReports(): JSX.Element {
                       size="sm"
                       onClick={() => handleChangePage(page - 1)}
                       disabled={page === 0}
-                      aria-label="Previous page" //TODO
+                      aria-label="Previous page"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <div className="text-sm text-muted-foreground">
-                      Page {page + 1} of {totalPages}
+                      {t("reports.pageOf", { current: page + 1, total: totalPages })}
                     </div>
                     <Button
                       variant="outline"
@@ -798,6 +1130,6 @@ export default function ModuleReports(): JSX.Element {
       )}
     </main>
   ) : (
-    <PageLoader pageName="Module Reports" />
+    <PageLoader pageName={t("reports.moduleReports")} />
   );
 }

@@ -31,13 +31,13 @@ function num_tokens_from_messages(messages: Array<any>) {
 
 export default function Chat(): JSX.Element {
   const {
-      courseInfo,
-      moduleInfo,
-      conversationList,
-      setConversationList,
-      viewUser,
-      instructor,
-      admin
+    courseInfo,
+    moduleInfo,
+    conversationList,
+    setConversationList,
+    viewUser,
+    instructor,
+    admin
   } = useOutletContext<ChatContextType>();
 
   const { t } = useTranslation();
@@ -45,7 +45,7 @@ export default function Chat(): JSX.Element {
   const navigator = useNavigate();
   const params = useParams(); // { username, courseId, moduleId, conversationIndex }
 
-    // Fallback if params are missing (shouldn't happen with new routing)
+  // Fallback if params are missing (shouldn't happen with new routing)
   const courseId = params.courseId || "";
   const moduleId = params.moduleId || "";
   const conversationIndex = params.conversationIndex || "";
@@ -214,9 +214,9 @@ export default function Chat(): JSX.Element {
                     .map((m) => m.message)
                     .join("");
                   temp[temp.length - 1] = {
-                      ...lastMsg,
-                      content: reconstructed || lastMsg.content,
-                      stream: stream
+                    ...lastMsg,
+                    content: reconstructed || lastMsg.content,
+                    stream: stream
                   };
                 }
                 return temp;
@@ -260,10 +260,10 @@ export default function Chat(): JSX.Element {
               }
 
               temp[lastIndex] = {
-                  ...lastMsg,
-                  content: returnMessage.message,
-                  sources: newMsgSource,
-                  finished: true
+                ...lastMsg,
+                content: returnMessage.message,
+                sources: newMsgSource,
+                finished: true
               };
               return temp;
             } else return prev;
@@ -284,14 +284,15 @@ export default function Chat(): JSX.Element {
       if (process.env.REACT_APP_WEBSOCKET_URL) {
 
         if (socket.current && (socket.current.readyState === WebSocket.OPEN || socket.current.readyState === WebSocket.CONNECTING)) {
-             closeSocket();
+          closeSocket();
         }
+        let sessionId = sessionStorage.getItem("sessionId") ?? "unknown";
 
         var URL = process.env.REACT_APP_WEBSOCKET_URL;
         URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
         URL =
           URL +
-          `&courseId=${cId}&moduleId=${mId}&index=${idx}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+          `&courseId=${cId}&moduleId=${mId}&index=${idx}&organization=${process.env.REACT_APP_ORGANIZATION}&sessionId=${sessionId}`;
 
         socket.current = new WebSocket(URL);
         socket.current.addEventListener("open", onSocketOpen);
@@ -299,7 +300,7 @@ export default function Chat(): JSX.Element {
 
         // Define the listener wrapper and store it ref
         const messageListener = (event: MessageEvent) => {
-            onSocketMessage(event.data);
+          onSocketMessage(event.data);
         };
         socketListenerRef.current = messageListener;
         socket.current.addEventListener("message", messageListener);
@@ -315,8 +316,8 @@ export default function Chat(): JSX.Element {
 
       // Use the stored ref to remove the exact listener function
       if (socketListenerRef.current) {
-          socket.current.removeEventListener("message", socketListenerRef.current);
-          socketListenerRef.current = null;
+        socket.current.removeEventListener("message", socketListenerRef.current);
+        socketListenerRef.current = null;
       }
 
       if (socket.current.readyState === WebSocket.OPEN || socket.current.readyState === WebSocket.CONNECTING) {
@@ -345,7 +346,7 @@ export default function Chat(): JSX.Element {
       setIsLoading(true);
 
       if (user && user.username === username) {
-          onConnect(courseId, moduleId, conversationIndex);
+        onConnect(courseId, moduleId, conversationIndex);
       }
 
       if (conversationIndex === "new") {
@@ -385,8 +386,8 @@ export default function Chat(): JSX.Element {
               setMessages(reverse.reverse());
             }
             if (res.data) {
-                setConversationCompleted(res.data.completed ? res.data.completed : false);
-                setConversationIsDeleted(res.data.isDeleted ? res.data.isDeleted : false);
+              setConversationCompleted(res.data.completed ? res.data.completed : false);
+              setConversationIsDeleted(res.data.isDeleted ? res.data.isDeleted : false);
             }
             if (location.state && location.state.pendingMessageContent) {
               setPendingMessageContent(location.state.pendingMessageContent);
@@ -442,11 +443,13 @@ export default function Chat(): JSX.Element {
           }
         });
 
+        let sessionId = sessionStorage.getItem("sessionId") ?? "unknown";
         socket.current?.send(
           JSON.stringify({
             action: "sendMessage",
             messages: messagesToSend,
             organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
+            sessionId: sessionId
           })
         );
         setShowTypingIndicator(true);
@@ -477,10 +480,12 @@ export default function Chat(): JSX.Element {
         } else if (essay.length < 750) {
           setChatError(t("chat.messageTooShort"));
         } else {
+          let sessionId = sessionStorage.getItem("sessionId") ?? "unknown";
           var sendEssay: any = {
             action: "raterEssay",
             essay: essay,
             organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
+            sessionId: sessionId
           };
           if (message) {
             sendEssay["message"] = message;
@@ -527,9 +532,9 @@ export default function Chat(): JSX.Element {
 
     if (conversationIndex === "new") {
       if (message.length < 1 && message.length > 0) {
-         setChatError(t("chat.messageTooShort"));
-         setIsLoading(false);
-         return;
+        setChatError(t("chat.messageTooShort"));
+        setIsLoading(false);
+        return;
       }
       // Create new conversation
       Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
@@ -541,14 +546,14 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
 
             // Navigate to the new conversation and pass the message in state
-             navigator(
-                 `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
-                 { state: { pendingMessageContent: message, pendingPromptId: null } }
-             );
+            navigator(
+              `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
+              { state: { pendingMessageContent: message, pendingPromptId: null } }
+            );
           }
         } else {
-             setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
-             setIsLoading(false);
+          setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
+          setIsLoading(false);
         }
       });
     } else {
@@ -597,8 +602,8 @@ export default function Chat(): JSX.Element {
                   var convos = [...prev.conversations];
                   const index = parseInt(conversationIndex);
                   // Ensure we don't crash if index out of bounds, though it shouldn't be
-                  if(convos[index]) {
-                      convos[index].name = res.data.conversations[index].name;
+                  if (convos[index]) {
+                    convos[index].name = res.data.conversations[index].name;
                   }
                   return { ...prev, conversations: convos };
                 } else return prev;
@@ -723,10 +728,10 @@ export default function Chat(): JSX.Element {
 
   function handleNewConversation() {
 
-      closeSocket();
-      navigator(
-        `/chat/${username}/${courseId}/${moduleId}/new`
-      );
+    closeSocket();
+    navigator(
+      `/chat/${username}/${courseId}/${moduleId}/new`
+    );
   }
 
   function returnDocText(docText: string) {
@@ -747,14 +752,14 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
 
             // Navigate to the new conversation and pass the message in state
-             navigator(
-                 `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
-                 { state: { pendingMessageContent: docText, pendingPromptId: null } }
-             );
+            navigator(
+              `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
+              { state: { pendingMessageContent: docText, pendingPromptId: null } }
+            );
           }
         } else {
-             setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
-             setIsLoading(false);
+          setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
+          setIsLoading(false);
         }
       });
       return;
@@ -806,8 +811,8 @@ export default function Chat(): JSX.Element {
 
 
   const currentConvoName = conversationList && conversationIndex !== "new" && conversationList.conversations[parseInt(conversationIndex)]
-      ? conversationList.conversations[parseInt(conversationIndex)].name
-      : t("chat.newConversation");
+    ? conversationList.conversations[parseInt(conversationIndex)].name
+    : t("chat.newConversation");
 
 
   const isChatInputVisible =
@@ -882,7 +887,7 @@ export default function Chat(): JSX.Element {
       <div className="flex-1 flex flex-col min-w-0" style={{ height: "calc(100vh - 4rem)" }}>
         {/* Chat Header */}
         {courseInfo && moduleInfo ? (
-            <ChatHeader
+          <ChatHeader
             conversationName={currentConvoName}
             courseInfo={courseInfo}
             moduleInfo={moduleInfo}
@@ -890,12 +895,12 @@ export default function Chat(): JSX.Element {
             viewUser={viewUser}
             onToggleSidebar={() => {
 
-                window.dispatchEvent(new CustomEvent('toggleSidebar'));
+              window.dispatchEvent(new CustomEvent('toggleSidebar'));
             }}
             isMobile={window.innerWidth < 1024}
-            />
+          />
         ) : (
-            <div className="h-16 border-b border-border"></div>
+          <div className="h-16 border-b border-border"></div>
         )}
 
         {/* Chat Messages */}

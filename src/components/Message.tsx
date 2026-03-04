@@ -163,7 +163,7 @@ export const MessageLeft = (props: MessageProps) => {
         </DialogWrapper>
       )}
 
-      {props.sources?.length === 0 ? (
+      {props.message && !props.typing && !(props.visible === false && props.sources?.length) ? (
         <div className="flex items-start gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">

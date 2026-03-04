@@ -3,11 +3,13 @@ import axios from "axios";
 export default async function Get(url: String, signal?: AbortSignal | undefined, reports: Boolean = false) {
   const user = localStorage.getItem("papyrusai_access_token")
   const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + url;
+  let sessionId = localStorage.getItem("sessionId") ?? "unknown";
 
   var data = await axios
     .get(API_URL, {
       headers: {
         Authorization: user,
+        "X-Session-Id": sessionId,
       },
       signal
     })

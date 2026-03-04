@@ -294,7 +294,8 @@ export default function CreateFile(): JSX.Element {
       return;
     }
     if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      return;
     }
     // Handle here
     if (fileInfo) {

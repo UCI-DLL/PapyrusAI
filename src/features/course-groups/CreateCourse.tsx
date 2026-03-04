@@ -289,7 +289,7 @@ export default function CreateCourse({
 
   function handleSubmit(e: any, isActive = false, isDeleted = false) {
     if (session.name === "") {
-      setErrors((prev) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+      setErrors((prev) => ({ ...prev, name: t("errorMessage.nameMissing") }));
     } else if (session.signUpCode === "") {
       setErrors((prev) => ({ ...prev, signUpCode: t("courses.signUpCodeMissing") }));
     } else {

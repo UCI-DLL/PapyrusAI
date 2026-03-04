@@ -240,11 +240,11 @@ export default function AddModule({
 
   function handleSubmit(e: any, isPublished = false, isDeleted = false) {
     if (session.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
     } else if (session.moduleDescription === "") {
       setErrors((prev: any) => ({
         ...prev,
-        moduleDescription: t("common.description") + " " + t("common.missing"),
+        moduleDescription: t("common.description") + " " + t("components.missing"),
       }));
     } else {
       // set is loading

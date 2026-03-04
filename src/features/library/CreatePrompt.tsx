@@ -239,9 +239,9 @@ export default function CreatePrompt({
   function handleSubmit(e: any, isDeleted = false) {
     setIsLoading(true);
     if (prompt.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
     } else if (prompt.prompt === "") {
-      setErrors((prev: any) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("components.missing") }));
     } else {
       if (isEditMode && promptInfo && promptInfo.promptId) { //editing prompt
         const dataToSend = {

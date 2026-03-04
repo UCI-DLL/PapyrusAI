@@ -51,6 +51,7 @@ import introJs from "intro.js";
 import "intro.js/introjs.css";
 import { changeLanguage } from "./i18n";
 import { useTranslation } from "./hooks/useTranslation";
+import { v4 as uuidv4 } from "uuid";
 
 function App(): JSX.Element {
   const { t } = useTranslation();
@@ -146,6 +147,16 @@ function App(): JSX.Element {
 
   }, [user]);
 
+  //create a session id that gets sent with every request or log so we can track 
+  // which user did what. save in local so it is the same across tabs
+  useEffect(() => {
+    let sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) {
+      sessionId = uuidv4();
+      localStorage.setItem("sessionId", sessionId);
+    }
+  }, [])
+
   //handle log out
   function handleLogOut() {
     localStorage.clear();
@@ -193,67 +204,67 @@ function App(): JSX.Element {
               >
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <MissingUserInfoForm
-                  user={user ? user : undefined}
-                  closeForm={(updatedUser) => {
-                    //Set user with new information
-                    if (user) {
-                      setUser((prev) => {
-                        if (prev)
-                          return {
-                            ...prev,
-                            name: updatedUser.name,
-                            family_name: updatedUser.family_name,
-                          };
-                        else return null;
-                      });
+                    user={user ? user : undefined}
+                    closeForm={(updatedUser) => {
+                      //Set user with new information
+                      if (user) {
+                        setUser((prev) => {
+                          if (prev)
+                            return {
+                              ...prev,
+                              name: updatedUser.name,
+                              family_name: updatedUser.family_name,
+                            };
+                          else return null;
+                        });
 
+                        setShowUpdateUserInfoModal(false);
+
+                        //Handle new user tutorial
+                        //Note: not updating this with language since the default is english and can't be changed until after this
+                        introJs()
+                          .setOptions({
+                            steps: [
+                              {
+                                intro: t("dashboard.tutorial1"),
+                              },
+                              {
+                                intro: t("dashboard.tutorial2"),
+                              },
+                              {
+                                intro: t("dashboard.tutorial3"),
+                              },
+                              {
+                                intro: user.groups.includes(
+                                  process.env.REACT_APP_INSTRUCTOR
+                                    ? process.env.REACT_APP_INSTRUCTOR
+                                    : "PapyrusAIInstructors"
+                                )
+                                  ? t("dashboard.tutorial4Instructors")
+                                  : t("dashboard.tutorial4Students"),
+                              },
+                            ],
+                          })
+                          .start();
+                      }
+                      if (
+                        localStorage.getItem("papyrusai_user") &&
+                        localStorage.getItem("papyrusai_user") !== null
+                      ) {
+                        var old = JSON.parse(
+                          localStorage.getItem("papyrusai_user") ?? ""
+                        );
+                        old.name = updatedUser.name;
+                        old.family_name = updatedUser.family_name;
+                        localStorage.setItem(
+                          "papyrusai_user",
+                          JSON.stringify(old)
+                        );
+                      }
+                      //then close modal
                       setShowUpdateUserInfoModal(false);
-
-                      //Handle new user tutorial
-                      //Note: not updating this with language since the default is english and can't be changed until after this
-                      introJs()
-                        .setOptions({
-                          steps: [
-                            {
-                              intro: t("dashboard.tutorial1"),
-                            },
-                            {
-                              intro: t("dashboard.tutorial2"),
-                            },
-                            {
-                              intro: t("dashboard.tutorial3"),
-                            },
-                            {
-                              intro: user.groups.includes(
-                                process.env.REACT_APP_INSTRUCTOR
-                                  ? process.env.REACT_APP_INSTRUCTOR
-                                  : "PapyrusAIInstructors"
-                              )
-                                ? t("dashboard.tutorial4Instructors")
-                                : t("dashboard.tutorial4Students"),
-                            },
-                          ],
-                        })
-                        .start();
-                    }
-                    if (
-                      localStorage.getItem("papyrusai_user") &&
-                      localStorage.getItem("papyrusai_user") !== null
-                    ) {
-                      var old = JSON.parse(
-                        localStorage.getItem("papyrusai_user") ?? ""
-                      );
-                      old.name = updatedUser.name;
-                      old.family_name = updatedUser.family_name;
-                      localStorage.setItem(
-                        "papyrusai_user",
-                        JSON.stringify(old)
-                      );
-                    }
-                    //then close modal
-                    setShowUpdateUserInfoModal(false);
-                  }}
-                />
+                    }}
+                  />
                 </div>
               </DialogWrapper>
               <Routes>

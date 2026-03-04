@@ -495,7 +495,7 @@ export default function EditFile(): JSX.Element {
     e?.preventDefault();
     setIsLoading(true);
     if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
     }
     //if new file selected, then get the signed upload url
     //else just update the file information

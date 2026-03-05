@@ -6,6 +6,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { ChevronDown, Users } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 interface StudentMenuProps {
   analysis: Record<string, unknown> | null;
@@ -42,6 +44,20 @@ export default function StudentMenu({
         analysis.students as Record<string, Record<string, unknown>>
       )
       : [];
+
+  useEffect(() => {
+    if (selectedStudentIds.length > 0) {
+      //log action
+      Post(logEvent(), { //log what students are being looked at
+        eventType: "client_action",
+        metadata: {
+          action: "view_student_stats",
+          page: "reports",
+          students: selectedStudentIds
+        }
+      })
+    }
+  }, [selectedStudentIds])
 
   // Close dropdown on Escape key
   useEffect(() => {

@@ -326,6 +326,16 @@ export default function Reports(): JSX.Element {
       course["users"] = sortCourseList(userList)[x].users;
       coursesToDownload.push(course);
     });
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "download_conversation",
+        page: "reports",
+        downloadType: downloadType,
+        courses: coursesToDownload.map(course => course.id) //just sent course ids
+      }
+    })
     // Both download methods will be using this as the controller
     const controller = new AbortController();
     // If "CSV Mode" is checked on, run this section instead of the logic below

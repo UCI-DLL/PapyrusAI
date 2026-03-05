@@ -3,13 +3,24 @@ import MissingUserInfoForm from "../dashboard/MissingUserInfoForm";
 import { UserContext } from "../../utility/context/UserContext";
 import { UserType } from "../../utility/types/UserTypes";
 import Get from "../../utility/Get";
-import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { getUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { User } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
 
 export default function Account(): JSX.Element {
   const { user, setUser } = useContext(UserContext);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        page: "acount",
+      }
+    })
+  }, [])
 
   useEffect(() => {
     Get(getUserData()).then((res) => {

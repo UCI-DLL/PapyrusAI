@@ -57,7 +57,7 @@ import Post from "../../utility/Post";
 import Put from "../../utility/Put";
 import { AlertContext } from "../../utility/context/AlertContext";
 import Get from "../../utility/Get";
-import { getUserList } from "../../utility/endpoints/UserEndpoints";
+import { getUserList, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { CustomUserType, UserType } from "../../utility/types/UserTypes";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
@@ -148,6 +148,19 @@ export default function CreateCourse({
     if (userList.length === 0) {
       getUsers("", controller.signal);
     }
+
+    //log page
+    var metadata: any = {
+      isEditMode: isEditMode,
+      page: "create_course",
+    }
+    if (actualCourseId) {
+      metadata["courseId"] = actualCourseId
+    }
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: metadata
+    })
 
     return () => {
       controller.abort();

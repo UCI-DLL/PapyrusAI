@@ -6,7 +6,7 @@ import Get from "../../utility/Get";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
 import { UserContext } from "../../utility/context/UserContext";
-import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { getUserFavoritingData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { Loader2, PlusIcon, GraduationCap, ChartColumnBig, Search } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -14,6 +14,7 @@ import { Input } from "../../components/ui/input";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { handleCourseTermLanguage } from "../../utility/Helpers";
+import Post from "../../utility/Post";
 
 export default function Modules(): JSX.Element {
   let location = useLocation();
@@ -36,6 +37,15 @@ export default function Modules(): JSX.Element {
       const courseId = location.pathname.split("/")[2];
       getThisCourse(courseId, controller.signal);
       getStarred(controller.signal);
+
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          courseId: courseId,
+          page: "course_modules",
+        }
+      })
     }
 
     return () => {

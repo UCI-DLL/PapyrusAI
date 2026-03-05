@@ -55,8 +55,6 @@ export default function Dashboard(): JSX.Element {
         //moduleId: moduleId,
         page: "dashboard",
       }
-    }).then(res => {
-      console.log(res)
     })
 
     return () => {

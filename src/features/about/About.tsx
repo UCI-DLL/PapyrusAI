@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Markdown from "react-markdown";
 import {
   Card,
@@ -8,9 +8,21 @@ import {
 } from "../../components/ui/card";
 import { Info } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 export default function About(): JSX.Element {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        page: "about",
+      }
+    })
+  }, [])
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">

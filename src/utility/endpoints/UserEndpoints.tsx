@@ -33,3 +33,7 @@ export function postCreateUserFavoritingData() {
 export function putUpdateUserFavoritingData() {
   return `user/data?organization=${process.env.REACT_APP_ORGANIZATION}`
 }
+
+export function logEvent() {
+  return `data/log?organization=${process.env.REACT_APP_ORGANIZATION}`
+}

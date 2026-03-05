@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import Post from "../../utility/Post";
-import { postUserData } from "../../utility/endpoints/UserEndpoints";
+import { logEvent, postUserData } from "../../utility/endpoints/UserEndpoints";
 import { changeTheme } from "../../utility/Themes";
 import { UserContext } from "../../utility/context/UserContext";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -65,6 +65,18 @@ export default function MissingUserInfoForm({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setUser } = useContext(UserContext);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        //courseId: courseId,
+        //moduleId: moduleId,
+        page: "missing_user_info_form",
+      }
+    })
+  }, [])
 
   useEffect(() => {
     //Check if any data is missing, if nothing, then close

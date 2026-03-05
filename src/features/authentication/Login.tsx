@@ -2,7 +2,8 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import axios from "axios";
-import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { getUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
+import Post from "../../utility/Post";
 
 
 interface LoginProps {
@@ -33,6 +34,14 @@ export default function Login(props: LoginProps): JSX.Element {
           token = location.hash.split("&")[0].split("=")[1];
         }
         localStorage.setItem("papyrusai_access_token", token);
+        //log page
+        Post(logEvent(), {
+          eventType: "view_page",
+          metadata: {
+            data: "new_token",
+            page: "login",
+          }
+        })
         setTimeout(() => {
           getUserInfo(token)
         }, 500);
@@ -46,6 +55,14 @@ export default function Login(props: LoginProps): JSX.Element {
       const params = new URLSearchParams(location.search);
       const token = params.get("papyrusai_access_token") as string;
       localStorage.setItem("papyrusai_access_token", token);
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          data: "sso_token",
+          page: "login",
+        }
+      })
       setTimeout(() => {
         getUserInfo(token);
       }, 500);

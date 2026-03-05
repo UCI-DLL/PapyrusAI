@@ -10,11 +10,12 @@ import { CourseType } from "../../utility/types/CourseTypes";
 import { CustomUserType, UserType } from "../../utility/types/UserTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { UserContext } from "../../utility/context/UserContext";
-import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { getUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { isNetworkError, createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
+import Post from "../../utility/Post";
 
 export default function UserReports(): JSX.Element {
   const { t } = useTranslation();
@@ -50,6 +51,15 @@ export default function UserReports(): JSX.Element {
       //Get viewUser information
       const username = location.pathname.split("/")[2];
       getSpecificUser(username, controller.signal);
+
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          username: username,
+          page: "user_reports",
+        }
+      })
 
       //get list of conversation
       //TODO handle pagination of conversation lists later when reports is more defined
@@ -285,26 +295,26 @@ export default function UserReports(): JSX.Element {
                 var tempTime =
                   row.conversations && row.conversations.length > 0
                     ? row.conversations
-                        .reduce(
-                          (x, y) =>
-                            x.messages.length > 0 &&
+                      .reduce(
+                        (x, y) =>
+                          x.messages.length > 0 &&
                             y.messages.length > 0 &&
                             x.messages.reduce(
                               (largest, current) => (parseInt(current) > parseInt(largest) ? current : largest),
                               row.conversations[0].messages[0],
                             ) >
-                              y.messages.reduce(
-                                (largest, current) => (parseInt(current) > parseInt(largest) ? current : largest),
-                                row.conversations[0].messages[0],
-                              )
-                              ? x
-                              : y,
-                          row.conversations[0],
-                        )
-                        .messages.reduce(
-                          (largest, current) => (parseInt(current) > parseInt(largest) ? current : largest),
-                          row.conversations[0].messages[0],
-                        )
+                            y.messages.reduce(
+                              (largest, current) => (parseInt(current) > parseInt(largest) ? current : largest),
+                              row.conversations[0].messages[0],
+                            )
+                            ? x
+                            : y,
+                        row.conversations[0],
+                      )
+                      .messages.reduce(
+                        (largest, current) => (parseInt(current) > parseInt(largest) ? current : largest),
+                        row.conversations[0].messages[0],
+                      )
                     : "";
                 if (tempTime) {
                   tempTime = new Date(parseInt(tempTime.substring(0, 13), 10)).toLocaleString();

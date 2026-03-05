@@ -44,6 +44,8 @@ import CustomFileRender from "../../components/CustomFileRender";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 
 export default function EditFile(): JSX.Element {
@@ -182,6 +184,17 @@ export default function EditFile(): JSX.Element {
       //save the ids
       setFileInfo({ isOrgFolder: true, folderId: folderId, fileId: fileId });
       getFile(true, folderId, fileId, controller.signal);
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          orgFolder: true,
+          isEditMode: true,
+          folderId: folderId,
+          fileId: fileId,
+          page: "edit_file",
+        }
+      })
     } else if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -196,6 +209,17 @@ export default function EditFile(): JSX.Element {
       //save the ids
       setFileInfo({ isOrgFolder: false, folderId: folderId, fileId: fileId });
       getFile(false, folderId, fileId, controller.signal);
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          orgFolder: false,
+          isEditMode: true,
+          folderId: folderId,
+          fileId: fileId,
+          page: "create_file",
+        }
+      })
     }
 
     if (tagList.length === 0) {

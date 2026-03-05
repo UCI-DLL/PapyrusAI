@@ -20,6 +20,7 @@ import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ChatContextType } from "./ChatContext";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 function num_tokens_from_messages(messages: Array<any>) {
   var num_tokens = 0;
@@ -82,15 +83,25 @@ export default function Chat(): JSX.Element {
     message: "",
   });
 
-
-
   const [pendingMessageContent, setPendingMessageContent] = useState<string | null>(null);
   const [pendingPromptId, setPendingPromptId] = useState<string | null>(null);
 
   // Fix: Store the current event listener function to properly remove it
   const socketListenerRef = useRef<((event: MessageEvent) => void) | null>(null);
 
-
+  useEffect(() => {
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        courseId: courseId,
+        moduleId: moduleId,
+        conversationIndex: conversationIndex,
+        page: "chat",
+      }
+    })
+    // eslint-disable-next-line
+  }, [conversationIndex])
 
   useEffect(() => {
     if (moduleInfo && moduleInfo.prompts && moduleInfo.prompts.length < 1) {

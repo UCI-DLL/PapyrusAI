@@ -22,6 +22,7 @@ import ListFolders from "./ListFolders";
 import { Loader2, Tag, Folder, Trash2, Save } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 
 export default function Library(): JSX.Element {
@@ -47,6 +48,14 @@ export default function Library(): JSX.Element {
     if (tagList.length === 0) {
       getTags("", controller.signal);
     }
+
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        page: "library",
+      }
+    })
 
     return () => {
       controller.abort();

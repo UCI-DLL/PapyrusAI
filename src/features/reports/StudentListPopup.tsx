@@ -94,6 +94,11 @@ export default function StudentListPopup({ isOpen, onClose, analysis }: StudentL
         },
       ];
     });
+    students.sort(([, a], [, b]) => {
+      const cmp = a.family_name.trim().toLowerCase().localeCompare(b.family_name.trim().toLowerCase());
+      if (cmp !== 0) return cmp;
+      return a.name.trim().toLowerCase().localeCompare(b.name.trim().toLowerCase());
+    });
   }
 
   const handleStudentClick = (username: string) => {

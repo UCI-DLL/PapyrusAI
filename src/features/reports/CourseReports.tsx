@@ -392,6 +392,7 @@ export default function CourseReports(): JSX.Element {
   return (
     <ClassCharts
       analysis={analysis}
+      courseId={courseId}
       setAnalysis={(newAnalysis: any) => {
         setAnalysis(newAnalysis);
         if (newAnalysis === null) {

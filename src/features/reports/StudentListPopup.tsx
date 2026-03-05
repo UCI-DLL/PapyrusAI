@@ -98,7 +98,6 @@ export default function StudentListPopup({ isOpen, onClose, analysis }: StudentL
 
   const handleStudentClick = (username: string) => {
     navigate(`/reports/${username}`);
-    onClose();
   };
 
   return (

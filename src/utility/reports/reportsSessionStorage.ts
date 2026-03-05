@@ -80,3 +80,20 @@ export function setCourseAnalysis(courseId: string, username: string, analysis: 
     // ignore
   }
 }
+
+// Remembering student list popup state when leaving (open/closed)
+const popupKey = (courseId: string) => STORAGE_PREFIX + "popup_open_" + hashString(courseId);
+
+export function getStudentListPopupOpen(courseId: string): boolean {
+  if (typeof sessionStorage === "undefined" || !courseId) return false;
+  return sessionStorage.getItem(popupKey(courseId)) === "1";
+}
+
+export function setStudentListPopupOpen(courseId: string, open: boolean): void {
+  if (typeof sessionStorage === "undefined" || !courseId) return;
+  if (open) {
+    sessionStorage.setItem(popupKey(courseId), "1");
+  } else {
+    sessionStorage.removeItem(popupKey(courseId));
+  }
+}

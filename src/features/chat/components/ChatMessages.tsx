@@ -176,6 +176,7 @@ export default function ChatMessages({
                       {message.role === "assistant" ? isStreamingAssistant ? (
                         <div aria-hidden="true">
                           <MessageLeft
+                            id={message.id}
                             message={message.content}
                             displayName={
                               message.sender === "ChatGPT" ? "Papyrus" : message.sender
@@ -204,6 +205,7 @@ export default function ChatMessages({
                         </div>
                       ) : (
                         <MessageLeft
+                          id={message.id}
                           message={message.content}
                           displayName={
                             message.sender === "ChatGPT" ? "Papyrus" : message.sender
@@ -231,6 +233,7 @@ export default function ChatMessages({
                         />
                       ) : !moduleInfo.showInitialPrompt && message.promptId ? null : (
                         <MessageRight
+                          id={message.id}
                           message={message.content}
                           displayName={viewUser?.name}
                           messageType={message.messageType}
@@ -249,7 +252,7 @@ export default function ChatMessages({
 
                 {/* Typing Indicator */}
                 {showTypingIndicator && (
-                  <MessageLeft message={""} displayName={"Papyrus"} typing />
+                  <MessageLeft id={""} message={""} displayName={"Papyrus"} typing />
                 )}
 
                 {/* screen reader announcement  */}

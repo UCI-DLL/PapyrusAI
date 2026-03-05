@@ -7,6 +7,8 @@ import { Alert, AlertDescription } from "../../components/ui/alert";
 import useSpeechRecognition from "../../utility/useSpeechRecognitionHook";
 import { Mic, MicOff, Send, MessageSquare } from 'lucide-react';
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 interface ChatWizardProps {
   returnSpeechText: (text: string) => void;
@@ -93,6 +95,15 @@ export default function SpeechToTextModal({
               <Button
                 className="w-full"
                 onClick={() => {
+                  //log action
+                  Post(logEvent(), {
+                    eventType: "client_action",
+                    metadata: {
+                      action: "speech_to_text",
+                      page: "chat",
+                      textLength: text.length
+                    }
+                  })
                   setIsLoading(true);
                   returnSpeechText(text);
                   setText("");

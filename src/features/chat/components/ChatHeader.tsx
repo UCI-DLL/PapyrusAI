@@ -1,8 +1,9 @@
 import React from "react";
 import { Button } from "../../../components/ui/button";
-import { MessageSquare, PanelRightOpen } from "lucide-react";
+import { MessageSquare, PanelRightOpen, Download } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
+import { useTranslation } from "../../../hooks/useTranslation";
 
 interface ChatHeaderProps {
   conversationName: string;
@@ -12,6 +13,8 @@ interface ChatHeaderProps {
   viewUser?: UserType;
   onToggleSidebar: () => void;
   isMobile?: boolean;
+  onDownloadConversation?: () => void;
+  canDownload?: boolean;
 }
 
 export default function ChatHeader({
@@ -22,7 +25,11 @@ export default function ChatHeader({
   viewUser,
   onToggleSidebar,
   isMobile = false,
+  onDownloadConversation,
+  canDownload = false,
 }: ChatHeaderProps): JSX.Element {
+
+  const { t } = useTranslation();
 
   return (
     <div className="bg-card border-b border-border px-4 py-3 sticky top-0 z-20">
@@ -39,6 +46,17 @@ export default function ChatHeader({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {canDownload && onDownloadConversation && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={onDownloadConversation}
+              aria-label={t("common.download")}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          )}
           {isMobile && (
             <Button
               variant="ghost"

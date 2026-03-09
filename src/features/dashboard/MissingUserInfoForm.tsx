@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { UserType } from "../../utility/types/UserTypes";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -12,10 +12,6 @@ import {
 } from "../../components/ui/card";
 import Post from "../../utility/Post";
 import { postUserData } from "../../utility/endpoints/UserEndpoints";
-import { changeTheme } from "../../utility/Themes";
-import { UserContext } from "../../utility/context/UserContext";
-import { AlertContext } from "../../utility/context/AlertContext";
-import { changeLanguage } from "../../i18n";
 import { useTranslation } from "../../hooks/useTranslation";
 
 /**
@@ -34,7 +30,6 @@ export default function MissingUserInfoForm({
   closeForm,
   requireUpdate = true,
 }: MissingUserInfoFormProps): JSX.Element {
-  const { setAlert } = useContext(AlertContext);
   //New user information
   const [session, setSession] = useState<{
     name: string;
@@ -63,7 +58,6 @@ export default function MissingUserInfoForm({
     language: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { setUser } = useContext(UserContext);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -142,10 +136,8 @@ export default function MissingUserInfoForm({
       Post(postUserData(), session).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data && res.data) {
-            //close modal if user data was updated
             closeForm(res.data);
-            // localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-            setAlert({ message: t("account.accountUpdated"), type: "success" });
+            window.location.reload();
           }
         } else {
           // set errors
@@ -165,54 +157,6 @@ export default function MissingUserInfoForm({
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
-
-  function handleThemeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    const root = document.documentElement;
-    if (user) {
-      setUser({ ...user, "custom:theme": e.target.value });
-      localStorage.setItem(
-        "papyrusai_user",
-        JSON.stringify({ ...user, "custom:theme": e.target.value })
-      );
-    }
-    // Apply theme change - supports light, dark, colorful-light, and colorful-dark themes
-    changeTheme(root, e.target.value);
-  }
-
-  function handleTextSizeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    const root = document.documentElement;
-    if (user) {
-      setUser({ ...user, "custom:textSize": e.target.value });
-      localStorage.setItem(
-        "papyrusai_user",
-        JSON.stringify({ ...user, "custom:textSize": e.target.value })
-      );
-    }
-    // Apply text size change
-    root.setAttribute("data-text-size", e.target.value);
-  }
-
-  function handleLanguageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selectedLanguage = e.target.value;
-    setSession((prev) => ({ ...prev, [e.target.name]: selectedLanguage }));
-
-    // Update i18n language
-    const languageCode = selectedLanguage === "spanish" ? "es" : "en";
-    changeLanguage(languageCode as "en" | "es");
-
-    // Update HTML lang attribute
-    document.documentElement.setAttribute("lang", languageCode);
-
-    if (user) {
-      setUser({ ...user, "custom:language": selectedLanguage });
-      localStorage.setItem(
-        "papyrusai_user",
-        JSON.stringify({ ...user, "custom:language": selectedLanguage })
-      );
-    }
   }
 
   return (
@@ -297,7 +241,7 @@ export default function MissingUserInfoForm({
                 const event = {
                   target: { name: "theme", value },
                 } as React.ChangeEvent<HTMLInputElement>;
-                handleThemeChange(event);
+                handleChange(event);
               }}
               className="flex flex-col space-y-3"
               aria-describedby={errors.theme ? "theme-error" : undefined}
@@ -359,7 +303,7 @@ export default function MissingUserInfoForm({
                 const event = {
                   target: { name: "textSize", value },
                 } as React.ChangeEvent<HTMLInputElement>;
-                handleTextSizeChange(event);
+                handleChange(event);
               }}
               className="flex flex-col space-y-3"
               aria-describedby={errors.textSize ? "text-size-error" : undefined}
@@ -430,7 +374,7 @@ export default function MissingUserInfoForm({
                 const event = {
                   target: { name: "language", value },
                 } as React.ChangeEvent<HTMLInputElement>;
-                handleLanguageChange(event);
+                handleChange(event);
               }}
               className="flex flex-col space-y-3"
               aria-describedby={errors.language ? "language-error" : undefined}

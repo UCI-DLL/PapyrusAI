@@ -613,7 +613,7 @@ export default function Chat(): JSX.Element {
                   var convos = [...prev.conversations];
                   const index = parseInt(conversationIndex);
                   // Ensure we don't crash if index out of bounds, though it shouldn't be
-                  if (convos[index]) {
+                  if (convos[index] && /^Conversation \d+$/i.test(convos[index].name)) {
                     convos[index].name = res.data.conversations[index].name;
                   }
                   return { ...prev, conversations: convos };

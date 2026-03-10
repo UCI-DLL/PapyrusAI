@@ -14,15 +14,17 @@ import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 import { parseLocalDate, formatDateForTooltip } from "../../utility/reports/date";
+import { getStudentListPopupOpen, setStudentListPopupOpen as persistPopupOpen } from "../../utility/reports/reportsSessionStorage";
 import { Users } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
   setAnalysis: any;
+  courseId?: string;
 }
 
-export default function ClassCharts({ analysis, setAnalysis }: ClassChartsProps) {
+export default function ClassCharts({ analysis, setAnalysis, courseId }: ClassChartsProps) {
   const { t } = useTranslation();
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -31,7 +33,19 @@ export default function ClassCharts({ analysis, setAnalysis }: ClassChartsProps)
   //   useState<boolean>(false); // Unused state variable, for when classification is implemented
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState<number>(0);
   const [studentMenuOpen, setStudentMenuOpen] = useState<boolean>(false);
-  const [studentListPopupOpen, setStudentListPopupOpen] = useState<boolean>(false);
+  const [studentListPopupOpen, setStudentListPopupOpen] = useState<boolean>(
+    courseId ? getStudentListPopupOpen(courseId) : false
+  );
+
+  const openStudentListPopup = () => {
+    setStudentListPopupOpen(true);
+    if (courseId) persistPopupOpen(courseId, true);
+  };
+
+  const closeStudentListPopup = () => {
+    setStudentListPopupOpen(false);
+    if (courseId) persistPopupOpen(courseId, false);
+  };
   const lengthsRef = useRef<HTMLDivElement>(null);
   const chatClassificationRef = useRef<HTMLDivElement>(null);
   const countsRef = useRef<HTMLDivElement>(null);
@@ -651,7 +665,7 @@ export default function ClassCharts({ analysis, setAnalysis }: ClassChartsProps)
               </div>
               <StudentFilter />
             </div>
-            <Button variant="outline" onClick={() => setStudentListPopupOpen(true)} className="flex items-center gap-2">
+            <Button variant="outline" onClick={openStudentListPopup} className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               {t("reports.viewAllStudents")}
             </Button>
@@ -682,7 +696,7 @@ export default function ClassCharts({ analysis, setAnalysis }: ClassChartsProps)
         {/* Student List Popup */}
         <StudentListPopup
           isOpen={studentListPopupOpen}
-          onClose={() => setStudentListPopupOpen(false)}
+          onClose={closeStudentListPopup}
           analysis={analysis}
         />
       </Card>
@@ -720,7 +734,7 @@ export default function ClassCharts({ analysis, setAnalysis }: ClassChartsProps)
             </div>
             <StudentFilter />
           </div>
-          <Button variant="outline" onClick={() => setStudentListPopupOpen(true)} className="flex items-center gap-2">
+          <Button variant="outline" onClick={openStudentListPopup} className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             {t("reports.viewAllStudents")}
           </Button>
@@ -978,7 +992,7 @@ export default function ClassCharts({ analysis, setAnalysis }: ClassChartsProps)
       {/* Student List Popup */}
       <StudentListPopup
         isOpen={studentListPopupOpen}
-        onClose={() => setStudentListPopupOpen(false)}
+        onClose={closeStudentListPopup}
         analysis={analysis}
       />
     </Card>

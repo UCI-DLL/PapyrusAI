@@ -14,11 +14,7 @@ interface StudentListPopupProps {
   analysis: Record<string, unknown> | null;
 }
 
-export default function StudentListPopup({
-  isOpen,
-  onClose,
-  analysis,
-}: StudentListPopupProps) {
+export default function StudentListPopup({ isOpen, onClose, analysis }: StudentListPopupProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const popupRef = useRef<HTMLDivElement>(null);
@@ -43,11 +39,7 @@ export default function StudentListPopup({
   // Close popup when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node) &&
-        isOpen
-      ) {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node) && isOpen) {
         onClose();
       }
     };
@@ -63,21 +55,54 @@ export default function StudentListPopup({
 
   if (!isOpen) return null;
 
-  const students =
-    analysis && analysis.students
-      ? Object.entries(
-        analysis.students as Record<string, Record<string, unknown>>
-      )
-      : [];
+  // Load full student list if available
+  type StudentRow = { username: string; name: string; family_name: string; email?: string; numConversations: number };
+  let students: Array<[string, StudentRow]> = [];
 
-  const handleStudentClick = (
-    studentId: string,
-    student: Record<string, unknown>
-  ) => {
-    const info = student.info as Record<string, unknown> | undefined;
-    const userId = info?.username || studentId;
-    navigate(`/reports/${userId}`);
-    onClose();
+  if (analysis?.allStudentsWithCounts && Array.isArray(analysis.allStudentsWithCounts)) {
+    const list = analysis.allStudentsWithCounts as Array<{
+      username: string;
+      name?: string;
+      family_name?: string;
+      email?: string;
+      numConversations: number;
+    }>;
+    students = list.map((s) => [
+      s.username,
+      {
+        username: s.username,
+        name: s.name ?? "",
+        family_name: s.family_name ?? "",
+        email: s.email,
+        numConversations: s.numConversations ?? 0,
+      },
+    ]);
+  } else if (analysis?.students && typeof analysis.students === "object") {
+    const studentEntries = Object.entries(analysis.students as Record<string, Record<string, unknown>>);
+    students = studentEntries.map(([id, student]) => {
+      const info = (student.info as Record<string, unknown> | undefined) ?? {};
+      const dailyConvoCounts = (student.dailyConvoCounts as Array<{ num_convos: number }> | undefined) ?? [];
+      const numConversations = dailyConvoCounts.reduce((sum, d) => sum + (d.num_convos ?? 0), 0);
+      return [
+        id,
+        {
+          username: (info.username as string) ?? id,
+          name: (info.name as string) ?? "",
+          family_name: (info.family_name as string) ?? "",
+          email: info.email as string | undefined,
+          numConversations,
+        },
+      ];
+    });
+    students.sort(([, a], [, b]) => {
+      const cmp = a.family_name.trim().toLowerCase().localeCompare(b.family_name.trim().toLowerCase());
+      if (cmp !== 0) return cmp;
+      return a.name.trim().toLowerCase().localeCompare(b.name.trim().toLowerCase());
+    });
+  }
+
+  const handleStudentClick = (username: string) => {
+    navigate(`/reports/${username}`);
   };
 
   return (
@@ -94,20 +119,11 @@ export default function StudentListPopup({
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
-            <h2
-              id="student-list-title"
-              className="text-xl font-semibold text-foreground"
-            >
+            <h2 id="student-list-title" className="text-xl font-semibold text-foreground">
               {t("reports.studentsInClass")}
             </h2>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            aria-label={t("common.close")}
-            className="h-8 w-8 p-0"
-          >
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label={t("common.close")} className="h-8 w-8 p-0">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -120,14 +136,9 @@ export default function StudentListPopup({
             </div>
           ) : (
             <div className="space-y-2">
-              {students.map(([id, student]) => {
-                const studentInfo = student as Record<string, unknown>;
-                const info = studentInfo.info as
-                  | Record<string, unknown>
-                  | undefined;
-                const studentName = `${info?.name as string} ${info?.family_name as string
-                  }`;
-                const studentEmail = info?.email as string;
+              {students.map(([id, row]) => {
+                const studentName = `${row.name} ${row.family_name}`.trim() || id;
+                const studentEmail = row.email;
 
                 return (
                   <div
@@ -135,11 +146,11 @@ export default function StudentListPopup({
                     tabIndex={0}
                     role="button"
                     aria-label={`${t("reports.viewReports")} ${studentName}`}
-                    onClick={() => handleStudentClick(id, student)}
+                    onClick={() => handleStudentClick(row.username)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        handleStudentClick(id, student);
+                        handleStudentClick(row.username);
                       }
                     }}
                     className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted cursor-pointer transition-colors group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
@@ -152,13 +163,16 @@ export default function StudentListPopup({
                         <div className="font-medium text-foreground group-hover:text-primary dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors">
                           {studentName}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {studentEmail}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{studentEmail}</div>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground group-hover:text-primary dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors">
-                      {t("reports.viewReports")} →
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground tabular-nums">
+                        {row.numConversations} {t("reports.conversations")}
+                      </span>
+                      <span className="text-sm text-muted-foreground group-hover:text-primary dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors">
+                        {t("reports.viewReports")} →
+                      </span>
                     </div>
                   </div>
                 );
@@ -168,9 +182,7 @@ export default function StudentListPopup({
         </div>
 
         <div className="p-4 border-t border-border">
-          <div className="text-sm text-muted-foreground text-center">
-            {t("reports.clickViewStudentReports")}
-          </div>
+          <div className="text-sm text-muted-foreground text-center">{t("reports.clickViewStudentReports")}</div>
         </div>
       </div>
     </div>

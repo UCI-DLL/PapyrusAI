@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { UserType } from "../../utility/types/UserTypes";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -12,6 +12,10 @@ import {
 } from "../../components/ui/card";
 import Post from "../../utility/Post";
 import { postUserData } from "../../utility/endpoints/UserEndpoints";
+import { changeTheme } from "../../utility/Themes";
+import { UserContext } from "../../utility/context/UserContext";
+import { AlertContext } from "../../utility/context/AlertContext";
+import { changeLanguage } from "../../i18n";
 import { useTranslation } from "../../hooks/useTranslation";
 
 /**
@@ -30,6 +34,7 @@ export default function MissingUserInfoForm({
   closeForm,
   requireUpdate = true,
 }: MissingUserInfoFormProps): JSX.Element {
+  const { setAlert } = useContext(AlertContext);
   //New user information
   const [session, setSession] = useState<{
     name: string;
@@ -58,29 +63,30 @@ export default function MissingUserInfoForm({
     language: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { setUser } = useContext(UserContext);
   const { t } = useTranslation();
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
+    if (hasInitialized.current) return;
+    if (!user) return;
+
+    hasInitialized.current = true;
+
     //Check if any data is missing, if nothing, then close
-    if (
-      user &&
-      user.name &&
-      user.name !== "" &&
-      requireUpdate &&
-      user.family_name
-    ) {
+    if (user.name && user.name !== "" && requireUpdate && user.family_name) {
       //if the user has both name, then close modal
       //NOTE: family name optional
       closeForm(user);
     } else {
       //set new user data based on old data
-      if (user && user.name && user.name !== "") {
+      if (user.name && user.name !== "") {
         setSession((prev) => ({ ...prev, name: user.name }));
       }
-      if (user && user.family_name && user.family_name !== "") {
+      if (user.family_name && user.family_name !== "") {
         setSession((prev) => ({ ...prev, family_name: user.family_name }));
       }
-      if (user && user["custom:theme"] && user["custom:theme"] !== "") {
+      if (user["custom:theme"] && user["custom:theme"] !== "") {
         // Keep all theme options including both colorful variants
         const normalizedTheme = [
           "dark",
@@ -91,7 +97,7 @@ export default function MissingUserInfoForm({
           : "light";
         setSession((prev) => ({ ...prev, theme: normalizedTheme }));
       }
-      if (user && user["custom:textSize"] && user["custom:textSize"] !== "") {
+      if (user["custom:textSize"] && user["custom:textSize"] !== "") {
         // Keep all text size options
         const normalizedTextSize = ["xs", "sm", "md", "lg", "xl"].includes(
           user["custom:textSize"]
@@ -105,7 +111,7 @@ export default function MissingUserInfoForm({
           normalizedTextSize
         );
       }
-      if (user && user["custom:language"] && user["custom:language"] !== "") {
+      if (user["custom:language"] && user["custom:language"] !== "") {
         // Keep valid language options
         const normalizedLanguage = ["english", "spanish"].includes(
           user["custom:language"]
@@ -136,8 +142,10 @@ export default function MissingUserInfoForm({
       Post(postUserData(), session).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data && res.data) {
+            //close modal if user data was updated
             closeForm(res.data);
-            window.location.reload();
+            // localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+            setAlert({ message: t("account.accountUpdated"), type: "success" });
           }
         } else {
           // set errors
@@ -157,6 +165,54 @@ export default function MissingUserInfoForm({
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleThemeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const root = document.documentElement;
+    if (user) {
+      setUser({ ...user, "custom:theme": e.target.value });
+      localStorage.setItem(
+        "papyrusai_user",
+        JSON.stringify({ ...user, "custom:theme": e.target.value })
+      );
+    }
+    // Apply theme change - supports light, dark, colorful-light, and colorful-dark themes
+    changeTheme(root, e.target.value);
+  }
+
+  function handleTextSizeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const root = document.documentElement;
+    if (user) {
+      setUser({ ...user, "custom:textSize": e.target.value });
+      localStorage.setItem(
+        "papyrusai_user",
+        JSON.stringify({ ...user, "custom:textSize": e.target.value })
+      );
+    }
+    // Apply text size change
+    root.setAttribute("data-text-size", e.target.value);
+  }
+
+  function handleLanguageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selectedLanguage = e.target.value;
+    setSession((prev) => ({ ...prev, [e.target.name]: selectedLanguage }));
+
+    // Update i18n language
+    const languageCode = selectedLanguage === "spanish" ? "es" : "en";
+    changeLanguage(languageCode as "en" | "es");
+
+    // Update HTML lang attribute
+    document.documentElement.setAttribute("lang", languageCode);
+
+    if (user) {
+      setUser({ ...user, "custom:language": selectedLanguage });
+      localStorage.setItem(
+        "papyrusai_user",
+        JSON.stringify({ ...user, "custom:language": selectedLanguage })
+      );
+    }
   }
 
   return (
@@ -241,7 +297,7 @@ export default function MissingUserInfoForm({
                 const event = {
                   target: { name: "theme", value },
                 } as React.ChangeEvent<HTMLInputElement>;
-                handleChange(event);
+                handleThemeChange(event);
               }}
               className="flex flex-col space-y-3"
               aria-describedby={errors.theme ? "theme-error" : undefined}
@@ -303,7 +359,7 @@ export default function MissingUserInfoForm({
                 const event = {
                   target: { name: "textSize", value },
                 } as React.ChangeEvent<HTMLInputElement>;
-                handleChange(event);
+                handleTextSizeChange(event);
               }}
               className="flex flex-col space-y-3"
               aria-describedby={errors.textSize ? "text-size-error" : undefined}
@@ -374,7 +430,7 @@ export default function MissingUserInfoForm({
                 const event = {
                   target: { name: "language", value },
                 } as React.ChangeEvent<HTMLInputElement>;
-                handleChange(event);
+                handleLanguageChange(event);
               }}
               className="flex flex-col space-y-3"
               aria-describedby={errors.language ? "language-error" : undefined}

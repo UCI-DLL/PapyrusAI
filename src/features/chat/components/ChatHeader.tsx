@@ -4,6 +4,7 @@ import { MessageSquare, PanelRightOpen, Download } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import { useTranslation } from "../../../hooks/useTranslation";
+import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
 
 interface ChatHeaderProps {
   conversationName: string;
@@ -47,15 +48,17 @@ export default function ChatHeader({
         </div>
         <div className="flex items-center gap-1">
           {canDownload && onDownloadConversation && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={onDownloadConversation}
-              aria-label={t("common.download")}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+            <TooltipWrapper content={t("common.download")} side="top">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={onDownloadConversation}
+                aria-label={t("common.download")}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipWrapper>
           )}
           {isMobile && (
             <Button
@@ -63,6 +66,7 @@ export default function ChatHeader({
               size="sm"
               className="h-8 w-8 p-0 lg:hidden"
               onClick={onToggleSidebar}
+              aria-label={t("common.expand")}
             >
               <PanelRightOpen className="h-4 w-4" />
             </Button>

@@ -20,6 +20,7 @@ import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ChatContextType } from "./ChatContext";
+import { downloadConversation } from "../../utility/chat/downloadConversation";
 
 function num_tokens_from_messages(messages: Array<any>) {
   var num_tokens = 0;
@@ -742,56 +743,17 @@ export default function Chat(): JSX.Element {
     ).then((res: any) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.messages) {
-          const conversationMessages = res.data.messages.sort(
-            (a: MessageType, b: MessageType) =>
-              parseInt(b.timestamp) - parseInt(a.timestamp)
-          );
-          const sortedMessages = conversationMessages.reverse();
-
-          let fileData =
-            courseInfo.name +
-            "\n" +
-            moduleInfo.name +
-            "\n" +
-            courseInfo.instructor.name +
-            " " +
-            courseInfo.instructor.family_name +
-            "\n";
-          if (user) {
-            fileData += "User: " + user.email + "\n";
-          }
           const isInstructor =
-            user &&
-            (user.groups.includes(instructor) || user.groups.includes(admin));
-          sortedMessages.forEach((message: MessageType, idx: number) => {
-            if (
-              !moduleInfo.showInitialPrompt &&
-              idx === 0 &&
-              !isInstructor
-            ) {
-            } else if (
-              message.userVisible !== undefined &&
-              !message.userVisible &&
-              !isInstructor
-            ) {
-            } else {
-              const dateTime = new Date(
-                parseInt(message.id.substring(0, 13), 10)
-              ).toLocaleString();
-              const sender =
-                message.sender === "ChatGPT"
-                  ? "Papyrus"
-                  : viewUser.name + " " + viewUser.family_name;
-              fileData +=
-                sender + " - " + dateTime + "\n" + message.content + "\n\n";
-            }
+            user.groups.includes(instructor) || user.groups.includes(admin);
+          downloadConversation({
+            courseInfo,
+            moduleInfo,
+            user,
+            viewUser,
+            messages: res.data.messages,
+            conversationIndex,
+            isInstructor,
           });
-          const blob = new Blob([fileData], { type: "text/plain" });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.download = `${courseInfo.name}_${moduleInfo.name}_${user?.email}_conversation${conversationIndex}.txt`;
-          link.href = url;
-          link.click();
         }
       } else if (res && res.status === 401) {
         navigator("/login");

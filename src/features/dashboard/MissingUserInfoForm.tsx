@@ -12,10 +12,11 @@ import {
 } from "../../components/ui/card";
 import Post from "../../utility/Post";
 import { postUserData } from "../../utility/endpoints/UserEndpoints";
-import { changeTheme } from "../../utility/Themes";
-import { UserContext } from "../../utility/context/UserContext";
+import {
+  applyUserSettings,
+  normalizeUserSettings,
+} from "../../utility/Themes";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { changeLanguage } from "../../i18n";
 import { useTranslation } from "../../hooks/useTranslation";
 
 /**
@@ -35,13 +36,12 @@ export default function MissingUserInfoForm({
   requireUpdate = true,
 }: MissingUserInfoFormProps): JSX.Element {
   const { setAlert } = useContext(AlertContext);
-  //New user information
   const [session, setSession] = useState<{
     name: string;
     family_name: string;
-    theme: string; //"light" | "dark",
-    textSize: string; //"xs" | "sm" | "md" | "lg" | "xl"
-    language: string; //"english" | "spanish"
+    theme: string;
+    textSize: string;
+    language: string;
   }>({
     name: "",
     family_name: "",
@@ -63,9 +63,14 @@ export default function MissingUserInfoForm({
     language: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { setUser } = useContext(UserContext);
   const { t } = useTranslation();
   const hasInitialized = useRef(false);
+  // For Preview:Tracks the last *saved* settings — always reverted to on unmount if no new save occurred.
+  const savedSettingsRef = useRef<{
+    theme: string;
+    textSize: string;
+    language: string;
+  } | null>(null);
 
   useEffect(() => {
     if (hasInitialized.current) return;
@@ -73,146 +78,103 @@ export default function MissingUserInfoForm({
 
     hasInitialized.current = true;
 
-    //Check if any data is missing, if nothing, then close
     if (user.name && user.name !== "" && requireUpdate && user.family_name) {
-      //if the user has both name, then close modal
-      //NOTE: family name optional
       closeForm(user);
     } else {
-      //set new user data based on old data
-      if (user.name && user.name !== "") {
-        setSession((prev) => ({ ...prev, name: user.name }));
-      }
-      if (user.family_name && user.family_name !== "") {
-        setSession((prev) => ({ ...prev, family_name: user.family_name }));
-      }
-      if (user["custom:theme"] && user["custom:theme"] !== "") {
-        // Keep all theme options including both colorful variants
-        const normalizedTheme = [
-          "dark",
-          "colorful-light",
-          "colorful-dark",
-        ].includes(user["custom:theme"])
-          ? user["custom:theme"]
-          : "light";
-        setSession((prev) => ({ ...prev, theme: normalizedTheme }));
-      }
-      if (user["custom:textSize"] && user["custom:textSize"] !== "") {
-        // Keep all text size options
-        const normalizedTextSize = ["xs", "sm", "md", "lg", "xl"].includes(
-          user["custom:textSize"]
-        )
-          ? user["custom:textSize"]
-          : "md";
-        setSession((prev) => ({ ...prev, textSize: normalizedTextSize }));
-        // Apply current text size to document
-        document.documentElement.setAttribute(
-          "data-text-size",
-          normalizedTextSize
-        );
-      }
-      if (user["custom:language"] && user["custom:language"] !== "") {
-        // Keep valid language options
-        const normalizedLanguage = ["english", "spanish"].includes(
-          user["custom:language"]
-        )
-          ? user["custom:language"]
-          : "english";
-        setSession((prev) => ({ ...prev, language: normalizedLanguage }));
-        // Apply current language to document
-        const languageCode = normalizedLanguage === "spanish" ? "es" : "en";
-        document.documentElement.setAttribute("lang", languageCode);
-      }
+      const settings = normalizeUserSettings(user);
+      savedSettingsRef.current = settings;
+
+      setSession((prev) => ({
+        ...prev,
+        name: user.name ?? prev.name,
+        family_name: user.family_name ?? prev.family_name,
+        ...settings,
+      }));
+
       setIsLoading(false);
     }
   }, [user, closeForm, requireUpdate]);
 
+  // On unmount, always revert DOM to the last saved settings (preview cleanup).
+  useEffect(() => {
+    return () => {
+      if (!savedSettingsRef.current) return;
+      applyUserSettings(savedSettingsRef.current);
+    };
+  }, []);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (session.name === "") {
-      setErrors((prev) => ({ ...prev, name: `${t("errorMessage.nameMissing")}` }));
+      setErrors((prev) => ({
+        ...prev,
+        name: `${t("errorMessage.nameMissing")}`,
+      }));
+      return;
     }
-    // else if(session.family_name === "") {
-    //   setErrors((prev) => ({...prev, family_name: "Family name missing"}))
-    // }
-    else {
-      // set is loading
-      setIsLoading(true);
-      // post data back
+
+    setIsLoading(true);
       Post(postUserData(), session).then((res) => {
         if (res && res.status && res.status < 300) {
-          if (res.data && res.data) {
-            //close modal if user data was updated
-            closeForm(res.data);
-            // localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+          if (res.data) {
+            // Update savedSettingsRef so any subsequent unsaved change reverts to THIS saved state.
+            savedSettingsRef.current = {
+              theme: session.theme,
+              textSize: session.textSize,
+              language: session.language,
+            };
+            const mergedUser: UserType = {
+              ...(user as UserType),
+              ...res.data,
+              "custom:theme": session.theme,
+              "custom:textSize": session.textSize,
+              "custom:language": session.language,
+            };
+            closeForm(mergedUser);
             setAlert({ message: t("account.accountUpdated"), type: "success" });
           }
-        } else {
-          // set errors
-          setErrors({
-            name: res.data,
-            family_name: res.data,
-            theme: res.data,
-            textSize: res.data,
-            language: res.data,
-          });
-        }
-        // set is loading back
-        setIsLoading(false);
-      });
-    }
+      } else {
+        setErrors({
+          name: res.data,
+          family_name: res.data,
+          theme: res.data,
+          textSize: res.data,
+          language: res.data,
+        });
+      }
+      setIsLoading(false);
+    });
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleThemeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    const root = document.documentElement;
-    if (user) {
-      setUser({ ...user, "custom:theme": e.target.value });
-      localStorage.setItem(
-        "papyrusai_user",
-        JSON.stringify({ ...user, "custom:theme": e.target.value })
-      );
-    }
-    // Apply theme change - supports light, dark, colorful-light, and colorful-dark themes
-    changeTheme(root, e.target.value);
+  function handleThemeChange(value: string) {
+    setSession((prev) => ({ ...prev, theme: value }));
+    applyUserSettings({
+      theme: value,
+      textSize: session.textSize,
+      language: session.language,
+    });
   }
 
-  function handleTextSizeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    const root = document.documentElement;
-    if (user) {
-      setUser({ ...user, "custom:textSize": e.target.value });
-      localStorage.setItem(
-        "papyrusai_user",
-        JSON.stringify({ ...user, "custom:textSize": e.target.value })
-      );
-    }
-    // Apply text size change
-    root.setAttribute("data-text-size", e.target.value);
+  function handleTextSizeChange(value: string) {
+    setSession((prev) => ({ ...prev, textSize: value }));
+    applyUserSettings({
+      theme: session.theme,
+      textSize: value,
+      language: session.language,
+    });
   }
 
-  function handleLanguageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selectedLanguage = e.target.value;
-    setSession((prev) => ({ ...prev, [e.target.name]: selectedLanguage }));
-
-    // Update i18n language
-    const languageCode = selectedLanguage === "spanish" ? "es" : "en";
-    changeLanguage(languageCode as "en" | "es");
-
-    // Update HTML lang attribute
-    document.documentElement.setAttribute("lang", languageCode);
-
-    if (user) {
-      setUser({ ...user, "custom:language": selectedLanguage });
-      localStorage.setItem(
-        "papyrusai_user",
-        JSON.stringify({ ...user, "custom:language": selectedLanguage })
-      );
-    }
+  function handleLanguageChange(value: string) {
+    setSession((prev) => ({ ...prev, language: value }));
+    applyUserSettings({
+      theme: session.theme,
+      textSize: session.textSize,
+      language: value,
+    });
   }
 
   return (
@@ -290,15 +252,12 @@ export default function MissingUserInfoForm({
           </div>
 
           <div className="space-y-3">
-            <Label className="text-sm font-medium">{t("account.themePreference")}</Label>
+            <Label className="text-sm font-medium">
+              {t("account.themePreference")}
+            </Label>
             <RadioGroup
               value={session.theme}
-              onValueChange={(value) => {
-                const event = {
-                  target: { name: "theme", value },
-                } as React.ChangeEvent<HTMLInputElement>;
-                handleThemeChange(event);
-              }}
+              onValueChange={handleThemeChange}
               className="flex flex-col space-y-3"
               aria-describedby={errors.theme ? "theme-error" : undefined}
             >
@@ -355,12 +314,7 @@ export default function MissingUserInfoForm({
             <Label className="text-sm font-medium">{t("account.textSize")}</Label>
             <RadioGroup
               value={session.textSize}
-              onValueChange={(value) => {
-                const event = {
-                  target: { name: "textSize", value },
-                } as React.ChangeEvent<HTMLInputElement>;
-                handleTextSizeChange(event);
-              }}
+              onValueChange={handleTextSizeChange}
               className="flex flex-col space-y-3"
               aria-describedby={errors.textSize ? "text-size-error" : undefined}
             >
@@ -426,12 +380,7 @@ export default function MissingUserInfoForm({
             <Label className="text-sm font-medium">{t("account.language")}</Label>
             <RadioGroup
               value={session.language}
-              onValueChange={(value) => {
-                const event = {
-                  target: { name: "language", value },
-                } as React.ChangeEvent<HTMLInputElement>;
-                handleLanguageChange(event);
-              }}
+              onValueChange={handleLanguageChange}
               className="flex flex-col space-y-3"
               aria-describedby={errors.language ? "language-error" : undefined}
             >

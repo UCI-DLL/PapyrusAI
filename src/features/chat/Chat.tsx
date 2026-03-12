@@ -20,6 +20,7 @@ import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ChatContextType } from "./ChatContext";
+import { downloadConversation } from "../../utility/chat/downloadConversation";
 
 function num_tokens_from_messages(messages: Array<any>) {
   var num_tokens = 0;
@@ -720,6 +721,51 @@ export default function Chat(): JSX.Element {
     setIsLoading(false);
   }
 
+  function handleDownloadConversation() {
+    if (
+      !courseInfo ||
+      !moduleInfo ||
+      !viewUser ||
+      !user ||
+      !courseId ||
+      !moduleId ||
+      !conversationIndex ||
+      conversationIndex === "new"
+    ) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    Get(
+      getConversation(courseId, moduleId, conversationIndex, viewUser.username),
+      controller.signal
+    ).then((res: any) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data.messages) {
+          const isInstructor =
+            user.groups.includes(instructor) || user.groups.includes(admin);
+          downloadConversation({
+            courseInfo,
+            moduleInfo,
+            user,
+            viewUser,
+            messages: res.data.messages,
+            conversationIndex,
+            isInstructor,
+          });
+        }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        setOpenErrorModal({
+          open: true,
+          message: t("errorMessage.downloadConversation"),
+        });
+      }
+    });
+  }
+
   function handleNewConversation() {
 
       closeSocket();
@@ -882,16 +928,18 @@ export default function Chat(): JSX.Element {
         {/* Chat Header */}
         {courseInfo && moduleInfo ? (
             <ChatHeader
-            conversationName={currentConvoName}
-            courseInfo={courseInfo}
-            moduleInfo={moduleInfo}
-            user={user}
-            viewUser={viewUser}
-            onToggleSidebar={() => {
+              conversationName={currentConvoName}
+              courseInfo={courseInfo}
+              moduleInfo={moduleInfo}
+              user={user}
+              viewUser={viewUser}
+              onToggleSidebar={() => {
 
-                window.dispatchEvent(new CustomEvent('toggleSidebar'));
-            }}
-            isMobile={window.innerWidth < 1024}
+                  window.dispatchEvent(new CustomEvent('toggleSidebar'));
+              }}
+              isMobile={window.innerWidth < 1024}
+              onDownloadConversation={handleDownloadConversation}
+              canDownload={conversationIndex !== "new"}
             />
         ) : (
             <div className="h-16 border-b border-border"></div>

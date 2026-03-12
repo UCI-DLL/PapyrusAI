@@ -297,7 +297,7 @@ export default function Chat(): JSX.Element {
         if (socket.current && (socket.current.readyState === WebSocket.OPEN || socket.current.readyState === WebSocket.CONNECTING)) {
           closeSocket();
         }
-        let sessionId = sessionStorage.getItem("sessionId") ?? "unknown";
+        let sessionId = localStorage.getItem("sessionId") ?? "unknown";
 
         var URL = process.env.REACT_APP_WEBSOCKET_URL;
         URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
@@ -454,7 +454,7 @@ export default function Chat(): JSX.Element {
           }
         });
 
-        let sessionId = sessionStorage.getItem("sessionId") ?? "unknown";
+        let sessionId = localStorage.getItem("sessionId") ?? "unknown";
         socket.current?.send(
           JSON.stringify({
             action: "sendMessage",
@@ -491,7 +491,7 @@ export default function Chat(): JSX.Element {
         } else if (essay.length < 750) {
           setChatError(t("chat.messageTooShort"));
         } else {
-          let sessionId = sessionStorage.getItem("sessionId") ?? "unknown";
+          let sessionId = localStorage.getItem("sessionId") ?? "unknown";
           var sendEssay: any = {
             action: "raterEssay",
             essay: essay,

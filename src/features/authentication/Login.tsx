@@ -80,7 +80,7 @@ export default function Login(props: LoginProps): JSX.Element {
 
   function getUserInfo(token: string) {
     const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
-    let sessionId = sessionStorage.getItem("sessionId") ?? "unknown";
+    let sessionId = localStorage.getItem("sessionId") ?? "unknown";
     axios
       .get(API_URL, {
         headers: {

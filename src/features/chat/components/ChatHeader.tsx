@@ -1,8 +1,10 @@
 import React from "react";
 import { Button } from "../../../components/ui/button";
-import { MessageSquare, PanelRightOpen } from "lucide-react";
+import { MessageSquare, PanelRightOpen, Download } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
+import { useTranslation } from "../../../hooks/useTranslation";
+import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
 
 interface ChatHeaderProps {
   conversationName: string;
@@ -12,6 +14,8 @@ interface ChatHeaderProps {
   viewUser?: UserType;
   onToggleSidebar: () => void;
   isMobile?: boolean;
+  onDownloadConversation?: () => void;
+  canDownload?: boolean;
 }
 
 export default function ChatHeader({
@@ -22,7 +26,11 @@ export default function ChatHeader({
   viewUser,
   onToggleSidebar,
   isMobile = false,
+  onDownloadConversation,
+  canDownload = false,
 }: ChatHeaderProps): JSX.Element {
+
+  const { t } = useTranslation();
 
   return (
     <div className="bg-card border-b border-border px-4 py-3 sticky top-0 z-20">
@@ -39,12 +47,26 @@ export default function ChatHeader({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {canDownload && onDownloadConversation && (
+            <TooltipWrapper content={t("common.download")} side="top">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={onDownloadConversation}
+                aria-label={t("common.download")}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipWrapper>
+          )}
           {isMobile && (
             <Button
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 lg:hidden"
               onClick={onToggleSidebar}
+              aria-label={t("common.expand")}
             >
               <PanelRightOpen className="h-4 w-4" />
             </Button>

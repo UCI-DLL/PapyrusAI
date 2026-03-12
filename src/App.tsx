@@ -34,7 +34,7 @@ import AllModules from "./features/modules/AllModules";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
-import { changeTheme } from "./utility/Themes";
+import { applyUserSettings, normalizeUserSettings } from "./utility/Themes";
 import Library from "./features/library/Library";
 import ViewFolder from "./features/library/ViewFolder";
 import OldEditPrompt from "./features/prompts/EditPrompt";
@@ -49,7 +49,6 @@ import ModuleReports from "./features/reports/ModuleReports";
 import CourseReports from "./features/reports/CourseReports";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
-import { changeLanguage } from "./i18n";
 import { useTranslation } from "./hooks/useTranslation";
 
 function App(): JSX.Element {
@@ -73,22 +72,8 @@ function App(): JSX.Element {
   const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
 
   useEffect(() => {
-    const root = document.documentElement;
     if (user) {
-      const userTheme = user["custom:theme"] ? user["custom:theme"] : "light";
-      changeTheme(root, userTheme);
-
-      const userTextSize = user["custom:textSize"]
-        ? user["custom:textSize"]
-        : "md";
-      root.setAttribute("data-text-size", userTextSize);
-
-      // Initialize language preference
-      const userLanguage = user["custom:language"];
-      const languageCode = userLanguage === "spanish" ? "es" : "en";
-      changeLanguage(languageCode);
-      // Set HTML lang attribute
-      document.documentElement.setAttribute("lang", languageCode);
+      applyUserSettings(normalizeUserSettings(user));
     }
   }, [user]);
 
@@ -195,63 +180,30 @@ function App(): JSX.Element {
                   <MissingUserInfoForm
                   user={user ? user : undefined}
                   closeForm={(updatedUser) => {
-                    //Set user with new information
-                    if (user) {
-                      setUser((prev) => {
-                        if (prev)
-                          return {
-                            ...prev,
-                            name: updatedUser.name,
-                            family_name: updatedUser.family_name,
-                          };
-                        else return null;
-                      });
-
-                      setShowUpdateUserInfoModal(false);
-
-                      //Handle new user tutorial
-                      //Note: not updating this with language since the default is english and can't be changed until after this
-                      introJs()
-                        .setOptions({
-                          steps: [
-                            {
-                              intro: t("dashboard.tutorial1"),
-                            },
-                            {
-                              intro: t("dashboard.tutorial2"),
-                            },
-                            {
-                              intro: t("dashboard.tutorial3"),
-                            },
-                            {
-                              intro: user.groups.includes(
-                                process.env.REACT_APP_INSTRUCTOR
-                                  ? process.env.REACT_APP_INSTRUCTOR
-                                  : "PapyrusAIInstructors"
-                              )
-                                ? t("dashboard.tutorial4Instructors")
-                                : t("dashboard.tutorial4Students"),
-                            },
-                          ],
-                        })
-                        .start();
-                    }
-                    if (
-                      localStorage.getItem("papyrusai_user") &&
-                      localStorage.getItem("papyrusai_user") !== null
-                    ) {
-                      var old = JSON.parse(
-                        localStorage.getItem("papyrusai_user") ?? ""
-                      );
-                      old.name = updatedUser.name;
-                      old.family_name = updatedUser.family_name;
-                      localStorage.setItem(
-                        "papyrusai_user",
-                        JSON.stringify(old)
-                      );
-                    }
-                    //then close modal
+                    setUser(updatedUser);
+                    localStorage.setItem("papyrusai_user", JSON.stringify(updatedUser));
                     setShowUpdateUserInfoModal(false);
+
+                    //Handle new user tutorial
+                    //Note: not updating this with language since the default is english and can't be changed until after this
+                    introJs()
+                      .setOptions({
+                        steps: [
+                          { intro: t("dashboard.tutorial1") },
+                          { intro: t("dashboard.tutorial2") },
+                          { intro: t("dashboard.tutorial3") },
+                          {
+                            intro: updatedUser.groups?.includes(
+                              process.env.REACT_APP_INSTRUCTOR
+                                ? process.env.REACT_APP_INSTRUCTOR
+                                : "PapyrusAIInstructors"
+                            )
+                              ? t("dashboard.tutorial4Instructors")
+                              : t("dashboard.tutorial4Students"),
+                          },
+                        ],
+                      })
+                      .start();
                   }}
                 />
                 </div>

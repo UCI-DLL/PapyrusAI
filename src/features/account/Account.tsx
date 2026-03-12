@@ -55,10 +55,9 @@ export default function Account(): JSX.Element {
         <div className="w-full" id="account-content">
           <MissingUserInfoForm
             user={user ? user : undefined}
-            closeForm={(_newuser: UserType) => {
-              //Set user with new information
-              // setUser(() => user ? user : null);
-              // localStorage.setItem("papyrusai_user", JSON.stringify(user));
+            closeForm={(newUser: UserType) => {
+              setUser(newUser);
+              localStorage.setItem("papyrusai_user", JSON.stringify(newUser));
             }}
             requireUpdate={false}
           />

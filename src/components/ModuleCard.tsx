@@ -15,7 +15,7 @@ import { CustomUserType, UserStarred } from "../utility/types/UserTypes";
 import Post from "../utility/Post";
 import Put from "../utility/Put";
 import Get from "../utility/Get";
-import { postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
+import { logEvent, postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
 import { getCourseList, putCopyModule } from "../utility/endpoints/CourseEndpoints";
 import { getConversationList, postCreateConversation } from "../utility/endpoints/ConversationEndpoints";
 import { cn } from "../lib/utils";
@@ -154,6 +154,17 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
 
   async function handleBeginModule() {
     if (!user) return;
+
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "begin_module",
+        page: "chat",
+        courseId: course.id,
+        moduleId: module.id,
+      }
+    })
 
     setIsNavigatingToModule(true);
 
@@ -523,8 +534,8 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
                     </button>
                   }
                   actions={(user?.groups.includes(course.id) &&
-                  (course.instructor.username === user.username ||
-                    (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username)))
+                    (course.instructor.username === user.username ||
+                      (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username)))
                     ? ownerMenu
                     : nonOwnerMenu
                   ).map((item) => ({

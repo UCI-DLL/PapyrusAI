@@ -23,6 +23,7 @@ import {
   orderModuleRecentlyCreatedAndStarred,
 } from "../../utility/Helpers";
 import {
+  logEvent,
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../../utility/endpoints/UserEndpoints";
@@ -185,6 +186,17 @@ export default function ModuleList({
 
   async function handleBeginModule(courseId: string, moduleId: string) {
     if (!user) return;
+
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "begin_module",
+        page: "chat",
+        courseId: courseId,
+        moduleId: moduleId,
+      }
+    })
 
     const moduleKey = `${courseId}-${moduleId}`;
     setIsNavigatingToModule(moduleKey);

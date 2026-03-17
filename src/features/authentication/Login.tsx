@@ -29,19 +29,28 @@ export default function Login(props: LoginProps): JSX.Element {
         if (hash[0].startsWith("#id")) {
           //get access token if normal login
           token = location.hash.split("&")[1].split("=")[1];
+          //log page
+          Post(logEvent(), {
+            eventType: "view_page",
+            metadata: {
+              data: "new_token",
+              page: "login",
+            }
+          })
         } else {
           //get access token if google login
           token = location.hash.split("&")[0].split("=")[1];
+          //log page
+          Post(logEvent(), {
+            eventType: "view_page",
+            metadata: {
+              data: "google_token",
+              page: "login",
+            }
+          })
         }
         localStorage.setItem("papyrusai_access_token", token);
-        //log page
-        Post(logEvent(), {
-          eventType: "view_page",
-          metadata: {
-            data: "new_token",
-            page: "login",
-          }
-        })
+
         setTimeout(() => {
           getUserInfo(token)
         }, 500);

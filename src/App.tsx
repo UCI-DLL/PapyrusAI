@@ -82,15 +82,19 @@ function App(): JSX.Element {
     setTimeout(() => {
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token") && !user) {
+        console.log("app, no local, no user")
         if (
           navigator.userAgent.indexOf("Chrome") < 0 &&
           navigator.userAgent.indexOf("Safari") > -1
         ) {
           //do nothing here if on safari (or it creates a weird loop)
+          console.log("do nothing?")
         } else {
+          console.log("app redirect")
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       } else if (localStorage.getItem("papyrusai_access_token") && !user) {
+        console.log("app, yes local, no user")
         // get user's most update-to-date info
         //If access denied, then update the access token
         Get(getUserData()).then((res) => {
@@ -111,6 +115,7 @@ function App(): JSX.Element {
               }
             }
           } else {
+            console.log("app error getting user data, redirecting")
             //remove user data
             localStorage.removeItem("papyrusai_access_token");
             localStorage.removeItem("papyrusai_user");
@@ -178,34 +183,34 @@ function App(): JSX.Element {
               >
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <MissingUserInfoForm
-                  user={user ? user : undefined}
-                  closeForm={(updatedUser) => {
-                    setUser(updatedUser);
-                    localStorage.setItem("papyrusai_user", JSON.stringify(updatedUser));
-                    setShowUpdateUserInfoModal(false);
+                    user={user ? user : undefined}
+                    closeForm={(updatedUser) => {
+                      setUser(updatedUser);
+                      localStorage.setItem("papyrusai_user", JSON.stringify(updatedUser));
+                      setShowUpdateUserInfoModal(false);
 
-                    //Handle new user tutorial
-                    //Note: not updating this with language since the default is english and can't be changed until after this
-                    introJs()
-                      .setOptions({
-                        steps: [
-                          { intro: t("dashboard.tutorial1") },
-                          { intro: t("dashboard.tutorial2") },
-                          { intro: t("dashboard.tutorial3") },
-                          {
-                            intro: updatedUser.groups?.includes(
-                              process.env.REACT_APP_INSTRUCTOR
-                                ? process.env.REACT_APP_INSTRUCTOR
-                                : "PapyrusAIInstructors"
-                            )
-                              ? t("dashboard.tutorial4Instructors")
-                              : t("dashboard.tutorial4Students"),
-                          },
-                        ],
-                      })
-                      .start();
-                  }}
-                />
+                      //Handle new user tutorial
+                      //Note: not updating this with language since the default is english and can't be changed until after this
+                      introJs()
+                        .setOptions({
+                          steps: [
+                            { intro: t("dashboard.tutorial1") },
+                            { intro: t("dashboard.tutorial2") },
+                            { intro: t("dashboard.tutorial3") },
+                            {
+                              intro: updatedUser.groups?.includes(
+                                process.env.REACT_APP_INSTRUCTOR
+                                  ? process.env.REACT_APP_INSTRUCTOR
+                                  : "PapyrusAIInstructors"
+                              )
+                                ? t("dashboard.tutorial4Instructors")
+                                : t("dashboard.tutorial4Students"),
+                            },
+                          ],
+                        })
+                        .start();
+                    }}
+                  />
                 </div>
               </DialogWrapper>
               <Routes>

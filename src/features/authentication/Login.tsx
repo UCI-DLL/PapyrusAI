@@ -16,6 +16,7 @@ export default function Login(props: LoginProps): JSX.Element {
   useEffect(() => {
     //Currently, this page just saves the token and then navigates to the home page
     if (location.hash) {
+      console.log("location", location)
       if (location.hash.split("#")[1].split("=")[0] === "error_description") {
         setTimeout(() => {
           navigator('/login-error', { state: { message: location.hash.split("#")[1].split("=")[1].split("&")[0].replaceAll("+", " ") } });
@@ -24,16 +25,20 @@ export default function Login(props: LoginProps): JSX.Element {
         //Clear localstorage before redirecting or anything else
         localStorage.clear()
         const hash = location.hash.split("&")
+        console.log("hash", hash)
         var token = "";
         if (hash[0].startsWith("#id")) {
           //get access token if normal login
           token = location.hash.split("&")[1].split("=")[1];
+          console.log("normal", token)
         } else {
           //get access token if google login
           token = location.hash.split("&")[0].split("=")[1];
+          console.log("google", token)
         }
         localStorage.setItem("papyrusai_access_token", token);
         setTimeout(() => {
+          console.log("start getting user info")
           getUserInfo(token)
         }, 500);
 
@@ -51,6 +56,7 @@ export default function Login(props: LoginProps): JSX.Element {
       }, 500);
     }
     else if (!localStorage.getItem("papyrusai_access_token")) {
+      console.log("nothin in local. redirecting to login page")
       //Clear localstorage before redirecting or anything else
       localStorage.clear()
       window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
@@ -70,6 +76,7 @@ export default function Login(props: LoginProps): JSX.Element {
         },
       })
       .then((response) => {
+        console.log("get user info", response)
         props.setUser(response.data);
         localStorage.setItem("papyrusai_user", JSON.stringify(response.data));
         navigator("/")

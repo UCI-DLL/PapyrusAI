@@ -80,6 +80,20 @@ function App(): JSX.Element {
   useEffect(() => {
     //Timeout so that login can possibly get token and save before this check
     setTimeout(() => {
+      // Let Login.tsx handle everything when we're on the /login route.
+      // Running auth logic here in parallel might be causing a race condition where
+      // a transient 5xx from the backend would nuke the token and redirect
+      // to Cognito, creating an infinite loop.
+      if (
+        window.location.pathname === "/login" ||
+        window.location.pathname === "/login/" ||
+        window.location.pathname === "/login-error" ||
+        sessionStorage.getItem("papyrusai_login_in_progress") === "true"
+      ) {
+        console.log("[app] skipping auth check — Login.tsx is handling it (path:", window.location.pathname, ")")
+        return;
+      }
+
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token") && !user) {
         console.log("app, no local, no user")
@@ -114,6 +128,10 @@ function App(): JSX.Element {
                 setShowUpdateUserInfoModal(true);
               }
             }
+          } else if (res && res.status && res.status >= 500) {
+            // server error — don't blow away the token, it might still be valid.
+            // just log it and let the user retry naturally.
+            console.error("[app] server error fetching user data (keeping token), status:", res.status)
           } else {
             console.log("app error getting user data, redirecting")
             //remove user data

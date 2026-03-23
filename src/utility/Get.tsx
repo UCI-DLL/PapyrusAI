@@ -25,7 +25,7 @@ export default async function Get(url: String, signal?: AbortSignal | undefined,
           //Note: commented cause reports page will retry these types of errors 
         } else {
           console.log("You got a 502 error that needs to be handled by the function that called this.", error)
-          // localStorage.removeItem("papyrusai_access_token");
+          localStorage.removeItem("papyrusai_access_token");
         }
       }
       if (error.response) {

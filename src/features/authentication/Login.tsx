@@ -2,7 +2,8 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import axios from "axios";
-import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { getUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
+import Post from "../../utility/Post";
 
 const COGNITO_LOGIN_URL = process.env.REACT_APP_LOGIN_URL || "";
 
@@ -55,6 +56,30 @@ export default function Login(props: LoginProps): JSX.Element {
         // Clear localstorage before redirecting or anything else
         localStorage.clear()
 
+        //handle logging login
+        const hash = location.hash.split("&")
+        if (hash[0].startsWith("#id")) {
+          //get access token if normal login
+          //log page
+          Post(logEvent(), {
+            eventType: "view_page",
+            metadata: {
+              data: "new_token",
+              page: "login",
+            }
+          })
+        } else {
+          //get access token if google login
+          //log page
+          Post(logEvent(), {
+            eventType: "view_page",
+            metadata: {
+              data: "google_token",
+              page: "login",
+            }
+          })
+        }
+
         // grab the access_token by name
         const token = hashParams.get("access_token") || "";
         console.log("token extracted from hash", token ? "present" : "missing")
@@ -66,6 +91,7 @@ export default function Login(props: LoginProps): JSX.Element {
         }
 
         localStorage.setItem("papyrusai_access_token", token);
+
         setTimeout(() => {
           console.log("start getting user info")
           getUserInfo(token)
@@ -81,6 +107,14 @@ export default function Login(props: LoginProps): JSX.Element {
       const params = new URLSearchParams(location.search);
       const token = params.get("papyrusai_access_token") as string;
       localStorage.setItem("papyrusai_access_token", token);
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          data: "sso_token",
+          page: "login",
+        }
+      })
       setTimeout(() => {
         getUserInfo(token);
       }, 500);
@@ -105,10 +139,12 @@ export default function Login(props: LoginProps): JSX.Element {
 
   function getUserInfo(token: string) {
     const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + getUserData();
+    let sessionId = localStorage.getItem("sessionId") ?? "unknown";
     axios
       .get(API_URL, {
         headers: {
           Authorization: token,
+          "X-Session-Id": sessionId,
         },
       })
       .then((response) => {

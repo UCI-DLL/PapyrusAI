@@ -13,6 +13,8 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { Plus, MessageSquare, FileText, Folder, Loader2 } from "lucide-react";
 import ListFolderContents from "./ListFolderContents";
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 export default function ViewFolder(): JSX.Element {
   let location = useLocation();
@@ -37,6 +39,15 @@ export default function ViewFolder(): JSX.Element {
     ) {
       //get user folder data
       getFolder(false, location.pathname.split("/")[2], controller.signal);
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          orgFolder: false,
+          folderId: location.pathname.split("/")[2],
+          page: "view_folder",
+        }
+      })
     } else if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -48,6 +59,15 @@ export default function ViewFolder(): JSX.Element {
     ) {
       //get org folder
       getFolder(true, location.pathname.split("/")[3], controller.signal);
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          orgFolder: true,
+          folderId: location.pathname.split("/")[3],
+          page: "view_folder",
+        }
+      })
     }
 
     return () => {

@@ -3,11 +3,13 @@ import axios from "axios";
 export default async function Put(url: String, formdata: any) {
   const user = localStorage.getItem("papyrusai_access_token")
   const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + url;
+  let sessionId = localStorage.getItem("sessionId") ?? "unknown";
 
   var data = await axios
     .put(API_URL, formdata, {
       headers: {
         Authorization: user,
+        "X-Session-Id": sessionId,
       },
     })
     .then((response) => {

@@ -32,22 +32,24 @@ import { Input } from "../../components/ui/input";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
 import { useTranslation } from "../../hooks/useTranslation";
 import { isNetworkError, createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 const CONVO_COUNT_CAP = 999999;
 
 interface Column {
   id:
-    | "name"
-    | "email"
-    | "convos"
-    | "essays"
-    | "lead"
-    | "position"
-    | "claim"
-    | "counterclaim"
-    | "rebuttal"
-    | "evidence"
-    | "conclude";
+  | "name"
+  | "email"
+  | "convos"
+  | "essays"
+  | "lead"
+  | "position"
+  | "claim"
+  | "counterclaim"
+  | "rebuttal"
+  | "evidence"
+  | "conclude";
   labelKey: string;
   minWidth?: number;
   align?: "right";
@@ -183,6 +185,16 @@ export default function ModuleReports(): JSX.Element {
         if (userList.length === 0) {
           getUsersInCourseList(courseId, moduleId, controller.signal);
         }
+
+        //log page
+        Post(logEvent(), {
+          eventType: "view_page",
+          metadata: {
+            courseId: courseId,
+            moduleId: moduleId,
+            page: "module_reports",
+          }
+        })
 
         const loadCourse = () => {
           Get(getCourse(courseId), controller.signal, true).then((res) => {
@@ -535,9 +547,9 @@ export default function ModuleReports(): JSX.Element {
     convoCountValue.trim() === ""
       ? null
       : (() => {
-          const parsed = parseInt(convoCountValue, 10);
-          return Number.isNaN(parsed) ? null : Math.min(Math.max(0, parsed), CONVO_COUNT_CAP);
-        })();
+        const parsed = parseInt(convoCountValue, 10);
+        return Number.isNaN(parsed) ? null : Math.min(Math.max(0, parsed), CONVO_COUNT_CAP);
+      })();
 
   // Filter student conversation data (non-rater mode): search by name/email, has/none conversation, leq/geq count
   const filteredStudentData = studentConversationData.filter((student) => {

@@ -20,13 +20,14 @@ import AddCourseForm, {
 } from "../course-groups/AddCourseForm";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { orderCourseRecentlyCreatedAndStarred } from "../../utility/Helpers";
-import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { getUserFavoritingData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import type { UserStarred } from "../../utility/types/UserTypes";
 import { ExternalLink, EyeIcon, PlusIcon, Target } from "lucide-react";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { Link } from "react-router-dom";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
 
 export default function Dashboard(): JSX.Element {
   const navigator = useNavigate();
@@ -45,6 +46,16 @@ export default function Dashboard(): JSX.Element {
       getCourses(controller.signal);
       getStarred(controller.signal);
     }
+
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        //courseId: courseId,
+        //moduleId: moduleId,
+        page: "dashboard",
+      }
+    })
 
     return () => {
       controller.abort();

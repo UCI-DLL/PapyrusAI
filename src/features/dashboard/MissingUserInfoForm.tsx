@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import Post from "../../utility/Post";
-import { postUserData } from "../../utility/endpoints/UserEndpoints";
+import { postUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import {
   applyUserSettings,
   normalizeUserSettings,
@@ -114,25 +114,25 @@ export default function MissingUserInfoForm({
     }
 
     setIsLoading(true);
-      Post(postUserData(), session).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            // Update savedSettingsRef so any subsequent unsaved change reverts to THIS saved state.
-            savedSettingsRef.current = {
-              theme: session.theme,
-              textSize: session.textSize,
-              language: session.language,
-            };
-            const mergedUser: UserType = {
-              ...(user as UserType),
-              ...res.data,
-              "custom:theme": session.theme,
-              "custom:textSize": session.textSize,
-              "custom:language": session.language,
-            };
-            closeForm(mergedUser);
-            setAlert({ message: t("account.accountUpdated"), type: "success" });
-          }
+    Post(postUserData(), session).then((res) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          // Update savedSettingsRef so any subsequent unsaved change reverts to THIS saved state.
+          savedSettingsRef.current = {
+            theme: session.theme,
+            textSize: session.textSize,
+            language: session.language,
+          };
+          const mergedUser: UserType = {
+            ...(user as UserType),
+            ...res.data,
+            "custom:theme": session.theme,
+            "custom:textSize": session.textSize,
+            "custom:language": session.language,
+          };
+          closeForm(mergedUser);
+          setAlert({ message: t("account.accountUpdated"), type: "success" });
+        }
       } else {
         setErrors({
           name: res.data,

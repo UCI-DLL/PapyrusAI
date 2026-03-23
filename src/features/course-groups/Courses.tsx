@@ -10,7 +10,7 @@ import { UserContext } from "../../utility/context/UserContext";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import AddCourseForm, { AddCourseFormHandle } from "./AddCourseForm";
-import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { getUserFavoritingData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import {
   Loader2,
   PlusIcon,
@@ -19,6 +19,7 @@ import {
   Search,
 } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
 
 export default function Courses(): JSX.Element {
   let navigator = useNavigate();
@@ -34,6 +35,16 @@ export default function Courses(): JSX.Element {
   >([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const addCourseFormRef = useRef<AddCourseFormHandle>(null);
+
+  useEffect(() => {
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        page: "courses",
+      }
+    })
+  })
 
   useEffect(() => {
     const controller = new AbortController();

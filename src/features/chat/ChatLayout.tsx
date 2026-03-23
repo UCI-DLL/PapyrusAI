@@ -9,7 +9,7 @@ import {
   getConversation,
 } from "../../utility/endpoints/ConversationEndpoints";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
-import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { getUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { UserContext } from "../../utility/context/UserContext";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
@@ -94,7 +94,7 @@ export default function ChatLayout(): JSX.Element {
     window.addEventListener("resize", handleResize);
 
     const handleToggleSidebar = () => {
-        setSidebarOpen(prev => !prev);
+      setSidebarOpen(prev => !prev);
     };
     window.addEventListener("toggleSidebar", handleToggleSidebar);
 
@@ -209,6 +209,18 @@ export default function ChatLayout(): JSX.Element {
   ) {
     if (!courseInfo || !moduleInfo || !viewUser || !user) return;
 
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "download_conversation",
+        page: "chat",
+        courseId: courseInfo.id,
+        moduleId: moduleInfo.id,
+        conversationIndex: index
+      }
+    })
+
     const controller = new AbortController();
 
     Get(
@@ -260,11 +272,11 @@ export default function ChatLayout(): JSX.Element {
       ).then((res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
-             // If the current conversation was deleted, navigate away or something
+            // If the current conversation was deleted, navigate away or something
             //  But since we are in layout, we just update the list.
             // Check if we are currently viewing the deleted conversation
-            if (conversationIndex === convoUpdateObject.index){
-               navigate(`/chat/${username}/${courseId}/${moduleId}/new`);
+            if (conversationIndex === convoUpdateObject.index) {
+              navigate(`/chat/${username}/${courseId}/${moduleId}/new`);
             }
 
             setOpenUpdateConvoModal({
@@ -277,20 +289,20 @@ export default function ChatLayout(): JSX.Element {
               isDeleted: false,
               error: "",
             });
-             // Update conversation list
-             setConversationList(prev => {
-                if(!prev) return prev;
-                 const newConvos = [...prev.conversations];
-                 if(newConvos[parseInt(convoUpdateObject.index)]){
-                    newConvos[parseInt(convoUpdateObject.index)].isDeleted = true;
-                 }
-                 return {...prev, conversations: newConvos}
-             })
+            // Update conversation list
+            setConversationList(prev => {
+              if (!prev) return prev;
+              const newConvos = [...prev.conversations];
+              if (newConvos[parseInt(convoUpdateObject.index)]) {
+                newConvos[parseInt(convoUpdateObject.index)].isDeleted = true;
+              }
+              return { ...prev, conversations: newConvos }
+            })
 
 
-              Get(getConversationList(convoUpdateObject.courseId, convoUpdateObject.moduleId)).then(resList => {
-                 if(resList?.data) setConversationList(resList.data);
-              });
+            Get(getConversationList(convoUpdateObject.courseId, convoUpdateObject.moduleId)).then(resList => {
+              if (resList?.data) setConversationList(resList.data);
+            });
           }
         } else if (res && res.status === 401) {
           navigate("/login");
@@ -348,14 +360,14 @@ export default function ChatLayout(): JSX.Element {
     }
   }
 
-   function handleNewConversation() {
-      if (username && courseId && moduleId) {
-        navigate(
-          `/chat/${username}/${courseId}/${moduleId}/new`
-        );
-        if (window.innerWidth < 1024) setSidebarOpen(false);
-      }
+  function handleNewConversation() {
+    if (username && courseId && moduleId) {
+      navigate(
+        `/chat/${username}/${courseId}/${moduleId}/new`
+      );
+      if (window.innerWidth < 1024) setSidebarOpen(false);
     }
+  }
 
   const contextValue: ChatContextType = {
     courseInfo,
@@ -404,8 +416,8 @@ export default function ChatLayout(): JSX.Element {
         </Button>
       </DialogWrapper>
 
-       {/* Delete Conversation Modal */}
-       <DialogWrapper
+      {/* Delete Conversation Modal */}
+      <DialogWrapper
         open={openUpdateConvoModal.deleteOpen}
         onOpenChange={(open) => setOpenUpdateConvoModal((prev) => ({ ...prev, deleteOpen: open }))}
         title={t("chat.archiveConversationQuestion")}
@@ -455,22 +467,22 @@ export default function ChatLayout(): JSX.Element {
         <div className="space-y-4">
           <div className="space-y-2">
             <React.Fragment>
-            <label htmlFor="conversation-name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t("chat.conversationName")}</label>
-            <input
-              id="conversation-name"
-              name="name"
-              value={openUpdateConvoModal.name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setOpenUpdateConvoModal((prev) => ({
-                  ...prev,
-                  name: e.target.value,
-                }));
-              }}
-              className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${openUpdateConvoModal.error ? "border-destructive" : ""}`}
-              disabled={isLoading}
-              autoFocus
-            />
-            {openUpdateConvoModal.error && <p className="text-sm text-destructive">{openUpdateConvoModal.error}</p>}
+              <label htmlFor="conversation-name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t("chat.conversationName")}</label>
+              <input
+                id="conversation-name"
+                name="name"
+                value={openUpdateConvoModal.name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setOpenUpdateConvoModal((prev) => ({
+                    ...prev,
+                    name: e.target.value,
+                  }));
+                }}
+                className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${openUpdateConvoModal.error ? "border-destructive" : ""}`}
+                disabled={isLoading}
+                autoFocus
+              />
+              {openUpdateConvoModal.error && <p className="text-sm text-destructive">{openUpdateConvoModal.error}</p>}
             </React.Fragment>
           </div>
         </div>
@@ -503,7 +515,7 @@ export default function ChatLayout(): JSX.Element {
           onClose={() => setSidebarOpen(false)}
         />
       ) : (
-          <div className="hidden lg:flex w-80 border-l border-border bg-card" style={{ height: "calc(100vh - 4rem)" }}></div>
+        <div className="hidden lg:flex w-80 border-l border-border bg-card" style={{ height: "calc(100vh - 4rem)" }}></div>
       )}
 
     </div>

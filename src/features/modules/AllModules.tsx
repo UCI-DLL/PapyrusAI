@@ -6,11 +6,12 @@ import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
 import { handleCourseTermLanguage, orderCourseRecentlyCreated } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
-import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
+import { getUserFavoritingData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { Loader2, BookOpen } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import Post from "../../utility/Post";
 
 export default function AllModules(): JSX.Element {
   let navigator = useNavigate();
@@ -27,6 +28,14 @@ export default function AllModules(): JSX.Element {
     //show all modules
     getCourses(controller.signal);
     getStarred(controller.signal);
+
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        page: "all_modules",
+      }
+    })
 
     return () => {
       controller.abort();

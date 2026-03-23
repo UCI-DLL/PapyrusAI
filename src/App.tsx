@@ -50,6 +50,7 @@ import CourseReports from "./features/reports/CourseReports";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
 import { useTranslation } from "./hooks/useTranslation";
+import { v4 as uuidv4 } from "uuid";
 
 function App(): JSX.Element {
   const { t } = useTranslation();
@@ -153,6 +154,16 @@ function App(): JSX.Element {
     }, 500);
 
   }, [user]);
+
+  //create a session id that gets sent with every request or log so we can track 
+  // which user did what. save in local so it is the same across tabs
+  useEffect(() => {
+    let sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) {
+      sessionId = uuidv4();
+      localStorage.setItem("sessionId", sessionId);
+    }
+  }, [])
 
   //handle log out
   function handleLogOut() {

@@ -20,6 +20,8 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { getCourseAnalysis, setCourseAnalysis } from "../../utility/reports/reportsSessionStorage";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 export default function CourseReports(): JSX.Element {
   const { t } = useTranslation();
@@ -38,6 +40,19 @@ export default function CourseReports(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(!courseData);
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState<boolean>(false);
   const [analysis, setAnalysis] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (course) {
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          courseId: course.id,
+          page: "course_reports",
+        }
+      })
+    }
+  }, [course])
 
   useEffect(() => {
     if (!courseId || !user) return;

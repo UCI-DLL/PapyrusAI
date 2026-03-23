@@ -44,6 +44,7 @@ import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 export enum PermissionsOptions {
   // Admin = "Admin",
@@ -95,6 +96,16 @@ export default function OrgSettings(): JSX.Element {
     window.navigator.userAgent.includes("Safari") &&
     !window.navigator.userAgent.includes("Chrome") &&
     window.navigator.userAgent.includes("Mac OS");
+
+  useEffect(() => {
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        page: "org_settings",
+      }
+    })
+  })
 
   useEffect(() => {
     const controller = new AbortController();

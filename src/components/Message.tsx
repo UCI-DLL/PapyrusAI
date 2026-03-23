@@ -21,8 +21,11 @@ import { truncateString } from "../utility/Helpers";
 import removeMarkdown from "markdown-to-text";
 import { toast } from "sonner";
 import { t } from "i18next";
+import Post from "../utility/Post";
+import { logEvent } from "../utility/endpoints/UserEndpoints";
 
 interface MessageProps {
+  id: string;
   message: string;
   displayName?: string;
   typing?: boolean;
@@ -62,21 +65,36 @@ const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
                 )}
               </div>
               <div className="w-1/5 flex items-start justify-end">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="h-8 w-8 p-0"
+                <TooltipWrapper
+                  content={t("common.view")}
                 >
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${t("common.visitSource")}: ${source.title}`}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      //log action
+                      Post(logEvent(), {
+                        eventType: "client_action",
+                        metadata: {
+                          action: "view_source",
+                          page: "chat",
+                          source: source,
+                        }
+                      })
+                    }}
                   >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${t("common.visitSource")}: ${source.title}`}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </TooltipWrapper>
               </div>
             </CardContent>
           </Card>
@@ -108,6 +126,13 @@ export const MessageLeft = (props: MessageProps) => {
   }, [props.message]);
 
   const handlePlay = () => {
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "read_message",
+        page: "chat",
+      }
+    })
     const synth = window.speechSynthesis;
     if (utterance) {
       synth.speak(utterance);
@@ -123,6 +148,13 @@ export const MessageLeft = (props: MessageProps) => {
   };
 
   const handleCopy = () => {
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "copy_message",
+        page: "chat",
+      }
+    })
     navigator.clipboard.writeText(removeMarkdown(props.message));
     toast.success(t("components.messageCopiedClipboard"));
   };
@@ -214,11 +246,10 @@ export const MessageLeft = (props: MessageProps) => {
               <Button
                 variant="outline"
                 onClick={() => setShowExpandableMessage(true)}
-                className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${
-                  props.outOfContext || (!props.visible && props.isInstructor)
-                    ? "opacity-80 border-dashed"
-                    : ""
-                }`}
+                className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${props.outOfContext || (!props.visible && props.isInstructor)
+                  ? "opacity-80 border-dashed"
+                  : ""
+                  }`}
               >
                 {props.typing ? (
                   <div aria-live="polite">
@@ -245,11 +276,10 @@ export const MessageLeft = (props: MessageProps) => {
               </Button>
             ) : (
               <div
-                className={`bg-muted rounded-lg p-4 ${
-                  props.outOfContext || (!props.visible && props.isInstructor)
-                    ? "opacity-80 border border-dashed"
-                    : ""
-                }`}
+                className={`bg-muted rounded-lg p-4 ${props.outOfContext || (!props.visible && props.isInstructor)
+                  ? "opacity-80 border border-dashed"
+                  : ""
+                  }`}
               >
                 {props.typing ? (
                   <div aria-live="polite">
@@ -310,6 +340,14 @@ export const MessageRight = (props: MessageProps) => {
   }, [props.message]);
 
   const handlePlay = () => {
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "read_message",
+        page: "chat",
+      }
+    })
     const synth = window.speechSynthesis;
     if (utterance) {
       synth.speak(utterance);
@@ -325,6 +363,13 @@ export const MessageRight = (props: MessageProps) => {
   };
 
   const handleCopy = () => {
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "copy_message",
+        page: "chat",
+      }
+    })
     navigator.clipboard.writeText(removeMarkdown(props.message));
     toast.success(t("components.messageCopiedClipboard"));
   };
@@ -394,11 +439,10 @@ export const MessageRight = (props: MessageProps) => {
 
           {props.messageType && props.messageType === "file" ? (
             <div
-              className={`max-w-md ${
-                props.outOfContext || (!props.visible && props.isInstructor)
-                  ? "opacity-80 border border-dashed"
-                  : ""
-              }`}
+              className={`max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-80 border border-dashed"
+                : ""
+                }`}
             >
               <DialogWrapper
                 open={openFileModal}
@@ -453,11 +497,10 @@ export const MessageRight = (props: MessageProps) => {
             </div>
           ) : (
             <div
-              className={`bg-primary/20 colorful-dark:bg-card rounded-lg p-4 max-w-md ${
-                props.outOfContext || (!props.visible && props.isInstructor)
-                  ? "opacity-80 border border-dashed"
-                  : ""
-              }`}
+              className={`bg-primary/20 colorful-dark:bg-card rounded-lg p-4 max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
+                ? "opacity-80 border border-dashed"
+                : ""
+                }`}
             >
               <Markdown
                 className="prose prose-sm max-w-none dark:prose-invert colorful-dark:prose-invert 

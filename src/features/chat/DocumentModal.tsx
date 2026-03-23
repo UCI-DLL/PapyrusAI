@@ -12,6 +12,8 @@ import { pdfjs } from 'react-pdf';
 import { removeSpecialCharacters } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
 import { useTranslation } from "../../hooks/useTranslation";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 interface ChatWizardProps {
   returnDocText: (docText: string) => void;
@@ -26,6 +28,7 @@ export default function DocumentModal({
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { user } = useContext(UserContext);
+  const [docExt, setDocExt] = useState<string>("");
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) {
@@ -34,11 +37,13 @@ export default function DocumentModal({
     }
     setDocText("");
     setError("");
+    setDocExt("");
     setIsLoading(true);
     const file = e.target.files[0];
 
     try {
       if (file.type === "text/plain") {
+        setDocExt("txt")
         const reader = new FileReader();
         reader.onload = (evt) => {
           if (!evt?.target?.result) {
@@ -50,6 +55,7 @@ export default function DocumentModal({
         };
         reader.readAsBinaryString(file);
       } else if (file.type === "application/pdf") {
+        setDocExt("pdf")
         const temp = URL.createObjectURL(file);
         const doc = pdfjs.getDocument(temp);
         const pdfDocument = await doc.promise;
@@ -66,6 +72,7 @@ export default function DocumentModal({
         }
         setIsLoading(false);
       } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        setDocExt("docx")
         const reader = new FileReader();
         reader.readAsBinaryString(file);
         reader.onload = function (evt) {
@@ -184,6 +191,16 @@ export default function DocumentModal({
             <Button
               className="w-full"
               onClick={() => {
+                //log action
+                Post(logEvent(), {
+                  eventType: "client_action",
+                  metadata: {
+                    action: "document_upload",
+                    page: "chat",
+                    docExt: docExt,
+                    textLength: docText.length
+                  }
+                })
                 returnDocText(docText);
                 setDocText("");
                 setError("");

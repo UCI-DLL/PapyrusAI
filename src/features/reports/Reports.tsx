@@ -41,6 +41,8 @@ import { handleCourseTermLanguage } from "../../utility/Helpers";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 type DownloadType = CourseType & { users: Array<CustomUserType> } & {
   modules: Array<
@@ -97,6 +99,14 @@ export default function Reports(): JSX.Element {
   useEffect(() => {
     const controller = new AbortController();
     retryAttemptedRef.current = false;
+
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        page: "reports",
+      }
+    })
 
     const loadCourse = (group: string) => {
       // Reports flag true
@@ -316,6 +326,16 @@ export default function Reports(): JSX.Element {
       course["users"] = sortCourseList(userList)[x].users;
       coursesToDownload.push(course);
     });
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "download_conversation",
+        page: "reports",
+        downloadType: downloadType,
+        courses: coursesToDownload.map(course => course.id) //just sent course ids
+      }
+    })
     // Both download methods will be using this as the controller
     const controller = new AbortController();
     // If "CSV Mode" is checked on, run this section instead of the logic below
@@ -634,15 +654,15 @@ export default function Reports(): JSX.Element {
                   {user?.groups.includes(
                     process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin",
                   ) && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setOpenDownloadCourseModal(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      {t("reports.downloadCourse")}
-                    </Button>
-                  )}
+                      <Button
+                        variant="outline"
+                        onClick={() => setOpenDownloadCourseModal(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        {t("reports.downloadCourse")}
+                      </Button>
+                    )}
                 </div>
                 <div>
                   <InfoAccordion>
@@ -799,9 +819,8 @@ export default function Reports(): JSX.Element {
                     onClick={handleRowClick}
                     tabIndex={0}
                     role="button"
-                    aria-label={`${t("common.view")} ${t("reports.reports")} ${
-                      x.course.name ? x.course.name : "Unnamed Course"
-                    }`}
+                    aria-label={`${t("common.view")} ${t("reports.reports")} ${x.course.name ? x.course.name : "Unnamed Course"
+                      }`}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
@@ -824,12 +843,10 @@ export default function Reports(): JSX.Element {
                             </div>
                             <div className="text-sm text-muted-foreground capitalize">
                               {x.course.section
-                                ? `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${
-                                    x.course.year ? x.course.year : ""
-                                  } - ${x.course.section}`
-                                : `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${
-                                    x.course.year ? x.course.year : ""
-                                  }`}
+                                ? `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${x.course.year ? x.course.year : ""
+                                } - ${x.course.section}`
+                                : `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${x.course.year ? x.course.year : ""
+                                }`}
                             </div>
                           </div>
                         </div>

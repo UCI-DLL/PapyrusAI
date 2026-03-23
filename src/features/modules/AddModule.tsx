@@ -50,6 +50,8 @@ import { Badge } from "../../components/ui/badge";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
+import Post from "../../utility/Post";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 type ModuleFormType = {
   name: string;
@@ -157,6 +159,20 @@ export default function AddModule({
   useEffect(() => {
     //When the page changes, reset the alert
     setAlert({ message: "", type: "info" });
+
+    //log page
+    var metadata: any = {
+      isEditMode: isEditMode,
+      courseId: actualCourseId,
+      page: "add_module",
+    }
+    if (isEditMode && actualModuleId) {
+      metadata.moduleId = actualModuleId
+    }
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: metadata
+    })
     // eslint-disable-next-line
   }, []);
 
@@ -240,11 +256,11 @@ export default function AddModule({
 
   function handleSubmit(e: any, isPublished = false, isDeleted = false) {
     if (session.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
     } else if (session.moduleDescription === "") {
       setErrors((prev: any) => ({
         ...prev,
-        moduleDescription: t("common.description") + " " + t("common.missing"),
+        moduleDescription: t("common.description") + " " + t("components.missing"),
       }));
     } else {
       // set is loading

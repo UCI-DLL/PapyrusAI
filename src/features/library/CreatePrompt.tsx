@@ -32,6 +32,7 @@ import {
 import Put from "../../utility/Put";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 type PromptFormMode = "create" | "edit";
 
@@ -103,6 +104,27 @@ export default function CreatePrompt({
     if (tagList.length === 0) {
       getTags("", controller.signal);
     }
+
+    //log page
+    var metadata: any = {
+      orgFolder: isOrgFolder,
+      isEditMode: isEditMode,
+      folderId: actualFolderId,
+      page: "create_prompt",
+    }
+    if (isEditMode && actualPromptId) {
+      metadata.promptId = actualPromptId
+    }
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        orgFolder: isOrgFolder,
+        isEditMode: isEditMode,
+        folderId: actualFolderId,
+        promptId: actualPromptId,
+        page: "create_prompt",
+      }
+    })
 
     return () => {
       controller.abort();
@@ -239,9 +261,9 @@ export default function CreatePrompt({
   function handleSubmit(e: any, isDeleted = false) {
     setIsLoading(true);
     if (prompt.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
     } else if (prompt.prompt === "") {
-      setErrors((prev: any) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("components.missing") }));
     } else {
       if (isEditMode && promptInfo && promptInfo.promptId) { //editing prompt
         const dataToSend = {

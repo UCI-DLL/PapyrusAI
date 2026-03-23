@@ -4,7 +4,7 @@ import remarkGfm from "remark-gfm";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
 import { MessageTypeType } from "../utility/types/ConversationTypes";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import {
@@ -21,8 +21,11 @@ import { truncateString } from "../utility/Helpers";
 import removeMarkdown from "markdown-to-text";
 import { toast } from "sonner";
 import { t } from "i18next";
+import Post from "../utility/Post";
+import { logEvent } from "../utility/endpoints/UserEndpoints";
 
 interface MessageProps {
+  id: string;
   message: string;
   displayName?: string;
   typing?: boolean;
@@ -40,50 +43,62 @@ interface ViewSourcesProps {
 
 const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
   return (
-    <div className="space-y-3 mt-4">
+    <div className="flex flex-row gap-4 overflow-x-auto pb-4 no-scrollbar">
       {sources.map(
         (
           source: { url: string; title: string; summary?: string },
-          index: number
+          index: number,
         ) => (
           <Card
             key={index}
-            className="transition-all duration-200 hover:shadow-md border-l-4 border-l-primary/20"
+            className="flex-shrink-0 w-[280px] transition-all duration-200 hover:shadow-md border-t-4 border-t-primary/20"
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-muted-foreground">
-                  {t("common.source")} {index + 1}
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="h-8 w-8 p-0"
-                >
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${t("common.visitSource")}: ${source.title}`}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
+            <CardContent className="flex flex-row gap-2">
+              <div className="w-4/5 p-2">
+                <h4 className="font-semibold text-sm mb-2 line-clamp-3 min-h-[2.5rem]">
+                  {source.title}
+                </h4>
+                {source.summary && (
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {truncateString(source.summary, 200)}
+                  </p>
+                )}
               </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <h4 className="font-semibold text-sm mb-2 line-clamp-2">
-                {truncateString(source.title, 50)}
-              </h4>
-              {source.summary && (
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {truncateString(source.summary, 200)}
-                </p>
-              )}
+              <div className="w-1/5 flex items-start justify-end">
+                <TooltipWrapper
+                  content={t("common.view")}
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      //log action
+                      Post(logEvent(), {
+                        eventType: "client_action",
+                        metadata: {
+                          action: "view_source",
+                          page: "chat",
+                          source: source,
+                        }
+                      })
+                    }}
+                  >
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${t("common.visitSource")}: ${source.title}`}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </TooltipWrapper>
+              </div>
             </CardContent>
           </Card>
-        )
+        ),
       )}
     </div>
   );
@@ -96,7 +111,7 @@ export const MessageLeft = (props: MessageProps) => {
   const [showExpandableMessage, setShowExpandableMessage] =
     useState<boolean>(false);
   const [expandableMessage] = useState(
-    props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined
+    props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined,
   );
 
   useEffect(() => {
@@ -111,6 +126,13 @@ export const MessageLeft = (props: MessageProps) => {
   }, [props.message]);
 
   const handlePlay = () => {
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "read_message",
+        page: "chat",
+      }
+    })
     const synth = window.speechSynthesis;
     if (utterance) {
       synth.speak(utterance);
@@ -126,6 +148,13 @@ export const MessageLeft = (props: MessageProps) => {
   };
 
   const handleCopy = () => {
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "copy_message",
+        page: "chat",
+      }
+    })
     navigator.clipboard.writeText(removeMarkdown(props.message));
     toast.success(t("components.messageCopiedClipboard"));
   };
@@ -166,63 +195,70 @@ export const MessageLeft = (props: MessageProps) => {
         </DialogWrapper>
       )}
 
-      <div className="flex items-start gap-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              {props.isInstructor && !props.visible && (
-                <span className="text-sm">{t("common.source")} - </span>
-              )}
-              {displayName}
-            </span>
-            <div className="flex items-center gap-1">
-              <TooltipWrapper content={isPlaying ? t("common.stop") : t("common.readAloud")}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={isPlaying ? handleStop : handlePlay}
-                  aria-label={isPlaying ? t("common.stopReading") : t("common.readMessageAloud")}
+      {props.message && !props.typing && !(props.visible === false && props.sources?.length) ? (
+        <div className="flex items-start gap-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                {props.isInstructor && !props.visible && (
+                  <span className="text-sm">{t("common.source")} - </span>
+                )}
+                {displayName}
+              </span>
+              <div className="flex items-center gap-1">
+                <TooltipWrapper
+                  content={isPlaying ? t("common.stop") : t("common.readAloud")}
                 >
-                  {isPlaying ? (
-                    <VolumeX className="h-4 w-4" />
-                  ) : (
-                    <Volume2 className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipWrapper>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={isPlaying ? handleStop : handlePlay}
+                    aria-label={
+                      isPlaying
+                        ? t("common.stopReading")
+                        : t("common.readMessageAloud")
+                    }
+                  >
+                    {isPlaying ? (
+                      <VolumeX className="h-4 w-4" />
+                    ) : (
+                      <Volume2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipWrapper>
 
-              <TooltipWrapper content={t("common.copyMessage")}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={handleCopy}
-                  aria-label={t("common.copyMessage")}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </TooltipWrapper>
+                <TooltipWrapper content={t("common.copyMessage")}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={handleCopy}
+                    aria-label={t("common.copyMessage")}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+              </div>
             </div>
-          </div>
 
-          {props.expandableMessage ? (
-            <Button
-              variant="outline"
-              onClick={() => setShowExpandableMessage(true)}
-              className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${props.outOfContext || (!props.visible && props.isInstructor)
-                ? "opacity-80 border-dashed"
-                : ""
-                }`}
-            >
-              {props.typing ? (
-                <div aria-live="polite">
-                  <CustomTypingIndicator />
-                </div>
-              ) : (
-                <Markdown
-                  remarkPlugins={[remarkGfm]}
-                  className="prose prose-sm max-w-none dark:prose-invert 
+            {props.expandableMessage ? (
+              <Button
+                variant="outline"
+                onClick={() => setShowExpandableMessage(true)}
+                className={`w-full justify-start text-left p-4 h-auto whitespace-normal ${props.outOfContext || (!props.visible && props.isInstructor)
+                  ? "opacity-80 border-dashed"
+                  : ""
+                  }`}
+              >
+                {props.typing ? (
+                  <div aria-live="polite">
+                    <CustomTypingIndicator />
+                  </div>
+                ) : (
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    className="prose prose-sm max-w-none dark:prose-invert 
                   colorful-dark:prose-invert prose-headings:font-semibold 
                   prose-headings:tracking-tight prose-p:leading-relaxed prose-pre:bg-muted 
                   prose-pre:border prose-pre:border-border prose-code:bg-muted prose-code:px-1.5 
@@ -232,27 +268,27 @@ export const MessageLeft = (props: MessageProps) => {
                   prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold 
                   prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-ul:list-disc 
                   prose-ol:list-decimal prose-li:marker:text-muted-foreground markdown-content"
-                  components={{ a: LinkRenderer }}
-                >
-                  {props.message}
-                </Markdown>
-              )}
-            </Button>
-          ) : (
-            <div
-              className={`bg-muted rounded-lg p-4 ${props.outOfContext || (!props.visible && props.isInstructor)
-                ? "opacity-80 border border-dashed"
-                : ""
-                }`}
-            >
-              {props.typing ? (
-                <div aria-live="polite">
-                  <CustomTypingIndicator />
-                </div>
-              ) : (
-                <Markdown
-                  remarkPlugins={[remarkGfm]}
-                  className="prose prose-sm max-w-none dark:prose-invert colorful-dark:prose-invert 
+                    components={{ a: LinkRenderer }}
+                  >
+                    {props.message}
+                  </Markdown>
+                )}
+              </Button>
+            ) : (
+              <div
+                className={`bg-muted rounded-lg p-4 ${props.outOfContext || (!props.visible && props.isInstructor)
+                  ? "opacity-80 border border-dashed"
+                  : ""
+                  }`}
+              >
+                {props.typing ? (
+                  <div aria-live="polite">
+                    <CustomTypingIndicator />
+                  </div>
+                ) : (
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    className="prose prose-sm max-w-none dark:prose-invert colorful-dark:prose-invert 
                   prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed 
                   prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-code:bg-muted 
                   prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono 
@@ -262,15 +298,22 @@ export const MessageLeft = (props: MessageProps) => {
                   prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-td:border prose-td:border-border 
                   prose-td:px-3 prose-td:py-2 prose-ul:list-disc prose-ol:list-decimal 
                   prose-li:marker:text-muted-foreground markdown-content"
-                  components={{ a: LinkRenderer }}
-                >
-                  {props.message}
-                </Markdown>
-              )}
-            </div>
-          )}
+                    components={{ a: LinkRenderer }}
+                  >
+                    {props.message}
+                  </Markdown>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : props.typing ? (
+        <div aria-live="polite">
+          <CustomTypingIndicator />
+        </div>
+      ) : (
+        <></>
+      )}
 
       {props.sources && <ViewSources sources={props.sources} />}
     </div>
@@ -297,6 +340,14 @@ export const MessageRight = (props: MessageProps) => {
   }, [props.message]);
 
   const handlePlay = () => {
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "read_message",
+        page: "chat",
+      }
+    })
     const synth = window.speechSynthesis;
     if (utterance) {
       synth.speak(utterance);
@@ -312,6 +363,13 @@ export const MessageRight = (props: MessageProps) => {
   };
 
   const handleCopy = () => {
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "copy_message",
+        page: "chat",
+      }
+    })
     navigator.clipboard.writeText(removeMarkdown(props.message));
     toast.success(t("components.messageCopiedClipboard"));
   };
@@ -335,13 +393,19 @@ export const MessageRight = (props: MessageProps) => {
         <div className="flex-1 flex flex-col items-end">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex items-center gap-1">
-              <TooltipWrapper content={isPlaying ? t("common.stop") : t("common.readAloud")}>
+              <TooltipWrapper
+                content={isPlaying ? t("common.stop") : t("common.readAloud")}
+              >
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
                   onClick={isPlaying ? handleStop : handlePlay}
-                  aria-label={isPlaying ? t("common.stopReading") : t("common.readMessageAloud")}
+                  aria-label={
+                    isPlaying
+                      ? t("common.stopReading")
+                      : t("common.readMessageAloud")
+                  }
                 >
                   {isPlaying ? (
                     <VolumeX className="h-4 w-4" />
@@ -365,7 +429,9 @@ export const MessageRight = (props: MessageProps) => {
             </div>
             <span className="text-sm font-medium text-muted-foreground">
               {props.isInstructor && !props.visible && (
-                <span className="text-destructive dark:text-orange colorful-dark:text-orange">{t("common.hiddenMessage")} - </span>
+                <span className="text-destructive dark:text-orange colorful-dark:text-orange">
+                  {t("common.hiddenMessage")} -{" "}
+                </span>
               )}
               {props.displayName ? props.displayName : "You"}
             </span>

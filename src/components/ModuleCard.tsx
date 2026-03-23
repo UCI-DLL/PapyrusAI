@@ -7,14 +7,7 @@ import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { useNavigate } from "react-router-dom";
-import {
-  Star,
-  Play,
-  MoreHorizontal,
-  Loader2,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Star, Play, MoreHorizontal, Loader2, CheckCircle, XCircle, Eye } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType, ModuleType } from "../utility/types/CourseTypes";
@@ -22,18 +15,9 @@ import { CustomUserType, UserStarred } from "../utility/types/UserTypes";
 import Post from "../utility/Post";
 import Put from "../utility/Put";
 import Get from "../utility/Get";
-import {
-  postCreateUserFavoritingData,
-  putUpdateUserFavoritingData,
-} from "../utility/endpoints/UserEndpoints";
-import {
-  getCourseList,
-  putCopyModule,
-} from "../utility/endpoints/CourseEndpoints";
-import {
-  getConversationList,
-  postCreateConversation,
-} from "../utility/endpoints/ConversationEndpoints";
+import { logEvent, postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
+import { getCourseList, putCopyModule } from "../utility/endpoints/CourseEndpoints";
+import { getConversationList, postCreateConversation } from "../utility/endpoints/ConversationEndpoints";
 import { cn } from "../lib/utils";
 import { orderCourseRecentlyCreatedAndStarred } from "../utility/Helpers";
 import CourseCard from "./CourseCard";
@@ -47,19 +31,13 @@ interface ModuleCardProps {
   starredList?: UserStarred;
 }
 
-export default function ModuleCard({
-  module,
-  course,
-  refreshList,
-  starredList,
-}: ModuleCardProps): JSX.Element {
+export default function ModuleCard({ module, course, refreshList, starredList }: ModuleCardProps): JSX.Element {
   let navigator = useNavigate();
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isNavigatingToModule, setIsNavigatingToModule] =
-    useState<boolean>(false);
+  const [isNavigatingToModule, setIsNavigatingToModule] = useState<boolean>(false);
   const [openDuplicateModal, setOpenDuplicateModal] = useState<{
     courseId: string;
     moduleId: string;
@@ -76,16 +54,11 @@ export default function ModuleCard({
     name: "",
     isPublished: false,
   });
-  const [starredModules, setStarredModules] = useState<
-    Array<{ courseId: string; moduleId: string }>
-  >([]);
+  const [starredModules, setStarredModules] = useState<Array<{ courseId: string; moduleId: string }>>([]);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [openCourseListModal, setOpenCourseListModal] =
-    useState<boolean>(false);
+  const [openCourseListModal, setOpenCourseListModal] = useState<boolean>(false);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
-  const [starredCourses, setStarredCourses] = useState<
-    Array<{ courseId: string }>
-  >([]);
+  const [starredCourses, setStarredCourses] = useState<Array<{ courseId: string }>>([]);
 
   useEffect(() => {
     if (starredList && starredList.modules) {
@@ -99,15 +72,9 @@ export default function ModuleCard({
   useEffect(() => {
     const controller = new AbortController();
     if (
-      (user?.groups.includes(
-        process.env.REACT_APP_ADMIN
-          ? process.env.REACT_APP_ADMIN
-          : "PapyrusAIAdmin"
-      ) ||
+      (user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
         user?.groups.includes(
-          process.env.REACT_APP_INSTRUCTOR
-            ? process.env.REACT_APP_INSTRUCTOR
-            : "PapyrusAIInstructors"
+          process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors",
         ) ||
         user?.groups.includes(course.id + "-TA")) &&
       openCourseListModal
@@ -145,12 +112,8 @@ export default function ModuleCard({
   function handleCopyModuleTo() {
     setIsLoading(true);
     Put(
-      putCopyModule(
-        openDuplicateModal.courseId,
-        openDuplicateModal.moduleId,
-        openDuplicateModal.copyCourseId
-      ),
-      duplicateModuleData
+      putCopyModule(openDuplicateModal.courseId, openDuplicateModal.moduleId, openDuplicateModal.copyCourseId),
+      duplicateModuleData,
     ).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
@@ -178,9 +141,7 @@ export default function ModuleCard({
     });
   }
 
-  const isStarred = starredModules.some(
-    (m) => m.moduleId === module.id && m.courseId === course.id
-  );
+  const isStarred = starredModules.some((m) => m.moduleId === module.id && m.courseId === course.id);
 
   const courseInfo = `${course.name} - ${course.instructor.name} ${course.instructor.family_name}`;
 
@@ -194,19 +155,24 @@ export default function ModuleCard({
   async function handleBeginModule() {
     if (!user) return;
 
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "begin_module",
+        page: "chat",
+        courseId: course.id,
+        moduleId: module.id,
+      }
+    })
+
     setIsNavigatingToModule(true);
 
     try {
       // First, get the conversation list for this module
-      const conversationRes = await Get(
-        getConversationList(course.id, module.id)
-      );
+      const conversationRes = await Get(getConversationList(course.id, module.id));
 
-      if (
-        conversationRes &&
-        conversationRes.status &&
-        conversationRes.status < 300
-      ) {
+      if (conversationRes && conversationRes.status && conversationRes.status < 300) {
         if (
           conversationRes.data &&
           conversationRes.data.conversations &&
@@ -214,33 +180,23 @@ export default function ModuleCard({
         ) {
           // Sort conversations by ID (latest first) and get the latest one
           const sortedConversations = conversationRes.data.conversations.sort(
-            (a: any, b: any) => parseInt(b.id) - parseInt(a.id)
+            (a: any, b: any) => parseInt(b.id) - parseInt(a.id),
           );
           const latestConversationIndex =
             conversationRes.data.conversations.length -
-            conversationRes.data.conversations.findIndex(
-              (conv: any) => conv.id === sortedConversations[0].id
-            ) -
+            conversationRes.data.conversations.findIndex((conv: any) => conv.id === sortedConversations[0].id) -
             1;
 
           // Navigate to the latest conversation
-          navigator(
-            `/chat/${user.username}/${course.id}/${module.id}/${latestConversationIndex}`
-          );
+          navigator(`/chat/${user.username}/${course.id}/${module.id}/${latestConversationIndex}`);
         } else {
           // No conversations exist, create a new one
-          const createRes = await Post(
-            postCreateConversation(course.id, module.id),
-            {}
-          );
+          const createRes = await Post(postCreateConversation(course.id, module.id), {});
 
           if (createRes && createRes.status && createRes.status < 300) {
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
-              navigator(
-                `/chat/${user.username}/${course.id}/${module.id}/${createRes.data.conversations.length - 1
-                }`
-              );
+              navigator(`/chat/${user.username}/${course.id}/${module.id}/${createRes.data.conversations.length - 1}`);
             }
           } else if (createRes && createRes.status === 401) {
             navigator("/login");
@@ -358,9 +314,8 @@ export default function ModuleCard({
   }
 
   const isInstructorOrTA =
-    user?.groups.includes(
-      process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
-    ) || user?.groups.includes(course.id + "-TA");
+    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
+    user?.groups.includes(course.id + "-TA");
 
   return (
     <>
@@ -383,26 +338,22 @@ export default function ModuleCard({
           role="list"
           aria-label={t("courses.availableCourses")}
         >
-          {orderCourseRecentlyCreatedAndStarred(courseList, starredCourses).map(
-            (course) => (
-              <div key={course.id} role="listitem">
-                <CourseCard
-                  course={course}
-                  refreshList={refreshList}
-                  onClick={(courseId: string) => {
-                    setOpenCourseListModal(false);
-                    setOpenDuplicateModal((prev) => ({
-                      ...prev,
-                      copyCourseId: courseId,
-                    }));
-                  }}
-                  isStarred={starredCourses.some(
-                    (c) => c.courseId === course.id
-                  )}
-                />
-              </div>
-            )
-          )}
+          {orderCourseRecentlyCreatedAndStarred(courseList, starredCourses).map((course) => (
+            <div key={course.id} role="listitem">
+              <CourseCard
+                course={course}
+                refreshList={refreshList}
+                onClick={(courseId: string) => {
+                  setOpenCourseListModal(false);
+                  setOpenDuplicateModal((prev) => ({
+                    ...prev,
+                    copyCourseId: courseId,
+                  }));
+                }}
+                isStarred={starredCourses.some((c) => c.courseId === course.id)}
+              />
+            </div>
+          ))}
         </section>
       </DialogWrapper>
 
@@ -429,7 +380,9 @@ export default function ModuleCard({
           className="space-y-4"
         >
           <div className="space-y-2">
-            <Label htmlFor="module-name">{t("common.module")} {t("common.name")}</Label>
+            <Label htmlFor="module-name">
+              {t("common.module")} {t("common.name")}
+            </Label>
             <Input
               id="module-name"
               name="name"
@@ -483,10 +436,7 @@ export default function ModuleCard({
       </DialogWrapper>
 
       <article className="group bg-card border rounded-xl hover-lift shadow-sm relative h-80 flex flex-col">
-        <div
-          className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl"
-          aria-hidden="true"
-        >
+        <div className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl" aria-hidden="true">
           <Play size={80} className="transform rotate-12" />
         </div>
 
@@ -515,10 +465,7 @@ export default function ModuleCard({
                   ) : (
                     <>
                       <XCircle className="h-5 w-5 text-gray-500" />
-                      <Badge
-                        className="pointer-events-none"
-                        variant="secondary"
-                      >
+                      <Badge className="pointer-events-none" variant="secondary">
                         {t("components.unpublished")}
                       </Badge>
                     </>
@@ -526,9 +473,7 @@ export default function ModuleCard({
                 </div>
               )}
               <div className="flex flex-col my-2 gap-2 text-xs text-muted-foreground">
-                <div className="font-medium text-sm truncate-text">
-                  {courseInfo}
-                </div>
+                <div className="font-medium text-sm truncate-text">{courseInfo}</div>
                 {module.moduleDescription && (
                   <p className="text-muted-foreground leading-relaxed text-sm line-clamp-2">
                     {module.moduleDescription}
@@ -541,10 +486,7 @@ export default function ModuleCard({
               className="flex items-center gap-1 ml-2 flex-shrink-0"
               aria-label={`${t("common.module")} ${t("common.actions")}}`}
             >
-              <TooltipWrapper
-                content={isStarred ? t("common.unstarModule") : t("common.starModule")}
-                side="top"
-              >
+              <TooltipWrapper content={isStarred ? t("common.unstarModule") : t("common.starModule")} side="top">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -553,40 +495,30 @@ export default function ModuleCard({
                   disabled={isLoading}
                   className={cn(
                     "p-1 rounded-full transition-all duration-300 text-lg",
-                    isStarred
-                      ? "text-gold hover:text-muted"
-                      : "text-muted hover:text-gold"
+                    isStarred ? "text-gold hover:text-muted" : "text-muted hover:text-gold",
                   )}
-                  aria-label={
-                    isStarred ? t("common.removeFromFavorites") : t("common.addToFavorites")
-                  }
+                  aria-label={isStarred ? t("common.removeFromFavorites") : t("common.addToFavorites")}
                 >
                   <Star
                     size={12}
                     fill={isStarred ? "currentColor" : "none"}
-                    className={cn(
-                      isStarred
-                        ? "hover:fill-none h-[1em] w-[1em]"
-                        : "hover:fill-current h-[1em] w-[1em]"
-                    )}
+                    className={cn(isStarred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]")}
                     aria-hidden="true"
                   />
                 </button>
               </TooltipWrapper>
 
-              {/* {isInstructorOrTA && ( //TODO figure this out later
+              {isInstructorOrTA && (
                 <TooltipWrapper content={t("common.view") + " " + t("common.reports")}>
                   <button
-                    onClick={() =>
-                      navigator(`/dashboard/${course.id}/${module.id}`)
-                    }
+                    onClick={() => navigator(`/reports/module/${course.id}/${module.id}`)}
                     className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                     aria-label={t("common.view") + " " + t("common.module") + " " + t("common.reports")}
                   >
                     <Eye className="h-[1em] w-[1em]" aria-hidden="true" />
                   </button>
                 </TooltipWrapper>
-              )} */}
+              )}
 
               {isInstructorOrTA && (
                 <DropdownWrapper
@@ -598,18 +530,12 @@ export default function ModuleCard({
                       }}
                       aria-label={t("common.moduleOptions")}
                     >
-                      <MoreHorizontal
-                        className="h-[1em] w-[1em]"
-                        aria-hidden="true"
-                      />
+                      <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
                     </button>
                   }
                   actions={(user?.groups.includes(course.id) &&
                     (course.instructor.username === user.username ||
-                      (course.taList &&
-                        course.taList.find(
-                          (a: CustomUserType) => a.username === user?.username
-                        )))
+                      (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username)))
                     ? ownerMenu
                     : nonOwnerMenu
                   ).map((item) => ({

@@ -23,10 +23,11 @@ import {
   orderModuleRecentlyCreatedAndStarred,
 } from "../../utility/Helpers";
 import {
+  logEvent,
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../../utility/endpoints/UserEndpoints";
-import { Star, Play, Copy, Edit, Loader2 } from "lucide-react";
+import { Star, Play, Copy, Edit, Loader2, Eye } from "lucide-react";
 import Post from "../../utility/Post";
 import { cn } from "../../lib/utils";
 import {
@@ -185,6 +186,17 @@ export default function ModuleList({
 
   async function handleBeginModule(courseId: string, moduleId: string) {
     if (!user) return;
+
+    //log action
+    Post(logEvent(), {
+      eventType: "client_action",
+      metadata: {
+        action: "begin_module",
+        page: "chat",
+        courseId: courseId,
+        moduleId: moduleId,
+      }
+    })
 
     const moduleKey = `${courseId}-${moduleId}`;
     setIsNavigatingToModule(moduleKey);
@@ -537,7 +549,7 @@ export default function ModuleList({
                       <div className="flex items-center justify-between">
                         {/* Secondary actions */}
                         <div className="flex items-center gap-1">
-                          {/* {(user?.groups.includes(
+                          {(user?.groups.includes(
                             process.env.REACT_APP_ADMIN
                               ? process.env.REACT_APP_ADMIN
                               : "PapyrusAIAdmin"
@@ -552,7 +564,7 @@ export default function ModuleList({
                                 <button
                                   onClick={() =>
                                     navigator(
-                                      `/dashboard/${course.id}/${module.id}`
+                                      `/reports/module/${course.id}/${module.id}`
                                     )
                                   }
                                   className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
@@ -560,7 +572,7 @@ export default function ModuleList({
                                   <Eye size={14} />
                                 </button>
                               </TooltipWrapper>
-                            )} */}
+                            )}
 
                           {(user?.groups.includes(
                             process.env.REACT_APP_ADMIN
@@ -704,7 +716,7 @@ export default function ModuleList({
                             </button>
                           </TooltipWrapper>
 
-                          {/* {(user?.groups.includes(
+                          {(user?.groups.includes(
                             process.env.REACT_APP_ADMIN
                               ? process.env.REACT_APP_ADMIN
                               : "PapyrusAIAdmin"
@@ -719,7 +731,7 @@ export default function ModuleList({
                                 <button
                                   onClick={() =>
                                     navigator(
-                                      `/dashboard/${course.id}/${module.id}`
+                                      `/reports/module/${course.id}/${module.id}`
                                     )
                                   }
                                   className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
@@ -727,7 +739,7 @@ export default function ModuleList({
                                   <Eye size={12} />
                                 </button>
                               </TooltipWrapper>
-                            )} */}
+                            )}
 
                           {(user?.groups.includes(
                             process.env.REACT_APP_ADMIN

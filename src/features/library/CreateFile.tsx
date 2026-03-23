@@ -29,6 +29,7 @@ import {
 import axios from "axios";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 export default function CreateFile(): JSX.Element {
   let location = useLocation();
@@ -133,6 +134,16 @@ export default function CreateFile(): JSX.Element {
       const folderId = location.pathname.split("/")[3];
       //save the ids
       setFileInfo({ isOrgFolder: true, folderId: folderId });
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          orgFolder: true,
+          isEditMode: false,
+          folderId: folderId,
+          page: "create_file",
+        }
+      })
     } else if (
       location.pathname &&
       location.pathname.split("/") &&
@@ -144,6 +155,16 @@ export default function CreateFile(): JSX.Element {
       const folderId = location.pathname.split("/")[2];
       //save the ids
       setFileInfo({ isOrgFolder: false, folderId: folderId });
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          orgFolder: false,
+          isEditMode: false,
+          folderId: folderId,
+          page: "create_file",
+        }
+      })
     }
 
     if (tagList.length === 0) {
@@ -294,7 +315,8 @@ export default function CreateFile(): JSX.Element {
       return;
     }
     if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("common.name") + " " + t("common.missing") }));
+      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      return;
     }
     // Handle here
     if (fileInfo) {

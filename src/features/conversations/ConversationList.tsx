@@ -39,7 +39,7 @@ import Post from "../../utility/Post";
 import { ConversationListType } from "../../utility/types/ConversationTypes";
 import { CourseType } from "../../utility/types/CourseTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
-import { getUserData } from "../../utility/endpoints/UserEndpoints";
+import { getUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { UserType } from "../../utility/types/UserTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -105,6 +105,15 @@ export default function ConversationList(): JSX.Element {
       }
       setModuleIds({ courseId: courseId, moduleId: moduleId });
       setIsLoading(true);
+      //log page
+      Post(logEvent(), {
+        eventType: "view_page",
+        metadata: {
+          courseId: courseId,
+          moduleId: moduleId,
+          page: "conversation_list",
+        }
+      })
       //get conversation list based on course and module
       Get(
         getConversationList(courseId, moduleId, username),

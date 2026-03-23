@@ -1,12 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MessageLeft, MessageRight } from "../../../components/Message";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ArrowDown } from "lucide-react";
 import { MessageType } from "../../../utility/types/ConversationTypes";
 import { ModuleType } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import ChatWizard from "../ChatWizard";
 import EssayWizard from "../EssayWizard";
 import { useTranslation } from "../../../hooks/useTranslation";
+import { Button } from "../../../components/ui/button";
 
 interface ChatMessagesProps {
   messages: MessageType[];
@@ -43,10 +44,26 @@ export default function ChatMessages({
 }: ChatMessagesProps): JSX.Element {
   const { t } = useTranslation();
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const containerRef = useRef<null | HTMLDivElement>(null);
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
+  const shouldAutoScroll = useRef(true);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = containerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
   };
+
+  const handleScroll = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    const scrolledUp = distanceFromBottom > 100;
+    setIsScrolledUp(scrolledUp);
+    shouldAutoScroll.current = !scrolledUp;
+  };
+
   //screen reader new message announcement
   const [srAnnouncement, setSrAnnouncement] = React.useState("");
 
@@ -59,7 +76,7 @@ export default function ChatMessages({
     moduleInfo?.raterEnabled;
 
   // Show regular wizard for prompt-based modules
-  const showPromptWizard = showWizard && !showEssayWizard;
+  const showPromptWizard = showWizard && !showEssayWizard && !showTypingIndicator;
 
   // Show empty state when no messages and no wizards
   const showEmptyState = (messages.length === 0 &&
@@ -79,12 +96,28 @@ export default function ChatMessages({
     return () => clearTimeout(timeout);
   }, [messages]);
 
+  // Scroll to bottom on mount
   useEffect(() => {
     scrollToBottom();
-  }, [messages, showTypingIndicator]);
+  }, []);
+
+  // Auto-scroll when messages update; reset auto-scroll flag when streaming finishes
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+    const streamingFinished = lastMessage?.role === "assistant" && lastMessage?.finished;
+
+    if (shouldAutoScroll.current) {
+      scrollToBottom();
+    }
+
+    // Once streaming finishes, re-enable auto-scroll so the next message scrolls down
+    if (streamingFinished) {
+      shouldAutoScroll.current = true;
+    }
+  }, [messages]);
 
   return (
-    <div className="flex-1 lg:overflow-y-auto">
+    <div ref={containerRef} onScroll={handleScroll} className="flex-1 lg:overflow-y-auto relative">
       <div className="p-4 max-w-4xl mx-auto">
         {/* Essay Wizard */}
         {showEssayWizard && (
@@ -176,6 +209,7 @@ export default function ChatMessages({
                       {message.role === "assistant" ? isStreamingAssistant ? (
                         <div aria-hidden="true">
                           <MessageLeft
+                            id={message.id}
                             message={message.content}
                             displayName={
                               message.sender === "ChatGPT" ? "Papyrus" : message.sender
@@ -204,6 +238,7 @@ export default function ChatMessages({
                         </div>
                       ) : (
                         <MessageLeft
+                          id={message.id}
                           message={message.content}
                           displayName={
                             message.sender === "ChatGPT" ? "Papyrus" : message.sender
@@ -231,6 +266,7 @@ export default function ChatMessages({
                         />
                       ) : !moduleInfo.showInitialPrompt && message.promptId ? null : (
                         <MessageRight
+                          id={message.id}
                           message={message.content}
                           displayName={viewUser?.name}
                           messageType={message.messageType}
@@ -249,7 +285,7 @@ export default function ChatMessages({
 
                 {/* Typing Indicator */}
                 {showTypingIndicator && (
-                  <MessageLeft message={""} displayName={"Papyrus"} typing />
+                  <MessageLeft id={""} message={""} displayName={"Papyrus"} typing />
                 )}
 
                 {/* screen reader announcement  */}
@@ -297,6 +333,23 @@ export default function ChatMessages({
         {/* Scroll anchor */}
         <div ref={messagesEndRef} className="h-1" />
       </div>
+
+      {/* Scroll to bottom button */}
+      {isScrolledUp && (
+        <Button
+          onClick={() => {
+            shouldAutoScroll.current = true;
+            setIsScrolledUp(false);
+            scrollToBottom();
+          }}
+          variant="outline"
+          aria-label="Scroll to bottom"
+          className="sticky bottom-4 float-right mr-4 "
+          size="icon"
+        >
+          <ArrowDown className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }

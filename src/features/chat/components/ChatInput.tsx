@@ -6,10 +6,13 @@ import { Send, Paperclip, Mic, AlertCircle } from "lucide-react";
 import { removeSpecialCharacters } from "../../../utility/Helpers";
 import { AutosizeTextarea } from '../../../components/ui/autosize-textarea';
 import { useTranslation } from "../../../hooks/useTranslation";
+import Post from "../../../utility/Post";
+import { logEvent } from "../../../utility/endpoints/UserEndpoints";
 
 interface ChatInputProps {
   isConnected: boolean;
   isLoading: boolean;
+  isNewChat: boolean;
   chatError?: string;
   onSubmit: (message: string) => void;
   onOpenDocumentModal: () => void;
@@ -20,6 +23,7 @@ interface ChatInputProps {
 export default function ChatInput({
   isConnected,
   isLoading,
+  isNewChat,
   chatError,
   onSubmit,
   onOpenDocumentModal,
@@ -32,7 +36,7 @@ export default function ChatInput({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!message.trim() || disabled || !isConnected) return;
+    if (!message.trim() || (!isNewChat && (disabled || !isConnected))) return;
 
     if (message.length > 100000) {
       return;
@@ -43,6 +47,17 @@ export default function ChatInput({
   };
 
   const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (e.target.value.length - message.length > 1) {
+      //log action
+      Post(logEvent(), {
+        eventType: "client_action",
+        metadata: {
+          action: "text_pasted",
+          page: "chat",
+          textLength: e.target.value.length
+        }
+      })
+    }
     if (e.target.value.length < 100000) {
       setMessage(removeSpecialCharacters(e.target.value));
     }
@@ -58,7 +73,7 @@ export default function ChatInput({
     }
   };
 
-  if (!isConnected || disabled) {
+  if (!isNewChat && (!isConnected || disabled)) {
     return null;
   }
 

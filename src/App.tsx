@@ -13,6 +13,7 @@ import "./fonts/OpenSans/OpenSans-Regular.ttf";
 // import Registration from "./features/authentication/Registration";
 // import ForgotPassword from "./features/authentication/ForgotPassword";
 import Chat from "./features/chat/Chat";
+import ChatLayout from "./features/chat/ChatLayout";
 import Reports from "./features/reports/Reports";
 import Courses from "./features/course-groups/Courses";
 import CreateCourse from "./features/course-groups/CreateCourse";
@@ -33,7 +34,7 @@ import AllModules from "./features/modules/AllModules";
 import UserReports from "./features/reports/UserReports";
 import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
-import { changeTheme } from "./utility/Themes";
+import { applyUserSettings, normalizeUserSettings } from "./utility/Themes";
 import Library from "./features/library/Library";
 import ViewFolder from "./features/library/ViewFolder";
 import OldEditPrompt from "./features/prompts/EditPrompt";
@@ -48,8 +49,8 @@ import ModuleReports from "./features/reports/ModuleReports";
 import CourseReports from "./features/reports/CourseReports";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
-import { changeLanguage } from "./i18n";
 import { useTranslation } from "./hooks/useTranslation";
+import { v4 as uuidv4 } from "uuid";
 
 function App(): JSX.Element {
   const { t } = useTranslation();
@@ -72,39 +73,43 @@ function App(): JSX.Element {
   const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
 
   useEffect(() => {
-    const root = document.documentElement;
     if (user) {
-      const userTheme = user["custom:theme"] ? user["custom:theme"] : "light";
-      changeTheme(root, userTheme);
-
-      const userTextSize = user["custom:textSize"]
-        ? user["custom:textSize"]
-        : "md";
-      root.setAttribute("data-text-size", userTextSize);
-
-      // Initialize language preference
-      const userLanguage = user["custom:language"];
-      const languageCode = userLanguage === "spanish" ? "es" : "en";
-      changeLanguage(languageCode);
-      // Set HTML lang attribute
-      document.documentElement.setAttribute("lang", languageCode);
+      applyUserSettings(normalizeUserSettings(user));
     }
   }, [user]);
 
   useEffect(() => {
     //Timeout so that login can possibly get token and save before this check
     setTimeout(() => {
+      // Let Login.tsx handle everything when we're on the /login route.
+      // Running auth logic here in parallel might be causing a race condition where
+      // a transient 5xx from the backend would nuke the token and redirect
+      // to Cognito, creating an infinite loop.
+      if (
+        window.location.pathname === "/login" ||
+        window.location.pathname === "/login/" ||
+        window.location.pathname === "/login-error" ||
+        sessionStorage.getItem("papyrusai_login_in_progress") === "true"
+      ) {
+        console.log("[app] skipping auth check — Login.tsx is handling it (path:", window.location.pathname, ")")
+        return;
+      }
+
       // Check if we have an access token, if not, redirect to aws cognito login page
       if (!localStorage.getItem("papyrusai_access_token") && !user) {
+        console.log("app, no local, no user")
         if (
           navigator.userAgent.indexOf("Chrome") < 0 &&
           navigator.userAgent.indexOf("Safari") > -1
         ) {
           //do nothing here if on safari (or it creates a weird loop)
+          console.log("do nothing?")
         } else {
+          console.log("app redirect")
           window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
         }
       } else if (localStorage.getItem("papyrusai_access_token") && !user) {
+        console.log("app, yes local, no user")
         // get user's most update-to-date info
         //If access denied, then update the access token
         Get(getUserData()).then((res) => {
@@ -124,7 +129,12 @@ function App(): JSX.Element {
                 setShowUpdateUserInfoModal(true);
               }
             }
+          } else if (res && res.status && res.status >= 500) {
+            // server error — don't blow away the token, it might still be valid.
+            // just log it and let the user retry naturally.
+            console.error("[app] server error fetching user data (keeping token), status:", res.status)
           } else {
+            console.log("app error getting user data, redirecting")
             //remove user data
             localStorage.removeItem("papyrusai_access_token");
             localStorage.removeItem("papyrusai_user");
@@ -144,6 +154,16 @@ function App(): JSX.Element {
     }, 500);
 
   }, [user]);
+
+  //create a session id that gets sent with every request or log so we can track 
+  // which user did what. save in local so it is the same across tabs
+  useEffect(() => {
+    let sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) {
+      sessionId = uuidv4();
+      localStorage.setItem("sessionId", sessionId);
+    }
+  }, [])
 
   //handle log out
   function handleLogOut() {
@@ -180,7 +200,7 @@ function App(): JSX.Element {
                 open={showUpdateUserInfoModal}
                 onOpenChange={() => { }}
                 title={t("dashboard.missingDetails")}
-                contentClassName="sm:max-w-md [&>button]:hidden"
+                contentClassName="sm:max-w-md max-h-[90vh] flex flex-col [&>button]:hidden"
                 actions={[
                   {
                     label: t("navigation.logout"),
@@ -190,21 +210,12 @@ function App(): JSX.Element {
                 ]}
                 footerClassName="w-full"
               >
-                <MissingUserInfoForm
-                  user={user ? user : undefined}
-                  closeForm={(updatedUser) => {
-                    //Set user with new information
-                    if (user) {
-                      setUser((prev) => {
-                        if (prev)
-                          return {
-                            ...prev,
-                            name: updatedUser.name,
-                            family_name: updatedUser.family_name,
-                          };
-                        else return null;
-                      });
-
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <MissingUserInfoForm
+                    user={user ? user : undefined}
+                    closeForm={(updatedUser) => {
+                      setUser(updatedUser);
+                      localStorage.setItem("papyrusai_user", JSON.stringify(updatedUser));
                       setShowUpdateUserInfoModal(false);
 
                       //Handle new user tutorial
@@ -212,17 +223,11 @@ function App(): JSX.Element {
                       introJs()
                         .setOptions({
                           steps: [
+                            { intro: t("dashboard.tutorial1") },
+                            { intro: t("dashboard.tutorial2") },
+                            { intro: t("dashboard.tutorial3") },
                             {
-                              intro: t("dashboard.tutorial1"),
-                            },
-                            {
-                              intro: t("dashboard.tutorial2"),
-                            },
-                            {
-                              intro: t("dashboard.tutorial3"),
-                            },
-                            {
-                              intro: user.groups.includes(
+                              intro: updatedUser.groups?.includes(
                                 process.env.REACT_APP_INSTRUCTOR
                                   ? process.env.REACT_APP_INSTRUCTOR
                                   : "PapyrusAIInstructors"
@@ -233,25 +238,9 @@ function App(): JSX.Element {
                           ],
                         })
                         .start();
-                    }
-                    if (
-                      localStorage.getItem("papyrusai_user") &&
-                      localStorage.getItem("papyrusai_user") !== null
-                    ) {
-                      var old = JSON.parse(
-                        localStorage.getItem("papyrusai_user") ?? ""
-                      );
-                      old.name = updatedUser.name;
-                      old.family_name = updatedUser.family_name;
-                      localStorage.setItem(
-                        "papyrusai_user",
-                        JSON.stringify(old)
-                      );
-                    }
-                    //then close modal
-                    setShowUpdateUserInfoModal(false);
-                  }}
-                />
+                    }}
+                  />
+                </div>
               </DialogWrapper>
               <Routes>
                 <Route
@@ -310,11 +299,12 @@ function App(): JSX.Element {
                 </Route>
 
                 <Route
-                  path="/chat/:id/:id/:id/:id"
+                  path="/chat/:username/:courseId/:moduleId"
                   element={<PrivateRoute user={user} />}
                 >
-                  {/* username/courseid/moduleid/conversation index  */}
-                  <Route path="/chat/:id/:id/:id/:id" element={<Chat />} />
+                  <Route element={<ChatLayout />}>
+                    <Route path=":conversationIndex" element={<Chat />} />
+                  </Route>
                 </Route>
 
                 <Route path="/account" element={<PrivateRoute user={user} />}>
@@ -379,13 +369,12 @@ function App(): JSX.Element {
                         />
                       </Route>
 
-                      {/* TODO change pathname  */}
                       <Route
-                        path="/dashboard/:id/:id"
+                        path="/reports/module/:id/:id"
                         element={<PrivateRoute user={user} />}
                       >
                         <Route
-                          path="/dashboard/:id/:id"
+                          path="/reports/module/:id/:id"
                           element={<ModuleReports />}
                         />
                       </Route>

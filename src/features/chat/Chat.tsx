@@ -1,24 +1,15 @@
-import React, { useEffect, useState, useCallback, useRef, useContext } from "react";
-import { Button } from "../../components/ui/button";
-import { Label } from "../../components/ui/label";
-import { Input } from "../../components/ui/input";
+import { useEffect, useState, useCallback, useRef, useContext } from "react";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import Get from "../../utility/Get";
 import {
   getConversation,
-  getConversationList,
   postAutoCreateConvoName,
   postCreateConversation,
-  postUpdateConversation,
 } from "../../utility/endpoints/ConversationEndpoints";
-import { getCourse } from "../../utility/endpoints/CourseEndpoints";
-import { ConversationListType, MessageType, StreamMessageType } from "../../utility/types/ConversationTypes";
-import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
+import { MessageType, StreamMessageType } from "../../utility/types/ConversationTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { UserContext } from "../../utility/context/UserContext";
-import { UserType } from "../../utility/types/UserTypes";
-import { getUserData } from "../../utility/endpoints/UserEndpoints";
 import DocumentModal from "./DocumentModal";
 import Post from "../../utility/Post";
 import SpeechToTextModal from "./SpeechToTextModal";
@@ -27,18 +18,41 @@ import SpeechToTextModal from "./SpeechToTextModal";
 import ChatHeader from "./components/ChatHeader";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
-import ChatSidebar from "./components/ChatSidebar";
 import { useTranslation } from "../../hooks/useTranslation";
+import { ChatContextType } from "./ChatContext";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
+import { downloadConversation } from "../../utility/chat/downloadConversation";
+
+function num_tokens_from_messages(messages: Array<any>) {
+  var num_tokens = 0;
+  messages.forEach((message: any) => {
+    num_tokens = num_tokens + Math.ceil(message["content"].length / 4);
+  });
+  return num_tokens;
+}
 
 export default function Chat(): JSX.Element {
-  const location = useLocation();
-  let navigator = useNavigate();
+  const {
+    courseInfo,
+    moduleInfo,
+    conversationList,
+    setConversationList,
+    viewUser,
+    instructor,
+    admin
+  } = useOutletContext<ChatContextType>();
+
   const { t } = useTranslation();
-  const [conversationIds, setConversationIds] = useState<{
-    courseId: string;
-    moduleId: string;
-    conversationIndex: string;
-  }>();
+  const location = useLocation();
+  const navigator = useNavigate();
+  const params = useParams(); // { username, courseId, moduleId, conversationIndex }
+
+  // Fallback if params are missing (shouldn't happen with new routing)
+  const courseId = params.courseId || "";
+  const moduleId = params.moduleId || "";
+  const conversationIndex = params.conversationIndex || "";
+  const username = params.username || "";
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const socket = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -46,41 +60,20 @@ export default function Chat(): JSX.Element {
   const messagesRef = useRef<Array<MessageType>>();
   messagesRef.current = messages;
   const currentStreamIdRef = useRef<string | null>(null);
-  const [courseInfo, setCourseInfo] = useState<CourseType>();
-  const [moduleInfo, setModuleInfo] = useState<ModuleType>();
+
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>();
   const [repeatingPrompts, setRepeatingPrompts] = useState<Array<string>>([]);
   const { setAlert } = useContext(AlertContext);
   const { user } = useContext(UserContext);
-  const [viewUser, setViewUser] = useState<UserType>();
+
   const [showTypingIndicator, setShowTypingIndicator] = useState<boolean>(false);
   const [showWizard, setShowWizard] = useState(false);
   const [chatError, setChatError] = useState<string | undefined>();
-  const [conversationList, setConversationList] = useState<ConversationListType>();
-  const [creatingConvo, setCreatingConvo] = useState<boolean>(false);
   const [messageNote, setMessageNote] = useState<string>();
-  const [openUpdateConvoModal, setOpenUpdateConvoModal] = useState<{
-    //used for autonaming also
-    open: boolean;
-    deleteOpen: boolean;
-    courseId: string;
-    moduleId: string;
-    index: string;
-    name: string;
-    isDeleted: boolean;
-    completed: boolean;
-    error: string;
-  }>({
-    open: false,
-    deleteOpen: false,
-    courseId: "",
-    moduleId: "",
-    index: "",
-    name: "",
-    isDeleted: false,
-    completed: false,
-    error: "",
-  });
+
+  const [conversationCompleted, setConversationCompleted] = useState<boolean>(false);
+  const [conversationIsDeleted, setConversationIsDeleted] = useState<boolean>(false);
+
   const [openDocumentModal, setOpenDocumentModal] = useState<boolean>(false);
   const [openSpeechToTextModal, setOpenSpeechToTextModal] = useState<boolean>(false);
   const [openErrorModal, setOpenErrorModal] = useState<{
@@ -90,165 +83,26 @@ export default function Chat(): JSX.Element {
     open: false,
     message: "",
   });
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
-  const [searchTerm, setSearchTerm] = useState<string>("");
 
-  const instructor = process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors";
-  const admin = process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin";
+  const [pendingMessageContent, setPendingMessageContent] = useState<string | null>(null);
+  const [pendingPromptId, setPendingPromptId] = useState<string | null>(null);
+
+  // Fix: Store the current event listener function to properly remove it
+  const socketListenerRef = useRef<((event: MessageEvent) => void) | null>(null);
 
   useEffect(() => {
-    setAlert({ message: "", type: "info" });
-
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
-      } else {
-        setSidebarOpen(false);
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        courseId: courseId,
+        moduleId: moduleId,
+        conversationIndex: conversationIndex,
+        page: "chat",
       }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      socket.current?.close();
-      setShowTypingIndicator(false);
-      window.removeEventListener("resize", handleResize);
-    };
+    })
     // eslint-disable-next-line
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    if (
-      location.pathname.split("/") &&
-      location.pathname.split("/")[2] &&
-      location.pathname.split("/")[3] &&
-      location.pathname.split("/")[4] &&
-      location.pathname.split("/")[5]
-    ) {
-      setConversationIds({
-        courseId: location.pathname.split("/")[3],
-        moduleId: location.pathname.split("/")[4],
-        conversationIndex: location.pathname.split("/")[5],
-      });
-      setIsLoading(true);
-
-      // Load user data
-      Get(getUserData(location.pathname.split("/")[2]), controller.signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            setViewUser(res.data);
-            if (user && user.username === res.data.username) {
-              onConnect(
-                location.pathname.split("/")[3],
-                location.pathname.split("/")[4],
-                location.pathname.split("/")[5]
-              );
-            }
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            setAlert({ message: t("errorMessage.userNotFound"), type: "error" });
-            navigator("/");
-          }
-        }
-      });
-
-      // Load course data
-      Get(getCourse(location.pathname.split("/")[3]), controller.signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            setCourseInfo(res.data);
-            setModuleInfo(res.data.modules.find((module: ModuleType) => module.id === location.pathname.split("/")[4]));
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res) {
-            setAlert({ message: t("errorMessage.courseNotFound"), type: "error" });
-            navigator("/");
-          }
-        }
-      });
-
-      // Load conversation list
-      Get(
-        getConversationList(location.pathname.split("/")[3], location.pathname.split("/")[4]),
-        controller.signal
-      ).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            setConversationList(res.data);
-          }
-        }
-      });
-
-      // Load conversation
-      Get(
-        getConversation(
-          location.pathname.split("/")[3],
-          location.pathname.split("/")[4],
-          location.pathname.split("/")[5],
-          location.pathname.split("/")[2]
-        ),
-        controller.signal
-      ).then((res: any) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data && res.data.messages) {
-            if (res.data.messages.length > 0) {
-              setSelectedPrompt("");
-            }
-            var sortedMessages = res.data.messages.sort(
-              (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp)
-            );
-            var contextCounter = 0;
-            var reverse = sortedMessages.map((message: MessageType) => {
-              contextCounter += num_tokens_from_messages([message]);
-              if (contextCounter < 64000) {
-                message["inContext"] = false;
-              } else {
-                message["inContext"] = true;
-              }
-              return message;
-            });
-            setMessages(reverse.reverse());
-          }
-          if (res.data && res.data.name) {
-            setOpenUpdateConvoModal({
-              open: false,
-              deleteOpen: false,
-              courseId: location.pathname.split("/")[3],
-              moduleId: location.pathname.split("/")[4],
-              index: location.pathname.split("/")[5],
-              name: res.data.name,
-              isDeleted: res.data.isDeleted,
-              completed: res.data.completed ? res.data.completed : false,
-              error: "",
-            });
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res && res.status === 400) {
-            setAlert({ message: t("errorMessage.convoNotFound"), type: "error" });
-            navigator(`/courses/${location.pathname.split("/")[3]}/modules/${location.pathname.split("/")[4]}`);
-          }
-        }
-        setIsLoading(false);
-      });
-    } else {
-      navigator("/courses");
-    }
-
-    return () => {
-      controller.abort();
-    };
-    // eslint-disable-next-line
-  }, [location]);
+  }, [conversationIndex])
 
   useEffect(() => {
     if (moduleInfo && moduleInfo.prompts && moduleInfo.prompts.length < 1) {
@@ -278,37 +132,28 @@ export default function Chat(): JSX.Element {
   }, [viewUser, user, moduleInfo, messages]);
 
   // WebSocket functions
-  function ping() {
+  const ping = useCallback(() => {
     if (isConnected) {
       setTimeout(() => {
         socket.current?.send(JSON.stringify({ action: "pong" }));
         ping();
       }, 120000);
     }
-  }
+  }, [isConnected]);
 
   useEffect(() => {
     if (isConnected) {
       ping();
     }
-    // eslint-disable-next-line
-  }, [isConnected]);
+  }, [isConnected, ping]);
 
   const onSocketOpen = useCallback(() => {
     setIsConnected(true);
   }, []);
 
   const onSocketClose = useCallback(() => {
-    // setIsConnected(false);
-    // if (user && viewUser && user.username === viewUser.username) {
-    //   onConnect(
-    //     location.pathname.split("/")[3],
-    //     location.pathname.split("/")[4],
-    //     location.pathname.split("/")[5]
-    //   );
-    // }
-    // eslint-disable-next-line
-  }, [location.pathname, user, viewUser]);
+    // Logic for reconnecting is  now handled by dependency on params
+  }, []);
 
   const onSocketMessage = useCallback(
     (dataStr: string) => {
@@ -366,11 +211,12 @@ export default function Chat(): JSX.Element {
 
           if (shouldAppendToExisting) {
             setMessages((prev) => {
-              if (prev && messagesRef.current) {
-                var temp = [...messagesRef.current];
-                if (temp[temp.length - 1].stream) {
-                  temp[temp.length - 1].stream?.push(returnMessage);
-                  const stream = temp[temp.length - 1].stream || [];
+              if (prev.length > 0) {
+                var temp = [...prev];
+                const lastMsg = temp[temp.length - 1];
+                if (lastMsg.stream) {
+                  lastMsg.stream.push(returnMessage);
+                  const stream = lastMsg.stream || [];
                   const filteredArray: StreamMessageType[] = stream.filter(
                     (obj, index, self) =>
                       index === self.findIndex((t) => t.timestamp === obj.timestamp && t.message === obj.message)
@@ -379,7 +225,11 @@ export default function Chat(): JSX.Element {
                     .sort((a, b) => a.timestamp - b.timestamp)
                     .map((m) => m.message)
                     .join("");
-                  temp[temp.length - 1].content = reconstructed || temp[temp.length - 1].content;
+                  temp[temp.length - 1] = {
+                    ...lastMsg,
+                    content: reconstructed || lastMsg.content,
+                    stream: stream
+                  };
                 }
                 return temp;
               } else return prev;
@@ -411,13 +261,22 @@ export default function Chat(): JSX.Element {
           // Clear the stream ID when finished
           currentStreamIdRef.current = null;
           setMessages((prev) => {
-            if (prev && messagesRef.current) {
-              var temp = [...messagesRef.current];
-              temp[temp.length - 1].content = returnMessage.message;
+            if (prev.length > 0) {
+              var temp = [...prev];
+              const lastIndex = temp.length - 1;
+              const lastMsg = temp[lastIndex];
+
+              var newMsgSource = lastMsg.sources;
               if (returnMessage.sources && returnMessage.sources.sources) {
-                temp[temp.length - 1].sources = returnMessage.sources.sources;
+                newMsgSource = returnMessage.sources.sources;
               }
-              temp[temp.length - 1].finished = true;
+
+              temp[lastIndex] = {
+                ...lastMsg,
+                content: returnMessage.message,
+                sources: newMsgSource,
+                finished: true
+              };
               return temp;
             } else return prev;
           });
@@ -425,7 +284,7 @@ export default function Chat(): JSX.Element {
       } else {
         setOpenErrorModal({ open: true, message: returnData.data });
         if (returnData.status === 400) {
-          setOpenUpdateConvoModal((prev) => ({ ...prev, completed: true }));
+          setConversationCompleted(true);
         }
       }
     },
@@ -433,39 +292,138 @@ export default function Chat(): JSX.Element {
   );
 
   const onConnect = useCallback(
-    (courseId: string, moduleId: string, conversationIndex: string) => {
-      if (socket.current?.readyState !== WebSocket.OPEN && process.env.REACT_APP_WEBSOCKET_URL) {
+    (cId: string, mId: string, idx: string) => {
+      if (process.env.REACT_APP_WEBSOCKET_URL) {
+
+        if (socket.current && (socket.current.readyState === WebSocket.OPEN || socket.current.readyState === WebSocket.CONNECTING)) {
+          closeSocket();
+        }
+        let sessionId = localStorage.getItem("sessionId") ?? "unknown";
+
         var URL = process.env.REACT_APP_WEBSOCKET_URL;
         URL = URL + `?token=${localStorage.getItem("papyrusai_access_token")}`;
         URL =
           URL +
-          `&courseId=${courseId}&moduleId=${moduleId}&index=${conversationIndex}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+          `&courseId=${cId}&moduleId=${mId}&index=${idx}&organization=${process.env.REACT_APP_ORGANIZATION}&sessionId=${sessionId}`;
+
         socket.current = new WebSocket(URL);
         socket.current.addEventListener("open", onSocketOpen);
         socket.current.addEventListener("close", onSocketClose);
-        socket.current.addEventListener("message", (event) => {
+
+        // Define the listener wrapper and store it ref
+        const messageListener = (event: MessageEvent) => {
           onSocketMessage(event.data);
-        });
+        };
+        socketListenerRef.current = messageListener;
+        socket.current.addEventListener("message", messageListener);
       }
     },
-    [onSocketClose, onSocketMessage, onSocketOpen]
+    [onSocketClose, onSocketMessage, onSocketOpen] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const closeSocket = useCallback(() => {
     if (socket.current) {
       socket.current.removeEventListener("open", onSocketOpen);
       socket.current.removeEventListener("close", onSocketClose);
-      socket.current.removeEventListener("message", (event) => {
-        onSocketMessage(event.data);
-      });
+
+      // Use the stored ref to remove the exact listener function
+      if (socketListenerRef.current) {
+        socket.current.removeEventListener("message", socketListenerRef.current);
+        socketListenerRef.current = null;
+      }
 
       if (socket.current.readyState === WebSocket.OPEN || socket.current.readyState === WebSocket.CONNECTING) {
         socket.current.close(1000, "Reconnecting with new port");
       }
 
       socket.current = null;
+      setIsConnected(false);
     }
-  }, [onSocketOpen, onSocketClose, onSocketMessage]);
+  }, [onSocketOpen, onSocketClose]);
+
+  useEffect(() => {
+    setAlert({ message: "", type: "info" });
+    return () => {
+      // Ensure socket is closed on unmount
+      closeSocket();
+      setShowTypingIndicator(false);
+    };
+    // eslint-disable-next-line
+  }, [closeSocket, setAlert]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    if (username && courseId && moduleId && conversationIndex) {
+      setIsLoading(true);
+
+      if (user && user.username === username) {
+        onConnect(courseId, moduleId, conversationIndex);
+      }
+
+      if (conversationIndex === "new") {
+        setMessages([]);
+        setSelectedPrompt("");
+        setIsLoading(false);
+        setConversationCompleted(false);
+        setConversationIsDeleted(false);
+      } else {
+        Get(
+          getConversation(
+            courseId,
+            moduleId,
+            conversationIndex,
+            username
+          ),
+          controller.signal
+        ).then((res: any) => {
+          if (res && res.status && res.status < 300) {
+            if (res.data && res.data.messages) {
+              if (res.data.messages.length > 0) {
+                setSelectedPrompt("");
+              }
+              var sortedMessages = res.data.messages.sort(
+                (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp)
+              );
+              var contextCounter = 0;
+              var reverse = sortedMessages.map((message: MessageType) => {
+                contextCounter += num_tokens_from_messages([message]);
+                if (contextCounter < 64000) {
+                  message["inContext"] = false;
+                } else {
+                  message["inContext"] = true;
+                }
+                return message;
+              });
+              setMessages(reverse.reverse());
+            }
+            if (res.data) {
+              setConversationCompleted(res.data.completed ? res.data.completed : false);
+              setConversationIsDeleted(res.data.isDeleted ? res.data.isDeleted : false);
+            }
+            if (location.state && location.state.pendingMessageContent) {
+              setPendingMessageContent(location.state.pendingMessageContent);
+              setPendingPromptId(location.state.pendingPromptId || null);
+              window.history.replaceState({}, "");
+            }
+          } else if (res && res.status === 401) {
+            navigator("/login");
+          } else {
+            if (res && res.status === 400) {
+              setAlert({ message: t("errorMessage.convoNotFound"), type: "error" });
+              navigator(`/courses/${courseId}/modules/${moduleId}`);
+            }
+          }
+          setIsLoading(false);
+        });
+      }
+    }
+    return () => {
+      controller.abort();
+      closeSocket();
+    };
+    // eslint-disable-next-line
+  }, [conversationIndex, courseId, moduleId, username, location.state, onConnect, closeSocket, navigator, t, setAlert, setConversationList]);
 
   const onSendMessage = useCallback(
     (messageList: Array<MessageType>, autoCreateConvoName: any) => {
@@ -497,11 +455,13 @@ export default function Chat(): JSX.Element {
           }
         });
 
+        let sessionId = localStorage.getItem("sessionId") ?? "unknown";
         socket.current?.send(
           JSON.stringify({
             action: "sendMessage",
             messages: messagesToSend,
             organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
+            sessionId: sessionId
           })
         );
         setShowTypingIndicator(true);
@@ -532,10 +492,12 @@ export default function Chat(): JSX.Element {
         } else if (essay.length < 750) {
           setChatError(t("chat.messageTooShort"));
         } else {
+          let sessionId = localStorage.getItem("sessionId") ?? "unknown";
           var sendEssay: any = {
             action: "raterEssay",
             essay: essay,
             organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
+            sessionId: sessionId
           };
           if (message) {
             sendEssay["message"] = message;
@@ -553,38 +515,81 @@ export default function Chat(): JSX.Element {
     [isConnected, t]
   );
 
-  function num_tokens_from_messages(messages: Array<any>) {
-    var num_tokens = 0;
-    messages.forEach((message) => {
-      num_tokens = num_tokens + Math.ceil(message["content"].length / 4);
-    });
-    return num_tokens;
-  }
+  useEffect(() => {
+    if (isConnected && pendingMessageContent && conversationIndex !== "new") {
+      const tempTimestamp = Date.now();
+      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+      var responseMessage: MessageType = {
+        id: tempTimestamp.toString(),
+        content: pendingMessageContent,
+        messageType: pendingMessageContent.length < 1000 ? "text" : "file",
+        role: "user",
+        sender: "username",
+        timestamp: messageTempId,
+        promptId: pendingPromptId,
+        userVisible: true,
+      };
+      onSendMessage([responseMessage], autoCreateConvoName);
+      setPendingMessageContent(null);
+      setPendingPromptId(null);
+    }
+  }, [isConnected, pendingMessageContent, conversationIndex, pendingPromptId, onSendMessage]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
 
   // Event handlers
   function handleSubmit(message: string) {
     setIsLoading(true);
     setChatError(undefined);
-    if (message.length < 100000 && message.length > 0) {
-      const tempTimestamp = Date.now();
-      const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
-      var responseMessage: MessageType = {
-        id: tempTimestamp.toString(),
-        content: message,
-        messageType: message.length < 1000 ? "text" : "file",
-        role: "user",
-        sender: "username",
-        timestamp: messageTempId,
-        promptId: null,
-        userVisible: true,
-      };
-      onSendMessage([responseMessage], autoCreateConvoName);
-    } else if (message.length < 1) {
-      setChatError(t("chat.messageTooShort"));
+
+    if (conversationIndex === "new") {
+      if (message.length < 1 && message.length > 0) {
+        setChatError(t("chat.messageTooShort"));
+        setIsLoading(false);
+        return;
+      }
+      // Create new conversation
+      Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data && res.data.conversations) {
+            const newIndex = res.data.conversations.length - 1;
+
+            // Update conversation list in Context
+            setConversationList(res.data);
+
+            // Navigate to the new conversation and pass the message in state
+            navigator(
+              `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
+              { state: { pendingMessageContent: message, pendingPromptId: null } }
+            );
+          }
+        } else {
+          setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
+          setIsLoading(false);
+        }
+      });
     } else {
-      setChatError(t("chat.messageTooLong"));
+      if (message.length < 100000 && message.length > 0) {
+        const tempTimestamp = Date.now();
+        const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
+        var responseMessage: MessageType = {
+          id: tempTimestamp.toString(),
+          content: message,
+          messageType: message.length < 1000 ? "text" : "file",
+          role: "user",
+          sender: "username",
+          timestamp: messageTempId,
+          promptId: null,
+          userVisible: true,
+        };
+        onSendMessage([responseMessage], autoCreateConvoName);
+      } else if (message.length < 1) {
+        setChatError(t("chat.messageTooShort"));
+      } else {
+        setChatError(t("chat.messageTooLong"));
+      }
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   function autoCreateConvoName(messages: Array<{ role: string; content: string }>) {
@@ -594,9 +599,9 @@ export default function Chat(): JSX.Element {
       setTimeout(() => {
         Post(
           postAutoCreateConvoName(
-            openUpdateConvoModal.courseId,
-            openUpdateConvoModal.moduleId,
-            openUpdateConvoModal.index.toString(),
+            courseId,
+            moduleId,
+            conversationIndex.toString(),
             user?.username
           ),
           { messages: messages }
@@ -606,24 +611,14 @@ export default function Chat(): JSX.Element {
               //update conversation list with new convo name
               setConversationList((prev) => {
                 if (prev) {
-                  var convos = prev.conversations;
-                  const index = parseInt(conversationIds ? conversationIds.conversationIndex : "");
-                  convos[index].name = res.data.conversations[index].name;
+                  var convos = [...prev.conversations];
+                  const index = parseInt(conversationIndex);
+                  // Ensure we don't crash if index out of bounds, though it shouldn't be
+                  if (convos[index] && /^Conversation \d+$/i.test(convos[index].name)) {
+                    convos[index].name = res.data.conversations[index].name;
+                  }
                   return { ...prev, conversations: convos };
                 } else return prev;
-              });
-              setOpenUpdateConvoModal({
-                open: false,
-                deleteOpen: false,
-                courseId: location.pathname.split("/")[3],
-                moduleId: location.pathname.split("/")[4],
-                index: location.pathname.split("/")[5],
-                name: res.data.conversations[location.pathname.split("/")[5]].name,
-                isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
-                completed: res.data.conversations[location.pathname.split("/")[5]].completed
-                  ? res.data.conversations[location.pathname.split("/")[5]].completed
-                  : false,
-                error: "",
               });
             }
           } else if (res && res.status === 401) {
@@ -643,9 +638,36 @@ export default function Chat(): JSX.Element {
     setSelectedPrompt(selectedPrompt);
     setRepeatingPrompts([selectedPrompt]);
     if (courseInfo && moduleInfo) {
-      var messagesToSend = [];
       if (moduleInfo.prompts.length !== 0) {
         const actualPrompt = moduleInfo.prompts.filter((x) => x.id === selectedPrompt);
+
+        if (conversationIndex === "new") {
+          const promptContent = actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "";
+          if (!promptContent) return;
+
+          setIsLoading(true);
+          Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
+            if (res && res.status && res.status < 300) {
+              if (res.data && res.data.conversations) {
+                const newIndex = res.data.conversations.length - 1;
+
+                // Update Conversation List in Context
+                setConversationList(res.data);
+
+                navigator(
+                  `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
+                  { state: { pendingMessageContent: promptContent, pendingPromptId: actualPrompt[0].id } }
+                );
+              }
+            } else {
+              setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
+              setIsLoading(false);
+            }
+          });
+          return;
+        }
+
+        var messagesToSend = [];
         const tempTimestamp = Date.now();
         const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
         var responseMessage: MessageType = {
@@ -659,8 +681,8 @@ export default function Chat(): JSX.Element {
           promptId: actualPrompt[0].id,
         };
         messagesToSend.unshift(responseMessage);
+        onSendMessage(messagesToSend, autoCreateConvoName);
       }
-      onSendMessage(messagesToSend, autoCreateConvoName);
     }
   }
 
@@ -716,38 +738,90 @@ export default function Chat(): JSX.Element {
     setIsLoading(false);
   }
 
-  function handleNewConversation() {
-    if (conversationIds) {
-      setCreatingConvo(true);
-      Post(postCreateConversation(conversationIds.courseId, conversationIds.moduleId), {}).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            setCreatingConvo(false);
-            setConversationList(res.data);
-            if (res.data.conversations) {
-              closeSocket();
-              navigator(
-                `/chat/${user?.username}/${conversationIds.courseId}/${conversationIds.moduleId}/${
-                  res.data.conversations.length - 1
-                }`
-              );
-            }
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          setAlert({
-            message: `${t("errorMessage.genericError")}`,
-            type: "error",
+  function handleDownloadConversation() {
+    if (
+      !courseInfo ||
+      !moduleInfo ||
+      !viewUser ||
+      !user ||
+      !courseId ||
+      !moduleId ||
+      !conversationIndex ||
+      conversationIndex === "new"
+    ) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    Get(
+      getConversation(courseId, moduleId, conversationIndex, viewUser.username),
+      controller.signal
+    ).then((res: any) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data.messages) {
+          const isInstructor =
+            user.groups.includes(instructor) || user.groups.includes(admin);
+          downloadConversation({
+            courseInfo,
+            moduleInfo,
+            user,
+            viewUser,
+            messages: res.data.messages,
+            conversationIndex,
+            isInstructor,
           });
         }
-        setCreatingConvo(false);
-      });
-    }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        setOpenErrorModal({
+          open: true,
+          message: t("errorMessage.downloadConversation"),
+        });
+      }
+    });
+  }
+
+  function handleNewConversation() {
+
+    closeSocket();
+    navigator(
+      `/chat/${username}/${courseId}/${moduleId}/new`
+    );
   }
 
   function returnDocText(docText: string) {
     setOpenDocumentModal(false);
+
+    if (conversationIndex === "new") {
+      if (docText.length < 1 && docText.length > 0) {
+        setChatError(t("chat.messageTooShort"));
+        return;
+      }
+      setIsLoading(true);
+      // Create new conversation
+      Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data && res.data.conversations) {
+            const newIndex = res.data.conversations.length - 1;
+
+            setConversationList(res.data);
+
+            // Navigate to the new conversation and pass the message in state
+            navigator(
+              `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
+              { state: { pendingMessageContent: docText, pendingPromptId: null } }
+            );
+          }
+        } else {
+          setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
+          setIsLoading(false);
+        }
+      });
+      return;
+    }
+
     if (docText.length < 100000 && docText.length > 0) {
       const tempTimestamp = Date.now();
       const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
@@ -790,206 +864,27 @@ export default function Chat(): JSX.Element {
     }
   }
 
-  // Handlers for sidebar conversation actions
-  function handleRenameConversation(courseId: string, moduleId: string, index: string, name: string) {
-    setOpenUpdateConvoModal({
-      open: true,
-      deleteOpen: false,
-      courseId,
-      moduleId,
-      index,
-      name,
-      isDeleted: false,
-      completed: false,
-      error: "",
-    });
-  }
+  const conversationArchived = conversationIsDeleted;
 
-  function handleArchiveConversation(courseId: string, moduleId: string, index: string) {
-    setOpenUpdateConvoModal((prev) => ({
-      ...prev,
-      deleteOpen: true,
-      courseId: courseId,
-      moduleId: moduleId,
-      index: index,
-    }));
-  }
 
-  function handleDownloadConversation(courseId: string, moduleId: string, index: string) {
-    if (!courseInfo || !moduleInfo || !viewUser || !user) return;
+  const currentConvoName = conversationList && conversationIndex !== "new" && conversationList.conversations[parseInt(conversationIndex)]
+    ? conversationList.conversations[parseInt(conversationIndex)].name
+    : t("chat.newConversation");
 
-    setIsLoading(true);
-    const controller = new AbortController();
-
-    Get(getConversation(courseId, moduleId, index, viewUser.username), controller.signal).then((res: any) => {
-      if (res && res.status && res.status < 300) {
-        if (res.data && res.data.messages) {
-          const conversationMessages = res.data.messages.sort(
-            (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp)
-          );
-          const sortedMessages = conversationMessages.reverse();
-
-          var fileData =
-            courseInfo.name +
-            "\n" +
-            moduleInfo.name +
-            "\n" +
-            courseInfo.instructor.name +
-            " " +
-            courseInfo.instructor.family_name +
-            "\n";
-          if (user) {
-            fileData += "User: " + user.email + "\n";
-          }
-          const isInstructor = user && (user.groups.includes(admin) || user.groups.includes(instructor));
-          sortedMessages.forEach((message: MessageType, index: number) => {
-            if (!moduleInfo.showInitialPrompt && index === 0 && !isInstructor) {
-            } else if (message.userVisible !== undefined && !message.userVisible && !isInstructor) {
-            } else {
-              var dateTime = new Date(parseInt(message.id.substring(0, 13), 10)).toLocaleString();
-              var sender = message.sender === "ChatGPT" ? "Papyrus" : viewUser.name + " " + viewUser.family_name;
-              fileData += sender + " - " + dateTime + "\n" + message.content + "\n\n";
-            }
-          });
-          const blob = new Blob([fileData], { type: "text/plain" });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.download = `${courseInfo.name}_${moduleInfo.name}_${user?.email}_conversation${index}.txt`;
-          link.href = url;
-          link.click();
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        setOpenErrorModal({
-          open: true,
-          message: t("errorMessage.downloadConversation"),
-        });
-      }
-      setIsLoading(false);
-    });
-  }
-
-  function handleConverstionNameDeleteUpdate(convoUpdateObject: {
-    open: boolean;
-    courseId: string;
-    moduleId: string;
-    index: string;
-    name: string;
-    isDeleted: boolean;
-    error: string;
-  }) {
-    if (convoUpdateObject.isDeleted) {
-      setIsLoading(true);
-      Post(
-        postUpdateConversation(
-          convoUpdateObject.courseId,
-          convoUpdateObject.moduleId,
-          convoUpdateObject.index.toString()
-        ),
-        { isDeleted: convoUpdateObject.isDeleted }
-      ).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            closeSocket();
-            setOpenUpdateConvoModal({
-              open: false,
-              deleteOpen: false,
-              courseId: location.pathname.split("/")[3],
-              moduleId: location.pathname.split("/")[4],
-              index: location.pathname.split("/")[5],
-              name: res.data.conversations[location.pathname.split("/")[5]].name,
-              isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
-              completed: res.data.conversations[location.pathname.split("/")[5]].completed
-                ? res.data.conversations[location.pathname.split("/")[5]].completed
-                : false,
-              error: "",
-            });
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          setOpenErrorModal({
-            open: true,
-            message: `${t("errorMessage.genericError")}`,
-          });
-        }
-        setIsLoading(false);
-      });
-    } else {
-      if (convoUpdateObject.name.length > 260) {
-        setOpenUpdateConvoModal((prev) => ({
-          ...prev,
-          error: t("errorMessage.nameTooLong"),
-        }));
-      } else if (convoUpdateObject.name.length === 0) {
-        setOpenUpdateConvoModal((prev) => ({
-          ...prev,
-          error: t("errorMessage.nameMissing"),
-        }));
-      } else {
-        setIsLoading(true);
-        Post(
-          postUpdateConversation(
-            convoUpdateObject.courseId,
-            convoUpdateObject.moduleId,
-            convoUpdateObject.index.toString()
-          ),
-          { name: convoUpdateObject.name }
-        ).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              // Update conversation list to reflect the new name
-              setConversationList(res.data);
-              setOpenUpdateConvoModal({
-                open: false,
-                deleteOpen: false,
-                courseId: location.pathname.split("/")[3],
-                moduleId: location.pathname.split("/")[4],
-                index: location.pathname.split("/")[5],
-                name: res.data.conversations[location.pathname.split("/")[5]].name,
-                isDeleted: res.data.conversations[location.pathname.split("/")[5]].isDeleted,
-                completed: res.data.conversations[location.pathname.split("/")[5]].completed
-                  ? res.data.conversations[location.pathname.split("/")[5]].completed
-                  : false,
-                error: "",
-              });
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setOpenErrorModal({
-              open: true,
-              message: `${t("errorMessage.genericError")}`,
-            });
-          }
-          setIsLoading(false);
-        });
-      }
-    }
-  }
-
-  const conversationArchived =
-    conversationList && conversationList?.conversations
-      ? conversationList.conversations.filter(
-          (_convo, index) => index.toString() === (conversationIds?.conversationIndex ?? 0)
-        )[0].isDeleted
-      : false;
 
   const isChatInputVisible =
-    isConnected &&
+    (isConnected || conversationIndex === "new") &&
     user &&
     viewUser &&
     user.username === viewUser.username &&
     selectedPrompt !== undefined &&
-    moduleInfo?.continuedInteraction &&
+    (moduleInfo?.continuedInteraction ?? true) &&
     !showWizard &&
-    !openUpdateConvoModal.completed &&
+    !conversationCompleted &&
     !conversationArchived;
 
-  return !isLoading && courseInfo && conversationIds && moduleInfo ? (
-    <div className="flex bg-background text-foreground">
-      {/* Error Modal */}
+  return (
+    <>
       <DialogWrapper
         open={openErrorModal.open}
         onOpenChange={(open) =>
@@ -1010,14 +905,9 @@ export default function Chat(): JSX.Element {
           },
         ]}
       >
-        <Button asChild onClick={() => setOpenErrorModal({ open: false, message: "" })}>
-          <Link to={`/courses/${courseInfo.id}/modules/${moduleInfo.id}`} className="no-underline">
-            {t("chat.backToConvoList")}
-          </Link>
-        </Button>
+        <div />
       </DialogWrapper>
 
-      {/* Document Modal */}
       <DialogWrapper
         open={openDocumentModal}
         onOpenChange={setOpenDocumentModal}
@@ -1034,7 +924,6 @@ export default function Chat(): JSX.Element {
         <DocumentModal returnDocText={returnDocText} />
       </DialogWrapper>
 
-      {/* Speech to Text Modal */}
       <DialogWrapper
         open={openSpeechToTextModal}
         onOpenChange={setOpenSpeechToTextModal}
@@ -1051,152 +940,70 @@ export default function Chat(): JSX.Element {
         <SpeechToTextModal returnSpeechText={returnSpeakingText} />
       </DialogWrapper>
 
-      {/* Delete Conversation Modal */}
-      <DialogWrapper
-        open={openUpdateConvoModal.deleteOpen}
-        onOpenChange={(open) => setOpenUpdateConvoModal((prev) => ({ ...prev, deleteOpen: open }))}
-        title={t("chat.archiveConversationQuestion")}
-        description={t("chat.archiveConversationDescription")}
-        contentClassName="sm:max-w-md"
-        footerClassName="flex-col gap-2 sm:flex-row"
-        actions={[
-          {
-            label: `${t("common.cancel")}`,
-            onClick: () =>
-              setOpenUpdateConvoModal((prev) => ({
-                ...prev,
-                deleteOpen: false,
-              })),
-            variant: "outline",
-          },
-          {
-            label: t("chat.archiveConversation"),
-            onClick: () =>
-              handleConverstionNameDeleteUpdate({
-                ...openUpdateConvoModal,
-                isDeleted: true,
-              }),
-            variant: "destructive",
-          },
-        ]}
-      />
-
-      {/* Rename Conversation Modal */}
-      <DialogWrapper
-        open={openUpdateConvoModal.open}
-        onOpenChange={(open) => setOpenUpdateConvoModal((prev) => ({ ...prev, open }))}
-        title={t("chat.renameConversation")}
-        contentClassName="sm:max-w-md"
-        actions={[
-          {
-            label: `${t("common.cancel")}`,
-            onClick: () => setOpenUpdateConvoModal((prev) => ({ ...prev, open: false })),
-            variant: "outline",
-          },
-          {
-            label: t("chat.submit"),
-            onClick: () => handleConverstionNameDeleteUpdate(openUpdateConvoModal),
-            disabled: isLoading,
-          },
-        ]}
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="conversation-name">{t("chat.conversationName")}</Label>
-            <Input
-              id="conversation-name"
-              name="name"
-              value={openUpdateConvoModal.name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setOpenUpdateConvoModal((prev) => ({
-                  ...prev,
-                  name: e.target.value,
-                }));
-              }}
-              className={openUpdateConvoModal.error ? "border-destructive" : ""}
-              disabled={isLoading}
-              autoFocus
-            />
-            {openUpdateConvoModal.error && <p className="text-sm text-destructive">{openUpdateConvoModal.error}</p>}
-          </div>
-        </div>
-      </DialogWrapper>
-
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0" style={sidebarOpen ? { height: "calc(100vh - 4rem)" } : {}}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ height: "calc(100vh - 4rem)" }}>
         {/* Chat Header */}
-        <ChatHeader
-          conversationName={openUpdateConvoModal.name || "Chat"}
-          courseInfo={courseInfo}
-          moduleInfo={moduleInfo}
-          user={user}
-          viewUser={viewUser}
-          onToggleSidebar={() => setSidebarOpen(true)}
-          isMobile={window.innerWidth < 1024}
-        />
+        {courseInfo && moduleInfo ? (
+          <ChatHeader
+            conversationName={currentConvoName}
+            courseInfo={courseInfo}
+            moduleInfo={moduleInfo}
+            user={user}
+            viewUser={viewUser}
+            onToggleSidebar={() => {
+
+              window.dispatchEvent(new CustomEvent('toggleSidebar'));
+            }}
+            isMobile={window.innerWidth < 1024}
+            onDownloadConversation={handleDownloadConversation}
+            canDownload={conversationIndex !== "new"}
+          />
+        ) : (
+          <div className="h-16 border-b border-border"></div>
+        )}
 
         {/* Chat Messages */}
-        <ChatMessages
-          messages={messages}
-          moduleInfo={moduleInfo}
-          user={user}
-          viewUser={viewUser}
-          showWizard={showWizard}
-          showTypingIndicator={showTypingIndicator}
-          messageNote={messageNote}
-          conversationCompleted={openUpdateConvoModal.completed}
-          instructor={instructor}
-          admin={admin}
-          conversationArchived={conversationArchived}
-          onWizardReturnPrompts={handleWizardReturnPrompts}
-          onWizardReturnEssay={handleWizardReturnEssay}
-          newConversation={handleNewConversation}
-        />
+        {courseInfo && moduleInfo && !isLoading ? (
+          <>
+            <ChatMessages
+              messages={messages}
+              moduleInfo={moduleInfo}
+              user={user}
+              viewUser={viewUser}
+              showWizard={showWizard}
+              showTypingIndicator={showTypingIndicator}
+              messageNote={messageNote}
+              conversationCompleted={conversationCompleted}
+              instructor={instructor}
+              admin={admin}
+              conversationArchived={conversationArchived}
+              onWizardReturnPrompts={handleWizardReturnPrompts}
+              onWizardReturnEssay={handleWizardReturnEssay}
+              newConversation={handleNewConversation}
+            />
 
-        {/* Chat Input */}
-        {isChatInputVisible && (
-          <ChatInput
-            isConnected={isConnected}
-            isLoading={isLoading}
-            chatError={chatError}
-            onSubmit={handleSubmit}
-            onOpenDocumentModal={() => setOpenDocumentModal(true)}
-            onOpenSpeechToTextModal={() => setOpenSpeechToTextModal(true)}
-          />
+            {/* Chat Input */}
+            {isChatInputVisible && (
+              <ChatInput
+                isConnected={isConnected}
+                isLoading={isLoading}
+                isNewChat={conversationIndex === "new"}
+                chatError={chatError}
+                onSubmit={handleSubmit}
+                onOpenDocumentModal={() => setOpenDocumentModal(true)}
+                onOpenSpeechToTextModal={() => setOpenSpeechToTextModal(true)}
+              />
+            )}
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground animate-pulse italic">
+              {t("loadingMessage.loadingConversation")}
+            </p>
+          </div>
         )}
       </div>
-
-      {/* Chat Sidebar */}
-      <ChatSidebar
-        courseInfo={courseInfo}
-        moduleInfo={moduleInfo}
-        user={user}
-        viewUser={viewUser}
-        conversationList={conversationList}
-        currentConversationIndex={conversationIds?.conversationIndex}
-        searchTerm={searchTerm}
-        creatingConvo={creatingConvo}
-        isOpen={sidebarOpen}
-        isMobile={window.innerWidth < 1024}
-        onSearchChange={setSearchTerm}
-        onNewConversation={handleNewConversation}
-        onConversationClick={(link) => {
-          closeSocket();
-          navigator(link);
-          if (window.innerWidth < 1024) setSidebarOpen(false);
-        }}
-        onRenameConversation={handleRenameConversation}
-        onArchiveConversation={handleArchiveConversation}
-        onDownloadConversation={handleDownloadConversation}
-        onClose={() => setSidebarOpen(false)}
-      />
-    </div>
-  ) : (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p className="text-sm text-muted-foreground">{t("loadingMessage.loadingConversation")}</p>
-      </div>
-    </div>
+    </>
   );
 }

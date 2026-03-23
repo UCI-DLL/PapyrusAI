@@ -10,11 +10,13 @@ See PapyrusAI in action at [papyrusai.org](https://www.papyrusai.org/)
 ## Setup
 create a .env file linking to your backend. 
 
-`REACT_APP_API_URL=
+```
+REACT_APP_API_URL=
 REACT_APP_WEBSOCKET_URL=
 REACT_APP_LOGIN_URL=
 REACT_APP_INSTRUCTOR=
-REACT_APP_ADMIN=`
+REACT_APP_ADMIN=
+```
 
 ### `npm install`
 install npm packages

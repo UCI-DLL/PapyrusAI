@@ -73,6 +73,16 @@ export default function MissingUserInfoForm({
   } | null>(null);
 
   useEffect(() => {
+    //log page
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: {
+        page: "missing_user_info_form",
+      }
+    })
+  }, [])
+
+  useEffect(() => {
     if (hasInitialized.current) return;
     if (!user) return;
 

@@ -770,7 +770,8 @@
     "fileNotSupportedDoc": "File is unsupported. Please upload TXT, PDF, or DOCX files only.",
     "processingFile": "Error processing file. Please try again.",
     "downloadConversation": "Could not download conversation. Try again later",
-    "ranIntoError": "We ran into an error!"
+    "ranIntoError": "We ran into an error!",
+    "networkError": "Network error: Unable to load reports. Please try again later."
   },
   "loadingMessage": {
     "loading": "Loading",

@@ -41,6 +41,7 @@ export default function Dashboard(): JSX.Element {
   const addCourseFormRef = useRef<AddCourseFormHandle>(null);
 
   useEffect(() => {
+    console.log("[dashboard] dashboard component mounted")
     const controller = new AbortController();
     if (!showAddCourseModal) {
       getCourses(controller.signal);
@@ -51,13 +52,12 @@ export default function Dashboard(): JSX.Element {
     Post(logEvent(), {
       eventType: "view_page",
       metadata: {
-        //courseId: courseId,
-        //moduleId: moduleId,
         page: "dashboard",
       }
     })
 
     return () => {
+      console.log("[dashboard] dashboard component unmounting")
       controller.abort();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

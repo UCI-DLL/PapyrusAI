@@ -770,7 +770,8 @@
     "fileNotSupportedDoc": "El archivo no es compatible. Solo se admiten archivos TXT, PDF o DOCX.",
     "processingFile": "Error al procesar el archivo. Inténtelo de nuevo.",
     "downloadConversation": "No se pudo descargar la conversación. Inténtelo de nuevo más tarde.",
-    "ranIntoError": "¡Se produjo un error!"
+    "ranIntoError": "¡Se produjo un error!",
+    "networkError": "Error de red: No se pudieron cargar los informes. Por favor, inténtelo de nuevo más tarde."
   },
   "loadingMessage": {
     "loading": "Cargando",

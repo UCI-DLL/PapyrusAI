@@ -32,15 +32,8 @@ function num_tokens_from_messages(messages: Array<any>) {
 }
 
 export default function Chat(): JSX.Element {
-  const {
-    courseInfo,
-    moduleInfo,
-    conversationList,
-    setConversationList,
-    viewUser,
-    instructor,
-    admin
-  } = useOutletContext<ChatContextType>();
+  const { courseInfo, moduleInfo, conversationList, setConversationList, viewUser, instructor, admin } =
+    useOutletContext<ChatContextType>();
 
   const { t } = useTranslation();
   const location = useLocation();
@@ -99,10 +92,10 @@ export default function Chat(): JSX.Element {
         moduleId: moduleId,
         conversationIndex: conversationIndex,
         page: "chat",
-      }
-    })
+      },
+    });
     // eslint-disable-next-line
-  }, [conversationIndex])
+  }, [conversationIndex]);
 
   useEffect(() => {
     if (moduleInfo && moduleInfo.prompts && moduleInfo.prompts.length < 1) {
@@ -219,7 +212,7 @@ export default function Chat(): JSX.Element {
                   const stream = lastMsg.stream || [];
                   const filteredArray: StreamMessageType[] = stream.filter(
                     (obj, index, self) =>
-                      index === self.findIndex((t) => t.timestamp === obj.timestamp && t.message === obj.message)
+                      index === self.findIndex((t) => t.timestamp === obj.timestamp && t.message === obj.message),
                   );
                   const reconstructed = filteredArray
                     .sort((a, b) => a.timestamp - b.timestamp)
@@ -228,7 +221,7 @@ export default function Chat(): JSX.Element {
                   temp[temp.length - 1] = {
                     ...lastMsg,
                     content: reconstructed || lastMsg.content,
-                    stream: stream
+                    stream: stream,
                   };
                 }
                 return temp;
@@ -275,7 +268,7 @@ export default function Chat(): JSX.Element {
                 ...lastMsg,
                 content: returnMessage.message,
                 sources: newMsgSource,
-                finished: true
+                finished: true,
               };
               return temp;
             } else return prev;
@@ -288,14 +281,16 @@ export default function Chat(): JSX.Element {
         }
       }
     },
-    [t]
+    [t],
   );
 
   const onConnect = useCallback(
     (cId: string, mId: string, idx: string) => {
       if (process.env.REACT_APP_WEBSOCKET_URL) {
-
-        if (socket.current && (socket.current.readyState === WebSocket.OPEN || socket.current.readyState === WebSocket.CONNECTING)) {
+        if (
+          socket.current &&
+          (socket.current.readyState === WebSocket.OPEN || socket.current.readyState === WebSocket.CONNECTING)
+        ) {
           closeSocket();
         }
         let sessionId = localStorage.getItem("sessionId") ?? "unknown";
@@ -318,7 +313,7 @@ export default function Chat(): JSX.Element {
         socket.current.addEventListener("message", messageListener);
       }
     },
-    [onSocketClose, onSocketMessage, onSocketOpen] // eslint-disable-line react-hooks/exhaustive-deps
+    [onSocketClose, onSocketMessage, onSocketOpen], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const closeSocket = useCallback(() => {
@@ -368,22 +363,14 @@ export default function Chat(): JSX.Element {
         setConversationCompleted(false);
         setConversationIsDeleted(false);
       } else {
-        Get(
-          getConversation(
-            courseId,
-            moduleId,
-            conversationIndex,
-            username
-          ),
-          controller.signal
-        ).then((res: any) => {
+        Get(getConversation(courseId, moduleId, conversationIndex, username), controller.signal).then((res: any) => {
           if (res && res.status && res.status < 300) {
             if (res.data && res.data.messages) {
               if (res.data.messages.length > 0) {
                 setSelectedPrompt("");
               }
               var sortedMessages = res.data.messages.sort(
-                (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp)
+                (a: MessageType, b: MessageType) => parseInt(b.timestamp) - parseInt(a.timestamp),
               );
               var contextCounter = 0;
               var reverse = sortedMessages.map((message: MessageType) => {
@@ -423,7 +410,19 @@ export default function Chat(): JSX.Element {
       closeSocket();
     };
     // eslint-disable-next-line
-  }, [conversationIndex, courseId, moduleId, username, location.state, onConnect, closeSocket, navigator, t, setAlert, setConversationList]);
+  }, [
+    conversationIndex,
+    courseId,
+    moduleId,
+    username,
+    location.state,
+    onConnect,
+    closeSocket,
+    navigator,
+    t,
+    setAlert,
+    setConversationList,
+  ]);
 
   const onSendMessage = useCallback(
     (messageList: Array<MessageType>, autoCreateConvoName: any) => {
@@ -461,8 +460,8 @@ export default function Chat(): JSX.Element {
             action: "sendMessage",
             messages: messagesToSend,
             organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
-            sessionId: sessionId
-          })
+            sessionId: sessionId,
+          }),
         );
         setShowTypingIndicator(true);
         if (
@@ -480,7 +479,7 @@ export default function Chat(): JSX.Element {
         });
       }
     },
-    [messages, isConnected, t]
+    [messages, isConnected, t],
   );
 
   const onSendEssay = useCallback(
@@ -497,7 +496,7 @@ export default function Chat(): JSX.Element {
             action: "raterEssay",
             essay: essay,
             organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
-            sessionId: sessionId
+            sessionId: sessionId,
           };
           if (message) {
             sendEssay["message"] = message;
@@ -512,7 +511,7 @@ export default function Chat(): JSX.Element {
         });
       }
     },
-    [isConnected, t]
+    [isConnected, t],
   );
 
   useEffect(() => {
@@ -535,8 +534,6 @@ export default function Chat(): JSX.Element {
     }
   }, [isConnected, pendingMessageContent, conversationIndex, pendingPromptId, onSendMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
-
-
   // Event handlers
   function handleSubmit(message: string) {
     setIsLoading(true);
@@ -558,10 +555,9 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
 
             // Navigate to the new conversation and pass the message in state
-            navigator(
-              `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
-              { state: { pendingMessageContent: message, pendingPromptId: null } }
-            );
+            navigator(`/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
+              state: { pendingMessageContent: message, pendingPromptId: null },
+            });
           }
         } else {
           setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
@@ -597,15 +593,9 @@ export default function Chat(): JSX.Element {
       //set a timeout so that we aren't updating the same conversation
       // on the backend at the same time and overwritting
       setTimeout(() => {
-        Post(
-          postAutoCreateConvoName(
-            courseId,
-            moduleId,
-            conversationIndex.toString(),
-            user?.username
-          ),
-          { messages: messages }
-        ).then((res) => {
+        Post(postAutoCreateConvoName(courseId, moduleId, conversationIndex.toString(), user?.username), {
+          messages: messages,
+        }).then((res) => {
           if (res && res.status && res.status < 300) {
             if (res.data) {
               //update conversation list with new convo name
@@ -614,7 +604,11 @@ export default function Chat(): JSX.Element {
                   var convos = [...prev.conversations];
                   const index = parseInt(conversationIndex);
                   // Ensure we don't crash if index out of bounds, though it shouldn't be
-                  if (convos[index] && /^Conversation \d+$/i.test(convos[index].name)) {
+                  if (
+                    convos[index] &&
+                    res.data.conversations[index] &&
+                    /^Conversation \d+$/i.test(convos[index].name)
+                  ) {
                     convos[index].name = res.data.conversations[index].name;
                   }
                   return { ...prev, conversations: convos };
@@ -654,10 +648,9 @@ export default function Chat(): JSX.Element {
                 // Update Conversation List in Context
                 setConversationList(res.data);
 
-                navigator(
-                  `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
-                  { state: { pendingMessageContent: promptContent, pendingPromptId: actualPrompt[0].id } }
-                );
+                navigator(`/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
+                  state: { pendingMessageContent: promptContent, pendingPromptId: actualPrompt[0].id },
+                });
               }
             } else {
               setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
@@ -754,41 +747,36 @@ export default function Chat(): JSX.Element {
 
     const controller = new AbortController();
 
-    Get(
-      getConversation(courseId, moduleId, conversationIndex, viewUser.username),
-      controller.signal
-    ).then((res: any) => {
-      if (res && res.status && res.status < 300) {
-        if (res.data && res.data.messages) {
-          const isInstructor =
-            user.groups.includes(instructor) || user.groups.includes(admin);
-          downloadConversation({
-            courseInfo,
-            moduleInfo,
-            user,
-            viewUser,
-            messages: res.data.messages,
-            conversationIndex,
-            isInstructor,
+    Get(getConversation(courseId, moduleId, conversationIndex, viewUser.username), controller.signal).then(
+      (res: any) => {
+        if (res && res.status && res.status < 300) {
+          if (res.data && res.data.messages) {
+            const isInstructor = user.groups.includes(instructor) || user.groups.includes(admin);
+            downloadConversation({
+              courseInfo,
+              moduleInfo,
+              user,
+              viewUser,
+              messages: res.data.messages,
+              conversationIndex,
+              isInstructor,
+            });
+          }
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else {
+          setOpenErrorModal({
+            open: true,
+            message: t("errorMessage.downloadConversation"),
           });
         }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        setOpenErrorModal({
-          open: true,
-          message: t("errorMessage.downloadConversation"),
-        });
-      }
-    });
+      },
+    );
   }
 
   function handleNewConversation() {
-
     closeSocket();
-    navigator(
-      `/chat/${username}/${courseId}/${moduleId}/new`
-    );
+    navigator(`/chat/${username}/${courseId}/${moduleId}/new`);
   }
 
   function returnDocText(docText: string) {
@@ -809,10 +797,9 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
 
             // Navigate to the new conversation and pass the message in state
-            navigator(
-              `/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`,
-              { state: { pendingMessageContent: docText, pendingPromptId: null } }
-            );
+            navigator(`/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
+              state: { pendingMessageContent: docText, pendingPromptId: null },
+            });
           }
         } else {
           setAlert({ message: `${t("errorMessage.genericError")}`, type: "error" });
@@ -866,11 +853,7 @@ export default function Chat(): JSX.Element {
 
   const conversationArchived = conversationIsDeleted;
 
-
-  const currentConvoName = conversationList && conversationIndex !== "new" && conversationList.conversations[parseInt(conversationIndex)]
-    ? conversationList.conversations[parseInt(conversationIndex)].name
-    : t("chat.newConversation");
-
+  const currentConvoName = conversationList?.conversations?.[parseInt(conversationIndex)]?.name ?? t("chat.newConversation");
 
   const isChatInputVisible =
     (isConnected || conversationIndex === "new") &&
@@ -951,8 +934,7 @@ export default function Chat(): JSX.Element {
             user={user}
             viewUser={viewUser}
             onToggleSidebar={() => {
-
-              window.dispatchEvent(new CustomEvent('toggleSidebar'));
+              window.dispatchEvent(new CustomEvent("toggleSidebar"));
             }}
             isMobile={window.innerWidth < 1024}
             onDownloadConversation={handleDownloadConversation}
@@ -998,9 +980,7 @@ export default function Chat(): JSX.Element {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground animate-pulse italic">
-              {t("loadingMessage.loadingConversation")}
-            </p>
+            <p className="text-muted-foreground animate-pulse italic">{t("loadingMessage.loadingConversation")}</p>
           </div>
         )}
       </div>

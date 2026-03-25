@@ -40,7 +40,7 @@ import { Input } from "../../components/ui/input";
 import { handleCourseTermLanguage } from "../../utility/Helpers";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
-import { createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
+import { createNetworkErrorHandler, isNetworkError } from "../../utility/reports/networkErrorHandler";
 import Post from "../../utility/Post";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
@@ -88,13 +88,7 @@ export default function Reports(): JSX.Element {
   };
 
   // Helper function to handle network errors with retry logic
-  const handleNetworkError = createNetworkErrorHandler(
-    retryAttemptedRef,
-    setAlert,
-    navigator,
-    t,
-    setIsLoading
-  );
+  const handleNetworkError = createNetworkErrorHandler(retryAttemptedRef, setAlert, navigator, t, setIsLoading);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -105,20 +99,21 @@ export default function Reports(): JSX.Element {
       eventType: "view_page",
       metadata: {
         page: "reports",
-      }
-    })
+      },
+    });
 
-    const loadCourse = (group: string) => {
+    const MAX_COURSE_RETRIES = 3;
+    const loadCourse = (group: string, retryCount: number = 0) => {
       // Reports flag true
       Get(getCourse(group), controller.signal, true).then((res1) => {
         if (res1 && res1.status && res1.status < 300) {
-          if (retryAttemptedRef.current) {
+          if (retryCount > 0) {
             console.log("[Reports] loadCourse retry succeeded", {
               group,
               courseId: res1.data?.id,
+              retryCount,
               timestamp: new Date().toISOString(),
             });
-            retryAttemptedRef.current = false;
           }
           if (
             res1.data &&
@@ -131,12 +126,27 @@ export default function Reports(): JSX.Element {
           }
         } else if (res1 && res1.status === 401) {
           navigator("/login");
-        } else {
-          // Check for network error (ERR_NETWORK)
-          handleNetworkError(res1, () => {
-            console.log("[Reports] loadCourse retry attempt", { group, timestamp: new Date().toISOString() });
-            loadCourse(group);
+        } else if (isNetworkError(res1) && retryCount < MAX_COURSE_RETRIES) {
+          // Network retry w/ exponential growth
+          const delay = 500 * Math.pow(2, retryCount);
+          console.log("[Reports] loadCourse network error, retrying", {
+            group,
+            retryCount: retryCount + 1,
+            delay,
+            timestamp: new Date().toISOString(),
           });
+          setTimeout(() => loadCourse(group, retryCount + 1), delay);
+        } else if (isNetworkError(res1)) {
+          console.error("[Reports] loadCourse failed after max retries", {
+            group,
+            retryCount,
+            timestamp: new Date().toISOString(),
+          });
+          setAlert({
+            message: t("errorMessage.networkError") || "Network error: Unable to load reports. Please try again later.",
+            type: "error",
+          });
+          setIsLoading(false);
         }
       });
     };
@@ -333,9 +343,9 @@ export default function Reports(): JSX.Element {
         action: "download_conversation",
         page: "reports",
         downloadType: downloadType,
-        courses: coursesToDownload.map(course => course.id) //just sent course ids
-      }
-    })
+        courses: coursesToDownload.map((course) => course.id), //just sent course ids
+      },
+    });
     // Both download methods will be using this as the controller
     const controller = new AbortController();
     // If "CSV Mode" is checked on, run this section instead of the logic below
@@ -654,15 +664,15 @@ export default function Reports(): JSX.Element {
                   {user?.groups.includes(
                     process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin",
                   ) && (
-                      <Button
-                        variant="outline"
-                        onClick={() => setOpenDownloadCourseModal(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        {t("reports.downloadCourse")}
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => setOpenDownloadCourseModal(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      {t("reports.downloadCourse")}
+                    </Button>
+                  )}
                 </div>
                 <div>
                   <InfoAccordion>
@@ -819,8 +829,9 @@ export default function Reports(): JSX.Element {
                     onClick={handleRowClick}
                     tabIndex={0}
                     role="button"
-                    aria-label={`${t("common.view")} ${t("reports.reports")} ${x.course.name ? x.course.name : "Unnamed Course"
-                      }`}
+                    aria-label={`${t("common.view")} ${t("reports.reports")} ${
+                      x.course.name ? x.course.name : "Unnamed Course"
+                    }`}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
@@ -843,10 +854,12 @@ export default function Reports(): JSX.Element {
                             </div>
                             <div className="text-sm text-muted-foreground capitalize">
                               {x.course.section
-                                ? `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${x.course.year ? x.course.year : ""
-                                } - ${x.course.section}`
-                                : `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${x.course.year ? x.course.year : ""
-                                }`}
+                                ? `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${
+                                    x.course.year ? x.course.year : ""
+                                  } - ${x.course.section}`
+                                : `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${
+                                    x.course.year ? x.course.year : ""
+                                  }`}
                             </div>
                           </div>
                         </div>

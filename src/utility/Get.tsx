@@ -16,17 +16,12 @@ export default async function Get(url: String, signal?: AbortSignal | undefined,
     .then((response) => {
       return response;
     })
-    .catch(function (error) {
+    .catch((error) => {
       if (error.code === "ERR_CANCELED") return;
 
       if (error.code === "ERR_NETWORK") {
-        if (reports) {
-          //do nothing
-          //Note: commented cause reports page will retry these types of errors 
-        } else {
           console.log("You got a 502 error that needs to be handled by the function that called this.", error)
-          localStorage.removeItem("papyrusai_access_token");
-        }
+        
       }
       if (error.response) {
         // The request was made and the server responded with a status code

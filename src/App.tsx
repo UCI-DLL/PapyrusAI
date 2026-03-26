@@ -80,7 +80,7 @@ function App(): JSX.Element {
 
   useEffect(() => {
     //Timeout so that login can possibly get token and save before this check
-    setTimeout(() => {
+    const authCheckTimer = setTimeout(() => {
       // Let Login.tsx handle everything when we're on the /login route.
       // Running auth logic here in parallel might be causing a race condition where
       // a transient 5xx from the backend would nuke the token and redirect
@@ -153,6 +153,7 @@ function App(): JSX.Element {
       } //else all is good
     }, 500);
 
+    return () => clearTimeout(authCheckTimer);
   }, [user]);
 
   //create a session id that gets sent with every request or log so we can track 

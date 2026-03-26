@@ -16,7 +16,7 @@ export default async function Get(url: String, signal?: AbortSignal | undefined,
     .then((response) => {
       return response;
     })
-    .catch(function (error) {
+    .catch((error) => {
       if (error.code === "ERR_CANCELED") return;
 
       if (error.code === "ERR_NETWORK") {

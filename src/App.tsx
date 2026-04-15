@@ -51,6 +51,7 @@ import introJs from "intro.js";
 import "intro.js/introjs.css";
 import { useTranslation } from "./hooks/useTranslation";
 import { v4 as uuidv4 } from "uuid";
+import { setupAxiosInterceptors } from "./utility/axiosSetup";
 
 function App(): JSX.Element {
   const { t } = useTranslation();
@@ -72,6 +73,13 @@ function App(): JSX.Element {
   });
   const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
   const [authStatus, setAuthStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
+
+  useEffect(() => {
+    setupAxiosInterceptors(() => {
+      setUser(null);
+      setAuthStatus("unauthenticated");
+    });
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -102,6 +110,7 @@ function App(): JSX.Element {
 
         if (!token) {
           setAuthStatus("unauthenticated");
+          console.log("redirect here 1")
           window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
           return;
         }
@@ -129,9 +138,11 @@ function App(): JSX.Element {
 
         localStorage.removeItem("papyrusai_access_token");
         localStorage.removeItem("papyrusai_user");
+        localStorage.removeItem("sessionId");
         setUser(null);
 
         setAuthStatus("unauthenticated");
+        console.log("redirect here 2")
         window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
       }
     };
@@ -236,8 +247,13 @@ function App(): JSX.Element {
     );
   }
 
+  //if we are still figuring out auth, show loading
   if (authStatus === "loading") {
-    return <div>Loading...</div>; // or spinner
+    return (
+      <div className="flex items-center justify-center p-4">
+        <Loader2 className="h-8 w-8 animate-spin " />
+      </div>
+    );
   }
 
   return (
@@ -333,30 +349,31 @@ function App(): JSX.Element {
                             )
                             : null
                       }
+                      authStatus={authStatus}
                     />
                   }
                 >
                   <Route path="/" element={<Dashboard />} />
                 </Route>
 
-                <Route path="/courses" element={<PrivateRoute user={user} />}>
+                <Route path="/courses" element={<PrivateRoute user={user} authStatus={authStatus} />}>
                   <Route path="/courses" element={<Courses />} />
                 </Route>
 
-                <Route path="/modules" element={<PrivateRoute user={user} />}>
+                <Route path="/modules" element={<PrivateRoute user={user} authStatus={authStatus} />}>
                   <Route path="/modules" element={<AllModules />} />
                 </Route>
 
                 <Route
                   path="/courses/:id/modules"
-                  element={<PrivateRoute user={user} />}
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
                 >
                   <Route path="/courses/:id/modules" element={<Modules />} />
                 </Route>
 
                 <Route
                   path="/courses/:id/modules/:id"
-                  element={<PrivateRoute user={user} />}
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
                 >
                   <Route
                     path="/courses/:id/modules/:id"
@@ -366,18 +383,18 @@ function App(): JSX.Element {
 
                 <Route
                   path="/chat/:username/:courseId/:moduleId"
-                  element={<PrivateRoute user={user} />}
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
                 >
                   <Route element={<ChatLayout />}>
                     <Route path=":conversationIndex" element={<Chat />} />
                   </Route>
                 </Route>
 
-                <Route path="/account" element={<PrivateRoute user={user} />}>
+                <Route path="/account" element={<PrivateRoute user={user} authStatus={authStatus} />}>
                   <Route path="/account" element={<Account />} />
                 </Route>
 
-                <Route path="/about" element={<PrivateRoute user={user} />}>
+                <Route path="/about" element={<PrivateRoute user={user} authStatus={authStatus} />}>
                   <Route path="/about" element={<About />} />
                 </Route>
 
@@ -393,7 +410,7 @@ function App(): JSX.Element {
                     <>
                       <Route
                         path="/courses/:id/createmodule"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/courses/:id/createmodule"
@@ -403,7 +420,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/courses/:id/editmodule/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/courses/:id/editmodule/:id"
@@ -413,21 +430,21 @@ function App(): JSX.Element {
 
                       <Route
                         path="/reports"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route path="/reports" element={<Reports />} />
                       </Route>
 
                       <Route
                         path="/reports/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route path="/reports/:id" element={<UserReports />} />
                       </Route>
 
                       <Route
                         path="/reports/course/:courseId"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/reports/course/:courseId"
@@ -437,7 +454,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/reports/module/:id/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/reports/module/:id/:id"
@@ -448,7 +465,7 @@ function App(): JSX.Element {
                       {/* shows conversation list of other users  */}
                       <Route
                         path="/courses/:id/modules/:id/username/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/courses/:id/modules/:id/username/:id"
@@ -468,7 +485,7 @@ function App(): JSX.Element {
                     <>
                       <Route
                         path="/createcourse"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/createcourse"
@@ -478,7 +495,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/editcourse/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/editcourse/:id"
@@ -488,21 +505,21 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route path="/library" element={<Library />} />
                       </Route>
 
                       <Route
                         path="/library/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route path="/library/:id" element={<ViewFolder />} />
                       </Route>
 
                       <Route
                         path="/library/org/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/org/:id"
@@ -512,7 +529,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library/org/:id/createprompt"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/org/:id/createprompt"
@@ -522,7 +539,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library/org/:id/prompts/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/org/:id/prompts/:id"
@@ -532,7 +549,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library/:id/createprompt"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/:id/createprompt"
@@ -542,7 +559,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library/:id/prompts/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/:id/prompts/:id"
@@ -552,7 +569,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library/org/:id/createfile"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/org/:id/createfile"
@@ -562,7 +579,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library/org/:id/files/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/org/:id/files/:id"
@@ -572,7 +589,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library/:id/createfile"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/:id/createfile"
@@ -582,7 +599,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library/:id/files/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/library/:id/files/:id"
@@ -602,14 +619,14 @@ function App(): JSX.Element {
                     <>
                       <Route
                         path="/prompts"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route path="/prompts" element={<OldPrompts />} />
                       </Route>
 
                       <Route
                         path="/prompts/:id"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route
                           path="/prompts/:id"
@@ -619,7 +636,7 @@ function App(): JSX.Element {
 
                       <Route
                         path="/org-settings"
-                        element={<PrivateRoute user={user} />}
+                        element={<PrivateRoute user={user} authStatus={authStatus} />}
                       >
                         <Route path="/org-settings" element={<OrgSettings />} />
                       </Route>

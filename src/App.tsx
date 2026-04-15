@@ -71,6 +71,7 @@ function App(): JSX.Element {
     type: "info",
   });
   const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
+  const [authStatus, setAuthStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 
   useEffect(() => {
     if (user) {
@@ -79,82 +80,142 @@ function App(): JSX.Element {
   }, [user]);
 
   useEffect(() => {
-    //Timeout so that login can possibly get token and save before this check
-    const authCheckTimer = setTimeout(() => {
-      // Let Login.tsx handle everything when we're on the /login route.
-      // Running auth logic here in parallel might be causing a race condition where
-      // a transient 5xx from the backend would nuke the token and redirect
-      // to Cognito, creating an infinite loop.
-      if (
-        window.location.pathname === "/login" ||
-        window.location.pathname === "/login/" ||
-        window.location.pathname === "/login-error" ||
-        sessionStorage.getItem("papyrusai_login_in_progress") === "true"
-      ) {
-        console.log("[app] skipping auth check — Login.tsx is handling it (path:", window.location.pathname, ")")
-        return;
-      }
+    const runAuth = async () => {
+      try {
+        // 1. Check URL hash (Cognito redirect)
+        if (window.location.hash.includes("access_token")) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const token = hashParams.get("access_token");
 
-      // Check if we have an access token, if not, redirect to aws cognito login page
-      if (!localStorage.getItem("papyrusai_access_token") && !user) {
-        console.log("app, no local, no user")
-        if (
-          navigator.userAgent.indexOf("Chrome") < 0 &&
-          navigator.userAgent.indexOf("Safari") > -1
-        ) {
-          //do nothing here if on safari (or it creates a weird loop)
-          console.log("do nothing?")
-        } else {
-          console.log("app redirect")
-          window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-        }
-      } else if (localStorage.getItem("papyrusai_access_token") && !user) {
-        console.log("app, yes local, no user")
-        // get user's most update-to-date info
-        //If access denied, then update the access token
-        Get(getUserData()).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              console.log("app user data", res.data)
-              //update our version of user
-              setUser(res.data);
-              localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-              //if user is missing name, then open the modal
-              //NOTE: family_name optional (aka can be empty string)
-              if (
-                !res.data.name ||
-                !res.data.family_name ||
-                res.data.name === ""
-              ) {
-                setShowUpdateUserInfoModal(true);
-              }
-            }
-          } else if (res && res.status && res.status >= 500) {
-            // server error — don't blow away the token, it might still be valid.
-            // just log it and let the user retry naturally.
-            console.error("[app] server error fetching user data (keeping token), status:", res.status)
-          } else {
-            console.log("app error getting user data, redirecting")
-            //remove user data
-            localStorage.removeItem("papyrusai_access_token");
-            localStorage.removeItem("papyrusai_user");
-            setUser(null);
-            window.location.replace(
-              process.env.REACT_APP_LOGIN_URL
-                ? process.env.REACT_APP_LOGIN_URL
-                : ""
-            );
+          if (!token) {
+            throw new Error("No token in hash");
           }
-        });
-      } else if (user && (!user.name || !user.family_name || user.name === "")) {
-        //if user is missing name, then open the modal
-        //NOTE: family_name optional (aka can be empty string)
-        setShowUpdateUserInfoModal(true);
-      } //else all is good
-    }, 500);
 
-    return () => clearTimeout(authCheckTimer);
-  }, [user]);
+          localStorage.setItem("papyrusai_access_token", token);
+
+          // clean URL immediately 
+          window.history.replaceState({}, document.title, "/");
+        }
+
+        // 2. Check token from storage
+        const token = localStorage.getItem("papyrusai_access_token");
+
+        if (!token) {
+          setAuthStatus("unauthenticated");
+          window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+          return;
+        }
+
+        // 3. Fetch user
+        const res = await Get(getUserData());
+
+        if (res && res.status < 300 && res.data) {
+          setUser(res.data);
+          localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+
+          if (!res.data.name || !res.data.family_name || res.data.name === "") {
+            setShowUpdateUserInfoModal(true);
+          }
+
+          setAuthStatus("authenticated");
+        } else if (res && res.status >= 500) {
+          console.error("[app] server error, keeping token");
+          setAuthStatus("loading"); // retry state or show UI
+        } else {
+          throw new Error("Invalid token");
+        }
+      } catch (err) {
+        console.error("[app] auth failed:", err);
+
+        localStorage.removeItem("papyrusai_access_token");
+        localStorage.removeItem("papyrusai_user");
+        setUser(null);
+
+        setAuthStatus("unauthenticated");
+        window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+      }
+    };
+
+    runAuth();
+  }, []);
+
+  // useEffect(() => {
+  //   //Timeout so that login can possibly get token and save before this check
+  //   const authCheckTimer = setTimeout(() => {
+  //     // Let Login.tsx handle everything when we're on the /login route.
+  //     // Running auth logic here in parallel might be causing a race condition where
+  //     // a transient 5xx from the backend would nuke the token and redirect
+  //     // to Cognito, creating an infinite loop.
+  //     if (
+  //       window.location.pathname === "/login" ||
+  //       window.location.pathname === "/login/" ||
+  //       window.location.pathname === "/login-error" ||
+  //       sessionStorage.getItem("papyrusai_login_in_progress") === "true"
+  //     ) {
+  //       console.log("[app] skipping auth check — Login.tsx is handling it (path:", window.location.pathname, ")")
+  //       return;
+  //     }
+
+  //     // Check if we have an access token, if not, redirect to aws cognito login page
+  //     if (!localStorage.getItem("papyrusai_access_token") && !user) {
+  //       console.log("app, no local, no user")
+  //       if (
+  //         navigator.userAgent.indexOf("Chrome") < 0 &&
+  //         navigator.userAgent.indexOf("Safari") > -1
+  //       ) {
+  //         //do nothing here if on safari (or it creates a weird loop)
+  //         console.log("do nothing?")
+  //       } else {
+  //         console.log("app redirect")
+  //         window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
+  //       }
+  //     } else if (localStorage.getItem("papyrusai_access_token") && !user) {
+  //       console.log("app, yes local, no user")
+  //       // get user's most update-to-date info
+  //       //If access denied, then update the access token
+  //       Get(getUserData()).then((res) => {
+  //         if (res && res.status && res.status < 300) {
+  //           if (res.data) {
+  //             console.log("app user data", res.data)
+  //             //update our version of user
+  //             setUser(res.data);
+  //             localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
+  //             //if user is missing name, then open the modal
+  //             //NOTE: family_name optional (aka can be empty string)
+  //             if (
+  //               !res.data.name ||
+  //               !res.data.family_name ||
+  //               res.data.name === ""
+  //             ) {
+  //               setShowUpdateUserInfoModal(true);
+  //             }
+  //           }
+  //         } else if (res && res.status && res.status >= 500) {
+  //           // server error — don't blow away the token, it might still be valid.
+  //           // just log it and let the user retry naturally.
+  //           console.error("[app] server error fetching user data (keeping token), status:", res.status)
+  //         } else {
+  //           console.log("app error getting user data, redirecting")
+  //           //remove user data
+  //           localStorage.removeItem("papyrusai_access_token");
+  //           localStorage.removeItem("papyrusai_user");
+  //           setUser(null);
+  //           window.location.replace(
+  //             process.env.REACT_APP_LOGIN_URL
+  //               ? process.env.REACT_APP_LOGIN_URL
+  //               : ""
+  //           );
+  //         }
+  //       });
+  //     } else if (user && (!user.name || !user.family_name || user.name === "")) {
+  //       //if user is missing name, then open the modal
+  //       //NOTE: family_name optional (aka can be empty string)
+  //       setShowUpdateUserInfoModal(true);
+  //     } //else all is good
+  //   }, 500);
+
+  //   return () => clearTimeout(authCheckTimer);
+  // }, [user]);
 
   //create a session id that gets sent with every request or log so we can track 
   // which user did what. save in local so it is the same across tabs
@@ -173,6 +234,10 @@ function App(): JSX.Element {
     window.location.replace(
       process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : ""
     );
+  }
+
+  if (authStatus === "loading") {
+    return <div>Loading...</div>; // or spinner
   }
 
   return (

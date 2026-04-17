@@ -10,8 +10,6 @@ import Login from "./features/authentication/Login";
 import Dashboard from "./features/dashboard/Dashboard";
 import "./fonts/Montserrat/Montserrat-Regular.otf";
 import "./fonts/OpenSans/OpenSans-Regular.ttf";
-// import Registration from "./features/authentication/Registration";
-// import ForgotPassword from "./features/authentication/ForgotPassword";
 import Chat from "./features/chat/Chat";
 import ChatLayout from "./features/chat/ChatLayout";
 import Reports from "./features/reports/Reports";
@@ -110,7 +108,7 @@ function App(): JSX.Element {
 
         if (!token) {
           setAuthStatus("unauthenticated");
-          console.log("redirect here 1")
+          // Note: Comment out next line to run locally
           window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
           return;
         }
@@ -142,91 +140,13 @@ function App(): JSX.Element {
         setUser(null);
 
         setAuthStatus("unauthenticated");
-        console.log("redirect here 2")
+        // Note: Comment out next line to run locally
         window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
       }
     };
 
     runAuth();
   }, []);
-
-  // useEffect(() => {
-  //   //Timeout so that login can possibly get token and save before this check
-  //   const authCheckTimer = setTimeout(() => {
-  //     // Let Login.tsx handle everything when we're on the /login route.
-  //     // Running auth logic here in parallel might be causing a race condition where
-  //     // a transient 5xx from the backend would nuke the token and redirect
-  //     // to Cognito, creating an infinite loop.
-  //     if (
-  //       window.location.pathname === "/login" ||
-  //       window.location.pathname === "/login/" ||
-  //       window.location.pathname === "/login-error" ||
-  //       sessionStorage.getItem("papyrusai_login_in_progress") === "true"
-  //     ) {
-  //       console.log("[app] skipping auth check — Login.tsx is handling it (path:", window.location.pathname, ")")
-  //       return;
-  //     }
-
-  //     // Check if we have an access token, if not, redirect to aws cognito login page
-  //     if (!localStorage.getItem("papyrusai_access_token") && !user) {
-  //       console.log("app, no local, no user")
-  //       if (
-  //         navigator.userAgent.indexOf("Chrome") < 0 &&
-  //         navigator.userAgent.indexOf("Safari") > -1
-  //       ) {
-  //         //do nothing here if on safari (or it creates a weird loop)
-  //         console.log("do nothing?")
-  //       } else {
-  //         console.log("app redirect")
-  //         window.location.replace(process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "");
-  //       }
-  //     } else if (localStorage.getItem("papyrusai_access_token") && !user) {
-  //       console.log("app, yes local, no user")
-  //       // get user's most update-to-date info
-  //       //If access denied, then update the access token
-  //       Get(getUserData()).then((res) => {
-  //         if (res && res.status && res.status < 300) {
-  //           if (res.data) {
-  //             console.log("app user data", res.data)
-  //             //update our version of user
-  //             setUser(res.data);
-  //             localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
-  //             //if user is missing name, then open the modal
-  //             //NOTE: family_name optional (aka can be empty string)
-  //             if (
-  //               !res.data.name ||
-  //               !res.data.family_name ||
-  //               res.data.name === ""
-  //             ) {
-  //               setShowUpdateUserInfoModal(true);
-  //             }
-  //           }
-  //         } else if (res && res.status && res.status >= 500) {
-  //           // server error — don't blow away the token, it might still be valid.
-  //           // just log it and let the user retry naturally.
-  //           console.error("[app] server error fetching user data (keeping token), status:", res.status)
-  //         } else {
-  //           console.log("app error getting user data, redirecting")
-  //           //remove user data
-  //           localStorage.removeItem("papyrusai_access_token");
-  //           localStorage.removeItem("papyrusai_user");
-  //           setUser(null);
-  //           window.location.replace(
-  //             process.env.REACT_APP_LOGIN_URL
-  //               ? process.env.REACT_APP_LOGIN_URL
-  //               : ""
-  //           );
-  //         }
-  //       });
-  //     } else if (user && (!user.name || !user.family_name || user.name === "")) {
-  //       //if user is missing name, then open the modal
-  //       //NOTE: family_name optional (aka can be empty string)
-  //       setShowUpdateUserInfoModal(true);
-  //     } //else all is good
-  //   }, 500);
-
-  //   return () => clearTimeout(authCheckTimer);
-  // }, [user]);
 
   //create a session id that gets sent with every request or log so we can track 
   // which user did what. save in local so it is the same across tabs
@@ -327,12 +247,9 @@ function App(): JSX.Element {
               <Routes>
                 <Route
                   path="/login"
-                  element={<Login setUser={(u) => setUser(u)} />}
+                  element={<Login />}
                 />
                 <Route path="/login-error" element={<LoginError />} />
-                {/* 
-                <Route path="/register" element={<Registration setUser={(u) => setUser(u)} />} />
-                <Route path="/forgot-password" element={<ForgotPassword setUser={(u) => setUser(u)} />} /> */}
                 <Route path="*" element={<div>{t("navigation.pageNotFound")}</div>} />
 
                 {/* Need to have start path here. Private route will redirect to login if no user  */}

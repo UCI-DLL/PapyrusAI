@@ -58,14 +58,17 @@ export default function Reports(): JSX.Element {
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<{ users: Array<CustomUserType>; course: CourseType }>>([]);
+  //copy of the list so when searching in download, it doesn't change both lists
+  const [downloadUserList, setDownloadUserList] = useState<Array<{ users: Array<CustomUserType>; course: CourseType }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [openDownloadCourseModal, setOpenDownloadCourseModal] = useState<boolean>(false);
   const [downloadType, setDownloadType] = useState<string>("json");
   var promiseArray: any[] = [];
   const retryAttemptedRef = useRef<boolean>(false);
-
-  const [checked, setChecked] = useState<Array<number>>([]);
+  //checked is a copy of courses and users that need to be downloaded
+  const [checked, setChecked] = useState<Array<{ users: Array<CustomUserType>; course: CourseType }>>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [downloadSearchTerm, setDownloadSearchTerm] = useState<string>("");
 
   //If safari, use a different dropdown within dialog modal so that screen readers can read
   const isSafari =
@@ -74,17 +77,14 @@ export default function Reports(): JSX.Element {
     !window.navigator.userAgent.includes("Chrome") &&
     window.navigator.userAgent.includes("Mac OS");
 
-  const handleToggle = (value: number) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
-
-    if (currentIndex === -1) {
-      newChecked.push(value);
+  const handleToggle = (users: CustomUserType[], course: CourseType) => () => {
+    //if course in checked list, then remove
+    //otherwise add it in
+    if (checked.some((x) => x.course.id === course.id)) {
+      setChecked(prev => prev.filter(item => item.course.id !== course.id));
     } else {
-      newChecked.splice(currentIndex, 1);
+      setChecked([{ users, course }, ...checked])
     }
-
-    setChecked(newChecked);
   };
 
   // Helper function to handle network errors with retry logic
@@ -184,6 +184,7 @@ export default function Reports(): JSX.Element {
 
     return () => {
       setUserList([]);
+      setDownloadUserList([])
       controller.abort();
     };
 
@@ -246,6 +247,21 @@ export default function Reports(): JSX.Element {
         if (res.data) {
           //Get the list of all users in the group
           setUserList((prev) => {
+            if (prev.find((x) => x.course.id === course.id)) {
+              //if the course has already been added, add the new list of users
+              var temp = [...prev];
+              var index = prev.findIndex((x) => x.course.id === course.id);
+              var prevUserList = prev[index].users ? prev[index].users : [];
+              temp[index] = {
+                users: prevUserList.concat(res.data.users),
+                course: course,
+              };
+              return temp;
+            } else {
+              return [...prev, { users: res.data.users, course: course }];
+            }
+          });
+          setDownloadUserList((prev) => {
             if (prev.find((x) => x.course.id === course.id)) {
               //if the course has already been added, add the new list of users
               var temp = [...prev];
@@ -332,8 +348,8 @@ export default function Reports(): JSX.Element {
     setIsLoading(true);
     var coursesToDownload: DownloadType[] = [];
     checked.forEach((x) => {
-      var course: any = sortCourseList(userList)[x].course;
-      course["users"] = sortCourseList(userList)[x].users;
+      var course: any = x.course;
+      course["users"] = x.users;
       coursesToDownload.push(course);
     });
     //log action
@@ -379,6 +395,7 @@ export default function Reports(): JSX.Element {
           setTimeout(() => {
             downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`);
             setIsLoading(false);
+            setChecked([])
           }, 10000);
         });
         break;
@@ -463,6 +480,7 @@ export default function Reports(): JSX.Element {
     // Trigger the download
     saveAs(zipContent, `${exportName}.zip`);
     setIsLoading(false);
+    setChecked([])
   }
 
   async function getConvoList(
@@ -608,7 +626,10 @@ export default function Reports(): JSX.Element {
     setIsLoading(true);
     getUserMessagesAsCsv(courseIds, controller)
       .then((csv) => downloadStringAsCsv(csv, "PapyrusAI_messages"))
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        setIsLoading(false)
+        setChecked([])
+      });
   }
 
   function getUserMessagesAsCsv(
@@ -664,15 +685,15 @@ export default function Reports(): JSX.Element {
                   {user?.groups.includes(
                     process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin",
                   ) && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setOpenDownloadCourseModal(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      {t("reports.downloadCourse")}
-                    </Button>
-                  )}
+                      <Button
+                        variant="outline"
+                        onClick={() => setOpenDownloadCourseModal(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        {t("reports.downloadCourse")}
+                      </Button>
+                    )}
                 </div>
                 <div>
                   <InfoAccordion>
@@ -695,88 +716,103 @@ export default function Reports(): JSX.Element {
           </div>
         </header>
 
-        {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
-          <Dialog open={openDownloadCourseModal} onOpenChange={setOpenDownloadCourseModal}>
-            <DialogContent className="sm:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  {t("reports.downloadCourseTitle")}
-                </DialogTitle>
-                <DialogDescription>{t("reports.downloadCourseDescription")}</DialogDescription>
-              </DialogHeader>
+        {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmins") ||
+          user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors")) && (
+            <Dialog open={openDownloadCourseModal} onOpenChange={setOpenDownloadCourseModal}>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    {t("reports.downloadCourseTitle")}
+                  </DialogTitle>
+                  <DialogDescription>{t("reports.downloadCourseDescription")}</DialogDescription>
+                </DialogHeader>
 
-              <div className="space-y-6">
-                {/* handle safari screen readers  */}
-                {isSafari ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
-                    <select
-                      className="h-10 w-full rounded-md border px-3 py-2 text-sm"
-                      value={downloadType}
-                      onChange={(e) => setDownloadType(e.target.value)}
-                    >
-                      <option value="json">JSON</option>
-                      <option value="csv">CSV</option>
-                      <option value="txt">TXT</option>
-                    </select>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
-                    <Select value={downloadType} onValueChange={setDownloadType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("reports.selectFormat")} />
-                      </SelectTrigger>
-                      <SelectContent avoidCollisions={false} position="popper">
-                        <SelectItem value="json">JSON</SelectItem>
-                        <SelectItem value="csv">CSV</SelectItem>
-                        <SelectItem value="txt">TXT</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                <div className="space-y-6">
+                  {/* handle safari screen readers  */}
+                  {isSafari ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
+                      <select
+                        className="h-10 w-full rounded-md border px-3 py-2 text-sm"
+                        value={downloadType}
+                        onChange={(e) => setDownloadType(e.target.value)}
+                      >
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                        <option value="txt">TXT</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
+                      <Select value={downloadType} onValueChange={setDownloadType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("reports.selectFormat")} />
+                        </SelectTrigger>
+                        <SelectContent avoidCollisions={false} position="popper">
+                          <SelectItem value="json">JSON</SelectItem>
+                          <SelectItem value="csv">CSV</SelectItem>
+                          <SelectItem value="txt">TXT</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
-                <div className="space-y-3">
-                  <h2 className="text-sm font-medium">{t("courses.availableCourses")}</h2>
-                  <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
-                    {filterCoursesBySearch(sortCourseList(userList), searchTerm).map((x, index) => {
-                      const labelId = `checkbox-list-secondary-label-${index}`;
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 p-2 rounded-md hover:text-primary
+                  <div className="space-y-3">
+                    <h2 className="text-sm font-medium">{t("courses.availableCourses")}</h2>
+                    <div className="relative w-full">
+                      <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <Input
+                        type="text"
+                        placeholder={t("reports.courseReportsSearch")}
+                        value={downloadSearchTerm}
+                        onChange={(e) => setDownloadSearchTerm(e.target.value)}
+                        className="pl-9 w-full"
+                        aria-label={t("courses.searchCourses")}
+                      />
+                    </div>
+                    <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
+                      {filterCoursesBySearch(sortCourseList(downloadUserList), downloadSearchTerm).map((x, index) => {
+                        const labelId = `checkbox-list-secondary-label-${index}`;
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 p-2 rounded-md hover:text-primary
                             dark:hover:bg-accent dark:hover:text-gold colorful-dark:hover:bg-accent colorful-dark:hover:text-gold"
-                        >
-                          <Checkbox
-                            id={labelId}
-                            aria-labelledby={`${labelId}Label`}
-                            checked={checked.includes(index)}
-                            onCheckedChange={handleToggle(index)}
-                          />
-                          <Label id={`${labelId}Label`} htmlFor={labelId} className="flex-1 cursor-pointer text-sm">
-                            {x.course.name} | {t("common.instructor")}: {x.course.instructor.name}{" "}
-                            {x.course.instructor.family_name}
-                          </Label>
-                        </div>
-                      );
-                    })}
+                          >
+                            <Checkbox
+                              id={labelId}
+                              aria-labelledby={`${labelId}Label`}
+                              checked={checked.some((y) => y.course.id === x.course.id)}
+                              onCheckedChange={handleToggle(x.users, x.course)}
+                            />
+                            <Label id={`${labelId}Label`} htmlFor={labelId} className="flex-1 cursor-pointer text-sm">
+                              {x.course.name} | {t("common.instructor")}: {x.course.instructor.name}{" "}
+                              {x.course.instructor.family_name}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpenDownloadCourseModal(false)}>
-                  {t("common.close")}
-                </Button>
-                <Button onClick={downloadCourses}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {t("common.download")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpenDownloadCourseModal(false)}>
+                    {t("common.close")}
+                  </Button>
+                  <Button onClick={downloadCourses}>
+                    <Download className="h-4 w-4 mr-2" />
+                    {t("common.download")}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
 
         <section aria-labelledby="reports-courses-heading">
           <header className="mb-6 w-full bg-card p-4 rounded-lg shadow-md" id="reports-courses-heading">
@@ -829,9 +865,8 @@ export default function Reports(): JSX.Element {
                     onClick={handleRowClick}
                     tabIndex={0}
                     role="button"
-                    aria-label={`${t("common.view")} ${t("reports.reports")} ${
-                      x.course.name ? x.course.name : "Unnamed Course"
-                    }`}
+                    aria-label={`${t("common.view")} ${t("reports.reports")} ${x.course.name ? x.course.name : "Unnamed Course"
+                      }`}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
@@ -854,12 +889,10 @@ export default function Reports(): JSX.Element {
                             </div>
                             <div className="text-sm text-muted-foreground capitalize">
                               {x.course.section
-                                ? `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${
-                                    x.course.year ? x.course.year : ""
-                                  } - ${x.course.section}`
-                                : `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${
-                                    x.course.year ? x.course.year : ""
-                                  }`}
+                                ? `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${x.course.year ? x.course.year : ""
+                                } - ${x.course.section}`
+                                : `${user && x.course.term ? handleCourseTermLanguage(user["custom:language"], x.course.term) : ""} ${x.course.year ? x.course.year : ""
+                                }`}
                             </div>
                           </div>
                         </div>

@@ -42,6 +42,8 @@ import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
 import CreateFile from "./features/library/CreateFile";
 import EditFile from "./features/library/EditFile";
+import CreateRubric from "./features/library/CreateRubric";
+import EditRubric from "./features/library/EditRubric";
 import OrgSettings from "./features/org-settings/OrgSettings";
 import ModuleReports from "./features/reports/ModuleReports";
 import CourseReports from "./features/reports/CourseReports";
@@ -589,6 +591,54 @@ function App(): JSX.Element {
                         <Route
                           path="/library/:id/files/:id"
                           element={<EditFile />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/library/org/:id/createrubric"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/library/org/:id/createrubric"
+                          element={<CreateRubric />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/library/org/:id/rubrics/:id"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/library/org/:id/rubrics/:id"
+                          element={<EditRubric />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/library/:id/createrubric"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/library/:id/createrubric"
+                          element={<CreateRubric />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/library/:id/rubrics/:id"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/library/:id/rubrics/:id"
+                          element={<EditRubric />}
                         />
                       </Route>
                     </>

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -8,7 +8,6 @@ import { RubricType, FolderType } from "../utility/types/CourseTypes";
 import { LayoutGrid, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router";
 import { AlertContext } from "../utility/context/AlertContext";
-import { useState } from "react";
 
 interface RubricProps {
   rubric: RubricType;

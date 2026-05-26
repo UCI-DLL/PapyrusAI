@@ -56,8 +56,11 @@ export default function CreateRubric({
   const [name, setName] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [columns, setColumns] = useState<string[]>([...DEFAULT_COLUMNS]);
-  const [criteria, setCriteria] = useState<RubricCriterion[]>([
-    { name: "", cells: DEFAULT_COLUMNS.map(() => "") },
+  const [columnKeys, setColumnKeys] = useState<string[]>(
+    DEFAULT_COLUMNS.map(() => crypto.randomUUID())
+  );
+  const [criteria, setCriteria] = useState<Array<RubricCriterion & { _key: string }>>([
+    { name: "", cells: DEFAULT_COLUMNS.map(() => ""), _key: crypto.randomUUID() },
   ]);
   const [tagList, setTagList] = useState<TagType[]>([]);
   const [openDiscardModal, setOpenDiscardModal] = useState(false);
@@ -74,11 +77,19 @@ export default function CreateRubric({
   }, []);
 
   function getTags(startKey: string, signal: AbortSignal) {
-    Get(getTagList(20, startKey), signal).then((res) => {
-      if (res?.status < 300 && res.data) {
-        setTagList((prev) => [...prev, ...res.data.items]);
-        if (res.data.lastEvaluatedKey) {
-          getTags(res.data.lastEvaluatedKey, signal);
+    const limit = 20;
+    Get(getTagList(limit, startKey), signal).then((res) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
+          setTagList((prev) => [...prev, ...res.data.tags]);
+          if (
+            res.data.ScannedCount > 0 &&
+            res.data.ScannedCount >= limit &&
+            res.data.LastEvaluatedKey &&
+            res.data.LastEvaluatedKey.id
+          ) {
+            getTags(res.data.LastEvaluatedKey.id, signal);
+          }
         }
       }
     });
@@ -87,15 +98,19 @@ export default function CreateRubric({
   function loadRubric(folderId: string, rubricId: string) {
     const key = `rubrics_${folderId}`;
     const stored = localStorage.getItem(key);
-    if (stored) {
+    if (!stored) return;
+    try {
       const rubrics: RubricType[] = JSON.parse(stored);
       const rubric = rubrics.find((r) => r.id === rubricId);
       if (rubric) {
         setName(rubric.name);
         setTags(rubric.tags);
         setColumns(rubric.columns);
-        setCriteria(rubric.criteria);
+        setColumnKeys(rubric.columns.map(() => crypto.randomUUID()));
+        setCriteria(rubric.criteria.map((c) => ({ ...c, _key: crypto.randomUUID() })));
       }
+    } catch {
+      // corrupt localStorage entry — ignore
     }
   }
 
@@ -104,6 +119,7 @@ export default function CreateRubric({
   function addColumn() {
     const newLabel = String(columns.length);
     setColumns((prev) => [...prev, newLabel]);
+    setColumnKeys((prev) => [...prev, crypto.randomUUID()]);
     setCriteria((prev) =>
       prev.map((c) => ({ ...c, cells: [...c.cells, ""] }))
     );
@@ -112,6 +128,7 @@ export default function CreateRubric({
   function removeColumn(colIndex: number) {
     if (columns.length <= 1) return;
     setColumns((prev) => prev.filter((_, i) => i !== colIndex));
+    setColumnKeys((prev) => prev.filter((_, i) => i !== colIndex));
     setCriteria((prev) =>
       prev.map((c) => ({
         ...c,
@@ -127,7 +144,7 @@ export default function CreateRubric({
   function addCriterion() {
     setCriteria((prev) => [
       ...prev,
-      { name: "", cells: columns.map(() => "") },
+      { name: "", cells: columns.map(() => ""), _key: crypto.randomUUID() },
     ]);
   }
 
@@ -177,7 +194,7 @@ export default function CreateRubric({
       isOrganizationRubric: isOrgFolder,
       folderId: actualFolderId,
       columns,
-      criteria,
+      criteria: criteria.map(({ _key, ...c }) => c),
     };
   }
 
@@ -358,7 +375,7 @@ export default function CreateRubric({
                       </th>
                       {columns.map((col, colIdx) => (
                         <th
-                          key={colIdx}
+                          key={columnKeys[colIdx]}
                           className="border border-border bg-muted px-2 py-2 text-center text-sm"
                           style={{ minWidth: 160 }}
                         >
@@ -387,7 +404,7 @@ export default function CreateRubric({
                   </thead>
                   <tbody>
                     {criteria.map((criterion, rowIdx) => (
-                      <tr key={rowIdx}>
+                      <tr key={criterion._key}>
                         {/* Sticky criterion name cell */}
                         <td
                           className="border border-border px-2 py-1 align-top"
@@ -416,7 +433,7 @@ export default function CreateRubric({
                         </td>
                         {criterion.cells.map((cell, colIdx) => (
                           <td
-                            key={colIdx}
+                            key={columnKeys[colIdx]}
                             className="border border-border p-0 align-top"
                           >
                             <textarea

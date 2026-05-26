@@ -10,7 +10,7 @@ import {
   getUserFolder,
 } from "../../utility/endpoints/FolderEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { Plus, MessageSquare, FileText, Folder, Loader2 } from "lucide-react";
+import { Plus, MessageSquare, FileText, Folder, Loader2, LayoutGrid } from "lucide-react";
 import ListFolderContents from "./ListFolderContents";
 import { useTranslation } from "../../hooks/useTranslation";
 import Post from "../../utility/Post";
@@ -128,17 +128,29 @@ export default function ViewFolder(): JSX.Element {
     }
   }
 
-  const getTotalItems = () => {
-    if (!folder) return 0;
-    return (folder.prompts?.length || 0) + (folder.files?.length || 0);
-  };
-
   const getPromptCount = () => {
     return folder?.prompts?.length || 0;
   };
 
   const getFileCount = () => {
     return folder?.files?.length || 0;
+  };
+
+  const getRubricCount = () => {
+    const key = `rubrics_${folder?.id}`;
+    const stored = localStorage.getItem(key);
+    if (!stored) return 0;
+    try {
+      const rubrics = JSON.parse(stored) as Array<{ isDeleted: boolean }>;
+      return rubrics.filter((r) => !r.isDeleted).length;
+    } catch {
+      return 0;
+    }
+  };
+
+  const getTotalItems = () => {
+    if (!folder) return 0;
+    return (folder.prompts?.length || 0) + (folder.files?.length || 0) + getRubricCount();
   };
 
   return !isLoading && folder ? (
@@ -200,6 +212,16 @@ export default function ViewFolder(): JSX.Element {
                               navigator(basePath);
                             },
                           },
+                          {
+                            label: "Add Rubric",
+                            onClick: () => {
+                              const basePath =
+                                location.pathname.split("/")[2] !== "org"
+                                  ? `/library/${folder.id}/createrubric`
+                                  : `/library/org/${folder.id}/createrubric`;
+                              navigator(basePath);
+                            },
+                          },
                         ]}
                         align="end"
                       />
@@ -253,6 +275,18 @@ export default function ViewFolder(): JSX.Element {
           >
             <FileText className="h-4 w-4" aria-hidden="true" />
             {t("library.files")} ({getFileCount()})
+          </Button>
+          <Button
+            variant={activeTab === "rubrics" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("rubrics")}
+            className="flex items-center gap-2"
+            role="tab"
+            aria-selected={activeTab === "rubrics"}
+            aria-controls="folder-content"
+          >
+            <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+            Rubrics ({getRubricCount()})
           </Button>
         </div>
 

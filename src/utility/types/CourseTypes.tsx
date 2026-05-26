@@ -59,6 +59,23 @@ export type FileType = {
   fileReference: string,
 }
 
+export type RubricCriterion = {
+  name: string,
+  cells: Array<string>, // parallel to RubricType.columns — cells[i] belongs to columns[i]
+}
+
+export type RubricType = {
+  id: string,
+  creator: CustomUserType,
+  isDeleted: boolean,
+  name: string,
+  tags: Array<string>,
+  isOrganizationRubric: boolean,
+  folderId?: string,
+  columns: Array<string>,        // e.g. ["0","1","2","3"] — user-editable labels
+  criteria: Array<RubricCriterion>,
+}
+
 export type FolderType = {
   id: string,
   creator: CustomUserType,
@@ -69,6 +86,7 @@ export type FolderType = {
   name: string,
   prompts: Array<PromptType>,
   files: Array<FileType>,
+  rubrics?: Array<RubricType>,   // optional — API doesn't return this yet
 }
 
 export type TagType = {

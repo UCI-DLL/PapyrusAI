@@ -24,6 +24,7 @@ import {
   FileType,
   FolderType,
   PromptType,
+  RubricType,
   TagType,
 } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
@@ -36,6 +37,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import { Prompt } from "../../components/Prompt";
 import { File } from "../../components/File";
+import { Rubric } from "../../components/Rubric";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { Search, Filter, FileText } from "lucide-react";
@@ -52,6 +54,7 @@ export enum TypeOptions {
   All = "All",
   Prompt = "Prompt",
   File = "File",
+  Rubric = "Rubric",
 }
 
 export enum StarredOptions {
@@ -83,6 +86,8 @@ export default function ListFolderContents(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [folder, setFolder] = useState<FolderType>();
   const [filteredFolder, setFilteredFolder] = useState<FolderType>();
+  const [rubrics, setRubrics] = useState<RubricType[]>([]);
+  const [filteredRubrics, setFilteredRubrics] = useState<RubricType[]>([]);
   const { setAlert } = useContext(AlertContext);
   const [starred, setStarred] = useState<UserStarred | undefined>();
   const [filters, setFilters] = useState<{
@@ -127,6 +132,7 @@ export default function ListFolderContents(
     const controller = new AbortController();
     //get user folder data
     getFolder(props.isOrgFolder, props.folderId, controller.signal);
+    loadRubrics(props.folderId);
 
     if (tagList.length === 0) {
       getTags("", controller.signal);
@@ -171,21 +177,24 @@ export default function ListFolderContents(
 
       if (props.activeTab === "prompts") {
         filteredFiles = [];
+        setFilteredRubrics([]);
       } else if (props.activeTab === "files") {
         filteredPrompts = [];
+        setFilteredRubrics([]);
+      } else if (props.activeTab === "rubrics") {
+        filteredPrompts = [];
+        filteredFiles = [];
+        setFilteredRubrics(rubrics);
+      } else {
+        // "all"
+        setFilteredRubrics(rubrics);
       }
 
       setFilteredFolder((prev) =>
-        prev
-          ? {
-            ...prev,
-            prompts: filteredPrompts,
-            files: filteredFiles,
-          }
-          : prev
+        prev ? { ...prev, prompts: filteredPrompts, files: filteredFiles } : prev
       );
     }
-  }, [props.activeTab, folder]);
+  }, [props.activeTab, folder, rubrics]);
 
   function getFolder(isOrg: boolean, folderId: string, signal: AbortSignal) {
     if (!isOrg) {
@@ -291,6 +300,20 @@ export default function ListFolderContents(
     });
   }
 
+  function loadRubrics(folderId: string) {
+    const key = `rubrics_${folderId}`;
+    const stored = localStorage.getItem(key);
+    if (!stored) return;
+    try {
+      const all: RubricType[] = JSON.parse(stored);
+      const active = all.filter((r) => !r.isDeleted);
+      setRubrics(active);
+      setFilteredRubrics(active);
+    } catch {
+      // corrupt localStorage — ignore
+    }
+  }
+
   function handleFilter(e: React.FormEvent) {
     e.preventDefault();
     if (!folder) return; //return if no folder
@@ -302,9 +325,29 @@ export default function ListFolderContents(
     //handle asset type
     if (filters.type === TypeOptions.Prompt) {
       filteredFiles = [];
-    }
-    if (filters.type === TypeOptions.File) {
+      setFilteredRubrics([]);
+    } else if (filters.type === TypeOptions.File) {
       filteredPrompts = [];
+      setFilteredRubrics([]);
+    } else if (filters.type === TypeOptions.Rubric) {
+      filteredFiles = [];
+      filteredPrompts = [];
+      setFilteredRubrics(
+        searchTerm
+          ? rubrics.filter((r) =>
+              r.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+          : rubrics
+      );
+    } else {
+      // TypeOptions.All — filter rubrics by search
+      setFilteredRubrics(
+        searchTerm
+          ? rubrics.filter((r) =>
+              r.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+          : rubrics
+      );
     }
 
     //handle starred filter
@@ -539,6 +582,9 @@ export default function ListFolderContents(
                     <option key={"File"} value={"File"}>
                       {t("common.file")}
                     </option>
+                    <option key={"Rubric"} value={"Rubric"}>
+                      Rubric
+                    </option>
                   </select>
                 </div>
               ) : (
@@ -565,6 +611,9 @@ export default function ListFolderContents(
                       </SelectItem>
                       <SelectItem key={"File"} value={"File"}>
                         {t("common.file")}
+                      </SelectItem>
+                      <SelectItem key={"Rubric"} value={"Rubric"}>
+                        Rubric
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -880,12 +929,28 @@ export default function ListFolderContents(
               isSelected={props.selectedFileIds?.includes(file.id) ?? false}
             />
           ))}
+
+        {/* Rubrics */}
+        {filteredRubrics.map((rubric: RubricType, i) => (
+          <Rubric
+            key={`rubric-${i}`}
+            rubric={rubric}
+            folder={filteredFolder!}
+            keyy={`${i}`}
+            refreshList={() => loadRubrics(props.folderId)}
+            loading={() => setIsLoading(true)}
+            noShowMenu={props.noShowMenu}
+            onClick={props.onClick}
+            isSelected={false}
+          />
+        ))}
       </div>
 
       {/* Empty State */}
       {filteredFolder &&
         (!filteredFolder.prompts || filteredFolder.prompts.length === 0) &&
-        (!filteredFolder.files || filteredFolder.files.length === 0) && (
+        (!filteredFolder.files || filteredFolder.files.length === 0) &&
+        filteredRubrics.length === 0 && (
           <div
             className="text-center py-12 text-muted-foreground bg-card border rounded-lg"
             role="status"

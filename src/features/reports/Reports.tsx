@@ -63,7 +63,6 @@ export default function Reports(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [openDownloadCourseModal, setOpenDownloadCourseModal] = useState<boolean>(false);
   const [downloadType, setDownloadType] = useState<string>("json");
-  var promiseArray: any[] = [];
   const retryAttemptedRef = useRef<boolean>(false);
   //checked is a copy of courses and users that need to be downloaded
   const [checked, setChecked] = useState<Array<{ users: Array<CustomUserType>; course: CourseType }>>([]);
@@ -364,6 +363,7 @@ export default function Reports(): JSX.Element {
     });
     // Both download methods will be using this as the controller
     const controller = new AbortController();
+    const promises: Promise<any>[] = [];
     // If "CSV Mode" is checked on, run this section instead of the logic below
     switch (downloadType) {
       case "csv": {
@@ -383,20 +383,17 @@ export default function Reports(): JSX.Element {
             }
             course.users.forEach((user) => {
               //get conversation list based on course and module and user
-              promiseArray.push(
+              promises.push(
                 getConvoList(course.id, module.id, user, controller, coursesToDownload, courseIndex, moduleIndex),
               );
             });
           });
         });
 
-        Promise.allSettled(promiseArray).then(() => {
-          // download here
-          setTimeout(() => {
-            downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`);
-            setIsLoading(false);
-            setChecked([])
-          }, 10000);
+        Promise.allSettled(promises).then(() => {
+          downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`);
+          setIsLoading(false);
+          setChecked([]);
         });
         break;
       }
@@ -412,18 +409,15 @@ export default function Reports(): JSX.Element {
             }
             course.users.forEach((user) => {
               //get conversation list based on course and module and user
-              promiseArray.push(
+              promises.push(
                 getConvoList(course.id, module.id, user, controller, coursesToDownload, courseIndex, moduleIndex),
               );
             });
           });
         });
 
-        Promise.allSettled(promiseArray).then(() => {
-          // download here
-          setTimeout(() => {
-            downloadTxtZip(coursesToDownload, `PapyrusAI_courses`);
-          }, 10000);
+        Promise.allSettled(promises).then(() => {
+          downloadTxtZip(coursesToDownload, `PapyrusAI_courses`);
         });
         break;
       }
@@ -500,22 +494,23 @@ export default function Reports(): JSX.Element {
             //check if conversation for course, module, user / get conversation list length
             //get conversation data (with message data)
             if (res.data.conversations && res.data.conversations.length > 0) {
-              res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
-                var convoData = await getConvo(courseId, moduleId, convoIndex.toString(), user.username, controller);
-                promiseArray.push(convoData);
-                if (convoData) {
-                  var convoData2 = { ...convoData, user: user };
-                  // push to convo list because it will be a list of ALL convos from all users
-                  // check if convo list already has convo with same id to prevent duplicates
-                  if (
-                    !coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(
-                      (e) => e.id === convoData2.id,
-                    )
-                  ) {
-                    coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
+              await Promise.all(
+                res.data.conversations.map(async (_convo: any, convoIndex: number) => {
+                  const convoData = await getConvo(courseId, moduleId, convoIndex.toString(), user.username, controller);
+                  if (convoData) {
+                    const convoData2 = { ...convoData, user: user };
+                    // push to convo list because it will be a list of ALL convos from all users
+                    // check if convo list already has convo with same id to prevent duplicates
+                    if (
+                      !coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(
+                        (e) => e.id === convoData2.id,
+                      )
+                    ) {
+                      coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
+                    }
                   }
-                }
-              });
+                }),
+              );
             }
           }
           return res.data;
@@ -526,19 +521,11 @@ export default function Reports(): JSX.Element {
           if (res && res.name && res.name === "AxiosError") {
             //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
             const delay = 2000 + Math.random() * 1000;
-            setTimeout(async () => {
-              var some = await getConvoList(
-                courseId,
-                moduleId,
-                user,
-                controller,
-                coursesToDownload,
-                courseIndex,
-                moduleIndex,
-              );
-              promiseArray.push(some);
-              return some;
-            }, delay);
+            return new Promise((resolve) => {
+              setTimeout(async () => {
+                resolve(await getConvoList(courseId, moduleId, user, controller, coursesToDownload, courseIndex, moduleIndex));
+              }, delay);
+            });
           }
         }
       },
@@ -590,9 +577,7 @@ export default function Reports(): JSX.Element {
           navigator("/login");
         } else {
           //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
-          var some = await getConvo(courseId, moduleId, convoIndex, username, controller);
-          promiseArray.push(some);
-          return some;
+          return await getConvo(courseId, moduleId, convoIndex, username, controller);
         }
       },
     );

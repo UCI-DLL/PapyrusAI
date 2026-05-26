@@ -99,8 +99,11 @@ function App(): JSX.Element {
 
           localStorage.setItem("papyrusai_access_token", token);
 
-          // clean URL immediately 
-          window.history.replaceState({}, document.title, "/");
+          // Use location.replace (not replaceState) so React Router picks up
+          // the navigation to "/" — replaceState bypasses the router and leaves
+          // the user stuck on /login even after the token is saved.
+          window.location.replace("/");
+          return;
         }
 
         // 2. Check token from storage
@@ -108,8 +111,9 @@ function App(): JSX.Element {
 
         if (!token) {
           setAuthStatus("unauthenticated");
-          // Note: Comment out next line to run locally
-          window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+          if (process.env.NODE_ENV === "production") {
+            window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+          }
           return;
         }
 
@@ -140,8 +144,9 @@ function App(): JSX.Element {
         setUser(null);
 
         setAuthStatus("unauthenticated");
-        // Note: Comment out next line to run locally
-        window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+        if (process.env.NODE_ENV === "production") {
+          window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+        }
       }
     };
 

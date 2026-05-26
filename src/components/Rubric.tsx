@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
@@ -110,20 +109,6 @@ export const Rubric = (props: RubricProps) => {
             {props.rubric.columns.length !== 1 ? "s" : ""}
           </p>
 
-          {props.rubric.tags && props.rubric.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-auto">
-              {props.rubric.tags.slice(0, 3).map((tag, i) => (
-                <Badge key={i} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {props.rubric.tags.length > 3 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{props.rubric.tags.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

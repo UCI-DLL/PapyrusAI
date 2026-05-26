@@ -1,8 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
-import { Label } from "../../components/ui/label";
-import { Checkbox } from "../../components/ui/checkbox";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import {
@@ -12,15 +10,11 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { ChevronDown, Plus, Trash2, X } from "lucide-react";
-import Get from "../../utility/Get";
 import {
-  TagType,
   RubricType,
   RubricCriterion,
 } from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { cn } from "../../lib/utils";
-import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 
 type RubricFormMode = "create" | "edit";
 
@@ -59,7 +53,6 @@ export default function CreateRubric({
     : undefined;
 
   const [name, setName] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
   const [columns, setColumns] = useState<string[]>([...DEFAULT_COLUMNS]);
   const [columnKeys, setColumnKeys] = useState<string[]>(
     DEFAULT_COLUMNS.map(() => crypto.randomUUID()),
@@ -73,38 +66,15 @@ export default function CreateRubric({
       _key: crypto.randomUUID(),
     },
   ]);
-  const [tagList, setTagList] = useState<TagType[]>([]);
   const [openDiscardModal, setOpenDiscardModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
   useEffect(() => {
-    const controller = new AbortController();
-    getTags("", controller.signal);
     if (isEditMode && actualRubricId) {
       loadRubric(actualFolderId, actualRubricId);
     }
-    return () => controller.abort();
     // eslint-disable-next-line
   }, []);
-
-  function getTags(startKey: string, signal: AbortSignal) {
-    const limit = 20;
-    Get(getTagList(limit, startKey), signal).then((res) => {
-      if (res && res.status && res.status < 300) {
-        if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
-          setTagList((prev) => [...prev, ...res.data.tags]);
-          if (
-            res.data.ScannedCount > 0 &&
-            res.data.ScannedCount >= limit &&
-            res.data.LastEvaluatedKey &&
-            res.data.LastEvaluatedKey.id
-          ) {
-            getTags(res.data.LastEvaluatedKey.id, signal);
-          }
-        }
-      }
-    });
-  }
 
   function loadRubric(folderId: string, rubricId: string) {
     const key = `rubrics_${folderId}`;
@@ -115,7 +85,6 @@ export default function CreateRubric({
       const rubric = rubrics.find((r) => r.id === rubricId);
       if (rubric) {
         setName(rubric.name);
-        setTags(rubric.tags);
         setColumns(rubric.columns);
         setColumnKeys(rubric.columns.map(() => crypto.randomUUID()));
         setCriteria(
@@ -183,12 +152,6 @@ export default function CreateRubric({
     );
   }
 
-  function toggleTag(tagId: string) {
-    setTags((prev) =>
-      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId],
-    );
-  }
-
   // --- Persistence ---
 
   function buildRubric(): RubricType {
@@ -201,7 +164,6 @@ export default function CreateRubric({
       creator: {} as any,
       isDeleted: false,
       name,
-      tags,
       isOrganizationRubric: isOrgFolder,
       folderId: actualFolderId,
       columns,
@@ -341,35 +303,6 @@ export default function CreateRubric({
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <Label className="mb-2 block text-sm font-medium">Tags</Label>
-            <div className="flex flex-wrap gap-2">
-              {tagList.map((tag) => (
-                <label
-                  key={tag.id}
-                  className={cn(
-                    "flex items-center gap-1.5 cursor-pointer px-3 py-1 rounded-full border text-sm transition-colors",
-                    tags.includes(tag.id)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border hover:bg-muted",
-                  )}
-                >
-                  <Checkbox
-                    checked={tags.includes(tag.id)}
-                    onCheckedChange={() => toggleTag(tag.id)}
-                    className="hidden"
-                    aria-hidden="true"
-                  />
-                  {tag.id}
-                </label>
-              ))}
-              {tagList.length === 0 && (
-                <span className="text-sm text-muted-foreground">
-                  No tags available
-                </span>
-              )}
-            </div>
-          </CardContent>
         </Card>
 
         {/* Grid card */}

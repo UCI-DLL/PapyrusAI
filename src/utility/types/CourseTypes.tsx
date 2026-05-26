@@ -69,7 +69,6 @@ export type RubricType = {
   creator: CustomUserType,
   isDeleted: boolean,
   name: string,
-  tags: Array<string>,
   isOrganizationRubric: boolean,
   folderId?: string,
   columns: Array<string>,        // e.g. ["0","1","2","3"] — user-editable labels

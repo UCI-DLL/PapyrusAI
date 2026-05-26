@@ -13,7 +13,11 @@ import {
 } from "../../components/ui/card";
 import { ChevronDown, Plus, Trash2, X } from "lucide-react";
 import Get from "../../utility/Get";
-import { TagType, RubricType, RubricCriterion } from "../../utility/types/CourseTypes";
+import {
+  TagType,
+  RubricType,
+  RubricCriterion,
+} from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
 import { getTagList } from "../../utility/endpoints/TagsEndpoints";
@@ -39,7 +43,8 @@ export default function CreateRubric({
   const navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
 
-  const isEditMode = mode === "edit" || !location.pathname.includes("/createrubric");
+  const isEditMode =
+    mode === "edit" || !location.pathname.includes("/createrubric");
   const isOrgFolder = orgFolder || location.pathname.split("/")[2] === "org";
   const actualFolderId =
     folderId ||
@@ -57,10 +62,16 @@ export default function CreateRubric({
   const [tags, setTags] = useState<string[]>([]);
   const [columns, setColumns] = useState<string[]>([...DEFAULT_COLUMNS]);
   const [columnKeys, setColumnKeys] = useState<string[]>(
-    DEFAULT_COLUMNS.map(() => crypto.randomUUID())
+    DEFAULT_COLUMNS.map(() => crypto.randomUUID()),
   );
-  const [criteria, setCriteria] = useState<Array<RubricCriterion & { _key: string }>>([
-    { name: "", cells: DEFAULT_COLUMNS.map(() => ""), _key: crypto.randomUUID() },
+  const [criteria, setCriteria] = useState<
+    Array<RubricCriterion & { _key: string }>
+  >([
+    {
+      name: "",
+      cells: DEFAULT_COLUMNS.map(() => ""),
+      _key: crypto.randomUUID(),
+    },
   ]);
   const [tagList, setTagList] = useState<TagType[]>([]);
   const [openDiscardModal, setOpenDiscardModal] = useState(false);
@@ -107,7 +118,9 @@ export default function CreateRubric({
         setTags(rubric.tags);
         setColumns(rubric.columns);
         setColumnKeys(rubric.columns.map(() => crypto.randomUUID()));
-        setCriteria(rubric.criteria.map((c) => ({ ...c, _key: crypto.randomUUID() })));
+        setCriteria(
+          rubric.criteria.map((c) => ({ ...c, _key: crypto.randomUUID() })),
+        );
       }
     } catch {
       // corrupt localStorage entry — ignore
@@ -120,9 +133,7 @@ export default function CreateRubric({
     const newLabel = String(columns.length);
     setColumns((prev) => [...prev, newLabel]);
     setColumnKeys((prev) => [...prev, crypto.randomUUID()]);
-    setCriteria((prev) =>
-      prev.map((c) => ({ ...c, cells: [...c.cells, ""] }))
-    );
+    setCriteria((prev) => prev.map((c) => ({ ...c, cells: [...c.cells, ""] })));
   }
 
   function removeColumn(colIndex: number) {
@@ -133,7 +144,7 @@ export default function CreateRubric({
       prev.map((c) => ({
         ...c,
         cells: c.cells.filter((_, i) => i !== colIndex),
-      }))
+      })),
     );
   }
 
@@ -155,7 +166,7 @@ export default function CreateRubric({
 
   function updateCriterionName(rowIndex: number, value: string) {
     setCriteria((prev) =>
-      prev.map((c, i) => (i === rowIndex ? { ...c, name: value } : c))
+      prev.map((c, i) => (i === rowIndex ? { ...c, name: value } : c)),
     );
   }
 
@@ -167,14 +178,14 @@ export default function CreateRubric({
               ...c,
               cells: c.cells.map((cell, j) => (j === colIndex ? value : cell)),
             }
-          : c
-      )
+          : c,
+      ),
     );
   }
 
   function toggleTag(tagId: string) {
     setTags((prev) =>
-      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]
+      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId],
     );
   }
 
@@ -206,7 +217,7 @@ export default function CreateRubric({
     const rubric = buildRubric();
     const key = `rubrics_${actualFolderId}`;
     const existing: RubricType[] = JSON.parse(
-      localStorage.getItem(key) || "[]"
+      localStorage.getItem(key) || "[]",
     );
     const updated = isEditMode
       ? existing.map((r) => (r.id === rubric.id ? rubric : r))
@@ -215,7 +226,9 @@ export default function CreateRubric({
     console.log("Rubric JSON:", JSON.stringify(rubric, null, 2));
     setAlert({ message: "Rubric saved.", type: "success" });
     navigator(
-      isOrgFolder ? `/library/org/${actualFolderId}` : `/library/${actualFolderId}`
+      isOrgFolder
+        ? `/library/org/${actualFolderId}`
+        : `/library/${actualFolderId}`,
     );
   }
 
@@ -223,15 +236,17 @@ export default function CreateRubric({
     if (!actualRubricId) return;
     const key = `rubrics_${actualFolderId}`;
     const existing: RubricType[] = JSON.parse(
-      localStorage.getItem(key) || "[]"
+      localStorage.getItem(key) || "[]",
     );
     localStorage.setItem(
       key,
-      JSON.stringify(existing.filter((r) => r.id !== actualRubricId))
+      JSON.stringify(existing.filter((r) => r.id !== actualRubricId)),
     );
     setAlert({ message: "Rubric deleted.", type: "success" });
     navigator(
-      isOrgFolder ? `/library/org/${actualFolderId}` : `/library/${actualFolderId}`
+      isOrgFolder
+        ? `/library/org/${actualFolderId}`
+        : `/library/${actualFolderId}`,
     );
   }
 
@@ -336,7 +351,7 @@ export default function CreateRubric({
                     "flex items-center gap-1.5 cursor-pointer px-3 py-1 rounded-full border text-sm transition-colors",
                     tags.includes(tag.id)
                       ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border hover:bg-muted"
+                      : "border-border hover:bg-muted",
                   )}
                 >
                   <Checkbox
@@ -363,13 +378,22 @@ export default function CreateRubric({
             <div className="flex items-start gap-3">
               {/* Scrollable table */}
               <div className="overflow-x-auto flex-1">
-                <table className="w-full border-collapse" style={{ minWidth: `${140 + columns.length * 160}px` }}>
+                <table
+                  className="w-full border-collapse"
+                  style={{ minWidth: `${140 + columns.length * 160}px` }}
+                >
                   <thead>
                     <tr>
                       {/* Sticky criterion header */}
                       <th
                         className="border border-border bg-muted px-3 py-2 text-left text-sm font-semibold"
-                        style={{ minWidth: 140, position: "sticky", left: 0, zIndex: 10, background: "hsl(var(--muted))" }}
+                        style={{
+                          minWidth: 140,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 10,
+                          background: "hsl(var(--muted))",
+                        }}
                       >
                         Criterion
                       </th>
@@ -408,11 +432,17 @@ export default function CreateRubric({
                         {/* Sticky criterion name cell */}
                         <td
                           className="border border-border px-2 py-1 align-top"
-                          style={{ position: "sticky", left: 0, zIndex: 10, background: "hsl(var(--muted) / 0.5)", minWidth: 140 }}
+                          style={{
+                            position: "sticky",
+                            left: 0,
+                            zIndex: 10,
+                            background: "hsl(var(--muted) / 0.5)",
+                            minWidth: 140,
+                          }}
                         >
                           <div className="flex items-center gap-1">
                             <input
-                              className="bg-transparent font-semibold text-sm outline-none flex-1 focus:bg-accent focus:rounded px-1 py-0.5 min-w-0"
+                              className="bg-transparent font-semibold text-sm outline-none flex-1 px-1 py-0.5 min-w-0"
                               value={criterion.name}
                               onChange={(e) =>
                                 updateCriterionName(rowIdx, e.target.value)
@@ -422,6 +452,7 @@ export default function CreateRubric({
                             />
                             {criteria.length > 1 && (
                               <button
+                                type="button"
                                 onClick={() => removeCriterion(rowIdx)}
                                 className="text-muted-foreground hover:text-destructive rounded p-0.5 flex-shrink-0"
                                 aria-label={`Remove criterion row ${rowIdx + 1}`}

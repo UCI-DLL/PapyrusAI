@@ -117,8 +117,11 @@ function App(): JSX.Element {
 
           localStorage.setItem("papyrusai_access_token", token);
 
-          // clean URL immediately
-          window.history.replaceState({}, document.title, "/");
+          // Use location.replace (not replaceState) so React Router picks up
+          // the navigation to "/" — replaceState bypasses the router and leaves
+          // the user stuck on /login even after the token is saved.
+          window.location.replace("/");
+          return;
         }
 
         // 2. Check token from storage
@@ -126,8 +129,9 @@ function App(): JSX.Element {
 
         if (!token) {
           setAuthStatus("unauthenticated");
-          // Note: Comment out next line to run locally
-          window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+          if (process.env.NODE_ENV === "production") {
+            window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+          }
           return;
         }
 
@@ -158,8 +162,9 @@ function App(): JSX.Element {
         setUser(null);
 
         setAuthStatus("unauthenticated");
-        // Note: Comment out next line to run locally
-        window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+        if (process.env.NODE_ENV === "production") {
+          window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+        }
       }
     };
 
@@ -215,7 +220,7 @@ function App(): JSX.Element {
             <Router>
               <DialogWrapper
                 open={showUpdateUserInfoModal}
-                onOpenChange={() => {}}
+                onOpenChange={() => { }}
                 title={t("dashboard.missingDetails")}
                 contentClassName="sm:max-w-md max-h-[90vh] flex flex-col [&>button]:hidden"
                 actions={[
@@ -280,8 +285,8 @@ function App(): JSX.Element {
                           ? user
                           : localStorage.getItem("papyrusai_user")
                             ? JSON.parse(
-                                localStorage.getItem("papyrusai_user") ?? "",
-                              )
+                              localStorage.getItem("papyrusai_user") ?? "",
+                            )
                             : null
                       }
                       authStatus={authStatus}
@@ -354,87 +359,87 @@ function App(): JSX.Element {
                       ? process.env.REACT_APP_INSTRUCTOR
                       : "PapyrusAIInstructors",
                   )) && (
-                  <>
-                    <Route
-                      path="/courses/:id/createmodule"
-                      element={
-                        <PrivateRoute user={user} authStatus={authStatus} />
-                      }
-                    >
+                    <>
                       <Route
                         path="/courses/:id/createmodule"
-                        element={<AddModule />}
-                      />
-                    </Route>
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/courses/:id/createmodule"
+                          element={<AddModule />}
+                        />
+                      </Route>
 
-                    <Route
-                      path="/courses/:id/editmodule/:id"
-                      element={
-                        <PrivateRoute user={user} authStatus={authStatus} />
-                      }
-                    >
                       <Route
                         path="/courses/:id/editmodule/:id"
-                        element={<EditModule />}
-                      />
-                    </Route>
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/courses/:id/editmodule/:id"
+                          element={<EditModule />}
+                        />
+                      </Route>
 
-                    <Route
-                      path="/reports"
-                      element={
-                        <PrivateRoute user={user} authStatus={authStatus} />
-                      }
-                    >
-                      <Route path="/reports" element={<Reports />} />
-                    </Route>
+                      <Route
+                        path="/reports"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route path="/reports" element={<Reports />} />
+                      </Route>
 
-                    <Route
-                      path="/reports/:id"
-                      element={
-                        <PrivateRoute user={user} authStatus={authStatus} />
-                      }
-                    >
-                      <Route path="/reports/:id" element={<UserReports />} />
-                    </Route>
+                      <Route
+                        path="/reports/:id"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route path="/reports/:id" element={<UserReports />} />
+                      </Route>
 
-                    <Route
-                      path="/reports/course/:courseId"
-                      element={
-                        <PrivateRoute user={user} authStatus={authStatus} />
-                      }
-                    >
                       <Route
                         path="/reports/course/:courseId"
-                        element={<CourseReports />}
-                      />
-                    </Route>
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/reports/course/:courseId"
+                          element={<CourseReports />}
+                        />
+                      </Route>
 
-                    <Route
-                      path="/reports/module/:id/:id"
-                      element={
-                        <PrivateRoute user={user} authStatus={authStatus} />
-                      }
-                    >
                       <Route
                         path="/reports/module/:id/:id"
-                        element={<ModuleReports />}
-                      />
-                    </Route>
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/reports/module/:id/:id"
+                          element={<ModuleReports />}
+                        />
+                      </Route>
 
-                    {/* shows conversation list of other users  */}
-                    <Route
-                      path="/courses/:id/modules/:id/username/:id"
-                      element={
-                        <PrivateRoute user={user} authStatus={authStatus} />
-                      }
-                    >
+                      {/* shows conversation list of other users  */}
                       <Route
                         path="/courses/:id/modules/:id/username/:id"
-                        element={<ConversationList />}
-                      />
-                    </Route>
-                  </>
-                )}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/courses/:id/modules/:id/username/:id"
+                          element={<ConversationList />}
+                        />
+                      </Route>
+                    </>
+                  )}
 
                 {user &&
                   user.groups &&

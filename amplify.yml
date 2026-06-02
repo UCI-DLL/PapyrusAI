@@ -10,6 +10,7 @@ frontend:
         - echo "REACT_APP_ORGANIZATION=$ORGANIZATION" >> .env
         - echo "REACT_APP_ADMIN=$ADMIN" >> .env
         - echo "REACT_APP_API_URL=$API_URL" >> .env
+        - echo "REACT_APP_API_URL2=$API_URL2" >> .env
         - echo "REACT_APP_INSTRUCTOR=$INSTRUCTOR" >> .env
         - echo "REACT_APP_WEBSOCKET_URL=$WEBSOCKET_URL" >> .env
         - npm run build

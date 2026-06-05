@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Checkbox } from "../../components/ui/checkbox";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
@@ -15,298 +14,102 @@ import {
 } from "../../components/ui/card";
 import { ChevronDown, Info, Loader2, Upload, X } from "lucide-react";
 import Get from "../../utility/Get";
-import { TagType } from "../../utility/types/CourseTypes";
-import { AlertContext } from "../../utility/context/AlertContext";
-import { cn } from "../../lib/utils";
-import { getTagList } from "../../utility/endpoints/TagsEndpoints";
 import Post from "../../utility/Post";
 import {
   getSignedS3BucketUploadOrgFolder,
   getSignedS3BucketUploadUserFolder,
-  postCreateOrgFile,
-  postCreateUserFile,
 } from "../../utility/endpoints/FolderEndpoints";
+import {
+  getItem,
+  postCreateItem,
+} from "../../utility/endpoints/ItemEndpoints";
 import axios from "axios";
+import { AlertContext } from "../../utility/context/AlertContext";
+import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 export default function CreateFile(): JSX.Element {
-  let location = useLocation();
-  let navigator = useNavigate();
+  const location = useLocation();
+  const navigator = useNavigate();
   const { t } = useTranslation();
-
-  // Translated options
-  const options = [t("createFile.saveUpload"), t("createFile.discardChanges")];
-  const [newFile, setNewFile] = useState<{
-    name: string;
-    id: string;
-    tags: Array<string>;
-  }>({
-    name: "",
-    id: "",
-    tags: [],
-  });
-  const [errors, setErrors] = useState<any>({
-    name: "",
-    file: "",
-    tags: "",
-  });
-  const [fileInfo, setFileInfo] = useState<{
-    isOrgFolder: boolean;
-    folderId: string;
-  }>();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setAlert } = useContext(AlertContext);
+
+  const options = [t("createFile.saveUpload"), t("createFile.discardChanges")];
+
+  const folderId = location.pathname.split("/")[2];
+
+  const [fileName, setFileName] = useState("");
+  const [isOrgFolder, setIsOrgFolder] = useState(false);
+  const [errors, setErrors] = useState({ name: "", file: "" });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [openSaveTop, setOpenSaveTop] = useState(false);
   const [openSaveBottom, setOpenSaveBottom] = useState(false);
-  const [showSavePublishTooltip, setShowSavePublishTooltip] =
-    useState<boolean>(false);
-  const [tagList, setTagList] = useState<Array<TagType>>([]);
+  const [showInfoDialog, setShowInfoDialog] = useState<boolean>(false);
+  const [selectedFiles, setSelectedFiles] = React.useState<File | undefined>();
   const fileRef = React.useRef<HTMLInputElement>(null);
   const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
-  const [selectedFiles, setSelectedFiles] = React.useState<any>();
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event?.target?.files?.[0];
-    if (file) {
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "application/pdf",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", //docx
-        "text/plain",
-      ];
-      //handle file size
-      if (file.size > MAX_FILE_SIZE) {
-        setErrors((prev: any) => ({
-          ...prev,
-          file: t("createFile.fileTooLarge"),
-        }));
-        setSelectedFiles(null);
-      } else {
-        //handle file formats
-        if (allowedTypes.includes(file.type)) {
-          setErrors((prev: any) => ({ ...prev, file: "" }));
-          setSelectedFiles(file);
-        } else {
-          setErrors((prev: any) => ({
-            ...prev,
-            file: t("createFile.invalidFileType"),
-          }));
-          setSelectedFiles(null);
-        }
-      }
-    }
-  };
-
-  const onClear = () => {
-    setSelectedFiles(undefined);
-  };
-
-  const onUpdate = (action: "change" | "clear") => {
-    if (action === "change" && fileRef.current) {
-      onClear();
-      fileRef.current.click();
-      return;
-    }
-    if (action === "clear") {
-      onClear();
-      return;
-    }
-  };
-
   useEffect(() => {
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: { folderId, page: "create_file" },
+    });
+
     const controller = new AbortController();
-    //get pathname to figure out if we are editing
-    if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[2] === "org" &&
-      location.pathname.split("/")[3] &&
-      location.pathname.split("/")[4] === "createfile"
-    ) {
-      //get prev file data
-      const folderId = location.pathname.split("/")[3];
-      //save the ids
-      setFileInfo({ isOrgFolder: true, folderId: folderId });
-      //log page
-      Post(logEvent(), {
-        eventType: "view_page",
-        metadata: {
-          orgFolder: true,
-          isEditMode: false,
-          folderId: folderId,
-          page: "create_file",
-        }
-      })
-    } else if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[2] !== "org" &&
-      location.pathname.split("/")[3] === "createfile"
-    ) {
-      //get prev file data
-      const folderId = location.pathname.split("/")[2];
-      //save the ids
-      setFileInfo({ isOrgFolder: false, folderId: folderId });
-      //log page
-      Post(logEvent(), {
-        eventType: "view_page",
-        metadata: {
-          orgFolder: false,
-          isEditMode: false,
-          folderId: folderId,
-          page: "create_file",
-        }
-      })
-    }
+    Get(getItem(folderId), controller.signal, true).then((res) => {
+      if (res && res.status && res.status < 300 && res.data) {
+        setIsOrgFolder(res.data.ownerId === "ORG");
+        setIsLoading(false);
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else if (res !== undefined) {
+        setAlert({ message: t("library.folderDoesNotExist"), type: "error" });
+        navigator("/library");
+      }
+    });
 
-    if (tagList.length === 0) {
-      getTags("", controller.signal);
-    }
-
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
     // eslint-disable-next-line
   }, [location.pathname]);
 
-  function getTags(startKey: string, signal: AbortSignal) {
-    var limit = 20;
-    Get(getTagList(limit, startKey), signal).then((res) => {
-      if (res && res.status && res.status < 300) {
-        if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
-          //Get the list of all folders
-          setTagList((prev) => [...prev, ...res.data.tags]);
-          //if the data is 20 files, then call for the next page
-          //handle pages
-          if (
-            res.data.ScannedCount > 0 &&
-            res.data.ScannedCount >= limit &&
-            res.data.LastEvaluatedKey &&
-            res.data.LastEvaluatedKey.id
-          ) {
-            getTags(res.data.LastEvaluatedKey.id, signal);
-          } else {
-            setIsLoading(false);
-          }
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        if (res === undefined) {
-        } else {
-          // handle error
-          setIsLoading(false);
-        }
-      }
-    });
-  }
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+    ];
+    if (file.size > MAX_FILE_SIZE) {
+      setErrors((prev) => ({ ...prev, file: t("createFile.fileTooLarge") }));
+      setSelectedFiles(undefined);
+    } else if (allowedTypes.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, file: "" }));
+      setSelectedFiles(file);
+    } else {
+      setErrors((prev) => ({ ...prev, file: t("createFile.invalidFileType") }));
+      setSelectedFiles(undefined);
+    }
+  };
 
   const handleMenuItemClick = (index: number) => {
-    if (index === 0) {
-      //Save and upload
-      handleUpload();
-    } else if (index === 1) {
-      //discard changes
-      setOpenDiscardModal(true);
-    }
+    if (index === 0) { handleUpload(); }
+    else if (index === 1) { setOpenDiscardModal(true); }
     setSelectedIndexSave(index);
     setOpenSaveTop(false);
     setOpenSaveBottom(false);
   };
 
-  function handleClick(e: any) {
-    if (selectedIndexSave === 0) {
-      //Save and upload
-      handleUpload(e);
-    } else if (selectedIndexSave === 1) {
-      //discard changes
-      setOpenDiscardModal(true);
-    }
+  function handleClick(_e: any) {
+    if (selectedIndexSave === 0) { handleUpload(); }
+    else if (selectedIndexSave === 1) { setOpenDiscardModal(true); }
   }
-
-  function handleSubmit(id: string) {
-    if (fileInfo && fileInfo.isOrgFolder) {
-      setIsLoading(true);
-      const dataToSend = {
-        name: newFile.name,
-        isDeleted: false,
-        tags: newFile.tags,
-        id: id,
-      };
-      // post data back
-      Post(postCreateOrgFile(fileInfo.folderId), dataToSend).then((res) => {
-        if (res.status && res.status < 300) {
-          if (res.data && res.data) {
-            //pop up notifying user of created
-            setAlert({ message: t("createFile.fileCreated"), type: "success" });
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          // handle error
-          if (res) {
-            setAlert({
-              message: t("createFile.fileCouldNotBeCreated"),
-              type: "error",
-            });
-          }
-        }
-        setIsLoading(false);
-        navigator(`/library/org/${fileInfo.folderId}`);
-      });
-    } else if (fileInfo) {
-      setIsLoading(true);
-      const dataToSend = {
-        name: newFile.name,
-        isDeleted: false,
-        tags: newFile.tags,
-        id: id,
-      };
-      // post data back
-      Post(postCreateUserFile(fileInfo.folderId), dataToSend).then((res) => {
-        if (res.status && res.status < 300) {
-          if (res.data && res.data) {
-            //pop up notifying user of Created
-            setAlert({ message: t("createFile.fileCreated"), type: "success" });
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          // set errors
-          setAlert({
-            message: t("errorMessage.createFileError"),
-            type: "error",
-          });
-        }
-        setIsLoading(false);
-        navigator(`/library/${fileInfo.folderId}`);
-      });
-    }
-  }
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setNewFile((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
-
-  const handleTagToggle = (tagId: string) => {
-    setNewFile((prev) => {
-      const isSelected = prev.tags.includes(tagId);
-      return {
-        ...prev,
-        tags: isSelected
-          ? prev.tags.filter((id) => id !== tagId)
-          : [...prev.tags, tagId],
-      };
-    });
-  };
 
   function handleUpload(e?: React.FormEvent) {
     e?.preventDefault();
@@ -314,115 +117,76 @@ export default function CreateFile(): JSX.Element {
       setAlert({ message: t("errorMessage.missingFileInfo"), type: "error" });
       return;
     }
-    if (newFile.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+    if (fileName === "") {
+      setErrors((prev) => ({ ...prev, name: t("errorMessage.nameMissing") }));
       return;
     }
-    // Handle here
-    if (fileInfo) {
-      setIsLoading(true);
-      const ext = selectedFiles.name.includes(".")
-        ? "." + selectedFiles.name.split(".").pop()
-        : "";
-      const fileId =
-        Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
-      //if is org folder, then upload to org folder
-      if (fileInfo?.isOrgFolder) {
-        Get(getSignedS3BucketUploadOrgFolder(fileInfo.folderId, fileId)).then(
-          (res) => {
-            if (res && res.status && res.status < 300) {
-              //handle upload to s3 -> handleUploadToS3
-              if (res.data) {
-                handleUploadToS3(res.data.url, res.data.id);
-              } else {
-                //handle error
-                setAlert({
-                  message: t("errorMessage.createFileError"),
-                  type: "error",
-                });
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              if (res === undefined) {
-              } else {
-                // handle error
-                setIsLoading(false);
-              }
-            }
-          }
-        );
-      } else {
-        //else an user folder
-        Get(getSignedS3BucketUploadUserFolder(fileInfo.folderId, fileId)).then(
-          (res) => {
-            if (res && res.status && res.status < 300) {
-              //handle upload to s3 -> handleUploadToS3
-              if (res.data) {
-                handleUploadToS3(res.data.url, fileId);
-              } else {
-                //handle error
-                setAlert({
-                  message: t("errorMessage.createFileError"),
-                  type: "error",
-                });
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              if (res === undefined) {
-              } else {
-                // handle error
-                setIsLoading(false);
-              }
-            }
-          }
-        );
+    setIsLoading(true);
+    const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split(".").pop() : "";
+    const fileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
+
+    const signedUrlEndpoint = isOrgFolder
+      ? getSignedS3BucketUploadOrgFolder(folderId, fileId)
+      : getSignedS3BucketUploadUserFolder(folderId, fileId);
+
+    Get(signedUrlEndpoint).then((res) => {
+      if (res && res.status && res.status < 300 && res.data) {
+        handleUploadToS3(res.data.url, isOrgFolder ? res.data.id : fileId);
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else if (res !== undefined) {
+        setAlert({ message: t("errorMessage.createFileError"), type: "error" });
+        setIsLoading(false);
       }
-    }
+    });
   }
 
   async function handleUploadToS3(url: string, id: string) {
     try {
-      // Upload original file directly to s3
-      await axios
-        .put(url, selectedFiles, {
-          headers: {
-            "Content-Type": selectedFiles.type,
-          },
-        })
-        .then((res) => {
-          if (res && res.status && res.status < 300) {
-            handleSubmit(id);
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              // handle error
-              setIsLoading(false);
-            }
-          }
-        });
+      const res = await axios.put(url, selectedFiles, {
+        headers: { "Content-Type": selectedFiles!.type },
+      });
+      if (res && res.status && res.status < 300) {
+        createFileItem(id);
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        setIsLoading(false);
+      }
     } catch (error) {
       console.error((error as Error).message);
+      setIsLoading(false);
     }
   }
 
-  return fileInfo && !isLoading ? (
+  function createFileItem(fileReference: string) {
+    Post(postCreateItem(), {
+      type: "file",
+      parentId: folderId,
+      name: fileName,
+      metadata: { fileReference },
+    }, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("createFile.fileCreated"), type: "success" });
+      } else if (res && res.status === 401) {
+        navigator("/login");
+        return;
+      } else {
+        setAlert({ message: t("createFile.fileCouldNotBeCreated"), type: "error" });
+      }
+      setIsLoading(false);
+      navigator(`/library/${folderId}`);
+    });
+  }
+
+  return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
-      {/* Dialogs */}
       <DialogWrapper
-        open={showSavePublishTooltip}
-        onOpenChange={setShowSavePublishTooltip}
+        open={showInfoDialog}
+        onOpenChange={setShowInfoDialog}
         title={t("library.aboutFileUpload")}
         contentClassName="sm:max-w-md"
-        actions={[
-          {
-            label: t("components.gotIt"),
-            onClick: () => setShowSavePublishTooltip(false),
-          },
-        ]}
+        actions={[{ label: t("components.gotIt"), onClick: () => setShowInfoDialog(false) }]}
       >
         <div className="space-y-3">
           <p>
@@ -438,7 +202,6 @@ export default function CreateFile(): JSX.Element {
             .
           </p>
         </div>
-
       </DialogWrapper>
 
       <DialogWrapper
@@ -448,26 +211,14 @@ export default function CreateFile(): JSX.Element {
         description={t("createFile.discardChangesDescription")}
         contentClassName="sm:max-w-md"
         actions={[
-          {
-            label: `${t("common.cancel")}`,
-            onClick: () => setOpenDiscardModal(false),
-            variant: "outline",
-          },
-          {
-            label: t("createFile.discardChanges"),
-            onClick: () => navigator(-1),
-            variant: "destructive",
-          },
+          { label: t("common.cancel"), onClick: () => setOpenDiscardModal(false), variant: "outline" },
+          { label: t("createFile.discardChanges"), onClick: () => navigator(-1), variant: "destructive" },
         ]}
       />
 
-      {/* Standard Page Header Pattern */}
       <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
-          <div
-            className="absolute top-0 right-0 w-48 h-48 opacity-10"
-            aria-hidden="true"
-          >
+          <div className="absolute top-0 right-0 w-48 h-48 opacity-10" aria-hidden="true">
             <Upload size={192} className="text-primary" />
           </div>
           <div className="relative z-10">
@@ -483,13 +234,12 @@ export default function CreateFile(): JSX.Element {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowSavePublishTooltip(true)}
+                    onClick={() => setShowInfoDialog(true)}
                     aria-label={t("createFile.fileInfoLabel")}
                   >
                     <Info className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </TooltipWrapper>
-
                 <div className="flex rounded-lg border">
                   <Button
                     size="sm"
@@ -527,7 +277,6 @@ export default function CreateFile(): JSX.Element {
                 </div>
               </nav>
             </div>
-
             <InfoAccordion>
               <p className="text-muted-foreground max-w-2xl text-base leading-6">
                 {t("createFile.createFileDescription")}&nbsp;
@@ -546,7 +295,6 @@ export default function CreateFile(): JSX.Element {
         </div>
       </header>
 
-      {/* Actions Section */}
       <section aria-labelledby="actions-heading">
         <Card className="transition-all duration-300 hover:shadow-md" id="actions-heading">
           <CardHeader>
@@ -565,7 +313,7 @@ export default function CreateFile(): JSX.Element {
                     {t("createFile.fileName")} *
                   </Label>
                   <TooltipWrapper content={t("createFile.fileNameTooltip")}>
-                    <button aria-label={t("createFile.fileNameTooltip")}>
+                    <button type="button" aria-label={t("createFile.fileNameTooltip")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -574,24 +322,15 @@ export default function CreateFile(): JSX.Element {
                   id="name"
                   name="name"
                   placeholder={t("createFile.fileNameHelptext")}
-                  value={newFile.name}
-                  onChange={handleChange}
+                  value={fileName}
+                  onChange={(e) => setFileName(e.target.value)}
                   disabled={isLoading}
                   required
-                  className={
-                    errors.name
-                      ? "border-destructive focus-visible:ring-destructive"
-                      : ""
-                  }
+                  className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
                   aria-describedby={errors.name ? "name-error" : undefined}
                 />
                 {errors.name && (
-                  <p
-                    id="name-error"
-                    className="text-sm text-destructive"
-                    role="alert"
-                    aria-live="assertive"
-                  >
+                  <p id="name-error" className="text-sm text-destructive" role="alert" aria-live="assertive">
                     {errors.name}
                   </p>
                 )}
@@ -600,7 +339,7 @@ export default function CreateFile(): JSX.Element {
                 <div className="flex items-center gap-2">
                   <Label className="text-sm font-medium">{t("createFile.fileUpload")}*</Label>
                   <TooltipWrapper content={t("createFile.fileTooltip")}>
-                    <button aria-label={t("createFile.fileTooltip")}>
+                    <button type="button" aria-label={t("createFile.fileTooltip")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -636,7 +375,7 @@ export default function CreateFile(): JSX.Element {
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Upload className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       <span className="text-sm font-medium truncate-text">
-                        {selectedFiles?.name}
+                        {selectedFiles.name}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -644,7 +383,7 @@ export default function CreateFile(): JSX.Element {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => onUpdate("change")}
+                        onClick={() => { setSelectedFiles(undefined); fileRef.current?.click(); }}
                         disabled={isLoading}
                       >
                         {t("components.change")}
@@ -653,7 +392,7 @@ export default function CreateFile(): JSX.Element {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => onUpdate("clear")}
+                        onClick={() => setSelectedFiles(undefined)}
                         disabled={isLoading}
                       >
                         <X className="h-4 w-4" />
@@ -662,64 +401,15 @@ export default function CreateFile(): JSX.Element {
                   </div>
                 )}
                 {errors.file && (
-                  <p
-                    className="text-sm text-destructive"
-                    role="alert"
-                    aria-live="assertive"
-                  >{errors.file}</p>
+                  <p className="text-sm text-destructive" role="alert" aria-live="assertive">
+                    {errors.file}
+                  </p>
                 )}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm font-medium">{t("library.tags")}</Label>
-                  <TooltipWrapper content={t("library.tagsDescription")}>
-                    <button aria-label={t("library.tagsDescription")}>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </TooltipWrapper>
-                </div>
-                <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
-                  {tagList.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2">
-                      {tagList.map((tag) => (
-                        <div
-                          key={tag.id}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`tag-${tag.id}`}
-                            aria-labelledby={`tag-${tag.id}label`}
-                            checked={newFile.tags.includes(tag.id)}
-                            onCheckedChange={() => handleTagToggle(tag.id)}
-                            disabled={isLoading}
-                          />
-                          <Label
-                            id={`tag-${tag.id}label`}
-                            htmlFor={`tag-${tag.id}`}
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            {tag.id}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {t("library.noTags")}
-                    </p>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {t("common.selected")}:{" "}
-                  {newFile.tags.length > 0 ? newFile.tags.join(", ") : t("common.none")}
-                </p>
               </div>
             </form>
           </CardContent>
         </Card>
 
-        {/* Bottom Actions */}
         <section aria-labelledby="bottom-actions-heading" className="pt-4">
           <nav
             className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
@@ -729,7 +419,7 @@ export default function CreateFile(): JSX.Element {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowSavePublishTooltip(true)}
+              onClick={() => setShowInfoDialog(true)}
               aria-label={t("createFile.fileInfoLabel")}
             >
               <Info className="h-4 w-4" aria-hidden="true" />
@@ -775,16 +465,9 @@ export default function CreateFile(): JSX.Element {
       </section>
     </main>
   ) : (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      role="status"
-      aria-live="polite"
-    >
+    <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-4">
-        <Loader2
-          className="h-8 w-8 animate-spin text-primary"
-          aria-hidden="true"
-        />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
         <p className="text-muted-foreground">{t("loadingMessage.fileCreationForm")}</p>
       </div>
     </div>

@@ -488,43 +488,7 @@ function App(): JSX.Element {
                           <PrivateRoute user={user} authStatus={authStatus} />
                         }
                       >
-                        <Route path="/library/:id" element={<ViewFolder />} />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route
-                          path="/library/org/:id"
-                          element={<ViewFolder />}
-                        />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id/createprompt"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route
-                          path="/library/org/:id/createprompt"
-                          element={<CreatePrompt />}
-                        />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id/prompts/:id"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route
-                          path="/library/org/:id/prompts/:id"
-                          element={<EditPrompt />}
-                        />
+                        <Route path="/library/:id" element={<Library />} />
                       </Route>
 
                       <Route
@@ -552,30 +516,6 @@ function App(): JSX.Element {
                       </Route>
 
                       <Route
-                        path="/library/org/:id/createfile"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route
-                          path="/library/org/:id/createfile"
-                          element={<CreateFile />}
-                        />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id/files/:id"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route
-                          path="/library/org/:id/files/:id"
-                          element={<EditFile />}
-                        />
-                      </Route>
-
-                      <Route
                         path="/library/:id/createfile"
                         element={
                           <PrivateRoute user={user} authStatus={authStatus} />
@@ -596,30 +536,6 @@ function App(): JSX.Element {
                         <Route
                           path="/library/:id/files/:id"
                           element={<EditFile />}
-                        />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id/createrubric"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route
-                          path="/library/org/:id/createrubric"
-                          element={<CreateRubric />}
-                        />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id/rubrics/:id"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route
-                          path="/library/org/:id/rubrics/:id"
-                          element={<EditRubric />}
                         />
                       </Route>
 

@@ -3,17 +3,22 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
-import { RubricType, FolderType } from "../utility/types/CourseTypes";
+import { LibraryItem } from "../utility/types/CourseTypes";
 import { LayoutGrid, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router";
 import { AlertContext } from "../utility/context/AlertContext";
+import { UserContext } from "../utility/context/UserContext";
+import Delete from "../utility/Delete";
+import Post from "../utility/Post";
+import { deleteItem, postCopyItem, postMoveItem } from "../utility/endpoints/ItemEndpoints";
+import { useTranslation } from "../hooks/useTranslation";
+import { FolderPickerDialog } from "../features/library/FolderPickerDialog";
 
 interface RubricProps {
-  rubric: RubricType;
-  folder: FolderType;
+  item: LibraryItem;
   keyy: string;
   refreshList: () => void;
-  loading: () => void;
+  loading: (isLoading?: boolean) => void;
   noShowMenu?: boolean;
   onClick?: (folderId: string, id: string, isOrgFolder: boolean, type: string) => void;
   isSelected?: boolean;
@@ -22,46 +27,130 @@ interface RubricProps {
 export const Rubric = (props: RubricProps) => {
   const navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
+  const { user } = useContext(UserContext);
+  const { t } = useTranslation();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openCopyDialog, setOpenCopyDialog] = useState(false);
+  const [openMoveDialog, setOpenMoveDialog] = useState(false);
 
-  const isOrgFolder = props.rubric.isOrganizationRubric;
+  const isOrgItem = props.item.ownerId === "ORG";
+  const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
 
   function edit() {
     props.loading();
-    const path = isOrgFolder
-      ? `/library/org/${props.folder.id}/rubrics/${props.rubric.id}`
-      : `/library/${props.folder.id}/rubrics/${props.rubric.id}`;
-    navigator(path);
+    navigator(`/library/${props.item.parentId}/rubrics/${props.item.itemId}`);
   }
 
   function handleCardClick() {
     if (props.onClick) {
-      props.onClick(props.folder.id, props.rubric.id, isOrgFolder, "rubric");
+      props.onClick(props.item.parentId, props.item.itemId, isOrgItem, "rubric");
     } else {
       edit();
     }
   }
 
   function deleteRubric() {
-    const key = `rubrics_${props.folder.id}`;
-    const existing: RubricType[] = JSON.parse(localStorage.getItem(key) || "[]");
-    localStorage.setItem(key, JSON.stringify(existing.filter((r) => r.id !== props.rubric.id)));
-    setAlert({ message: "Rubric deleted.", type: "success" });
-    setOpenDeleteDialog(false);
-    props.refreshList();
+    props.loading();
+    Delete(deleteItem(props.item.itemId), true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.rubricDeletedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToDeleteRubric"), type: "error" });
+      }
+      setOpenDeleteDialog(false);
+    });
   }
+
+  function copyRubric(destinationFolderId: string) {
+    setOpenCopyDialog(false);
+    props.loading();
+    const copyBody = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postCopyItem(props.item.itemId), copyBody, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.rubricCopiedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToCopyRubric"), type: "error" });
+      }
+    });
+  }
+
+  function moveRubric(destinationFolderId: string) {
+    setOpenMoveDialog(false);
+    props.loading();
+    const moveBody = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postMoveItem(props.item.itemId), moveBody, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.rubricMovedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToMoveRubric"), type: "error" });
+      }
+    });
+  }
+
+  const criteriaCount = props.item.metadata?.criteria?.length ?? 0;
+  const columnsCount = props.item.metadata?.columns?.length ?? 0;
+
+  // Instructors viewing org rubrics can only copy; owners get full menu
+  const menuItems = isOrgItem && !isAdmin
+    ? [
+        { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
+      ]
+    : [
+        { label: t("common.edit"), onClick: edit },
+        { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
+        { label: t("common.moveTo"), onClick: () => setOpenMoveDialog(true) },
+        {
+          label: t("common.delete"),
+          onClick: () => setOpenDeleteDialog(true),
+          className: "text-destructive focus:bg-destructive focus:text-destructive-foreground",
+        },
+      ];
 
   return (
     <div key={props.keyy}>
+      {/* Delete Dialog */}
       <DialogWrapper
         open={openDeleteDialog}
         onOpenChange={setOpenDeleteDialog}
-        title="Delete Rubric"
-        description={`"${props.rubric.name}" will be permanently deleted.`}
+        title={t("components.deleteRubric")}
+        description={t("components.deleteRubricMessage")}
         actions={[
-          { label: "Cancel", onClick: () => setOpenDeleteDialog(false), variant: "outline" },
-          { label: "Delete", onClick: deleteRubric, variant: "destructive" },
+          { label: t("common.cancel"), onClick: () => setOpenDeleteDialog(false), variant: "outline" },
+          { label: t("common.delete"), onClick: deleteRubric, variant: "destructive" },
         ]}
+      />
+
+      {/* Copy To */}
+      <FolderPickerDialog
+        open={openCopyDialog}
+        onOpenChange={setOpenCopyDialog}
+        title={t("components.copyRubricTo")}
+        description={t("components.copyRubricToDescription")}
+        onSelect={(folderId) => copyRubric(folderId)}
+        allowOrgFolders={isAdmin}
+      />
+
+      {/* Move To */}
+      <FolderPickerDialog
+        open={openMoveDialog}
+        onOpenChange={setOpenMoveDialog}
+        title={t("components.moveRubricTo")}
+        description={t("components.moveRubricToDescription")}
+        onSelect={(folderId) => moveRubric(folderId)}
+        disableSelectFolderId={props.item.parentId}
+        allowOrgFolders={isAdmin}
       />
 
       <Card
@@ -73,7 +162,7 @@ export const Rubric = (props: RubricProps) => {
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 text-primary" />
               <span className="text-xs font-medium text-primary uppercase tracking-wide">
-                Rubric
+                {t("library.rubric")}
               </span>
             </div>
             {!props.noShowMenu && (
@@ -84,31 +173,27 @@ export const Rubric = (props: RubricProps) => {
                     size="sm"
                     className="flex items-center p-1"
                     onClick={(e) => e.stopPropagation()}
-                    aria-label="More options"
+                    aria-label={t("common.moreOptions")}
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 }
-                actions={[
-                  { label: "Edit", onClick: edit },
-                  { label: "Delete", onClick: () => setOpenDeleteDialog(true) },
-                ]}
+                actions={menuItems}
                 align="end"
               />
             )}
           </div>
 
           <h3 className="font-semibold text-foreground mb-1 line-clamp-2">
-            {props.rubric.name || "Untitled Rubric"}
+            {props.item.name || "Untitled Rubric"}
           </h3>
 
-          <p className="text-xs text-muted-foreground mb-3">
-            {props.rubric.criteria.length} criterion
-            {props.rubric.criteria.length !== 1 ? "a" : ""} ·{" "}
-            {props.rubric.columns.length} score level
-            {props.rubric.columns.length !== 1 ? "s" : ""}
-          </p>
-
+          {(criteriaCount > 0 || columnsCount > 0) && (
+            <p className="text-xs text-muted-foreground mb-3">
+              {criteriaCount} criterion{criteriaCount !== 1 ? "a" : ""} ·{" "}
+              {columnsCount} score level{columnsCount !== 1 ? "s" : ""}
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

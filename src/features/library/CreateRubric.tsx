@@ -9,92 +9,75 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
-import { ChevronDown, Plus, Trash2, X } from "lucide-react";
-import {
-  RubricType,
-  RubricCriterion,
-} from "../../utility/types/CourseTypes";
+import { ChevronDown, Loader2, Plus, Trash2, X } from "lucide-react";
+import { RubricCriterion } from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
-
-type RubricFormMode = "create" | "edit";
-
-interface RubricFormProps {
-  mode?: RubricFormMode;
-  orgFolder?: boolean;
-  folderId?: string;
-  rubricId?: string;
-}
+import Get from "../../utility/Get";
+import Post from "../../utility/Post";
+import Patch from "../../utility/Patch";
+import Delete from "../../utility/Delete";
+import {
+  getItem,
+  postCreateItem,
+  patchUpdateItem,
+  deleteItem,
+} from "../../utility/endpoints/ItemEndpoints";
+import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 const DEFAULT_COLUMNS = ["0", "1", "2", "3"];
 
-export default function CreateRubric({
-  mode = "create",
-  orgFolder = false,
-  folderId,
-  rubricId,
-}: RubricFormProps = {}): JSX.Element {
+export default function CreateRubric(): JSX.Element {
   const location = useLocation();
   const navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
 
-  const isEditMode =
-    mode === "edit" || !location.pathname.includes("/createrubric");
-  const isOrgFolder = orgFolder || location.pathname.split("/")[2] === "org";
-  const actualFolderId =
-    folderId ||
-    (isOrgFolder
-      ? location.pathname.split("/")[3]
-      : location.pathname.split("/")[2]);
-  const actualRubricId = isEditMode
-    ? rubricId ||
-      (isOrgFolder
-        ? location.pathname.split("/")[5]
-        : location.pathname.split("/")[4])
-    : undefined;
+  const isEditMode = !location.pathname.includes("/createrubric");
+  const folderId = location.pathname.split("/")[2];
+  const rubricId = isEditMode ? location.pathname.split("/")[4] : undefined;
 
   const [name, setName] = useState("");
   const [columns, setColumns] = useState<string[]>([...DEFAULT_COLUMNS]);
   const [columnKeys, setColumnKeys] = useState<string[]>(
     DEFAULT_COLUMNS.map(() => crypto.randomUUID()),
   );
-  const [criteria, setCriteria] = useState<
-    Array<RubricCriterion & { _key: string }>
-  >([
-    {
-      name: "",
-      cells: DEFAULT_COLUMNS.map(() => ""),
-      _key: crypto.randomUUID(),
-    },
+  const [criteria, setCriteria] = useState<Array<RubricCriterion & { _key: string }>>([
+    { name: "", cells: DEFAULT_COLUMNS.map(() => ""), _key: crypto.randomUUID() },
   ]);
+  const [isLoading, setIsLoading] = useState<boolean>(isEditMode);
   const [openDiscardModal, setOpenDiscardModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
   useEffect(() => {
-    if (isEditMode && actualRubricId) {
-      loadRubric(actualFolderId, actualRubricId);
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: { isEditMode, folderId, rubricId, page: "create_rubric" },
+    });
+
+    if (isEditMode && rubricId) {
+      const controller = new AbortController();
+      Get(getItem(rubricId), controller.signal, true).then((res) => {
+        if (res && res.status && res.status < 300 && res.data) {
+          const meta = res.data.metadata ?? {};
+          setName(res.data.name);
+          if (meta.columns?.length) {
+            setColumns(meta.columns);
+            setColumnKeys(meta.columns.map(() => crypto.randomUUID()));
+          }
+          if (meta.criteria?.length) {
+            setCriteria(meta.criteria.map((c: RubricCriterion) => ({ ...c, _key: crypto.randomUUID() })));
+          }
+          setIsLoading(false);
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else if (res !== undefined) {
+          setAlert({ message: "Rubric not found.", type: "error" });
+          navigator(`/library/${folderId}`);
+        }
+      });
+      return () => controller.abort();
     }
     // eslint-disable-next-line
-  }, []);
-
-  function loadRubric(folderId: string, rubricId: string) {
-    const key = `rubrics_${folderId}`;
-    const stored = localStorage.getItem(key);
-    if (!stored) return;
-    try {
-      const rubrics: RubricType[] = JSON.parse(stored);
-      const rubric = rubrics.find((r) => r.id === rubricId);
-      if (rubric) {
-        setName(rubric.name);
-        setColumns(rubric.columns);
-        setColumnKeys(rubric.columns.map(() => crypto.randomUUID()));
-        setCriteria(
-          rubric.criteria.map((c) => ({ ...c, _key: crypto.randomUUID() })),
-        );
-      }
-    } catch {
-      // corrupt localStorage entry — ignore
-    }
-  }
+  }, [location.pathname]);
 
   // --- Grid mutations ---
 
@@ -110,10 +93,7 @@ export default function CreateRubric({
     setColumns((prev) => prev.filter((_, i) => i !== colIndex));
     setColumnKeys((prev) => prev.filter((_, i) => i !== colIndex));
     setCriteria((prev) =>
-      prev.map((c) => ({
-        ...c,
-        cells: c.cells.filter((_, i) => i !== colIndex),
-      })),
+      prev.map((c) => ({ ...c, cells: c.cells.filter((_, i) => i !== colIndex) })),
     );
   }
 
@@ -143,10 +123,7 @@ export default function CreateRubric({
     setCriteria((prev) =>
       prev.map((c, i) =>
         i === rowIndex
-          ? {
-              ...c,
-              cells: c.cells.map((cell, j) => (j === colIndex ? value : cell)),
-            }
+          ? { ...c, cells: c.cells.map((cell, j) => (j === colIndex ? value : cell)) }
           : c,
       ),
     );
@@ -154,70 +131,81 @@ export default function CreateRubric({
 
   // --- Persistence ---
 
-  function buildRubric(): RubricType {
-    return {
-      id:
-        isEditMode && actualRubricId
-          ? actualRubricId
-          : String(Date.now()) +
-            String(Math.floor(100000 + Math.random() * 900000)),
-      creator: {} as any,
-      isDeleted: false,
-      name,
-      isOrganizationRubric: isOrgFolder,
-      folderId: actualFolderId,
-      columns,
-      criteria: criteria.map(({ _key, ...c }) => c),
-    };
-  }
-
   function handleSave() {
     if (!name.trim()) {
       setAlert({ message: "Rubric name is required.", type: "error" });
       return;
     }
-    const rubric = buildRubric();
-    const key = `rubrics_${actualFolderId}`;
-    const existing: RubricType[] = JSON.parse(
-      localStorage.getItem(key) || "[]",
-    );
-    const updated = isEditMode
-      ? existing.map((r) => (r.id === rubric.id ? rubric : r))
-      : [...existing, rubric];
-    localStorage.setItem(key, JSON.stringify(updated));
-    console.log("Rubric JSON:", JSON.stringify(rubric, null, 2));
-    setAlert({ message: "Rubric saved.", type: "success" });
-    navigator(
-      isOrgFolder
-        ? `/library/org/${actualFolderId}`
-        : `/library/${actualFolderId}`,
-    );
+    setIsLoading(true);
+    const cleanCriteria = criteria.map(({ _key, ...c }) => c);
+    const metadata = { columns, criteria: cleanCriteria };
+
+    if (isEditMode && rubricId) {
+      Patch(patchUpdateItem(rubricId), { name, metadata }, true).then((res) => {
+        if (res.status && res.status < 300) {
+          setAlert({ message: "Rubric saved.", type: "success" });
+        } else if (res && res.status === 401) {
+          navigator("/login");
+          return;
+        } else {
+          setAlert({ message: "Could not save rubric.", type: "error" });
+        }
+        navigator(`/library/${folderId}`);
+        setIsLoading(false);
+      });
+    } else {
+      Post(postCreateItem(), {
+        type: "rubric",
+        parentId: folderId,
+        name,
+        metadata,
+      }, true).then((res) => {
+        if (res.status && res.status < 300) {
+          setAlert({ message: "Rubric saved.", type: "success" });
+        } else if (res && res.status === 401) {
+          navigator("/login");
+          return;
+        } else {
+          setAlert({ message: "Could not save rubric.", type: "error" });
+        }
+        navigator(`/library/${folderId}`);
+      });
+    }
   }
 
   function handleDelete() {
-    if (!actualRubricId) return;
-    const key = `rubrics_${actualFolderId}`;
-    const existing: RubricType[] = JSON.parse(
-      localStorage.getItem(key) || "[]",
-    );
-    localStorage.setItem(
-      key,
-      JSON.stringify(existing.filter((r) => r.id !== actualRubricId)),
-    );
-    setAlert({ message: "Rubric deleted.", type: "success" });
-    navigator(
-      isOrgFolder
-        ? `/library/org/${actualFolderId}`
-        : `/library/${actualFolderId}`,
-    );
+    if (!rubricId) return;
+    setIsLoading(true);
+    Delete(deleteItem(rubricId), true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: "Rubric deleted.", type: "success" });
+      } else if (res && res.status === 401) {
+        navigator("/login");
+        return;
+      } else {
+        setAlert({ message: "Could not delete rubric.", type: "error" });
+      }
+      navigator(`/library/${folderId}`);
+      setIsLoading(false);
+    });
   }
 
   // --- Render ---
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <p className="text-muted-foreground">Loading rubric…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="bg-background text-foreground min-h-screen">
       <div className="mx-auto px-4 sm:px-6 py-8 max-w-6xl">
-        {/* Dialogs */}
         <DialogWrapper
           open={openDiscardModal}
           onOpenChange={setOpenDiscardModal}
@@ -225,16 +213,8 @@ export default function CreateRubric({
           description="All unsaved changes will be lost."
           contentClassName="sm:max-w-md"
           actions={[
-            {
-              label: "Keep Editing",
-              onClick: () => setOpenDiscardModal(false),
-              variant: "outline",
-            },
-            {
-              label: "Discard",
-              onClick: () => navigator(-1),
-              variant: "destructive",
-            },
+            { label: "Keep Editing", onClick: () => setOpenDiscardModal(false), variant: "outline" },
+            { label: "Discard", onClick: () => navigator(-1), variant: "destructive" },
           ]}
         />
 
@@ -246,21 +226,12 @@ export default function CreateRubric({
             description={`"${name || "This rubric"}" will be permanently deleted.`}
             contentClassName="sm:max-w-md"
             actions={[
-              {
-                label: "Cancel",
-                onClick: () => setOpenDeleteModal(false),
-                variant: "outline",
-              },
-              {
-                label: "Delete",
-                onClick: handleDelete,
-                variant: "destructive",
-              },
+              { label: "Cancel", onClick: () => setOpenDeleteModal(false), variant: "outline" },
+              { label: "Delete", onClick: handleDelete, variant: "destructive" },
             ]}
           />
         )}
 
-        {/* Header card */}
         <Card className="mb-6">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -293,10 +264,7 @@ export default function CreateRubric({
                   }
                   actions={[
                     { label: "Save Rubric", onClick: handleSave },
-                    {
-                      label: "Discard Changes",
-                      onClick: () => setOpenDiscardModal(true),
-                    },
+                    { label: "Discard Changes", onClick: () => setOpenDiscardModal(true) },
                   ]}
                   align="end"
                 />
@@ -305,11 +273,9 @@ export default function CreateRubric({
           </CardHeader>
         </Card>
 
-        {/* Grid card */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              {/* Scrollable table */}
               <div className="overflow-x-auto flex-1">
                 <table
                   className="w-full border-collapse"
@@ -317,16 +283,9 @@ export default function CreateRubric({
                 >
                   <thead>
                     <tr>
-                      {/* Sticky criterion header */}
                       <th
                         className="border border-border bg-muted px-3 py-2 text-left text-sm font-semibold"
-                        style={{
-                          minWidth: 140,
-                          position: "sticky",
-                          left: 0,
-                          zIndex: 10,
-                          background: "hsl(var(--muted))",
-                        }}
+                        style={{ minWidth: 140, position: "sticky", left: 0, zIndex: 10, background: "hsl(var(--muted))" }}
                       >
                         Criterion
                       </th>
@@ -340,9 +299,7 @@ export default function CreateRubric({
                             <input
                               className="bg-transparent text-center font-semibold outline-none w-16 focus:bg-accent focus:rounded px-1"
                               value={col}
-                              onChange={(e) =>
-                                updateColumnLabel(colIdx, e.target.value)
-                              }
+                              onChange={(e) => updateColumnLabel(colIdx, e.target.value)}
                               aria-label={`Column ${colIdx + 1} label`}
                             />
                             {columns.length > 1 && (
@@ -362,24 +319,15 @@ export default function CreateRubric({
                   <tbody>
                     {criteria.map((criterion, rowIdx) => (
                       <tr key={criterion._key}>
-                        {/* Sticky criterion name cell */}
                         <td
                           className="border border-border px-2 py-1 align-top"
-                          style={{
-                            position: "sticky",
-                            left: 0,
-                            zIndex: 10,
-                            background: "hsl(var(--muted) / 0.5)",
-                            minWidth: 140,
-                          }}
+                          style={{ position: "sticky", left: 0, zIndex: 10, background: "hsl(var(--muted) / 0.5)", minWidth: 140 }}
                         >
                           <div className="flex items-center gap-1">
                             <input
                               className="bg-transparent font-semibold text-sm outline-none flex-1 px-1 py-0.5 min-w-0"
                               value={criterion.name}
-                              onChange={(e) =>
-                                updateCriterionName(rowIdx, e.target.value)
-                              }
+                              onChange={(e) => updateCriterionName(rowIdx, e.target.value)}
                               placeholder="Criterion name…"
                               aria-label={`Criterion ${rowIdx + 1} name`}
                             />
@@ -396,16 +344,11 @@ export default function CreateRubric({
                           </div>
                         </td>
                         {criterion.cells.map((cell, colIdx) => (
-                          <td
-                            key={columnKeys[colIdx]}
-                            className="border border-border p-0 align-top"
-                          >
+                          <td key={columnKeys[colIdx]} className="border border-border p-0 align-top">
                             <textarea
                               className="w-full min-h-[80px] bg-transparent text-sm p-2 outline-none resize-none focus:bg-accent/30 placeholder:text-muted-foreground/50 font-sans"
                               value={cell}
-                              onChange={(e) =>
-                                updateCell(rowIdx, colIdx, e.target.value)
-                              }
+                              onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
                               placeholder={`Describe "${columns[colIdx]}"…`}
                               aria-label={`${criterion.name || `Criterion ${rowIdx + 1}`} score ${columns[colIdx]}`}
                             />
@@ -417,7 +360,6 @@ export default function CreateRubric({
                 </table>
               </div>
 
-              {/* Add column button — stays outside the scroll area */}
               <Button
                 variant="outline"
                 size="sm"
@@ -430,11 +372,7 @@ export default function CreateRubric({
               </Button>
             </div>
 
-            <Button
-              variant="outline"
-              onClick={addCriterion}
-              className="mt-4 border-dashed"
-            >
+            <Button variant="outline" onClick={addCriterion} className="mt-4 border-dashed">
               <Plus className="h-4 w-4 mr-2" />
               Add Criterion
             </Button>

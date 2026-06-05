@@ -1,5 +1,17 @@
 import { CustomUserType } from "./UserTypes"
 
+export type LibraryItem = {
+  itemId: string;
+  name: string;
+  description?: string;
+  type: "folder" | "prompt" | "file" | "rubric";
+  parentId: string;
+  ownerId: string; // "ORG" or username
+  organization: string;
+  createdAt: number; // ms epoch
+  updatedAt: number; // ms epoch
+  metadata: Record<string, any>;
+}
 
 export type CourseType = {
   name: string,
@@ -33,6 +45,8 @@ export type ModuleType = {
   files?: Array<FileType>,
   webSearch?: boolean,
 }
+
+//TODO delete these types
 //Note: the difference between this folder/prompt and the old prompt type is 
 //old one has organization
 //new one has isOrganizationPrompt and folderId
@@ -42,7 +56,6 @@ export type PromptType = {
   isDeleted: boolean,
   name: string,
   prompt: string,
-  tags: Array<string>,
   isOrganizationPrompt: boolean,
   folderId?: string,
 }
@@ -52,7 +65,6 @@ export type FileType = {
   creator: CustomUserType,
   isDeleted: boolean,
   name: string,
-  tags: Array<string>,
   isOrganizationFile: boolean,
   folderId?: string,
   hiddenMessageId: string,
@@ -88,9 +100,3 @@ export type FolderType = {
   rubrics?: Array<RubricType>,   // optional — API doesn't return this yet
 }
 
-export type TagType = {
-  id: string,
-  isDeleted: boolean,
-  organization: string,
-  name?: string, //this is a placeholder for updating the tag to a new name
-}

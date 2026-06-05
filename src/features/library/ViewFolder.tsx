@@ -1,14 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
-import { FolderType } from "../../utility/types/CourseTypes";
+import { LibraryItem } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
 import { UserContext } from "../../utility/context/UserContext";
-import {
-  getOrgFolder,
-  getUserFolder,
-} from "../../utility/endpoints/FolderEndpoints";
+import { getItem } from "../../utility/endpoints/ItemEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { Plus, MessageSquare, FileText, Folder, Loader2, LayoutGrid } from "lucide-react";
 import ListFolderContents from "./ListFolderContents";
@@ -16,142 +13,67 @@ import { useTranslation } from "../../hooks/useTranslation";
 import Post from "../../utility/Post";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
-export default function ViewFolder(): JSX.Element {
-  let location = useLocation();
+interface ItemCounts {
+  prompts: number;
+  files: number;
+  rubrics: number;
+  folders: number;
+}
+
+interface ViewFolderProps {
+  folderId: string;
+  noShowMenu?: boolean;
+}
+
+export default function ViewFolder(props: ViewFolderProps): JSX.Element {
   let navigator = useNavigate();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [folder, setFolder] = useState<FolderType>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [folder, setFolder] = useState<LibraryItem>();
+  const [itemCounts, setItemCounts] = useState<ItemCounts>({ prompts: 0, files: 0, rubrics: 0, folders: 0 });
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>("all");
 
+  const folderId = props.folderId;
+
+  console.log("folderId", folderId)
+
   useEffect(() => {
+    if (!folderId) return;
     const controller = new AbortController();
-    //get pathname to figure out if we are editing
-    if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[1] === "library" &&
-      location.pathname.split("/")[2] &&
-      location.pathname.split("/")[2] !== "org"
-    ) {
-      //get user folder data
-      getFolder(false, location.pathname.split("/")[2], controller.signal);
-      //log page
-      Post(logEvent(), {
-        eventType: "view_page",
-        metadata: {
-          orgFolder: false,
-          folderId: location.pathname.split("/")[2],
-          page: "view_folder",
+    setIsLoading(true);
+
+    Get(getItem(folderId), controller.signal, true).then((res) => {
+      if (res && res.status && res.status < 300) {
+        if (res.data) {
+          setFolder(res.data);
+          setIsLoading(false);
         }
-      })
-    } else if (
-      location.pathname &&
-      location.pathname.split("/") &&
-      location.pathname.split("/")[1] &&
-      location.pathname.split("/")[1] === "library" &&
-      location.pathname.split("/")[2] &&
-      location.pathname.split("/")[2] === "org" &&
-      location.pathname.split("/")[3]
-    ) {
-      //get org folder
-      getFolder(true, location.pathname.split("/")[3], controller.signal);
-      //log page
-      Post(logEvent(), {
-        eventType: "view_page",
-        metadata: {
-          orgFolder: true,
-          folderId: location.pathname.split("/")[3],
-          page: "view_folder",
-        }
-      })
-    }
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else if (res !== undefined) {
+        setAlert({ message: t("library.folderDoesNotExist"), type: "error" });
+        navigator("/library");
+        setIsLoading(false);
+      }
+    });
+
+    Post(logEvent(), {
+      eventType: "view_page",
+      metadata: { folderId, page: "view_folder" },
+    });
 
     return () => {
       controller.abort();
     };
     // eslint-disable-next-line
-  }, [location.pathname]);
+  }, [folderId]);
 
-  function getFolder(isOrg: boolean, folderId: string, signal: AbortSignal) {
-    if (!isOrg) {
-      Get(getUserFolder(folderId), signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //also set session
-            setFolder(res.data);
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            //handle error
-            //redirect to prompt list
-            navigator("/library");
-            setAlert({
-              message: t("library.folderDoesNotExist"),
-              type: "error",
-            });
-            setIsLoading(false);
-          }
-        }
-      });
-    } else {
-      Get(getOrgFolder(folderId), signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //also set session
-            setFolder(res.data);
-            setIsLoading(false);
-          }
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          if (res === undefined) {
-          } else {
-            //handle error
-            //redirect to prompt list
-            // navigator("/library");
-            setAlert({
-              message: t("library.folderDoesNotExist"),
-              type: "error",
-            });
-            setIsLoading(false);
-          }
-        }
-      });
-    }
-  }
+  const isOrgFolder = folder?.ownerId === "ORG";
 
-  const getPromptCount = () => {
-    return folder?.prompts?.length || 0;
-  };
-
-  const getFileCount = () => {
-    return folder?.files?.length || 0;
-  };
-
-  const getRubricCount = () => {
-    const key = `rubrics_${folder?.id}`;
-    const stored = localStorage.getItem(key);
-    if (!stored) return 0;
-    try {
-      const rubrics = JSON.parse(stored) as Array<{ isDeleted: boolean }>;
-      return rubrics.filter((r) => !r.isDeleted).length;
-    } catch {
-      return 0;
-    }
-  };
-
-  const getTotalItems = () => {
-    if (!folder) return 0;
-    return (folder.prompts?.length || 0) + (folder.files?.length || 0) + getRubricCount();
-  };
+  const getTotalItems = () =>
+    itemCounts.prompts + itemCounts.files + itemCounts.rubrics + itemCounts.folders;
 
   return !isLoading && folder ? (
     <main className="bg-background text-foreground min-h-screen">
@@ -168,7 +90,7 @@ export default function ViewFolder(): JSX.Element {
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                 <div>
                   <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                    {folder?.name}
+                    {folder.name}
                   </h1>
                 </div>
                 <nav
@@ -194,33 +116,15 @@ export default function ViewFolder(): JSX.Element {
                         actions={[
                           {
                             label: t("library.addPrompt"),
-                            onClick: () => {
-                              const basePath =
-                                location.pathname.split("/")[2] !== "org"
-                                  ? `/library/${folder.id}/createprompt`
-                                  : `/library/org/${folder.id}/createprompt`;
-                              navigator(basePath);
-                            },
+                            onClick: () => navigator(`/library/${folder.itemId}/createprompt`),
                           },
                           {
                             label: t("library.addFile"),
-                            onClick: () => {
-                              const basePath =
-                                location.pathname.split("/")[2] !== "org"
-                                  ? `/library/${folder.id}/createfile`
-                                  : `/library/org/${folder.id}/createfile`;
-                              navigator(basePath);
-                            },
+                            onClick: () => navigator(`/library/${folder.itemId}/createfile`),
                           },
                           {
-                            label: "Add Rubric",
-                            onClick: () => {
-                              const basePath =
-                                location.pathname.split("/")[2] !== "org"
-                                  ? `/library/${folder.id}/createrubric`
-                                  : `/library/org/${folder.id}/createrubric`;
-                              navigator(basePath);
-                            },
+                            label: t("library.addRubric"),
+                            onClick: () => navigator(`/library/${folder.itemId}/createrubric`),
                           },
                         ]}
                         align="end"
@@ -236,7 +140,7 @@ export default function ViewFolder(): JSX.Element {
         </header>
 
         <div
-          className="flex gap-2 mb-6"
+          className="flex gap-2 mb-6 flex-wrap"
           role="tablist"
           aria-label={t("library.contentFilterTabs")}
         >
@@ -262,7 +166,7 @@ export default function ViewFolder(): JSX.Element {
             aria-controls="folder-content"
           >
             <MessageSquare className="h-4 w-4" aria-hidden="true" />
-            {t("library.prompts")} ({getPromptCount()})
+            {t("library.prompts")} ({itemCounts.prompts})
           </Button>
           <Button
             variant={activeTab === "files" ? "default" : "outline"}
@@ -274,7 +178,7 @@ export default function ViewFolder(): JSX.Element {
             aria-controls="folder-content"
           >
             <FileText className="h-4 w-4" aria-hidden="true" />
-            {t("library.files")} ({getFileCount()})
+            {t("library.files")} ({itemCounts.files})
           </Button>
           <Button
             variant={activeTab === "rubrics" ? "default" : "outline"}
@@ -286,15 +190,16 @@ export default function ViewFolder(): JSX.Element {
             aria-controls="folder-content"
           >
             <LayoutGrid className="h-4 w-4" aria-hidden="true" />
-            Rubrics ({getRubricCount()})
+            {t("library.rubrics")} ({itemCounts.rubrics})
           </Button>
         </div>
 
         <div id="folder-content" role="tabpanel">
           <ListFolderContents
-            folderId={folder.id}
-            isOrgFolder={location.pathname.split("/")[2] === "org"}
+            folderId={folder.itemId}
+            isOrgFolder={isOrgFolder}
             activeTab={activeTab}
+            onCountsChange={setItemCounts}
           />
         </div>
       </div>

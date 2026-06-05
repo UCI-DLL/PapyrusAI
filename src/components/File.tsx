@@ -1,25 +1,18 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
-import { FileType, FolderType } from "../utility/types/CourseTypes";
+import { LibraryItem } from "../utility/types/CourseTypes";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
+import Delete from "../utility/Delete";
+import Post from "../utility/Post";
 import { AlertContext } from "../utility/context/AlertContext";
 import {
-  postCopyOrgFileToOrgFolder,
-  postCopyOrgFileToUserFolder,
-  postCopyUserFileToOrgFolder,
-  postCopyUserFileToUserFolder,
-  postMoveOrgFileToOrgFolder,
-  postMoveOrgFileToUserFolder,
-  postMoveUserFileToOrgFolder,
-  postMoveUserFileToUserFolder,
-  putUpdateOrgFile,
-  putUpdateUserFile,
-} from "../utility/endpoints/FolderEndpoints";
-import Post from "../utility/Post";
+  postCopyItem,
+  postMoveItem,
+  deleteItem,
+} from "../utility/endpoints/ItemEndpoints";
 import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
@@ -37,26 +30,21 @@ import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { cn } from "../lib/utils";
 import { useNavigate, Link } from "react-router-dom";
-import ListFolders from "../features/library/ListFolders";
+import { FolderPickerDialog } from "../features/library/FolderPickerDialog";
 import { useTranslation } from "../hooks/useTranslation";
 
 interface FileProps {
-  file: FileType;
-  folder: FolderType;
+  item: LibraryItem;
   keyy: string;
   refreshList: () => void;
-  loading: () => void;
+  loading: (isLoading?: boolean) => void;
   noShowMenu?: boolean;
-  onClick?: (
-    folderId: string,
-    fileId: string,
-    isOrgFolder: boolean,
-    type: string
-  ) => void; //type is "prompt" or "file"
+  onClick?: (folderId: string, fileId: string, isOrgFolder: boolean, type: string) => void;
   showRemove?: boolean;
   isStarred?: boolean;
   disableStarring?: boolean;
   isSelected?: boolean;
+  onStarChange?: (itemId: string, type: "folder" | "prompt" | "file", parentId: string, isNowStarred: boolean) => void;
 }
 
 export const File = (props: FileProps) => {
@@ -67,288 +55,79 @@ export const File = (props: FileProps) => {
   const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
-  const [starred, setStarred] = useState<boolean>(
-    props.isStarred ? props.isStarred : false
-  );
+  const [starred, setStarred] = useState<boolean>(props.isStarred ?? false);
 
   useEffect(() => {
-    setStarred(props.isStarred ? props.isStarred : false);
+    setStarred(props.isStarred ?? false);
   }, [props.isStarred]);
 
-  const getEditUrl = () => {
-    if (props.file.isOrganizationFile) {
-      return `/library/org/${props.folder.id}/files/${props.file.id}`;
-    } else {
-      return `/library/${props.folder.id}/files/${props.file.id}`;
-    }
-  };
+  const isOrgItem = props.item.ownerId === "ORG";
 
-  function openCopyTo() {
-    setOpenCopyToDialog(true);
+  const getEditUrl = () => `/library/${props.item.parentId}/files/${props.item.itemId}`;
+
+  function copyTo(folderId: string) {
+    setOpenCopyToDialog(false);
+    props.loading();
+    const copyBody = folderId !== "root" ? { parentId: folderId } : {};
+    Post(postCopyItem(props.item.itemId), copyBody, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.fileCopiedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToCopyFile"), type: "error" });
+      }
+    });
   }
 
-  function copyTo(folderId: string, isOrgFolder: boolean) {
+  function moveTo(folderId: string) {
+    setOpenMoveDialog(false);
     props.loading();
-    if (props.file.isOrganizationFile) {
-      if (isOrgFolder) {
-        Post(
-          postCopyOrgFileToOrgFolder(props.folder.id, props.file.id, folderId),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileCopiedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToCopyFile"),
-              type: "error",
-            });
-          }
-          setOpenCopyToDialog(false);
-        });
+    const moveBody = folderId !== "root" ? { parentId: folderId } : {};
+    Post(postMoveItem(props.item.itemId), moveBody, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.fileMovedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
-        Post(
-          postCopyOrgFileToUserFolder(props.folder.id, props.file.id, folderId),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileCopiedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToCopyFile"),
-              type: "error",
-            });
-          }
-          setOpenCopyToDialog(false);
-        });
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToMoveFile"), type: "error" });
       }
-    } else {
-      if (isOrgFolder) {
-        Post(
-          postCopyUserFileToOrgFolder(props.folder.id, props.file.id, folderId),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileCopiedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToCopyFile"),
-              type: "error",
-            });
-          }
-          setOpenCopyToDialog(false);
-        });
-      } else {
-        Post(
-          postCopyUserFileToUserFolder(
-            props.folder.id, props.file.id, folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileCopiedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToCopyFile"),
-              type: "error",
-            });
-          }
-          setOpenCopyToDialog(false);
-        });
-      }
-    }
+    });
   }
 
   function deleteFile() {
     props.loading();
-    if (props.file.isOrganizationFile) {
-      const dataToSend = {
-        name: props.file.name,
-        isDeleted: true,
-        tags: props.file.tags,
-        id: props.file.id,
-      };
-      Put(putUpdateOrgFile(props.folder.id, props.file.id), dataToSend).then(
-        (res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileDeletedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToDeleteFile"),
-              type: "error",
-            });
-          }
-          setOpenDeleteDialog(false);
-        }
-      );
-    } else {
-      const dataToSend = {
-        name: props.file.name,
-        isDeleted: true,
-        tags: props.file.tags,
-        id: props.file.id,
-      };
-      Put(putUpdateUserFile(props.folder.id, props.file.id), dataToSend).then(
-        (res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileDeletedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToDeleteFile"),
-              type: "error",
-            });
-          }
-          setOpenDeleteDialog(false);
-        }
-      );
-    }
-  }
-
-  function openMoveFile() {
-    setOpenMoveDialog(true);
-  }
-
-  function moveTo(folderId: string, isOrgFolder: boolean) {
-    props.loading();
-    if (props.file.isOrganizationFile) {
-      if (isOrgFolder) {
-        Post(
-          postMoveOrgFileToOrgFolder(props.folder.id, props.file.id, folderId),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileMovedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToMoveFile"),
-              type: "error",
-            });
-          }
-          setOpenMoveDialog(false);
-        });
+    Delete(deleteItem(props.item.itemId), true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.fileDeletedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
-        Post(
-          postMoveOrgFileToUserFolder(props.folder.id, props.file.id, folderId),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileMovedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToMoveFile"),
-              type: "error",
-            });
-          }
-          setOpenMoveDialog(false);
-        });
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToDeleteFile"), type: "error" });
       }
-    } else {
-      if (isOrgFolder) {
-        Post(
-          postMoveUserFileToOrgFolder(props.folder.id, props.file.id, folderId),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileMovedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToMoveFile"),
-              type: "error",
-            });
-          }
-          setOpenMoveDialog(false);
-        });
-      } else {
-        Post(
-          postMoveUserFileToUserFolder(
-            props.folder.id, props.file.id, folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.fileMovedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToMoveFile"),
-              type: "error",
-            });
-          }
-          setOpenMoveDialog(false);
-        });
-      }
-    }
+      setOpenDeleteDialog(false);
+    });
   }
 
   function createStarredFile() {
     Post(postCreateUserFavoritingData(), {
-      id: { folderId: props.folder.id, fileId: props.file.id },
+      id: { folderId: props.item.parentId, fileId: props.item.itemId },
       type: "files",
     }).then((res) => {
       if (res.status && res.status < 300) {
-        setStarred(true);
         setAlert({ message: t("components.fileStarred"), type: "success" });
+        props.onStarChange?.(props.item.itemId, "file", props.item.parentId, true);
       } else if (res && res.status === 401) {
+        setStarred(false);
         navigator("/login");
       } else {
+        setStarred(false);
         setAlert({ message: t("components.failedToStarFile"), type: "error" });
       }
     });
@@ -356,15 +135,17 @@ export const File = (props: FileProps) => {
 
   function removeStarredFile() {
     Put(putUpdateUserFavoritingData(), {
-      id: { folderId: props.folder.id, fileId: props.file.id },
+      id: { folderId: props.item.parentId, fileId: props.item.itemId },
       type: "files",
     }).then((res) => {
       if (res.status && res.status < 300) {
-        setStarred(false);
         setAlert({ message: t("components.fileUnstarred"), type: "success" });
+        props.onStarChange?.(props.item.itemId, "file", props.item.parentId, false);
       } else if (res && res.status === 401) {
+        setStarred(true);
         navigator("/login");
       } else {
+        setStarred(true);
         setAlert({ message: t("components.failedToUnstarFile"), type: "error" });
       }
     });
@@ -372,101 +153,44 @@ export const File = (props: FileProps) => {
 
   const toggleStar = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (starred) {
-      removeStarredFile();
-    } else {
-      createStarredFile();
-    }
+    const willStar = !starred;
+    setStarred(willStar);
+    if (willStar) { createStarredFile(); } else { removeStarredFile(); }
   };
 
   const getFileType = () => {
-    const extension = props.file.name.split(".").pop()?.toLowerCase();
-    switch (extension) {
-      case "pdf":
-        return "PDF";
-      case "doc":
-      case "docx":
-        return "DOC";
-      case "txt":
-        return "TXT";
-      case "jpg":
-      case "jpeg":
-      case "png":
-        return "IMG";
-      default:
-        return t("common.file").toUpperCase();
+    const ext = props.item.name.split(".").pop()?.toLowerCase();
+    switch (ext) {
+      case "pdf": return "PDF";
+      case "doc": case "docx": return "DOC";
+      case "txt": return "TXT";
+      case "jpg": case "jpeg": case "png": return "IMG";
+      default: return t("common.file").toUpperCase();
     }
-  };
-
-  const getFileDescription = () => {
-    // Generate a description based on the file name and type
-    const fileName = props.file.name;
-    if (fileName.toLowerCase().includes("guidelines"))
-      return "Comprehensive guide on development and implementation";
-    if (fileName.toLowerCase().includes("style"))
-      return "Design guidelines and brand standards";
-    if (fileName.toLowerCase().includes("manual"))
-      return "User manual and documentation";
-    return "Document file for reference and use";
   };
 
   const adminOrgMenu = [
     { label: t("common.view"), type: "link" as const, action: getEditUrl() },
-    {
-      label: starred ? t("common.unstar") : t("common.star"),
-      type: "function" as const,
-      action: starred ? removeStarredFile : createStarredFile,
-    },
+    { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFile : createStarredFile },
     { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
-    { label: t("common.copyTo"), type: "function" as const, action: openCopyTo },
-    { label: t("common.moveTo"), type: "function" as const, action: openMoveFile },
-    {
-      label: t("common.delete"),
-      type: "function" as const,
-      action: () => setOpenDeleteDialog(true),
-    },
+    { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
+    { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
+    { label: t("common.delete"), type: "function" as const, action: () => setOpenDeleteDialog(true) },
   ];
   const instructorOrgMenu = [
     { label: t("common.view"), type: "link" as const, action: getEditUrl() },
-    {
-      label: starred ? t("common.unstar") : t("common.star"),
-      type: "function" as const,
-      action: starred ? removeStarredFile : createStarredFile,
-    },
-    { label: t("common.copyTo"), type: "function" as const, action: openCopyTo },
+    { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFile : createStarredFile },
+    { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
   ];
   const adminUserMenu = [
     { label: t("common.view"), type: "link" as const, action: getEditUrl() },
-    {
-      label: starred ? t("common.unstar") : t("common.star"),
-      type: "function" as const,
-      action: starred ? removeStarredFile : createStarredFile,
-    },
+    { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFile : createStarredFile },
     { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
-    { label: t("common.copyTo"), type: "function" as const, action: openCopyTo },
-    { label: t("common.moveTo"), type: "function" as const, action: openMoveFile },
-    {
-      label: t("common.delete"),
-      type: "function" as const,
-      action: () => setOpenDeleteDialog(true),
-    },
+    { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
+    { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
+    { label: t("common.delete"), type: "function" as const, action: () => setOpenDeleteDialog(true) },
   ];
-  const instructorUserMenu = [
-    { label: t("common.view"), type: "link" as const, action: getEditUrl() },
-    {
-      label: starred ? t("common.unstar") : t("common.star"),
-      type: "function" as const,
-      action: starred ? removeStarredFile : createStarredFile,
-    },
-    { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
-    { label: t("common.copyTo"), type: "function" as const, action: openCopyTo },
-    { label: t("common.moveTo"), type: "function" as const, action: openMoveFile },
-    {
-      label: t("common.delete"),
-      type: "function" as const,
-      action: () => setOpenDeleteDialog(true),
-    },
-  ];
+  const instructorUserMenu = adminUserMenu;
 
   return (
     <div key={props.keyy ? props.keyy : "key"}>
@@ -477,63 +201,31 @@ export const File = (props: FileProps) => {
         title={t("components.deleteFile")}
         description={t("components.deleteFileMessage")}
         actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenDeleteDialog(false),
-            variant: "outline",
-          },
-          {
-            label: t("common.delete"),
-            onClick: deleteFile,
-            variant: "destructive",
-          },
+          { label: t("common.cancel"), onClick: () => setOpenDeleteDialog(false), variant: "outline" },
+          { label: t("common.delete"), onClick: deleteFile, variant: "destructive" },
         ]}
       />
 
-      {/* Copy To Dialog */}
-      <DialogWrapper
+      {/* Copy To */}
+      <FolderPickerDialog
         open={openCopyToDialog}
         onOpenChange={setOpenCopyToDialog}
         title={t("components.copyFileTo")}
         description={t("components.copyFileToDescription")}
-        contentClassName="max-w-2xl"
-        actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenCopyToDialog(false),
-            variant: "outline",
-          },
-        ]}
-      >
-        <div className="max-h-96 overflow-y-auto">
-          <ListFolders noShowMenu onClick={copyTo} compactGrid />
-        </div>
-      </DialogWrapper>
+        onSelect={(folderId) => copyTo(folderId)}
+        allowOrgFolders={user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false}
+      />
 
-      {/* Move To Dialog */}
-      <DialogWrapper
+      {/* Move To */}
+      <FolderPickerDialog
         open={openMoveDialog}
         onOpenChange={setOpenMoveDialog}
         title={t("components.moveFileTo")}
         description={t("components.moveFileToDescription")}
-        contentClassName="max-w-2xl"
-        actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenMoveDialog(false),
-            variant: "outline",
-          },
-        ]}
-      >
-        <div className="max-h-96 w-90vw overflow-y-auto">
-          <ListFolders
-            noShowMenu
-            onClick={moveTo}
-            disableFolderId={props.folder.id}
-            compactGrid
-          />
-        </div>
-      </DialogWrapper>
+        onSelect={(folderId) => moveTo(folderId)}
+        disableSelectFolderId={props.item.parentId}
+        allowOrgFolders={user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false}
+      />
 
       <Card className="h-full">
         <CardContent className="p-4 h-full flex flex-col">
@@ -555,20 +247,14 @@ export const File = (props: FileProps) => {
                     onClick={toggleStar}
                     className={cn(
                       "p-1 rounded-full transition-all duration-300",
-                      starred
-                        ? "text-gold hover:text-muted text-lg"
-                        : "text-muted hover:text-gold text-lg"
+                      starred ? "text-gold hover:text-muted text-lg" : "text-muted hover:text-gold text-lg"
                     )}
-                    aria-label={
-                      starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
-                    }
+                    aria-label={starred ? t("common.removeFromFavorites") : t("common.addToFavorites")}
                   >
                     <Star
                       size={16}
                       fill={starred ? "currentColor" : "none"}
-                      className={cn(
-                        starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
-                      )}
+                      className={cn(starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]")}
                       aria-hidden="true"
                     />
                   </button>
@@ -587,33 +273,22 @@ export const File = (props: FileProps) => {
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
                   }
-                  actions={(props.file.isOrganizationFile
-                    ? user?.groups.includes(
-                      process.env.REACT_APP_ADMIN
-                        ? process.env.REACT_APP_ADMIN
-                        : "PapyrusAIAdmin"
-                    )
+                  actions={(isOrgItem
+                    ? user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
                       ? adminOrgMenu
                       : instructorOrgMenu
-                    : user?.groups.includes(
-                      process.env.REACT_APP_ADMIN
-                        ? process.env.REACT_APP_ADMIN
-                        : "PapyrusAIAdmin"
-                    )
+                    : user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
                       ? adminUserMenu
                       : instructorUserMenu
                   ).map((item) => ({
                     label: item.label,
                     onClick: () => {
-                      if (item.type === "link") {
-                        props.loading();
-                      } else {
-                        item.action();
-                      }
+                      if (item.type === "link") { props.loading(); }
+                      else { item.action(); }
                     },
                     type: item.type,
                     href: item.type === "link" ? item.action : undefined,
-                    className: item.label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                    className: item.label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : "",
                   }))}
                   align="end"
                 />
@@ -623,31 +298,16 @@ export const File = (props: FileProps) => {
 
           {/* File title */}
           <h2 className="font-semibold text-foreground mb-2 text-lg leading-tight">
-            {props.file.name}
+            {props.item.name}
           </h2>
 
           {/* Description */}
           <p className="text-sm text-muted-foreground mb-4 flex-grow leading-relaxed">
-            {getFileDescription()}
+            {props.item.description || "Document file for reference and use"}
           </p>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1 mb-4">
-            {props.file.tags &&
-              props.file.tags.map((tag, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="text-xs bg-green-50 text-green-700 border-green-200 pointer-events-none"
-                >
-                  {tag}
-                </Badge>
-              ))}
-          </div>
           <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-2">
-
-            </div>
+            <div />
             {props.noShowMenu ? (
               props.showRemove ? (
                 <TooltipWrapper content={t("components.removeFileFromModule")} side="top">
@@ -658,14 +318,7 @@ export const File = (props: FileProps) => {
                     className="flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (props.onClick) {
-                        props.onClick(
-                          props.folder.id,
-                          props.file.id,
-                          props.file.isOrganizationFile ?? false,
-                          "file"
-                        );
-                      }
+                      props.onClick?.(props.item.parentId, props.item.itemId, isOrgItem, "file");
                     }}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -694,14 +347,7 @@ export const File = (props: FileProps) => {
                     className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (props.onClick) {
-                        props.onClick(
-                          props.folder.id,
-                          props.file.id,
-                          props.file.isOrganizationFile ?? false,
-                          "file"
-                        );
-                      }
+                      props.onClick?.(props.item.parentId, props.item.itemId, isOrgItem, "file");
                     }}
                   >
                     <Plus className="h-3 w-3" />
@@ -719,10 +365,7 @@ export const File = (props: FileProps) => {
                 onClick={() => props.loading()}
                 aria-label={t("common.view")}
               >
-                <Link
-                  to={getEditUrl()}
-                  className="flex items-center gap-1 no-underline"
-                >
+                <Link to={getEditUrl()} className="flex items-center gap-1 no-underline">
                   <Eye className="h-3 w-3" />
                   {t("common.view")}
                 </Link>

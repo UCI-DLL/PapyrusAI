@@ -4,7 +4,6 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Checkbox } from "../../components/ui/checkbox";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
@@ -16,231 +15,147 @@ import {
 } from "../../components/ui/card";
 import { ChevronDown, Info, Loader2, MessageSquare, Trash2 } from "lucide-react";
 import Get from "../../utility/Get";
-import { TagType } from "../../utility/types/CourseTypes";
+import Post from "../../utility/Post";
+import Delete from "../../utility/Delete";
+import Patch from "../../utility/Patch";
+import {
+  getItem,
+  postCreateItem,
+  patchUpdateItem,
+  deleteItem,
+} from "../../utility/endpoints/ItemEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
-import { getTagList } from "../../utility/endpoints/TagsEndpoints";
-import Post from "../../utility/Post";
-import {
-  getOrgPrompt,
-  getUserPrompt,
-  postCreateOrgPrompt,
-  postCreateUserPrompt,
-  postUpdateOrgPrompt,
-  postUpdateUserPrompt,
-} from "../../utility/endpoints/FolderEndpoints";
-import Put from "../../utility/Put";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
-type PromptFormMode = "create" | "edit";
-
 type PromptFormType = {
   name: string;
   prompt: string;
-  tags: Array<string>;
 };
 
-interface PromptFormProps {
-  mode?: PromptFormMode;
-  orgFolder?: boolean;
-  folderId?: string;
-  promptId?: string;
-}
-
-export default function CreatePrompt({
-  mode = "create",
-  orgFolder = false,
-  folderId,
-  promptId,
-}: PromptFormProps = {}): JSX.Element {
-  let location = useLocation();
-  let navigator = useNavigate();
+export default function CreatePrompt(): JSX.Element {
+  const location = useLocation();
+  const navigator = useNavigate();
   const { t } = useTranslation();
+  const { setAlert } = useContext(AlertContext);
 
-  // Translated options
   const options = [t("createPrompt.savePublish"), t("createPrompt.discardChanges")];
 
-  // Determine if we're in edit mode based on URL or props
-  const isEditMode =
-    mode === "edit" || !location.pathname.includes("/createprompt")
-  const isOrgFolder = orgFolder || location.pathname.split("/")[2] === "org";
-  const actualFolderId =
-    folderId ||
-    (isOrgFolder
-      ? location.pathname.split("/")[3]
-      : location.pathname.split("/")[2]);
-  const actualPromptId = isEditMode ?
-    (promptId || (isOrgFolder ? location.pathname.split("/")[5] : location.pathname.split("/")[4])) : undefined;
-  const [prompt, setPrompt] = useState<PromptFormType>({
-    name: "",
-    prompt: "",
-    tags: [],
-  });
-  const [errors, setErrors] = useState<any>({
-    name: "",
-    prompt: "",
-    tags: "",
-  });
-  const [promptInfo, setPromptInfo] = useState<{
-    isOrgFolder: boolean;
-    folderId: string;
-    promptId: string | undefined;
-  }>();
+  const isEditMode = !location.pathname.includes("/createprompt");
+  const folderId = location.pathname.split("/")[2];
+  const promptId = isEditMode ? location.pathname.split("/")[4] : undefined;
+
+  const [prompt, setPrompt] = useState<PromptFormType>({ name: "", prompt: "" });
+  const [errors, setErrors] = useState({ name: "", prompt: "" });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { setAlert } = useContext(AlertContext);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openSaveTop, setOpenSaveTop] = useState(false);
   const [openSaveBottom, setOpenSaveBottom] = useState(false);
-  const [showSavePublishTooltip, setShowSavePublishTooltip] =
-    useState<boolean>(false);
-  const [tagList, setTagList] = useState<Array<TagType>>([]);
+  const [showInfoDialog, setShowInfoDialog] = useState<boolean>(false);
 
   useEffect(() => {
-    const controller = new AbortController();
-    if (tagList.length === 0) {
-      getTags("", controller.signal);
-    }
-
-    //log page
-    var metadata: any = {
-      orgFolder: isOrgFolder,
-      isEditMode: isEditMode,
-      folderId: actualFolderId,
-      page: "create_prompt",
-    }
-    if (isEditMode && actualPromptId) {
-      metadata.promptId = actualPromptId
-    }
     Post(logEvent(), {
       eventType: "view_page",
-      metadata: {
-        orgFolder: isOrgFolder,
-        isEditMode: isEditMode,
-        folderId: actualFolderId,
-        promptId: actualPromptId,
-        page: "create_prompt",
-      }
-    })
+      metadata: { isEditMode, folderId, promptId, page: "create_prompt" },
+    });
 
-    return () => {
-      controller.abort();
-    };
+    if (isEditMode && promptId) {
+      const controller = new AbortController();
+      Get(getItem(promptId), controller.signal, true).then((res) => {
+        if (res && res.status && res.status < 300 && res.data) {
+          setPrompt({ name: res.data.name, prompt: res.data.metadata?.prompt ?? "" });
+          setIsLoading(false);
+        } else if (res && res.status === 401) {
+          navigator("/login");
+        } else if (res !== undefined) {
+          setAlert({ message: t("errorMessage.promptNotExist"), type: "error" });
+          navigator("/library");
+        }
+      });
+      return () => controller.abort();
+    } else {
+      setIsLoading(false);
+    }
     // eslint-disable-next-line
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (isEditMode && actualFolderId && actualPromptId) {
-      // Load existing module data for edit mode
-      const controller = new AbortController();
-      setPromptInfo({ isOrgFolder: isOrgFolder, folderId: actualFolderId, promptId: actualPromptId });
-
-      getPrompt(isOrgFolder, actualFolderId, actualPromptId, controller.signal)
-
-      return () => {
-        controller.abort();
-      };
-    } else if (!isEditMode) {
-      // For create mode, just set loading to false
-      setIsLoading(false);
-      setPromptInfo({ isOrgFolder: isOrgFolder, folderId: actualFolderId, promptId: undefined });
+  function handleSubmit(_e: any) {
+    if (prompt.name === "") {
+      setErrors((prev) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      return;
     }
-    // eslint-disable-next-line
-  }, [isEditMode, actualFolderId, actualPromptId, isOrgFolder])
+    if (prompt.prompt === "") {
+      setErrors((prev) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("components.missing") }));
+      return;
+    }
 
-  function getPrompt(
-    isOrg: boolean,
-    folderId: string,
-    promptId: string,
-    signal: AbortSignal
-  ) {
-    if (!isOrg) {
-      Get(getUserPrompt(folderId, promptId), signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //also set session
-            setPrompt(res.data);
-            setIsLoading(false);
-          }
+    setIsLoading(true);
+
+    if (isEditMode && promptId) {
+      Patch(patchUpdateItem(promptId), {
+        name: prompt.name,
+        metadata: { prompt: prompt.prompt },
+      }, true).then((res) => {
+        if (res.status && res.status < 300) {
+          setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
         } else if (res && res.status === 401) {
           navigator("/login");
+          return;
         } else {
-          if (res === undefined) {
-          } else {
-            //handle error
-            //redirect to prompt list
-            navigator("/library");
-            setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
-            setIsLoading(false);
-          }
+          setAlert({ message: t("createPrompt.promptCouldNotBeUpdated"), type: "error" });
         }
+        navigator(`/library/${folderId}`);
+        setIsLoading(false);
       });
     } else {
-      Get(getOrgPrompt(folderId, promptId), signal).then((res) => {
-        if (res && res.status && res.status < 300) {
-          if (res.data) {
-            //also set session
-            setPrompt(res.data);
-            setIsLoading(false);
-          }
+      Post(postCreateItem(), {
+        type: "prompt",
+        parentId: folderId,
+        name: prompt.name,
+        metadata: { prompt: prompt.prompt },
+      }, true).then((res) => {
+        if (res.status && res.status < 300) {
+          setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
         } else if (res && res.status === 401) {
           navigator("/login");
+          return;
         } else {
-          if (res === undefined) {
-          } else {
-            //handle error
-            //redirect to prompt list
-            navigator("/library");
-            setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
-            setIsLoading(false);
-          }
+          setAlert({ message: t("createPrompt.promptCouldNotBeCreated"), type: "error" });
         }
+        navigator(`/library/${folderId}`);
       });
     }
   }
 
-
-  function getTags(startKey: string, signal: AbortSignal) {
-    var limit = 20;
-    Get(getTagList(limit, startKey), signal).then((res) => {
-      if (res && res.status && res.status < 300) {
-        if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
-          //Get the list of all folders
-          setTagList((prev) => [...prev, ...res.data.tags]);
-          //if the data is 20 prompts, then call for the next page
-          //handle pages
-          if (
-            res.data.ScannedCount > 0 &&
-            res.data.ScannedCount >= limit &&
-            res.data.LastEvaluatedKey &&
-            res.data.LastEvaluatedKey.id
-          ) {
-            getTags(res.data.LastEvaluatedKey.id, signal);
-          } else {
-            setIsLoading(false);
-          }
-        }
+  function handleDelete() {
+    if (!promptId) return;
+    setIsLoading(true);
+    Delete(deleteItem(promptId), true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("createPrompt.promptDeleted") || "Prompt deleted.", type: "success" });
       } else if (res && res.status === 401) {
         navigator("/login");
+        return;
       } else {
-        if (res === undefined) {
-        } else {
-          // handle error
-          setIsLoading(false);
-        }
+        setAlert({ message: t("createPrompt.promptCouldNotBeDeleted") || "Could not delete prompt.", type: "error" });
       }
+      navigator(`/library/${folderId}`);
+      setIsLoading(false);
     });
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    setPrompt((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
   const handleMenuItemClick = (index: number) => {
     if (index === 0) {
-      //Save and publish
       handleSubmit(null);
     } else if (index === 1) {
-      //discard changes
       setOpenDiscardModal(true);
     }
     setSelectedIndexSave(index);
@@ -248,174 +163,23 @@ export default function CreatePrompt({
     setOpenSaveBottom(false);
   };
 
-  function handleClick(e: any) {
+  function handleClick(_e: any) {
     if (selectedIndexSave === 0) {
-      //Save and publish
-      handleSubmit(e);
+      handleSubmit(_e);
     } else if (selectedIndexSave === 1) {
-      //discard changes
       setOpenDiscardModal(true);
     }
   }
 
-  function handleSubmit(e: any, isDeleted = false) {
-    setIsLoading(true);
-    if (prompt.name === "") {
-      setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
-    } else if (prompt.prompt === "") {
-      setErrors((prev: any) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("components.missing") }));
-    } else {
-      if (isEditMode && promptInfo && promptInfo.promptId) { //editing prompt
-        const dataToSend = {
-          name: prompt.name,
-          prompt: prompt.prompt,
-          isDeleted: isDeleted,
-          tags: prompt.tags,
-        };
-        if (promptInfo && promptInfo.isOrgFolder) {
-          //       // post data back
-          Put(
-            postUpdateOrgPrompt(promptInfo.folderId, promptInfo.promptId),
-            dataToSend
-          ).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of update
-                setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // handle error
-              if (res) {
-                setAlert({
-                  message: t("createPrompt.promptCouldNotBeUpdated"),
-                  type: "error",
-                });
-              }
-            }
-            navigator(`/library/org/${promptInfo.folderId}`);
-            setIsLoading(false);
-          });
-        } else if (promptInfo) {
-          // post data back
-          Put(
-            postUpdateUserPrompt(promptInfo.folderId, promptInfo.promptId),
-            dataToSend
-          ).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of updated
-                setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // set errors
-              setAlert({
-                message: t("createPrompt.promptCouldNotBeUpdated"),
-                type: "error",
-              });
-            }
-            navigator(`/library/${promptInfo.folderId}`);
-            setIsLoading(false);
-          });
-        }
-      } else { //creating new prompt
-        if (promptInfo?.isOrgFolder) {
-          setIsLoading(true);
-          const dataToSend = {
-            name: prompt.name,
-            prompt: prompt.prompt,
-            isDeleted: false,
-            tags: prompt.tags,
-          };
-          // post data back
-          Post(postCreateOrgPrompt(promptInfo.folderId), dataToSend).then((res) => {
-            if (res.status && res.status < 300) {
-              if (res.data && res.data) {
-                //pop up notifying user of created
-                setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
-              }
-            } else if (res && res.status === 401) {
-              navigator("/login");
-            } else {
-              // handle error
-              if (res) {
-                setAlert({
-                  message: t("createPrompt.promptCouldNotBeCreated"),
-                  type: "error",
-                });
-              }
-            }
-            navigator(`/library/org/${promptInfo.folderId}`);
-          });
-        } else if (promptInfo) {
-          setIsLoading(true);
-          const dataToSend = {
-            name: prompt.name,
-            prompt: prompt.prompt,
-            isDeleted: false,
-            tags: prompt.tags,
-          };
-          // post data back
-          Post(postCreateUserPrompt(promptInfo.folderId), dataToSend).then(
-            (res) => {
-              if (res.status && res.status < 300) {
-                if (res.data && res.data) {
-                  //pop up notifying user of Created
-                  setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
-                }
-              } else if (res && res.status === 401) {
-                navigator("/login");
-              } else {
-                // set errors
-                setAlert({
-                  message: t("createPrompt.promptCouldNotBeCreated"),
-                  type: "error",
-                });
-              }
-              navigator(`/library/${promptInfo.folderId}`);
-            }
-          );
-        }
-      }
-
-    }
-  }
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    setPrompt((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  }
-
-  const handleTagToggle = (tagId: string) => {
-    setPrompt((prev) => {
-      const isSelected = prev.tags.includes(tagId);
-      return {
-        ...prev,
-        tags: isSelected
-          ? prev.tags.filter((id) => id !== tagId)
-          : [...prev.tags, tagId],
-      };
-    });
-  };
-
-  return promptInfo && !isLoading ? (
+  return !isLoading ? (
     <main className="bg-background text-foreground p-4 space-y-6">
       {/* Dialogs */}
       <DialogWrapper
-        open={showSavePublishTooltip}
-        onOpenChange={setShowSavePublishTooltip}
+        open={showInfoDialog}
+        onOpenChange={setShowInfoDialog}
         title={t("library.aboutPromptCreation")}
         contentClassName="sm:max-w-md"
-        actions={[
-          {
-            label: t("components.gotIt"),
-            onClick: () => setShowSavePublishTooltip(false),
-          },
-        ]}
+        actions={[{ label: t("components.gotIt"), onClick: () => setShowInfoDialog(false) }]}
       >
         <div className="space-y-3">
           <p>
@@ -440,18 +204,8 @@ export default function CreatePrompt({
         description={t("createPrompt.discardChangesDescription")}
         contentClassName="sm:max-w-md"
         actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenDiscardModal(false),
-            variant: "outline",
-            disabled: isLoading
-          },
-          {
-            label: t("createPrompt.discardChanges"),
-            onClick: () => navigator(-1),
-            variant: "destructive",
-            disabled: isLoading
-          },
+          { label: t("common.cancel"), onClick: () => setOpenDiscardModal(false), variant: "outline", disabled: isLoading },
+          { label: t("createPrompt.discardChanges"), onClick: () => navigator(-1), variant: "destructive", disabled: isLoading },
         ]}
       />
 
@@ -462,36 +216,20 @@ export default function CreatePrompt({
         description={t("createPrompt.deletePromptMessage")}
         contentClassName="sm:max-w-md"
         actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenDeleteModal(false),
-            variant: "outline",
-            disabled: isLoading
-          },
-          {
-            label: t("common.delete"),
-            onClick: () => handleSubmit(null, true),
-            variant: "destructive",
-            disabled: isLoading
-          },
+          { label: t("common.cancel"), onClick: () => setOpenDeleteModal(false), variant: "outline", disabled: isLoading },
+          { label: t("common.delete"), onClick: handleDelete, variant: "destructive", disabled: isLoading },
         ]}
       />
 
-      {/* Standard Page Header Pattern */}
       <header className="animate-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg">
-          <div
-            className="absolute top-0 right-0 w-48 h-48 opacity-10"
-            aria-hidden="true"
-          >
+          <div className="absolute top-0 right-0 w-48 h-48 opacity-10" aria-hidden="true">
             <MessageSquare size={192} className="text-primary" />
           </div>
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
               <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
-                {isEditMode
-                  ? t("createPrompt.editPrompt")
-                  : t("createPrompt.createPrompt")}
+                {isEditMode ? t("createPrompt.editPrompt") : t("createPrompt.createPrompt")}
               </h1>
               <nav
                 className="flex flex-col md:flex-row gap-2"
@@ -515,13 +253,12 @@ export default function CreatePrompt({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowSavePublishTooltip(true)}
+                    onClick={() => setShowInfoDialog(true)}
                     aria-label={t("createPrompt.promptInfoLabel")}
                   >
                     <Info className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </TooltipWrapper>
-
                 <div className="flex rounded-lg border">
                   <Button
                     size="sm"
@@ -559,7 +296,6 @@ export default function CreatePrompt({
                 </div>
               </nav>
             </div>
-
             <InfoAccordion>
               <p className="text-muted-foreground max-w-2xl text-base leading-6">
                 {t("createPrompt.createPromptDescription")}&nbsp;
@@ -578,7 +314,6 @@ export default function CreatePrompt({
         </div>
       </header>
 
-      {/* Actions Section */}
       <section aria-labelledby="actions-heading">
         <Card className="transition-all duration-300 hover:shadow-md" id="actions-heading">
           <CardHeader>
@@ -597,7 +332,7 @@ export default function CreatePrompt({
                     {t("createPrompt.promptName")} *
                   </Label>
                   <TooltipWrapper content={t("createPrompt.promptNameTooltip")}>
-                    <button aria-label={t("createPrompt.promptNameTooltip")}>
+                    <button type="button" aria-label={t("createPrompt.promptNameTooltip")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -610,20 +345,11 @@ export default function CreatePrompt({
                   onChange={handleChange}
                   disabled={isLoading}
                   required
-                  className={
-                    errors.name
-                      ? "border-destructive focus-visible:ring-destructive"
-                      : ""
-                  }
+                  className={errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
                   aria-describedby={errors.name ? "name-error" : undefined}
                 />
                 {errors.name && (
-                  <p
-                    id="name-error"
-                    className="text-sm text-destructive"
-                    role="alert"
-                    aria-live="assertive"
-                  >
+                  <p id="name-error" className="text-sm text-destructive" role="alert" aria-live="assertive">
                     {errors.name}
                   </p>
                 )}
@@ -634,7 +360,7 @@ export default function CreatePrompt({
                     {t("common.prompt")} *
                   </Label>
                   <TooltipWrapper content={t("createPrompt.promptTooltip")}>
-                    <button aria-label={t("createPrompt.promptTooltip")}>
+                    <button type="button" aria-label={t("createPrompt.promptTooltip")}>
                       <Info className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </TooltipWrapper>
@@ -648,76 +374,19 @@ export default function CreatePrompt({
                   disabled={isLoading}
                   required
                   rows={5}
-                  className={
-                    errors.prompt
-                      ? "border-destructive focus-visible:ring-destructive"
-                      : ""
-                  }
+                  className={errors.prompt ? "border-destructive focus-visible:ring-destructive" : ""}
                   aria-describedby={errors.prompt ? "prompt-error" : undefined}
                 />
                 {errors.prompt && (
-                  <p
-                    id="prompt-error"
-                    className="text-sm text-destructive"
-                    role="alert"
-                    aria-live="assertive"
-                  >
+                  <p id="prompt-error" className="text-sm text-destructive" role="alert" aria-live="assertive">
                     {errors.prompt}
                   </p>
                 )}
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm font-medium">{t("library.tags")}</Label>
-                  <TooltipWrapper content={t("library.tagsDescription")}>
-                    <button aria-label={t("library.tagsDescription")}>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </TooltipWrapper>
-                </div>
-                <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
-                  {tagList.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2">
-                      {tagList.map((tag) => (
-                        <div
-                          key={tag.id}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`tag-${tag.id}`}
-                            aria-labelledby={`tag-${tag.id}label`}
-                            checked={prompt.tags.includes(tag.id)}
-                            onCheckedChange={() => handleTagToggle(tag.id)}
-                            disabled={isLoading}
-                          />
-                          <Label
-                            id={`tag-${tag.id}label`}
-                            htmlFor={`tag-${tag.id}`}
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            {tag.id}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {t("library.noTags")}
-                    </p>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {t("common.selected")}:{" "}
-                  {prompt.tags.length > 0
-                    ? prompt.tags.join(", ")
-                    : t("common.none")}
-                </p>
               </div>
             </form>
           </CardContent>
         </Card>
 
-        {/* Bottom Actions */}
         <section aria-labelledby="bottom-actions-heading" className="pt-4">
           <nav
             className="flex flex-col md:flex-row md:items-center md:justify-end gap-2"
@@ -740,7 +409,7 @@ export default function CreatePrompt({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowSavePublishTooltip(true)}
+              onClick={() => setShowInfoDialog(true)}
               aria-label={t("createPrompt.promptInfoLabel")}
             >
               <Info className="h-4 w-4" aria-hidden="true" />
@@ -786,16 +455,9 @@ export default function CreatePrompt({
       </section>
     </main>
   ) : (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      role="status"
-      aria-live="polite"
-    >
+    <div className="min-h-screen flex items-center justify-center" role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-4">
-        <Loader2
-          className="h-8 w-8 animate-spin text-primary"
-          aria-hidden="true"
-        />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
         <p className="text-muted-foreground">{t("loadingMessage.promptCreationForm")}</p>
       </div>
     </div>

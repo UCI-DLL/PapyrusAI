@@ -36,7 +36,7 @@ import {
 import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
 import ListFolderContents from "../library/ListFolderContents";
-import ListFolders from "../library/ListFolders";
+import ListFolders from "../library/ListFolderItems";
 import {
   getOrgFile,
   getOrgPrompt,
@@ -650,7 +650,7 @@ export default function AddModule({
         ]}
       >
         <div>
-          <ListFolders noShowMenu onClick={selectFolder} compactGrid />
+          {/*TODO <ListFolders noShowMenu onClick={selectFolder} compactGrid /> */}
         </div>
       </DialogWrapper>
 
@@ -982,7 +982,7 @@ export default function AddModule({
               </div>
             ) : (
               <div className="grid gap-6 grid-flow-row grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                {session.prompts.map((prompt: PromptType, i) => {
+                {/* {session.prompts.map((prompt: PromptType, i) => {
                   return (
                     <div key={i}>
                       <Prompt
@@ -1014,9 +1014,9 @@ export default function AddModule({
                       />
                     </div>
                   );
-                })}
+                })} */}
 
-                {session.files &&
+                {/* {session.files &&
                   session.files.map((file: FileType, i) => {
                     return (
                       <div key={i}>
@@ -1049,7 +1049,7 @@ export default function AddModule({
                         />
                       </div>
                     );
-                  })}
+                  })} */}
               </div>
             )}
 

@@ -10,7 +10,7 @@ import { AlertContext } from "../utility/context/AlertContext";
 import { UserContext } from "../utility/context/UserContext";
 import Delete from "../utility/Delete";
 import Post from "../utility/Post";
-import { deleteItem, postCopyItem, postMoveItem } from "../utility/endpoints/ItemEndpoints";
+import { deleteItem, postCopyItem, postMoveItem, postPromoteItem, postDemoteItem } from "../utility/endpoints/ItemEndpoints";
 import { useTranslation } from "../hooks/useTranslation";
 import { FolderPickerDialog } from "../features/library/FolderPickerDialog";
 
@@ -32,6 +32,8 @@ export const Rubric = (props: RubricProps) => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openCopyDialog, setOpenCopyDialog] = useState(false);
   const [openMoveDialog, setOpenMoveDialog] = useState(false);
+  const [openPromoteDialog, setOpenPromoteDialog] = useState(false);
+  const [openDemoteDialog, setOpenDemoteDialog] = useState(false);
 
   const isOrgItem = props.item.ownerId === "ORG";
   const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
@@ -99,24 +101,66 @@ export const Rubric = (props: RubricProps) => {
     });
   }
 
+  function promote(destinationFolderId: string) {
+    setOpenPromoteDialog(false);
+    props.loading();
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postPromoteItem(props.item.itemId), body, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.rubricPromotedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToPromoteRubric"), type: "error" });
+      }
+    });
+  }
+
+  function demote(destinationFolderId: string) {
+    setOpenDemoteDialog(false);
+    props.loading();
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postDemoteItem(props.item.itemId), body, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.rubricDemotedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToDemoteRubric"), type: "error" });
+      }
+    });
+  }
+
   const criteriaCount = props.item.metadata?.criteria?.length ?? 0;
   const columnsCount = props.item.metadata?.columns?.length ?? 0;
 
-  // Instructors viewing org rubrics can only copy; owners get full menu
-  const menuItems = isOrgItem && !isAdmin
-    ? [
-        { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
-      ]
-    : [
-        { label: t("common.edit"), onClick: edit },
-        { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
-        { label: t("common.moveTo"), onClick: () => setOpenMoveDialog(true) },
-        {
-          label: t("common.delete"),
-          onClick: () => setOpenDeleteDialog(true),
-          className: "text-destructive focus:bg-destructive focus:text-destructive-foreground",
-        },
-      ];
+  const menuItems =
+    isOrgItem && !isAdmin ? [
+      { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
+    ] :
+    isOrgItem && isAdmin ? [
+      { label: t("common.edit"), onClick: edit },
+      { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
+      { label: t("common.moveTo"), onClick: () => setOpenMoveDialog(true) },
+      { label: t("common.makePrivate"), onClick: () => setOpenDemoteDialog(true) },
+      { label: t("common.delete"), onClick: () => setOpenDeleteDialog(true), className: "text-destructive focus:bg-destructive focus:text-destructive-foreground" },
+    ] :
+    isAdmin ? [
+      { label: t("common.edit"), onClick: edit },
+      { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
+      { label: t("common.moveTo"), onClick: () => setOpenMoveDialog(true) },
+      { label: t("common.makePublic"), onClick: () => setOpenPromoteDialog(true) },
+      { label: t("common.delete"), onClick: () => setOpenDeleteDialog(true), className: "text-destructive focus:bg-destructive focus:text-destructive-foreground" },
+    ] : [
+      { label: t("common.edit"), onClick: edit },
+      { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
+      { label: t("common.moveTo"), onClick: () => setOpenMoveDialog(true) },
+      { label: t("common.delete"), onClick: () => setOpenDeleteDialog(true), className: "text-destructive focus:bg-destructive focus:text-destructive-foreground" },
+    ];
 
   return (
     <div key={props.keyy}>
@@ -151,6 +195,27 @@ export const Rubric = (props: RubricProps) => {
         onSelect={(folderId) => moveRubric(folderId)}
         disableSelectFolderId={props.item.parentId}
         allowOrgFolders={isAdmin}
+      />
+
+      {/* Promote */}
+      <FolderPickerDialog
+        open={openPromoteDialog}
+        onOpenChange={setOpenPromoteDialog}
+        title={t("components.promoteRubricTo")}
+        description={t("components.promoteRubricToDescription")}
+        onSelect={(folderId) => promote(folderId)}
+        allowOrgFolders={true}
+        requireOrgFolders={true}
+      />
+
+      {/* Demote */}
+      <FolderPickerDialog
+        open={openDemoteDialog}
+        onOpenChange={setOpenDemoteDialog}
+        title={t("components.demoteRubricTo")}
+        description={t("components.demoteRubricToDescription")}
+        onSelect={(folderId) => demote(folderId)}
+        allowOrgFolders={false}
       />
 
       <Card

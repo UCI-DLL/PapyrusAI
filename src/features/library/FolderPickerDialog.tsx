@@ -24,6 +24,7 @@ interface FolderPickerDialogProps {
   onSelect: (folderId: string, isOrgFolder: boolean) => void;
   disableSelectFolderId?: string;
   allowOrgFolders: boolean;
+  requireOrgFolders?: boolean;
 }
 
 export function FolderPickerDialog({
@@ -34,6 +35,7 @@ export function FolderPickerDialog({
   onSelect,
   disableSelectFolderId,
   allowOrgFolders,
+  requireOrgFolders = false,
 }: FolderPickerDialogProps) {
   const navigator = useNavigate();
   const { t } = useTranslation();
@@ -87,12 +89,14 @@ export function FolderPickerDialog({
   function isSelectable(folderId: string, isOrg: boolean): boolean {
     if (folderId === disableSelectFolderId) return false;
     if (!allowOrgFolders && isOrg) return false;
+    if (requireOrgFolders && !isOrg && folderId !== "root") return false;
     return true;
   }
 
   function getDisabledTooltip(folderId: string, isOrg: boolean): string {
     if (folderId === disableSelectFolderId) return t("library.folderIsCurrent");
     if (!allowOrgFolders && isOrg) return t("library.orgFolderAccessDenied");
+    if (requireOrgFolders && !isOrg && folderId !== "root") return t("library.orgFolderRequired");
     return "";
   }
 
@@ -176,7 +180,7 @@ export function FolderPickerDialog({
             <p className="text-sm">{t("errorMessage.noFolders")}</p>
           </div>
         ) : (
-          <ul role="list" className="divide-y">
+          <ul className="divide-y">
             {folders.map((folder) => {
               const isOrg = folder.ownerId === "ORG";
               const selectable = isSelectable(folder.itemId, isOrg);

@@ -12,6 +12,7 @@ import {
 import { ChevronDown, Loader2, Plus, Trash2, X } from "lucide-react";
 import { RubricCriterion } from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { UserContext } from "../../utility/context/UserContext";
 import Get from "../../utility/Get";
 import Post from "../../utility/Post";
 import Patch from "../../utility/Patch";
@@ -30,6 +31,7 @@ export default function CreateRubric(): JSX.Element {
   const location = useLocation();
   const navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
+  const { user } = useContext(UserContext);
 
   const isEditMode = !location.pathname.includes("/createrubric");
   const folderId = location.pathname.split("/")[2];
@@ -138,7 +140,7 @@ export default function CreateRubric(): JSX.Element {
     }
     setIsLoading(true);
     const cleanCriteria = criteria.map(({ _key, ...c }) => c);
-    const metadata = { columns, criteria: cleanCriteria };
+    const metadata = { columns, criteria: cleanCriteria, createdBy: user?.username };
 
     if (isEditMode && rubricId) {
       Patch(patchUpdateItem(rubricId), { name, metadata }, true).then((res) => {

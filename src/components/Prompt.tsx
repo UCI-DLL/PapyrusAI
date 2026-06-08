@@ -14,6 +14,8 @@ import {
   postCopyItem,
   postMoveItem,
   deleteItem,
+  postPromoteItem,
+  postDemoteItem,
 } from "../utility/endpoints/ItemEndpoints";
 import {
   postCreateUserFavoritingData,
@@ -57,6 +59,8 @@ export const Prompt = (props: PromptProps) => {
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [openPreviewDialog, setOpenPreviewDialog] = useState<boolean>(false);
+  const [openPromoteDialog, setOpenPromoteDialog] = useState<boolean>(false);
+  const [openDemoteDialog, setOpenDemoteDialog] = useState<boolean>(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ?? false);
 
   useEffect(() => {
@@ -64,6 +68,7 @@ export const Prompt = (props: PromptProps) => {
   }, [props.isStarred]);
 
   const isOrgItem = props.item.ownerId === "ORG";
+  const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
 
   function edit() {
     props.loading();
@@ -120,6 +125,40 @@ export const Prompt = (props: PromptProps) => {
     });
   }
 
+  function promote(destinationFolderId: string) {
+    setOpenPromoteDialog(false);
+    props.loading();
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postPromoteItem(props.item.itemId), body, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.promptPromotedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToPromotePrompt"), type: "error" });
+      }
+    });
+  }
+
+  function demote(destinationFolderId: string) {
+    setOpenDemoteDialog(false);
+    props.loading();
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postDemoteItem(props.item.itemId), body, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.promptDemotedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToDemotePrompt"), type: "error" });
+      }
+    });
+  }
+
   function createStarredPrompt() {
     Post(postCreateUserFavoritingData(), {
       id: { folderId: props.item.parentId, promptId: props.item.itemId },
@@ -173,6 +212,7 @@ export const Prompt = (props: PromptProps) => {
     t("common.edit"),
     t("common.copyTo"),
     t("common.moveTo"),
+    t("common.makePrivate"),
     t("common.delete"),
   ];
   const instructorOrgMenu = [t("common.view"), starred ? t("common.unstar") : t("common.star"), t("common.copyTo")];
@@ -182,6 +222,7 @@ export const Prompt = (props: PromptProps) => {
     t("common.edit"),
     t("common.copyTo"),
     t("common.moveTo"),
+    t("common.makePublic"),
     t("common.delete"),
   ];
   const instructorUserMenu = [
@@ -199,6 +240,7 @@ export const Prompt = (props: PromptProps) => {
     edit,
     () => setOpenCopyToDialog(true),
     () => setOpenMoveDialog(true),
+    () => setOpenDemoteDialog(true),
     () => setOpenDeleteDialog(true),
   ];
   const instructorOrgMenuFunctions = [
@@ -212,6 +254,7 @@ export const Prompt = (props: PromptProps) => {
     edit,
     () => setOpenCopyToDialog(true),
     () => setOpenMoveDialog(true),
+    () => setOpenPromoteDialog(true),
     () => setOpenDeleteDialog(true),
   ];
   const instructorUserMenuFunctions = [
@@ -262,7 +305,7 @@ export const Prompt = (props: PromptProps) => {
         title={t("components.copyPromptTo")}
         description={t("components.copyPromptToDescription")}
         onSelect={(folderId) => copyTo(folderId)}
-        allowOrgFolders={user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false}
+        allowOrgFolders={isAdmin}
       />
 
       {/* Move To */}
@@ -273,7 +316,28 @@ export const Prompt = (props: PromptProps) => {
         description={t("components.movePromptToDescription")}
         onSelect={(folderId) => moveTo(folderId)}
         disableSelectFolderId={props.item.parentId}
-        allowOrgFolders={user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false}
+        allowOrgFolders={isAdmin}
+      />
+
+      {/* Promote */}
+      <FolderPickerDialog
+        open={openPromoteDialog}
+        onOpenChange={setOpenPromoteDialog}
+        title={t("components.promotePromptTo")}
+        description={t("components.promotePromptToDescription")}
+        onSelect={(folderId) => promote(folderId)}
+        allowOrgFolders={true}
+        requireOrgFolders={true}
+      />
+
+      {/* Demote */}
+      <FolderPickerDialog
+        open={openDemoteDialog}
+        onOpenChange={setOpenDemoteDialog}
+        title={t("components.demotePromptTo")}
+        description={t("components.demotePromptToDescription")}
+        onSelect={(folderId) => demote(folderId)}
+        allowOrgFolders={false}
       />
 
       <Card className="h-full hover:shadow-md transition-shadow duration-200 group">
@@ -363,6 +427,13 @@ export const Prompt = (props: PromptProps) => {
           <h2 className="font-semibold text-foreground mb-2 text-lg leading-tight">
             {props.item.name}
           </h2>
+
+          {/* Description */}
+          {props.item.description && (
+            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+              {props.item.description}
+            </p>
+          )}
 
           {/* Prompt preview box */}
           <div

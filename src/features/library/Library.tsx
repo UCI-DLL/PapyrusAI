@@ -39,7 +39,7 @@ export default function Library(): JSX.Element {
     type: "folder",
     parentId: "root",
     ownerType: user?.username,
-    metadata: {}
+    metadata: { createdBy: user?.username }
   });
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function Library(): JSX.Element {
         type: "folder",
         parentId: "root",
         ownerType: user?.username,
-        metadata: {}
+        metadata: { createdBy: user?.username }
       });
     });
   }

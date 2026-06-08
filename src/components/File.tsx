@@ -12,6 +12,8 @@ import {
   postCopyItem,
   postMoveItem,
   deleteItem,
+  postPromoteItem,
+  postDemoteItem,
 } from "../utility/endpoints/ItemEndpoints";
 import {
   postCreateUserFavoritingData,
@@ -55,6 +57,8 @@ export const File = (props: FileProps) => {
   const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
+  const [openPromoteDialog, setOpenPromoteDialog] = useState<boolean>(false);
+  const [openDemoteDialog, setOpenDemoteDialog] = useState<boolean>(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ?? false);
 
   useEffect(() => {
@@ -62,6 +66,7 @@ export const File = (props: FileProps) => {
   }, [props.isStarred]);
 
   const isOrgItem = props.item.ownerId === "ORG";
+  const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
 
   const getEditUrl = () => `/library/${props.item.parentId}/files/${props.item.itemId}`;
 
@@ -112,6 +117,40 @@ export const File = (props: FileProps) => {
         setAlert({ message: res.data?.message || t("components.failedToDeleteFile"), type: "error" });
       }
       setOpenDeleteDialog(false);
+    });
+  }
+
+  function promote(destinationFolderId: string) {
+    setOpenPromoteDialog(false);
+    props.loading();
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postPromoteItem(props.item.itemId), body, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.filePromotedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToPromoteFile"), type: "error" });
+      }
+    });
+  }
+
+  function demote(destinationFolderId: string) {
+    setOpenDemoteDialog(false);
+    props.loading();
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postDemoteItem(props.item.itemId), body, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.fileDemotedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToDemoteFile"), type: "error" });
+      }
     });
   }
 
@@ -175,6 +214,7 @@ export const File = (props: FileProps) => {
     { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
     { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
     { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
+    { label: t("common.makePrivate"), type: "function" as const, action: () => setOpenDemoteDialog(true) },
     { label: t("common.delete"), type: "function" as const, action: () => setOpenDeleteDialog(true) },
   ];
   const instructorOrgMenu = [
@@ -188,9 +228,17 @@ export const File = (props: FileProps) => {
     { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
     { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
     { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
+    { label: t("common.makePublic"), type: "function" as const, action: () => setOpenPromoteDialog(true) },
     { label: t("common.delete"), type: "function" as const, action: () => setOpenDeleteDialog(true) },
   ];
-  const instructorUserMenu = adminUserMenu;
+  const instructorUserMenu = [
+    { label: t("common.view"), type: "link" as const, action: getEditUrl() },
+    { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFile : createStarredFile },
+    { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
+    { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
+    { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
+    { label: t("common.delete"), type: "function" as const, action: () => setOpenDeleteDialog(true) },
+  ];
 
   return (
     <div key={props.keyy ? props.keyy : "key"}>
@@ -213,7 +261,7 @@ export const File = (props: FileProps) => {
         title={t("components.copyFileTo")}
         description={t("components.copyFileToDescription")}
         onSelect={(folderId) => copyTo(folderId)}
-        allowOrgFolders={user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false}
+        allowOrgFolders={isAdmin}
       />
 
       {/* Move To */}
@@ -224,7 +272,28 @@ export const File = (props: FileProps) => {
         description={t("components.moveFileToDescription")}
         onSelect={(folderId) => moveTo(folderId)}
         disableSelectFolderId={props.item.parentId}
-        allowOrgFolders={user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false}
+        allowOrgFolders={isAdmin}
+      />
+
+      {/* Promote */}
+      <FolderPickerDialog
+        open={openPromoteDialog}
+        onOpenChange={setOpenPromoteDialog}
+        title={t("components.promoteFileTo")}
+        description={t("components.promoteFileToDescription")}
+        onSelect={(folderId) => promote(folderId)}
+        allowOrgFolders={true}
+        requireOrgFolders={true}
+      />
+
+      {/* Demote */}
+      <FolderPickerDialog
+        open={openDemoteDialog}
+        onOpenChange={setOpenDemoteDialog}
+        title={t("components.demoteFileTo")}
+        description={t("components.demoteFileToDescription")}
+        onSelect={(folderId) => demote(folderId)}
+        allowOrgFolders={false}
       />
 
       <Card className="h-full">
@@ -274,12 +343,8 @@ export const File = (props: FileProps) => {
                     </Button>
                   }
                   actions={(isOrgItem
-                    ? user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
-                      ? adminOrgMenu
-                      : instructorOrgMenu
-                    : user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
-                      ? adminUserMenu
-                      : instructorUserMenu
+                    ? isAdmin ? adminOrgMenu : instructorOrgMenu
+                    : isAdmin ? adminUserMenu : instructorUserMenu
                   ).map((item) => ({
                     label: item.label,
                     onClick: () => {
@@ -302,9 +367,9 @@ export const File = (props: FileProps) => {
           </h2>
 
           {/* Description */}
-          <p className="text-sm text-muted-foreground mb-4 flex-grow leading-relaxed">
-            {props.item.description || "Document file for reference and use"}
-          </p>
+          {props.item.description && (
+            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">{props.item.description}</p>
+          )}
 
           <div className="flex w-full items-center justify-between">
             <div />

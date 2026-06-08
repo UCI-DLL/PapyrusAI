@@ -34,14 +34,12 @@ import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
 import { applyUserSettings, normalizeUserSettings } from "./utility/Themes";
 import Library from "./features/library/Library";
-import ViewFolder from "./features/library/ViewFolder";
 import OldEditPrompt from "./features/prompts/EditPrompt";
 import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
-import CreateFile from "./features/library/CreateFile";
-import EditFile from "./features/library/EditFile";
+import CreateEditFile from "./features/library/CreateFile";
 import CreateRubric from "./features/library/CreateRubric";
 import EditRubric from "./features/library/EditRubric";
 import OrgSettings from "./features/org-settings/OrgSettings";
@@ -523,7 +521,7 @@ function App(): JSX.Element {
                       >
                         <Route
                           path="/library/:id/createfile"
-                          element={<CreateFile />}
+                          element={<CreateEditFile />}
                         />
                       </Route>
 
@@ -535,7 +533,7 @@ function App(): JSX.Element {
                       >
                         <Route
                           path="/library/:id/files/:id"
-                          element={<EditFile />}
+                          element={<CreateEditFile />}
                         />
                       </Route>
 

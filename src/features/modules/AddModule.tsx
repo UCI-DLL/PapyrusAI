@@ -35,7 +35,7 @@ import {
 } from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
-import ListFolderContents from "../library/ListFolderContents";
+// import ListFolderContents from "../library/ListFolderContents";
 import ListFolders from "../library/ListFolderItems";
 import {
   getOrgFile,
@@ -680,7 +680,8 @@ export default function AddModule({
         ]}
       >
         <div>
-          <ListFolderContents
+          {/* //TODO switch to list folder items  */}
+          {/* <ListFolderContents
             folderId={openSelectPromptModal.folderId}
             isOrgFolder={openSelectPromptModal.isOrgFolder}
             noShowMenu
@@ -688,7 +689,7 @@ export default function AddModule({
             compactGrid
             selectedPromptIds={session.prompts.map((p) => p.id)}
             selectedFileIds={session.files.map((f) => f.id)}
-          />
+          /> */}
         </div>
       </DialogWrapper>
 

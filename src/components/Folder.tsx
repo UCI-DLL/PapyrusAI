@@ -142,9 +142,11 @@ export const FolderComponent = (props: FolderProps) => {
     });
   }
 
-  function promote() {
+  function promote(destinationFolderId: string) {
+    setOpenPromoteDialog(false);
     props.loading();
-    Post(postPromoteItem(props.item.itemId), {}, true).then((res) => {
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postPromoteItem(props.item.itemId), body, true).then((res) => {
       if (res.status && res.status < 300) {
         setAlert({ message: t("components.folderPromotedSuccessfully"), type: "success" });
         props.refreshList();
@@ -154,13 +156,14 @@ export const FolderComponent = (props: FolderProps) => {
         props.loading(false);
         setAlert({ message: res.data?.message || t("components.failedToPromoteFolder"), type: "error" });
       }
-      setOpenPromoteDialog(false);
     });
   }
 
-  function demote() {
+  function demote(destinationFolderId: string) {
+    setOpenDemoteDialog(false);
     props.loading();
-    Post(postDemoteItem(props.item.itemId), {}, true).then((res) => {
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postDemoteItem(props.item.itemId), body, true).then((res) => {
       if (res.status && res.status < 300) {
         setAlert({ message: t("components.folderDemotedSuccessfully"), type: "success" });
         props.refreshList();
@@ -170,7 +173,6 @@ export const FolderComponent = (props: FolderProps) => {
         props.loading(false);
         setAlert({ message: res.data?.message || t("components.failedToDemoteFolder"), type: "error" });
       }
-      setOpenDemoteDialog(false);
     });
   }
 
@@ -262,27 +264,24 @@ export const FolderComponent = (props: FolderProps) => {
   return (
     <div key={props.keyy ? props.keyy : "key"}>
       {/* Promote Dialog */}
-      <DialogWrapper
+      <FolderPickerDialog
         open={openPromoteDialog}
         onOpenChange={setOpenPromoteDialog}
         title={t("components.promoteFolder")}
         description={t("components.promoteFolderDescription")}
-        actions={[
-          { label: t("common.cancel"), onClick: () => setOpenPromoteDialog(false), variant: "outline" },
-          { label: t("common.confirm"), onClick: promote, variant: "default" },
-        ]}
+        onSelect={(folderId) => promote(folderId)}
+        allowOrgFolders={true}
+        requireOrgFolders={true}
       />
 
       {/* Demote Dialog */}
-      <DialogWrapper
+      <FolderPickerDialog
         open={openDemoteDialog}
         onOpenChange={setOpenDemoteDialog}
         title={t("components.demoteFolder")}
         description={t("components.demoteFolderDescription")}
-        actions={[
-          { label: t("common.cancel"), onClick: () => setOpenDemoteDialog(false), variant: "outline" },
-          { label: t("common.confirm"), onClick: demote, variant: "default" },
-        ]}
+        onSelect={(folderId) => demote(folderId)}
+        allowOrgFolders={false}
       />
 
       {/* Copy Dialog */}

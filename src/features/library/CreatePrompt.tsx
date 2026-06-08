@@ -25,6 +25,7 @@ import {
   deleteItem,
 } from "../../utility/endpoints/ItemEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { UserContext } from "../../utility/context/UserContext";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
@@ -32,6 +33,7 @@ import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 type PromptFormType = {
   name: string;
+  description: string;
   prompt: string;
 };
 
@@ -40,6 +42,7 @@ export default function CreatePrompt(): JSX.Element {
   const navigator = useNavigate();
   const { t } = useTranslation();
   const { setAlert } = useContext(AlertContext);
+  const { user } = useContext(UserContext);
 
   const options = [t("createPrompt.savePublish"), t("createPrompt.discardChanges")];
 
@@ -47,7 +50,7 @@ export default function CreatePrompt(): JSX.Element {
   const folderId = location.pathname.split("/")[2];
   const promptId = isEditMode ? location.pathname.split("/")[4] : undefined;
 
-  const [prompt, setPrompt] = useState<PromptFormType>({ name: "", prompt: "" });
+  const [prompt, setPrompt] = useState<PromptFormType>({ name: "", description: "", prompt: "" });
   const [errors, setErrors] = useState({ name: "", prompt: "" });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
@@ -67,7 +70,7 @@ export default function CreatePrompt(): JSX.Element {
       const controller = new AbortController();
       Get(getItem(promptId), controller.signal, true).then((res) => {
         if (res && res.status && res.status < 300 && res.data) {
-          setPrompt({ name: res.data.name, prompt: res.data.metadata?.prompt ?? "" });
+          setPrompt({ name: res.data.name, description: res.data.description ?? "", prompt: res.data.metadata?.prompt ?? "" });
           setIsLoading(false);
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -98,6 +101,7 @@ export default function CreatePrompt(): JSX.Element {
     if (isEditMode && promptId) {
       Patch(patchUpdateItem(promptId), {
         name: prompt.name,
+        description: prompt.description,
         metadata: { prompt: prompt.prompt },
       }, true).then((res) => {
         if (res.status && res.status < 300) {
@@ -116,7 +120,8 @@ export default function CreatePrompt(): JSX.Element {
         type: "prompt",
         parentId: folderId,
         name: prompt.name,
-        metadata: { prompt: prompt.prompt },
+        description: prompt.description,
+        metadata: { prompt: prompt.prompt, createdBy: user?.username },
       }, true).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
@@ -236,13 +241,13 @@ export default function CreatePrompt(): JSX.Element {
                 aria-label={`${t("createPrompt.createPrompt")} ${t("common.actions")}}`}
               >
                 {isEditMode && (
-                  <TooltipWrapper content={t("createPrompt.deletePrompt")}>
+                  <TooltipWrapper content={t("common.delete")}>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setOpenDeleteModal(true)}
                       disabled={isLoading}
-                      aria-label={t("createPrompt.deletePrompt")}
+                      aria-label={t("common.delete")}
                       className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -353,6 +358,26 @@ export default function CreatePrompt(): JSX.Element {
                     {errors.name}
                   </p>
                 )}
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="description" className="text-sm font-medium">
+                    {t("createPrompt.promptDescription")}
+                  </Label>
+                  <TooltipWrapper content={t("createPrompt.promptDescriptionTooltip")}>
+                    <button type="button" aria-label={t("createPrompt.promptDescriptionTooltip")}>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </TooltipWrapper>
+                </div>
+                <Input
+                  id="description"
+                  name="description"
+                  placeholder={t("createPrompt.promptDescriptionHelptext")}
+                  value={prompt.description}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">

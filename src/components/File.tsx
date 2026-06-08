@@ -41,7 +41,7 @@ interface FileProps {
   refreshList: () => void;
   loading: (isLoading?: boolean) => void;
   noShowMenu?: boolean;
-  onClick?: (folderId: string, fileId: string, isOrgFolder: boolean, type: string) => void;
+  onClick?: (fileId: string, type: string) => void;
   showRemove?: boolean;
   isStarred?: boolean;
   disableStarring?: boolean;
@@ -383,7 +383,7 @@ export const File = (props: FileProps) => {
                     className="flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
-                      props.onClick?.(props.item.parentId, props.item.itemId, isOrgItem, "file");
+                      props.onClick?.(props.item.itemId, "file");
                     }}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -412,7 +412,7 @@ export const File = (props: FileProps) => {
                     className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
-                      props.onClick?.(props.item.parentId, props.item.itemId, isOrgItem, "file");
+                      props.onClick?.(props.item.itemId, "file");
                     }}
                   >
                     <Plus className="h-3 w-3" />

@@ -34,8 +34,6 @@ import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
 import { applyUserSettings, normalizeUserSettings } from "./utility/Themes";
 import Library from "./features/library/Library";
-import OldEditPrompt from "./features/prompts/EditPrompt";
-import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
@@ -571,27 +569,6 @@ function App(): JSX.Element {
                       : "PapyrusAIAdmin",
                   ) && (
                     <>
-                      <Route
-                        path="/prompts"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route path="/prompts" element={<OldPrompts />} />
-                      </Route>
-
-                      <Route
-                        path="/prompts/:id"
-                        element={
-                          <PrivateRoute user={user} authStatus={authStatus} />
-                        }
-                      >
-                        <Route
-                          path="/prompts/:id"
-                          element={<OldEditPrompt />}
-                        />
-                      </Route>
-
                       <Route
                         path="/org-settings"
                         element={

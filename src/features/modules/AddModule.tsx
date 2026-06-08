@@ -35,16 +35,9 @@ import {
 } from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
-// import ListFolderContents from "../library/ListFolderContents";
 import ListFolders from "../library/ListFolderItems";
-import {
-  getOrgFile,
-  getOrgPrompt,
-  getUserFile,
-  getUserPrompt,
-} from "../../utility/endpoints/FolderEndpoints";
 import { Prompt } from "../../components/Prompt";
-import { FileType, PromptType } from "../../utility/types/CourseTypes";
+import { FileType, LibraryItem, PromptType } from "../../utility/types/CourseTypes";
 import { File } from "../../components/File";
 import { Badge } from "../../components/ui/badge";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -134,12 +127,8 @@ export default function AddModule({
   });
   const [isLoading, setIsLoading] = useState<boolean>(isEditMode);
   const { setAlert } = useContext(AlertContext);
-  const [openSelectFolderModal, setOpenSelectFolderModal] =
-    useState<boolean>(false);
-  const [openSelectPromptModal, setOpenSelectPromptModal] = useState<{
-    folderId: string;
-    isOrgFolder: boolean;
-  }>({ folderId: "", isOrgFolder: false });
+  const [openLibraryModal, setOpenLibraryModal] = useState<boolean>(false);
+  const [libraryFolderId, setLibraryFolderId] = useState<string>("root");
   const [openSaveTop, setOpenSaveTop] = useState(false);
   const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
@@ -350,151 +339,69 @@ export default function AddModule({
     setSession((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function selectFolder(folderId: string, isOrgFolder: boolean) {
-    setOpenSelectPromptModal({
-      folderId: folderId,
-      isOrgFolder: isOrgFolder,
-    });
-    setOpenSelectFolderModal(false);
+  function selectAsset(item: LibraryItem) {
+    if (item.type === "prompt") {
+      setSession((prev) => {
+        if (prev.prompts.some((p) => p.id === item.itemId)) return prev;
+        return {
+          ...prev,
+          prompts: [
+            ...prev.prompts,
+            {
+              id: item.itemId,
+              isDeleted: false,
+              name: item.name,
+              prompt: item.metadata?.prompt ?? "",
+            },
+          ],
+        };
+      });
+    } else if (item.type === "file") {
+      setSession((prev) => {
+        if (prev.files.some((f) => f.id === item.itemId)) return prev;
+        return {
+          ...prev,
+          files: [
+            ...prev.files,
+            {
+              id: item.itemId,
+              isDeleted: false,
+              name: item.name,
+              hiddenMessageId: item.metadata?.hiddenMessageId ?? "",
+              fileReference: item.metadata?.fileReference ?? "",
+            },
+          ],
+        };
+      });
+    }
   }
 
-  function selectAsset(
-    folderId: string,
-    id: string,
-    isOrgFolder: boolean,
-    type: string
-  ) {
-    //type is "prompt" or "file"
-    setOpenSelectPromptModal({
-      folderId: "",
-      isOrgFolder: false,
-    });
-    setIsLoading(true);
-    const controller = new AbortController();
-    //check if asset is prompt or file
-    if (type === "prompt") {
-      // get prompt and add it to list of prompts
-      if (isOrgFolder) {
-        Get(getOrgPrompt(folderId, id), controller.signal).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              //also set session
-              if (
-                session.prompts.filter((x) => x.id === res.data.id).length === 0
-              ) {
-                setSession((prev) => ({
-                  ...prev,
-                  prompts: [
-                    ...prev.prompts,
-                    { ...res.data, isOrgFolder: true, folderId: folderId },
-                  ],
-                }));
-              }
-              setIsLoading(false);
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              //handle error
-              setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
-              setIsLoading(false);
-            }
-          }
-        });
-      } else {
-        Get(getUserPrompt(folderId, id), controller.signal).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              //also set session
-              if (
-                session.prompts.filter((x) => x.id === res.data.id).length === 0
-              ) {
-                setSession((prev) => ({
-                  ...prev,
-                  prompts: [
-                    ...prev.prompts,
-                    { ...res.data, isOrgFolder: false, folderId: folderId },
-                  ],
-                }));
-              }
-              setIsLoading(false);
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              //handle error
-              setAlert({ message: `${t("errorMessage.promptNotExist")}`, type: "error" });
-              setIsLoading(false);
-            }
-          }
-        });
-      }
-    } else if (type === "file") {
-      // get file and add it to list of files
-      if (isOrgFolder) {
-        Get(getOrgFile(folderId, id), controller.signal).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              //also set session
-              if (
-                session.files.filter((x) => x.id === res.data.id).length === 0
-              ) {
-                setSession((prev) => ({
-                  ...prev,
-                  files: [
-                    ...prev.files,
-                    { ...res.data, isOrgFolder: true, folderId: folderId },
-                  ],
-                }));
-              }
-              setIsLoading(false);
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              //handle error
-              setAlert({ message: `${t("errorMessage.fileNotExist")}`, type: "error" });
-              setIsLoading(false);
-            }
-          }
-        });
-      } else {
-        Get(getUserFile(folderId, id), controller.signal).then((res) => {
-          if (res && res.status && res.status < 300) {
-            if (res.data) {
-              //also set session
-              if (
-                session.files.filter((x) => x.id === res.data.id).length === 0
-              ) {
-                setSession((prev) => ({
-                  ...prev,
-                  files: [
-                    ...prev.files,
-                    { ...res.data, isOrgFolder: false, folderId: folderId },
-                  ],
-                }));
-              }
-              setIsLoading(false);
-            }
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            if (res === undefined) {
-            } else {
-              //handle error
-              setAlert({ message: `${t("errorMessage.fileNotExist")}`, type: "error" });
-              setIsLoading(false);
-            }
-          }
-        });
-      }
-    }
+  function promptToLibraryItem(p: PromptType): LibraryItem {
+    return {
+      itemId: p.id,
+      name: p.name,
+      type: "prompt",
+      parentId: "",
+      ownerId: "",
+      organization: "",
+      createdAt: 0,
+      updatedAt: 0,
+      metadata: { prompt: p.prompt },
+    };
+  }
+
+  function fileToLibraryItem(f: FileType): LibraryItem {
+    return {
+      itemId: f.id,
+      name: f.name,
+      type: "file",
+      parentId: "",
+      ownerId: "",
+      organization: "",
+      createdAt: 0,
+      updatedAt: 0,
+      metadata: { hiddenMessageId: f.hiddenMessageId, fileReference: f.fileReference },
+    };
   }
 
   function refreshList() { } //empty
@@ -525,9 +432,7 @@ export default function AddModule({
   }
 
   function setConfirmationModal(
-    folderId: string,
     id: string,
-    isOrgFolder: boolean,
     type: string
   ) {
     setOpenConfirmationModal({ id: id, type: type });
@@ -637,60 +542,37 @@ export default function AddModule({
         </>
       )}
       <DialogWrapper
-        open={openSelectFolderModal}
-        onOpenChange={setOpenSelectFolderModal}
-        title={t("createModule.selectFolder")}
-        contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
-        actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenSelectFolderModal(false),
-            variant: "outline",
-          },
-        ]}
-      >
-        <div>
-          {/*TODO <ListFolders noShowMenu onClick={selectFolder} compactGrid /> */}
-        </div>
-      </DialogWrapper>
-
-      <DialogWrapper
-        open={openSelectPromptModal.folderId !== ""}
-        onOpenChange={(open) =>
-          !open &&
-          setOpenSelectPromptModal({ folderId: "", isOrgFolder: false })
-        }
+        open={openLibraryModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setOpenLibraryModal(false);
+            setLibraryFolderId("root");
+          }
+        }}
         title={t("createModule.selectAsset")}
         contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
         actions={[
           {
-            label: t("common.back"),
-            onClick: () => {
-              setOpenSelectPromptModal({ folderId: "", isOrgFolder: false });
-              setOpenSelectFolderModal(true);
-            },
-            variant: "outline",
-          },
-          {
             label: t("common.cancel"),
-            onClick: () =>
-              setOpenSelectPromptModal({ folderId: "", isOrgFolder: false }),
+            onClick: () => {
+              setOpenLibraryModal(false);
+              setLibraryFolderId("root");
+            },
             variant: "outline",
           },
         ]}
       >
-        <div>
-          {/* //TODO switch to list folder items  */}
-          {/* <ListFolderContents
-            folderId={openSelectPromptModal.folderId}
-            isOrgFolder={openSelectPromptModal.isOrgFolder}
-            noShowMenu
-            onClick={selectAsset}
-            compactGrid
-            selectedPromptIds={session.prompts.map((p) => p.id)}
-            selectedFileIds={session.files.map((f) => f.id)}
-          /> */}
-        </div>
+        <ListFolders
+          folderId={libraryFolderId}
+          noShowMenu
+          compactGrid
+          onSelectItem={selectAsset}
+          selectedItemIds={[
+            ...session.prompts.map((p) => p.id),
+            ...session.files.map((f) => f.id),
+          ]}
+          onFolderNavigate={(folderId) => setLibraryFolderId(folderId)}
+        />
       </DialogWrapper>
 
       <DialogWrapper
@@ -951,7 +833,7 @@ export default function AddModule({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpenSelectFolderModal(true)}
+                onClick={() => setOpenLibraryModal(true)}
                 className="gap-2"
                 aria-label={t("createModule.addAssetModule")}
               >
@@ -965,11 +847,11 @@ export default function AddModule({
                 className="text-center py-12 cursor-pointer text-muted-foreground bg-card border rounded-lg hover:bg-muted/50 transition-colors duration-200"
                 role="button"
                 tabIndex={0}
-                onClick={() => setOpenSelectFolderModal(true)}
+                onClick={() => setOpenLibraryModal(true)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    setOpenSelectFolderModal(true);
+                    setOpenLibraryModal(true);
                   }
                 }}
                 aria-label={t("createModule.clickToAddAsset")}
@@ -983,74 +865,32 @@ export default function AddModule({
               </div>
             ) : (
               <div className="grid gap-6 grid-flow-row grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                {/* {session.prompts.map((prompt: PromptType, i) => {
-                  return (
-                    <div key={i}>
-                      <Prompt
-                        prompt={prompt}
-                        folder={{
-                          //pass in temp folder
-                          id: prompt.folderId ? prompt.folderId : "",
-                          creator: {
-                            email: "",
-                            sub: "",
-                            name: "",
-                            family_name: "",
-                            username: "",
-                          },
-                          isDeleted: false,
-                          name: "",
-                          prompts: [],
-                          organization: "",
-                          timestamp: "",
-                          files: [],
-                        }}
-                        keyy={`${i}`}
-                        refreshList={() => refreshList()}
-                        loading={() => setIsLoading(true)}
-                        noShowMenu={true}
-                        showRemove
-                        onClick={setConfirmationModal}
-                        disableStarring={true}
-                      />
-                    </div>
-                  );
-                })} */}
-
-                {/* {session.files &&
-                  session.files.map((file: FileType, i) => {
-                    return (
-                      <div key={i}>
-                        <File
-                          file={file}
-                          folder={{
-                            //pass in temp folder
-                            id: file.folderId ? file.folderId : "",
-                            creator: {
-                              email: "",
-                              sub: "",
-                              name: "",
-                              family_name: "",
-                              username: "",
-                            },
-                            isDeleted: false,
-                            name: "",
-                            prompts: [],
-                            organization: "",
-                            timestamp: "",
-                            files: [],
-                          }}
-                          keyy={`${i}`}
-                          refreshList={() => refreshList()}
-                          loading={() => setIsLoading(true)}
-                          noShowMenu={true}
-                          showRemove
-                          onClick={setConfirmationModal}
-                          disableStarring={true}
-                        />
-                      </div>
-                    );
-                  })} */}
+                {session.prompts.map((prompt: PromptType, i) => (
+                  <Prompt
+                    key={prompt.id}
+                    item={promptToLibraryItem(prompt)}
+                    keyy={`${i}`}
+                    refreshList={refreshList}
+                    loading={() => setIsLoading(true)}
+                    noShowMenu={true}
+                    showRemove
+                    onClick={setConfirmationModal}
+                    disableStarring={true}
+                  />
+                ))}
+                {session.files.map((file: FileType, i) => (
+                  <File
+                    key={file.id}
+                    item={fileToLibraryItem(file)}
+                    keyy={`${i}`}
+                    refreshList={refreshList}
+                    loading={() => setIsLoading(true)}
+                    noShowMenu={true}
+                    showRemove
+                    onClick={setConfirmationModal}
+                    disableStarring={true}
+                  />
+                ))}
               </div>
             )}
 

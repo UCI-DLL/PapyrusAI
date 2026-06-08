@@ -13,7 +13,6 @@ import { cn } from "../../lib/utils";
 import { FolderComponent } from "../../components/Folder";
 import { getItem, getItems, patchUpdateItem } from "../../utility/endpoints/ItemEndpoints";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
-import { UserContext } from "../../utility/context/UserContext";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -55,11 +54,13 @@ interface ListFoldersProps {
   onClick?: (folderId: string, isOrgFolder: boolean) => void;
   disableFolderId?: string;
   compactGrid?: boolean;
+  onSelectItem?: (item: LibraryItem) => void;
+  selectedItemIds?: string[];
+  onFolderNavigate?: (folderId: string) => void;
 }
 
 export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [folderData, setFolderData] = useState<LibraryItem | undefined>();
@@ -106,18 +107,6 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
     };
     // eslint-disable-next-line
   }, [props.folderId]);
-
-  // useEffect(() => { TODO figure this out
-  //   if (starred?.folders) {
-  //     setItemList((prev) =>
-  //       orderFolderNewestCreatedAndStarred([...prev], starred.folders!)
-  //     );
-  //     setFilteredItemList((prev) =>
-  //       orderFolderNewestCreatedAndStarred([...prev], starred.folders!)
-  //     );
-  //   }
-  //   // eslint-disable-next-line
-  // }, [starred]);
 
   useEffect(() => {
     handleFilter({ preventDefault: () => { } } as React.FormEvent);
@@ -276,7 +265,7 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
 
   return !isLoading ? (
     <div className="space-y-6">
-      {props.noShowMenu && (
+      {props.noShowMenu && !props.onSelectItem && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
           {t("library.noAssetsAdded")}
           <br />
@@ -350,11 +339,15 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
               size="sm"
               className="flex items-center gap-1 -ml-2 h-8"
               aria-label={t("common.back")}
-              onClick={() =>
-                folderData.parentId === "root"
-                  ? navigator("/library")
-                  : navigator(`/library/${folderData.parentId}`)
-              }
+              onClick={() => {
+                if (props.onFolderNavigate) {
+                  props.onFolderNavigate(folderData.parentId);
+                } else if (folderData.parentId === "root") {
+                  navigator("/library");
+                } else {
+                  navigator(`/library/${folderData.parentId}`);
+                }
+              }}
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               {t("common.back")}
@@ -503,9 +496,11 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
                 refreshList={refreshList}
                 loading={loading}
                 noShowMenu={props.noShowMenu}
-                onClick={() => console.log("TODO")}
+                onClick={props.onSelectItem
+                  ? (_id, _type) => props.onSelectItem!(item)
+                  : undefined}
                 isStarred={isItemStarred(item, starred)}
-                isSelected={false}
+                isSelected={props.selectedItemIds?.includes(item.itemId) ?? false}
                 onStarChange={handleStarChange}
               />
             );
@@ -519,9 +514,11 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
                 refreshList={refreshList}
                 loading={loading}
                 noShowMenu={props.noShowMenu}
-                onClick={() => console.log("TODO")}
+                onClick={props.onSelectItem
+                  ? (_id, _type) => props.onSelectItem!(item)
+                  : undefined}
                 isStarred={isItemStarred(item, starred)}
-                isSelected={false}
+                isSelected={props.selectedItemIds?.includes(item.itemId) ?? false}
                 onStarChange={handleStarChange}
               />
             );
@@ -545,7 +542,10 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
                 key={item.itemId}
                 item={item}
                 displayName={item.name}
-                onClick={() => navigator(`/library/${item.itemId}`)}
+                onClick={() => props.onFolderNavigate
+                  ? props.onFolderNavigate(item.itemId)
+                  : navigator(`/library/${item.itemId}`)
+                }
                 keyy={`${i}`}
                 refreshList={refreshList}
                 loading={loading}

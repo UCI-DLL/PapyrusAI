@@ -46,27 +46,18 @@ export type ModuleType = {
   webSearch?: boolean,
 }
 
-//TODO delete these types
-//Note: the difference between this folder/prompt and the old prompt type is 
-//old one has organization
-//new one has isOrganizationPrompt and folderId
+//These are used in adding assets to a module
 export type PromptType = {
   id: string,
-  creator: CustomUserType,
   isDeleted: boolean,
   name: string,
   prompt: string,
-  isOrganizationPrompt: boolean,
-  folderId?: string,
 }
 
 export type FileType = {
   id: string,
-  creator: CustomUserType,
   isDeleted: boolean,
   name: string,
-  isOrganizationFile: boolean,
-  folderId?: string,
   hiddenMessageId: string,
   fileReference: string,
 }
@@ -85,18 +76,5 @@ export type RubricType = {
   folderId?: string,
   columns: Array<string>,        // e.g. ["0","1","2","3"] — user-editable labels
   criteria: Array<RubricCriterion>,
-}
-
-export type FolderType = {
-  id: string,
-  creator: CustomUserType,
-  userId?: string, //if folder is user type
-  organization: string,
-  timestamp: string,
-  isDeleted: boolean,
-  name: string,
-  prompts: Array<PromptType>,
-  files: Array<FileType>,
-  rubrics?: Array<RubricType>,   // optional — API doesn't return this yet
 }
 

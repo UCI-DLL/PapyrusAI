@@ -124,8 +124,13 @@ export function postMoveUserPromptToUserFolder(folderid: string, promptid: strin
  * Document endpoints
  */
 
-export function getSignedUploadUrl(parentId: string, fileName: string) { //fileName MUST include file ext
-  return `document/upload?organization=${process.env.REACT_APP_ORGANIZATION}&parentId=${parentId}&fileName=${fileName}`;
+export function getSignedUploadUrl(
+  params: { parentId: string; fileName: string } | { fileId: string; fileName: string }
+) {
+  const base = `document/upload?organization=${process.env.REACT_APP_ORGANIZATION}&fileName=${encodeURIComponent(params.fileName)}`;
+  return "fileId" in params
+    ? `${base}&fileId=${params.fileId}`
+    : `${base}&parentId=${params.parentId}`;
 }
 
 export function getSignedDownloadFile(itemId: string) {

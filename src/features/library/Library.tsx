@@ -23,6 +23,7 @@ export default function Library(): JSX.Element {
   const { user } = useContext(UserContext);
   const { t } = useTranslation();
   const [folderId, setFolderId] = useState(location.pathname.split("/")[2]);
+  const [activeTab, setActiveTab] = useState<"my" | "shared">("my");
   const [openCreateFolderModal, setOpenCreateFolderModal] =
     useState<boolean>(false);
   const [listKey, setListKey] = useState(0);
@@ -53,7 +54,9 @@ export default function Library(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    setFolderId(location.pathname.split("/")[2]);
+    const id = location.pathname.split("/")[2];
+    setFolderId(id);
+    if (id) setActiveTab("my"); // reset to My Library when entering a subfolder
   }, [location])
 
   function handleCreateFolder() {
@@ -229,7 +232,41 @@ export default function Library(): JSX.Element {
           </div>
         </header>
 
-        <ListFolderItems key={listKey} folderId={folderId ?? "root"} />
+        {/* Tab switcher — only visible at the root level */}
+        {!folderId && (
+          <div className="flex gap-1 mb-4 border-b" role="tablist" aria-label={t("library.library")}>
+            <button
+              role="tab"
+              aria-selected={activeTab === "my"}
+              onClick={() => setActiveTab("my")}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                activeTab === "my"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("library.myLibrary")}
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === "shared"}
+              onClick={() => setActiveTab("shared")}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                activeTab === "shared"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("library.sharedWithMe")}
+            </button>
+          </div>
+        )}
+
+        <ListFolderItems
+          key={`${listKey}-${activeTab}`}
+          folderId={folderId ?? "root"}
+          shared={activeTab === "shared" && !folderId}
+        />
 
       </div>
     </div>

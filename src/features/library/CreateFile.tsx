@@ -49,14 +49,14 @@ export default function CreateEditFile(): JSX.Element {
   const { user } = useContext(UserContext);
 
   const isEditMode = !location.pathname.includes("/createfile");
-  const folderId = location.pathname.split("/")[2];
-  const fileId = isEditMode ? location.pathname.split("/")[4] : undefined;
+  const fileId = isEditMode ? location.pathname.split("/")[3] : undefined;
 
   const options = [
     isEditMode ? t("createFile.saveChanges") : t("createFile.saveUpload"),
     t("createFile.discardChanges"),
   ];
 
+  const [folderId, setFolderId] = useState<string>(isEditMode ? "" : location.pathname.split("/")[2]);
   const [fileName, setFileName] = useState("");
   const [fileDescription, setFileDescription] = useState("");
   const [fileReference, setFileReference] = useState("");
@@ -98,26 +98,13 @@ export default function CreateEditFile(): JSX.Element {
           const item = res.data;
           setFileName(item.name);
           setFileDescription(item.description ?? "");
+          setFolderId(item.parentId ?? "");
           const ref = item.metadata?.fileReference ?? "";
           setFileReference(ref);
           setIsLoading(false);
 
           if (ref) {
-            Get(getSignedDownloadFile(fileId)).then(async (res1) => {
-              if (res1 && res1.status && res1.status < 300 && res1.data) {
-                const url = res1.data.url;
-                setRawDownloadUrl(url);
-                const ext = ref.split(".").pop()?.toLowerCase();
-                if (ext === "txt") {
-                  const text = await fetch(url).then((r) => r.text());
-                  setPreviewUrl(text);
-                } else {
-                  setPreviewUrl(url);
-                }
-              } else if (res1 && res1.status === 401) {
-                navigator("/login");
-              }
-            });
+            fetchPreview(ref);
           }
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -191,15 +178,16 @@ export default function CreateEditFile(): JSX.Element {
     setIsLoading(true);
 
     if (selectedFiles) {
-      const ext = selectedFiles.name.includes(".") ? "." + selectedFiles.name.split(".").pop() : "";
-      const tempFileId = Date.now() + "" + Math.floor(100000 + Math.random() * 900000) + ext;
-      Get(getSignedUploadUrl(folderId, tempFileId)).then((res) => {
+      const uploadEndpoint = isEditMode && fileId
+        ? getSignedUploadUrl({ fileId, fileName: selectedFiles.name })
+        : getSignedUploadUrl({ parentId: folderId, fileName: selectedFiles.name });
+      Get(uploadEndpoint).then((res) => {
         if (res && res.status && res.status < 300 && res.data) {
           handleUploadToS3(res.data.url, res.data.fileId);
         } else if (res && res.status === 401) {
           navigator("/login");
         } else if (res !== undefined) {
-          setAlert({ message: t("errorMessage.createFileError"), type: "error" });
+          setAlert({ message: res.data?.message || t("errorMessage.createFileError"), type: "error" });
           setIsLoading(false);
         }
       });
@@ -226,6 +214,25 @@ export default function CreateEditFile(): JSX.Element {
     }
   }
 
+  async function fetchPreview(ref: string) {
+    if (!fileId || !ref) return;
+    Get(getSignedDownloadFile(fileId)).then(async (res1) => {
+      if (res1 && res1.status && res1.status < 300 && res1.data) {
+        const url = res1.data.url;
+        setRawDownloadUrl(url);
+        const ext = ref.split(".").pop()?.toLowerCase();
+        if (ext === "txt") {
+          const text = await fetch(url).then((r) => r.text());
+          setPreviewUrl(text);
+        } else {
+          setPreviewUrl(url);
+        }
+      } else if (res1 && res1.status === 401) {
+        navigator("/login");
+      }
+    });
+  }
+
   function saveFileItem(newFileReference: string) {
     if (isEditMode && fileId) {
       Patch(patchUpdateItem(fileId), {
@@ -235,13 +242,19 @@ export default function CreateEditFile(): JSX.Element {
       }, true).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createFile.fileUpdated"), type: "success" });
-        } else if (res && res.status === 401) {
+          if (newFileReference !== fileReference) {
+            setFileReference(newFileReference);
+            setPreviewUrl("");
+            setRawDownloadUrl("");
+            setTimeout(() => fetchPreview(newFileReference), 3000);
+          }
+        } else if (res?.status === 401) {
           navigator("/login");
-          return;
+        } else if (res?.status === 403) {
+          setAlert({ message: res?.data?.message || t("createFile.fileCouldNotBeCreated"), type: "error" });
         } else {
-          setAlert({ message: t("createFile.fileCouldNotBeCreated"), type: "error" });
+          setAlert({ message: res?.data?.message || t("createFile.fileCouldNotBeCreated"), type: "error" });
         }
-        navigator(`/library/${folderId}`);
         setIsLoading(false);
       });
     } else {

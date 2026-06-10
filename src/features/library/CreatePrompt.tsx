@@ -47,9 +47,9 @@ export default function CreatePrompt(): JSX.Element {
   const options = [t("createPrompt.savePublish"), t("createPrompt.discardChanges")];
 
   const isEditMode = !location.pathname.includes("/createprompt");
-  const folderId = location.pathname.split("/")[2];
-  const promptId = isEditMode ? location.pathname.split("/")[4] : undefined;
+  const promptId = isEditMode ? location.pathname.split("/")[3] : undefined;
 
+  const [folderId, setFolderId] = useState<string>(isEditMode ? "" : location.pathname.split("/")[2]);
   const [prompt, setPrompt] = useState<PromptFormType>({ name: "", description: "", prompt: "" });
   const [errors, setErrors] = useState({ name: "", prompt: "" });
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -71,6 +71,7 @@ export default function CreatePrompt(): JSX.Element {
       Get(getItem(promptId), controller.signal, true).then((res) => {
         if (res && res.status && res.status < 300 && res.data) {
           setPrompt({ name: res.data.name, description: res.data.description ?? "", prompt: res.data.metadata?.prompt ?? "" });
+          setFolderId(res.data.parentId ?? "");
           setIsLoading(false);
         } else if (res && res.status === 401) {
           navigator("/login");
@@ -106,13 +107,13 @@ export default function CreatePrompt(): JSX.Element {
       }, true).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
-        } else if (res && res.status === 401) {
+        } else if (res?.status === 401) {
           navigator("/login");
-          return;
+        } else if (res?.status === 403) {
+          setAlert({ message: res?.data?.message || t("createPrompt.promptCouldNotBeUpdated"), type: "error" });
         } else {
-          setAlert({ message: t("createPrompt.promptCouldNotBeUpdated"), type: "error" });
+          setAlert({ message: res?.data?.message || t("createPrompt.promptCouldNotBeUpdated"), type: "error" });
         }
-        navigator(`/library/${folderId}`);
         setIsLoading(false);
       });
     } else {

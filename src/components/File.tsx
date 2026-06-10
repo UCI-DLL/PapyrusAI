@@ -33,6 +33,7 @@ import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { cn } from "../lib/utils";
 import { useNavigate, Link } from "react-router-dom";
 import { FolderPickerDialog } from "../features/library/FolderPickerDialog";
+import { ShareItemDialog } from "../features/library/ShareItemDialog";
 import { useTranslation } from "../hooks/useTranslation";
 
 interface FileProps {
@@ -47,6 +48,7 @@ interface FileProps {
   disableStarring?: boolean;
   isSelected?: boolean;
   onStarChange?: (itemId: string, type: "folder" | "prompt" | "file", parentId: string, isNowStarred: boolean) => void;
+  shared?: boolean;
 }
 
 export const File = (props: FileProps) => {
@@ -59,6 +61,7 @@ export const File = (props: FileProps) => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [openPromoteDialog, setOpenPromoteDialog] = useState<boolean>(false);
   const [openDemoteDialog, setOpenDemoteDialog] = useState<boolean>(false);
+  const [openShareDialog, setOpenShareDialog] = useState<boolean>(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ?? false);
 
   useEffect(() => {
@@ -67,8 +70,10 @@ export const File = (props: FileProps) => {
 
   const isOrgItem = props.item.ownerId === "ORG";
   const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
+  const isOwner = props.item.ownerId === user?.username;
+  const canEdit = !props.shared || props.item.userPermission === "editor";
 
-  const getEditUrl = () => `/library/${props.item.parentId}/files/${props.item.itemId}`;
+  const getEditUrl = () => `/library/files/${props.item.itemId}`;
 
   function copyTo(folderId: string) {
     setOpenCopyToDialog(false);
@@ -212,6 +217,7 @@ export const File = (props: FileProps) => {
     { label: t("common.view"), type: "link" as const, action: getEditUrl() },
     { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFile : createStarredFile },
     { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
+    { label: t("common.share"), type: "function" as const, action: () => setOpenShareDialog(true) },
     { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
     { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
     { label: t("common.makePrivate"), type: "function" as const, action: () => setOpenDemoteDialog(true) },
@@ -226,6 +232,7 @@ export const File = (props: FileProps) => {
     { label: t("common.view"), type: "link" as const, action: getEditUrl() },
     { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFile : createStarredFile },
     { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
+    { label: t("common.share"), type: "function" as const, action: () => setOpenShareDialog(true) },
     { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
     { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
     { label: t("common.makePublic"), type: "function" as const, action: () => setOpenPromoteDialog(true) },
@@ -235,6 +242,7 @@ export const File = (props: FileProps) => {
     { label: t("common.view"), type: "link" as const, action: getEditUrl() },
     { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFile : createStarredFile },
     { label: t("common.edit"), type: "link" as const, action: getEditUrl() },
+    ...(isOwner ? [{ label: t("common.share"), type: "function" as const, action: () => setOpenShareDialog(true) }] : []),
     { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyToDialog(true) },
     { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
     { label: t("common.delete"), type: "function" as const, action: () => setOpenDeleteDialog(true) },
@@ -242,6 +250,13 @@ export const File = (props: FileProps) => {
 
   return (
     <div key={props.keyy ? props.keyy : "key"}>
+      {/* Share Dialog */}
+      <ShareItemDialog
+        open={openShareDialog}
+        onOpenChange={setOpenShareDialog}
+        item={props.item}
+      />
+
       {/* Delete Dialog */}
       <DialogWrapper
         open={openDeleteDialog}
@@ -354,7 +369,8 @@ export const File = (props: FileProps) => {
                     type: item.type,
                     href: item.type === "link" ? item.action : undefined,
                     className: item.label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : "",
-                  }))}
+                  })).filter(item => canEdit || item.label !== t("common.edit"))
+                    .filter(item => !props.shared || item.label !== t("common.moveTo"))}
                   align="end"
                 />
               )}

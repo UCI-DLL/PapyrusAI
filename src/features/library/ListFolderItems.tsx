@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -11,9 +11,10 @@ import Patch from "../../utility/Patch";
 import { Search, Loader2, Folder, Pencil, ArrowLeft } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { FolderComponent } from "../../components/Folder";
-import { getItem, getItems, patchUpdateItem } from "../../utility/endpoints/ItemEndpoints";
+import { getItem, getItems, getItemPermissions, patchUpdateItem } from "../../utility/endpoints/ItemEndpoints";
 import { getUserFavoritingData } from "../../utility/endpoints/UserEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
+import { UserContext } from "../../utility/context/UserContext";
 import { UserStarred } from "../../utility/types/UserTypes";
 import { useTranslation } from "../../hooks/useTranslation";
 import { Prompt } from "../../components/Prompt";
@@ -57,11 +58,14 @@ interface ListFoldersProps {
   onSelectItem?: (item: LibraryItem) => void;
   selectedItemIds?: string[];
   onFolderNavigate?: (folderId: string) => void;
+  shared?: boolean;
 }
 
 export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
   let navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
+  const { user } = useContext(UserContext);
+  const fetchedPermissionsRef = useRef<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [folderData, setFolderData] = useState<LibraryItem | undefined>();
   const [openEditFolderModal, setOpenEditFolderModal] = useState(false);
@@ -86,11 +90,14 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
 
   useEffect(() => {
     const controller = new AbortController();
+    fetchedPermissionsRef.current = new Set();
     setIsLoading(true);
     setItemList([])
     setFilteredItemList([])
     setFolderData(undefined)
-    if (props.folderId !== "root") {
+    setSearchTerm("")
+    setFilters({ sort: SortOptions.Default, type: typeOptions.All, starred: StarredOptions.All, owner: OwnerTypeOptions.Any })
+    if (!props.shared && props.folderId !== "root") {
       getFolderData(props.folderId, controller.signal)
     }
     setStarred(undefined)
@@ -99,6 +106,7 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
 
     return () => {
       controller.abort();
+      fetchedPermissionsRef.current = new Set();
       setItemList([])
       setFilteredItemList([])
       setStarred(undefined)
@@ -112,6 +120,49 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
     handleFilter({ preventDefault: () => { } } as React.FormEvent);
     // eslint-disable-next-line
   }, [searchTerm, filters, starred, itemList]);
+
+  useEffect(() => {
+    if (!props.shared || itemList.length === 0 || !user?.username) return;
+
+    const toFetch = itemList.filter(
+      (item) => !fetchedPermissionsRef.current.has(item.itemId) && !item.userPermission
+    );
+    if (toFetch.length === 0) return;
+
+    toFetch.forEach((item) => fetchedPermissionsRef.current.add(item.itemId));
+
+    const controller = new AbortController();
+    Promise.all(
+      toFetch.map((item) =>
+        Get(getItemPermissions(item.itemId), controller.signal, true).then((res) => ({
+          itemId: item.itemId,
+          res,
+        }))
+      )
+    ).then((results) => {
+      if (controller.signal.aborted) return;
+      const permMap: Record<string, "viewer" | "editor"> = {};
+      results.forEach(({ itemId, res }) => {
+        if (res && res.status < 300 && Array.isArray(res.data)) {
+          const entry = (res.data as Array<{ userId: string; permission: string }>)
+            .find((p) => p.userId === user?.username);
+          if (entry && (entry.permission === "viewer" || entry.permission === "editor")) {
+            permMap[itemId] = entry.permission;
+          }
+        }
+      });
+      if (Object.keys(permMap).length > 0) {
+        setItemList((prev) =>
+          prev.map((item) =>
+            permMap[item.itemId] ? { ...item, userPermission: permMap[item.itemId] } : item
+          )
+        );
+      }
+    });
+
+    return () => controller.abort();
+    // eslint-disable-next-line
+  }, [itemList, props.shared, user?.username]);
 
   //get folder data
   function getFolderData(folderId: string, signal: AbortSignal) {
@@ -131,11 +182,13 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
 
   //get all items in the folder
   function getFolderItems(nextKey: string | null, signal: AbortSignal) {
-    const params: Parameters<typeof getItems>[0] = { parentId: props.folderId };
+    const params: Parameters<typeof getItems>[0] = props.shared
+      ? { shared: true }
+      : { parentId: props.folderId };
     if (nextKey) params.nextKey = nextKey;
     Get(getItems(params), signal, true).then((res) => {
       if (res && res.status && res.status < 300) {
-        if (res.data && res.data.items) {
+        if (res.data && res.data.items && res.data.items.length > 0) {
           setItemList((prev) => {
             const seen = new Set(prev.map((item) => item.itemId));
             return [...prev, ...res.data.items.filter((item: LibraryItem) => !seen.has(item.itemId))];
@@ -145,6 +198,8 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
           } else {
             setIsLoading(false);
           }
+        } else {
+          setIsLoading(false);
         }
       } else if (res && res.status === 401) {
         navigator("/login");
@@ -185,10 +240,12 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
       if (res && res.status && res.status < 300) {
         setFolderData((prev) => prev ? { ...prev, name: editFolderForm.name, description: editFolderForm.description } : prev);
         setAlert({ message: t("library.folderUpdated"), type: "success" });
-      } else if (res && res.status === 401) {
+      } else if (res?.status === 401) {
         navigator("/login");
+      } else if (res?.status === 403) {
+        setAlert({ message: res?.data?.message || t("library.folderCouldNotBeUpdated"), type: "error" });
       } else {
-        setAlert({ message: t("library.folderCouldNotBeUpdated"), type: "error" });
+        setAlert({ message: res?.data?.message || t("library.folderCouldNotBeUpdated"), type: "error" });
       }
       setOpenEditFolderModal(false);
       setIsEditLoading(false);
@@ -208,9 +265,9 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
 
     // starred filter
     if (filters.starred === StarredOptions.Starred) {
-      filtered = filtered.filter((item) => isItemStarred(item, starred));
+      filtered = filtered.filter((item) => isItemStarred(item, starred, props.shared));
     } else if (filters.starred === StarredOptions["Not Starred"]) {
-      filtered = filtered.filter((item) => !isItemStarred(item, starred));
+      filtered = filtered.filter((item) => !isItemStarred(item, starred, props.shared));
     }
 
     // search
@@ -274,7 +331,7 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
       )}
 
       {/* Edit Folder Dialog */}
-      {props.folderId !== "root" && (
+      {!props.shared && props.folderId !== "root" && (
         <DialogWrapper
           open={openEditFolderModal}
           onOpenChange={setOpenEditFolderModal}
@@ -331,7 +388,7 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
 
       {/* Search and Filter Section */}
       <div className="bg-card rounded-xl border p-4 mb-6">
-        {props.folderId !== "root" && folderData && (
+        {!props.shared && props.folderId !== "root" && folderData && (
           <div className="mb-1">
             <Button
               type="button"
@@ -354,9 +411,9 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
             </Button>
           </div>
         )}
-        <div className="flex items-center gap-2">
-          <h5 className="text-lg font-semibold">{folderData ? folderData.name : t("library.myAssets")}</h5>
-          {props.folderId !== "root" && folderData && (
+        {!props.shared && props.folderId !== "root" && folderData && (
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-xl font-semibold">{folderData.name}</h2>
             <Button
               type="button"
               variant="ghost"
@@ -370,15 +427,15 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
-          )}
-        </div>
+          </div>
+        )}
         {folderData?.description && (
           <div className="flex flex-col sm:flex-row gap-4">
             <span className="text-sm text-muted-foreground">{folderData.description}</span>
           </div>
         )}
         {/* Search */}
-        <div className="relative mt-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
           <Input
             placeholder={t("library.searchContent")}
@@ -499,9 +556,10 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
                 onClick={props.onSelectItem
                   ? (_id, _type) => props.onSelectItem!(item)
                   : undefined}
-                isStarred={isItemStarred(item, starred)}
+                isStarred={isItemStarred(item, starred, props.shared)}
                 isSelected={props.selectedItemIds?.includes(item.itemId) ?? false}
                 onStarChange={handleStarChange}
+                shared={props.shared}
               />
             );
           }
@@ -517,9 +575,10 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
                 onClick={props.onSelectItem
                   ? (_id, _type) => props.onSelectItem!(item)
                   : undefined}
-                isStarred={isItemStarred(item, starred)}
+                isStarred={isItemStarred(item, starred, props.shared)}
                 isSelected={props.selectedItemIds?.includes(item.itemId) ?? false}
                 onStarChange={handleStarChange}
+                shared={props.shared}
               />
             );
           }
@@ -533,6 +592,7 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
                 loading={loading}
                 noShowMenu={props.noShowMenu}
                 onClick={() => console.log("TODO")}
+                shared={props.shared}
               />
             );
           }
@@ -549,9 +609,10 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
                 keyy={`${i}`}
                 refreshList={refreshList}
                 loading={loading}
-                isStarred={isItemStarred(item, starred)}
+                isStarred={isItemStarred(item, starred, props.shared)}
                 noShowMenu={props.noShowMenu}
                 onStarChange={handleStarChange}
+                shared={props.shared}
               />
             );
           }
@@ -563,11 +624,17 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
       {filteredItemList.length === 0 && (
         <div className="text-center py-12 text-muted-foreground bg-card border rounded-lg" role="status">
           <Folder className="mx-auto h-12 w-12 mb-4 opacity-50" />
-          <p className="text-lg font-medium mb-2">{t("errorMessage.noFolders")}</p>
+          <p className="text-lg font-medium mb-2">
+            {props.shared && !searchTerm && filters.starred === StarredOptions.All
+              ? t("library.noSharedItems")
+              : t("library.noAssetsFound")}
+          </p>
           <p className="text-sm">
             {searchTerm || filters.starred !== StarredOptions.All
-              ? "Try adjusting your search or filters"
-              : "Create your first folder to get started organizing your content"}
+              ? t("library.tryAdjustingSearchOrFilters")
+              : props.shared
+                ? t("library.noSharedItemsDescription")
+                : t("library.createNewAsset")}
           </p>
         </div>
       )}
@@ -580,11 +647,19 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
   );
 }
 
-function isItemStarred(item: LibraryItem, starred: UserStarred | undefined): boolean {
+function isItemStarred(item: LibraryItem, starred: UserStarred | undefined, shared?: boolean): boolean {
   if (!starred) return false;
   if (item.type === "folder") return starred.folders?.some((s) => s.folderId === item.itemId) ?? false;
-  if (item.type === "prompt") return starred.prompts?.some((p) => p.promptId === item.itemId && p.folderId === item.parentId) ?? false;
-  if (item.type === "file") return starred.files?.some((f) => f.fileId === item.itemId && f.folderId === item.parentId) ?? false;
+  if (item.type === "prompt") {
+    return starred.prompts?.some((p) =>
+      p.promptId === item.itemId && (shared || !p.folderId || p.folderId === item.parentId)
+    ) ?? false;
+  }
+  if (item.type === "file") {
+    return starred.files?.some((f) =>
+      f.fileId === item.itemId && (shared || !f.folderId || f.folderId === item.parentId)
+    ) ?? false;
+  }
   return false;
 }
 

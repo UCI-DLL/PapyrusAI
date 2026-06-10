@@ -17,6 +17,7 @@ import {
   postPromoteItem,
   postDemoteItem,
 } from "../utility/endpoints/ItemEndpoints";
+import { ShareItemDialog } from "../features/library/ShareItemDialog";
 import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
@@ -48,6 +49,7 @@ interface PromptProps {
   disableStarring?: boolean;
   isSelected?: boolean;
   onStarChange?: (itemId: string, type: "folder" | "prompt" | "file", parentId: string, isNowStarred: boolean) => void;
+  shared?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -61,6 +63,7 @@ export const Prompt = (props: PromptProps) => {
   const [openPreviewDialog, setOpenPreviewDialog] = useState<boolean>(false);
   const [openPromoteDialog, setOpenPromoteDialog] = useState<boolean>(false);
   const [openDemoteDialog, setOpenDemoteDialog] = useState<boolean>(false);
+  const [openShareDialog, setOpenShareDialog] = useState<boolean>(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ?? false);
 
   useEffect(() => {
@@ -69,10 +72,14 @@ export const Prompt = (props: PromptProps) => {
 
   const isOrgItem = props.item.ownerId === "ORG";
   const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
+  const isOwner = props.item.ownerId === user?.username;
+  const canEdit = !props.shared || props.item.userPermission === "editor";
+
+  console.log("item props", props.item.userPermission)
 
   function edit() {
     props.loading();
-    navigator(`/library/${props.item.parentId}/prompts/${props.item.itemId}`);
+    navigator(`/library/prompts/${props.item.itemId}`);
   }
 
   function copyTo(folderId: string) {
@@ -210,6 +217,7 @@ export const Prompt = (props: PromptProps) => {
     t("common.view"),
     starred ? t("common.unstar") : t("common.star"),
     t("common.edit"),
+    t("common.share"),
     t("common.copyTo"),
     t("common.moveTo"),
     t("common.makePrivate"),
@@ -220,6 +228,7 @@ export const Prompt = (props: PromptProps) => {
     t("common.view"),
     starred ? t("common.unstar") : t("common.star"),
     t("common.edit"),
+    t("common.share"),
     t("common.copyTo"),
     t("common.moveTo"),
     t("common.makePublic"),
@@ -229,6 +238,7 @@ export const Prompt = (props: PromptProps) => {
     t("common.view"),
     starred ? t("common.unstar") : t("common.star"),
     t("common.edit"),
+    ...(isOwner ? [t("common.share")] : []),
     t("common.copyTo"),
     t("common.moveTo"),
     t("common.delete"),
@@ -238,6 +248,7 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
     edit,
+    () => setOpenShareDialog(true),
     () => setOpenCopyToDialog(true),
     () => setOpenMoveDialog(true),
     () => setOpenDemoteDialog(true),
@@ -252,6 +263,7 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
     edit,
+    () => setOpenShareDialog(true),
     () => setOpenCopyToDialog(true),
     () => setOpenMoveDialog(true),
     () => setOpenPromoteDialog(true),
@@ -261,6 +273,7 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
     edit,
+    ...(isOwner ? [() => setOpenShareDialog(true)] : []),
     () => setOpenCopyToDialog(true),
     () => setOpenMoveDialog(true),
     () => setOpenDeleteDialog(true),
@@ -268,6 +281,13 @@ export const Prompt = (props: PromptProps) => {
 
   return (
     <div key={props.keyy ? props.keyy : "key"}>
+      {/* Share Dialog */}
+      <ShareItemDialog
+        open={openShareDialog}
+        onOpenChange={setOpenShareDialog}
+        item={props.item}
+      />
+
       {/* Preview Dialog */}
       <DialogWrapper
         open={openPreviewDialog}
@@ -386,7 +406,7 @@ export const Prompt = (props: PromptProps) => {
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
                   }
-                  actions={
+                  actions={(
                     isOrgItem
                       ? user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
                         ? adminOrgMenu.map((label, i) => ({
@@ -414,7 +434,8 @@ export const Prompt = (props: PromptProps) => {
                           type: "button" as const,
                           className: label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : "",
                         }))
-                  }
+                  ).filter(item => canEdit || item.label !== t("common.edit"))
+                    .filter(item => !props.shared || item.label !== t("common.moveTo"))}
                   align="end"
                   tooltipContent={t("common.promptOptions")}
                   tooltipSide="top"

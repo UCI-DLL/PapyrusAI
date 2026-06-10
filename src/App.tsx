@@ -500,13 +500,13 @@ function App(): JSX.Element {
                       </Route>
 
                       <Route
-                        path="/library/:id/prompts/:id"
+                        path="/library/prompts/:id"
                         element={
                           <PrivateRoute user={user} authStatus={authStatus} />
                         }
                       >
                         <Route
-                          path="/library/:id/prompts/:id"
+                          path="/library/prompts/:id"
                           element={<EditPrompt />}
                         />
                       </Route>
@@ -524,13 +524,13 @@ function App(): JSX.Element {
                       </Route>
 
                       <Route
-                        path="/library/:id/files/:id"
+                        path="/library/files/:id"
                         element={
                           <PrivateRoute user={user} authStatus={authStatus} />
                         }
                       >
                         <Route
-                          path="/library/:id/files/:id"
+                          path="/library/files/:id"
                           element={<CreateEditFile />}
                         />
                       </Route>
@@ -548,13 +548,13 @@ function App(): JSX.Element {
                       </Route>
 
                       <Route
-                        path="/library/:id/rubrics/:id"
+                        path="/library/rubrics/:id"
                         element={
                           <PrivateRoute user={user} authStatus={authStatus} />
                         }
                       >
                         <Route
-                          path="/library/:id/rubrics/:id"
+                          path="/library/rubrics/:id"
                           element={<EditRubric />}
                         />
                       </Route>

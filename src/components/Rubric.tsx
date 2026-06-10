@@ -13,6 +13,7 @@ import Post from "../utility/Post";
 import { deleteItem, postCopyItem, postMoveItem, postPromoteItem, postDemoteItem } from "../utility/endpoints/ItemEndpoints";
 import { useTranslation } from "../hooks/useTranslation";
 import { FolderPickerDialog } from "../features/library/FolderPickerDialog";
+import { ShareItemDialog } from "../features/library/ShareItemDialog";
 
 interface RubricProps {
   item: LibraryItem;
@@ -20,6 +21,7 @@ interface RubricProps {
   refreshList: () => void;
   loading: (isLoading?: boolean) => void;
   noShowMenu?: boolean;
+  shared?: boolean;
   onClick?: (folderId: string, id: string, isOrgFolder: boolean, type: string) => void;
   isSelected?: boolean;
 }
@@ -34,13 +36,16 @@ export const Rubric = (props: RubricProps) => {
   const [openMoveDialog, setOpenMoveDialog] = useState(false);
   const [openPromoteDialog, setOpenPromoteDialog] = useState(false);
   const [openDemoteDialog, setOpenDemoteDialog] = useState(false);
+  const [openShareDialog, setOpenShareDialog] = useState(false);
 
   const isOrgItem = props.item.ownerId === "ORG";
   const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
+  const isOwner = props.item.ownerId === user?.username;
+  const canEdit = !props.shared || props.item.userPermission === "editor";
 
   function edit() {
     props.loading();
-    navigator(`/library/${props.item.parentId}/rubrics/${props.item.itemId}`);
+    navigator(`/library/rubrics/${props.item.itemId}`);
   }
 
   function handleCardClick() {
@@ -138,12 +143,13 @@ export const Rubric = (props: RubricProps) => {
   const criteriaCount = props.item.metadata?.criteria?.length ?? 0;
   const columnsCount = props.item.metadata?.columns?.length ?? 0;
 
-  const menuItems =
+  const menuItemsBase =
     isOrgItem && !isAdmin ? [
       { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
     ] :
     isOrgItem && isAdmin ? [
       { label: t("common.edit"), onClick: edit },
+      { label: t("common.share"), onClick: () => setOpenShareDialog(true) },
       { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
       { label: t("common.moveTo"), onClick: () => setOpenMoveDialog(true) },
       { label: t("common.makePrivate"), onClick: () => setOpenDemoteDialog(true) },
@@ -151,19 +157,32 @@ export const Rubric = (props: RubricProps) => {
     ] :
     isAdmin ? [
       { label: t("common.edit"), onClick: edit },
+      { label: t("common.share"), onClick: () => setOpenShareDialog(true) },
       { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
       { label: t("common.moveTo"), onClick: () => setOpenMoveDialog(true) },
       { label: t("common.makePublic"), onClick: () => setOpenPromoteDialog(true) },
       { label: t("common.delete"), onClick: () => setOpenDeleteDialog(true), className: "text-destructive focus:bg-destructive focus:text-destructive-foreground" },
     ] : [
       { label: t("common.edit"), onClick: edit },
+      ...(isOwner ? [{ label: t("common.share"), onClick: () => setOpenShareDialog(true) }] : []),
       { label: t("common.copyTo"), onClick: () => setOpenCopyDialog(true) },
       { label: t("common.moveTo"), onClick: () => setOpenMoveDialog(true) },
       { label: t("common.delete"), onClick: () => setOpenDeleteDialog(true), className: "text-destructive focus:bg-destructive focus:text-destructive-foreground" },
     ];
 
+  const menuItems = menuItemsBase
+    .filter(item => canEdit || item.label !== t("common.edit"))
+    .filter(item => !props.shared || item.label !== t("common.moveTo"));
+
   return (
     <div key={props.keyy}>
+      {/* Share Dialog */}
+      <ShareItemDialog
+        open={openShareDialog}
+        onOpenChange={setOpenShareDialog}
+        item={props.item}
+      />
+
       {/* Delete Dialog */}
       <DialogWrapper
         open={openDeleteDialog}

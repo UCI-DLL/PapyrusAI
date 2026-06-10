@@ -34,9 +34,9 @@ export default function CreateRubric(): JSX.Element {
   const { user } = useContext(UserContext);
 
   const isEditMode = !location.pathname.includes("/createrubric");
-  const folderId = location.pathname.split("/")[2];
-  const rubricId = isEditMode ? location.pathname.split("/")[4] : undefined;
+  const rubricId = isEditMode ? location.pathname.split("/")[3] : undefined;
 
+  const [folderId, setFolderId] = useState<string>(isEditMode ? "" : location.pathname.split("/")[2]);
   const [name, setName] = useState("");
   const [columns, setColumns] = useState<string[]>([...DEFAULT_COLUMNS]);
   const [columnKeys, setColumnKeys] = useState<string[]>(
@@ -61,6 +61,7 @@ export default function CreateRubric(): JSX.Element {
         if (res && res.status && res.status < 300 && res.data) {
           const meta = res.data.metadata ?? {};
           setName(res.data.name);
+          setFolderId(res.data.parentId ?? "");
           if (meta.columns?.length) {
             setColumns(meta.columns);
             setColumnKeys(meta.columns.map(() => crypto.randomUUID()));
@@ -73,7 +74,6 @@ export default function CreateRubric(): JSX.Element {
           navigator("/login");
         } else if (res !== undefined) {
           setAlert({ message: "Rubric not found.", type: "error" });
-          navigator(`/library/${folderId}`);
         }
       });
       return () => controller.abort();
@@ -146,13 +146,14 @@ export default function CreateRubric(): JSX.Element {
       Patch(patchUpdateItem(rubricId), { name, metadata }, true).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: "Rubric saved.", type: "success" });
-        } else if (res && res.status === 401) {
+          navigator(`/library/${folderId}`);
+        } else if (res?.status === 401) {
           navigator("/login");
-          return;
+        } else if (res?.status === 403) {
+          setAlert({ message: res?.data?.message || "Could not save rubric.", type: "error" });
         } else {
-          setAlert({ message: "Could not save rubric.", type: "error" });
+          setAlert({ message: res?.data?.message || "Could not save rubric.", type: "error" });
         }
-        navigator(`/library/${folderId}`);
         setIsLoading(false);
       });
     } else {

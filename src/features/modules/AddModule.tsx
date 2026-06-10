@@ -129,6 +129,7 @@ export default function AddModule({
   const { setAlert } = useContext(AlertContext);
   const [openLibraryModal, setOpenLibraryModal] = useState<boolean>(false);
   const [libraryFolderId, setLibraryFolderId] = useState<string>("root");
+  const [libraryTab, setLibraryTab] = useState<"my" | "shared">("my");
   const [openSaveTop, setOpenSaveTop] = useState(false);
   const [openSaveBottom, setOpenSaveBottom] = useState(false);
   const [selectedIndexSave, setSelectedIndexSave] = useState(0);
@@ -547,6 +548,7 @@ export default function AddModule({
           if (!open) {
             setOpenLibraryModal(false);
             setLibraryFolderId("root");
+            setLibraryTab("my");
           }
         }}
         title={t("createModule.selectAsset")}
@@ -557,12 +559,30 @@ export default function AddModule({
             onClick: () => {
               setOpenLibraryModal(false);
               setLibraryFolderId("root");
+              setLibraryTab("my");
             },
             variant: "outline",
           },
         ]}
       >
+        <div className="flex gap-1 border-b mb-4">
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${libraryTab === "my" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            onClick={() => { setLibraryTab("my"); setLibraryFolderId("root"); }}
+          >
+            {t("library.myLibrary")}
+          </button>
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${libraryTab === "shared" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            onClick={() => { setLibraryTab("shared"); setLibraryFolderId("root"); }}
+          >
+            {t("library.sharedWithMe")}
+          </button>
+        </div>
         <ListFolders
+          key={libraryTab}
           folderId={libraryFolderId}
           noShowMenu
           compactGrid
@@ -571,7 +591,8 @@ export default function AddModule({
             ...session.prompts.map((p) => p.id),
             ...session.files.map((f) => f.id),
           ]}
-          onFolderNavigate={(folderId) => setLibraryFolderId(folderId)}
+          onFolderNavigate={libraryTab === "my" ? (folderId) => setLibraryFolderId(folderId) : undefined}
+          shared={libraryTab === "shared"}
         />
       </DialogWrapper>
 

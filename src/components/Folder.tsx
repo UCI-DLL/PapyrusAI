@@ -29,6 +29,7 @@ import {
   putUpdateUserFavoritingData,
 } from "../utility/endpoints/UserEndpoints";
 import { Star, Folder, MoreHorizontal } from "lucide-react";
+import { ShareItemDialog } from "../features/library/ShareItemDialog";
 import { cn } from "../lib/utils";
 import { useTranslation } from "../hooks/useTranslation";
 
@@ -42,6 +43,7 @@ interface FolderProps {
   noShowMenu?: boolean;
   isStarred?: boolean;
   onStarChange?: (itemId: string, type: "folder" | "prompt" | "file", parentId: string, isNowStarred: boolean) => void;
+  shared?: boolean;
 }
 
 export const FolderComponent = (props: FolderProps) => {
@@ -51,23 +53,26 @@ export const FolderComponent = (props: FolderProps) => {
   const { t } = useTranslation();
   const isOrganizationFolder = props.item.ownerId === "ORG";
   const displayName = props.displayName ? props.displayName : "Displayname";
-  const [renameFolderText, setRenameFolderText] = useState<string>(props.item.name);
+  const [editFolderForm, setEditFolderForm] = useState<{ name: string; description: string }>({ name: props.item.name, description: props.item.description ?? "" });
   const [openRenameDialog, setOpenRenameDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [openPromoteDialog, setOpenPromoteDialog] = useState<boolean>(false);
   const [openDemoteDialog, setOpenDemoteDialog] = useState<boolean>(false);
   const [openCopyDialog, setOpenCopyDialog] = useState<boolean>(false);
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
+  const [openShareDialog, setOpenShareDialog] = useState<boolean>(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ? props.isStarred : false);
   const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
+  const isOwner = props.item.ownerId === user?.username;
+  const canEdit = !props.shared || props.item.userPermission === "editor";
 
   useEffect(() => {
     setStarred(props.isStarred ? props.isStarred : false);
   }, [props.isStarred]);
 
   useEffect(() => {
-    setRenameFolderText(props.item.name);
-  }, [props.item.name]);
+    setEditFolderForm({ name: props.item.name, description: props.item.description ?? "" });
+  }, [props.item.name, props.item.description]);
 
   const getViewUrl = () => `/library/${props.item.itemId}`;
 
@@ -78,7 +83,7 @@ export const FolderComponent = (props: FolderProps) => {
 
   function rename() {
     props.loading();
-    Patch(patchUpdateItem(props.item.itemId), { name: renameFolderText }, true).then((res) => {
+    Patch(patchUpdateItem(props.item.itemId), { name: editFolderForm.name, description: editFolderForm.description }, true).then((res) => {
       if (res.status && res.status < 300) {
         setAlert({ message: t("components.folderRenamedSuccessfully"), type: "success" });
         props.refreshList();
@@ -227,12 +232,13 @@ export const FolderComponent = (props: FolderProps) => {
     }
   };
 
-  const getFolderDescription = () => props.item.description || t("components.emptyFolder");
+  const getFolderDescription = () => props.item.description || "";
 
   const adminOrgMenu = [
     { label: t("common.view"), type: "link" as const, action: getViewUrl() },
     { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFolder : createStarredFolder },
-    { label: t("common.rename"), type: "function" as const, action: openRename },
+    { label: t("common.edit"), type: "function" as const, action: openRename },
+    { label: t("common.share"), type: "function" as const, action: () => setOpenShareDialog(true) },
     { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyDialog(true) },
     { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
     { label: t("common.makePrivate"), type: "function" as const, action: openDemote },
@@ -246,7 +252,8 @@ export const FolderComponent = (props: FolderProps) => {
   const adminUserMenu = [
     { label: t("common.view"), type: "link" as const, action: getViewUrl() },
     { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFolder : createStarredFolder },
-    { label: t("common.rename"), type: "function" as const, action: openRename },
+    { label: t("common.edit"), type: "function" as const, action: openRename },
+    { label: t("common.share"), type: "function" as const, action: () => setOpenShareDialog(true) },
     { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyDialog(true) },
     { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
     { label: t("common.makePublic"), type: "function" as const, action: openPromote },
@@ -255,7 +262,8 @@ export const FolderComponent = (props: FolderProps) => {
   const instructorUserMenu = [
     { label: t("common.view"), type: "link" as const, action: getViewUrl() },
     { label: starred ? t("common.unstar") : t("common.star"), type: "function" as const, action: starred ? removeStarredFolder : createStarredFolder },
-    { label: t("common.rename"), type: "function" as const, action: openRename },
+    { label: t("common.edit"), type: "function" as const, action: openRename },
+    ...(isOwner ? [{ label: t("common.share"), type: "function" as const, action: () => setOpenShareDialog(true) }] : []),
     { label: t("common.copyTo"), type: "function" as const, action: () => setOpenCopyDialog(true) },
     { label: t("common.moveTo"), type: "function" as const, action: () => setOpenMoveDialog(true) },
     { label: t("common.delete"), type: "function" as const, action: openDelete },
@@ -263,6 +271,13 @@ export const FolderComponent = (props: FolderProps) => {
 
   return (
     <div key={props.keyy ? props.keyy : "key"}>
+      {/* Share Dialog */}
+      <ShareItemDialog
+        open={openShareDialog}
+        onOpenChange={setOpenShareDialog}
+        item={props.item}
+      />
+
       {/* Promote Dialog */}
       <FolderPickerDialog
         open={openPromoteDialog}
@@ -317,16 +332,16 @@ export const FolderComponent = (props: FolderProps) => {
         ]}
       />
 
-      {/* Rename Dialog */}
+      {/* Edit Dialog */}
       <DialogWrapper
         open={openRenameDialog}
         onOpenChange={setOpenRenameDialog}
-        title={t("components.renameFolder")}
-        description={t("components.renameFolderDescription")}
+        title={t("library.editFolder")}
+        description={t("library.editFolderDescription")}
         actions={[
           { label: t("common.cancel"), onClick: () => setOpenRenameDialog(false), variant: "outline" },
           {
-            label: t("common.rename"),
+            label: t("common.save"),
             onClick: () => { setOpenRenameDialog(false); rename(); },
             variant: "default",
           },
@@ -337,9 +352,18 @@ export const FolderComponent = (props: FolderProps) => {
             <Label htmlFor="folder-name">{t("common.folder")} {t("common.name")}</Label>
             <Input
               id="folder-name"
-              value={renameFolderText}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRenameFolderText(e.target.value)}
+              value={editFolderForm.name}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditFolderForm((prev) => ({ ...prev, name: e.target.value }))}
               placeholder={t("components.enterFolderName")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="folder-description">{t("library.folderDescription")}</Label>
+            <Input
+              id="folder-description"
+              value={editFolderForm.description}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditFolderForm((prev) => ({ ...prev, description: e.target.value }))}
+              placeholder={t("library.enterFolderDescription")}
             />
           </div>
         </div>
@@ -415,13 +439,14 @@ export const FolderComponent = (props: FolderProps) => {
                         item.action();
                       }
                     },
-                    type: item.type === "link" ? "link" : "button",
+                    type: item.type === "link" ? "link" as const : "button" as const,
                     href: item.type === "link" ? item.action : undefined,
                     className:
                       item.label === t("common.delete")
                         ? "text-destructive focus:bg-destructive focus:text-destructive-foreground"
                         : "",
-                  }))}
+                  })).filter(item => canEdit || item.label !== t("common.rename"))
+                    .filter(item => !props.shared || item.label !== t("common.moveTo"))}
                   align="end"
                   tooltipContent={t("common.folderOptions")}
                   tooltipSide="top"
@@ -436,9 +461,11 @@ export const FolderComponent = (props: FolderProps) => {
           </h2>
 
           {/* Description */}
-          <p className="text-sm text-muted-foreground mb-4 flex-grow leading-relaxed">
-            {getFolderDescription()}
-          </p>
+          {props.item.description && (
+            <p className="text-sm text-muted-foreground mb-4 flex-grow leading-relaxed">
+              {getFolderDescription()}
+            </p>
+          )}
 
           {/* Footer with view link */}
           <div className="flex items-center justify-end mt-auto">

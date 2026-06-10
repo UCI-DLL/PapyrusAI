@@ -11,6 +11,7 @@ export type LibraryItem = {
   createdAt: number; // ms epoch
   updatedAt: number; // ms epoch
   metadata: Record<string, any>;
+  userPermission?: "viewer" | "editor"; // present on items returned via shared=true
 }
 
 export type CourseType = {

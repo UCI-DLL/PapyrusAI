@@ -103,8 +103,7 @@ export default function Reports(): JSX.Element {
 
     const MAX_COURSE_RETRIES = 3;
     const loadCourse = (group: string, retryCount: number = 0) => {
-      // Reports flag true
-      Get(getCourse(group), controller.signal, true).then((res1) => {
+      Get(getCourse(group), controller.signal).then((res1) => {
         if (res1 && res1.status && res1.status < 300) {
           if (retryCount > 0) {
             console.log("[Reports] loadCourse retry succeeded", {
@@ -197,8 +196,7 @@ export default function Reports(): JSX.Element {
     handleNetworkErrorFn: (res: any, retryFn: () => void) => void,
   ) {
     var limit = 20;
-    // Reports flag true
-    Get(getAllCourseList(limit, startKey), signal, true).then((res) => {
+    Get(getAllCourseList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.courses && res.data.ScannedCount !== undefined) {
           //Get users for each course in the list of all courses
@@ -240,8 +238,7 @@ export default function Reports(): JSX.Element {
 
   function getUsersInCourseList(course: CourseType, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
-    //Note: add true to Get function so that it will try again if it fails
-    Get(getUsersInCourse(course.id, limit, nextToken), signal, true).then(async (res) => {
+    Get(getUsersInCourse(course.id, limit, nextToken), signal).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //Get the list of all users in the group
@@ -486,8 +483,7 @@ export default function Reports(): JSX.Element {
     courseIndex: number,
     moduleIndex: number,
   ): Promise<any> {
-    //Note: add true to Get function so that it will try again if it fails
-    const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal, true).then(
+    const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal).then(
       async (res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
@@ -541,18 +537,15 @@ export default function Reports(): JSX.Element {
     username: string,
     controller: AbortController,
   ): Promise<any> {
-    //Note: add true to Get function so that it will try again if it fails
-    const temp = await Get(getConversation(courseId, moduleId, convoIndex, username), controller.signal, true).then(
+    const temp = await Get(getConversation(courseId, moduleId, convoIndex, username), controller.signal).then(
       async (res1: any) => {
         if (res1 && res1.status && res1.status < 300) {
           if (res1.data) {
             //handle content moderation messages
             if (res1.data.completed) {
-              //Note: add true to Get function so that it will try again if it fails
               const temp2 = await Get(
                 getContentModMessage(courseId, moduleId, convoIndex, username),
                 controller.signal,
-                true,
               ).then(async (res2: any) => {
                 if (res2 && res2.status && res2.status < 300) {
                   //add content mod message to res1 data before returning

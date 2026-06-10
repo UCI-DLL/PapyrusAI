@@ -66,6 +66,7 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const { user } = useContext(UserContext);
   const fetchedPermissionsRef = useRef<Set<string>>(new Set());
+  const pendingFetchCountRef = useRef(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [folderData, setFolderData] = useState<LibraryItem | undefined>();
   const [openEditFolderModal, setOpenEditFolderModal] = useState(false);
@@ -101,12 +102,20 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
       getFolderData(props.folderId, controller.signal)
     }
     setStarred(undefined)
-    getFolderItems(null, controller.signal);
+    if (!props.shared && props.folderId === "root" && user?.username) {
+      pendingFetchCountRef.current = 2;
+      getFolderItems(null, controller.signal, user.username);
+      getFolderItems(null, controller.signal, "ORG");
+    } else {
+      pendingFetchCountRef.current = 1;
+      getFolderItems(null, controller.signal);
+    }
     getStarred(controller.signal);
 
     return () => {
       controller.abort();
       fetchedPermissionsRef.current = new Set();
+      pendingFetchCountRef.current = 0;
       setItemList([])
       setFilteredItemList([])
       setStarred(undefined)
@@ -181,10 +190,10 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
   }
 
   //get all items in the folder
-  function getFolderItems(nextKey: string | null, signal: AbortSignal) {
+  function getFolderItems(nextKey: string | null, signal: AbortSignal, owner?: string) {
     const params: Parameters<typeof getItems>[0] = props.shared
       ? { shared: true }
-      : { parentId: props.folderId };
+      : { parentId: props.folderId, ...(owner ? { owner } : {}) };
     if (nextKey) params.nextKey = nextKey;
     Get(getItems(params), signal, true).then((res) => {
       if (res && res.status && res.status < 300) {
@@ -194,17 +203,22 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
             return [...prev, ...res.data.items.filter((item: LibraryItem) => !seen.has(item.itemId))];
           });
           if (res.data.nextKey) {
-            getFolderItems(res.data.nextKey, signal);
+            getFolderItems(res.data.nextKey, signal, owner);
           } else {
-            setIsLoading(false);
+            pendingFetchCountRef.current -= 1;
+            if (pendingFetchCountRef.current <= 0) setIsLoading(false);
           }
         } else {
-          setIsLoading(false);
+          pendingFetchCountRef.current -= 1;
+          if (pendingFetchCountRef.current <= 0) setIsLoading(false);
         }
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        if (res !== undefined) setIsLoading(false);
+        if (res !== undefined) {
+          pendingFetchCountRef.current -= 1;
+          if (pendingFetchCountRef.current <= 0) setIsLoading(false);
+        }
       }
     });
   }

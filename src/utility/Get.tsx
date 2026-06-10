@@ -1,44 +1,69 @@
 import axios from "axios";
 
+const RETRY_STATUSES = new Set([502]);
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => { clearTimeout(timer); reject(new DOMException("Aborted", "AbortError")); }, { once: true });
+  });
+}
+
 export default async function Get(url: String, signal?: AbortSignal | undefined, second: boolean = false) {
   const user = localStorage.getItem("papyrusai_access_token")
   const API_URL = (second ? (process.env.REACT_APP_API_URL2 ?? "") : (process.env.REACT_APP_API_URL ?? "")) + url;
   let sessionId = localStorage.getItem("sessionId") ?? "unknown";
 
-  var data = await axios
-    .get(API_URL, {
-      headers: {
-        Authorization: user,
-        "X-Session-Id": sessionId,
-      },
-      signal
-    })
-    .then((response) => {
-      return response;
-    })
-    .catch((error) => {
-      if (error.code === "ERR_CANCELED") return;
+  let attempt = 0;
+  while (true) {
+    const data = await axios
+      .get(API_URL, {
+        headers: {
+          Authorization: user,
+          "X-Session-Id": sessionId,
+        },
+        signal
+      })
+      .then((response) => {
+        return response;
+      })
+      .catch((error) => {
+        if (error.code === "ERR_CANCELED") return;
 
-      // if (error.code === "ERR_NETWORK") {
-      //   console.log("You got a 502 error that needs to be handled by the function that called this.", error)
+        // if (error.code === "ERR_NETWORK") {
+        //   console.log("You got a 502 error that needs to be handled by the function that called this.", error)
 
-      // }
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        // showMsg(Object.values(error.response.data), "error");
-        // if (error.response.status === 401) {
-        //   localStorage.removeItem("papyrusai_access_token");
         // }
-        return error.response;
-      } else if (error.request) {
-        // The request was made but no response was received
-        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-        // http.ClientRequest in node.js
-      } else {
-        // Something happened in setting up the request that triggered an Error
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          // showMsg(Object.values(error.response.data), "error");
+          // if (error.response.status === 401) {
+          //   localStorage.removeItem("papyrusai_access_token");
+          // }
+          return error.response;
+        } else if (error.request) {
+          // The request was made but no response was received
+          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+          // http.ClientRequest in node.js
+        } else {
+          // Something happened in setting up the request that triggered an Error
+        }
+        return error;
+      });
+
+    if (data && RETRY_STATUSES.has(data.status) && attempt < MAX_RETRIES && !signal?.aborted) {
+      attempt++;
+      try {
+        await sleep(RETRY_DELAY_MS, signal);
+      } catch {
+        return data;
       }
-      return error;
-    });
-  return await data;
+      continue;
+    }
+
+    return data;
+  }
 }

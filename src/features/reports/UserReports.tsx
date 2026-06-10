@@ -64,7 +64,7 @@ export default function UserReports(): JSX.Element {
       //get list of conversation
       //TODO handle pagination of conversation lists later when reports is more defined
       const fetchConversations = () => {
-        Get(getUserConversationList(username), controller.signal, true).then((res) => {
+        Get(getUserConversationList(username), controller.signal).then((res) => {
           // Check for network error first
           if (isNetworkError(res)) {
             handleNetworkError(res, fetchConversations);
@@ -102,7 +102,7 @@ export default function UserReports(): JSX.Element {
               const totalFetches = res.data.length;
 
               const loadCourse = (conversation: any) => {
-                Get(getCourse(conversation.courseId), controller.signal, true).then((res1) => {
+                Get(getCourse(conversation.courseId), controller.signal).then((res1) => {
                   // Check for network error
                   if (isNetworkError(res1)) {
                     handleNetworkError(res1, () => {
@@ -195,7 +195,7 @@ export default function UserReports(): JSX.Element {
 
   function getSpecificUser(username: string, signal: AbortSignal) {
     //get user details
-    Get(getUserData(username), signal, true).then((res) => {
+    Get(getUserData(username), signal).then((res) => {
       // Check for network error
       if (isNetworkError(res)) {
         handleNetworkError(res, () => {

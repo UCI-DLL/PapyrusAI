@@ -197,7 +197,7 @@ export default function ModuleReports(): JSX.Element {
         })
 
         const loadCourse = () => {
-          Get(getCourse(courseId), controller.signal, true).then((res) => {
+          Get(getCourse(courseId), controller.signal).then((res) => {
             if (res && res.status && res.status < 300) {
               if (res.data && res.data.modules) {
                 setCourseData(res.data);
@@ -221,7 +221,7 @@ export default function ModuleReports(): JSX.Element {
         };
 
         const loadRaterData = () => {
-          Get(getRaterModuleData(courseId, moduleId), controller.signal, true).then((res) => {
+          Get(getRaterModuleData(courseId, moduleId), controller.signal).then((res) => {
             if (res && res.status && res.status < 300) {
               if (res.data) {
                 res.data.forEach((item: any) => {
@@ -410,7 +410,7 @@ export default function ModuleReports(): JSX.Element {
     for (const student of students) {
       if (student.numConvos > 0) {
         try {
-          const convoListRes = await Get(getConversationList(courseId, moduleId, student.username), signal, true);
+          const convoListRes = await Get(getConversationList(courseId, moduleId, student.username), signal);
           if (isNetworkError(convoListRes)) {
             handleNetworkError(convoListRes, () =>
               fetchConversationDataForStudents(courseId, moduleId, students, signal)
@@ -423,8 +423,7 @@ export default function ModuleReports(): JSX.Element {
                 try {
                   const convoRes = await Get(
                     getConversation(courseId, moduleId, index.toString(), student.username),
-                    signal,
-                    true
+                    signal
                   );
                   if (isNetworkError(convoRes)) {
                     handleNetworkError(convoRes, () =>
@@ -461,7 +460,7 @@ export default function ModuleReports(): JSX.Element {
 
   function getUsersInCourseList(course: string, module: string, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
-    Get(getUsersInCourse(course, limit, nextToken), signal, true).then(async (res) => {
+    Get(getUsersInCourse(course, limit, nextToken), signal).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.users) {
           const usersWithConvos: Array<CustomUserType & { numConvos: number }> = [];
@@ -469,7 +468,7 @@ export default function ModuleReports(): JSX.Element {
           //filter out current user and email_verified
           await Promise.all(
             res.data.users.map(async (u: CustomUserType) => {
-              const convoRes = await Get(getUserConversationList(u.username), signal, true);
+              const convoRes = await Get(getUserConversationList(u.username), signal);
               if (convoRes && convoRes.status && convoRes.status < 300) {
                 if (convoRes.data) {
                   //Get the list of all conversations

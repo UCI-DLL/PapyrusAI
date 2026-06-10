@@ -229,7 +229,7 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
         {/* Add new user */}
         <div className="space-y-2">
           <Label>{t("library.addUser")}</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             {/* User picker */}
             <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
               <PopoverTrigger asChild>
@@ -287,7 +287,7 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
                     filteredUsers.map((u) => (
                       <button
                         key={u.username}
-                        className="w-full text-left px-3 py-2 hover:bg-accent focus:bg-accent text-sm transition-colors"
+                        className="w-full text-left px-3 py-2 hover:text-accent-foreground hover:bg-accent focus:text-accent-foreground focus:bg-accent text-sm transition-colors"
                         onClick={() => {
                           setSelectedUser(u);
                           setUserSearch("");
@@ -297,7 +297,7 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
                         <div className="font-medium">
                           {u.name} {u.family_name}
                         </div>
-                        <div className="text-xs text-muted-foreground">{u.email}</div>
+                        <div className="text-xs">{u.email}</div>
                       </button>
                     ))
                   )}
@@ -305,33 +305,35 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
               </PopoverContent>
             </Popover>
 
-            {/* Permission level */}
-            <Select
-              value={newPermission}
-              onValueChange={(v) => setNewPermission(v as "viewer" | "editor")}
-            >
-              <SelectTrigger className="w-28">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="viewer">{t("library.viewer")}</SelectItem>
-                <SelectItem value="editor">{t("library.editor")}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              {/* Permission level */}
+              <Select
+                value={newPermission}
+                onValueChange={(v) => setNewPermission(v as "viewer" | "editor")}
+              >
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="viewer">{t("library.viewer")}</SelectItem>
+                  <SelectItem value="editor">{t("library.editor")}</SelectItem>
+                </SelectContent>
+              </Select>
 
-            {/* Add button */}
-            <Button
-              onClick={handleAdd}
-              disabled={!selectedUser || isAdding}
-              size="sm"
-              aria-label={t("library.addUser")}
-            >
-              {isAdding ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <UserPlus className="h-4 w-4" />
-              )}
-            </Button>
+              {/* Add button */}
+              <Button
+                onClick={handleAdd}
+                disabled={!selectedUser || isAdding}
+                size="sm"
+                aria-label={t("library.addUser")}
+              >
+                {isAdding ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <UserPlus className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -351,7 +353,7 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
               {permissions.filter((p) => p.permission !== "owner").map((perm) => {
                 const email = getUserEmail(perm.userId);
                 return (
-                  <div key={perm.userId} className="flex items-center gap-2 px-3 py-2">
+                  <div key={perm.userId} className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{email}</div>
                       {/* Show username beneath email when they differ */}
@@ -361,48 +363,50 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
                         </div>
                       )}
                     </div>
-                    {perm.source === "inherited" && (
-                      <Badge variant="outline" className="text-xs shrink-0">
-                        {t("library.inherited")}
-                      </Badge>
-                    )}
-                    {isEditable(perm) ? (
-                      <>
-                        <Select
-                          value={perm.permission}
-                          onValueChange={(v) =>
-                            handleUpdate(perm.userId, v as "viewer" | "editor")
-                          }
-                          disabled={updatingId === perm.userId}
-                        >
-                          <SelectTrigger className="w-24 h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="viewer">{t("library.viewer")}</SelectItem>
-                            <SelectItem value="editor">{t("library.editor")}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(perm.userId)}
-                          disabled={deletingId === perm.userId}
-                          aria-label={t("library.removePermission")}
-                        >
-                          {deletingId === perm.userId ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                      </>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">
-                        {perm.permission}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {perm.source === "inherited" && (
+                        <Badge variant="outline" className="text-xs shrink-0">
+                          {t("library.inherited")}
+                        </Badge>
+                      )}
+                      {isEditable(perm) ? (
+                        <>
+                          <Select
+                            value={perm.permission}
+                            onValueChange={(v) =>
+                              handleUpdate(perm.userId, v as "viewer" | "editor")
+                            }
+                            disabled={updatingId === perm.userId}
+                          >
+                            <SelectTrigger className="w-24 h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="viewer">{t("library.viewer")}</SelectItem>
+                              <SelectItem value="editor">{t("library.editor")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => handleDelete(perm.userId)}
+                            disabled={deletingId === perm.userId}
+                            aria-label={t("library.removePermission")}
+                          >
+                            {deletingId === perm.userId ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          {perm.permission}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 );
               })}

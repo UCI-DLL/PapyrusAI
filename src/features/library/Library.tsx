@@ -204,10 +204,10 @@ export default function Library(): JSX.Element {
                             label: t("library.addFile"),
                             onClick: () => navigator(`/library/${folderId}/createfile`),
                           },
-                          {
-                            label: t("library.addRubric"),
-                            onClick: () => navigator(`/library/${folderId}/createrubric`),
-                          },
+                          // { TODO add back in
+                          //   label: t("library.addRubric"),
+                          //   onClick: () => navigator(`/library/${folderId}/createrubric`),
+                          // },
                         ]}
                         align="end"
                       />
@@ -239,11 +239,10 @@ export default function Library(): JSX.Element {
               role="tab"
               aria-selected={activeTab === "my"}
               onClick={() => setActiveTab("my")}
-              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                activeTab === "my"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === "my"
+                ? "border-primary text-primary dark:text-gold colorful-dark:text-gold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               {t("library.myLibrary")}
             </button>
@@ -251,11 +250,10 @@ export default function Library(): JSX.Element {
               role="tab"
               aria-selected={activeTab === "shared"}
               onClick={() => setActiveTab("shared")}
-              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                activeTab === "shared"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === "shared"
+                ? "border-primary text-primary dark:text-gold colorful-dark:text-gold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               {t("library.sharedWithMe")}
             </button>

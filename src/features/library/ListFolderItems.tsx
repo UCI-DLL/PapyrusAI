@@ -309,7 +309,7 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
     setFilters({ sort: SortOptions.Default, type: typeOptions.All, starred: StarredOptions.All, owner: OwnerTypeOptions.Any });
   }
 
-  function handleStarChange(itemId: string, type: "folder" | "prompt" | "file", parentId: string, isNowStarred: boolean) {
+  function handleStarChange(itemId: string, type: "folder" | "prompt" | "file" | "rubric", parentId: string, isNowStarred: boolean) {
     setStarred((prev) => {
       if (!prev) return prev;
       if (type === "folder") {
@@ -329,6 +329,12 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
           ? [...(prev.files ?? []), { fileId: itemId, folderId: parentId }]
           : (prev.files ?? []).filter((f) => !(f.fileId === itemId && f.folderId === parentId));
         return { ...prev, files };
+      }
+      if (type === "rubric") {
+        const rubrics = isNowStarred
+          ? [...(prev.rubrics ?? []), { rubricId: itemId }]
+          : (prev.rubrics ?? []).filter((r) => r.rubricId !== itemId);
+        return { ...prev, rubrics };
       }
       return prev;
     });
@@ -605,7 +611,12 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
                 refreshList={refreshList}
                 loading={loading}
                 noShowMenu={props.noShowMenu}
-                onClick={() => console.log("TODO")}
+                onClick={props.onSelectItem
+                  ? (_folderId, _id, _isOrg, _type) => props.onSelectItem!(item)
+                  : undefined}
+                isStarred={isItemStarred(item, starred, props.shared)}
+                isSelected={props.selectedItemIds?.includes(item.itemId) ?? false}
+                onStarChange={handleStarChange}
                 shared={props.shared}
               />
             );
@@ -673,6 +684,9 @@ function isItemStarred(item: LibraryItem, starred: UserStarred | undefined, shar
     return starred.files?.some((f) =>
       f.fileId === item.itemId && (shared || !f.folderId || f.folderId === item.parentId)
     ) ?? false;
+  }
+  if (item.type === "rubric") {
+    return starred.rubrics?.some((r) => r.rubricId === item.itemId) ?? false;
   }
   return false;
 }

@@ -27,4 +27,5 @@ export type UserStarred = {
   folders?: Array<{ folderId: string }>;
   prompts?: Array<{ folderId: string; promptId: string }>;
   files?: Array<{ folderId: string; fileId: string }>;
+  rubrics?: Array<{ rubricId: string }>;
 };

@@ -204,10 +204,10 @@ export default function Library(): JSX.Element {
                             label: t("library.addFile"),
                             onClick: () => navigator(`/library/${folderId}/createfile`),
                           },
-                          // { TODO add back in
-                          //   label: t("library.addRubric"),
-                          //   onClick: () => navigator(`/library/${folderId}/createrubric`),
-                          // },
+                          {
+                            label: t("library.addRubric"),
+                            onClick: () => navigator(`/library/${folderId}/createrubric`),
+                          },
                         ]}
                         align="end"
                       />

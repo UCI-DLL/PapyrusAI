@@ -1,8 +1,8 @@
 import axios from "axios";
 
-export default async function Post(url: String, formdata: any) {
+export default async function Post(url: String, formdata: any, second: boolean = false) {
   const user = localStorage.getItem("papyrusai_access_token")
-  const API_URL = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : "") + url;
+  const API_URL = (second ? (process.env.REACT_APP_API_URL2 ?? "") : (process.env.REACT_APP_API_URL ?? "")) + url;
   let sessionId = localStorage.getItem("sessionId") ?? "unknown";
 
   var data = await axios

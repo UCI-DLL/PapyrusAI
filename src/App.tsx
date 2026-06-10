@@ -34,14 +34,12 @@ import { AlertContext } from "./utility/context/AlertContext";
 import About from "./features/about/About";
 import { applyUserSettings, normalizeUserSettings } from "./utility/Themes";
 import Library from "./features/library/Library";
-import ViewFolder from "./features/library/ViewFolder";
-import OldEditPrompt from "./features/prompts/EditPrompt";
-import OldPrompts from "./features/prompts/Prompts";
 import EditPrompt from "./features/library/EditPrompt";
 import CreatePrompt from "./features/library/CreatePrompt";
 import LoginError from "./features/authentication/LoginError";
-import CreateFile from "./features/library/CreateFile";
-import EditFile from "./features/library/EditFile";
+import CreateEditFile from "./features/library/CreateFile";
+import CreateRubric from "./features/library/CreateRubric";
+import EditRubric from "./features/library/EditRubric";
 import OrgSettings from "./features/org-settings/OrgSettings";
 import ModuleReports from "./features/reports/ModuleReports";
 import CourseReports from "./features/reports/CourseReports";
@@ -53,13 +51,24 @@ import { setupAxiosInterceptors } from "./utility/axiosSetup";
 
 function App(): JSX.Element {
   const { t } = useTranslation();
+  const envUser = process.env.REACT_APP_USER;
+  const envAccessToken = process.env.REACT_APP_ACCESS_TOKEN;
+
+  if (envAccessToken) {
+    localStorage.setItem("papyrusai_access_token", envAccessToken);
+  }
+
+  if (envUser) {
+    localStorage.setItem("papyrusai_user", envUser);
+  }
+
   // user object obtained from backend or local
   const [user, setUser] = useState<UserType | null>(
     localStorage.getItem("papyrusai_user")
       ? JSON.parse(localStorage.getItem("papyrusai_user") ?? "")
-      : null
+      : null,
   ); //user info and not just token
-  const value = useMemo(() => ({ user, setUser }), [user, setUser]);
+  const value = useMemo(() => ({ user, setUser }), [user]);
   const isProduction = process.env.NODE_ENV === "production";
   // only show if missing data
   const [showUpdateUserInfoModal, setShowUpdateUserInfoModal] =
@@ -69,8 +78,11 @@ function App(): JSX.Element {
     message: "",
     type: "info",
   });
+
   const alertValue = useMemo(() => ({ alert, setAlert }), [alert, setAlert]);
-  const [authStatus, setAuthStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
+  const [authStatus, setAuthStatus] = useState<
+    "loading" | "authenticated" | "unauthenticated"
+  >("loading");
 
   useEffect(() => {
     setupAxiosInterceptors(() => {
@@ -90,7 +102,9 @@ function App(): JSX.Element {
       try {
         // 1. Check URL hash (Cognito redirect)
         if (window.location.hash.includes("access_token")) {
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const hashParams = new URLSearchParams(
+            window.location.hash.substring(1),
+          );
           const token = hashParams.get("access_token");
 
           if (!token) {
@@ -153,7 +167,7 @@ function App(): JSX.Element {
     runAuth();
   }, []);
 
-  //create a session id that gets sent with every request or log so we can track 
+  //create a session id that gets sent with every request or log so we can track
   // which user did what. save in local so it is the same across tabs
   useEffect(() => {
     let sessionId = localStorage.getItem("sessionId");
@@ -161,14 +175,14 @@ function App(): JSX.Element {
       sessionId = uuidv4();
       localStorage.setItem("sessionId", sessionId);
     }
-  }, [user])
+  }, []);
 
   //handle log out
   function handleLogOut() {
     localStorage.clear();
     setUser(null);
     window.location.replace(
-      process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : ""
+      process.env.REACT_APP_LOGIN_URL ? process.env.REACT_APP_LOGIN_URL : "",
     );
   }
 
@@ -194,10 +208,7 @@ function App(): JSX.Element {
       } //If not pass, nothing appears at the time of new version check.
     >
       <div className="flex flex-row justify-center bg-background">
-        <a
-          href="#main-content"
-          className="skip-link"
-        >
+        <a href="#main-content" className="skip-link">
           {t("navigation.skipToMain")}
         </a>
         <UserContext.Provider value={value}>
@@ -222,7 +233,10 @@ function App(): JSX.Element {
                     user={user ? user : undefined}
                     closeForm={(updatedUser) => {
                       setUser(updatedUser);
-                      localStorage.setItem("papyrusai_user", JSON.stringify(updatedUser));
+                      localStorage.setItem(
+                        "papyrusai_user",
+                        JSON.stringify(updatedUser),
+                      );
                       setShowUpdateUserInfoModal(false);
 
                       //Handle new user tutorial
@@ -237,7 +251,7 @@ function App(): JSX.Element {
                               intro: updatedUser.groups?.includes(
                                 process.env.REACT_APP_INSTRUCTOR
                                   ? process.env.REACT_APP_INSTRUCTOR
-                                  : "PapyrusAIInstructors"
+                                  : "PapyrusAIInstructors",
                               )
                                 ? t("dashboard.tutorial4Instructors")
                                 : t("dashboard.tutorial4Students"),
@@ -250,12 +264,12 @@ function App(): JSX.Element {
                 </div>
               </DialogWrapper>
               <Routes>
-                <Route
-                  path="/login"
-                  element={<Login />}
-                />
+                <Route path="/login" element={<Login />} />
                 <Route path="/login-error" element={<LoginError />} />
-                <Route path="*" element={<div>{t("navigation.pageNotFound")}</div>} />
+                <Route
+                  path="*"
+                  element={<div>{t("navigation.pageNotFound")}</div>}
+                />
 
                 {/* Need to have start path here. Private route will redirect to login if no user  */}
                 <Route
@@ -267,7 +281,7 @@ function App(): JSX.Element {
                           ? user
                           : localStorage.getItem("papyrusai_user")
                             ? JSON.parse(
-                              localStorage.getItem("papyrusai_user") ?? ""
+                              localStorage.getItem("papyrusai_user") ?? "",
                             )
                             : null
                       }
@@ -278,11 +292,17 @@ function App(): JSX.Element {
                   <Route path="/" element={<Dashboard />} />
                 </Route>
 
-                <Route path="/courses" element={<PrivateRoute user={user} authStatus={authStatus} />}>
+                <Route
+                  path="/courses"
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
+                >
                   <Route path="/courses" element={<Courses />} />
                 </Route>
 
-                <Route path="/modules" element={<PrivateRoute user={user} authStatus={authStatus} />}>
+                <Route
+                  path="/modules"
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
+                >
                   <Route path="/modules" element={<AllModules />} />
                 </Route>
 
@@ -312,11 +332,17 @@ function App(): JSX.Element {
                   </Route>
                 </Route>
 
-                <Route path="/account" element={<PrivateRoute user={user} authStatus={authStatus} />}>
+                <Route
+                  path="/account"
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
+                >
                   <Route path="/account" element={<Account />} />
                 </Route>
 
-                <Route path="/about" element={<PrivateRoute user={user} authStatus={authStatus} />}>
+                <Route
+                  path="/about"
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
+                >
                   <Route path="/about" element={<About />} />
                 </Route>
 
@@ -327,12 +353,14 @@ function App(): JSX.Element {
                   user?.groups.includes(
                     process.env.REACT_APP_INSTRUCTOR
                       ? process.env.REACT_APP_INSTRUCTOR
-                      : "PapyrusAIInstructors"
+                      : "PapyrusAIInstructors",
                   )) && (
                     <>
                       <Route
                         path="/courses/:id/createmodule"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/courses/:id/createmodule"
@@ -342,7 +370,9 @@ function App(): JSX.Element {
 
                       <Route
                         path="/courses/:id/editmodule/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/courses/:id/editmodule/:id"
@@ -352,21 +382,27 @@ function App(): JSX.Element {
 
                       <Route
                         path="/reports"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route path="/reports" element={<Reports />} />
                       </Route>
 
                       <Route
                         path="/reports/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route path="/reports/:id" element={<UserReports />} />
                       </Route>
 
                       <Route
                         path="/reports/course/:courseId"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/reports/course/:courseId"
@@ -376,7 +412,9 @@ function App(): JSX.Element {
 
                       <Route
                         path="/reports/module/:id/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/reports/module/:id/:id"
@@ -387,7 +425,9 @@ function App(): JSX.Element {
                       {/* shows conversation list of other users  */}
                       <Route
                         path="/courses/:id/modules/:id/username/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/courses/:id/modules/:id/username/:id"
@@ -402,12 +442,14 @@ function App(): JSX.Element {
                   user.groups.includes(
                     process.env.REACT_APP_INSTRUCTOR
                       ? process.env.REACT_APP_INSTRUCTOR
-                      : "PapyrusAIInstructors"
+                      : "PapyrusAIInstructors",
                   ) && (
                     <>
                       <Route
                         path="/createcourse"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/createcourse"
@@ -417,7 +459,9 @@ function App(): JSX.Element {
 
                       <Route
                         path="/editcourse/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/editcourse/:id"
@@ -427,51 +471,27 @@ function App(): JSX.Element {
 
                       <Route
                         path="/library"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route path="/library" element={<Library />} />
                       </Route>
 
                       <Route
                         path="/library/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
-                        <Route path="/library/:id" element={<ViewFolder />} />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
-                      >
-                        <Route
-                          path="/library/org/:id"
-                          element={<ViewFolder />}
-                        />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id/createprompt"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
-                      >
-                        <Route
-                          path="/library/org/:id/createprompt"
-                          element={<CreatePrompt />}
-                        />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id/prompts/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
-                      >
-                        <Route
-                          path="/library/org/:id/prompts/:id"
-                          element={<EditPrompt />}
-                        />
+                        <Route path="/library/:id" element={<Library />} />
                       </Route>
 
                       <Route
                         path="/library/:id/createprompt"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/library/:id/createprompt"
@@ -480,52 +500,62 @@ function App(): JSX.Element {
                       </Route>
 
                       <Route
-                        path="/library/:id/prompts/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        path="/library/prompts/:id"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
-                          path="/library/:id/prompts/:id"
+                          path="/library/prompts/:id"
                           element={<EditPrompt />}
                         />
                       </Route>
 
                       <Route
-                        path="/library/org/:id/createfile"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
-                      >
-                        <Route
-                          path="/library/org/:id/createfile"
-                          element={<CreateFile />}
-                        />
-                      </Route>
-
-                      <Route
-                        path="/library/org/:id/files/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
-                      >
-                        <Route
-                          path="/library/org/:id/files/:id"
-                          element={<EditFile />}
-                        />
-                      </Route>
-
-                      <Route
                         path="/library/:id/createfile"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
                           path="/library/:id/createfile"
-                          element={<CreateFile />}
+                          element={<CreateEditFile />}
                         />
                       </Route>
 
                       <Route
-                        path="/library/:id/files/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        path="/library/files/:id"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route
-                          path="/library/:id/files/:id"
-                          element={<EditFile />}
+                          path="/library/files/:id"
+                          element={<CreateEditFile />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/library/:id/createrubric"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/library/:id/createrubric"
+                          element={<CreateRubric />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/library/rubrics/:id"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/library/rubrics/:id"
+                          element={<EditRubric />}
                         />
                       </Route>
                     </>
@@ -536,29 +566,14 @@ function App(): JSX.Element {
                   user.groups.includes(
                     process.env.REACT_APP_ADMIN
                       ? process.env.REACT_APP_ADMIN
-                      : "PapyrusAIAdmin"
+                      : "PapyrusAIAdmin",
                   ) && (
                     <>
                       <Route
-                        path="/prompts"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
-                      >
-                        <Route path="/prompts" element={<OldPrompts />} />
-                      </Route>
-
-                      <Route
-                        path="/prompts/:id"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
-                      >
-                        <Route
-                          path="/prompts/:id"
-                          element={<OldEditPrompt />}
-                        />
-                      </Route>
-
-                      <Route
                         path="/org-settings"
-                        element={<PrivateRoute user={user} authStatus={authStatus} />}
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
                       >
                         <Route path="/org-settings" element={<OrgSettings />} />
                       </Route>
@@ -568,12 +583,7 @@ function App(): JSX.Element {
             </Router>
           </AlertContext.Provider>
         </UserContext.Provider>
-        <Toaster
-          position="top-right"
-          richColors
-          closeButton
-          duration={4000}
-        />
+        <Toaster position="top-right" richColors closeButton duration={4000} />
       </div>
     </CacheBuster>
   );

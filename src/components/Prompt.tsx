@@ -1,27 +1,23 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
-import { FolderType, PromptType } from "../utility/types/CourseTypes";
+import { LibraryItem } from "../utility/types/CourseTypes";
 import { UserContext } from "../utility/context/UserContext";
 import Put from "../utility/Put";
+import Delete from "../utility/Delete";
+import Post from "../utility/Post";
 import { AlertContext } from "../utility/context/AlertContext";
 import {
-  postCopyOrgPromptToOrgFolder,
-  postCopyOrgPromptToUserFolder,
-  postCopyUserPromptToOrgFolder,
-  postCopyUserPromptToUserFolder,
-  postMoveOrgPromptToOrgFolder,
-  postMoveOrgPromptToUserFolder,
-  postMoveUserPromptToOrgFolder,
-  postMoveUserPromptToUserFolder,
-  postUpdateOrgPrompt,
-  postUpdateUserPrompt,
-} from "../utility/endpoints/FolderEndpoints";
-import Post from "../utility/Post";
+  postCopyItem,
+  postMoveItem,
+  deleteItem,
+  postPromoteItem,
+  postDemoteItem,
+} from "../utility/endpoints/ItemEndpoints";
+import { ShareItemDialog } from "../features/library/ShareItemDialog";
 import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
@@ -37,34 +33,23 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useNavigate } from "react-router";
-import ListFolders from "../features/library/ListFolders";
+import { FolderPickerDialog } from "../features/library/FolderPickerDialog";
 import { truncateString } from "../utility/Helpers";
 import { useTranslation } from "../hooks/useTranslation";
 
 interface PromptProps {
-  prompt: PromptType;
-  folder: FolderType;
+  item: LibraryItem;
   keyy: string;
   refreshList: () => void;
-  loading: () => void;
+  loading: (isLoading?: boolean) => void;
   noShowMenu?: boolean;
-  onClick?: (
-    folderId: string,
-    promptId: string,
-    isOrgFolder: boolean,
-    type: string
-  ) => void; //type is "prompt" or "file"
-  onCardClick?: (
-    folderId: string,
-    promptId: string,
-    isOrgFolder: boolean
-  ) => void;
+  onClick?: (promptId: string, type: string) => void;
   showRemove?: boolean;
-  selected?: boolean;
-  noShowDesc?: boolean;
   isStarred?: boolean;
   disableStarring?: boolean;
   isSelected?: boolean;
+  onStarChange?: (itemId: string, type: "folder" | "prompt" | "file", parentId: string, isNowStarred: boolean) => void;
+  shared?: boolean;
 }
 
 export const Prompt = (props: PromptProps) => {
@@ -76,375 +61,166 @@ export const Prompt = (props: PromptProps) => {
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState<boolean>(false);
   const [openPreviewDialog, setOpenPreviewDialog] = useState<boolean>(false);
-  const [starred, setStarred] = useState<boolean>(
-    props.isStarred ? props.isStarred : false
-  );
+  const [openPromoteDialog, setOpenPromoteDialog] = useState<boolean>(false);
+  const [openDemoteDialog, setOpenDemoteDialog] = useState<boolean>(false);
+  const [openShareDialog, setOpenShareDialog] = useState<boolean>(false);
+  const [starred, setStarred] = useState<boolean>(props.isStarred ?? false);
 
   useEffect(() => {
-    setStarred(props.isStarred ? props.isStarred : false);
+    setStarred(props.isStarred ?? false);
   }, [props.isStarred]);
+
+  const isOrgItem = props.item.ownerId === "ORG";
+  const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
+  const isOwner = props.item.ownerId === user?.username;
+  const canEdit = !props.shared || props.item.userPermission === "editor";
+
+  console.log("item props", props.item.userPermission)
 
   function edit() {
     props.loading();
-    if (props.prompt.isOrganizationPrompt) {
-      navigator(`/library/org/${props.folder.id}/prompts/${props.prompt.id}`)
-    } else {
-      navigator(`/library/${props.folder.id}/prompts/${props.prompt.id}`)
-    }
+    navigator(`/library/prompts/${props.item.itemId}`);
   }
 
-  function openCopyTo() {
-    setOpenCopyToDialog(true);
-  }
-
-  function copyTo(folderId: string, isOrgFolder: boolean) {
+  function copyTo(folderId: string) {
+    setOpenCopyToDialog(false);
     props.loading();
-    if (props.prompt.isOrganizationPrompt) {
-      if (isOrgFolder) {
-        Post(
-          postCopyOrgPromptToOrgFolder(
-            props.folder.id,
-            props.prompt.id,
-            folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.promptCopiedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToCopyPrompt"),
-              type: "error",
-            });
-          }
-          setOpenCopyToDialog(false);
-        });
+    const copyBody = folderId !== "root" ? { parentId: folderId } : {};
+    Post(postCopyItem(props.item.itemId), copyBody, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.promptCopiedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
-        Post(
-          postCopyOrgPromptToUserFolder(
-            props.folder.id,
-            props.prompt.id,
-            folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.promptCopiedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToCopyPrompt"),
-              type: "error",
-            });
-          }
-          setOpenCopyToDialog(false);
-        });
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToCopyPrompt"), type: "error" });
       }
-    } else {
-      if (isOrgFolder) {
-        Post(
-          postCopyUserPromptToOrgFolder(
-            props.folder.id,
-            props.prompt.id,
-            folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.promptCopiedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToCopyPrompt"),
-              type: "error",
-            });
-          }
-          setOpenCopyToDialog(false);
-        });
+    });
+  }
+
+  function moveTo(folderId: string) {
+    setOpenMoveDialog(false);
+    props.loading();
+    const moveBody = folderId !== "root" ? { parentId: folderId } : {};
+    Post(postMoveItem(props.item.itemId), moveBody, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.promptMovedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
-        Post(
-          postCopyUserPromptToUserFolder(
-            props.folder.id,
-            props.prompt.id,
-            folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.promptCopiedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToCopyPrompt"),
-              type: "error",
-            });
-          }
-          setOpenCopyToDialog(false);
-        });
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToMovePrompt"), type: "error" });
       }
-    }
+    });
   }
 
   function deletePrompt() {
     props.loading();
-    if (props.prompt.isOrganizationPrompt) {
-      const dataToSend = {
-        name: props.prompt.name,
-        prompt: props.prompt.prompt,
-        isDeleted: true,
-        tags: props.prompt.tags
-      };
-      Put(
-        postUpdateOrgPrompt(props.folder.id, props.prompt.id),
-        dataToSend
-      ).then((res) => {
-        if (res.status && res.status < 300) {
-          setAlert({
-            message: t("components.promptDeletedSuccessfully"),
-            type: "success",
-          });
-          props.refreshList();
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          setAlert({
-            message: t("components.failedToDeletePrompt"),
-            type: "error",
-          });
-        }
-        setOpenDeleteDialog(false);
-      });
-    } else {
-      const dataToSend = {
-        name: props.prompt.name,
-        prompt: props.prompt.prompt,
-        isDeleted: true,
-        tags: props.prompt.tags
-      };
-      Put(
-        postUpdateUserPrompt(props.folder.id, props.prompt.id),
-        dataToSend
-      ).then((res) => {
-        if (res.status && res.status < 300) {
-          setAlert({
-            message: t("components.promptDeletedSuccessfully"),
-            type: "success",
-          });
-          props.refreshList();
-        } else if (res && res.status === 401) {
-          navigator("/login");
-        } else {
-          setAlert({
-            message: t("components.failedToDeletePrompt"),
-            type: "error",
-          });
-        }
-        setOpenDeleteDialog(false);
-      });
-    }
+    Delete(deleteItem(props.item.itemId), true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.promptDeletedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
+      } else {
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToDeletePrompt"), type: "error" });
+      }
+      setOpenDeleteDialog(false);
+    });
   }
 
-  function openMovePrompt() {
-    setOpenMoveDialog(true);
-  }
-
-  function moveTo(folderId: string, isOrgFolder: boolean) {
+  function promote(destinationFolderId: string) {
+    setOpenPromoteDialog(false);
     props.loading();
-    if (props.prompt.isOrganizationPrompt) {
-      if (isOrgFolder) {
-        Post(
-          postMoveOrgPromptToOrgFolder(
-            props.folder.id,
-            props.prompt.id,
-            folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.promptMovedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToMovePrompt"),
-              type: "error",
-            });
-          }
-          setOpenMoveDialog(false);
-        });
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postPromoteItem(props.item.itemId), body, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.promptPromotedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
-        Post(
-          postMoveOrgPromptToUserFolder(
-            props.folder.id,
-            props.prompt.id,
-            folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.promptMovedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToMovePrompt"),
-              type: "error",
-            });
-          }
-          setOpenMoveDialog(false);
-        });
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToPromotePrompt"), type: "error" });
       }
-    } else {
-      if (isOrgFolder) {
-        Post(
-          postMoveUserPromptToOrgFolder(
-            props.folder.id,
-            props.prompt.id,
-            folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.promptMovedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToMovePrompt"),
-              type: "error",
-            });
-          }
-          setOpenMoveDialog(false);
-        });
+    });
+  }
+
+  function demote(destinationFolderId: string) {
+    setOpenDemoteDialog(false);
+    props.loading();
+    const body = destinationFolderId !== "root" ? { parentId: destinationFolderId } : {};
+    Post(postDemoteItem(props.item.itemId), body, true).then((res) => {
+      if (res.status && res.status < 300) {
+        setAlert({ message: t("components.promptDemotedSuccessfully"), type: "success" });
+        props.refreshList();
+      } else if (res && res.status === 401) {
+        navigator("/login");
       } else {
-        Post(
-          postMoveUserPromptToUserFolder(
-            props.folder.id,
-            props.prompt.id,
-            folderId
-          ),
-          {}
-        ).then((res) => {
-          if (res.status && res.status < 300) {
-            setAlert({
-              message: t("components.promptMovedSuccessfully"),
-              type: "success",
-            });
-            props.refreshList();
-          } else if (res && res.status === 401) {
-            navigator("/login");
-          } else {
-            setAlert({
-              message: t("components.failedToMovePrompt"),
-              type: "error",
-            });
-          }
-          setOpenMoveDialog(false);
-        });
+        props.loading(false);
+        setAlert({ message: res.data?.message || t("components.failedToDemotePrompt"), type: "error" });
       }
-    }
+    });
   }
 
   function createStarredPrompt() {
     Post(postCreateUserFavoritingData(), {
-      id: { folderId: props.folder.id, promptId: props.prompt.id },
+      id: { folderId: props.item.parentId, promptId: props.item.itemId },
       type: "prompts",
     }).then((res) => {
       if (res.status && res.status < 300) {
-        setStarred(true);
         setAlert({ message: t("components.promptStarred"), type: "success" });
+        props.onStarChange?.(props.item.itemId, "prompt", props.item.parentId, true);
       } else if (res && res.status === 401) {
+        setStarred(false);
         navigator("/login");
       } else {
+        setStarred(false);
         setAlert({ message: t("components.failedToStarPrompt"), type: "error" });
       }
-      props.refreshList();
+      if (!props.onStarChange) props.refreshList();
     });
   }
 
   function removeStarredPrompt() {
     Put(putUpdateUserFavoritingData(), {
-      id: { folderId: props.folder.id, promptId: props.prompt.id },
+      id: { folderId: props.item.parentId, promptId: props.item.itemId },
       type: "prompts",
     }).then((res) => {
       if (res.status && res.status < 300) {
-        setStarred(false);
         setAlert({ message: t("components.promptUnstarred"), type: "success" });
+        props.onStarChange?.(props.item.itemId, "prompt", props.item.parentId, false);
       } else if (res && res.status === 401) {
+        setStarred(true);
         navigator("/login");
       } else {
+        setStarred(true);
         setAlert({ message: t("components.failedToUnstarPrompt"), type: "error" });
       }
-      props.refreshList();
+      if (!props.onStarChange) props.refreshList();
     });
   }
 
   const toggleStar = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (starred) {
-      removeStarredPrompt();
-    } else {
-      createStarredPrompt();
-    }
+    const willStar = !starred;
+    setStarred(willStar);
+    if (willStar) { createStarredPrompt(); } else { removeStarredPrompt(); }
   };
 
-  const getPromptCategory = () => {
-    // Determine category based on prompt content or tags
-    if (props.prompt.tags && props.prompt.tags.length > 0) {
-      const firstTag = props.prompt.tags[0];
-      if (firstTag.toLowerCase().includes("creative")) return "CREATIVE";
-      if (firstTag.toLowerCase().includes("technical")) return "TECHNICAL";
-      if (firstTag.toLowerCase().includes("business")) return "BUSINESS";
-      if (firstTag.toLowerCase().includes("academic")) return "ACADEMIC";
-    }
-    return t("common.prompt").toUpperCase();
-  };
-
-  const getPromptPreview = () => {
-    // Extract a preview from the prompt content
-    const preview = truncateString(props.prompt.prompt, 150);
-    return preview;
-  };
+  const getPromptPreview = () => truncateString(props.item.metadata?.prompt ?? "", 150);
 
   const adminOrgMenu = [
     t("common.view"),
     starred ? t("common.unstar") : t("common.star"),
     t("common.edit"),
+    t("common.share"),
     t("common.copyTo"),
     t("common.moveTo"),
+    t("common.makePrivate"),
     t("common.delete"),
   ];
   const instructorOrgMenu = [t("common.view"), starred ? t("common.unstar") : t("common.star"), t("common.copyTo")];
@@ -452,14 +228,17 @@ export const Prompt = (props: PromptProps) => {
     t("common.view"),
     starred ? t("common.unstar") : t("common.star"),
     t("common.edit"),
+    t("common.share"),
     t("common.copyTo"),
     t("common.moveTo"),
+    t("common.makePublic"),
     t("common.delete"),
   ];
   const instructorUserMenu = [
     t("common.view"),
     starred ? t("common.unstar") : t("common.star"),
     t("common.edit"),
+    ...(isOwner ? [t("common.share")] : []),
     t("common.copyTo"),
     t("common.moveTo"),
     t("common.delete"),
@@ -469,53 +248,59 @@ export const Prompt = (props: PromptProps) => {
     () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
     edit,
-    openCopyTo,
-    openMovePrompt,
+    () => setOpenShareDialog(true),
+    () => setOpenCopyToDialog(true),
+    () => setOpenMoveDialog(true),
+    () => setOpenDemoteDialog(true),
     () => setOpenDeleteDialog(true),
   ];
   const instructorOrgMenuFunctions = [
     () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
-    openCopyTo,
+    () => setOpenCopyToDialog(true),
   ];
   const adminUserMenuFunctions = [
     () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
     edit,
-    openCopyTo,
-    openMovePrompt,
+    () => setOpenShareDialog(true),
+    () => setOpenCopyToDialog(true),
+    () => setOpenMoveDialog(true),
+    () => setOpenPromoteDialog(true),
     () => setOpenDeleteDialog(true),
   ];
   const instructorUserMenuFunctions = [
     () => setOpenPreviewDialog(true),
     starred ? removeStarredPrompt : createStarredPrompt,
     edit,
-    openCopyTo,
-    openMovePrompt,
+    ...(isOwner ? [() => setOpenShareDialog(true)] : []),
+    () => setOpenCopyToDialog(true),
+    () => setOpenMoveDialog(true),
     () => setOpenDeleteDialog(true),
   ];
 
   return (
     <div key={props.keyy ? props.keyy : "key"}>
+      {/* Share Dialog */}
+      <ShareItemDialog
+        open={openShareDialog}
+        onOpenChange={setOpenShareDialog}
+        item={props.item}
+      />
+
       {/* Preview Dialog */}
       <DialogWrapper
         open={openPreviewDialog}
         onOpenChange={setOpenPreviewDialog}
-        title={props.prompt.name}
+        title={props.item.name}
         description={t("common.fullPromptContent")}
         contentClassName="max-w-4xl max-h-[80vh]"
-        actions={[
-          {
-            label: t("common.close"),
-            onClick: () => setOpenPreviewDialog(false),
-            variant: "outline",
-          },
-        ]}
+        actions={[{ label: t("common.close"), onClick: () => setOpenPreviewDialog(false), variant: "outline" }]}
       >
         <div className="max-h-96 overflow-y-auto">
           <div className="bg-muted/50 border rounded-lg p-4">
             <pre className="text-sm text-muted-foreground font-mono whitespace-pre-wrap break-words">
-              {props.prompt.prompt}
+              {props.item.metadata?.prompt ?? ""}
             </pre>
           </div>
         </div>
@@ -528,72 +313,61 @@ export const Prompt = (props: PromptProps) => {
         title={t("components.deletePrompt")}
         description={t("components.deletePromptMessage")}
         actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenDeleteDialog(false),
-            variant: "outline",
-          },
-          {
-            label: t("common.delete"),
-            onClick: deletePrompt,
-            variant: "destructive",
-          },
+          { label: t("common.cancel"), onClick: () => setOpenDeleteDialog(false), variant: "outline" },
+          { label: t("common.delete"), onClick: deletePrompt, variant: "destructive" },
         ]}
       />
 
-      {/* Copy To Dialog */}
-      <DialogWrapper
+      {/* Copy To */}
+      <FolderPickerDialog
         open={openCopyToDialog}
         onOpenChange={setOpenCopyToDialog}
         title={t("components.copyPromptTo")}
         description={t("components.copyPromptToDescription")}
-        contentClassName="max-w-2xl"
-        actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenCopyToDialog(false),
-            variant: "outline",
-          },
-        ]}
-      >
-        <div className="max-h-96 overflow-y-auto">
-          <ListFolders noShowMenu onClick={copyTo} compactGrid />
-        </div>
-      </DialogWrapper>
+        onSelect={(folderId) => copyTo(folderId)}
+        allowOrgFolders={isAdmin}
+      />
 
-      {/* Move To Dialog */}
-      <DialogWrapper
+      {/* Move To */}
+      <FolderPickerDialog
         open={openMoveDialog}
         onOpenChange={setOpenMoveDialog}
         title={t("components.movePromptTo")}
         description={t("components.movePromptToDescription")}
-        contentClassName="max-w-2xl"
-        actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setOpenMoveDialog(false),
-            variant: "outline",
-          },
-        ]}
-      >
-        <div className="max-h-96 overflow-y-auto">
-          <ListFolders
-            noShowMenu
-            onClick={moveTo}
-            disableFolderId={props.folder.id}
-            compactGrid
-          />
-        </div>
-      </DialogWrapper>
+        onSelect={(folderId) => moveTo(folderId)}
+        disableSelectFolderId={props.item.parentId}
+        allowOrgFolders={isAdmin}
+      />
+
+      {/* Promote */}
+      <FolderPickerDialog
+        open={openPromoteDialog}
+        onOpenChange={setOpenPromoteDialog}
+        title={t("components.promotePromptTo")}
+        description={t("components.promotePromptToDescription")}
+        onSelect={(folderId) => promote(folderId)}
+        allowOrgFolders={true}
+        requireOrgFolders={true}
+      />
+
+      {/* Demote */}
+      <FolderPickerDialog
+        open={openDemoteDialog}
+        onOpenChange={setOpenDemoteDialog}
+        title={t("components.demotePromptTo")}
+        description={t("components.demotePromptToDescription")}
+        onSelect={(folderId) => demote(folderId)}
+        allowOrgFolders={false}
+      />
 
       <Card className="h-full hover:shadow-md transition-shadow duration-200 group">
         <CardContent className="p-4 h-full flex flex-col">
-          {/* Header with icon, category, and star */}
+          {/* Header with icon and star */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-primary dark:text-blue-400 colorful-dark:text-blue-400" />
               <span className="text-xs font-medium text-primary dark:text-blue-400 colorful-dark:text-blue-400 uppercase tracking-wide">
-                {getPromptCategory()}
+                {t("common.prompt").toUpperCase()}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -606,20 +380,14 @@ export const Prompt = (props: PromptProps) => {
                     onClick={toggleStar}
                     className={cn(
                       "p-1 rounded-full transition-all duration-300",
-                      starred
-                        ? "text-gold hover:text-muted text-lg"
-                        : "text-muted hover:text-gold text-lg"
+                      starred ? "text-gold hover:text-muted text-lg" : "text-muted hover:text-gold text-lg"
                     )}
-                    aria-label={
-                      starred ? t("common.removeFromFavorites") : t("common.addToFavorites")
-                    }
+                    aria-label={starred ? t("common.removeFromFavorites") : t("common.addToFavorites")}
                   >
                     <Star
                       size={16}
                       fill={starred ? "currentColor" : "none"}
-                      className={cn(
-                        starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]"
-                      )}
+                      className={cn(starred ? "hover:fill-none h-[1em] w-[1em]" : "hover:fill-current h-[1em] w-[1em]")}
                       aria-hidden="true"
                     />
                   </button>
@@ -638,55 +406,36 @@ export const Prompt = (props: PromptProps) => {
                       <MoreHorizontal className="h-[1em] w-[1em]" />
                     </Button>
                   }
-                  actions={
-                    props.prompt.isOrganizationPrompt
-                      ? user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      )
-                        ? adminOrgMenu.map((item: string, index: number) => ({
-                          label: item,
-                          onClick: () => {
-                            adminOrgMenuFunctions[index]();
-                          },
+                  actions={(
+                    isOrgItem
+                      ? user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
+                        ? adminOrgMenu.map((label, i) => ({
+                          label,
+                          onClick: () => adminOrgMenuFunctions[i](),
                           type: "button" as const,
-                          className: item === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                          className: label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : "",
                         }))
-                        : instructorOrgMenu.map(
-                          (item: string, index: number) => ({
-                            label: item,
-                            onClick: () => {
-                              instructorOrgMenuFunctions[index]();
-                            },
-                            type: "button" as const,
-                            className: item === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
-                          })
-                        )
-                      : user?.groups.includes(
-                        process.env.REACT_APP_ADMIN
-                          ? process.env.REACT_APP_ADMIN
-                          : "PapyrusAIAdmin"
-                      )
-                        ? adminUserMenu.map((item: string, index: number) => ({
-                          label: item,
-                          onClick: () => {
-                            adminUserMenuFunctions[index]();
-                          },
+                        : instructorOrgMenu.map((label, i) => ({
+                          label,
+                          onClick: () => instructorOrgMenuFunctions[i](),
                           type: "button" as const,
-                          className: item === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
+                          className: "",
                         }))
-                        : instructorUserMenu.map(
-                          (item: string, index: number) => ({
-                            label: item,
-                            onClick: () => {
-                              instructorUserMenuFunctions[index]();
-                            },
-                            type: "button" as const,
-                            className: item === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : ""
-                          })
-                        )
-                  }
+                      : user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
+                        ? adminUserMenu.map((label, i) => ({
+                          label,
+                          onClick: () => adminUserMenuFunctions[i](),
+                          type: "button" as const,
+                          className: label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : "",
+                        }))
+                        : instructorUserMenu.map((label, i) => ({
+                          label,
+                          onClick: () => instructorUserMenuFunctions[i](),
+                          type: "button" as const,
+                          className: label === t("common.delete") ? "text-destructive focus:bg-destructive focus:text-destructive-foreground" : "",
+                        }))
+                  ).filter(item => canEdit || item.label !== t("common.edit"))
+                    .filter(item => !props.shared || item.label !== t("common.moveTo"))}
                   align="end"
                   tooltipContent={t("common.promptOptions")}
                   tooltipSide="top"
@@ -697,8 +446,15 @@ export const Prompt = (props: PromptProps) => {
 
           {/* Prompt title */}
           <h2 className="font-semibold text-foreground mb-2 text-lg leading-tight">
-            {props.prompt.name}
+            {props.item.name}
           </h2>
+
+          {/* Description */}
+          {props.item.description && (
+            <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
+              {props.item.description}
+            </p>
+          )}
 
           {/* Prompt preview box */}
           <div
@@ -710,25 +466,9 @@ export const Prompt = (props: PromptProps) => {
             </p>
           </div>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1 mb-4">
-            {props.prompt.tags &&
-              props.prompt.tags.map((tag, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="text-xs bg-green-50 text-green-700 border-green-200 pointer-events-none"
-                >
-                  {tag}
-                </Badge>
-              ))}
-          </div>
-
           {/* Footer with actions */}
           <div className="flex items-center justify-between mt-auto">
-            <div className="flex items-center gap-2">
-
-            </div>
+            <div />
             {props.noShowMenu ? (
               props.showRemove ? (
                 <TooltipWrapper content={t("components.removePromptFromModule")} side="top">
@@ -739,14 +479,7 @@ export const Prompt = (props: PromptProps) => {
                     className="flex items-center gap-1 text-xs font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (props.onClick) {
-                        props.onClick(
-                          props.folder.id,
-                          props.prompt.id,
-                          props.prompt.isOrganizationPrompt ?? false,
-                          "prompt"
-                        );
-                      }
+                      props.onClick?.(props.item.itemId, "prompt");
                     }}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -775,14 +508,7 @@ export const Prompt = (props: PromptProps) => {
                     className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (props.onClick) {
-                        props.onClick(
-                          props.folder.id,
-                          props.prompt.id,
-                          props.prompt.isOrganizationPrompt ?? false,
-                          "prompt"
-                        );
-                      }
+                      props.onClick?.(props.item.itemId, "prompt");
                     }}
                   >
                     <Plus className="h-3 w-3" />

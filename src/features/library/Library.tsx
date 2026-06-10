@@ -1,308 +1,91 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
-import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
-import { TagType } from "../../utility/types/CourseTypes";
-import Get from "../../utility/Get";
 import { UserContext } from "../../utility/context/UserContext";
-import { postCreateUserFolder } from "../../utility/endpoints/FolderEndpoints";
-import {
-  getTagList,
-  postCreateTag,
-  updateTag,
-} from "../../utility/endpoints/TagsEndpoints";
+import { postCreateItem } from "../../utility/endpoints/ItemEndpoints";
 import Post from "../../utility/Post";
 import { AlertContext } from "../../utility/context/AlertContext";
-import Put from "../../utility/Put";
-import { onlyLettersAndNumbers } from "../../utility/Helpers";
-import ListFolders from "./ListFolders";
-import { Loader2, Tag, Folder, Trash2, Save } from "lucide-react";
+import { Folder, Plus } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
+import ListFolderItems from "./ListFolderItems";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 
 
 export default function Library(): JSX.Element {
   let navigator = useNavigate();
+  const location = useLocation();
   const { setAlert } = useContext(AlertContext);
+  const { user } = useContext(UserContext);
   const { t } = useTranslation();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [folderId, setFolderId] = useState(location.pathname.split("/")[2]);
+  const [activeTab, setActiveTab] = useState<"my" | "shared">("my");
   const [openCreateFolderModal, setOpenCreateFolderModal] =
     useState<boolean>(false);
-  const [newFolderName, setNewFolderName] = useState<string>("");
-  const [openManageTagsModal, setOpenManageTagsModal] =
-    useState<boolean>(false);
-  const [tagList, setTagList] = useState<Array<TagType>>([]);
-  const [newTag, setNewTag] = useState<string>("");
-  const { user } = useContext(UserContext);
+  const [listKey, setListKey] = useState(0);
+  const [newFolder, setNewFolder] = useState<{
+    name: string,
+    description: string,
+    type: string,
+    parentId: string,
+    ownerType: string | undefined,
+    metadata: any
+  }>({
+    name: "",
+    description: "",
+    type: "folder",
+    parentId: "root",
+    ownerType: user?.username,
+    metadata: { createdBy: user?.username }
+  });
 
   useEffect(() => {
     setAlert({ message: "", type: "info" });
 
-    const controller = new AbortController();
-    setIsLoading(true);
-
-    if (tagList.length === 0) {
-      getTags("", controller.signal);
-    }
-
-    //log page
     Post(logEvent(), {
       eventType: "view_page",
-      metadata: {
-        page: "library",
-      }
-    })
-
-    return () => {
-      controller.abort();
-    };
+      metadata: { page: "library" },
+    });
     // eslint-disable-next-line
   }, []);
 
-  function getTags(startKey: string, signal: AbortSignal) {
-    var limit = 20;
-    Get(getTagList(limit, startKey), signal).then((res) => {
-      if (res && res.status && res.status < 300) {
-        if (res.data && res.data.tags && res.data.ScannedCount !== undefined) {
-          //Get the list of all folders
-          setTagList((prev) => [...prev, ...res.data.tags]);
-          //if the data is 20 prompts, then call for the next page
-          //handle pages
-          if (
-            res.data.ScannedCount > 0 &&
-            res.data.ScannedCount >= limit &&
-            res.data.LastEvaluatedKey &&
-            res.data.LastEvaluatedKey.id
-          ) {
-            getTags(res.data.LastEvaluatedKey.id, signal);
-          } else {
-            setIsLoading(false);
-          }
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        if (res === undefined) {
-        } else {
-          // handle error
-          setIsLoading(false);
-        }
-      }
-    });
-  }
-
-  function refreshList() {
-    setIsLoading(true);
-    setTagList([]);
-    const controller = new AbortController();
-    getTags("", controller.signal);
-    setNewTag("");
-  }
+  useEffect(() => {
+    const id = location.pathname.split("/")[2];
+    setFolderId(id);
+    if (id) setActiveTab("my"); // reset to My Library when entering a subfolder
+  }, [location])
 
   function handleCreateFolder() {
-    setIsLoading(true);
-    Post(postCreateUserFolder(), { name: newFolderName }).then((res) => {
+    Post(postCreateItem(), newFolder, true).then((res) => {
       if (res.status && res.status < 300) {
-        if (res.data && res.data) {
-          //pop up notifying user of folder
-          setAlert({ message: t("library.folderCreated"), type: "success" });
-        }
+        setListKey((k) => k + 1);
+        setAlert({ message: t("library.folderCreated"), type: "success" });
       } else if (res && res.status === 401) {
         navigator("/login");
       } else {
-        // set errors
         setAlert({
           message: t("library.folderCouldNotBeCreated"),
           type: "error",
         });
       }
       setOpenCreateFolderModal(false);
-      setNewFolderName("");
-      refreshList();
+      setNewFolder({
+        name: "",
+        description: "",
+        type: "folder",
+        parentId: "root",
+        ownerType: user?.username,
+        metadata: { createdBy: user?.username }
+      });
     });
   }
 
-  function handleCreateTag() {
-    setIsLoading(true);
-    Post(postCreateTag(), { name: newTag }).then((res) => {
-      if (res.status && res.status < 300) {
-        if (res.data && res.data) {
-          //pop up notifying user of tag
-          setAlert({ message: t("library.tagCreated"), type: "success" });
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        // set errors
-        setAlert({
-          message: t("library.tagCouldNotBeCreated"),
-          type: "error",
-        });
-      }
-      setOpenManageTagsModal(false);
-      refreshList();
-    });
-  }
-
-  function handleUpdateTag(
-    oldTag: string,
-    isDeleted: boolean,
-    newTag?: string
-  ) {
-    setIsLoading(true);
-    const dataToSend = newTag
-      ? {
-        name: newTag,
-        id: oldTag,
-        isDeleted: isDeleted,
-      }
-      : {
-        id: oldTag,
-        isDeleted: isDeleted,
-      };
-    Put(updateTag(oldTag), dataToSend).then((res) => {
-      if (res.status && res.status < 300) {
-        if (res.data && res.data) {
-          //pop up notifying user of tag update
-          setAlert({
-            message: isDeleted ? t("library.tagDeleted") : t("library.tagUpdated"),
-            type: "success",
-          });
-        }
-      } else if (res && res.status === 401) {
-        navigator("/login");
-      } else {
-        // set errors
-        setAlert({
-          message: t("library.tagCouldNotBeUpdated"),
-          type: "error",
-        });
-      }
-      setOpenManageTagsModal(false);
-      refreshList();
-    });
-  }
-
-  return !isLoading ? (
+  return (
     <div className="min-h-screen">
-      {user?.groups.includes(
-        process.env.REACT_APP_ADMIN
-          ? process.env.REACT_APP_ADMIN
-          : "PapyrusAIAdmin"
-      ) && (
-          <DialogWrapper
-            open={openManageTagsModal}
-            onOpenChange={setOpenManageTagsModal}
-            title={t("library.manageTags")}
-            description={t("library.manageTagsDescription")}
-            contentClassName="sm:max-w-2xl"
-            actions={[
-              {
-                label: t("common.close"),
-                onClick: () => setOpenManageTagsModal(false),
-                variant: "outline",
-              },
-            ]}
-          >
-            <div className="space-y-6">
-              {/* Existing Tags */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">{t("library.existingTags")}</h3>
-                <div className="max-h-64 overflow-y-auto space-y-2">
-                  {tagList.length === 0 ? (
-                    <p className="text-muted-foreground text-sm text-center py-8">
-                      {t("library.noTagsFound")}
-                    </p>
-                  ) : (
-                    tagList.map((tag, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-2 p-3 rounded-md border"
-                      >
-                        <Input
-                          name={`${i}_tag`}
-                          className="flex-1"
-                          aria-label={t("library.tags")}
-                          value={tag.name ? tag.name : tag.id}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            setTagList((prev) => {
-                              if (onlyLettersAndNumbers(e.target.value)) {
-                                var list = [...prev];
-                                list[i].name = e.target.value;
-                                return list;
-                              } else {
-                                return prev;
-                              }
-                            });
-                          }}
-                        />
-                        <TooltipWrapper content={t("library.saveTagChanges")}>
-                          <Button
-                            variant="ghost"
-                            onClick={() =>
-                              handleUpdateTag(
-                                tag.id,
-                                false,
-                                tagList[i].name ?? ""
-                              )
-                            }
-                            size="sm"
-                            aria-label={t("library.saveTagChanges")}
-                          >
-                            <Save className="h-4 w-4 mr-1.5" />
-                            {t("common.save")}
-                          </Button>
-                        </TooltipWrapper>
-                        <TooltipWrapper content={t("library.permanentlyDeleteTag")}>
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleUpdateTag(tag.id, true)}
-                            size="sm"
-                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                            aria-label={t("library.permanentlyDeleteTag")}
-                          >
-                            <Trash2 className="h-4 w-4 mr-1.5" />
-                            {t("common.delete")}
-                          </Button>
-                        </TooltipWrapper>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Create New Tag */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">{t("library.createNewTag")}</h3>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={t("library.enterTagName")}
-                    value={newTag}
-                    aria-label={t("library.createNewTag")}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      if (onlyLettersAndNumbers(e.target.value)) {
-                        setNewTag(e.target.value);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && newTag.trim()) {
-                        handleCreateTag();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleCreateTag} disabled={!newTag.trim()}>
-                    <Tag className="h-4 w-4 mr-2" />
-                    {t("common.create")}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </DialogWrapper>
-        )}
       <DialogWrapper
         open={openCreateFolderModal}
         onOpenChange={setOpenCreateFolderModal}
@@ -318,7 +101,7 @@ export default function Library(): JSX.Element {
           {
             label: t("library.createFolder"),
             onClick: handleCreateFolder,
-            disabled: !newFolderName.trim(),
+            disabled: !newFolder.name.trim(),
           },
         ]}
       >
@@ -329,12 +112,30 @@ export default function Library(): JSX.Element {
             aria-label={t("library.folderName")}
             name="foldername"
             placeholder={t("library.enterFolderName")}
-            value={newFolderName}
+            value={newFolder.name}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setNewFolderName(e.target.value);
+              setNewFolder((prev: any) => ({ ...prev, name: e.target.value }));
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && newFolderName.trim()) {
+              if (e.key === "Enter" && newFolder.name.trim()) {
+                handleCreateFolder();
+              }
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="folder-description">{t("library.folderDescription")}</Label>
+          <Input
+            id="folder-description"
+            aria-label={t("library.folderDescription")}
+            name="folderdescription"
+            placeholder={t("library.enterFolderDescription")}
+            value={newFolder.description}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setNewFolder((prev: any) => ({ ...prev, description: e.target.value }));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
                 handleCreateFolder();
               }
             }}
@@ -342,7 +143,7 @@ export default function Library(): JSX.Element {
         </div>
       </DialogWrapper>
 
-      <div className="mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="mx-auto px-4 py-6 ">
         <header className="animate-in slide-in-from-bottom-4 duration-700">
           <div className="relative overflow-hidden bg-card border rounded-xl p-6 shadow-lg mb-8">
             <div
@@ -363,21 +164,6 @@ export default function Library(): JSX.Element {
                   aria-label={`${t("library.library")} ${t("common.actions")}}`}
                 >
                   {user?.groups.includes(
-                    process.env.REACT_APP_ADMIN
-                      ? process.env.REACT_APP_ADMIN
-                      : "PapyrusAIAdmin"
-                  ) && (
-                      <Button
-                        variant="outline"
-                        onClick={() => setOpenManageTagsModal(true)}
-                        className="flex items-center gap-2"
-                        aria-label={t("library.manageTags")}
-                      >
-                        <Tag className="h-4 w-4" aria-hidden="true" />
-                        {t("library.manageTags")}
-                      </Button>
-                    )}
-                  {user?.groups.includes(
                     process.env.REACT_APP_INSTRUCTOR
                       ? process.env.REACT_APP_INSTRUCTOR
                       : "PapyrusAIInstructors"
@@ -391,6 +177,40 @@ export default function Library(): JSX.Element {
                         <Folder className="h-4 w-4" aria-hidden="true" />
                         {t("library.newFolder")}
                       </Button>
+                    )}
+                  {/* Note: don't allow user's create anything other than a folder at the root (at least on the frontend) */}
+                  {user?.groups.includes(
+                    process.env.REACT_APP_INSTRUCTOR
+                      ? process.env.REACT_APP_INSTRUCTOR
+                      : "PapyrusAIInstructors"
+                  ) && folderId && (
+                      <DropdownWrapper
+                        trigger={
+                          <Button
+                            variant="default"
+                            className="flex items-center gap-2"
+                            aria-label={t("library.addContent")}
+                          >
+                            <Plus className="h-4 w-4" aria-hidden="true" />
+                            {t("library.addContent")}
+                          </Button>
+                        }
+                        actions={[
+                          {
+                            label: t("library.addPrompt"),
+                            onClick: () => navigator(`/library/${folderId}/createprompt`),
+                          },
+                          {
+                            label: t("library.addFile"),
+                            onClick: () => navigator(`/library/${folderId}/createfile`),
+                          },
+                          // { TODO add back in
+                          //   label: t("library.addRubric"),
+                          //   onClick: () => navigator(`/library/${folderId}/createrubric`),
+                          // },
+                        ]}
+                        align="end"
+                      />
                     )}
                 </nav>
               </div>
@@ -412,21 +232,40 @@ export default function Library(): JSX.Element {
           </div>
         </header>
 
-        <ListFolders />
-      </div>
-    </div>
-  ) : (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      role="status"
-      aria-live="polite"
-    >
-      <div className="flex flex-col items-center gap-4">
-        <Loader2
-          className="h-8 w-8 animate-spin text-primary"
-          aria-hidden="true"
+        {/* Tab switcher — only visible at the root level */}
+        {!folderId && (
+          <div className="flex gap-1 mb-4 border-b" role="tablist" aria-label={t("library.library")}>
+            <button
+              role="tab"
+              aria-selected={activeTab === "my"}
+              onClick={() => setActiveTab("my")}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === "my"
+                ? "border-primary text-primary dark:text-gold colorful-dark:text-gold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              {t("library.myLibrary")}
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === "shared"}
+              onClick={() => setActiveTab("shared")}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === "shared"
+                ? "border-primary text-primary dark:text-gold colorful-dark:text-gold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              {t("library.sharedWithMe")}
+            </button>
+          </div>
+        )}
+
+        <ListFolderItems
+          key={`${listKey}-${activeTab}`}
+          folderId={folderId ?? "root"}
+          shared={activeTab === "shared" && !folderId}
         />
-        <p className="text-muted-foreground">{t("library.loadingLibrary")}</p>
+
       </div>
     </div>
   );

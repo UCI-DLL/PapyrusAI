@@ -1116,7 +1116,7 @@ export default function ModuleReports(): JSX.Element {
                       size="sm"
                       onClick={() => handleChangePage(page - 1)}
                       disabled={page === 0}
-                      aria-label="Previous page"
+                      aria-label={t("reports.previousPage")}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -1128,7 +1128,7 @@ export default function ModuleReports(): JSX.Element {
                       size="sm"
                       onClick={() => handleChangePage(page + 1)}
                       disabled={page >= totalPages - 1}
-                      aria-label="Next page" //TODO
+                      aria-label={t("reports.nextPage")}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>

@@ -808,6 +808,8 @@
     "noConversations": "No conversations",
     "showingEntries": "Showing {{start}} to {{end}} of {{total}} entries",
     "pageOf": "Page {{current}} of {{total}}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
     "moduleReports": "Module Reports",
     "name": "Name",
     "numConvosColumn": "Num Convos",

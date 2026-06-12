@@ -59,7 +59,7 @@ export function FolderPickerDialog({
     // eslint-disable-next-line
   }, [open]);
 
-  // Fetch folders at the current level
+  // Fetch folders at the current level (with pagination)
   useEffect(() => {
     if (!open) return;
     const controller = new AbortController();
@@ -74,22 +74,30 @@ export function FolderPickerDialog({
       });
     };
 
+    function fetchPage(params: Parameters<typeof getItems>[0], onDone: () => void) {
+      Get(getItems(params), controller.signal, true).then((res) => {
+        if (res && res.status < 300 && res.data?.items) {
+          addFolders(res.data.items);
+          if (res.data.nextKey) {
+            fetchPage({ ...params, nextKey: res.data.nextKey }, onDone);
+          } else {
+            onDone();
+          }
+        } else {
+          if (res?.status === 401) navigator("/login");
+          onDone();
+        }
+      });
+    }
+
     if (currentFolderId === "root" && user?.username) {
       let pending = 2;
       const done = () => { if (--pending === 0) setIsLoading(false); };
       [user.username, "ORG"].forEach((owner) => {
-        Get(getItems({ parentId: "root", owner }), controller.signal, true).then((res) => {
-          if (res && res.status < 300 && res.data?.items) addFolders(res.data.items);
-          else if (res?.status === 401) navigator("/login");
-          done();
-        });
+        fetchPage({ parentId: "root", owner }, done);
       });
     } else {
-      Get(getItems({ parentId: currentFolderId }), controller.signal, true).then((res) => {
-        if (res && res.status < 300 && res.data?.items) addFolders(res.data.items);
-        else if (res?.status === 401) navigator("/login");
-        setIsLoading(false);
-      });
+      fetchPage({ parentId: currentFolderId }, () => setIsLoading(false));
     }
 
     return () => controller.abort();

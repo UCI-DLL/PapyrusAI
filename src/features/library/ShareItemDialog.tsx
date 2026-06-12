@@ -194,9 +194,11 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
   const isEditable = (p: ItemPermission) =>
     p.source === "direct" && p.permission !== "owner";
 
-  // Display email for a userId; fall back to the username if not found in the loaded list
-  const getUserEmail = (userId: string) =>
-    users.find((u) => u.username === userId)?.email ?? userId;
+  const getUserDisplay = (userId: string) => {
+    const u = users.find((u) => u.username === userId);
+    const name = u ? `${u.name ?? ""} ${u.family_name ?? ""}`.trim() : "";
+    return { name: name || null, email: u?.email ?? null };
+  };
 
   const permissionedUserIds = new Set(permissions.map((p) => p.userId));
 
@@ -240,7 +242,9 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
                   className="flex-1 justify-between font-normal min-w-0"
                 >
                   <span className="truncate text-sm">
-                    {selectedUser ? selectedUser.email : t("library.selectUser")}
+                    {selectedUser
+                      ? (`${selectedUser.name ?? ""} ${selectedUser.family_name ?? ""}`.trim() || selectedUser.email)
+                      : t("library.selectUser")}
                   </span>
                   {selectedUser ? (
                     <button
@@ -351,16 +355,13 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
           ) : (
             <div className="divide-y rounded-md border">
               {permissions.filter((p) => p.permission !== "owner").map((perm) => {
-                const email = getUserEmail(perm.userId);
+                const { name, email } = getUserDisplay(perm.userId);
                 return (
                   <div key={perm.userId} className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 py-2">
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{email}</div>
-                      {/* Show username beneath email when they differ */}
-                      {email !== perm.userId && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          {perm.userId}
-                        </div>
+                      <div className="text-sm font-medium truncate">{email ?? perm.userId}</div>
+                      {name && (
+                        <div className="text-xs text-muted-foreground truncate">{name}</div>
                       )}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">

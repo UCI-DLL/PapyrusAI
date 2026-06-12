@@ -60,7 +60,8 @@ export default function Library(): JSX.Element {
   }, [location])
 
   function handleCreateFolder() {
-    Post(postCreateItem(), newFolder, true).then((res) => {
+    const folderBody = { ...newFolder, parentId: folderId || "root" };
+    Post(postCreateItem(), folderBody, true).then((res) => {
       if (res.status && res.status < 300) {
         setListKey((k) => k + 1);
         setAlert({ message: t("library.folderCreated"), type: "success" });

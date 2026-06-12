@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
@@ -9,6 +9,7 @@ import { getItems } from "../../utility/endpoints/ItemEndpoints";
 import { ChevronRight, Folder, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
+import { UserContext } from "../../utility/context/UserContext";
 
 interface BreadcrumbEntry {
   id: string;
@@ -39,6 +40,7 @@ export function FolderPickerDialog({
 }: FolderPickerDialogProps) {
   const navigator = useNavigate();
   const { t } = useTranslation();
+  const { user } = useContext(UserContext);
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbEntry[]>([
     { id: "root", name: t("library.library"), isOrg: false },
   ]);
@@ -63,14 +65,33 @@ export function FolderPickerDialog({
     const controller = new AbortController();
     setIsLoading(true);
     setFolders([]);
-    Get(getItems({ parentId: currentFolderId }), controller.signal, true).then((res) => {
-      if (res && res.status < 300 && res.data?.items) {
-        setFolders(res.data.items.filter((i: LibraryItem) => i.type === "folder"));
-      } else if (res?.status === 401) {
-        navigator("/login");
-      }
-      setIsLoading(false);
-    });
+
+    const addFolders = (items: LibraryItem[]) => {
+      const newFolders = items.filter((i) => i.type === "folder");
+      setFolders((prev) => {
+        const seen = new Set(prev.map((f) => f.itemId));
+        return [...prev, ...newFolders.filter((f) => !seen.has(f.itemId))];
+      });
+    };
+
+    if (currentFolderId === "root" && user?.username) {
+      let pending = 2;
+      const done = () => { if (--pending === 0) setIsLoading(false); };
+      [user.username, "ORG"].forEach((owner) => {
+        Get(getItems({ parentId: "root", owner }), controller.signal, true).then((res) => {
+          if (res && res.status < 300 && res.data?.items) addFolders(res.data.items);
+          else if (res?.status === 401) navigator("/login");
+          done();
+        });
+      });
+    } else {
+      Get(getItems({ parentId: currentFolderId }), controller.signal, true).then((res) => {
+        if (res && res.status < 300 && res.data?.items) addFolders(res.data.items);
+        else if (res?.status === 401) navigator("/login");
+        setIsLoading(false);
+      });
+    }
+
     return () => controller.abort();
     // eslint-disable-next-line
   }, [currentFolderId, open]);

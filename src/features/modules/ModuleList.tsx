@@ -654,7 +654,7 @@ export default function ModuleList({
                   <div className="hidden md:block">
                     <div className="p-4">
                       <div className="relative flex items-start justify-between">
-                        <div className="absolute top-0 right-0 w-16 h-16 opacity-5">
+                        <div className="absolute top-0 right-0 w-16 h-16 opacity-5 pointer-events-none">
                           <Play size={64} className="transform rotate-12" />
                         </div>
 

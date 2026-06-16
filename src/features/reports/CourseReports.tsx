@@ -70,14 +70,14 @@ export default function CourseReports(): JSX.Element {
     setIsLoading(true);
     // Fetch course details
 
-    Get(getCourse(courseId), controller.signal, true).then((courseRes) => {
+    Get(getCourse(courseId), controller.signal).then((courseRes) => {
       if (courseRes && courseRes.status && courseRes.status < 300 && courseRes.data) {
         const fetchedCourse = courseRes.data as CourseType;
         setCourse(fetchedCourse);
         // Fetch users (handle pagination)
         const allUsers: Array<CustomUserType> = [];
         const fetchUsersPage = (nextToken?: string) => {
-          Get(getUsersInCourse(courseId, 50, nextToken ?? ""), controller.signal, true).then((usersRes) => {
+          Get(getUsersInCourse(courseId, 50, nextToken ?? ""), controller.signal).then((usersRes) => {
             if (usersRes && usersRes.status && usersRes.status < 300 && usersRes.data) {
               if (usersRes.data.users) {
                 allUsers.push(...usersRes.data.users);
@@ -106,13 +106,13 @@ export default function CourseReports(): JSX.Element {
         // Retry once after a short delay; keep loading UI
         setTimeout(() => {
           if (!controller.signal.aborted) {
-            Get(getCourse(courseId), controller.signal, true).then((retryRes) => {
+            Get(getCourse(courseId), controller.signal).then((retryRes) => {
               if (retryRes && retryRes.status && retryRes.status < 300 && retryRes.data) {
                 const fetchedCourse = retryRes.data as CourseType;
                 setCourse(fetchedCourse);
                 const allUsers: Array<CustomUserType> = [];
                 const fetchUsersPage = (nextToken?: string) => {
-                  Get(getUsersInCourse(courseId, 50, nextToken ?? ""), controller.signal, true).then((usersRes) => {
+                  Get(getUsersInCourse(courseId, 50, nextToken ?? ""), controller.signal).then((usersRes) => {
                     if (usersRes && usersRes.status && usersRes.status < 300 && usersRes.data) {
                       if (usersRes.data.users) {
                         allUsers.push(...usersRes.data.users);
@@ -163,15 +163,14 @@ export default function CourseReports(): JSX.Element {
       username: string,
       controller: AbortController,
     ): Promise<any> => {
-      const temp = await Get(getConversation(courseId, moduleId, convoIndex, username), controller.signal, true).then(
+      const temp = await Get(getConversation(courseId, moduleId, convoIndex, username), controller.signal).then(
         async (res1: any) => {
           if (res1 && res1.status && res1.status < 300) {
             if (res1.data) {
               if (res1.data.completed) {
                 const temp2 = await Get(
                   getContentModMessage(courseId, moduleId, convoIndex, username),
-                  controller.signal,
-                  true,
+                  controller.signal
                 ).then(async (res2: any) => {
                   if (res2 && res2.status && res2.status < 300) {
                     if (res2.data && res2.data[0]) {
@@ -212,7 +211,7 @@ export default function CourseReports(): JSX.Element {
       courseIndex: number,
       moduleIndex: number,
     ): Promise<any> => {
-      const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal, true).then(
+      const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal).then(
         async (res) => {
           if (res && res.status && res.status < 300) {
             if (res.data) {

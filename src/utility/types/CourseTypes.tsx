@@ -1,5 +1,18 @@
 import { CustomUserType } from "./UserTypes"
 
+export type LibraryItem = {
+  itemId: string;
+  name: string;
+  description?: string;
+  type: "folder" | "prompt" | "file" | "rubric";
+  parentId: string;
+  ownerId: string; // "ORG" or username
+  organization: string;
+  createdAt: number; // ms epoch
+  updatedAt: number; // ms epoch
+  metadata: Record<string, any>;
+  userPermission?: "viewer" | "editor"; // present on items returned via shared=true
+}
 
 export type CourseType = {
   name: string,
@@ -33,47 +46,36 @@ export type ModuleType = {
   files?: Array<FileType>,
   webSearch?: boolean,
 }
-//Note: the difference between this folder/prompt and the old prompt type is 
-//old one has organization
-//new one has isOrganizationPrompt and folderId
+
+//These are used in adding assets to a module
 export type PromptType = {
   id: string,
-  creator: CustomUserType,
   isDeleted: boolean,
   name: string,
   prompt: string,
-  tags: Array<string>,
-  isOrganizationPrompt: boolean,
-  folderId?: string,
 }
 
 export type FileType = {
   id: string,
-  creator: CustomUserType,
   isDeleted: boolean,
   name: string,
-  tags: Array<string>,
-  isOrganizationFile: boolean,
-  folderId?: string,
   hiddenMessageId: string,
   fileReference: string,
 }
 
-export type FolderType = {
-  id: string,
-  creator: CustomUserType,
-  userId?: string, //if folder is user type
-  organization: string,
-  timestamp: string,
-  isDeleted: boolean,
+export type RubricCriterion = {
   name: string,
-  prompts: Array<PromptType>,
-  files: Array<FileType>,
+  cells: Array<string>, // parallel to RubricType.columns — cells[i] belongs to columns[i]
 }
 
-export type TagType = {
+export type RubricType = {
   id: string,
+  creator: CustomUserType,
   isDeleted: boolean,
-  organization: string,
-  name?: string, //this is a placeholder for updating the tag to a new name
+  name: string,
+  isOrganizationRubric: boolean,
+  folderId?: string,
+  columns: Array<string>,        // e.g. ["0","1","2","3"] — user-editable labels
+  criteria: Array<RubricCriterion>,
 }
+

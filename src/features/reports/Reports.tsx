@@ -40,7 +40,7 @@ import { Input } from "../../components/ui/input";
 import { handleCourseTermLanguage } from "../../utility/Helpers";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
-import { createNetworkErrorHandler } from "../../utility/reports/networkErrorHandler";
+import { createNetworkErrorHandler, isNetworkError } from "../../utility/reports/networkErrorHandler";
 import Post from "../../utility/Post";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
@@ -58,14 +58,16 @@ export default function Reports(): JSX.Element {
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<{ users: Array<CustomUserType>; course: CourseType }>>([]);
+  //copy of the list so when searching in download, it doesn't change both lists
+  const [downloadUserList, setDownloadUserList] = useState<Array<{ users: Array<CustomUserType>; course: CourseType }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [openDownloadCourseModal, setOpenDownloadCourseModal] = useState<boolean>(false);
   const [downloadType, setDownloadType] = useState<string>("json");
-  var promiseArray: any[] = [];
   const retryAttemptedRef = useRef<boolean>(false);
-
-  const [checked, setChecked] = useState<Array<number>>([]);
+  //checked is a copy of courses and users that need to be downloaded
+  const [checked, setChecked] = useState<Array<{ users: Array<CustomUserType>; course: CourseType }>>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [downloadSearchTerm, setDownloadSearchTerm] = useState<string>("");
 
   //If safari, use a different dropdown within dialog modal so that screen readers can read
   const isSafari =
@@ -74,27 +76,18 @@ export default function Reports(): JSX.Element {
     !window.navigator.userAgent.includes("Chrome") &&
     window.navigator.userAgent.includes("Mac OS");
 
-  const handleToggle = (value: number) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
-
-    if (currentIndex === -1) {
-      newChecked.push(value);
+  const handleToggle = (users: CustomUserType[], course: CourseType) => () => {
+    //if course in checked list, then remove
+    //otherwise add it in
+    if (checked.some((x) => x.course.id === course.id)) {
+      setChecked(prev => prev.filter(item => item.course.id !== course.id));
     } else {
-      newChecked.splice(currentIndex, 1);
+      setChecked([{ users, course }, ...checked])
     }
-
-    setChecked(newChecked);
   };
 
   // Helper function to handle network errors with retry logic
-  const handleNetworkError = createNetworkErrorHandler(
-    retryAttemptedRef,
-    setAlert,
-    navigator,
-    t,
-    setIsLoading
-  );
+  const handleNetworkError = createNetworkErrorHandler(retryAttemptedRef, setAlert, navigator, t, setIsLoading);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -105,20 +98,20 @@ export default function Reports(): JSX.Element {
       eventType: "view_page",
       metadata: {
         page: "reports",
-      }
-    })
+      },
+    });
 
-    const loadCourse = (group: string) => {
-      // Reports flag true
-      Get(getCourse(group), controller.signal, true).then((res1) => {
+    const MAX_COURSE_RETRIES = 3;
+    const loadCourse = (group: string, retryCount: number = 0) => {
+      Get(getCourse(group), controller.signal).then((res1) => {
         if (res1 && res1.status && res1.status < 300) {
-          if (retryAttemptedRef.current) {
+          if (retryCount > 0) {
             console.log("[Reports] loadCourse retry succeeded", {
               group,
               courseId: res1.data?.id,
+              retryCount,
               timestamp: new Date().toISOString(),
             });
-            retryAttemptedRef.current = false;
           }
           if (
             res1.data &&
@@ -131,12 +124,27 @@ export default function Reports(): JSX.Element {
           }
         } else if (res1 && res1.status === 401) {
           navigator("/login");
-        } else {
-          // Check for network error (ERR_NETWORK)
-          handleNetworkError(res1, () => {
-            console.log("[Reports] loadCourse retry attempt", { group, timestamp: new Date().toISOString() });
-            loadCourse(group);
+        } else if (isNetworkError(res1) && retryCount < MAX_COURSE_RETRIES) {
+          // Network retry w/ exponential growth
+          const delay = 500 * Math.pow(2, retryCount);
+          console.log("[Reports] loadCourse network error, retrying", {
+            group,
+            retryCount: retryCount + 1,
+            delay,
+            timestamp: new Date().toISOString(),
           });
+          setTimeout(() => loadCourse(group, retryCount + 1), delay);
+        } else if (isNetworkError(res1)) {
+          console.error("[Reports] loadCourse failed after max retries", {
+            group,
+            retryCount,
+            timestamp: new Date().toISOString(),
+          });
+          setAlert({
+            message: t("errorMessage.networkError") || "Network error: Unable to load reports. Please try again later.",
+            type: "error",
+          });
+          setIsLoading(false);
         }
       });
     };
@@ -174,6 +182,7 @@ export default function Reports(): JSX.Element {
 
     return () => {
       setUserList([]);
+      setDownloadUserList([])
       controller.abort();
     };
 
@@ -187,8 +196,7 @@ export default function Reports(): JSX.Element {
     handleNetworkErrorFn: (res: any, retryFn: () => void) => void,
   ) {
     var limit = 20;
-    // Reports flag true
-    Get(getAllCourseList(limit, startKey), signal, true).then((res) => {
+    Get(getAllCourseList(limit, startKey), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.courses && res.data.ScannedCount !== undefined) {
           //Get users for each course in the list of all courses
@@ -230,12 +238,26 @@ export default function Reports(): JSX.Element {
 
   function getUsersInCourseList(course: CourseType, signal: AbortSignal, nextToken?: string) {
     var limit = 25;
-    //Note: add true to Get function so that it will try again if it fails
-    Get(getUsersInCourse(course.id, limit, nextToken), signal, true).then(async (res) => {
+    Get(getUsersInCourse(course.id, limit, nextToken), signal).then(async (res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //Get the list of all users in the group
           setUserList((prev) => {
+            if (prev.find((x) => x.course.id === course.id)) {
+              //if the course has already been added, add the new list of users
+              var temp = [...prev];
+              var index = prev.findIndex((x) => x.course.id === course.id);
+              var prevUserList = prev[index].users ? prev[index].users : [];
+              temp[index] = {
+                users: prevUserList.concat(res.data.users),
+                course: course,
+              };
+              return temp;
+            } else {
+              return [...prev, { users: res.data.users, course: course }];
+            }
+          });
+          setDownloadUserList((prev) => {
             if (prev.find((x) => x.course.id === course.id)) {
               //if the course has already been added, add the new list of users
               var temp = [...prev];
@@ -322,8 +344,8 @@ export default function Reports(): JSX.Element {
     setIsLoading(true);
     var coursesToDownload: DownloadType[] = [];
     checked.forEach((x) => {
-      var course: any = sortCourseList(userList)[x].course;
-      course["users"] = sortCourseList(userList)[x].users;
+      var course: any = x.course;
+      course["users"] = x.users;
       coursesToDownload.push(course);
     });
     //log action
@@ -333,11 +355,12 @@ export default function Reports(): JSX.Element {
         action: "download_conversation",
         page: "reports",
         downloadType: downloadType,
-        courses: coursesToDownload.map(course => course.id) //just sent course ids
-      }
-    })
+        courses: coursesToDownload.map((course) => course.id), //just sent course ids
+      },
+    });
     // Both download methods will be using this as the controller
     const controller = new AbortController();
+    const promises: Promise<any>[] = [];
     // If "CSV Mode" is checked on, run this section instead of the logic below
     switch (downloadType) {
       case "csv": {
@@ -357,19 +380,17 @@ export default function Reports(): JSX.Element {
             }
             course.users.forEach((user) => {
               //get conversation list based on course and module and user
-              promiseArray.push(
+              promises.push(
                 getConvoList(course.id, module.id, user, controller, coursesToDownload, courseIndex, moduleIndex),
               );
             });
           });
         });
 
-        Promise.allSettled(promiseArray).then(() => {
-          // download here
-          setTimeout(() => {
-            downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`);
-            setIsLoading(false);
-          }, 10000);
+        Promise.allSettled(promises).then(() => {
+          downloadObjectAsJson(coursesToDownload, `PapyrusAI_courses`);
+          setIsLoading(false);
+          setChecked([]);
         });
         break;
       }
@@ -385,18 +406,15 @@ export default function Reports(): JSX.Element {
             }
             course.users.forEach((user) => {
               //get conversation list based on course and module and user
-              promiseArray.push(
+              promises.push(
                 getConvoList(course.id, module.id, user, controller, coursesToDownload, courseIndex, moduleIndex),
               );
             });
           });
         });
 
-        Promise.allSettled(promiseArray).then(() => {
-          // download here
-          setTimeout(() => {
-            downloadTxtZip(coursesToDownload, `PapyrusAI_courses`);
-          }, 10000);
+        Promise.allSettled(promises).then(() => {
+          downloadTxtZip(coursesToDownload, `PapyrusAI_courses`);
         });
         break;
       }
@@ -453,6 +471,7 @@ export default function Reports(): JSX.Element {
     // Trigger the download
     saveAs(zipContent, `${exportName}.zip`);
     setIsLoading(false);
+    setChecked([])
   }
 
   async function getConvoList(
@@ -464,30 +483,30 @@ export default function Reports(): JSX.Element {
     courseIndex: number,
     moduleIndex: number,
   ): Promise<any> {
-    //Note: add true to Get function so that it will try again if it fails
-    const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal, true).then(
+    const temp = await Get(getConversationList(courseId, moduleId, user.username), controller.signal).then(
       async (res) => {
         if (res && res.status && res.status < 300) {
           if (res.data) {
             //check if conversation for course, module, user / get conversation list length
             //get conversation data (with message data)
             if (res.data.conversations && res.data.conversations.length > 0) {
-              res.data.conversations.forEach(async (convo: any, convoIndex: number) => {
-                var convoData = await getConvo(courseId, moduleId, convoIndex.toString(), user.username, controller);
-                promiseArray.push(convoData);
-                if (convoData) {
-                  var convoData2 = { ...convoData, user: user };
-                  // push to convo list because it will be a list of ALL convos from all users
-                  // check if convo list already has convo with same id to prevent duplicates
-                  if (
-                    !coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(
-                      (e) => e.id === convoData2.id,
-                    )
-                  ) {
-                    coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
+              await Promise.all(
+                res.data.conversations.map(async (_convo: any, convoIndex: number) => {
+                  const convoData = await getConvo(courseId, moduleId, convoIndex.toString(), user.username, controller);
+                  if (convoData) {
+                    const convoData2 = { ...convoData, user: user };
+                    // push to convo list because it will be a list of ALL convos from all users
+                    // check if convo list already has convo with same id to prevent duplicates
+                    if (
+                      !coursesToDownload[courseIndex].modules[moduleIndex].conversations.some(
+                        (e) => e.id === convoData2.id,
+                      )
+                    ) {
+                      coursesToDownload[courseIndex].modules[moduleIndex].conversations.push(convoData2);
+                    }
                   }
-                }
-              });
+                }),
+              );
             }
           }
           return res.data;
@@ -498,19 +517,11 @@ export default function Reports(): JSX.Element {
           if (res && res.name && res.name === "AxiosError") {
             //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
             const delay = 2000 + Math.random() * 1000;
-            setTimeout(async () => {
-              var some = await getConvoList(
-                courseId,
-                moduleId,
-                user,
-                controller,
-                coursesToDownload,
-                courseIndex,
-                moduleIndex,
-              );
-              promiseArray.push(some);
-              return some;
-            }, delay);
+            return new Promise((resolve) => {
+              setTimeout(async () => {
+                resolve(await getConvoList(courseId, moduleId, user, controller, coursesToDownload, courseIndex, moduleIndex));
+              }, delay);
+            });
           }
         }
       },
@@ -526,18 +537,15 @@ export default function Reports(): JSX.Element {
     username: string,
     controller: AbortController,
   ): Promise<any> {
-    //Note: add true to Get function so that it will try again if it fails
-    const temp = await Get(getConversation(courseId, moduleId, convoIndex, username), controller.signal, true).then(
+    const temp = await Get(getConversation(courseId, moduleId, convoIndex, username), controller.signal).then(
       async (res1: any) => {
         if (res1 && res1.status && res1.status < 300) {
           if (res1.data) {
             //handle content moderation messages
             if (res1.data.completed) {
-              //Note: add true to Get function so that it will try again if it fails
               const temp2 = await Get(
                 getContentModMessage(courseId, moduleId, convoIndex, username),
                 controller.signal,
-                true,
               ).then(async (res2: any) => {
                 if (res2 && res2.status && res2.status < 300) {
                   //add content mod message to res1 data before returning
@@ -562,9 +570,7 @@ export default function Reports(): JSX.Element {
           navigator("/login");
         } else {
           //if 502 error (since we cant have too many lambdas running at once), try again later cause we have a too many requests error
-          var some = await getConvo(courseId, moduleId, convoIndex, username, controller);
-          promiseArray.push(some);
-          return some;
+          return await getConvo(courseId, moduleId, convoIndex, username, controller);
         }
       },
     );
@@ -598,7 +604,10 @@ export default function Reports(): JSX.Element {
     setIsLoading(true);
     getUserMessagesAsCsv(courseIds, controller)
       .then((csv) => downloadStringAsCsv(csv, "PapyrusAI_messages"))
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        setIsLoading(false)
+        setChecked([])
+      });
   }
 
   function getUserMessagesAsCsv(
@@ -685,88 +694,103 @@ export default function Reports(): JSX.Element {
           </div>
         </header>
 
-        {user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") && (
-          <Dialog open={openDownloadCourseModal} onOpenChange={setOpenDownloadCourseModal}>
-            <DialogContent className="sm:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  {t("reports.downloadCourseTitle")}
-                </DialogTitle>
-                <DialogDescription>{t("reports.downloadCourseDescription")}</DialogDescription>
-              </DialogHeader>
+        {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmins") ||
+          user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors")) && (
+            <Dialog open={openDownloadCourseModal} onOpenChange={setOpenDownloadCourseModal}>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    {t("reports.downloadCourseTitle")}
+                  </DialogTitle>
+                  <DialogDescription>{t("reports.downloadCourseDescription")}</DialogDescription>
+                </DialogHeader>
 
-              <div className="space-y-6">
-                {/* handle safari screen readers  */}
-                {isSafari ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
-                    <select
-                      className="h-10 w-full rounded-md border px-3 py-2 text-sm"
-                      value={downloadType}
-                      onChange={(e) => setDownloadType(e.target.value)}
-                    >
-                      <option value="json">JSON</option>
-                      <option value="csv">CSV</option>
-                      <option value="txt">TXT</option>
-                    </select>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
-                    <Select value={downloadType} onValueChange={setDownloadType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("reports.selectFormat")} />
-                      </SelectTrigger>
-                      <SelectContent avoidCollisions={false} position="popper">
-                        <SelectItem value="json">JSON</SelectItem>
-                        <SelectItem value="csv">CSV</SelectItem>
-                        <SelectItem value="txt">TXT</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                <div className="space-y-6">
+                  {/* handle safari screen readers  */}
+                  {isSafari ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
+                      <select
+                        className="h-10 w-full rounded-md border px-3 py-2 text-sm"
+                        value={downloadType}
+                        onChange={(e) => setDownloadType(e.target.value)}
+                      >
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                        <option value="txt">TXT</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="download-format">{t("reports.downloadFormat")}</Label>
+                      <Select value={downloadType} onValueChange={setDownloadType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("reports.selectFormat")} />
+                        </SelectTrigger>
+                        <SelectContent avoidCollisions={false} position="popper">
+                          <SelectItem value="json">JSON</SelectItem>
+                          <SelectItem value="csv">CSV</SelectItem>
+                          <SelectItem value="txt">TXT</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
-                <div className="space-y-3">
-                  <h2 className="text-sm font-medium">{t("courses.availableCourses")}</h2>
-                  <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
-                    {filterCoursesBySearch(sortCourseList(userList), searchTerm).map((x, index) => {
-                      const labelId = `checkbox-list-secondary-label-${index}`;
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 p-2 rounded-md hover:text-primary
+                  <div className="space-y-3">
+                    <h2 className="text-sm font-medium">{t("courses.availableCourses")}</h2>
+                    <div className="relative w-full">
+                      <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <Input
+                        type="text"
+                        placeholder={t("reports.courseReportsSearch")}
+                        value={downloadSearchTerm}
+                        onChange={(e) => setDownloadSearchTerm(e.target.value)}
+                        className="pl-9 w-full"
+                        aria-label={t("courses.searchCourses")}
+                      />
+                    </div>
+                    <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-4">
+                      {filterCoursesBySearch(sortCourseList(downloadUserList), downloadSearchTerm).map((x, index) => {
+                        const labelId = `checkbox-list-secondary-label-${index}`;
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 p-2 rounded-md hover:text-primary
                             dark:hover:bg-accent dark:hover:text-gold colorful-dark:hover:bg-accent colorful-dark:hover:text-gold"
-                        >
-                          <Checkbox
-                            id={labelId}
-                            aria-labelledby={`${labelId}Label`}
-                            checked={checked.includes(index)}
-                            onCheckedChange={handleToggle(index)}
-                          />
-                          <Label id={`${labelId}Label`} htmlFor={labelId} className="flex-1 cursor-pointer text-sm">
-                            {x.course.name} | {t("common.instructor")}: {x.course.instructor.name}{" "}
-                            {x.course.instructor.family_name}
-                          </Label>
-                        </div>
-                      );
-                    })}
+                          >
+                            <Checkbox
+                              id={labelId}
+                              aria-labelledby={`${labelId}Label`}
+                              checked={checked.some((y) => y.course.id === x.course.id)}
+                              onCheckedChange={handleToggle(x.users, x.course)}
+                            />
+                            <Label id={`${labelId}Label`} htmlFor={labelId} className="flex-1 cursor-pointer text-sm">
+                              {x.course.name} | {t("common.instructor")}: {x.course.instructor.name}{" "}
+                              {x.course.instructor.family_name}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpenDownloadCourseModal(false)}>
-                  {t("common.close")}
-                </Button>
-                <Button onClick={downloadCourses}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {t("common.download")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpenDownloadCourseModal(false)}>
+                    {t("common.close")}
+                  </Button>
+                  <Button onClick={downloadCourses}>
+                    <Download className="h-4 w-4 mr-2" />
+                    {t("common.download")}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
 
         <section aria-labelledby="reports-courses-heading">
           <header className="mb-6 w-full bg-card p-4 rounded-lg shadow-md" id="reports-courses-heading">

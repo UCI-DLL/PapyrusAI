@@ -13,6 +13,7 @@ import { useTranslation } from "../hooks/useTranslation";
 
 interface props {
     user: UserType | null;
+    authStatus: "loading" | "authenticated" | "unauthenticated"
 }
 
 const Alert = ({
@@ -77,7 +78,7 @@ const Alert = ({
     );
 };
 
-export function PrivateRoute({ user }: props): JSX.Element {
+export function PrivateRoute({ user, authStatus }: props): JSX.Element {
     const { alert, setAlert } = useContext(AlertContext);
 
     const handleCloseAlert = useCallback(() => {
@@ -91,7 +92,18 @@ export function PrivateRoute({ user }: props): JSX.Element {
         // eslint-disable-next-line
     }, []);
 
-    return localStorage.getItem("papyrusai_access_token") ? (
+    //  Still loading → show nothing 
+    if (authStatus === "loading") {
+        return <div>Loading...</div>;
+    }
+
+    //  Not authenticated → let App/interceptor handle redirect
+    if (authStatus === "unauthenticated") {
+        return <Navigate to="/login" replace />;
+    }
+
+    // else Authenticated → render app
+    return (
         <Navigation>
             <div className="flex flex-col h-full">
                 {alert.message !== "" && (
@@ -106,7 +118,24 @@ export function PrivateRoute({ user }: props): JSX.Element {
                 </div>
             </div>
         </Navigation>
-    ) : (
-        <Navigate to={"/login"} />
     );
+
+    // return localStorage.getItem("papyrusai_access_token") ? (
+    //     <Navigation>
+    //         <div className="flex flex-col h-full">
+    //             {alert.message !== "" && (
+    //                 <div className="p-4">
+    //                     <Alert severity={alert.type} onClose={handleCloseAlert}>
+    //                         {alert.message}
+    //                     </Alert>
+    //                 </div>
+    //             )}
+    //             <div className="flex-1">
+    //                 <Outlet />
+    //             </div>
+    //         </div>
+    //     </Navigation>
+    // ) : (
+    //     <Navigate to={"/login"} />
+    // );
 }

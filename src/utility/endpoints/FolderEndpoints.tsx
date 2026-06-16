@@ -124,16 +124,17 @@ export function postMoveUserPromptToUserFolder(folderid: string, promptid: strin
  * Document endpoints
  */
 
-export function getSignedS3BucketUploadOrgFolder(folderId: string, fileId: string) {
-  return `document/upload/org/${process.env.REACT_APP_ORGANIZATION}/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+export function getSignedUploadUrl(
+  params: { parentId: string; fileName: string } | { fileId: string; fileName: string }
+) {
+  const base = `document/upload?organization=${process.env.REACT_APP_ORGANIZATION}&fileName=${encodeURIComponent(params.fileName)}`;
+  return "fileId" in params
+    ? `${base}&fileId=${params.fileId}`
+    : `${base}&parentId=${params.parentId}`;
 }
 
-export function getSignedS3BucketUploadUserFolder(folderId: string, fileId: string) {
-  return `document/upload/${folderId}/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
-}
-
-export function getSignedS3BucketDownloadFile(fileId: string) {
-  return `document/download/${fileId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
+export function getSignedDownloadFile(itemId: string) {
+  return `document/download/${itemId}?organization=${process.env.REACT_APP_ORGANIZATION}`;
 }
 
 

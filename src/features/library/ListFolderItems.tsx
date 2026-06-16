@@ -245,7 +245,8 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
     setIsLoading(isLoading);
   }
 
-  function handleEditFolder() {
+  function handleEditFolder(e?: React.FormEvent) {
+    e?.preventDefault();
     setIsEditLoading(true);
     Patch(patchUpdateItem(props.folderId), { name: editFolderForm.name, description: editFolderForm.description }, true).then((res) => {
       if (res && res.status && res.status < 300) {
@@ -365,41 +366,39 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
               label: t("common.save"),
               onClick: handleEditFolder,
               disabled: !editFolderForm.name.trim() || isEditLoading,
+              type: "submit",
+              form: "edit-folder-form",
             },
           ]}
         >
-          <div className="space-y-2">
-            <Label htmlFor="edit-folder-name">{t("library.folderName")}</Label>
-            <Input
-              id="edit-folder-name"
-              aria-label={t("library.folderName")}
-              name="editfoldername"
-              placeholder={t("library.enterFolderName")}
-              value={editFolderForm.name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setEditFolderForm((prev) => ({ ...prev, name: e.target.value }))
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && editFolderForm.name.trim()) handleEditFolder();
-              }}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="edit-folder-description">{t("library.folderDescription")}</Label>
-            <Input
-              id="edit-folder-description"
-              aria-label={t("library.folderDescription")}
-              name="editfolderdescription"
-              placeholder={t("library.enterFolderDescription")}
-              value={editFolderForm.description}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setEditFolderForm((prev) => ({ ...prev, description: e.target.value }))
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && editFolderForm.name.trim()) handleEditFolder();
-              }}
-            />
-          </div>
+          <form id="edit-folder-form" onSubmit={handleEditFolder} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-name">{t("library.folderName")}</Label>
+              <Input
+                id="edit-folder-name"
+                aria-label={t("library.folderName")}
+                name="editfoldername"
+                placeholder={t("library.enterFolderName")}
+                value={editFolderForm.name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setEditFolderForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-description">{t("library.folderDescription")}</Label>
+              <Input
+                id="edit-folder-description"
+                aria-label={t("library.folderDescription")}
+                name="editfolderdescription"
+                placeholder={t("library.enterFolderDescription")}
+                value={editFolderForm.description}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setEditFolderForm((prev) => ({ ...prev, description: e.target.value }))
+                }
+              />
+            </div>
+          </form>
         </DialogWrapper>
       )}
 

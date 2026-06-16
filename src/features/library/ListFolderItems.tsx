@@ -202,12 +202,9 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
             const seen = new Set(prev.map((item) => item.itemId));
             return [...prev, ...res.data.items.filter((item: LibraryItem) => !seen.has(item.itemId))];
           });
-          if (res.data.nextKey) {
-            getFolderItems(res.data.nextKey, signal, owner);
-          } else {
-            pendingFetchCountRef.current -= 1;
-            if (pendingFetchCountRef.current <= 0) setIsLoading(false);
-          }
+        }
+        if (res.data?.nextKey) {
+          getFolderItems(res.data.nextKey, signal, owner);
         } else {
           pendingFetchCountRef.current -= 1;
           if (pendingFetchCountRef.current <= 0) setIsLoading(false);
@@ -705,11 +702,15 @@ function sortItems(list: LibraryItem[], sort: SortOptions, starred: UserStarred 
         return [...group].sort((a, b) => b.updatedAt - a.updatedAt);
       case SortOptions.DateCreated:
         return [...group].sort((a, b) => b.createdAt - a.createdAt);
-      default: // Default: org items first, then newest created
+      default: // Default: starred org → unstarred org → starred user → unstarred user, then newest first
         return [...group].sort((a, b) => {
-          const aOrg = a.ownerId === "ORG" ? 0 : 1;
-          const bOrg = b.ownerId === "ORG" ? 0 : 1;
-          if (aOrg !== bOrg) return aOrg - bOrg;
+          const aOrg = a.ownerId === "ORG";
+          const bOrg = b.ownerId === "ORG";
+          const aStarred = isItemStarred(a, starred, true);
+          const bStarred = isItemStarred(b, starred, true);
+          const aRank = aOrg ? (aStarred ? 0 : 1) : (aStarred ? 2 : 3);
+          const bRank = bOrg ? (bStarred ? 0 : 1) : (bStarred ? 2 : 3);
+          if (aRank !== bRank) return aRank - bRank;
           return b.createdAt - a.createdAt;
         });
     }

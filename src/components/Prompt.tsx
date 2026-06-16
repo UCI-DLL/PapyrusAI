@@ -75,8 +75,6 @@ export const Prompt = (props: PromptProps) => {
   const isOwner = props.item.ownerId === user?.username;
   const canEdit = !props.shared || props.item.userPermission === "editor";
 
-  console.log("item props", props.item.userPermission)
-
   function edit() {
     props.loading();
     navigator(`/library/prompts/${props.item.itemId}`);

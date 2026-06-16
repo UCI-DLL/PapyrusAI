@@ -31,18 +31,9 @@ export default async function Get(url: String, signal?: AbortSignal | undefined,
       })
       .catch((error) => {
         if (error.code === "ERR_CANCELED") return;
-
-        // if (error.code === "ERR_NETWORK") {
-        //   console.log("You got a 502 error that needs to be handled by the function that called this.", error)
-
-        // }
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
-          // showMsg(Object.values(error.response.data), "error");
-          // if (error.response.status === 401) {
-          //   localStorage.removeItem("papyrusai_access_token");
-          // }
           return error.response;
         } else if (error.request) {
           // The request was made but no response was received

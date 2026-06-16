@@ -175,7 +175,7 @@ function App(): JSX.Element {
       sessionId = uuidv4();
       localStorage.setItem("sessionId", sessionId);
     }
-  }, []);
+  }, [user]);
 
   //handle log out
   function handleLogOut() {

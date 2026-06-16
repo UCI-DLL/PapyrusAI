@@ -61,6 +61,7 @@ export const FolderComponent = (props: FolderProps) => {
   const [openCopyDialog, setOpenCopyDialog] = useState<boolean>(false);
   const [openMoveDialog, setOpenMoveDialog] = useState<boolean>(false);
   const [openShareDialog, setOpenShareDialog] = useState<boolean>(false);
+  const [isRenaming, setIsRenaming] = useState(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ? props.isStarred : false);
   const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
   const isOwner = props.item.ownerId === user?.username;
@@ -81,7 +82,9 @@ export const FolderComponent = (props: FolderProps) => {
   const openPromote = () => setOpenPromoteDialog(true);
   const openDemote = () => setOpenDemoteDialog(true);
 
-  function rename() {
+  function rename(e?: React.FormEvent) {
+    e?.preventDefault();
+    setIsRenaming(true);
     props.loading();
     Patch(patchUpdateItem(props.item.itemId), { name: editFolderForm.name, description: editFolderForm.description }, true).then((res) => {
       if (res.status && res.status < 300) {
@@ -93,6 +96,7 @@ export const FolderComponent = (props: FolderProps) => {
         props.loading(false);
         setAlert({ message: res.data?.message || t("components.failedToRenameFolder"), type: "error" });
       }
+      setIsRenaming(false);
       setOpenRenameDialog(false);
     });
   }
@@ -342,12 +346,15 @@ export const FolderComponent = (props: FolderProps) => {
           { label: t("common.cancel"), onClick: () => setOpenRenameDialog(false), variant: "outline" },
           {
             label: t("common.save"),
-            onClick: () => { setOpenRenameDialog(false); rename(); },
+            onClick: rename,
             variant: "default",
+            type: "submit",
+            form: "edit-folder-form",
+            disabled: isRenaming,
           },
         ]}
       >
-        <div className="space-y-4">
+        <form id="edit-folder-form" onSubmit={rename} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="folder-name">{t("common.folder")} {t("common.name")}</Label>
             <Input
@@ -366,7 +373,7 @@ export const FolderComponent = (props: FolderProps) => {
               placeholder={t("library.enterFolderDescription")}
             />
           </div>
-        </div>
+        </form>
       </DialogWrapper>
 
       <Card className="h-full hover:shadow-md transition-shadow duration-200 group">

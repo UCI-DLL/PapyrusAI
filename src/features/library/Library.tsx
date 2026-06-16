@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -27,6 +27,8 @@ export default function Library(): JSX.Element {
   const [openCreateFolderModal, setOpenCreateFolderModal] =
     useState<boolean>(false);
   const [listKey, setListKey] = useState(0);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const isCreatingFolderRef = useRef(false);
   const [newFolder, setNewFolder] = useState<{
     name: string,
     description: string,
@@ -59,7 +61,11 @@ export default function Library(): JSX.Element {
     if (id) setActiveTab("my"); // reset to My Library when entering a subfolder
   }, [location])
 
-  function handleCreateFolder() {
+  function handleCreateFolder(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (isCreatingFolderRef.current) return;
+    isCreatingFolderRef.current = true;
+    setIsCreatingFolder(true);
     const folderBody = { ...newFolder, parentId: folderId || "root" };
     Post(postCreateItem(), folderBody, true).then((res) => {
       if (res.status && res.status < 300) {
@@ -73,6 +79,8 @@ export default function Library(): JSX.Element {
           type: "error",
         });
       }
+      isCreatingFolderRef.current = false;
+      setIsCreatingFolder(false);
       setOpenCreateFolderModal(false);
       setNewFolder({
         name: "",
@@ -102,46 +110,40 @@ export default function Library(): JSX.Element {
           {
             label: t("library.createFolder"),
             onClick: handleCreateFolder,
-            disabled: !newFolder.name.trim(),
+            disabled: !newFolder.name.trim() || isCreatingFolder,
+            type: "submit",
+            form: "create-folder-form",
           },
         ]}
       >
-        <div className="space-y-2">
-          <Label htmlFor="folder-name">{t("library.folderName")}</Label>
-          <Input
-            id="folder-name"
-            aria-label={t("library.folderName")}
-            name="foldername"
-            placeholder={t("library.enterFolderName")}
-            value={newFolder.name}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setNewFolder((prev: any) => ({ ...prev, name: e.target.value }));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && newFolder.name.trim()) {
-                handleCreateFolder();
-              }
-            }}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="folder-description">{t("library.folderDescription")}</Label>
-          <Input
-            id="folder-description"
-            aria-label={t("library.folderDescription")}
-            name="folderdescription"
-            placeholder={t("library.enterFolderDescription")}
-            value={newFolder.description}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setNewFolder((prev: any) => ({ ...prev, description: e.target.value }));
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleCreateFolder();
-              }
-            }}
-          />
-        </div>
+        <form id="create-folder-form" onSubmit={handleCreateFolder} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="folder-name">{t("library.folderName")}</Label>
+            <Input
+              id="folder-name"
+              aria-label={t("library.folderName")}
+              name="foldername"
+              placeholder={t("library.enterFolderName")}
+              value={newFolder.name}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setNewFolder((prev: any) => ({ ...prev, name: e.target.value }));
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="folder-description">{t("library.folderDescription")}</Label>
+            <Input
+              id="folder-description"
+              aria-label={t("library.folderDescription")}
+              name="folderdescription"
+              placeholder={t("library.enterFolderDescription")}
+              value={newFolder.description}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setNewFolder((prev: any) => ({ ...prev, description: e.target.value }));
+              }}
+            />
+          </div>
+        </form>
       </DialogWrapper>
 
       <div className="mx-auto px-4 py-6 ">

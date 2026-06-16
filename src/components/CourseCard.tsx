@@ -64,7 +64,8 @@ export default function CourseCard({
     setOpenDuplicateModal(true);
   }
 
-  function handleDuplicateCourse() {
+  function handleDuplicateCourse(e?: React.FormEvent) {
+    e?.preventDefault();
     setIsLoading(true);
     Post(postCopyCourse(course.id), duplicateCourseData).then((res) => {
       if (res.status && res.status < 300) {
@@ -180,10 +181,13 @@ export default function CourseCard({
             label: t("common.duplicate"),
             onClick: handleDuplicateCourse,
             variant: "default",
+            type: "submit",
+            form: "duplicate-course-form",
+            disabled: isLoading,
           },
         ]}
       >
-        <div className="space-y-4">
+        <form id="duplicate-course-form" onSubmit={handleDuplicateCourse} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="course-name" className="font-bold">
               {t("courses.newCourseName")}
@@ -231,7 +235,7 @@ export default function CourseCard({
               {t("courses.publishCourse")}
             </Label>
           </div>
-        </div>
+        </form>
       </DialogWrapper>
 
       <article className="group bg-card border rounded-xl hover-lift shadow-sm relative h-50 flex flex-col">

@@ -12,10 +12,11 @@ import { ButtonProps } from "../ui/button";
 
 export interface DialogAction {
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
   variant?: ButtonProps["variant"];
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
+  form?: string;
 }
 
 export interface DialogWrapperProps {
@@ -102,8 +103,9 @@ export const DialogWrapper: React.FC<DialogWrapperProps> = ({
               <Button
                 key={index}
                 type={action.type || "button"}
+                form={action.form}
                 variant={action.variant || "default"}
-                onClick={action.onClick}
+                onClick={action.type === "submit" ? undefined : action.onClick}
                 disabled={action.disabled}
               >
                 {action.label}

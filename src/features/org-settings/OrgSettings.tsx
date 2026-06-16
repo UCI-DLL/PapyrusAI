@@ -397,17 +397,13 @@ export default function OrgSettings(): JSX.Element {
               },
               {
                 label: isLoading ? t("orgSettings.adding") : t("orgSettings.addPermission"),
-                onClick: () => {
-                  const fakeEvent = {
-                    preventDefault: () => { },
-                  } as React.FormEvent;
-                  addPermission(fakeEvent);
-                },
                 disabled: isLoading,
+                type: "submit",
+                form: "add-permission-form",
               },
             ]}
           >
-            <div className="space-y-4">
+            <form id="add-permission-form" onSubmit={addPermission} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">{t("orgSettings.emailAddress")}</Label>
                 <Input
@@ -422,15 +418,6 @@ export default function OrgSettings(): JSX.Element {
                       email: e.target.value,
                     }))
                   }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const fakeEvent = {
-                        preventDefault: () => { },
-                      } as React.FormEvent;
-                      addPermission(fakeEvent);
-                    }
-                  }}
                 />
               </div>
               {isSafari ? (
@@ -479,7 +466,7 @@ export default function OrgSettings(): JSX.Element {
                   </Select>
                 </div>
               )}
-            </div>
+            </form>
           </DialogWrapper>
 
           {/* Delete Permission Modal */}

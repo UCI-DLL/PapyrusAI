@@ -43,6 +43,7 @@ export default function ChatLayout(): JSX.Element {
   const [conversationList, setConversationList] =
     useState<ConversationListType>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSubmittingRename, setIsSubmittingRename] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
@@ -325,6 +326,7 @@ export default function ChatLayout(): JSX.Element {
           error: t("errorMessage.nameMissing"),
         }));
       } else {
+        setIsSubmittingRename(true);
         Post(
           postUpdateConversation(
             convoUpdateObject.courseId,
@@ -333,6 +335,7 @@ export default function ChatLayout(): JSX.Element {
           ),
           { name: convoUpdateObject.name }
         ).then((res) => {
+          setIsSubmittingRename(false);
           if (res && res.status && res.status < 300) {
             if (res.data) {
               setConversationList(res.data);
@@ -461,31 +464,35 @@ export default function ChatLayout(): JSX.Element {
           {
             label: t("chat.submit"),
             onClick: () => handleConverstionNameDeleteUpdate(openUpdateConvoModal),
+            type: "submit",
+            form: "rename-conversation-form",
+            disabled: isSubmittingRename,
           },
         ]}
       >
-        <div className="space-y-4">
+        <form
+          id="rename-conversation-form"
+          onSubmit={(e) => { e.preventDefault(); handleConverstionNameDeleteUpdate(openUpdateConvoModal); }}
+        >
           <div className="space-y-2">
-            <React.Fragment>
-              <label htmlFor="conversation-name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t("chat.conversationName")}</label>
-              <input
-                id="conversation-name"
-                name="name"
-                value={openUpdateConvoModal.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setOpenUpdateConvoModal((prev) => ({
-                    ...prev,
-                    name: e.target.value,
-                  }));
-                }}
-                className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${openUpdateConvoModal.error ? "border-destructive" : ""}`}
-                disabled={isLoading}
-                autoFocus
-              />
-              {openUpdateConvoModal.error && <p className="text-sm text-destructive">{openUpdateConvoModal.error}</p>}
-            </React.Fragment>
+            <label htmlFor="conversation-name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t("chat.conversationName")}</label>
+            <input
+              id="conversation-name"
+              name="name"
+              value={openUpdateConvoModal.name}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setOpenUpdateConvoModal((prev) => ({
+                  ...prev,
+                  name: e.target.value,
+                }));
+              }}
+              className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${openUpdateConvoModal.error ? "border-destructive" : ""}`}
+              disabled={isLoading || isSubmittingRename}
+              autoFocus
+            />
+            {openUpdateConvoModal.error && <p className="text-sm text-destructive">{openUpdateConvoModal.error}</p>}
           </div>
-        </div>
+        </form>
       </DialogWrapper>
 
 

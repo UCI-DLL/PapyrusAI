@@ -59,6 +59,7 @@ interface ListFoldersProps {
   selectedItemIds?: string[];
   onFolderNavigate?: (folderId: string) => void;
   shared?: boolean;
+  excludeTypes?: string[];
 }
 
 export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
@@ -267,6 +268,10 @@ export default function ListFolderItems(props: ListFoldersProps): JSX.Element {
   function handleFilter(e: React.FormEvent) {
     e.preventDefault();
     let filtered = [...itemList];
+
+    if (props.excludeTypes && props.excludeTypes.length > 0) {
+      filtered = filtered.filter((item) => !props.excludeTypes!.includes(item.type));
+    }
 
     // owner filter
     if (filters.owner === OwnerTypeOptions.Private) {

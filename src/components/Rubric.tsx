@@ -447,9 +447,9 @@ export const Rubric = (props: RubricProps) => {
             ) : (
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="flex items-center gap-1 text-muted-foreground text-xs font-medium hover:bg-primary hover:text-primary-foreground"
+                className="flex items-center gap-1 text-xs font-medium"
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpenPreviewDialog(true);

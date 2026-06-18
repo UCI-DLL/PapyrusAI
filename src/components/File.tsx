@@ -439,9 +439,9 @@ export const File = (props: FileProps) => {
             ) : (
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="text-xs font-medium text-muted-foreground hover:bg-primary hover:text-primary-foreground"
+                className="text-xs font-medium"
                 asChild
                 onClick={() => props.loading()}
                 aria-label={t("common.view")}

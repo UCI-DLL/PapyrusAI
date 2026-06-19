@@ -593,6 +593,7 @@ export default function AddModule({
           ]}
           onFolderNavigate={libraryTab === "my" ? (folderId) => setLibraryFolderId(folderId) : undefined}
           shared={libraryTab === "shared"}
+          excludeTypes={["rubric"]}
         />
       </DialogWrapper>
 

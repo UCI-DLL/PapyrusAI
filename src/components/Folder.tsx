@@ -28,7 +28,7 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../utility/endpoints/UserEndpoints";
-import { Star, Folder, MoreHorizontal } from "lucide-react";
+import { Star, Folder, MoreHorizontal, Eye } from "lucide-react";
 import { ShareItemDialog } from "../features/library/ShareItemDialog";
 import { cn } from "../lib/utils";
 import { useTranslation } from "../hooks/useTranslation";
@@ -476,19 +476,31 @@ export const FolderComponent = (props: FolderProps) => {
 
           {/* Footer with view link */}
           <div className="flex items-center justify-end mt-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="flex items-center gap-1 text-muted-foreground text-xs font-medium w-full p-2 hover:bg-primary hover:text-primary-foreground"
-              onClick={props.onClick}
-              aria-label={props.noShowMenu ? t("common.select") : t("common.view")}
-            >
-              {props.noShowMenu ? t("common.select") : (
+            {props.noShowMenu ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1 text-xs font-medium"
+                onClick={props.onClick}
+                aria-label={t("common.select")}
+              >
+                {t("common.select")}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1 text-xs font-medium"
+                asChild
+                onClick={props.onClick}
+                aria-label={t("common.view")}
+              >
                 <Link to={getViewUrl()} className="no-underline">
+                  <Eye className="h-3 w-3" />
                   {t("common.view")}
                 </Link>
-              )}
-            </Button>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

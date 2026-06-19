@@ -9,6 +9,7 @@ import { Star, BookOpen, Calendar, User, MoreHorizontal } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType } from "../utility/types/CourseTypes";
+import { UserType } from "../utility/types/UserTypes";
 import Post from "../utility/Post";
 import { postCopyCourse } from "../utility/endpoints/CourseEndpoints";
 import { Checkbox } from "./ui/checkbox";
@@ -36,7 +37,7 @@ export default function CourseCard({
   isStarred,
 }: CourseListProps): JSX.Element {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -59,7 +60,7 @@ export default function CourseCard({
     setStarred(isStarred ? isStarred : false);
   }, [isStarred]);
 
-  function duplicateCourse(courseId: string) {
+  function duplicateCourse(_courseId: string) {
     setMenuOpen(false);
     setOpenDuplicateModal(true);
   }
@@ -70,6 +71,9 @@ export default function CourseCard({
     Post(postCopyCourse(course.id), duplicateCourseData).then((res) => {
       if (res.status && res.status < 300) {
         if (res.data && res.data) {
+          const newGroups = user?.groups ? [...user.groups, res.data.id] : [res.data.id];
+          setUser({ ...user, groups: newGroups } as UserType);
+          localStorage.setItem("papyrusai_user", JSON.stringify({ ...user, groups: newGroups }));
           setOpenDuplicateModal(false);
           setAlert({
             message: t("courses.courseDuplicated"),

@@ -259,6 +259,7 @@ export default function CreateEditFile(): JSX.Element {
       });
     } else {
       Post(postCreateItem(), {
+        itemId: newFileReference.replace(/\.[^.]+$/, ""),
         type: "file",
         parentId: folderId,
         name: fileName,

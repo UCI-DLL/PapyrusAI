@@ -490,7 +490,9 @@
     "managementActions": "Acciones de gestión de módulos",
     "creationActions": "Acciones de creación de módulos",
     "addAssetModule": "Agregar recurso al módulo",
-    "clickToAddAsset": "Haga clic aquí para añadir un recurso (incluyendo indicaciones y documentos) al módulo."
+    "clickToAddAsset": "Haga clic aquí para añadir un recurso (incluyendo indicaciones y documentos) al módulo.",
+    "enableOralModule": "Habilitar módulo oral",
+    "oralModuleDescription": "Convierte este módulo en un módulo de expresión oral basado en audio."
   },
   "library": {
     "library": "Biblioteca",

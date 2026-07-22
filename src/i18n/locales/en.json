@@ -483,7 +483,9 @@
     "managementActions": "Module management actions",
     "creationActions": "Module creation actions",
     "addAssetModule": "Add asset to module",
-    "clickToAddAsset": "Click here to add an asset (including prompts and documents) to the module"
+    "clickToAddAsset": "Click here to add an asset (including prompts and documents) to the module",
+    "enableOralModule": "Enable Oral Module",
+    "oralModuleDescription": "Converts this module into an audio-based speaking module."
   },
   "library": {
     "library": "Library",

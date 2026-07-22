@@ -19,6 +19,7 @@ export interface Conversation {
 export interface Module {
   name?: string;
   conversations?: Conversation[];
+  isOralModule?: boolean;
 }
 
 export interface Course {

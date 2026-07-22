@@ -4,7 +4,7 @@ import { Input } from "../../../components/ui/input";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Sheet, SheetContent } from "../../../components/ui/sheet";
 import { Search, Plus, MessageCircle, MoreVertical } from "lucide-react";
-import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
+import { CourseType, GradeType, ModuleType } from "../../../utility/types/CourseTypes";
 import { ConversationListType, ConversationType } from "../../../utility/types/ConversationTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import { cn } from "../../../lib/utils";
@@ -23,13 +23,16 @@ interface ChatSidebarProps {
   searchTerm: string;
   isOpen: boolean;
   isMobile?: boolean;
+  canStartNewConversation?: boolean;
   onSearchChange: (term: string) => void;
   onNewConversation: () => void;
   onConversationClick: (link: string) => void;
   onRenameConversation: (courseId: string, moduleId: string, index: string, name: string) => void;
   onArchiveConversation: (courseId: string, moduleId: string, index: string) => void;
   onDownloadConversation: (courseId: string, moduleId: string, index: string) => void;
+  onVoidConversation?: (courseId: string, moduleId: string, index: string, voided: boolean) => void;
   onClose?: () => void;
+  grades?: GradeType[];
 }
 
 export default function ChatSidebar({
@@ -42,13 +45,16 @@ export default function ChatSidebar({
   searchTerm,
   isOpen,
   isMobile = false,
+  canStartNewConversation = true,
   onSearchChange,
   onNewConversation,
   onConversationClick,
   onRenameConversation,
   onArchiveConversation,
   onDownloadConversation,
+  onVoidConversation,
   onClose,
+  grades,
 }: ChatSidebarProps): JSX.Element | null {
   const { t } = useTranslation();
   const instructor = process.env.REACT_APP_INSTRUCTOR
@@ -57,6 +63,11 @@ export default function ChatSidebar({
   const admin = process.env.REACT_APP_ADMIN
     ? process.env.REACT_APP_ADMIN
     : "PapyrusAIAdmin";
+  const isReviewModule = moduleInfo?.moduleType === "review";
+  const rubric = moduleInfo?.rubrics?.[0];
+  const maxPerCriterion = rubric ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite)) : undefined;
+  const maxTotal = maxPerCriterion !== undefined ? (rubric?.criteria.length ?? 0) * maxPerCriterion : undefined;
+
   const [filteredConversations, setFilteredConversations] = useState<ConversationType[]>([]);
   useEffect(() => {
     setFilteredConversations(
@@ -73,16 +84,18 @@ export default function ChatSidebar({
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">{t("chat.conversations")}</h2>
-          <TooltipWrapper content={t("chat.newConversation")}>
-            <Button
-              size="sm"
-              onClick={onNewConversation}
-              className={`h-6 px-2 text-xs ${isMobile && "mr-6"}`}
-              aria-label={t("chat.newConversation")}
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-          </TooltipWrapper>
+          {canStartNewConversation && (
+            <TooltipWrapper content={t("chat.newConversation")}>
+              <Button
+                size="sm"
+                onClick={onNewConversation}
+                className={`h-6 px-2 text-xs ${isMobile && "mr-6"}`}
+                aria-label={t("chat.newConversation")}
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </TooltipWrapper>
+          )}
         </div>
       </div>
 
@@ -133,24 +146,53 @@ export default function ChatSidebar({
                   : 0;
                 const isCurrentConversation =
                   conversationIndex.toString() === currentConversationIndex;
-                const conversationLink = `/chat/${user?.username}/${courseInfo.id}/${moduleInfo.id}/${conversationIndex}`;
+                const chatPrefix = moduleInfo.moduleType === "review" ? "review-chat" : "chat";
+                const conversationLink = `/${chatPrefix}/${user?.username}/${courseInfo.id}/${moduleInfo.id}/${conversationIndex}`;
                 const canModifyConversation =
                   user && viewUser && user.username === viewUser.username;
+                const isInstructorUser = user && (
+                  user.groups.includes(instructor) ||
+                  user.groups.includes(admin) ||
+                  user.groups.includes(courseInfo.id + "-TA")
+                );
+                const canVoid = isInstructorUser && moduleInfo.moduleType === "review" && conversation.completed;
+                const grade = isReviewModule && grades
+                  ? grades.find(g => g.courseModuleConversationId.endsWith(`+${conversation.id}`))
+                  : undefined;
+                const scoreDisplay = (() => {
+                  if (!isReviewModule || !conversation.completed) return null;
+                  if (grade?.released) {
+                    const value = `${grade.totalScore}${maxTotal !== undefined ? ` / ${maxTotal}` : ""}`;
+                    return `${t("reviewChat.score")}: ${value}`;
+                  }
+                  return t("reviewChat.badgePendingReview");
+                })();
 
                 // handle archiving/deleted conversations based on user permissions
                 if ((!user?.groups.includes(instructor) || !user?.groups.includes(admin)) && conversation.isDeleted) {
                   return <></>
                 }
 
+                const cardClasses = (() => {
+                  if (conversation.voidedByInstructor) {
+                    return isCurrentConversation
+                      ? "bg-amber-100 dark:bg-amber-900/40 text-foreground border-amber-400"
+                      : "hover:bg-amber-50 dark:hover:bg-amber-900/20 border-transparent";
+                  }
+                  if (conversation.isDeleted) {
+                    return isCurrentConversation
+                      ? "bg-destructive text-primary-foreground border-primary"
+                      : "hover:bg-destructive hover:text-secondary-foreground border-transparent";
+                  }
+                  return isCurrentConversation
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "hover:bg-accent hover:text-secondary-foreground border-transparent";
+                })();
+
                 return (
                   <div
                     key={conversation.id}
-                    className={cn(
-                      "rounded-lg border transition-colors group",
-                      isCurrentConversation
-                        ? conversation.isDeleted ? "bg-destructive text-primary-foreground border-primary" : "bg-primary text-primary-foreground border-primary"
-                        : conversation.isDeleted ? "hover:bg-destructive hover:text-secondary-foreground border-transparent" : "hover:bg-accent hover:text-secondary-foreground border-transparent"
-                    )}
+                    className={cn("rounded-lg border transition-colors group", cardClasses)}
                   >
                     <div className="flex items-center gap-2 p-3">
                       <Link
@@ -167,7 +209,16 @@ export default function ChatSidebar({
                               parseInt(conversation.id.substring(0, 13))
                             ).toLocaleDateString()}
                           </p>
-                          {conversation.isDeleted && (
+                          {scoreDisplay && (
+                            <span className="inline-flex items-center gap-1 text-xs border border-current/40 rounded-full px-2 py-0.5 mt-0.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-current opacity-60 shrink-0" />
+                              {scoreDisplay}
+                            </span>
+                          )}
+                          {conversation.voidedByInstructor && (
+                            <p className="text-xs truncate text-amber-600 dark:text-amber-400">{t("chat.voided")}</p>
+                          )}
+                          {conversation.isDeleted && !conversation.voidedByInstructor && (
                             <p className={"text-xs truncate "}>{t("chat.archived")}</p>
                           )}
                         </div>
@@ -232,6 +283,23 @@ export default function ChatSidebar({
                                   },
                                 ]
                                 : []),
+                              ...(canVoid
+                                ? [
+                                  {
+                                    label: conversation.voidedByInstructor ? t("chat.unvoidSubmission") : t("chat.voidSubmission"),
+                                    onClick: () => {
+                                      onVoidConversation?.(
+                                        courseInfo.id,
+                                        moduleInfo.id,
+                                        conversationIndex.toString(),
+                                        !conversation.voidedByInstructor
+                                      );
+                                      if (isMobile && onClose) onClose();
+                                    },
+                                    className: conversation.voidedByInstructor ? "" : "text-amber-600 dark:text-amber-400",
+                                  },
+                                ]
+                                : []),
                             ]}
                             align="end"
                           />
@@ -250,7 +318,7 @@ export default function ChatSidebar({
                   ? t("errorMessage.convoNotFound")
                   : t("errorMessage.noConversationsYet")}
               </p>
-              {!searchTerm && (
+              {!searchTerm && canStartNewConversation && (
                 <Button
                   size="sm"
                   onClick={() => {

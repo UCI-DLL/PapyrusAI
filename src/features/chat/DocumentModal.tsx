@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
@@ -17,10 +17,12 @@ import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
 interface ChatWizardProps {
   returnDocText: (docText: string) => void;
+  inline?: boolean;
 }
 
 export default function DocumentModal({
   returnDocText,
+  inline = false,
 }: ChatWizardProps): JSX.Element {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
   const { t } = useTranslation();
@@ -29,6 +31,13 @@ export default function DocumentModal({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { user } = useContext(UserContext);
   const [docExt, setDocExt] = useState<string>("");
+
+  useEffect(() => {
+    if (inline && docText) {
+      returnDocText(docText);
+      setDocText("");
+    }
+  }, [docText]); // eslint-disable-line
 
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) {
@@ -102,6 +111,44 @@ export default function DocumentModal({
 
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setDocText(removeSpecialCharacters(e.target.value));
+  }
+
+  if (inline) {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor="file-upload-inline" className="sr-only">{t("chat.uploadFile")}</Label>
+        <Button
+          variant="outline"
+          className="w-full h-14 border-dashed"
+          disabled={isLoading}
+          asChild
+        >
+          <label htmlFor="file-upload-inline" className="cursor-pointer flex items-center justify-center gap-2">
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            <span className="text-sm">
+              {isLoading ? t("loadingMessage.processing") : t("chat.uploadDocTypes")}
+            </span>
+          </label>
+        </Button>
+        <Input
+          id="file-upload-inline"
+          type="file"
+          accept=".docx,.txt,.pdf"
+          className="hidden"
+          onChange={handleFileUpload}
+          disabled={isLoading}
+        />
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+    );
   }
 
   return (

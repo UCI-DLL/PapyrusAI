@@ -8,13 +8,12 @@ import {
   postCreateConversation,
 } from "../../utility/endpoints/ConversationEndpoints";
 import { MessageType, StreamMessageType } from "../../utility/types/ConversationTypes";
+import { GradeScore } from "../../utility/types/CourseTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { UserContext } from "../../utility/context/UserContext";
 import DocumentModal from "./DocumentModal";
 import Post from "../../utility/Post";
 import SpeechToTextModal from "./SpeechToTextModal";
-
-// Import new components
 import ChatHeader from "./components/ChatHeader";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
@@ -22,6 +21,10 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { ChatContextType } from "./ChatContext";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 import { downloadConversation } from "../../utility/chat/downloadConversation";
+import { Button } from "../../components/ui/button";
+import { Textarea } from "../../components/ui/textarea";
+import { Label } from "../../components/ui/label";
+import { Loader2, Send, FileText, CheckCircle } from "lucide-react";
 
 function num_tokens_from_messages(messages: Array<any>) {
   var num_tokens = 0;
@@ -32,7 +35,7 @@ function num_tokens_from_messages(messages: Array<any>) {
 }
 
 export default function Chat(): JSX.Element {
-  const { courseInfo, moduleInfo, conversationList, setConversationList, viewUser, instructor, admin } =
+  const { courseInfo, moduleInfo, conversationList, setConversationList, viewUser, instructor, admin, grades, gradesLoaded } =
     useOutletContext<ChatContextType>();
 
   const { t } = useTranslation();
@@ -83,6 +86,65 @@ export default function Chat(): JSX.Element {
   // Fix: Store the current event listener function to properly remove it
   const socketListenerRef = useRef<((event: MessageEvent) => void) | null>(null);
 
+  // Review module state
+  const [gradeResult, setGradeResult] = useState<{ scores: GradeScore[]; totalScore: number; instructorNotes?: string } | null>(null);
+  const [gradePending, setGradePending] = useState(false);
+  const [gradeError, setGradeError] = useState<string | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [openCompleteModal, setOpenCompleteModal] = useState(false);
+  const [openViewRubricModal, setOpenViewRubricModal] = useState(false);
+  const [reviewInputText, setReviewInputText] = useState("");
+  const [essayText, setEssayText] = useState("");
+  const [essayError, setEssayError] = useState("");
+
+  // Derived values
+  const isReviewModule = moduleInfo?.moduleType === "review";
+  const chatPrefix = isReviewModule ? "review-chat" : "chat";
+  const isEssayMode = isReviewModule && moduleInfo?.essaySubmission === true;
+  const converseAfterComplete = moduleInfo?.converseAfterComplete === true;
+  const showEssayWizard = isEssayMode && !messages.some(m => m.userVisible !== false) && !conversationCompleted && !isSubmitting;
+  const chatBlocked = conversationCompleted && !converseAfterComplete;
+
+  // Ref to avoid stale closure in onSendMessage
+  const isReviewModuleRef = useRef(false);
+  isReviewModuleRef.current = isReviewModule ?? false;
+
+  // Auto-create conversation for review modules navigating to "new"
+  const reviewAutoCreatedRef = useRef(false);
+  useEffect(() => {
+    if (!isReviewModule || conversationIndex !== "new") {
+      reviewAutoCreatedRef.current = false;
+      return;
+    }
+    if (reviewAutoCreatedRef.current) return;
+
+    // Check maxDrafts before creating (summative: slot consumed only after grade released, let backend enforce)
+    const maxDrafts = moduleInfo?.maxDrafts ?? 999;
+    if (maxDrafts < 999 && conversationList && moduleInfo?.assessmentType !== "summative") {
+      const completedCount = conversationList.conversations.filter(c => c.completed && !c.voidedByInstructor).length;
+      if (completedCount >= maxDrafts) {
+        setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+        navigator(`/courses/${courseId}/modules/${moduleId}${isReviewModule ? "/review" : ""}`);
+        return;
+      }
+    }
+
+    reviewAutoCreatedRef.current = true;
+    Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
+      if (res?.status < 300 && res.data?.conversations) {
+        setConversationList(res.data);
+        navigator(`/${chatPrefix}/${username}/${courseId}/${moduleId}/${res.data.conversations.length - 1}`, {
+          replace: true,
+        });
+      } else if (res?.status === 401) {
+        navigator("/login");
+      } else if (res?.status === 400) {
+        setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+        navigator(`/courses/${courseId}/modules/${moduleId}${isReviewModule ? "/review" : ""}`);
+      }
+    });
+  }, [isReviewModule, conversationIndex]); // eslint-disable-line
+
   useEffect(() => {
     //log page
     Post(logEvent(), {
@@ -91,20 +153,20 @@ export default function Chat(): JSX.Element {
         courseId: courseId,
         moduleId: moduleId,
         conversationIndex: conversationIndex,
-        page: "chat",
+        page: isReviewModule ? "review_chat" : "chat",
       },
     });
     // eslint-disable-next-line
   }, [conversationIndex]);
 
   useEffect(() => {
-    if (moduleInfo && moduleInfo.prompts && moduleInfo.prompts.length < 1) {
+    if (moduleInfo && (moduleInfo.prompts.length < 1 || moduleInfo.moduleType === "review")) {
       setSelectedPrompt("");
     }
   }, [moduleInfo, repeatingPrompts, selectedPrompt, messages]);
 
   useEffect(() => {
-    if (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled) {
+    if (moduleInfo?.moduleType === "review" || (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled)) {
       setShowWizard(false);
     } else {
       var visibleMessages = messages.filter((m) => m.userVisible !== undefined && m.userVisible);
@@ -152,6 +214,42 @@ export default function Chat(): JSX.Element {
     (dataStr: string) => {
       const returnData = JSON.parse(dataStr);
       setShowTypingIndicator(false);
+
+      // Review module: grade results and submission responses
+      if (returnData.messageType === "gradeResult") {
+        setGradeResult({ scores: returnData.data, totalScore: returnData.totalScore, instructorNotes: returnData.instructorNotes });
+        setConversationCompleted(true);
+        setConversationList((prev) => {
+          if (!prev) return prev;
+          const idx = prev.conversations.length - 1 - parseInt(conversationIndex);
+          if (idx < 0) return prev;
+          const convs = [...prev.conversations];
+          convs[idx] = { ...convs[idx], completed: true };
+          return { ...prev, conversations: convs };
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      if (returnData.messageType === "submitted") {
+        setGradePending(true);
+        setConversationCompleted(true);
+        setConversationList((prev) => {
+          if (!prev) return prev;
+          const idx = prev.conversations.length - 1 - parseInt(conversationIndex);
+          if (idx < 0) return prev;
+          const convs = [...prev.conversations];
+          convs[idx] = { ...convs[idx], completed: true };
+          return { ...prev, conversations: convs };
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      if (returnData.messageType === "gradeError") {
+        setGradeError(t("reviewChat.gradingError"));
+        setIsSubmitting(false);
+        return;
+      }
+
       if (returnData.essay && returnData.status < 300 && returnData.rater) {
         const tempTimestamp = Date.now();
         const essayTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
@@ -351,6 +449,14 @@ export default function Chat(): JSX.Element {
 
     if (username && courseId && moduleId && conversationIndex) {
       setIsLoading(true);
+      // Reset review state on conversation change
+      setGradeResult(null);
+      setGradePending(false);
+      setGradeError(undefined);
+      setIsSubmitting(false);
+      setEssayText("");
+      setEssayError("");
+      setReviewInputText("");
 
       if (user && user.username === username) {
         onConnect(courseId, moduleId, conversationIndex);
@@ -455,14 +561,28 @@ export default function Chat(): JSX.Element {
         });
 
         let sessionId = localStorage.getItem("sessionId") ?? "unknown";
-        socket.current?.send(
-          JSON.stringify({
-            action: "sendMessage",
-            messages: messagesToSend,
-            organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
-            sessionId: sessionId,
-          }),
-        );
+
+        if (isReviewModuleRef.current) {
+          socket.current?.send(
+            JSON.stringify({
+              action: "reviewChat",
+              messageType: "chat",
+              messages: messagesToSend,
+              organization: process.env.REACT_APP_ORGANIZATION ?? "",
+              sessionId,
+            }),
+          );
+        } else {
+          socket.current?.send(
+            JSON.stringify({
+              action: "sendMessage",
+              messages: messagesToSend,
+              organization: process.env.REACT_APP_ORGANIZATION ? process.env.REACT_APP_ORGANIZATION : "UCI",
+              sessionId: sessionId,
+            }),
+          );
+        }
+
         setShowTypingIndicator(true);
         if (
           messages
@@ -555,7 +675,7 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
 
             // Navigate to the new conversation and pass the message in state
-            navigator(`/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
+            navigator(`/${chatPrefix}/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
               state: { pendingMessageContent: message, pendingPromptId: null },
             });
           }
@@ -648,7 +768,7 @@ export default function Chat(): JSX.Element {
                 // Update Conversation List in Context
                 setConversationList(res.data);
 
-                navigator(`/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
+                navigator(`/${chatPrefix}/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
                   state: { pendingMessageContent: promptContent, pendingPromptId: actualPrompt[0].id },
                 });
               }
@@ -775,8 +895,18 @@ export default function Chat(): JSX.Element {
   }
 
   function handleNewConversation() {
+    if (isReviewModule && moduleInfo?.assessmentType !== "summative") {
+      const maxDrafts = moduleInfo?.maxDrafts ?? 999;
+      if (maxDrafts < 999 && conversationList) {
+        const completedCount = conversationList.conversations.filter(c => c.completed && !c.voidedByInstructor).length;
+        if (completedCount >= maxDrafts) {
+          setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+          return;
+        }
+      }
+    }
     closeSocket();
-    navigator(`/chat/${username}/${courseId}/${moduleId}/new`);
+    navigator(`/${chatPrefix}/${username}/${courseId}/${moduleId}/new`);
   }
 
   function returnDocText(docText: string) {
@@ -797,7 +927,7 @@ export default function Chat(): JSX.Element {
             setConversationList(res.data);
 
             // Navigate to the new conversation and pass the message in state
-            navigator(`/chat/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
+            navigator(`/${chatPrefix}/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
               state: { pendingMessageContent: docText, pendingPromptId: null },
             });
           }
@@ -851,9 +981,139 @@ export default function Chat(): JSX.Element {
     }
   }
 
+  // Review module: complete conversation
+  function onCompleteConversation() {
+    if (!isConnected) return;
+    setIsSubmitting(true);
+    setOpenCompleteModal(false);
+    const sessionId = localStorage.getItem("sessionId") ?? "unknown";
+    socket.current?.send(
+      JSON.stringify({
+        action: "reviewChat",
+        messageType: "completeConversation",
+        messages: [],
+        organization: process.env.REACT_APP_ORGANIZATION ?? "",
+        sessionId,
+      }),
+    );
+  }
+
+  // Review module: send chat message (chat mode)
+  function onSendReviewMessage() {
+    if (!reviewInputText.trim() || !isConnected) return;
+    const sessionId = localStorage.getItem("sessionId") ?? "unknown";
+    const tempId = Date.now().toString();
+    const userMsg: MessageType = {
+      id: tempId,
+      content: reviewInputText,
+      messageType: "text",
+      role: "user",
+      sender: username,
+      timestamp: tempId,
+      promptId: null,
+      userVisible: true,
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    socket.current?.send(
+      JSON.stringify({
+        action: "reviewChat",
+        messageType: "chat",
+        messages: [{ role: "user", content: reviewInputText }],
+        organization: process.env.REACT_APP_ORGANIZATION ?? "",
+        sessionId,
+      }),
+    );
+    setReviewInputText("");
+    setShowTypingIndicator(true);
+    setChatError(undefined);
+  }
+
+  // Review module: submit essay
+  function onSubmitEssay() {
+    if (essayText.length < 150) {
+      setEssayError(t("reviewChat.essayMinLength"));
+      return;
+    }
+    if (!isConnected) return;
+    setIsSubmitting(true);
+    setEssayError("");
+    const sessionId = localStorage.getItem("sessionId") ?? "unknown";
+    const promptMessages = (moduleInfo?.prompts ?? [])
+      .filter((p) => !p.isDeleted)
+      .map((p) => ({ role: "user" as const, content: p.prompt }));
+    const capturedEssayText = essayText;
+    socket.current?.send(
+      JSON.stringify({
+        action: "reviewChat",
+        messageType: "essayDraft",
+        essayContent: capturedEssayText,
+        messages: promptMessages,
+        organization: process.env.REACT_APP_ORGANIZATION ?? "",
+        sessionId,
+      }),
+    );
+    const tempId = `${Date.now()}${Math.floor(Math.random() * 900000 + 100000)}`;
+    setMessages(prev => [...prev, {
+      id: tempId,
+      content: capturedEssayText,
+      messageType: "essayDraft",
+      role: "user",
+      sender: user?.username ?? "",
+      timestamp: Date.now().toString(),
+      promptId: null,
+      userVisible: true,
+    }]);
+    setEssayText("");
+  }
+
   const conversationArchived = conversationIsDeleted;
 
   const currentConvoName = conversationList?.conversations?.[parseInt(conversationIndex)]?.name ?? t("chat.newConversation");
+
+  const isViewingOwnConvo = user && viewUser && user.username === viewUser.username;
+
+  // Sync grade display from loaded grades when viewing a completed conversation (e.g. page refresh)
+  useEffect(() => {
+    if (!isReviewModule || !gradesLoaded || conversationIndex === "new" || !conversationCompleted) return;
+    if (gradeResult !== null) return; // already set from WebSocket this session
+
+    const convId = conversationList?.conversations[parseInt(conversationIndex)]?.id;
+    if (!convId) return;
+
+    const grade = grades.find((g) => g.courseModuleConversationId.endsWith(`+${convId}`));
+    if (grade?.released) {
+      setGradeResult({ scores: grade.scores, totalScore: grade.totalScore, instructorNotes: grade.instructorNotes });
+      setGradePending(false);
+    } else {
+      setGradePending(true);
+    }
+  }, [grades, gradesLoaded, conversationList, conversationIndex, conversationCompleted, isReviewModule, gradeResult]); // eslint-disable-line
+
+  const [canStartNewConversation, setCanStartNewConversation] = useState(true);
+  useEffect(() => {
+    if (!isViewingOwnConvo) { setCanStartNewConversation(false); return; }
+    if (moduleInfo?.assessmentType === "summative") {
+      if (!gradesLoaded) { setCanStartNewConversation(false); return; }
+      const nonVoidedCompleted = conversationList?.conversations.filter(c => c.completed && !c.voidedByInstructor) ?? [];
+      const hasUnreleasedSubmission = nonVoidedCompleted.some(c => {
+        const grade = grades.find(g => g.courseModuleConversationId.endsWith(`+${c.id}`));
+        return !grade?.released;
+      });
+      if (hasUnreleasedSubmission) { setCanStartNewConversation(false); return; }
+      const maxDrafts = moduleInfo?.maxDrafts ?? 999;
+      if (maxDrafts >= 999) { setCanStartNewConversation(true); return; }
+      const releasedCount = nonVoidedCompleted.filter(c =>
+        grades.find(g => g.courseModuleConversationId.endsWith(`+${c.id}`))?.released
+      ).length;
+      setCanStartNewConversation(releasedCount < maxDrafts);
+      return;
+    }
+    const maxDrafts = moduleInfo?.maxDrafts ?? 999;
+    if (maxDrafts >= 999) { setCanStartNewConversation(true); return; }
+    if (!conversationList) { setCanStartNewConversation(false); return; }
+    const completedCount = conversationList.conversations.filter(c => c.completed && !c.voidedByInstructor).length;
+    setCanStartNewConversation(completedCount < maxDrafts);
+  }, [conversationList, conversationCompleted, isViewingOwnConvo, moduleInfo, grades, gradesLoaded]);
 
   const isChatInputVisible =
     (isConnected || conversationIndex === "new") &&
@@ -865,6 +1125,14 @@ export default function Chat(): JSX.Element {
     !showWizard &&
     !conversationCompleted &&
     !conversationArchived;
+
+  const isReviewChatInputVisible =
+    isReviewModule &&
+    !chatBlocked &&
+    !!isViewingOwnConvo &&
+    !conversationArchived &&
+    !showEssayWizard &&
+    conversationIndex !== "new";
 
   return (
     <>
@@ -923,6 +1191,58 @@ export default function Chat(): JSX.Element {
         <SpeechToTextModal returnSpeechText={returnSpeakingText} />
       </DialogWrapper>
 
+      {/* Review: Complete conversation confirm */}
+      {isReviewModule && (
+        <DialogWrapper
+          open={openCompleteModal}
+          onOpenChange={setOpenCompleteModal}
+          title={t("reviewChat.completeConversationTitle")}
+          description={t("reviewChat.completeConversationDescription")}
+          actions={[
+            { label: t("common.cancel"), onClick: () => setOpenCompleteModal(false), variant: "outline" },
+            { label: t("reviewChat.completeConversation"), onClick: onCompleteConversation },
+          ]}
+        />
+      )}
+
+      {/* Review: View rubric modal */}
+      {isReviewModule && moduleInfo?.showRubric && moduleInfo?.rubrics?.[0] && (
+        <DialogWrapper
+          open={openViewRubricModal}
+          onOpenChange={setOpenViewRubricModal}
+          title={moduleInfo.rubrics[0].name}
+          contentClassName="sm:max-w-3xl max-h-[90vh] overflow-y-auto"
+          actions={[{ label: t("common.close"), onClick: () => setOpenViewRubricModal(false), variant: "outline" }]}
+        >
+          {moduleInfo.rubrics[0].criteria.length > 0 && moduleInfo.rubrics[0].columns.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th className="text-left p-2 border bg-muted font-semibold">{t("reviewModule.criterion")}</th>
+                    {moduleInfo.rubrics[0].columns.map((col, i) => (
+                      <th key={i} className="p-2 border bg-muted font-semibold text-center">{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {moduleInfo.rubrics[0].criteria.map((criterion, i) => (
+                    <tr key={i} className={i % 2 === 0 ? "bg-background" : "bg-muted/30"}>
+                      <td className="p-2 border font-medium">{criterion.name}</td>
+                      {criterion.cells.map((cell, j) => (
+                        <td key={j} className="p-2 border text-muted-foreground text-xs align-top">{cell}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
+          )}
+        </DialogWrapper>
+      )}
+
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0" style={{ height: "calc(100vh - 4rem)" }}>
         {/* Chat Header */}
@@ -931,50 +1251,174 @@ export default function Chat(): JSX.Element {
             conversationName={currentConvoName}
             courseInfo={courseInfo}
             moduleInfo={moduleInfo}
-            user={user}
-            viewUser={viewUser}
             onToggleSidebar={() => {
               window.dispatchEvent(new CustomEvent("toggleSidebar"));
             }}
             isMobile={window.innerWidth < 1024}
             onDownloadConversation={handleDownloadConversation}
             canDownload={conversationIndex !== "new"}
+            reviewBadge={
+              isReviewModule && conversationCompleted
+                ? gradeResult ? "available" : "pending"
+                : null
+            }
+            onViewRubric={
+              isReviewModule && moduleInfo?.showRubric && moduleInfo?.rubrics?.[0]
+                ? () => setOpenViewRubricModal(true)
+                : undefined
+            }
+            attemptsLabel={(() => {
+              if (!isReviewModule || !isViewingOwnConvo) return undefined;
+              const used = conversationList?.conversations.filter(c => c.completed && !c.voidedByInstructor).length ?? 0;
+              const max = moduleInfo?.maxDrafts;
+              if (!max || max >= 999) return t("reviewChat.unlimitedAttempts");
+              const remaining = Math.max(0, max - used);
+              return t("reviewChat.attemptsLeft", { remaining, max });
+            })()}
           />
         ) : (
           <div className="h-16 border-b border-border"></div>
         )}
 
-        {/* Chat Messages */}
+        {/* Chat Messages and Input */}
         {courseInfo && moduleInfo && !isLoading ? (
           <>
-            <ChatMessages
-              messages={messages}
-              moduleInfo={moduleInfo}
-              user={user}
-              viewUser={viewUser}
-              showWizard={showWizard}
-              showTypingIndicator={showTypingIndicator}
-              messageNote={messageNote}
-              conversationCompleted={conversationCompleted}
-              instructor={instructor}
-              admin={admin}
-              conversationArchived={conversationArchived}
-              onWizardReturnPrompts={handleWizardReturnPrompts}
-              onWizardReturnEssay={handleWizardReturnEssay}
-              newConversation={handleNewConversation}
-            />
+            {/* Messages / Essay Wizard / Submitting Spinner */}
+            {isReviewModule && conversationIndex === "new" ? (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : isReviewModule && showEssayWizard ? (
+              <div className="flex-1 overflow-y-auto">
+                <div className="flex items-center justify-center min-h-full p-6">
+                  <div className="w-full max-w-2xl space-y-4 border rounded-xl bg-card p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FileText className="h-6 w-6 text-primary shrink-0" />
+                      <div>
+                        <h2 className="font-semibold text-lg">{t("reviewChat.essayUploadTitle")}</h2>
+                        <p className="text-sm text-muted-foreground">{t("reviewChat.essayUploadDescription")}</p>
+                      </div>
+                    </div>
 
-            {/* Chat Input */}
-            {isChatInputVisible && (
-              <ChatInput
-                isConnected={isConnected}
-                isLoading={isLoading}
-                isNewChat={conversationIndex === "new"}
-                chatError={chatError}
-                onSubmit={handleSubmit}
-                onOpenDocumentModal={() => setOpenDocumentModal(true)}
-                onOpenSpeechToTextModal={() => setOpenSpeechToTextModal(true)}
+                    <DocumentModal inline returnDocText={(text) => setEssayText(text)} />
+
+                    <div className="space-y-1">
+                      <Label htmlFor="essay-text" className="text-xs">
+                        {t("reviewChat.essayLabel")}
+                      </Label>
+                      <Textarea
+                        id="essay-text"
+                        placeholder={t("reviewChat.essayPlaceholder")}
+                        value={essayText}
+                        onChange={(e) => setEssayText(e.target.value)}
+                        className="min-h-[200px] text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground text-right">{essayText.length} chars</p>
+                    </div>
+
+                    {essayError && <p className="text-sm text-destructive">{essayError}</p>}
+
+                    <Button
+                      onClick={onSubmitEssay}
+                      disabled={essayText.length < 150}
+                      className="w-full gap-2"
+                    >
+                      <Send className="h-4 w-4" />
+                      {t("reviewChat.submitEssay")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : isReviewModule && isSubmitting && isEssayMode ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-muted-foreground">{t("reviewChat.submittingEssay")}</p>
+                </div>
+              </div>
+            ) : (
+              <ChatMessages
+                messages={messages}
+                moduleInfo={moduleInfo}
+                user={user}
+                viewUser={viewUser}
+                showWizard={showWizard}
+                showTypingIndicator={showTypingIndicator || (isReviewModule && isSubmitting)}
+                messageNote={messageNote}
+                conversationCompleted={conversationCompleted}
+                instructor={instructor}
+                admin={admin}
+                conversationArchived={conversationArchived}
+                canStartNewConversation={canStartNewConversation}
+                onWizardReturnPrompts={handleWizardReturnPrompts}
+                onWizardReturnEssay={handleWizardReturnEssay}
+                newConversation={handleNewConversation}
+                gradeResult={gradeResult}
+                gradePending={gradePending}
+                gradeError={gradeError}
+                isEssayMode={isEssayMode}
               />
+            )}
+
+            {/* Input Area */}
+            {isReviewModule ? (
+              isReviewChatInputVisible ? (
+                <div className="border-t bg-card p-3 space-y-2 shrink-0">
+                  {chatError && <p className="text-sm text-destructive px-1">{chatError}</p>}
+                  <div className="flex items-end gap-2">
+                    <Textarea
+                      placeholder={t("chat.enterMessage")}
+                      value={reviewInputText}
+                      onChange={(e) => setReviewInputText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          onSendReviewMessage();
+                        }
+                      }}
+                      disabled={!isConnected || isSubmitting}
+                      className="flex-1 min-h-[42px] max-h-[140px] resize-none text-sm"
+                      rows={1}
+                    />
+                    <Button
+                      onClick={onSendReviewMessage}
+                      disabled={!reviewInputText.trim() || !isConnected || isSubmitting}
+                      size="sm"
+                      className="shrink-0"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                    {isViewingOwnConvo && !conversationCompleted && !isEssayMode && messages.some((m) => m.role === "user") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOpenCompleteModal(true)}
+                        disabled={isSubmitting}
+                        className="shrink-0 gap-2"
+                      >
+                        {isSubmitting ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                        {t("reviewChat.complete")}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : null
+            ) : (
+              isChatInputVisible && (
+                <ChatInput
+                  isConnected={isConnected}
+                  isLoading={isLoading}
+                  isNewChat={conversationIndex === "new"}
+                  chatError={chatError}
+                  onSubmit={handleSubmit}
+                  onOpenDocumentModal={() => setOpenDocumentModal(true)}
+                  onOpenSpeechToTextModal={() => setOpenSpeechToTextModal(true)}
+                />
+              )
             )}
           </>
         ) : (

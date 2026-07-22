@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction } from "react";
-import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
+import { CourseType, GradeType, ModuleType } from "../../utility/types/CourseTypes";
 import { ConversationListType } from "../../utility/types/ConversationTypes";
 import { UserType } from "../../utility/types/UserTypes";
 
@@ -11,7 +11,9 @@ export interface ChatContextType {
     SetStateAction<ConversationListType | undefined>
   >;
   viewUser: UserType | undefined;
-  user: UserType | null; 
+  user: UserType | null;
   instructor: string;
   admin: string;
+  grades: GradeType[];
+  gradesLoaded: boolean;
 }

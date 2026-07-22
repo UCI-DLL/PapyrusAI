@@ -48,6 +48,7 @@ interface PromptProps {
   isStarred?: boolean;
   disableStarring?: boolean;
   isSelected?: boolean;
+  hideActions?: boolean;
   onStarChange?: (itemId: string, type: "folder" | "prompt" | "file", parentId: string, isNowStarred: boolean) => void;
   shared?: boolean;
 }
@@ -467,7 +468,7 @@ export const Prompt = (props: PromptProps) => {
           {/* Footer with actions */}
           <div className="flex items-center justify-between mt-auto">
             <div />
-            {props.noShowMenu ? (
+            {props.hideActions ? null : props.noShowMenu ? (
               props.showRemove ? (
                 <TooltipWrapper content={t("components.removePromptFromModule")} side="top">
                   <Button

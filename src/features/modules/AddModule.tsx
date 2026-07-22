@@ -1000,11 +1000,11 @@ export default function AddModule({
                       disabled={isLoading}
                     />
                     <Label id="isOralModuleLabel" htmlFor="isOralModule" className="text-md font-bold">
-                      Enable Oral Module
+                      {t("createModule.enableOralModule")}
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground ml-6">
-                    Converts this module into an audio-based speaking module.
+                    {t("createModule.oralModuleDescription")}
                   </p>
                 </div>
                 

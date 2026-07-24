@@ -1047,7 +1047,8 @@
     "showEssay": "Show Essay",
     "hideEssay": "Hide Essay",
     "showFeedback": "Show Feedback",
-    "hideFeedback": "Hide Feedback"
+    "hideFeedback": "Hide Feedback",
+    "reviewSummary": "Review Summary"
   },
   "reviewConversation": {
     "mySubmissions": "My Submissions",

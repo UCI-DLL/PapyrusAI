@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import ChatSidebar from "./components/ChatSidebar";
 import Get from "../../utility/Get";
@@ -192,6 +192,15 @@ export default function ChatLayout(): JSX.Element {
       setGradesLoaded(true);
     });
     return () => controller.abort();
+  }, [courseId, moduleId, moduleInfo]); // eslint-disable-line
+
+  const refreshGrades = useCallback(() => {
+    if (!moduleInfo || moduleInfo.moduleType !== "review" || !courseId || !moduleId) return;
+    Get(getGrades(courseId, moduleId), undefined, true).then((res) => {
+      if (res?.status < 300 && res.data) {
+        setGrades(Array.isArray(res.data) ? res.data : []);
+      }
+    });
   }, [courseId, moduleId, moduleInfo]); // eslint-disable-line
 
   // Handlers for sidebar conversation actions
@@ -459,6 +468,7 @@ export default function ChatLayout(): JSX.Element {
     admin,
     grades,
     gradesLoaded,
+    refreshGrades,
   };
 
   return (

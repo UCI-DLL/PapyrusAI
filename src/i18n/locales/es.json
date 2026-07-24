@@ -1047,7 +1047,8 @@
     "showEssay": "Mostrar ensayo",
     "hideEssay": "Ocultar ensayo",
     "showFeedback": "Mostrar comentarios",
-    "hideFeedback": "Ocultar comentarios"
+    "hideFeedback": "Ocultar comentarios",
+    "reviewSummary": "Resumen de revisión"
   },
   "reviewConversation": {
     "mySubmissions": "Mis entregas",

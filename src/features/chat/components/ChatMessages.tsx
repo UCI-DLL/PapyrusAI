@@ -1,13 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { MessageLeft, MessageRight } from "../../../components/Message";
-import { MessageCircle, ArrowDown, ChevronDown, ChevronUp, CheckCircle, Clock, FileText } from "lucide-react";
+import { MessageCircle, ChevronDown, ChevronUp, CheckCircle, Clock, FileText } from "lucide-react";
 import { MessageType } from "../../../utility/types/ConversationTypes";
 import { ModuleType, GradeScore } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import ChatWizard from "../ChatWizard";
 import EssayWizard from "../EssayWizard";
 import { useTranslation } from "../../../hooks/useTranslation";
-import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -32,6 +31,8 @@ interface ChatMessagesProps {
   gradePending?: boolean;
   gradeError?: string;
   isEssayMode?: boolean;
+  onScrolledUpChange?: (up: boolean) => void;
+  scrollToBottomRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 export default function ChatMessages({
@@ -54,11 +55,12 @@ export default function ChatMessages({
   gradePending,
   gradeError,
   isEssayMode = false,
+  onScrolledUpChange,
+  scrollToBottomRef,
 }: ChatMessagesProps): JSX.Element {
   const { t } = useTranslation();
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const containerRef = useRef<null | HTMLDivElement>(null);
-  const [isScrolledUp, setIsScrolledUp] = useState(false);
   const shouldAutoScroll = useRef(true);
   const [essayExpanded, setEssayExpanded] = useState(false);
   const [gradeExpanded, setGradeExpanded] = useState(true);
@@ -70,13 +72,15 @@ export default function ChatMessages({
     container.scrollTop = container.scrollHeight;
   };
 
+  if (scrollToBottomRef) scrollToBottomRef.current = scrollToBottom;
+
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
     const { scrollTop, scrollHeight, clientHeight } = container;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
     const scrolledUp = distanceFromBottom > 100;
-    setIsScrolledUp(scrolledUp);
+    onScrolledUpChange?.(scrolledUp);
     shouldAutoScroll.current = !scrolledUp;
   };
 
@@ -283,7 +287,7 @@ export default function ChatMessages({
   const hasGradeContent = !!(gradeResult || gradePending || gradeError);
 
   return (
-    <div ref={containerRef} onScroll={handleScroll} className="flex-1 lg:overflow-y-auto relative">
+    <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto relative">
       <div className="p-4 max-w-4xl mx-auto">
         {/* Essay Wizard */}
         {showEssayWizard && (
@@ -345,8 +349,8 @@ export default function ChatMessages({
           </div>
         ) : (
           <>
-            {/* Messages */}
-            {messages.length > 0 && (
+            {/* Messages — hidden while prompt wizard is active */}
+            {!showPromptWizard && messages.length > 0 && (
               <div className="space-y-4">
                 {messages.map((message, index) => {
                   const isContextDivider =
@@ -522,22 +526,6 @@ export default function ChatMessages({
         <div ref={messagesEndRef} className="h-1" />
       </div>
 
-      {/* Scroll to bottom button */}
-      {isScrolledUp && (
-        <Button
-          onClick={() => {
-            shouldAutoScroll.current = true;
-            setIsScrolledUp(false);
-            scrollToBottom();
-          }}
-          variant="outline"
-          aria-label="Scroll to bottom"
-          className="sticky bottom-4 float-right mr-4 "
-          size="icon"
-        >
-          <ArrowDown className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 }

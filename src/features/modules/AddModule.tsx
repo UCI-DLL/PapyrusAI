@@ -992,29 +992,6 @@ export default function AddModule({
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="essaySubmission"
-                      aria-labelledby="essaySubmissionLabel"
-                      checked={session.essaySubmission}
-                      onCheckedChange={(checked) => {
-                        setSession((prev) => ({
-                          ...prev,
-                          essaySubmission: checked as boolean,
-                        }));
-                      }}
-                      disabled={isLoading}
-                    />
-                    <Label id="essaySubmissionLabel" htmlFor="essaySubmission" className="text-md font-bold">
-                      {t("createModule.allowEssaySubmission")}
-                    </Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-6">
-                    {t("createModule.allowEssaySubmissionDescription")}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
                       id="isOralModule"
                       aria-labelledby="isOralModuleLabel"
                       checked={session.isOralModule}

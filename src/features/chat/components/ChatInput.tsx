@@ -18,6 +18,7 @@ interface ChatInputProps {
   onOpenDocumentModal: () => void;
   onOpenSpeechToTextModal: () => void;
   disabled?: boolean;
+  footerContent?: React.ReactNode;
 }
 
 export default function ChatInput({
@@ -29,6 +30,7 @@ export default function ChatInput({
   onOpenDocumentModal,
   onOpenSpeechToTextModal,
   disabled = false,
+  footerContent,
 }: ChatInputProps): JSX.Element | null {
   const { t } = useTranslation();
   const [message, setMessage] = useState<string>("");
@@ -141,6 +143,11 @@ export default function ChatInput({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{chatError}</AlertDescription>
           </Alert>
+        )}
+        {footerContent && (
+          <div className="flex justify-end mt-2">
+            {footerContent}
+          </div>
         )}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
-import { MessageSquare, PanelRightOpen, Download, BookOpen, ClipboardCheck } from "lucide-react";
+import { MessageSquare, PanelRightOpen, Download, BookOpen, ClipboardCheck, CheckCircle } from "lucide-react";
 import { CourseType, ModuleType } from "../../../utility/types/CourseTypes";
 import { useTranslation } from "../../../hooks/useTranslation";
 import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
@@ -17,6 +17,8 @@ interface ChatHeaderProps {
   reviewBadge?: "pending" | "available" | null;
   onViewRubric?: () => void;
   attemptsLabel?: string;
+  onComplete?: () => void;
+  showComplete?: boolean;
 }
 
 export default function ChatHeader({
@@ -30,6 +32,8 @@ export default function ChatHeader({
   reviewBadge,
   onViewRubric,
   attemptsLabel,
+  onComplete,
+  showComplete = false,
 }: ChatHeaderProps): JSX.Element {
 
   const { t } = useTranslation();
@@ -88,6 +92,28 @@ export default function ChatHeader({
 
         {/* Right: action buttons */}
         <div className="flex items-center gap-1 shrink-0">
+          {showComplete && onComplete && (
+            <>
+              <TooltipWrapper content={t("reviewChat.complete")} side="bottom">
+                <Button
+                  size="sm"
+                  className="sm:hidden h-8 w-8 p-0"
+                  onClick={onComplete}
+                  aria-label={t("reviewChat.complete")}
+                >
+                  <CheckCircle className="h-4 w-4" />
+                </Button>
+              </TooltipWrapper>
+              <Button
+                size="sm"
+                className="hidden sm:flex gap-1.5 px-2"
+                onClick={onComplete}
+              >
+                <CheckCircle className="h-4 w-4" />
+                {t("reviewChat.complete")}
+              </Button>
+            </>
+          )}
           {onViewRubric && (
             <>
               {/* Icon-only on mobile */}

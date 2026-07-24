@@ -1004,6 +1004,32 @@ export default function AddReviewModule({
             <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.essaySubmissionDescription")}</p>
           </div>
 
+          {/* Show embedded prompt */}
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="showInitialPrompt"
+                checked={session.showInitialPrompt}
+                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showInitialPrompt: checked as boolean }))}
+              />
+              <Label htmlFor="showInitialPrompt" className="text-md font-bold">
+                {t("createModule.showEmbeddedPrompt")}
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground ml-6">
+              {t("createModule.showEmbeddedPromptDescription")}{" "}
+              <a
+                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
+              >
+                {t("createModule.showEmbeddedPromptDescriptionLinkText")}
+              </a>
+              .
+            </p>
+          </div>
+
           {/* Converse after complete */}
           <div className="space-y-1">
             <div className="flex items-center space-x-2">

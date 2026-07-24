@@ -17,6 +17,7 @@ import SpeechToTextModal from "./SpeechToTextModal";
 import ChatHeader from "./components/ChatHeader";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
+import ReviewSummaryPanel from "./components/ReviewSummaryPanel";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ChatContextType } from "./ChatContext";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
@@ -24,7 +25,7 @@ import { downloadConversation } from "../../utility/chat/downloadConversation";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
-import { Loader2, Send, FileText, CheckCircle } from "lucide-react";
+import { Loader2, Send, FileText, ArrowDown } from "lucide-react";
 
 function num_tokens_from_messages(messages: Array<any>) {
   var num_tokens = 0;
@@ -35,7 +36,7 @@ function num_tokens_from_messages(messages: Array<any>) {
 }
 
 export default function Chat(): JSX.Element {
-  const { courseInfo, moduleInfo, conversationList, setConversationList, viewUser, instructor, admin, grades, gradesLoaded } =
+  const { courseInfo, moduleInfo, conversationList, setConversationList, viewUser, instructor, admin, grades, gradesLoaded, refreshGrades } =
     useOutletContext<ChatContextType>();
 
   const { t } = useTranslation();
@@ -86,15 +87,23 @@ export default function Chat(): JSX.Element {
   // Fix: Store the current event listener function to properly remove it
   const socketListenerRef = useRef<((event: MessageEvent) => void) | null>(null);
 
+  // WebSocket retry state
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectParamsRef = useRef<{ cId: string; mId: string; idx: string } | null>(null);
+  const onConnectRef = useRef<(cId: string, mId: string, idx: string) => void>(() => {});
+
   // Review module state
   const [gradeResult, setGradeResult] = useState<{ scores: GradeScore[]; totalScore: number; instructorNotes?: string } | null>(null);
   const [gradePending, setGradePending] = useState(false);
+  const [chatScrolledUp, setChatScrolledUp] = useState(false);
+  const scrollToBottomRef = useRef<(() => void) | null>(null);
   const [gradeError, setGradeError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openCompleteModal, setOpenCompleteModal] = useState(false);
   const [openViewRubricModal, setOpenViewRubricModal] = useState(false);
-  const [reviewInputText, setReviewInputText] = useState("");
   const [essayText, setEssayText] = useState("");
+  const [pendingEssay, setPendingEssay] = useState<string | null>(null);
   const [essayError, setEssayError] = useState("");
 
   // Derived values
@@ -109,41 +118,6 @@ export default function Chat(): JSX.Element {
   const isReviewModuleRef = useRef(false);
   isReviewModuleRef.current = isReviewModule ?? false;
 
-  // Auto-create conversation for review modules navigating to "new"
-  const reviewAutoCreatedRef = useRef(false);
-  useEffect(() => {
-    if (!isReviewModule || conversationIndex !== "new") {
-      reviewAutoCreatedRef.current = false;
-      return;
-    }
-    if (reviewAutoCreatedRef.current) return;
-
-    // Check maxDrafts before creating (summative: slot consumed only after grade released, let backend enforce)
-    const maxDrafts = moduleInfo?.maxDrafts ?? 999;
-    if (maxDrafts < 999 && conversationList && moduleInfo?.assessmentType !== "summative") {
-      const completedCount = conversationList.conversations.filter(c => c.completed && !c.voidedByInstructor).length;
-      if (completedCount >= maxDrafts) {
-        setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
-        navigator(`/courses/${courseId}/modules/${moduleId}${isReviewModule ? "/review" : ""}`);
-        return;
-      }
-    }
-
-    reviewAutoCreatedRef.current = true;
-    Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
-      if (res?.status < 300 && res.data?.conversations) {
-        setConversationList(res.data);
-        navigator(`/${chatPrefix}/${username}/${courseId}/${moduleId}/${res.data.conversations.length - 1}`, {
-          replace: true,
-        });
-      } else if (res?.status === 401) {
-        navigator("/login");
-      } else if (res?.status === 400) {
-        setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
-        navigator(`/courses/${courseId}/modules/${moduleId}${isReviewModule ? "/review" : ""}`);
-      }
-    });
-  }, [isReviewModule, conversationIndex]); // eslint-disable-line
 
   useEffect(() => {
     //log page
@@ -160,13 +134,17 @@ export default function Chat(): JSX.Element {
   }, [conversationIndex]);
 
   useEffect(() => {
-    if (moduleInfo && (moduleInfo.prompts.length < 1 || moduleInfo.moduleType === "review")) {
+    if (moduleInfo && (
+      moduleInfo.prompts.length < 1 ||
+      (moduleInfo.moduleType === "review" && isEssayMode) ||
+      (moduleInfo.moduleType === "review" && !isEssayMode && messages.some(m => m.userVisible !== false && m.role === "user"))
+    )) {
       setSelectedPrompt("");
     }
-  }, [moduleInfo, repeatingPrompts, selectedPrompt, messages]);
+  }, [moduleInfo, repeatingPrompts, selectedPrompt, messages, isEssayMode]);
 
   useEffect(() => {
-    if (moduleInfo?.moduleType === "review" || (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled)) {
+    if (isEssayMode || (moduleInfo && moduleInfo.raterEnabled !== undefined && moduleInfo.raterEnabled)) {
       setShowWizard(false);
     } else {
       var visibleMessages = messages.filter((m) => m.userVisible !== undefined && m.userVisible);
@@ -204,10 +182,22 @@ export default function Chat(): JSX.Element {
 
   const onSocketOpen = useCallback(() => {
     setIsConnected(true);
+    retryCountRef.current = 0;
   }, []);
 
   const onSocketClose = useCallback(() => {
-    // Logic for reconnecting is  now handled by dependency on params
+    setIsConnected(false);
+    if (!connectParamsRef.current) return;
+    const MAX_RETRIES = 5;
+    if (retryCountRef.current >= MAX_RETRIES) return;
+    const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
+    retryCountRef.current += 1;
+    retryTimeoutRef.current = setTimeout(() => {
+      if (connectParamsRef.current) {
+        const { cId, mId, idx } = connectParamsRef.current;
+        onConnectRef.current(cId, mId, idx);
+      }
+    }, delay);
   }, []);
 
   const onSocketMessage = useCallback(
@@ -228,6 +218,7 @@ export default function Chat(): JSX.Element {
           return { ...prev, conversations: convs };
         });
         setIsSubmitting(false);
+        refreshGrades();
         return;
       }
       if (returnData.messageType === "submitted") {
@@ -379,11 +370,15 @@ export default function Chat(): JSX.Element {
         }
       }
     },
-    [t],
+    [t, refreshGrades],
   );
 
   const onConnect = useCallback(
     (cId: string, mId: string, idx: string) => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
       if (process.env.REACT_APP_WEBSOCKET_URL) {
         if (
           socket.current &&
@@ -391,6 +386,7 @@ export default function Chat(): JSX.Element {
         ) {
           closeSocket();
         }
+        connectParamsRef.current = { cId, mId, idx };
         let sessionId = localStorage.getItem("sessionId") ?? "unknown";
 
         var URL = process.env.REACT_APP_WEBSOCKET_URL;
@@ -414,7 +410,16 @@ export default function Chat(): JSX.Element {
     [onSocketClose, onSocketMessage, onSocketOpen], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
+  useEffect(() => {
+    onConnectRef.current = onConnect;
+  }, [onConnect]);
+
   const closeSocket = useCallback(() => {
+    connectParamsRef.current = null;
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
     if (socket.current) {
       socket.current.removeEventListener("open", onSocketOpen);
       socket.current.removeEventListener("close", onSocketClose);
@@ -456,7 +461,7 @@ export default function Chat(): JSX.Element {
       setIsSubmitting(false);
       setEssayText("");
       setEssayError("");
-      setReviewInputText("");
+      setPendingEssay(null);
 
       if (user && user.username === username) {
         onConnect(courseId, moduleId, conversationIndex);
@@ -494,7 +499,11 @@ export default function Chat(): JSX.Element {
               setConversationCompleted(res.data.completed ? res.data.completed : false);
               setConversationIsDeleted(res.data.isDeleted ? res.data.isDeleted : false);
             }
-            if (location.state && location.state.pendingMessageContent) {
+            if (location.state?.pendingEssay) {
+              setPendingEssay(location.state.pendingEssay);
+              window.history.replaceState({}, "");
+            }
+            if (location.state?.pendingMessageContent) {
               setPendingMessageContent(location.state.pendingMessageContent);
               setPendingPromptId(location.state.pendingPromptId || null);
               window.history.replaceState({}, "");
@@ -654,6 +663,38 @@ export default function Chat(): JSX.Element {
     }
   }, [isConnected, pendingMessageContent, conversationIndex, pendingPromptId, onSendMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!isConnected || !pendingEssay || conversationIndex === "new") return;
+    setIsSubmitting(true);
+    setEssayError("");
+    const capturedEssayText = pendingEssay;
+    const sessionId = localStorage.getItem("sessionId") ?? "unknown";
+    const promptMessages = (moduleInfo?.prompts ?? [])
+      .filter((p) => !p.isDeleted)
+      .map((p) => ({ role: "user" as const, content: p.prompt }));
+    socket.current?.send(JSON.stringify({
+      action: "reviewChat",
+      messageType: "essayDraft",
+      essayContent: capturedEssayText,
+      messages: promptMessages,
+      organization: process.env.REACT_APP_ORGANIZATION ?? "",
+      sessionId,
+    }));
+    const tempId = `${Date.now()}${Math.floor(Math.random() * 900000 + 100000)}`;
+    setMessages(prev => [...prev, {
+      id: tempId,
+      content: capturedEssayText,
+      messageType: "essayDraft",
+      role: "user",
+      sender: user?.username ?? "",
+      timestamp: Date.now().toString(),
+      promptId: null,
+      userVisible: true,
+    }]);
+    setShowTypingIndicator(true);
+    setPendingEssay(null);
+  }, [isConnected, pendingEssay, conversationIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Event handlers
   function handleSubmit(message: string) {
     setIsLoading(true);
@@ -758,6 +799,18 @@ export default function Chat(): JSX.Element {
         if (conversationIndex === "new") {
           const promptContent = actualPrompt && actualPrompt.length > 0 ? actualPrompt[0].prompt : "";
           if (!promptContent) return;
+
+          if (isReviewModule) {
+            const maxDrafts = moduleInfo?.maxDrafts ?? 999;
+            if (maxDrafts < 999 && conversationList && moduleInfo?.assessmentType !== "summative") {
+              const completedCount = conversationList.conversations.filter(c => c.completed && !c.voidedByInstructor).length;
+              if (completedCount >= maxDrafts) {
+                setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+                navigator(`/courses/${courseId}/modules/${moduleId}/review`);
+                return;
+              }
+            }
+          }
 
           setIsLoading(true);
           Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
@@ -999,13 +1052,48 @@ export default function Chat(): JSX.Element {
   }
 
   // Review module: send chat message (chat mode)
-  function onSendReviewMessage() {
-    if (!reviewInputText.trim() || !isConnected) return;
+  function onSendReviewMessage(messageText: string) {
+    if (!messageText.trim()) return;
+
+    if (conversationIndex === "new") {
+      const maxDrafts = moduleInfo?.maxDrafts ?? 999;
+      if (maxDrafts < 999 && conversationList && moduleInfo?.assessmentType !== "summative") {
+        const completedCount = conversationList.conversations.filter(c => c.completed && !c.voidedByInstructor).length;
+        if (completedCount >= maxDrafts) {
+          setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+          navigator(`/courses/${courseId}/modules/${moduleId}/review`);
+          return;
+        }
+      }
+      setIsLoading(true);
+      Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
+        if (res?.status < 300 && res.data?.conversations) {
+          setConversationList(res.data);
+          const newIndex = res.data.conversations.length - 1;
+          navigator(`/${chatPrefix}/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
+            replace: true,
+            state: { pendingMessageContent: messageText, pendingPromptId: null },
+          });
+        } else if (res?.status === 401) {
+          navigator("/login");
+        } else if (res?.status === 400) {
+          setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+          navigator(`/courses/${courseId}/modules/${moduleId}/review`);
+          setIsLoading(false);
+        } else {
+          setAlert({ message: t("errorMessage.genericError"), type: "error" });
+          setIsLoading(false);
+        }
+      });
+      return;
+    }
+
+    if (!isConnected) return;
     const sessionId = localStorage.getItem("sessionId") ?? "unknown";
     const tempId = Date.now().toString();
     const userMsg: MessageType = {
       id: tempId,
-      content: reviewInputText,
+      content: messageText,
       messageType: "text",
       role: "user",
       sender: username,
@@ -1018,12 +1106,11 @@ export default function Chat(): JSX.Element {
       JSON.stringify({
         action: "reviewChat",
         messageType: "chat",
-        messages: [{ role: "user", content: reviewInputText }],
+        messages: [{ role: "user", content: messageText }],
         organization: process.env.REACT_APP_ORGANIZATION ?? "",
         sessionId,
       }),
     );
-    setReviewInputText("");
     setShowTypingIndicator(true);
     setChatError(undefined);
   }
@@ -1034,6 +1121,42 @@ export default function Chat(): JSX.Element {
       setEssayError(t("reviewChat.essayMinLength"));
       return;
     }
+
+    if (conversationIndex === "new") {
+      const maxDrafts = moduleInfo?.maxDrafts ?? 999;
+      if (maxDrafts < 999 && conversationList && moduleInfo?.assessmentType !== "summative") {
+        const completedCount = conversationList.conversations.filter(c => c.completed && !c.voidedByInstructor).length;
+        if (completedCount >= maxDrafts) {
+          setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+          navigator(`/courses/${courseId}/modules/${moduleId}/review`);
+          return;
+        }
+      }
+      setIsSubmitting(true);
+      const capturedEssayText = essayText;
+      Post(postCreateConversation(courseId, moduleId), {}).then((res) => {
+        if (res?.status < 300 && res.data?.conversations) {
+          setConversationList(res.data);
+          const newIndex = res.data.conversations.length - 1;
+          setEssayText("");
+          navigator(`/${chatPrefix}/${user?.username}/${courseId}/${moduleId}/${newIndex}`, {
+            replace: true,
+            state: { pendingEssay: capturedEssayText },
+          });
+        } else if (res?.status === 401) {
+          navigator("/login");
+        } else if (res?.status === 400) {
+          setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+          navigator(`/courses/${courseId}/modules/${moduleId}/review`);
+          setIsSubmitting(false);
+        } else {
+          setAlert({ message: t("errorMessage.genericError"), type: "error" });
+          setIsSubmitting(false);
+        }
+      });
+      return;
+    }
+
     if (!isConnected) return;
     setIsSubmitting(true);
     setEssayError("");
@@ -1133,6 +1256,16 @@ export default function Chat(): JSX.Element {
     !conversationArchived &&
     !showEssayWizard &&
     conversationIndex !== "new";
+
+  const isNonEssayReviewInputVisible =
+    isReviewModule &&
+    !isEssayMode &&
+    !chatBlocked &&
+    !!isViewingOwnConvo &&
+    !conversationArchived &&
+    (isConnected || conversationIndex === "new") &&
+    selectedPrompt !== undefined &&
+    !showWizard;
 
   return (
     <>
@@ -1275,6 +1408,8 @@ export default function Chat(): JSX.Element {
               const remaining = Math.max(0, max - used);
               return t("reviewChat.attemptsLeft", { remaining, max });
             })()}
+            showComplete={!!(isReviewModule && isViewingOwnConvo && !conversationCompleted && !isEssayMode && messages.some((m) => m.role === "user"))}
+            onComplete={() => setOpenCompleteModal(true)}
           />
         ) : (
           <div className="h-16 border-b border-border"></div>
@@ -1284,11 +1419,7 @@ export default function Chat(): JSX.Element {
         {courseInfo && moduleInfo && !isLoading ? (
           <>
             {/* Messages / Essay Wizard / Submitting Spinner */}
-            {isReviewModule && conversationIndex === "new" ? (
-              <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : isReviewModule && showEssayWizard ? (
+            {isReviewModule && showEssayWizard ? (
               <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center justify-center min-h-full p-6">
                   <div className="w-full max-w-2xl space-y-4 border rounded-xl bg-card p-6 shadow-sm">
@@ -1357,69 +1488,82 @@ export default function Chat(): JSX.Element {
                 gradePending={gradePending}
                 gradeError={gradeError}
                 isEssayMode={isEssayMode}
+                onScrolledUpChange={setChatScrolledUp}
+                scrollToBottomRef={scrollToBottomRef}
               />
             )}
 
-            {/* Input Area */}
-            {isReviewModule ? (
-              isReviewChatInputVisible ? (
-                <div className="border-t bg-card p-3 space-y-2 shrink-0">
-                  {chatError && <p className="text-sm text-destructive px-1">{chatError}</p>}
-                  <div className="flex items-end gap-2">
-                    <Textarea
-                      placeholder={t("chat.enterMessage")}
-                      value={reviewInputText}
-                      onChange={(e) => setReviewInputText(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          onSendReviewMessage();
-                        }
-                      }}
-                      disabled={!isConnected || isSubmitting}
-                      className="flex-1 min-h-[42px] max-h-[140px] resize-none text-sm"
-                      rows={1}
-                    />
-                    <Button
-                      onClick={onSendReviewMessage}
-                      disabled={!reviewInputText.trim() || !isConnected || isSubmitting}
-                      size="sm"
-                      className="shrink-0"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                    {isViewingOwnConvo && !conversationCompleted && !isEssayMode && messages.some((m) => m.role === "user") && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setOpenCompleteModal(true)}
-                        disabled={isSubmitting}
-                        className="shrink-0 gap-2"
-                      >
-                        {isSubmitting ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CheckCircle className="h-4 w-4" />
-                        )}
-                        {t("reviewChat.complete")}
-                      </Button>
+            {/* Input area wrapper — floating buttons anchor above this */}
+            {(() => {
+              const panelEssayMessage = messages.find(m => m.role === "user" && m.messageType === "essayDraft");
+              const rubric = moduleInfo?.rubrics?.[0];
+              const maxPerCriterion = rubric
+                ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
+                : undefined;
+              const maxTotal = maxPerCriterion !== undefined
+                ? (rubric?.criteria.length ?? 0) * maxPerCriterion
+                : undefined;
+              const hasGradeContent = !!(gradeResult || gradePending || gradeError);
+              const showPanel = isReviewModule && (hasGradeContent || !!panelEssayMessage);
+
+              return (
+                <div className="sticky bottom-0 z-20 shrink-0">
+                  {/* Floating buttons — sit just above the input */}
+                  <div className="absolute bottom-full right-4 mb-2 z-20 flex flex-row items-end gap-2 pointer-events-none">
+                    {chatScrolledUp && (
+                      <div className="pointer-events-auto">
+                        <button
+                          aria-label="Scroll to bottom"
+                          onClick={() => scrollToBottomRef.current?.()}
+                          className="flex items-center gap-1.5 border rounded-full bg-card shadow-md px-3 py-2 text-sm font-medium hover:bg-muted/50 transition-colors"
+                        >
+                          <ArrowDown className="h-4 w-4 text-primary" />
+                        </button>
+                      </div>
+                    )}
+                    {showPanel && (
+                      <div className="pointer-events-auto">
+                        <ReviewSummaryPanel
+                          essayMessage={panelEssayMessage}
+                          gradeResult={gradeResult}
+                          gradePending={gradePending}
+                          gradeError={gradeError}
+                          maxPerCriterion={maxPerCriterion}
+                          maxTotal={maxTotal}
+                        />
+                      </div>
                     )}
                   </div>
+
+                  {isReviewModule ? (
+                    (isEssayMode ? isReviewChatInputVisible : isNonEssayReviewInputVisible) ? (
+                      <ChatInput
+                        isConnected={isConnected}
+                        isLoading={isSubmitting}
+                        isNewChat={false}
+                        chatError={chatError}
+                        onSubmit={onSendReviewMessage}
+                        onOpenDocumentModal={() => setOpenDocumentModal(true)}
+                        onOpenSpeechToTextModal={() => setOpenSpeechToTextModal(true)}
+                        disabled={isSubmitting}
+                      />
+                    ) : null
+                  ) : (
+                    isChatInputVisible && (
+                      <ChatInput
+                        isConnected={isConnected}
+                        isLoading={isLoading}
+                        isNewChat={conversationIndex === "new"}
+                        chatError={chatError}
+                        onSubmit={handleSubmit}
+                        onOpenDocumentModal={() => setOpenDocumentModal(true)}
+                        onOpenSpeechToTextModal={() => setOpenSpeechToTextModal(true)}
+                      />
+                    )
+                  )}
                 </div>
-              ) : null
-            ) : (
-              isChatInputVisible && (
-                <ChatInput
-                  isConnected={isConnected}
-                  isLoading={isLoading}
-                  isNewChat={conversationIndex === "new"}
-                  chatError={chatError}
-                  onSubmit={handleSubmit}
-                  onOpenDocumentModal={() => setOpenDocumentModal(true)}
-                  onOpenSpeechToTextModal={() => setOpenSpeechToTextModal(true)}
-                />
-              )
-            )}
+              );
+            })()}
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-4">

@@ -12,20 +12,25 @@ import StudentMenu from "./StudentMenu";
 import StudentListPopup from "./StudentListPopup";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 import { colorToHex, PLOT_COLOR_PALETTE } from "../../utility/reports/color";
 import { parseLocalDate, formatDateForTooltip } from "../../utility/reports/date";
 import { getStudentListPopupOpen, setStudentListPopupOpen as persistPopupOpen } from "../../utility/reports/reportsSessionStorage";
-import { Users } from "lucide-react";
+import { Users, BarChart2, ClipboardList } from "lucide-react";
 import { useTranslation } from "../../hooks/useTranslation";
+import { Link, useNavigate } from "react-router-dom";
+import { ModuleType } from "../../utility/types/CourseTypes";
 
 interface ClassChartsProps {
   analysis: Record<string, unknown> | null;
   setAnalysis: any;
   courseId?: string;
+  modules?: ModuleType[];
 }
 
-export default function ClassCharts({ analysis, setAnalysis, courseId }: ClassChartsProps) {
+export default function ClassCharts({ analysis, setAnalysis, courseId, modules }: ClassChartsProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -419,8 +424,7 @@ export default function ClassCharts({ analysis, setAnalysis, courseId }: ClassCh
             dot.setAttribute("role", "img");
             dot.setAttribute(
               "aria-label",
-              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.avgConvoLength")} ${
-                data.avg_convo_length
+              `${t("common.date")} ${data.date.toLocaleDateString()}, ${t("reports.avgConvoLength")} ${data.avg_convo_length
               }`
             );
             dot.setAttribute("tabindex", "0");
@@ -985,6 +989,62 @@ export default function ClassCharts({ analysis, setAnalysis, courseId }: ClassCh
               </div> */}
               </div>
             </div>
+
+            {/* Module List Section */}
+            {modules && modules.filter((m) => !m.isDeleted).length > 0 && (
+              <div className="mb-10 px-8">
+                <h2 className="text-2xl font-bold text-foreground mb-4">{t("common.modules")}</h2>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {modules.filter((m) => !m.isDeleted).map((mod) => {
+                    const isReview = mod.moduleType === "review";
+                    const reportPath = isReview
+                      ? `/reports/review-module/${courseId}/${mod.id}`
+                      : `/reports/module/${courseId}/${mod.id}`;
+                    return (
+                      <div
+                        key={mod.id}
+                        className="border rounded-lg p-4 bg-card flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-semibold text-sm leading-snug">{mod.name}</span>
+                          <Badge variant={isReview ? "default" : "secondary"} className="shrink-0 text-xs">
+                            {isReview ? t("reviewModule.reviewBadge") : t("navigation.chat")}
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {isReview && mod.assessmentType && (
+                            <Badge variant="outline" className="text-xs">
+                              {mod.assessmentType === "formative" ? t("reviewModule.formative") : t("reviewModule.summative")}
+                            </Badge>
+                          )}
+                          {isReview && mod.essaySubmission && (
+                            <Badge variant="outline" className="text-xs">{t("reviewModule.essaySubmission")}</Badge>
+                          )}
+                          {!mod.isPublished && (
+                            <Badge variant="outline" className="text-xs text-muted-foreground">{t("common.unpublished")}</Badge>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-auto flex items-center gap-1.5 w-full"
+                          asChild
+                          aria-label={`${t("reports.viewReports")} ${mod.name}`}
+                        >
+                          <Link
+                            to={reportPath}
+                            className="flex items-center justify-center gap-2 no-underline"
+                          >
+                            {isReview ? <ClipboardList className="h-3.5 w-3.5" aria-hidden="true" /> : <BarChart2 className="h-3.5 w-3.5" aria-hidden="true" />}
+                            {t("reports.viewReports")}
+                          </Link>
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </>
         )}
       </CardContent>

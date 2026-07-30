@@ -47,6 +47,8 @@ import AddReviewModule from "./features/modules/AddReviewModule";
 import EditReviewModule from "./features/modules/EditReviewModule";
 import ReviewConversationList from "./features/review-chat/ReviewConversationList";
 import ReviewModuleReports from "./features/reports/ReviewModuleReports";
+import ReviewStudentConversations from "./features/reports/ReviewStudentConversations";
+import ReviewConversationView from "./features/reports/ReviewConversationView";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
 import { useTranslation } from "./hooks/useTranslation";
@@ -506,6 +508,30 @@ function App(): JSX.Element {
                         <Route
                           path="/reports/review-module/:courseId/:moduleId"
                           element={<ReviewModuleReports />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/reports/review-module/:courseId/:moduleId/student/:username"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/reports/review-module/:courseId/:moduleId/student/:username"
+                          element={<ReviewStudentConversations />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/reports/review-module/:courseId/:moduleId/student/:username/conversation/:convIndex"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/reports/review-module/:courseId/:moduleId/student/:username/conversation/:convIndex"
+                          element={<ReviewConversationView />}
                         />
                       </Route>
 

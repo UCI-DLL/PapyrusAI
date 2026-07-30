@@ -1044,7 +1044,7 @@ export default function ModuleReports(): JSX.Element {
                             <TableCell>
                               {student.numConversations > 0 ? (
                                 <Button
-                                  variant="outline"
+                                  variant="default"
                                   size="sm"
                                   onClick={() =>
                                     navigator(
@@ -1079,7 +1079,7 @@ export default function ModuleReports(): JSX.Element {
                             <TableCell>
                               {row.convos > 0 ? (
                                 <Button
-                                  variant="outline"
+                                  variant="default"
                                   size="sm"
                                   onClick={() =>
                                     navigator(
@@ -1102,33 +1102,26 @@ export default function ModuleReports(): JSX.Element {
               </div>
 
               {(filteredRows.length > 0 || filteredStudentData.length > 0) && (
-                <div className="flex items-center justify-between px-2 py-4">
-                  <div className="text-sm text-muted-foreground">
-                    {t("reports.showingEntries", {
-                      start: startIndex + 1,
-                      end: Math.min(endIndex, totalRows),
-                      total: totalRows,
-                    })}
-                  </div>
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between text-sm text-muted-foreground mt-4">
+                  <span>
+                    {startIndex + 1}–{Math.min(endIndex, totalRows)} {t("common.of")} {totalRows}
+                  </span>
+                  <div className="flex gap-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleChangePage(page - 1)}
                       disabled={page === 0}
-                      aria-label={t("reports.previousPage")}
+                      aria-label={t("common.previous")}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <div className="text-sm text-muted-foreground">
-                      {t("reports.pageOf", { current: page + 1, total: totalPages })}
-                    </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleChangePage(page + 1)}
                       disabled={page >= totalPages - 1}
-                      aria-label={t("reports.nextPage")}
+                      aria-label={t("common.next")}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>

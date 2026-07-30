@@ -1,73 +1,50 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Get from "../../utility/Get";
 import Post from "../../utility/Post";
-import Put from "../../utility/Put";
-import {
-  getGrades,
-  postReleaseAllGrades,
-  putUpdateGrade,
-} from "../../utility/endpoints/GradeEndpoints";
+import { getGrades, postReleaseAllGrades } from "../../utility/endpoints/GradeEndpoints";
 import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
-import { GradeScore, GradeType, ModuleType } from "../../utility/types/CourseTypes";
+import { GradeType, ModuleType } from "../../utility/types/CourseTypes";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
-import { Label } from "../../components/ui/label";
 import { Badge } from "../../components/ui/badge";
-import { Card, CardContent } from "../../components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 import {
-  CheckCircle,
-  Clock,
-  Edit,
-  ChevronLeft,
-  ClipboardCheck,
-  RefreshCw,
+  CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, RefreshCw,
+  MessageSquare, Users, Star,
 } from "lucide-react";
-import { cn } from "../../lib/utils";
+
+const ROWS_OPTIONS = [10, 25, 50] as const;
 
 export default function ReviewModuleReports(): JSX.Element {
-  const location = useLocation();
-  const navigator = useNavigate();
+  const { courseId = "", moduleId = "" } = useParams<{ courseId: string; moduleId: string }>();
+  const navigate = useNavigate();
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
 
-  const parts = location.pathname.split("/");
-  const courseId = parts[3] ?? "";
-  const moduleId = parts[4] ?? "";
-
+  const [courseName, setCourseName] = useState("");
   const [module, setModule] = useState<ModuleType>();
-  const [grades, setGrades] = useState<Array<GradeType>>([]);
-  const [students, setStudents] = useState<Array<CustomUserType>>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [grades, setGrades] = useState<GradeType[]>([]);
+  const [students, setStudents] = useState<CustomUserType[]>([]);
+  const [gradesLoading, setGradesLoading] = useState(true);
+  const [courseLoaded, setCourseLoaded] = useState(true);
+  const [studentsLoaded, setStudentsLoaded] = useState(true);
+  const isLoading = gradesLoading || courseLoaded || studentsLoaded;
   const [isReleasing, setIsReleasing] = useState(false);
-
   const [openReleaseAllModal, setOpenReleaseAllModal] = useState(false);
 
-  const [editModal, setEditModal] = useState<{
-    open: boolean;
-    grade: GradeType | null;
-    scores: Array<GradeScore>;
-    instructorNotes: string;
-    isSaving: boolean;
-  }>({ open: false, grade: null, scores: [], instructorNotes: "", isSaving: false });
-
-  const instructor = process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors";
-  const admin = process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin";
+  const [search, setSearch] = useState("");
+  const [submittedFilter, setSubmittedFilter] = useState<"all" | "submitted" | "not-submitted">("all");
+  const [rowsPerPage, setRowsPerPage] = useState<number>(10);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     if (!courseId || !moduleId) return;
@@ -77,31 +54,42 @@ export default function ReviewModuleReports(): JSX.Element {
 
     Get(getCourse(courseId), controller.signal).then((res) => {
       if (res?.status < 300 && res.data) {
+        setCourseName(res.data.name ?? "");
         setModule(res.data.modules.find((m: ModuleType) => m.id === moduleId));
       } else if (res?.status === 401) {
-        navigator("/login");
+        navigate("/login");
       }
+      setCourseLoaded(false);
     });
 
-    Get(getUsersInCourse(courseId), controller.signal).then((res) => {
-      if (res?.status < 300 && res.data) setStudents(res.data);
-    });
+    const fetchStudents = (nextToken?: string, acc: CustomUserType[] = []) => {
+      Get(getUsersInCourse(courseId, 50, nextToken ?? ""), controller.signal).then((res) => {
+        if (res?.status < 300 && res.data) {
+          const page = Array.isArray(res.data.users) ? res.data.users : [];
+          const all = [...acc, ...page];
+          if (res.data.nextToken) fetchStudents(res.data.nextToken, all);
+          else { setStudents(all); setStudentsLoaded(false); }
+        } else {
+          setStudentsLoaded(false);
+        }
+      });
+    };
+    fetchStudents();
 
     loadGrades(courseId, moduleId, controller.signal);
-
     return () => controller.abort();
     // eslint-disable-next-line
   }, [courseId, moduleId]);
 
   function loadGrades(cId: string, mId: string, signal?: AbortSignal) {
-    setIsLoading(true);
+    setGradesLoading(true);
     Get(getGrades(cId, mId), signal, true).then((res) => {
       if (res?.status < 300 && res.data) {
         setGrades(Array.isArray(res.data) ? res.data : []);
       } else if (res?.status === 401) {
-        navigator("/login");
+        navigate("/login");
       }
-      setIsLoading(false);
+      setGradesLoading(false);
     });
   }
 
@@ -113,7 +101,7 @@ export default function ReviewModuleReports(): JSX.Element {
         setAlert({ message: t("reviewReports.gradesReleased"), type: "success" });
         loadGrades(courseId, moduleId);
       } else if (res?.status === 401) {
-        navigator("/login");
+        navigate("/login");
       } else {
         setAlert({ message: t("errorMessage.genericError"), type: "error" });
       }
@@ -121,69 +109,61 @@ export default function ReviewModuleReports(): JSX.Element {
     });
   }
 
-  function openEditModal(grade: GradeType) {
-    setEditModal({
-      open: true,
-      grade,
-      scores: grade.scores.map((s) => ({ ...s })),
-      instructorNotes: grade.instructorNotes ?? "",
-      isSaving: false,
-    });
-  }
-
-  function handleScoreChange(idx: number, field: "score" | "feedback", value: string) {
-    setEditModal((prev) => {
-      const updated = [...prev.scores];
-      if (field === "score") updated[idx] = { ...updated[idx], score: Number(value) };
-      else updated[idx] = { ...updated[idx], feedback: value };
-      return { ...prev, scores: updated };
-    });
-  }
-
-  function handleSaveGrade() {
-    if (!editModal.grade) return;
-    setEditModal((prev) => ({ ...prev, isSaving: true }));
-
-    const parts = editModal.grade!.courseModuleConversationId.split("+");
-    const convId = parts[parts.length - 1];
-
-    Put(putUpdateGrade(courseId, moduleId, editModal.grade!.username, convId), {
-      scores: editModal.scores,
-      instructorNotes: editModal.instructorNotes,
-    }, true).then((res) => {
-      if (res?.status < 300) {
-        setAlert({ message: t("reviewReports.gradeSaved"), type: "success" });
-        setEditModal({ open: false, grade: null, scores: [], instructorNotes: "", isSaving: false });
-        loadGrades(courseId, moduleId);
-      } else if (res?.status === 401) {
-        navigator("/login");
-      } else {
-        setAlert({ message: t("errorMessage.genericError"), type: "error" });
-        setEditModal((prev) => ({ ...prev, isSaving: false }));
-      }
-    });
-  }
-
-  function getStudentName(username: string) {
-    const s = students.find((st) => st.username === username);
-    return s ? `${s.name} ${s.family_name}` : username;
-  }
-
-  function getConvId(grade: GradeType) {
-    const parts = grade.courseModuleConversationId.split("+");
-    return parts[parts.length - 1];
-  }
-
-  const pendingCount = grades.filter((g) => !g.released).length;
+  // Derived data
   const rubric = module?.rubrics?.[0];
-  const maxPerCriterion = rubric ? Math.max(...(rubric.columns.map(Number).filter(Number.isFinite))) : undefined;
+  const maxPerCriterion = rubric ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite)) : undefined;
   const maxTotal = maxPerCriterion !== undefined && rubric ? rubric.criteria.length * maxPerCriterion : undefined;
+  const pendingCount = grades.filter((g) => !g.released).length;
+  const studentsSubmitted = new Set(grades.map((g) => g.username)).size;
+  const avgScore =
+    grades.length > 0
+      ? (grades.reduce((sum, g) => sum + g.totalScore, 0) / grades.length).toFixed(1)
+      : null;
+
+  const gradesByUser = grades.reduce<Record<string, GradeType[]>>((acc, g) => {
+    (acc[g.username] ??= []).push(g);
+    return acc;
+  }, {});
+
+  const bestGradeByUser = Object.fromEntries(
+    Object.entries(gradesByUser).map(([u, gs]) => [
+      u,
+      gs.reduce((best, g) => (g.totalScore > best.totalScore ? g : best)),
+    ])
+  );
+
+  const sortedStudents = [...students].sort((a, b) => {
+    const cmp = (a.family_name ?? "").localeCompare(b.family_name ?? "");
+    return cmp !== 0 ? cmp : (a.name ?? "").localeCompare(b.name ?? "");
+  });
+
+  // Search + filter
+  const filteredStudents = sortedStudents.filter((s) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      !q ||
+      `${s.name} ${s.family_name}`.toLowerCase().includes(q) ||
+      s.email.toLowerCase().includes(q);
+    const hasSubmission = !!bestGradeByUser[s.username];
+    const matchesFilter =
+      submittedFilter === "all" ||
+      (submittedFilter === "submitted" && hasSubmission) ||
+      (submittedFilter === "not-submitted" && !hasSubmission);
+    return matchesSearch && matchesFilter;
+  });
+
+  const totalPages = Math.ceil(filteredStudents.length / rowsPerPage);
+  const paginatedStudents = filteredStudents.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+
+  // Reset to page 0 when filters change
+  const handleSearch = (v: string) => { setSearch(v); setPage(0); };
+  const handleFilter = (v: "all" | "submitted" | "not-submitted") => { setSubmittedFilter(v); setPage(0); };
+  const handleRowsPerPage = (v: string) => { setRowsPerPage(Number(v)); setPage(0); };
 
   if (isLoading) return <PageLoader pageName={t("reviewReports.title")} />;
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      {/* Release all confirm */}
       <DialogWrapper
         open={openReleaseAllModal}
         onOpenChange={setOpenReleaseAllModal}
@@ -195,170 +175,299 @@ export default function ReviewModuleReports(): JSX.Element {
         ]}
       />
 
-      {/* Edit grade modal */}
-      <DialogWrapper
-        open={editModal.open}
-        onOpenChange={(open) => !open && setEditModal({ open: false, grade: null, scores: [], instructorNotes: "", isSaving: false })}
-        title={t("reviewReports.editGrade")}
-        contentClassName="sm:max-w-xl max-h-[90vh] overflow-y-auto"
-        actions={[
-          {
-            label: t("common.cancel"),
-            onClick: () => setEditModal({ open: false, grade: null, scores: [], instructorNotes: "", isSaving: false }),
-            variant: "outline",
-          },
-          {
-            label: editModal.isSaving ? t("common.saving") ?? "Saving…" : t("reviewReports.saveGrade"),
-            onClick: handleSaveGrade,
-            disabled: editModal.isSaving,
-          },
-        ]}
+      <Link
+        to={`/reports/course/${courseId}`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground no-underline"
       >
-        <div className="space-y-4">
-          {editModal.scores.map((score, idx) => (
-            <div key={idx} className="border rounded-lg p-3 space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-semibold text-sm">{score.name}</span>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`score-${idx}`} className="text-xs shrink-0">{t("reviewReports.totalScore")}</Label>
-                  <Input
-                    id={`score-${idx}`}
-                    type="number"
-                    value={score.score}
-                    onChange={(e) => handleScoreChange(idx, "score", e.target.value)}
-                    className="w-20 text-sm"
-                    min={0}
-                    max={maxPerCriterion}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor={`feedback-${idx}`} className="text-xs">{t("reviewReports.editGrade")}</Label>
-                <Textarea
-                  id={`feedback-${idx}`}
-                  value={score.feedback}
-                  onChange={(e) => handleScoreChange(idx, "feedback", e.target.value)}
-                  className="text-sm min-h-[60px]"
-                />
-              </div>
-            </div>
-          ))}
-          <div className="space-y-1">
-            <Label htmlFor="instructor-notes" className="text-sm font-medium">{t("reviewReports.instructorNotes")}</Label>
-            <Textarea
-              id="instructor-notes"
-              value={editModal.instructorNotes}
-              onChange={(e) => setEditModal((prev) => ({ ...prev, instructorNotes: e.target.value }))}
-              className="text-sm min-h-[80px]"
-            />
-          </div>
-        </div>
-      </DialogWrapper>
-
-      {/* Page header */}
-      <PageHeaderCard
-        title={t("reviewReports.title")}
-        description={module?.name}
-        icon={<ClipboardCheck size={192} />}
-      />
-
-      {/* Nav buttons */}
-      <nav className="flex gap-2 flex-wrap">
-        <Button variant="outline" size="sm" onClick={() => loadGrades(courseId, moduleId)} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          {t("common.refresh")}
-        </Button>
-        {pendingCount > 0 && (
-          <Button size="sm" onClick={() => setOpenReleaseAllModal(true)} disabled={isReleasing} className="gap-2">
-            {isReleasing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-            {t("reviewReports.releaseAll")} ({pendingCount})
-          </Button>
-        )}
-      </nav>
-
-      {/* Back link */}
-      <Link to={`/reports/course/${courseId}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground no-underline">
         <ChevronLeft className="h-4 w-4" />
         {t("reviewReports.backToReports")}
       </Link>
 
-      {/* Grades table */}
-      {grades.length === 0 ? (
+      <PageHeaderCard
+        title={`${courseName}${module?.name ? ` — ${module.name}` : ""}`}
+        icon={<ClipboardCheck size={192} className="text-primary" />}
+        description={
+          <div className="space-y-2 mt-1">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="text-foreground border-border">
+                {students.length} {t("reviewReports.students")}
+              </Badge>
+              {module?.maxDrafts !== undefined && module.maxDrafts !== 999 && (
+                <Badge variant="outline" className="text-foreground border-border">
+                  {t("reviewReports.conversationLimit")}: {module.maxDrafts}
+                </Badge>
+              )}
+              {module?.assessmentType && (
+                <Badge variant={module.assessmentType === "formative" ? "default" : "secondary"}>
+                  {module.assessmentType === "formative"
+                    ? t("reviewModule.formative")
+                    : t("reviewModule.summative")}
+                </Badge>
+              )}
+              {module?.essaySubmission && (
+                <Badge variant="outline" className="text-foreground border-border">
+                  {t("reviewModule.essaySubmission")}
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm">{t("reviewReports.pageDescription")}</p>
+          </div>
+        }
+        action={
+          <div className="flex gap-2 flex-wrap justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => loadGrades(courseId, moduleId)}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              {t("common.refresh")}
+            </Button>
+            {pendingCount > 0 && (
+              <Button
+                size="sm"
+                onClick={() => setOpenReleaseAllModal(true)}
+                disabled={isReleasing}
+                className="gap-2"
+              >
+                {isReleasing ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+                {t("reviewReports.releaseAll")} ({pendingCount})
+              </Button>
+            )}
+          </div>
+        }
+      />
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <ClipboardCheck className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p>{t("reviewReports.noGrades")}</p>
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                {t("reports.totalConversations")}
+              </p>
+              <p className="text-3xl font-bold mt-1">{grades.length}</p>
+            </div>
+            <MessageSquare className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
           </CardContent>
         </Card>
-      ) : (
-        <div className="rounded-xl border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("reviewReports.student")}</TableHead>
-                <TableHead>{t("reviewReports.conversationId")}</TableHead>
-                <TableHead>{t("reviewReports.submittedAt")}</TableHead>
-                <TableHead>{t("reviewReports.totalScore")}</TableHead>
-                {rubric?.criteria.map((c) => (
-                  <TableHead key={c.name} className="whitespace-nowrap">{c.name}</TableHead>
-                ))}
-                <TableHead>{t("reviewReports.released")}</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {grades.map((grade, i) => {
-                const convId = getConvId(grade);
-                const ts = new Date(parseInt(grade.timestamp, 10)).toLocaleDateString();
-                return (
-                  <TableRow key={i} className={cn(!grade.released && "bg-muted/30")}>
-                    <TableCell className="font-medium">
-                      {getStudentName(grade.username)}
-                      {grade.instructorEdited && (
-                        <Badge variant="outline" className="ml-2 text-xs pointer-events-none">
-                          {t("reviewReports.edited")}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{convId.substring(0, 8)}…</TableCell>
-                    <TableCell className="text-sm">{ts}</TableCell>
-                    <TableCell className="font-semibold">
-                      {grade.totalScore}{maxTotal !== undefined ? ` / ${maxTotal}` : ""}
-                    </TableCell>
-                    {rubric?.criteria.map((c) => {
-                      const s = grade.scores.find((sc) => sc.name === c.name);
-                      return (
-                        <TableCell key={c.name}>
-                          {s ? `${s.score}${maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}` : "—"}
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell>
-                      {grade.released ? (
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-white flex items-center gap-1 pointer-events-none w-fit">
-                          <CheckCircle className="h-3 w-3" />
-                          {t("reviewReports.released")}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="flex items-center gap-1 pointer-events-none w-fit">
-                          <Clock className="h-3 w-3" />
-                          {t("reviewReports.pending")}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => openEditModal(grade)} className="gap-1">
-                        <Edit className="h-3.5 w-3.5" />
-                        {t("reviewReports.editGrade")}
-                      </Button>
+        <Card>
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                {t("reviewReports.studentsSubmitted")}
+              </p>
+              <p className="text-3xl font-bold mt-1">{studentsSubmitted}</p>
+            </div>
+            <Users className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                {t("reviewReports.averageScore")}
+              </p>
+              <p className="text-3xl font-bold mt-1">
+                {avgScore ?? "—"}
+                {avgScore && maxTotal ? (
+                  <span className="text-lg text-muted-foreground font-normal"> / {maxTotal}</span>
+                ) : null}
+              </p>
+            </div>
+            <Star className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Student table card */}
+      <Card className="transition-all duration-300 hover:shadow-md">
+        <CardHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+              <h3 className="text-lg font-semibold">{t("reports.studentReports")}</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{t("reports.rowsPerPage")}</span>
+                <Select value={String(rowsPerPage)} onValueChange={handleRowsPerPage}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-muted z-[100]">
+                    {ROWS_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                    <SelectItem value={String(students.length)}>{t("common.all")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 flex-wrap p-3 rounded-lg bg-muted/50">
+              <Input
+                placeholder={t("reports.searchByNameOrEmail")}
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="max-w-xs bg-background"
+                aria-label={t("common.search")}
+              />
+              <Select value={submittedFilter} onValueChange={(v) => handleFilter(v as any)}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-muted z-[100]">
+                  <SelectItem value="all">{t("reviewReports.filterAll")}</SelectItem>
+                  <SelectItem value="submitted">{t("reviewReports.filterSubmitted")}</SelectItem>
+                  <SelectItem value="not-submitted">{t("reviewReports.filterNotSubmitted")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("reports.name")}</TableHead>
+                  <TableHead>{t("reviewReports.bestScore")}</TableHead>
+                  <TableHead>{t("reviewReports.bestSubmission")}</TableHead>
+                  <TableHead aria-label={t("common.actions")}></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredStudents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <ClipboardCheck className="h-8 w-8 text-muted-foreground opacity-50" aria-hidden="true" />
+                        <p className="text-muted-foreground">
+                          {search || submittedFilter !== "all"
+                            ? t("common.noResults")
+                            : t("reviewReports.noGrades")}
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+                ) : (
+                  paginatedStudents.map((student) => {
+                    const bestGrade = bestGradeByUser[student.username];
+                    const studentGrades = gradesByUser[student.username] ?? [];
+                    const totalConvs = studentGrades.length;
+                    // Rank best grade among student's grades sorted by timestamp (1-based)
+                    const sortedGrades = [...studentGrades].sort(
+                      (a, b) => parseInt(a.timestamp, 10) - parseInt(b.timestamp, 10)
+                    );
+                    const bestRank = bestGrade
+                      ? sortedGrades.findIndex(
+                        (g) => g.courseModuleConversationId === bestGrade.courseModuleConversationId
+                      ) + 1
+                      : null;
+                    const convNumber = bestRank ?? null;
+                    // bestRank - 1 = 0-based index matching the conversation array order (grades sorted by timestamp = conversation creation order)
+                    const bestConvIdx = bestRank !== null ? bestRank - 1 : null;
+                    const convPath = bestGrade && bestConvIdx !== null
+                      ? `/reports/review-module/${courseId}/${moduleId}/student/${student.username}/conversation/${bestConvIdx}`
+                      : null;
+                    const submittedAt = bestGrade
+                      ? new Date(parseInt(bestGrade.timestamp, 10)).toLocaleString()
+                      : null;
+                    return (
+                      <TableRow key={student.username}>
+                        <TableCell>
+                          <div className="font-medium">{student.name} {student.family_name}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">{student.email}</div>
+                        </TableCell>
+                        <TableCell>
+                          {bestGrade ? (
+                            <span className="font-semibold">
+                              {bestGrade.totalScore}
+                              {maxTotal !== undefined ? ` / ${maxTotal}` : ""}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {convPath && convNumber !== null ? (
+                            <div>
+                              <Link
+                                to={convPath}
+                                className="text-sm text-primary underline-offset-2 hover:underline font-medium"
+                                aria-label={`Conversation ${convNumber} of ${totalConvs} — ${student.name} ${student.family_name}`}
+                              >
+                                Conversation {convNumber} of {totalConvs}
+                              </Link>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                Best of {totalConvs}{submittedAt ? ` · ${submittedAt}` : ""}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {totalConvs > 0 ? (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
+                              asChild
+                              aria-label={`${t("reviewReports.viewConversations")} — ${student.name} ${student.family_name}`}
+                            >
+                              <Link
+                                className="flex items-center justify-center gap-2 no-underline"
+                                to={`/reports/review-module/${courseId}/${moduleId}/student/${student.username}`}
+                              >
+                                {t("reviewReports.viewConversations")}
+                              </Link>
+                            </Button>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">N/A</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {filteredStudents.length > 0 && (
+            <div className="flex items-center justify-between text-sm text-muted-foreground mt-4">
+              <span>
+                {page * rowsPerPage + 1}–{Math.min((page + 1) * rowsPerPage, filteredStudents.length)}{" "}
+                {t("common.of")} {filteredStudents.length}
+              </span>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => p - 1)}
+                  disabled={page === 0}
+                  aria-label={t("common.previous")}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={page >= totalPages - 1}
+                  aria-label={t("common.next")}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </main>
   );
 }

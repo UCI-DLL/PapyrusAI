@@ -407,10 +407,10 @@ export default function CourseReports(): JSX.Element {
     <ClassCharts
       analysis={analysis}
       courseId={courseId}
+      modules={course.modules}
       setAnalysis={(newAnalysis: any) => {
         setAnalysis(newAnalysis);
         if (newAnalysis === null) {
-          // Navigate back to reports when analysis is cleared
           navigate("/reports");
         }
       }}

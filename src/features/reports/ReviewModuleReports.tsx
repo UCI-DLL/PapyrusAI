@@ -4,6 +4,7 @@ import Get from "../../utility/Get";
 import Post from "../../utility/Post";
 import { getGrades, postReleaseAllGrades } from "../../utility/endpoints/GradeEndpoints";
 import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
+import { getConversation } from "../../utility/endpoints/ConversationEndpoints";
 import { GradeType, ModuleType } from "../../utility/types/CourseTypes";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -11,18 +12,29 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
+import { Checkbox } from "../../components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 import {
-  CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, RefreshCw,
-  MessageSquare, Users, Star,
+  ArrowUpDown, CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, Download, RefreshCw,
+  MessageSquare, SlidersHorizontal, Users, Star,
 } from "lucide-react";
 
 const ROWS_OPTIONS = [10, 25, 50] as const;
+type ExportFormat = "json" | "txt" | "csv";
+function csvCell(v: string | number | null | undefined): string {
+  if (v == null) return "";
+  const s = String(v);
+  return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+}
+type SortBy = "name-asc" | "name-desc" | "email-asc" | "email-desc" | "score-asc" | "score-desc" | "time-asc" | "time-desc";
 
 export default function ReviewModuleReports(): JSX.Element {
   const { courseId = "", moduleId = "" } = useParams<{ courseId: string; moduleId: string }>();
@@ -30,53 +42,90 @@ export default function ReviewModuleReports(): JSX.Element {
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
 
+  const SORT_LABELS: Record<SortBy, string> = {
+    "name-asc": t("reviewReports.sortNameAZ"), "name-desc": t("reviewReports.sortNameZA"),
+    "email-asc": t("reviewReports.sortEmailAZ"), "email-desc": t("reviewReports.sortEmailZA"),
+    "score-asc": t("reviewReports.sortScoreLowHigh"), "score-desc": t("reviewReports.sortScoreHighLow"),
+    "time-asc": t("reviewReports.sortSubmittedFirst"), "time-desc": t("reviewReports.sortSubmittedLast"),
+  };
+
   const [courseName, setCourseName] = useState("");
   const [module, setModule] = useState<ModuleType>();
   const [grades, setGrades] = useState<GradeType[]>([]);
   const [students, setStudents] = useState<CustomUserType[]>([]);
-  const [gradesLoading, setGradesLoading] = useState(true);
-  const [courseLoaded, setCourseLoaded] = useState(true);
-  const [studentsLoaded, setStudentsLoaded] = useState(true);
-  const isLoading = gradesLoading || courseLoaded || studentsLoaded;
+  const [dataKey, setDataKey] = useState<string | null>(null);
+  const [gradesLoading, setGradesLoading] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
   const [openReleaseAllModal, setOpenReleaseAllModal] = useState(false);
+  const [selectedUsernames, setSelectedUsernames] = useState<Set<string>>(new Set());
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("json");
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const paramsKey = courseId && moduleId ? `${courseId}:${moduleId}` : null;
+  const isLoading = dataKey !== paramsKey;
 
   const [search, setSearch] = useState("");
   const [submittedFilter, setSubmittedFilter] = useState<"all" | "submitted" | "not-submitted">("all");
+  const [sortBy, setSortBy] = useState<SortBy>("name-asc");
+  const [scoreMin, setScoreMin] = useState("");
+  const [scoreMax, setScoreMax] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
   const [page, setPage] = useState(0);
 
   useEffect(() => {
     if (!courseId || !moduleId) return;
     const controller = new AbortController();
+    const key = `${courseId}:${moduleId}`;
+
+    let courseReady = false;
+    let studentsReady = false;
+    let gradesReady = false;
+    const checkReady = () => {
+      if (courseReady && studentsReady && gradesReady) setDataKey(key);
+    };
 
     Post(logEvent(), { eventType: "view_page", metadata: { courseId, moduleId, page: "review_module_reports" } });
 
     Get(getCourse(courseId), controller.signal).then((res) => {
+      if (controller.signal.aborted) return;
       if (res?.status < 300 && res.data) {
         setCourseName(res.data.name ?? "");
         setModule(res.data.modules.find((m: ModuleType) => m.id === moduleId));
       } else if (res?.status === 401) {
         navigate("/login");
       }
-      setCourseLoaded(false);
+      courseReady = true;
+      checkReady();
     });
 
     const fetchStudents = (nextToken?: string, acc: CustomUserType[] = []) => {
       Get(getUsersInCourse(courseId, 50, nextToken ?? ""), controller.signal).then((res) => {
+        if (controller.signal.aborted) return;
         if (res?.status < 300 && res.data) {
-          const page = Array.isArray(res.data.users) ? res.data.users : [];
-          const all = [...acc, ...page];
+          const pageUsers = Array.isArray(res.data.users) ? res.data.users : [];
+          const all = [...acc, ...pageUsers];
           if (res.data.nextToken) fetchStudents(res.data.nextToken, all);
-          else { setStudents(all); setStudentsLoaded(false); }
+          else { setStudents(all); studentsReady = true; checkReady(); }
         } else {
-          setStudentsLoaded(false);
+          studentsReady = true;
+          checkReady();
         }
       });
     };
     fetchStudents();
 
-    loadGrades(courseId, moduleId, controller.signal);
+    Get(getGrades(courseId, moduleId), controller.signal, true).then((res) => {
+      if (controller.signal.aborted) return;
+      if (res?.status < 300 && res.data) {
+        setGrades(Array.isArray(res.data) ? res.data : []);
+      } else if (res?.status === 401) {
+        navigate("/login");
+      }
+      gradesReady = true;
+      checkReady();
+    });
+
     return () => controller.abort();
     // eslint-disable-next-line
   }, [courseId, moduleId]);
@@ -133,37 +182,241 @@ export default function ReviewModuleReports(): JSX.Element {
   );
 
   const sortedStudents = [...students].sort((a, b) => {
-    const cmp = (a.family_name ?? "").localeCompare(b.family_name ?? "");
-    return cmp !== 0 ? cmp : (a.name ?? "").localeCompare(b.name ?? "");
+    const aBest = bestGradeByUser[a.username];
+    const bBest = bestGradeByUser[b.username];
+    switch (sortBy) {
+      case "name-asc":
+      case "name-desc": {
+        const cmp = (a.family_name ?? "").localeCompare(b.family_name ?? "") || (a.name ?? "").localeCompare(b.name ?? "");
+        return sortBy === "name-asc" ? cmp : -cmp;
+      }
+      case "email-asc":
+      case "email-desc": {
+        const cmp = (a.email ?? "").localeCompare(b.email ?? "");
+        return sortBy === "email-asc" ? cmp : -cmp;
+      }
+      case "score-asc":
+      case "score-desc": {
+        const aScore = aBest?.totalScore ?? (sortBy === "score-asc" ? Infinity : -Infinity);
+        const bScore = bBest?.totalScore ?? (sortBy === "score-asc" ? Infinity : -Infinity);
+        return sortBy === "score-asc" ? aScore - bScore : bScore - aScore;
+      }
+      case "time-asc":
+      case "time-desc": {
+        const aTime = aBest ? parseInt(aBest.timestamp, 10) : (sortBy === "time-asc" ? Infinity : -Infinity);
+        const bTime = bBest ? parseInt(bBest.timestamp, 10) : (sortBy === "time-asc" ? Infinity : -Infinity);
+        return sortBy === "time-asc" ? aTime - bTime : bTime - aTime;
+      }
+    }
   });
 
   // Search + filter
+  const minScoreVal = scoreMin !== "" ? Number(scoreMin) : null;
+  const maxScoreVal = scoreMax !== "" ? Number(scoreMax) : null;
+
   const filteredStudents = sortedStudents.filter((s) => {
     const q = search.toLowerCase();
     const matchesSearch =
       !q ||
       `${s.name} ${s.family_name}`.toLowerCase().includes(q) ||
       s.email.toLowerCase().includes(q);
-    const hasSubmission = !!bestGradeByUser[s.username];
+    const bestGrade = bestGradeByUser[s.username];
+    const hasSubmission = !!bestGrade;
     const matchesFilter =
       submittedFilter === "all" ||
       (submittedFilter === "submitted" && hasSubmission) ||
       (submittedFilter === "not-submitted" && !hasSubmission);
-    return matchesSearch && matchesFilter;
+    const score = bestGrade?.totalScore;
+    const matchesScore =
+      (minScoreVal === null || (score !== undefined && score >= minScoreVal)) &&
+      (maxScoreVal === null || (score !== undefined && score <= maxScoreVal));
+    return matchesSearch && matchesFilter && matchesScore;
   });
 
   const totalPages = Math.ceil(filteredStudents.length / rowsPerPage);
   const paginatedStudents = filteredStudents.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+  const activeFilterCount = (submittedFilter !== "all" ? 1 : 0) + (scoreMin !== "" ? 1 : 0) + (scoreMax !== "" ? 1 : 0);
 
   // Reset to page 0 when filters change
   const handleSearch = (v: string) => { setSearch(v); setPage(0); };
   const handleFilter = (v: "all" | "submitted" | "not-submitted") => { setSubmittedFilter(v); setPage(0); };
+  const handleSort = (v: SortBy) => { setSortBy(v); setPage(0); };
+  const handleScoreMin = (v: string) => { setScoreMin(v); setPage(0); };
+  const handleScoreMax = (v: string) => { setScoreMax(v); setPage(0); };
   const handleRowsPerPage = (v: string) => { setRowsPerPage(Number(v)); setPage(0); };
+
+  const allVisibleUsernames = filteredStudents.map((s) => s.username);
+  const allSelected = allVisibleUsernames.length > 0 && allVisibleUsernames.every((u) => selectedUsernames.has(u));
+  const someSelected = !allSelected && allVisibleUsernames.some((u) => selectedUsernames.has(u));
+  const toggleStudent = (uname: string) => setSelectedUsernames((prev) => { const next = new Set(prev); next.has(uname) ? next.delete(uname) : next.add(uname); return next; });
+  const toggleAll = () => setSelectedUsernames(allSelected ? new Set() : new Set(allVisibleUsernames));
+  const clearSelection = () => setSelectedUsernames(new Set());
+
+  async function handleDownload() {
+    setExportLoading(true);
+    const exportStudents = selectedUsernames.size > 0
+      ? filteredStudents.filter((s) => selectedUsernames.has(s.username))
+      : filteredStudents;
+
+    const studentData = await Promise.all(
+      exportStudents.map(async (student) => {
+        const bestGrade = bestGradeByUser[student.username];
+        const studentGrades = gradesByUser[student.username] ?? [];
+        const sortedGrades = [...studentGrades].sort(
+          (a, b) => parseInt(a.timestamp, 10) - parseInt(b.timestamp, 10)
+        );
+        const bestRank = bestGrade
+          ? sortedGrades.findIndex(
+              (g) => g.courseModuleConversationId === bestGrade.courseModuleConversationId
+            ) + 1
+          : null;
+        const bestConvIdx = bestRank !== null ? bestRank - 1 : null;
+
+        let messages: any[] = [];
+        if (bestConvIdx !== null) {
+          const res = await Get(getConversation(courseId, moduleId, String(bestConvIdx), student.username));
+          if (res?.status < 300 && res.data?.messages) {
+            messages = [...res.data.messages].sort(
+              (a: any, b: any) => parseInt(a.timestamp ?? "0") - parseInt(b.timestamp ?? "0")
+            );
+          }
+        }
+
+        return {
+          name: `${student.name} ${student.family_name}`.trim(),
+          email: student.email,
+          username: student.username,
+          best_score: bestGrade?.totalScore ?? null,
+          max_score: maxTotal ?? null,
+          status: bestGrade?.released ? "released" : bestGrade ? "pending" : "not_submitted",
+          submitted_at: bestGrade ? new Date(parseInt(bestGrade.timestamp, 10)).toISOString() : null,
+          scores: bestGrade?.scores.map((s) => ({ criterion: s.name, score: s.score, feedback: s.feedback })) ?? [],
+          best_conversation: bestConvIdx !== null ? {
+            attempt_number: bestRank,
+            total_attempts: studentGrades.length,
+            messages: messages.map((m: any) => ({
+              role: m.role === "user" ? "student" : "ai",
+              content: m.content,
+              hidden: m.userVisible === false,
+              timestamp: (() => { const n = m.id ? parseInt(m.id.substring(0, 13), 10) : NaN; return isNaN(n) ? null : new Date(n).toISOString(); })(),
+            })),
+          } : null,
+        };
+      })
+    );
+
+    const payload = {
+      exported_at: new Date().toISOString(),
+      course: { name: courseName, id: courseId },
+      module: { name: module?.name ?? "", id: moduleId, assessment_type: module?.assessmentType ?? "", essay_mode: module?.essaySubmission ?? false },
+      students: studentData,
+    };
+
+    function buildTxt(): string {
+      const line = (label: string, val: string | number | null | undefined) => `  ${label}: ${val ?? "—"}`;
+      return [
+        "=== PapyrusAI Module Export ===",
+        `Exported At: ${payload.exported_at}`,
+        "",
+        "COURSE", line("Name", payload.course.name), line("ID", payload.course.id),
+        "",
+        "MODULE", line("Name", payload.module.name), line("Assessment Type", payload.module.assessment_type), line("Essay Mode", payload.module.essay_mode ? "Yes" : "No"),
+        "",
+        ...payload.students.flatMap((s) => [
+          `STUDENT: ${s.name} <${s.email}>`,
+          line("Best Score", s.best_score != null ? `${s.best_score}${s.max_score != null ? ` / ${s.max_score}` : ""}` : null),
+          line("Status", s.status),
+          line("Submitted At", s.submitted_at),
+          ...(s.scores.length ? ["  Scores:", ...s.scores.map((sc) => `    [${sc.criterion}]: ${sc.score}${sc.feedback ? ` — ${sc.feedback}` : ""}`)] : []),
+          ...(s.best_conversation ? [
+            `  Best Conversation (Attempt ${s.best_conversation.attempt_number} of ${s.best_conversation.total_attempts}):`,
+            ...(s.best_conversation.messages.length
+              ? s.best_conversation.messages.map((m) => `    [${m.role === "student" ? "Student" : "AI"}]${m.hidden ? " (hidden)" : ""}: ${m.content}`)
+              : ["    (no messages)"]),
+          ] : ["  Best Conversation: —"]),
+          "",
+        ]),
+      ].join("\n");
+    }
+
+    function buildCsv(): string {
+      const rows: (string | number | null | undefined)[][] = [];
+      rows.push(["Field", "Value"]);
+      rows.push(["Course", payload.course.name]);
+      rows.push(["Module", payload.module.name]);
+      rows.push(["Assessment Type", payload.module.assessment_type]);
+      rows.push([]);
+      payload.students.forEach((s) => {
+        rows.push(["Student", s.name, s.email]);
+        rows.push(["Best Score", s.best_score, `/ ${s.max_score ?? "?"}`]);
+        rows.push(["Status", s.status]);
+        rows.push(["Submitted At", s.submitted_at]);
+        if (s.scores.length) {
+          rows.push(["Criterion", "Score", "Feedback"]);
+          s.scores.forEach((sc) => rows.push([sc.criterion, sc.score, sc.feedback]));
+        }
+        if (s.best_conversation?.messages.length) {
+          rows.push([`Best Conversation (Attempt ${s.best_conversation.attempt_number} of ${s.best_conversation.total_attempts})`]);
+          rows.push(["Role", "Content", "Hidden", "Timestamp"]);
+          s.best_conversation.messages.forEach((m) => rows.push([m.role, m.content, m.hidden ? "Yes" : "No", m.timestamp]));
+        }
+        rows.push([]);
+      });
+      return rows.map((r) => r.map(csvCell).join(",")).join("\n");
+    }
+
+    const safeName = `${(module?.name ?? moduleId).replace(/\s+/g, "_")}_module_export`;
+    let content: string; let mime: string; let ext: string;
+    if (exportFormat === "json") { content = JSON.stringify(payload, null, 2); mime = "application/json"; ext = "json"; }
+    else if (exportFormat === "txt") { content = buildTxt(); mime = "text/plain"; ext = "txt"; }
+    else { content = buildCsv(); mime = "text/csv"; ext = "csv"; }
+
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.download = `${safeName}.${ext}`;
+    a.href = url;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExportDialogOpen(false);
+    setExportLoading(false);
+  }
 
   if (isLoading) return <PageLoader pageName={t("reviewReports.title")} />;
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("reviewReports.export")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("reviewReports.exportBestConvNote")}</p>
+          <div className="space-y-2 py-2">
+            {(["json", "txt", "csv"] as ExportFormat[]).map((fmt) => (
+              <button
+                key={fmt}
+                onClick={() => setExportFormat(fmt)}
+                className={`w-full text-left rounded-lg border p-3 transition-colors ${
+                  exportFormat === fmt ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                }`}
+              >
+                <p className="font-medium">{fmt.toUpperCase()}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {fmt === "json" ? t("reviewReports.exportFormatJson") : fmt === "txt" ? t("reviewReports.exportFormatTxt") : t("reviewReports.exportFormatCsv")}
+                </p>
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleDownload} disabled={exportLoading} className="gap-2">
+              <Download className="h-4 w-4" />
+              {exportLoading ? t("common.loading") : t("reviewReports.download")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <DialogWrapper
         open={openReleaseAllModal}
         onOpenChange={setOpenReleaseAllModal}
@@ -292,6 +545,15 @@ export default function ReviewModuleReports(): JSX.Element {
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
               <h3 className="text-lg font-semibold">{t("reports.studentReports")}</h3>
               <div className="flex items-center gap-2">
+                {selectedUsernames.size > 0 && (
+                  <Button size="sm" variant="outline" onClick={clearSelection}>
+                    {t("reviewReports.clearSelected", { count: selectedUsernames.size })}
+                  </Button>
+                )}
+                <Button size="sm" className="gap-2" onClick={() => setExportDialogOpen(true)}>
+                  <Download className="h-4 w-4" />
+                  {t("reviewReports.export")}
+                </Button>
                 <span className="text-sm text-muted-foreground">{t("reports.rowsPerPage")}</span>
                 <Select value={String(rowsPerPage)} onValueChange={handleRowsPerPage}>
                   <SelectTrigger className="w-20">
@@ -306,7 +568,7 @@ export default function ReviewModuleReports(): JSX.Element {
                 </Select>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 flex-wrap p-3 rounded-lg bg-muted/50">
+            <div className="flex flex-wrap gap-3 p-3 rounded-lg bg-muted/50">
               <Input
                 placeholder={t("reports.searchByNameOrEmail")}
                 value={search}
@@ -314,16 +576,104 @@ export default function ReviewModuleReports(): JSX.Element {
                 className="max-w-xs bg-background"
                 aria-label={t("common.search")}
               />
-              <Select value={submittedFilter} onValueChange={(v) => handleFilter(v as any)}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-muted z-[100]">
-                  <SelectItem value="all">{t("reviewReports.filterAll")}</SelectItem>
-                  <SelectItem value="submitted">{t("reviewReports.filterSubmitted")}</SelectItem>
-                  <SelectItem value="not-submitted">{t("reviewReports.filterNotSubmitted")}</SelectItem>
-                </SelectContent>
-              </Select>
+
+              {/* Filter popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 h-9">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    {t("reviewReports.filterButton")}
+                    {activeFilterCount > 0 && (
+                      <Badge className="ml-0.5 h-5 min-w-5 px-1 text-xs flex items-center justify-center">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-60 space-y-4 p-4">
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("reviewReports.statusFilter")}</p>
+                    <div className="space-y-1">
+                      {([
+                        { value: "all", label: t("reviewReports.filterAll") },
+                        { value: "submitted", label: t("reviewReports.filterSubmitted") },
+                        { value: "not-submitted", label: t("reviewReports.filterNotSubmitted") },
+                      ] as const).map(({ value, label }) => (
+                        <button
+                          key={value}
+                          onClick={() => handleFilter(value)}
+                          className={`w-full text-left text-sm px-2 py-1.5 rounded-md transition-colors ${
+                            submittedFilter === value ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("reviewReports.scoreRange")}</p>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Min"
+                        value={scoreMin}
+                        onChange={(e) => handleScoreMin(e.target.value)}
+                        className="w-full"
+                        aria-label="Minimum score"
+                      />
+                      <span className="text-muted-foreground text-sm shrink-0">–</span>
+                      <Input
+                        type="number"
+                        placeholder="Max"
+                        value={scoreMax}
+                        onChange={(e) => handleScoreMax(e.target.value)}
+                        className="w-full"
+                        aria-label="Maximum score"
+                      />
+                    </div>
+                  </div>
+                  {activeFilterCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => { setSubmittedFilter("all"); setScoreMin(""); setScoreMax(""); setPage(0); }}
+                    >
+                      {t("reviewReports.clearFilters")}
+                    </Button>
+                  )}
+                </PopoverContent>
+              </Popover>
+
+              {/* Sort dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2 h-9">
+                    <ArrowUpDown className="h-4 w-4" />
+                    {SORT_LABELS[sortBy]}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuRadioGroup value={sortBy} onValueChange={(v) => handleSort(v as SortBy)}>
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">{t("reviewReports.sortSectionName")}</DropdownMenuLabel>
+                    <DropdownMenuRadioItem value="name-asc">{t("reviewReports.sortAZ")}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name-desc">{t("reviewReports.sortZA")}</DropdownMenuRadioItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">{t("reviewReports.sortSectionEmail")}</DropdownMenuLabel>
+                    <DropdownMenuRadioItem value="email-asc">{t("reviewReports.sortAZ")}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="email-desc">{t("reviewReports.sortZA")}</DropdownMenuRadioItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">{t("reviewReports.sortSectionScore")}</DropdownMenuLabel>
+                    <DropdownMenuRadioItem value="score-asc">{t("reviewReports.sortLowToHigh")}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="score-desc">{t("reviewReports.sortHighToLow")}</DropdownMenuRadioItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">{t("reviewReports.sortSectionTime")}</DropdownMenuLabel>
+                    <DropdownMenuRadioItem value="time-asc">{t("reviewReports.sortSubmittedFirst")}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="time-desc">{t("reviewReports.sortSubmittedLast")}</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
@@ -332,6 +682,13 @@ export default function ReviewModuleReports(): JSX.Element {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                      onCheckedChange={toggleAll}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
                   <TableHead>{t("reports.name")}</TableHead>
                   <TableHead>{t("reviewReports.bestScore")}</TableHead>
                   <TableHead>{t("reviewReports.bestSubmission")}</TableHead>
@@ -339,9 +696,18 @@ export default function ReviewModuleReports(): JSX.Element {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStudents.length === 0 ? (
+                {gradesLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8">
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground opacity-50" aria-hidden="true" />
+                        <p className="text-muted-foreground">{t("common.loading")}</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredStudents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <ClipboardCheck className="h-8 w-8 text-muted-foreground opacity-50" aria-hidden="true" />
                         <p className="text-muted-foreground">
@@ -377,6 +743,13 @@ export default function ReviewModuleReports(): JSX.Element {
                       : null;
                     return (
                       <TableRow key={student.username}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedUsernames.has(student.username)}
+                            onCheckedChange={() => toggleStudent(student.username)}
+                            aria-label={`Select ${student.name} ${student.family_name}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div className="font-medium">{student.name} {student.family_name}</div>
                           <div className="text-xs text-muted-foreground mt-0.5">{student.email}</div>

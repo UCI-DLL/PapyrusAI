@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Get from "../../utility/Get";
+import Post from "../../utility/Post";
+import Put from "../../utility/Put";
 import { getConversation } from "../../utility/endpoints/ConversationEndpoints";
 import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
-import { getGrades } from "../../utility/endpoints/GradeEndpoints";
-import { GradeType, ModuleType } from "../../utility/types/CourseTypes";
+import { getGrades, postRegrade, putUpdateGrade } from "../../utility/endpoints/GradeEndpoints";
+import { buildRegradeContent } from "../../utility/chat/buildRegradeContent";
+import { GradeScore, GradeType, ModuleType } from "../../utility/types/CourseTypes";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { useTranslation } from "../../hooks/useTranslation";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Textarea } from "../../components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../components/ui/accordion";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../../components/ui/sheet";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
@@ -17,7 +21,9 @@ import { PageLoader } from "../../components/Common";
 import { MessageLeft, MessageRight } from "../../components/Message";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { BookOpen, CheckCircle, ChevronLeft, Clock, Download, Eye, MessageSquare } from "lucide-react";
+import { AlertTriangle, BookOpen, CheckCircle, ChevronLeft, Clock, Download, Eye, MessageSquare, RefreshCw } from "lucide-react";
+
+type GradingType = "ma6";
 
 type ExportFormat = "json" | "txt" | "csv";
 
@@ -47,50 +53,75 @@ export default function ReviewConversationView(): JSX.Element {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("json");
+  const [regradeDialogOpen, setRegradeDialogOpen] = useState(false);
+  const [gradingType, setGradingType] = useState<GradingType>("ma6");
+  const [regradeContext, setRegradeContext] = useState("");
+  const [regradeLoading, setRegradeLoading] = useState(false);
+  const [regradeResults, setRegradeResults] = useState<GradeScore[] | null>(null);
+  const [regradeError, setRegradeError] = useState<string | null>(null);
+  const [saveLoading, setSaveLoading] = useState(false);
 
-  const [courseLoading, setCourseLoading] = useState(true);
-  const [conversationLoading, setConversationLoading] = useState(true);
-  const [gradesLoading, setGradesLoading] = useState(true);
-  const [studentLoading, setStudentLoading] = useState(true);
-  const isLoading = courseLoading || conversationLoading || gradesLoading || studentLoading;
+  const [dataKey, setDataKey] = useState<string | null>(null);
+
+  const paramsKey = courseId && moduleId && username && convIndex !== ""
+    ? `${courseId}:${moduleId}:${username}:${convIndex}`
+    : null;
+  const isLoading = dataKey !== paramsKey;
 
   useEffect(() => {
     if (!courseId || !moduleId || !username || convIndex === "") return;
     const controller = new AbortController();
+    const key = `${courseId}:${moduleId}:${username}:${convIndex}`;
+
+    let courseReady = false;
+    let conversationReady = false;
+    let gradesReady = false;
+    let studentReady = false;
+    const checkReady = () => {
+      if (courseReady && conversationReady && gradesReady && studentReady) setDataKey(key);
+    };
 
     Get(getCourse(courseId), controller.signal).then((res) => {
+      if (controller.signal.aborted) return;
       if (res?.status < 300 && res.data) {
         setCourseName(res.data.name ?? "");
         setModule(res.data.modules.find((m: ModuleType) => m.id === moduleId));
       } else if (res?.status === 401) navigate("/login");
-      setCourseLoading(false);
+      courseReady = true;
+      checkReady();
     });
 
     Get(getConversation(courseId, moduleId, convIndex, username), controller.signal).then((res) => {
+      if (controller.signal.aborted) return;
       if (res?.status < 300 && res.data) setConversation(res.data);
       else if (res?.status === 401) navigate("/login");
-      setConversationLoading(false);
+      conversationReady = true;
+      checkReady();
     });
 
     Get(getGrades(courseId, moduleId), controller.signal, true).then((res) => {
+      if (controller.signal.aborted) return;
       if (res?.status < 300 && res.data) {
         const all: GradeType[] = Array.isArray(res.data) ? res.data : [];
         setAllGrades(all.filter((g: GradeType) => g.username === username));
       } else if (res?.status === 401) navigate("/login");
-      setGradesLoading(false);
+      gradesReady = true;
+      checkReady();
     });
 
     const fetchStudents = (nextToken?: string, acc: CustomUserType[] = []) => {
       Get(getUsersInCourse(courseId, 50, nextToken ?? ""), controller.signal).then((res) => {
+        if (controller.signal.aborted) return;
         if (res?.status < 300 && res.data) {
           const page: CustomUserType[] = Array.isArray(res.data.users) ? res.data.users : [];
           const all = [...acc, ...page];
           const found = all.find((u) => u.username === username || u.sub === username);
-          if (found) { setStudent(found); setStudentLoading(false); return; }
+          if (found) { setStudent(found); studentReady = true; checkReady(); return; }
           if (res.data.nextToken) fetchStudents(res.data.nextToken, all);
-          else setStudentLoading(false);
+          else { studentReady = true; checkReady(); }
         } else {
-          setStudentLoading(false);
+          studentReady = true;
+          checkReady();
         }
       });
     };
@@ -151,7 +182,7 @@ export default function ReviewConversationView(): JSX.Element {
         role: m.role === "user" ? "student" : "ai",
         content: m.content,
         hidden: m.userVisible === false,
-        timestamp: m.id ? new Date(parseInt(m.id.substring(0, 13), 10)).toISOString() : null,
+        timestamp: (() => { const n = m.id ? parseInt(m.id.substring(0, 13), 10) : NaN; return isNaN(n) ? null : new Date(n).toISOString(); })(),
       })),
     };
   }
@@ -260,6 +291,59 @@ export default function ReviewConversationView(): JSX.Element {
     a.click();
     URL.revokeObjectURL(url);
     setExportDialogOpen(false);
+  }
+
+  function handleRegradeClose() {
+    setRegradeDialogOpen(false);
+    setRegradeResults(null);
+    setRegradeContext("");
+    setRegradeError(null);
+  }
+
+  async function handleRegrade() {
+    if (!student || !module) return;
+    setRegradeLoading(true);
+    setRegradeError(null);
+    const essay = buildRegradeContent(messages, { name: student.name, family_name: student.family_name }, module);
+    const body: Record<string, any> = {
+      essay,
+      gradingType,
+      organization: process.env.REACT_APP_ORGANIZATION ?? "",
+      courseId,
+      moduleId,
+      rubricId: rubric?.id,
+    };
+    if (regradeContext.trim()) body.essayQuestion = regradeContext.trim();
+    const res = await Post(postRegrade(), body, true);
+    setRegradeLoading(false);
+    if (res?.status < 300 && Array.isArray(res.data?.data)) {
+      setRegradeResults(res.data.data as GradeScore[]);
+    } else {
+      setRegradeError(t("reviewReports.regradeError"));
+    }
+  }
+
+  async function handleSaveGrades() {
+    if (!regradeResults || !conversation?.id) return;
+    setSaveLoading(true);
+    const totalScore = regradeResults.reduce((sum, s) => sum + (s.score ?? 0), 0);
+    const res = await Put(putUpdateGrade(courseId, moduleId, username, conversation.id), {
+      scores: regradeResults,
+      totalScore,
+      released: grade?.released ?? false,
+      instructorNotes: grade?.instructorNotes ?? "",
+    }, true);
+    if (res?.status < 300) {
+      const gradesRes = await Get(getGrades(courseId, moduleId), undefined, true);
+      if (gradesRes?.status < 300) {
+        const all: GradeType[] = Array.isArray(gradesRes.data) ? gradesRes.data : [];
+        setAllGrades(all.filter((g: GradeType) => g.username === username));
+      }
+      handleRegradeClose();
+    } else {
+      setRegradeError(t("reviewReports.regradeError"));
+    }
+    setSaveLoading(false);
   }
 
   if (isLoading) return <PageLoader pageName={t("reviewReports.conversationDetails")} />;
@@ -402,6 +486,10 @@ export default function ReviewConversationView(): JSX.Element {
                   {t("reviewReports.openConversation")}
                 </Button>
               )}
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setRegradeDialogOpen(true)}>
+                <RefreshCw className="h-4 w-4" />
+                {t("reviewReports.regrade")}
+              </Button>
               <Button size="sm" className="gap-2" onClick={() => setExportDialogOpen(true)}>
                 <Download className="h-4 w-4" />
                 {t("reviewReports.export")}
@@ -511,6 +599,117 @@ export default function ReviewConversationView(): JSX.Element {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Regrade dialog */}
+      <Dialog open={regradeDialogOpen} onOpenChange={(open) => { if (!open) handleRegradeClose(); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {regradeResults ? t("reviewReports.regradeResults") : t("reviewReports.regrade")}
+            </DialogTitle>
+          </DialogHeader>
+
+          {regradeResults ? (
+            /* Results phase */
+            <div className="space-y-4">
+              <div className="rounded-md border divide-y text-sm">
+                {regradeResults.map((s, i) => (
+                  <div key={i} className="px-3 py-2.5 space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{s.name}</span>
+                      <Badge variant="secondary">
+                        {s.score ?? "—"}
+                        {maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                      </Badge>
+                    </div>
+                    {s.feedback && (
+                      <p className="text-xs text-muted-foreground leading-relaxed">{s.feedback}</p>
+                    )}
+                  </div>
+                ))}
+                <div className="px-3 py-2.5 flex items-center justify-between font-semibold">
+                  <span>{t("reviewReports.totalScore")}</span>
+                  <span>
+                    {regradeResults.reduce((sum, s) => sum + (s.score ?? 0), 0)}
+                    {maxTotal !== undefined ? ` / ${maxTotal}` : ""}
+                  </span>
+                </div>
+              </div>
+              {module?.assessmentType === "formative" && (
+                <div className="flex gap-2 rounded-md border border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/30 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>{t("reviewReports.formativeRegradeNote")}</span>
+                </div>
+              )}
+              {regradeError && (
+                <p className="text-sm text-destructive">{regradeError}</p>
+              )}
+            </div>
+          ) : (
+            /* Configure phase */
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t("reviewReports.gradingMethod")}
+                </p>
+                <button
+                  onClick={() => setGradingType("ma6")}
+                  className={`w-full text-left rounded-lg border p-3 transition-colors ${
+                    gradingType === "ma6" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <p className="font-medium">MA6</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.ma6Desc")}</p>
+                </button>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t("reviewReports.additionalContext")}{" "}
+                  <span className="normal-case font-normal text-muted-foreground">({t("common.optional")})</span>
+                </p>
+                <Textarea
+                  placeholder={t("reviewReports.additionalContextPlaceholder")}
+                  value={regradeContext}
+                  onChange={(e) => setRegradeContext(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+              {module?.assessmentType === "formative" && (
+                <div className="flex gap-2 rounded-md border border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/30 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>{t("reviewReports.formativeRegradeNote")}</span>
+                </div>
+              )}
+              {regradeError && (
+                <p className="text-sm text-destructive">{regradeError}</p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            {regradeResults ? (
+              <>
+                <Button variant="outline" onClick={() => { setRegradeResults(null); setRegradeError(null); }}>
+                  {t("reviewReports.startOver")}
+                </Button>
+                <Button onClick={handleSaveGrades} disabled={saveLoading} className="gap-2">
+                  {saveLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
+                  {saveLoading ? t("reviewReports.savingGrades") : t("reviewReports.replaceGrades")}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={handleRegradeClose}>{t("common.cancel")}</Button>
+                <Button onClick={handleRegrade} disabled={regradeLoading} className="gap-2">
+                  {regradeLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
+                  {regradeLoading ? t("reviewReports.regrading") : t("reviewReports.runRegrade")}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Export format dialog */}
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>

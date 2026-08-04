@@ -12,6 +12,7 @@ export type ConversationType = {
   messages: Array<string>,
   name: string,
   completed?: boolean,
+  voidedByInstructor?: boolean,
 }
 
 export type MessageType = {
@@ -31,7 +32,7 @@ export type MessageType = {
   finished?: boolean
 }
 
-export type MessageTypeType = "text" | "file"
+export type MessageTypeType = "text" | "file" | "essayDraft"
 
 export type StreamMessageType = {
   message: string,

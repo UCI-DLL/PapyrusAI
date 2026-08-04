@@ -1,18 +1,21 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import ChatSidebar from "./components/ChatSidebar";
 import Get from "../../utility/Get";
+import Patch from "../../utility/Patch";
 import Post from "../../utility/Post";
 import {
   getConversationList,
   postUpdateConversation,
+  patchVoidConversation,
   getConversation,
 } from "../../utility/endpoints/ConversationEndpoints";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
+import { getGrades } from "../../utility/endpoints/GradeEndpoints";
 import { getUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { UserContext } from "../../utility/context/UserContext";
 import { AlertContext } from "../../utility/context/AlertContext";
-import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
+import { CourseType, GradeType, ModuleType } from "../../utility/types/CourseTypes";
 import { ConversationListType } from "../../utility/types/ConversationTypes";
 import { UserType } from "../../utility/types/UserTypes";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -42,6 +45,8 @@ export default function ChatLayout(): JSX.Element {
   const [viewUser, setViewUser] = useState<UserType>();
   const [conversationList, setConversationList] =
     useState<ConversationListType>();
+  const [grades, setGrades] = useState<GradeType[]>([]);
+  const [gradesLoaded, setGradesLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmittingRename, setIsSubmittingRename] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
@@ -173,6 +178,31 @@ export default function ChatLayout(): JSX.Element {
     };
   }, [username, courseId, moduleId, navigate, setAlert, t]);
 
+  // Load grades for review modules once module info is known
+  useEffect(() => {
+    if (!moduleInfo || moduleInfo.moduleType !== "review" || !courseId || !moduleId) return;
+    setGradesLoaded(false);
+    const controller = new AbortController();
+    Get(getGrades(courseId, moduleId), controller.signal, true).then((res) => {
+      if (res?.status < 300 && res.data) {
+        setGrades(Array.isArray(res.data) ? res.data : []);
+      } else {
+        setGrades([]);
+      }
+      setGradesLoaded(true);
+    });
+    return () => controller.abort();
+  }, [courseId, moduleId, moduleInfo]); // eslint-disable-line
+
+  const refreshGrades = useCallback(() => {
+    if (!moduleInfo || moduleInfo.moduleType !== "review" || !courseId || !moduleId) return;
+    Get(getGrades(courseId, moduleId), undefined, true).then((res) => {
+      if (res?.status < 300 && res.data) {
+        setGrades(Array.isArray(res.data) ? res.data : []);
+      }
+    });
+  }, [courseId, moduleId, moduleInfo]); // eslint-disable-line
+
   // Handlers for sidebar conversation actions
   function handleRenameConversation(
     cId: string,
@@ -253,6 +283,28 @@ export default function ChatLayout(): JSX.Element {
     });
   }
 
+  function handleVoidConversation(cId: string, mId: string, index: string, voided: boolean) {
+    if (!viewUser) return;
+    Patch(patchVoidConversation(cId, mId, index, viewUser.username), { voidedByInstructor: voided }).then((res) => {
+      if (res?.status < 300) {
+        setConversationList((prev) => {
+          if (!prev) return prev;
+          const convs = [...prev.conversations];
+          const idx = parseInt(index);
+          if (convs[idx]) convs[idx] = { ...convs[idx], voidedByInstructor: voided };
+          return { ...prev, conversations: convs };
+        });
+        Get(getConversationList(cId, mId, viewUser.username)).then((resList) => {
+          if (resList?.data) setConversationList(resList.data);
+        });
+      } else if (res?.status === 401) {
+        navigate("/login");
+      } else {
+        setAlert({ message: t("errorMessage.voidConversationError"), type: "error" });
+      }
+    });
+  }
+
   function handleConverstionNameDeleteUpdate(convoUpdateObject: {
     open: boolean;
     courseId: string;
@@ -277,7 +329,7 @@ export default function ChatLayout(): JSX.Element {
             //  But since we are in layout, we just update the list.
             // Check if we are currently viewing the deleted conversation
             if (conversationIndex === convoUpdateObject.index) {
-              navigate(`/chat/${username}/${courseId}/${moduleId}/new`);
+              navigate(`/${chatPrefix}/${username}/${courseId}/${moduleId}/new`);
             }
 
             setOpenUpdateConvoModal({
@@ -363,14 +415,47 @@ export default function ChatLayout(): JSX.Element {
     }
   }
 
+  const canStartNewConversation = (() => {
+    if (viewUser && user && viewUser.username !== user.username) return false;
+    if (moduleInfo?.moduleType !== "review") return true;
+    const nonVoidedCompleted = conversationList?.conversations.filter(c => c.completed && !c.voidedByInstructor) ?? [];
+    if (moduleInfo?.assessmentType === "summative") {
+      if (!gradesLoaded) return false;
+      const hasUnreleasedSubmission = nonVoidedCompleted.some(c => {
+        const grade = grades.find(g => g.courseModuleConversationId.endsWith(`+${c.id}`));
+        return !grade?.released;
+      });
+      if (hasUnreleasedSubmission) return false;
+      const maxDrafts = moduleInfo.maxDrafts ?? 999;
+      if (maxDrafts >= 999) return true;
+      const releasedCount = nonVoidedCompleted.filter(c =>
+        grades.find(g => g.courseModuleConversationId.endsWith(`+${c.id}`))?.released
+      ).length;
+      return releasedCount < maxDrafts;
+    }
+    const maxDrafts = moduleInfo.maxDrafts ?? 999;
+    if (maxDrafts >= 999) return true;
+    return nonVoidedCompleted.length < maxDrafts;
+  })();
+
   function handleNewConversation() {
     if (username && courseId && moduleId) {
-      navigate(
-        `/chat/${username}/${courseId}/${moduleId}/new`
-      );
+      if (moduleInfo?.moduleType === "review" && moduleInfo?.assessmentType !== "summative") {
+        const maxDrafts = moduleInfo.maxDrafts ?? 999;
+        if (maxDrafts < 999 && conversationList) {
+          const completedCount = conversationList.conversations.filter(c => c.completed && !c.voidedByInstructor).length;
+          if (completedCount >= maxDrafts) {
+            setAlert({ message: t("errorMessage.maxDraftsReached"), type: "error" });
+            return;
+          }
+        }
+      }
+      navigate(`/${chatPrefix}/${username}/${courseId}/${moduleId}/new`);
       if (window.innerWidth < 1024) setSidebarOpen(false);
     }
   }
+
+  const chatPrefix = moduleInfo?.moduleType === "review" ? "review-chat" : "chat";
 
   const contextValue: ChatContextType = {
     courseInfo,
@@ -381,6 +466,9 @@ export default function ChatLayout(): JSX.Element {
     user,
     instructor,
     admin,
+    grades,
+    gradesLoaded,
+    refreshGrades,
   };
 
   return (
@@ -511,6 +599,7 @@ export default function ChatLayout(): JSX.Element {
           isOpen={sidebarOpen}
           isMobile={window.innerWidth < 1024}
           onSearchChange={setSearchTerm}
+          canStartNewConversation={canStartNewConversation}
           onNewConversation={handleNewConversation}
           onConversationClick={(link) => {
             navigate(link);
@@ -519,7 +608,9 @@ export default function ChatLayout(): JSX.Element {
           onRenameConversation={handleRenameConversation}
           onArchiveConversation={handleArchiveConversation}
           onDownloadConversation={handleDownloadConversation}
+          onVoidConversation={handleVoidConversation}
           onClose={() => setSidebarOpen(false)}
+          grades={grades}
         />
       ) : (
         <div className="hidden lg:flex w-80 border-l border-border bg-card" style={{ height: "calc(100vh - 4rem)" }}></div>

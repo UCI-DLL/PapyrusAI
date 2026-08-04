@@ -41,3 +41,7 @@ export function getUserConversationList(username: string, limit?: number, startK
     return `conversation/user/${username}?organization=${process.env.REACT_APP_ORGANIZATION}`;
   }
 }
+
+export function patchVoidConversation(courseId: string, moduleId: string, index: string, username: string) {
+  return `conversation/${courseId}/${moduleId}/${index}?organization=${process.env.REACT_APP_ORGANIZATION}&username=${username}`;
+}

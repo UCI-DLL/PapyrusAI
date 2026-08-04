@@ -43,6 +43,12 @@ import EditRubric from "./features/library/EditRubric";
 import OrgSettings from "./features/org-settings/OrgSettings";
 import ModuleReports from "./features/reports/ModuleReports";
 import CourseReports from "./features/reports/CourseReports";
+import AddReviewModule from "./features/modules/AddReviewModule";
+import EditReviewModule from "./features/modules/EditReviewModule";
+import ReviewConversationList from "./features/review-chat/ReviewConversationList";
+import ReviewModuleReports from "./features/reports/ReviewModuleReports";
+import ReviewStudentConversations from "./features/reports/ReviewStudentConversations";
+import ReviewConversationView from "./features/reports/ReviewConversationView";
 import introJs from "intro.js";
 import "intro.js/introjs.css";
 import { useTranslation } from "./hooks/useTranslation";
@@ -98,7 +104,11 @@ function App(): JSX.Element {
   }, [user]);
 
   useEffect(() => {
-    const runAuth = async () => {
+    let cancelled = false;
+    const MAX_AUTH_RETRIES = 4;
+    const AUTH_RETRY_DELAY_MS = 3000;
+
+    const runAuth = async (attempt = 0) => {
       try {
         // 1. Check URL hash (Cognito redirect)
         if (window.location.hash.includes("access_token")) {
@@ -124,7 +134,7 @@ function App(): JSX.Element {
         const token = localStorage.getItem("papyrusai_access_token");
 
         if (!token) {
-          setAuthStatus("unauthenticated");
+          if (!cancelled) setAuthStatus("unauthenticated");
           if (process.env.NODE_ENV === "production") {
             window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
           }
@@ -133,6 +143,8 @@ function App(): JSX.Element {
 
         // 3. Fetch user
         const res = await Get(getUserData());
+
+        if (cancelled) return;
 
         if (res && res.status < 300 && res.data) {
           setUser(res.data);
@@ -143,14 +155,22 @@ function App(): JSX.Element {
           }
 
           setAuthStatus("authenticated");
-        } else if (res && res.status >= 500) {
-          console.error("[app] server error, keeping token");
-          setAuthStatus("loading"); // retry state or show UI
+        } else if (!res || res.status >= 500) {
+          // Server error (e.g. transient 502) — retry without clearing the token
+          console.error(`[app] server error on get user (attempt ${attempt + 1}), will retry`);
+          if (attempt < MAX_AUTH_RETRIES) {
+            setTimeout(() => { if (!cancelled) runAuth(attempt + 1); }, AUTH_RETRY_DELAY_MS);
+          } else {
+            console.error("[app] get user failed after retries, keeping token for next page load");
+            setAuthStatus("loading");
+          }
         } else {
           throw new Error("Invalid token");
         }
       } catch (err) {
         console.error("[app] auth failed:", err);
+
+        if (cancelled) return;
 
         localStorage.removeItem("papyrusai_access_token");
         localStorage.removeItem("papyrusai_user");
@@ -165,6 +185,7 @@ function App(): JSX.Element {
     };
 
     runAuth();
+    return () => { cancelled = true; };
   }, []);
 
   //create a session id that gets sent with every request or log so we can track
@@ -333,6 +354,25 @@ function App(): JSX.Element {
                 </Route>
 
                 <Route
+                  path="/courses/:id/modules/:id/review"
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
+                >
+                  <Route
+                    path="/courses/:id/modules/:id/review"
+                    element={<ReviewConversationList />}
+                  />
+                </Route>
+
+                <Route
+                  path="/review-chat/:username/:courseId/:moduleId"
+                  element={<PrivateRoute user={user} authStatus={authStatus} />}
+                >
+                  <Route element={<ChatLayout />}>
+                    <Route path=":conversationIndex" element={<Chat />} />
+                  </Route>
+                </Route>
+
+                <Route
                   path="/account"
                   element={<PrivateRoute user={user} authStatus={authStatus} />}
                 >
@@ -432,6 +472,79 @@ function App(): JSX.Element {
                         <Route
                           path="/courses/:id/modules/:id/username/:id"
                           element={<ConversationList />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/courses/:id/createreviewmodule"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/courses/:id/createreviewmodule"
+                          element={<AddReviewModule />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/courses/:id/editreviewmodule/:id"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/courses/:id/editreviewmodule/:id"
+                          element={<EditReviewModule />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/reports/review-module/:courseId/:moduleId"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/reports/review-module/:courseId/:moduleId"
+                          element={<ReviewModuleReports />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/reports/review-module/:courseId/:moduleId/student/:username"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/reports/review-module/:courseId/:moduleId/student/:username"
+                          element={<ReviewStudentConversations />}
+                        />
+                      </Route>
+
+                      <Route
+                        path="/reports/review-module/:courseId/:moduleId/student/:username/conversation/:convIndex"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/reports/review-module/:courseId/:moduleId/student/:username/conversation/:convIndex"
+                          element={<ReviewConversationView />}
+                        />
+                      </Route>
+
+                      {/* shows review submission list for a specific student */}
+                      <Route
+                        path="/courses/:id/modules/:id/review/username/:id"
+                        element={
+                          <PrivateRoute user={user} authStatus={authStatus} />
+                        }
+                      >
+                        <Route
+                          path="/courses/:id/modules/:id/review/username/:id"
+                          element={<ReviewConversationList />}
                         />
                       </Route>
                     </>

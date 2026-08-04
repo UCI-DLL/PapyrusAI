@@ -17,6 +17,11 @@ export function setupAxiosInterceptors(onLogout: () => void) {
       if (error.response?.status === 401) {
         console.log("[auth] 401 detected");
 
+        const requestUrl: string = error.config?.url ?? "";
+        if (requestUrl.includes("data/log")) {
+          return Promise.reject(error);
+        }
+
         if (!isRedirecting) {
           isRedirecting = true;
 

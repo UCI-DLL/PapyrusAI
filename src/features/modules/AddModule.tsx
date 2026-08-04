@@ -55,6 +55,7 @@ type ModuleFormType = {
   prompts: Array<PromptType>;
   files: Array<FileType>;
   webSearch: boolean;
+  essaySubmission: boolean;
   id?: string;
   isDeleted?: boolean;
   isTemplate?: boolean;
@@ -107,6 +108,7 @@ export default function AddModule({
     prompts: [],
     files: [],
     webSearch: false,
+    essaySubmission: false,
     id: "",
     isDeleted: false,
     isTemplate: false,
@@ -274,6 +276,7 @@ export default function AddModule({
           id: session.id,
           raterEnabled: session.raterEnabled ? true : false,
           webSearch: session.webSearch ? true : false,
+          essaySubmission: session.essaySubmission ? true : false,
           isOralModule: session.isOralModule ? true : false,
         };
         // put data back
@@ -314,6 +317,7 @@ export default function AddModule({
           files: session.files, //send files with all information + folderid
           isDeleted: false,
           webSearch: session.webSearch,
+          essaySubmission: session.essaySubmission ? true : false,
           isOralModule: session.isOralModule,
         };
         // post data back
@@ -1007,7 +1011,6 @@ export default function AddModule({
                     {t("createModule.oralModuleDescription")}
                   </p>
                 </div>
-                
               </div>
             </div>
           </form>

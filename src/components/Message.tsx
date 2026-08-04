@@ -437,7 +437,7 @@ export const MessageRight = (props: MessageProps) => {
             </span>
           </div>
 
-          {props.messageType && props.messageType === "file" ? (
+          {(props.messageType && props.messageType === "file") || (!props.visible && props.isInstructor) ? (
             <div
               className={`max-w-md ${props.outOfContext || (!props.visible && props.isInstructor)
                 ? "opacity-80 border border-dashed"

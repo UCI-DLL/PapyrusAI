@@ -7,7 +7,7 @@ import { TooltipWrapper } from "./ui-wrappers/TooltipWrapper";
 import { DropdownWrapper } from "./ui-wrappers/DropdownWrapper";
 import { DialogWrapper } from "./ui-wrappers/DialogWrapper";
 import { useNavigate } from "react-router-dom";
-import { Star, Play, MoreHorizontal, Loader2, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Star, Play, MoreHorizontal, Loader2, CheckCircle, XCircle, Eye, ClipboardCheck } from "lucide-react";
 import { UserContext } from "../utility/context/UserContext";
 import { AlertContext } from "../utility/context/AlertContext";
 import { CourseType, ModuleType } from "../utility/types/CourseTypes";
@@ -155,16 +155,15 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
   async function handleBeginModule() {
     if (!user) return;
 
-    //log action
     Post(logEvent(), {
       eventType: "client_action",
       metadata: {
         action: "begin_module",
-        page: "chat",
+        page: isReview ? "review_chat" : "chat",
         courseId: course.id,
         moduleId: module.id,
       }
-    })
+    });
 
     setIsNavigatingToModule(true);
 
@@ -188,7 +187,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
             1;
 
           // Navigate to the latest conversation
-          navigator(`/chat/${user.username}/${course.id}/${module.id}/${latestConversationIndex}`);
+          navigator(`/${isReview ? "review-chat" : "chat"}/${user.username}/${course.id}/${module.id}/${latestConversationIndex}`);
         } else {
           // No conversations exist, create a new one
           const createRes = await Post(postCreateConversation(course.id, module.id), {});
@@ -196,7 +195,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
           if (createRes && createRes.status && createRes.status < 300) {
             if (createRes.data && createRes.data.conversations) {
               // Navigate to the newly created conversation
-              navigator(`/chat/${user.username}/${course.id}/${module.id}/${createRes.data.conversations.length - 1}`);
+              navigator(`/${isReview ? "review-chat" : "chat"}/${user.username}/${course.id}/${module.id}/${createRes.data.conversations.length - 1}`);
             }
           } else if (createRes && createRes.status === 401) {
             navigator("/login");
@@ -271,11 +270,19 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
     });
   }
 
+  const isReview = module?.moduleType === "review";
+  const reportsLink = isReview
+    ? `/reports/review-module/${course.id}/${module.id}`
+    : `/reports/module/${course.id}/${module.id}`;
+  const editLink = isReview
+    ? `/courses/${course.id}/editreviewmodule/${module.id}`
+    : `/courses/${course.id}/editmodule/${module.id}`;
+
   const ownerMenu = [
     {
       label: t("common.editModule"),
       type: "link" as const,
-      action: `/courses/${course.id}/editmodule/${module.id}`,
+      action: editLink,
     },
     {
       label: t("common.copyModule"),
@@ -443,12 +450,25 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
         <div className="p-4 flex flex-col flex-1 relative z-10">
           <header className="relative z-10 flex items-start justify-between mb-3 flex-shrink-0">
             <div className="flex-1 min-w-0">
-              <h2
-                className="text-xl font-bold text-foreground mb-1 line-clamp-2 group-hover:text-primary 
-              dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors duration-300"
-              >
-                {module.name}
-              </h2>
+              <div className="flex items-start gap-2 mb-1 flex-wrap">
+                <h2
+                  className="text-xl font-bold text-foreground line-clamp-2 group-hover:text-primary
+                dark:group-hover:text-gold colorful-dark:group-hover:text-gold transition-colors duration-300"
+                >
+                  {module.name}
+                </h2>
+                {isReview ? (
+                  <Badge variant="secondary" className="flex items-center gap-1 text-xs pointer-events-none shrink-0 mt-1">
+                    <ClipboardCheck className="h-3 w-3" />
+                    {t("reviewModule.reviewBadge")}
+                  </Badge>
+                ) : (
+                  <Badge variant="default" className="flex items-center gap-1 text-xs pointer-events-none shrink-0 mt-1">
+                    <Play className="h-3 w-3" />
+                    {t("reviewModule.chatBadge")}
+                  </Badge>
+                )}
+              </div>
               {isInstructorOrTA && (
                 <div className="flex items-center gap-2">
                   {module.isPublished ? (
@@ -511,7 +531,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
               {isInstructorOrTA && (
                 <TooltipWrapper content={t("common.view") + " " + t("common.reports")}>
                   <button
-                    onClick={() => navigator(`/reports/module/${course.id}/${module.id}`)}
+                    onClick={() => navigator(reportsLink)}
                     className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                     aria-label={t("common.view") + " " + t("common.module") + " " + t("common.reports")}
                   >

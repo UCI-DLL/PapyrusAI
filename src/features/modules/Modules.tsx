@@ -8,11 +8,12 @@ import ModuleList from "./ModuleList";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserFavoritingData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
-import { Loader2, PlusIcon, GraduationCap, ChartColumnBig, Search } from "lucide-react";
+import { Loader2, PlusIcon, GraduationCap, ChartColumnBig, Search, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "../../components/ui/input";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { handleCourseTermLanguage } from "../../utility/Helpers";
 import Post from "../../utility/Post";
 
@@ -168,15 +169,26 @@ export default function Modules(): JSX.Element {
                   </Button>
                 )}
                 {isInstructorOrTA && (
-                  <Button size="sm" asChild aria-label={`${t("common.create")} ${t("common.module")}`}>
-                    <Link
-                      to={`/courses/${course?.id}/createmodule`}
-                      className="no-underline hover:text-white "
-                    >
-                      <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                      {t("common.create")} {t("common.module")}
-                    </Link>
-                  </Button>
+                  <DropdownWrapper
+                    trigger={
+                      <Button size="sm" className="flex items-center gap-2" aria-label={t("common.createModule")}>
+                        <PlusIcon className="w-4 h-4" aria-hidden="true" />
+                        {t("common.createModule")}
+                        <ChevronDown className="w-3 h-3" aria-hidden="true" />
+                      </Button>
+                    }
+                    actions={[
+                      {
+                        label: t("common.chatModule"),
+                        onClick: () => navigator(`/courses/${course?.id}/createmodule`),
+                      },
+                      {
+                        label: t("common.reviewModule"),
+                        onClick: () => navigator(`/courses/${course?.id}/createreviewmodule`),
+                      },
+                    ]}
+                    align="end"
+                  />
                 )}
               </nav>
             </div>

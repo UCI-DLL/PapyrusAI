@@ -17,6 +17,7 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
@@ -63,6 +64,8 @@ export default function ReviewModuleReports(): JSX.Element {
   const [exportFormat, setExportFormat] = useState<ExportFormat>("json");
   const [exportLoading, setExportLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [approveConfirmStudent, setApproveConfirmStudent] = useState<{ student: CustomUserType; grade: GradeType } | null>(null);
+  const [approveNotes, setApproveNotes] = useState("");
 
   const paramsKey = courseId && moduleId ? `${courseId}:${moduleId}` : null;
   const isLoading = dataKey !== paramsKey;
@@ -160,18 +163,25 @@ export default function ReviewModuleReports(): JSX.Element {
     });
   }
 
-  async function handleApprove(student: CustomUserType) {
-    const studentGrades = (grades.filter(g => g.username === student.username))
+  function openApproveDialog(student: CustomUserType) {
+    const studentGrades = grades.filter(g => g.username === student.username)
       .sort((a, b) => parseInt(a.timestamp, 10) - parseInt(b.timestamp, 10));
     const pendingGrade = studentGrades.find(g => !g.released);
     if (!pendingGrade) return;
+    setApproveNotes(pendingGrade.instructorNotes ?? "");
+    setApproveConfirmStudent({ student, grade: pendingGrade });
+  }
+
+  async function handleApproveConfirm() {
+    if (!approveConfirmStudent) return;
+    const { student, grade: pendingGrade } = approveConfirmStudent;
     const conversationId = pendingGrade.courseModuleConversationId.split("+").pop() ?? "";
     const key = `${student.username}_approve`;
     setActionLoading(prev => ({ ...prev, [key]: true }));
     const res = await Put(putUpdateGrade(courseId, moduleId, student.username, conversationId), {
       scores: pendingGrade.scores,
       totalScore: pendingGrade.totalScore,
-      instructorNotes: pendingGrade.instructorNotes ?? "",
+      instructorNotes: approveNotes,
       released: true,
     }, true);
     if (res?.status < 300) {
@@ -181,6 +191,7 @@ export default function ReviewModuleReports(): JSX.Element {
       setAlert({ message: t("errorMessage.genericError"), type: "error" });
     }
     setActionLoading(prev => ({ ...prev, [key]: false }));
+    setApproveConfirmStudent(null);
   }
 
   // Derived data
@@ -421,6 +432,53 @@ export default function ReviewModuleReports(): JSX.Element {
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
+      <Dialog open={approveConfirmStudent !== null} onOpenChange={(open) => { if (!open) setApproveConfirmStudent(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("reviewReports.approveConfirmTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("reviewReports.approveConfirmDescription")}</p>
+            {approveConfirmStudent && (
+              <div className="rounded-md border p-3 flex items-center justify-between">
+                <span className="text-sm font-medium">{t("reviewReports.scoreToRelease")}</span>
+                <span className="font-bold">
+                  {approveConfirmStudent.grade.totalScore}
+                  {maxTotal !== undefined ? ` / ${maxTotal}` : ""}
+                </span>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("reviewReports.instructorNotes")} <span className="normal-case font-normal">({t("common.optional")})</span>
+              </label>
+              <Textarea
+                placeholder={t("reviewReports.instructorNotesPlaceholder")}
+                value={approveNotes}
+                onChange={(e) => setApproveNotes(e.target.value)}
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApproveConfirmStudent(null)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              onClick={handleApproveConfirm}
+              className="gap-2"
+              disabled={approveConfirmStudent ? !!actionLoading[`${approveConfirmStudent.student.username}_approve`] : false}
+            >
+              {approveConfirmStudent && actionLoading[`${approveConfirmStudent.student.username}_approve`] && (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              )}
+              {t("reviewReports.approve")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -915,7 +973,7 @@ export default function ReviewModuleReports(): JSX.Element {
                                   <Button
                                     size="sm"
                                     disabled={actionLoading[`${student.username}_approve`]}
-                                    onClick={() => handleApprove(student)}
+                                    onClick={() => openApproveDialog(student)}
                                     className="gap-1"
                                   >
                                     {actionLoading[`${student.username}_approve`]

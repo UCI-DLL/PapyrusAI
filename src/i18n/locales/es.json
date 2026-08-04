@@ -1194,6 +1194,10 @@
     "reviewedConversations": "Revisados",
     "needsReview": "Necesita revisión",
     "status": "Estado",
-    "approved": "Aprobado"
+    "approved": "Aprobado",
+    "approveConfirmTitle": "Aprobar Calificación",
+    "approveConfirmDescription": "Esto liberará la calificación al estudiante.",
+    "scoreToRelease": "Puntuación a Liberar",
+    "instructorNotesPlaceholder": "Agrega una nota opcional para el estudiante..."
   }
 }

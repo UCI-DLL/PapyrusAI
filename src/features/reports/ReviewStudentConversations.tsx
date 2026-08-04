@@ -16,6 +16,7 @@ import { Badge } from "../../components/ui/badge";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/popover";
@@ -23,7 +24,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
-import { ArrowUpDown, CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, Clock, Download, MessageSquare, SlidersHorizontal, XCircle } from "lucide-react";
+import { ArrowUpDown, CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, Clock, Download, MessageSquare, RefreshCw, SlidersHorizontal, XCircle } from "lucide-react";
 
 const ROWS_OPTIONS = [10, 25, 50] as const;
 type SortBy = "name-asc" | "name-desc" | "score-asc" | "score-desc" | "time-asc" | "time-desc" | "messages-asc" | "messages-desc";
@@ -60,6 +61,8 @@ export default function ReviewStudentConversations(): JSX.Element {
 
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [voidConfirmConv, setVoidConfirmConv] = useState<{ grade: GradeType; conv: ConversationType; idx: number } | null>(null);
+  const [approveConfirmData, setApproveConfirmData] = useState<{ grade: GradeType; conv: ConversationType } | null>(null);
+  const [approveNotes, setApproveNotes] = useState("");
 
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("json");
@@ -224,13 +227,20 @@ export default function ReviewStudentConversations(): JSX.Element {
     });
   }
 
-  async function handleApprove(grade: GradeType, conv: ConversationType) {
+  function openApproveDialog(grade: GradeType, conv: ConversationType) {
+    setApproveNotes(grade.instructorNotes ?? "");
+    setApproveConfirmData({ grade, conv });
+  }
+
+  async function handleApproveConfirm() {
+    if (!approveConfirmData) return;
+    const { grade, conv } = approveConfirmData;
     const conversationId = grade.courseModuleConversationId.split("+").pop() ?? "";
     const key = `${conv.id}_approve`;
     setActionLoading(prev => ({ ...prev, [key]: true }));
     const res = await Put(putUpdateGrade(courseId, moduleId, username, conversationId), {
       scores: grade.scores, totalScore: grade.totalScore,
-      instructorNotes: grade.instructorNotes ?? "", released: true,
+      instructorNotes: approveNotes, released: true,
     }, true);
     if (res?.status < 300) {
       setAlert({ message: t("reviewReports.gradeApproved"), type: "success" });
@@ -239,6 +249,7 @@ export default function ReviewStudentConversations(): JSX.Element {
       setAlert({ message: t("errorMessage.genericError"), type: "error" });
     }
     setActionLoading(prev => ({ ...prev, [key]: false }));
+    setApproveConfirmData(null);
   }
 
   async function handleVoid(grade: GradeType, conv: ConversationType, idx: number) {
@@ -385,6 +396,49 @@ export default function ReviewStudentConversations(): JSX.Element {
           { label: t("reviewReports.void"), onClick: () => { if (voidConfirmConv) { handleVoid(voidConfirmConv.grade, voidConfirmConv.conv, voidConfirmConv.idx); setVoidConfirmConv(null); } }, variant: "destructive" },
         ]}
       />
+      <Dialog open={approveConfirmData !== null} onOpenChange={(open) => { if (!open) setApproveConfirmData(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("reviewReports.approveConfirmTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("reviewReports.approveConfirmDescription")}</p>
+            {approveConfirmData?.grade && (
+              <div className="rounded-md border p-3 flex items-center justify-between">
+                <span className="text-sm font-medium">{t("reviewReports.scoreToRelease")}</span>
+                <span className="font-bold">
+                  {approveConfirmData.grade.totalScore}
+                  {maxTotal !== undefined ? ` / ${maxTotal}` : ""}
+                </span>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("reviewReports.instructorNotes")} <span className="normal-case font-normal">({t("common.optional")})</span>
+              </label>
+              <Textarea
+                placeholder={t("reviewReports.instructorNotesPlaceholder")}
+                value={approveNotes}
+                onChange={(e) => setApproveNotes(e.target.value)}
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApproveConfirmData(null)}>
+              {t("common.cancel")}
+            </Button>
+            <Button onClick={handleApproveConfirm} className="gap-2"
+              disabled={approveConfirmData ? !!actionLoading[`${approveConfirmData.conv.id}_approve`] : false}>
+              {approveConfirmData && actionLoading[`${approveConfirmData.conv.id}_approve`] && (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              )}
+              {t("reviewReports.approve")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -693,7 +747,7 @@ export default function ReviewStudentConversations(): JSX.Element {
                                       size="sm"
                                       variant="default"
                                       disabled={actionLoading[`${conv.id}_approve`]}
-                                      onClick={() => handleApprove(grade, conv)}
+                                      onClick={() => openApproveDialog(grade, conv)}
                                     >
                                       {t("reviewReports.approve")}
                                     </Button>

@@ -66,6 +66,8 @@ export default function ReviewConversationView(): JSX.Element {
   const [editScores, setEditScores] = useState<GradeScore[]>([]);
   const [editErrors, setEditErrors] = useState<string[]>([]);
   const [approveLoading, setApproveLoading] = useState(false);
+  const [approveDialogMode, setApproveDialogMode] = useState<"asIs" | "edit" | null>(null);
+  const [approveNotes, setApproveNotes] = useState("");
 
   const { setAlert } = useContext(AlertContext);
 
@@ -390,40 +392,27 @@ export default function ReviewConversationView(): JSX.Element {
     setEditScores((prev) => prev.map((s, idx) => idx === i ? { ...s, feedback: value } : s));
   }
 
-  async function handleApproveEdit() {
-    if (!grade || !conversation) return;
-    const hasErrors = editErrors.some((e) => e !== "");
-    if (hasErrors) return;
-    const conversationId = grade.courseModuleConversationId.split("+").pop() ?? "";
-    setApproveLoading(true);
-    const res = await Put(putUpdateGrade(courseId, moduleId, username, conversationId), {
-      scores: editScores,
-      totalScore: editTotal,
-      instructorNotes: grade.instructorNotes ?? "",
-      released: true,
-    }, true);
-    if (res?.status < 300) {
-      setAlert({ message: t("reviewReports.gradeApproved"), type: "success" });
-      const gradesRes = await Get(getGrades(courseId, moduleId), undefined, true);
-      if (gradesRes?.status < 300 && gradesRes.data) {
-        const all = Array.isArray(gradesRes.data) ? gradesRes.data : [];
-        setAllGrades(all.filter((g: GradeType) => g.username === username));
-      }
-      handleCancelEdit();
-    } else {
-      setAlert({ message: t("errorMessage.genericError"), type: "error" });
-    }
-    setApproveLoading(false);
+  function handleApproveEditOpen() {
+    if (!grade || editErrors.some((e) => e !== "")) return;
+    setApproveNotes(grade.instructorNotes ?? "");
+    setApproveDialogMode("edit");
   }
 
-  async function handleApproveAsIs() {
-    if (!grade || !conversation) return;
+  function handleApproveAsIs() {
+    if (!grade) return;
+    setApproveNotes(grade.instructorNotes ?? "");
+    setApproveDialogMode("asIs");
+  }
+
+  async function handleApproveConfirm() {
+    if (!grade || !conversation || approveDialogMode === null) return;
     const conversationId = grade.courseModuleConversationId.split("+").pop() ?? "";
     setApproveLoading(true);
+    const isEdit = approveDialogMode === "edit";
     const res = await Put(putUpdateGrade(courseId, moduleId, username, conversationId), {
-      scores: grade.scores,
-      totalScore: grade.totalScore,
-      instructorNotes: grade.instructorNotes ?? "",
+      scores: isEdit ? editScores : grade.scores,
+      totalScore: isEdit ? editTotal : grade.totalScore,
+      instructorNotes: approveNotes,
       released: true,
     }, true);
     if (res?.status < 300) {
@@ -433,10 +422,12 @@ export default function ReviewConversationView(): JSX.Element {
         const all = Array.isArray(gradesRes.data) ? gradesRes.data : [];
         setAllGrades(all.filter((g: GradeType) => g.username === username));
       }
+      if (isEdit) handleCancelEdit();
     } else {
       setAlert({ message: t("errorMessage.genericError"), type: "error" });
     }
     setApproveLoading(false);
+    setApproveDialogMode(null);
   }
 
   if (isLoading) return <PageLoader pageName={t("reviewReports.conversationDetails")} />;
@@ -583,10 +574,9 @@ export default function ReviewConversationView(): JSX.Element {
                   <Button
                     size="sm"
                     className="gap-2"
-                    disabled={approveLoading || editErrors.some((e) => e !== "")}
-                    onClick={handleApproveEdit}
+                    disabled={editErrors.some((e) => e !== "")}
+                    onClick={handleApproveEditOpen}
                   >
-                    {approveLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
                     {t("reviewReports.approve")}
                   </Button>
                 </>
@@ -867,6 +857,48 @@ export default function ReviewConversationView(): JSX.Element {
                 </Button>
               </>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve with notes dialog */}
+      <Dialog open={approveDialogMode !== null} onOpenChange={(open) => { if (!open && !approveLoading) setApproveDialogMode(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("reviewReports.approveConfirmTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("reviewReports.approveConfirmDescription")}</p>
+            {grade && (
+              <div className="rounded-md border p-3 flex items-center justify-between">
+                <span className="text-sm font-medium">{t("reviewReports.scoreToRelease")}</span>
+                <span className="font-bold">
+                  {approveDialogMode === "edit" ? editTotal : grade.totalScore}
+                  {maxTotal !== undefined ? ` / ${maxTotal}` : ""}
+                </span>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("reviewReports.instructorNotes")} <span className="normal-case font-normal">({t("common.optional")})</span>
+              </label>
+              <Textarea
+                placeholder={t("reviewReports.instructorNotesPlaceholder")}
+                value={approveNotes}
+                onChange={(e) => setApproveNotes(e.target.value)}
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" disabled={approveLoading} onClick={() => setApproveDialogMode(null)}>
+              {t("common.cancel")}
+            </Button>
+            <Button disabled={approveLoading} onClick={handleApproveConfirm} className="gap-2">
+              {approveLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
+              {t("reviewReports.approve")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

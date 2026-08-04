@@ -1194,6 +1194,10 @@
     "reviewedConversations": "Reviewed",
     "needsReview": "Needs Review",
     "status": "Status",
-    "approved": "Approved"
+    "approved": "Approved",
+    "approveConfirmTitle": "Approve Grade",
+    "approveConfirmDescription": "This will release the grade to the student.",
+    "scoreToRelease": "Score to Release",
+    "instructorNotesPlaceholder": "Add an optional note for the student..."
   }
 }

@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Get from "../../utility/Get";
-import { getConversation, getConversationList } from "../../utility/endpoints/ConversationEndpoints";
+import Post from "../../utility/Post";
+import Put from "../../utility/Put";
+import { getConversation, getConversationList, patchVoidConversation } from "../../utility/endpoints/ConversationEndpoints";
 import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
-import { getGrades } from "../../utility/endpoints/GradeEndpoints";
+import { getGrades, putUpdateGrade } from "../../utility/endpoints/GradeEndpoints";
 import { ConversationListType, ConversationType } from "../../utility/types/ConversationTypes";
 import { GradeType, ModuleType } from "../../utility/types/CourseTypes";
 import { CustomUserType } from "../../utility/types/UserTypes";
+import { AlertContext } from "../../utility/context/AlertContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -19,7 +22,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../components/ui/pop
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { PageLoader, PageHeaderCard } from "../../components/Common";
-import { ArrowUpDown, ChevronLeft, ChevronRight, ClipboardCheck, Clock, Download, MessageSquare, SlidersHorizontal } from "lucide-react";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
+import { ArrowUpDown, CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, Clock, Download, MessageSquare, SlidersHorizontal, XCircle } from "lucide-react";
 
 const ROWS_OPTIONS = [10, 25, 50] as const;
 type SortBy = "name-asc" | "name-desc" | "score-asc" | "score-desc" | "time-asc" | "time-desc" | "messages-asc" | "messages-desc";
@@ -38,6 +42,7 @@ export default function ReviewStudentConversations(): JSX.Element {
   }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { setAlert } = useContext(AlertContext);
 
   const SORT_LABELS: Record<SortBy, string> = {
     "name-asc": t("reviewReports.sortNameAZ"), "name-desc": t("reviewReports.sortNameZA"),
@@ -52,6 +57,9 @@ export default function ReviewStudentConversations(): JSX.Element {
   const [conversations, setConversations] = useState<ConversationType[]>([]);
   const [grades, setGrades] = useState<GradeType[]>([]);
   const [dataKey, setDataKey] = useState<string | null>(null);
+
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
+  const [voidConfirmConv, setVoidConfirmConv] = useState<{ grade: GradeType; conv: ConversationType; idx: number } | null>(null);
 
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("json");
@@ -147,6 +155,7 @@ export default function ReviewStudentConversations(): JSX.Element {
       ? rubric.criteria.length * maxPerCriterion
       : undefined;
 
+  const isSummative = module?.assessmentType === "summative";
   const studentName = student ? `${student.name} ${student.family_name}`.trim() : "";
   const visibleConversations = conversations.filter((c) => !c.isDeleted);
 
@@ -205,6 +214,44 @@ export default function ReviewStudentConversations(): JSX.Element {
   const toggleConv = (id: string) => setSelectedConvIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   const toggleAll = () => setSelectedConvIds(allSelected ? new Set() : new Set(allVisibleIds));
   const clearSelection = () => setSelectedConvIds(new Set());
+
+  function loadGrades() {
+    Get(getGrades(courseId, moduleId), undefined, true).then((res) => {
+      if (res?.status < 300 && res.data) {
+        const all = Array.isArray(res.data) ? res.data : [];
+        setGrades(all.filter((g: GradeType) => g.username === username));
+      }
+    });
+  }
+
+  async function handleApprove(grade: GradeType, conv: ConversationType) {
+    const conversationId = grade.courseModuleConversationId.split("+").pop() ?? "";
+    const key = `${conv.id}_approve`;
+    setActionLoading(prev => ({ ...prev, [key]: true }));
+    const res = await Put(putUpdateGrade(courseId, moduleId, username, conversationId), {
+      scores: grade.scores, totalScore: grade.totalScore,
+      instructorNotes: grade.instructorNotes ?? "", released: true,
+    }, true);
+    if (res?.status < 300) {
+      setAlert({ message: t("reviewReports.gradeApproved"), type: "success" });
+      loadGrades();
+    } else {
+      setAlert({ message: t("errorMessage.genericError"), type: "error" });
+    }
+    setActionLoading(prev => ({ ...prev, [key]: false }));
+  }
+
+  async function handleVoid(grade: GradeType, conv: ConversationType, idx: number) {
+    const key = `${conv.id}_void`;
+    setActionLoading(prev => ({ ...prev, [key]: true }));
+    const res = await Post(patchVoidConversation(courseId, moduleId, String(idx), username), { voidedByInstructor: true });
+    if (res?.status < 300) {
+      loadGrades();
+    } else {
+      setAlert({ message: t("errorMessage.genericError"), type: "error" });
+    }
+    setActionLoading(prev => ({ ...prev, [key]: false }));
+  }
 
   async function handleDownload() {
     setExportLoading(true);
@@ -328,6 +375,16 @@ export default function ReviewStudentConversations(): JSX.Element {
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
+      <DialogWrapper
+        open={voidConfirmConv !== null}
+        onOpenChange={(open) => { if (!open) setVoidConfirmConv(null); }}
+        title={t("reviewReports.voidTitle")}
+        description={t("reviewReports.voidDescription")}
+        actions={[
+          { label: t("common.cancel"), onClick: () => setVoidConfirmConv(null), variant: "outline" },
+          { label: t("reviewReports.void"), onClick: () => { if (voidConfirmConv) { handleVoid(voidConfirmConv.grade, voidConfirmConv.conv, voidConfirmConv.idx); setVoidConfirmConv(null); } }, variant: "destructive" },
+        ]}
+      />
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -532,13 +589,14 @@ export default function ReviewStudentConversations(): JSX.Element {
                   <TableHead>{t("reviewReports.dateSubmitted")}</TableHead>
                   <TableHead>{t("reviewReports.numMessages")}</TableHead>
                   <TableHead>{t("reviewReports.totalScore")}</TableHead>
+                  {isSummative && <TableHead>{t("reviewReports.status")}</TableHead>}
                   <TableHead aria-label={t("common.actions")} />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {conversations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
+                    <TableCell colSpan={isSummative ? 7 : 6} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <MessageSquare className="h-8 w-8 text-muted-foreground opacity-50" aria-hidden="true" />
                         <p className="text-muted-foreground">
@@ -578,22 +636,99 @@ export default function ReviewStudentConversations(): JSX.Element {
                             </Badge>
                           )}
                         </TableCell>
+                        {isSummative && (
+                          <TableCell>
+                            {conv.voidedByInstructor ? (
+                              <Badge variant="outline" className="gap-1 pointer-events-none text-muted-foreground">
+                                <XCircle className="h-3 w-3" aria-hidden="true" />
+                                {t("reviewReports.void")}
+                              </Badge>
+                            ) : grade?.released ? (
+                              <Badge className="gap-1 pointer-events-none bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                                <CheckCircle className="h-3 w-3" aria-hidden="true" />
+                                {t("reviewReports.approved")}
+                              </Badge>
+                            ) : grade ? (
+                              <Badge variant="secondary" className="gap-1 pointer-events-none">
+                                <Clock className="h-3 w-3" aria-hidden="true" />
+                                {t("reviewReports.pending")}
+                              </Badge>
+                            ) : null}
+                          </TableCell>
+                        )}
                         <TableCell>
-                          <Button
-                            size="sm"
-                            asChild
-                            variant="default"
-                            aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
-                            className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
-                          >
-                            <Link
-                              to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
+                          {isSummative ? (
+                            <div className="flex gap-2 justify-end">
+                              {conv.voidedByInstructor || grade?.released ? (
+                                <Button
+                                  size="sm"
+                                  asChild
+                                  variant="outline"
+                                  aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
+                                >
+                                  <Link
+                                    to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
+                                    className="no-underline"
+                                  >
+                                    {t("reviewReports.viewConversation")}
+                                  </Link>
+                                </Button>
+                              ) : (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    asChild
+                                    variant="outline"
+                                    aria-label={`${t("reviewReports.review")} — ${convLabel}`}
+                                  >
+                                    <Link
+                                      to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
+                                      className="no-underline"
+                                    >
+                                      {t("reviewReports.review")}
+                                    </Link>
+                                  </Button>
+                                  {grade && !grade.released && (
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      disabled={actionLoading[`${conv.id}_approve`]}
+                                      onClick={() => handleApprove(grade, conv)}
+                                    >
+                                      {t("reviewReports.approve")}
+                                    </Button>
+                                  )}
+                                  {grade && !grade.released && (
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      disabled={actionLoading[`${conv.id}_void`]}
+                                      onClick={() => setVoidConfirmConv({ grade, conv, idx })}
+                                    >
+                                      <XCircle className="h-3 w-3 mr-1" aria-hidden="true" />
+                                      {t("reviewReports.void")}
+                                    </Button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              asChild
+                              variant="default"
                               aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
-                              className="flex items-center justify-center gap-2 no-underline"
+                              className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
                             >
-                              {t("reviewReports.viewConversation")}
-                            </Link>
-                          </Button>
+                              <Link
+                                to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
+                                aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
+                                className="flex items-center justify-center gap-2 no-underline"
+                              >
+                                {t("reviewReports.viewConversation")}
+                              </Link>
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

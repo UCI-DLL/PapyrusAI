@@ -9,9 +9,8 @@ export function buildRegradeContent(
   const sortedMessages = [...messages].sort((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp)).reverse();
 
   if (moduleInfo.essaySubmission) {
-    // Find the submitted essay: first user message with messageType "file"
     const essayMessage = sortedMessages.find(
-      (m) => m.role === "user" && m.messageType === "file" && m.userVisible !== false
+      (m) => m.role === "user" && (m.messageType === "essayDraft" || m.messageType === "file")
     );
     return essayMessage?.content ?? "";
   }

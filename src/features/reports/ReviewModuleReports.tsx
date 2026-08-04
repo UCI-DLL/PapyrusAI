@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Get from "../../utility/Get";
 import Post from "../../utility/Post";
-import { getGrades, postReleaseAllGrades } from "../../utility/endpoints/GradeEndpoints";
+import Put from "../../utility/Put";
+import { getGrades, postReleaseAllGrades, putUpdateGrade } from "../../utility/endpoints/GradeEndpoints";
 import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
 import { getConversation } from "../../utility/endpoints/ConversationEndpoints";
 import { GradeType, ModuleType } from "../../utility/types/CourseTypes";
@@ -23,7 +24,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { PageLoader, PageHeaderCard } from "../../components/Common";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 import {
-  ArrowUpDown, CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, Download, RefreshCw,
+  ArrowUpDown, CheckCircle, ChevronLeft, ChevronRight, ClipboardCheck, Clock, Download, RefreshCw,
   MessageSquare, SlidersHorizontal, Users, Star,
 } from "lucide-react";
 
@@ -61,6 +62,7 @@ export default function ReviewModuleReports(): JSX.Element {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("json");
   const [exportLoading, setExportLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
   const paramsKey = courseId && moduleId ? `${courseId}:${moduleId}` : null;
   const isLoading = dataKey !== paramsKey;
@@ -158,21 +160,54 @@ export default function ReviewModuleReports(): JSX.Element {
     });
   }
 
+  async function handleApprove(student: CustomUserType) {
+    const studentGrades = (grades.filter(g => g.username === student.username))
+      .sort((a, b) => parseInt(a.timestamp, 10) - parseInt(b.timestamp, 10));
+    const pendingGrade = studentGrades.find(g => !g.released);
+    if (!pendingGrade) return;
+    const conversationId = pendingGrade.courseModuleConversationId.split("+").pop() ?? "";
+    const key = `${student.username}_approve`;
+    setActionLoading(prev => ({ ...prev, [key]: true }));
+    const res = await Put(putUpdateGrade(courseId, moduleId, student.username, conversationId), {
+      scores: pendingGrade.scores,
+      totalScore: pendingGrade.totalScore,
+      instructorNotes: pendingGrade.instructorNotes ?? "",
+      released: true,
+    }, true);
+    if (res?.status < 300) {
+      setAlert({ message: t("reviewReports.gradeApproved"), type: "success" });
+      loadGrades(courseId, moduleId);
+    } else {
+      setAlert({ message: t("errorMessage.genericError"), type: "error" });
+    }
+    setActionLoading(prev => ({ ...prev, [key]: false }));
+  }
+
   // Derived data
   const rubric = module?.rubrics?.[0];
   const maxPerCriterion = rubric ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite)) : undefined;
   const maxTotal = maxPerCriterion !== undefined && rubric ? rubric.criteria.length * maxPerCriterion : undefined;
-  const pendingCount = grades.filter((g) => !g.released).length;
   const studentsSubmitted = new Set(grades.map((g) => g.username)).size;
   const avgScore =
     grades.length > 0
       ? (grades.reduce((sum, g) => sum + g.totalScore, 0) / grades.length).toFixed(1)
       : null;
 
+  const isSummative = module?.assessmentType === "summative";
+  const reviewedCount = grades.filter(g => g.released).length;
+  const needsReviewCount = grades.filter(g => !g.released).length;
+
   const gradesByUser = grades.reduce<Record<string, GradeType[]>>((acc, g) => {
     (acc[g.username] ??= []).push(g);
     return acc;
   }, {});
+
+  const pendingGradeByUser: Record<string, GradeType | undefined> = Object.fromEntries(
+    Object.entries(gradesByUser).map(([u, gs]) => [
+      u,
+      [...gs].sort((a, b) => parseInt(a.timestamp, 10) - parseInt(b.timestamp, 10)).find(g => !g.released),
+    ])
+  );
 
   const bestGradeByUser = Object.fromEntries(
     Object.entries(gradesByUser).map(([u, gs]) => [
@@ -420,11 +455,11 @@ export default function ReviewModuleReports(): JSX.Element {
       <DialogWrapper
         open={openReleaseAllModal}
         onOpenChange={setOpenReleaseAllModal}
-        title={t("reviewReports.releaseAllTitle")}
-        description={t("reviewReports.releaseAllDescription")}
+        title={isSummative ? t("reviewReports.approveAll") : t("reviewReports.releaseAllTitle")}
+        description={isSummative ? t("reviewReports.releaseAllDescription") : t("reviewReports.releaseAllDescription")}
         actions={[
           { label: t("common.cancel"), onClick: () => setOpenReleaseAllModal(false), variant: "outline" },
-          { label: t("reviewReports.releaseAll"), onClick: handleReleaseAll },
+          { label: isSummative ? t("reviewReports.approveAll") : t("reviewReports.releaseAll"), onClick: handleReleaseAll },
         ]}
       />
 
@@ -477,38 +512,12 @@ export default function ReviewModuleReports(): JSX.Element {
               <RefreshCw className="h-4 w-4" />
               {t("common.refresh")}
             </Button>
-            {pendingCount > 0 && (
-              <Button
-                size="sm"
-                onClick={() => setOpenReleaseAllModal(true)}
-                disabled={isReleasing}
-                className="gap-2"
-              >
-                {isReleasing ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle className="h-4 w-4" />
-                )}
-                {t("reviewReports.releaseAll")} ({pendingCount})
-              </Button>
-            )}
           </div>
         }
       />
 
       {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                {t("reports.totalConversations")}
-              </p>
-              <p className="text-3xl font-bold mt-1">{grades.length}</p>
-            </div>
-            <MessageSquare className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
-          </CardContent>
-        </Card>
         <Card>
           <CardContent className="p-6 flex items-center justify-between">
             <div>
@@ -520,22 +529,62 @@ export default function ReviewModuleReports(): JSX.Element {
             <Users className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                {t("reviewReports.averageScore")}
-              </p>
-              <p className="text-3xl font-bold mt-1">
-                {avgScore ?? "—"}
-                {avgScore && maxTotal ? (
-                  <span className="text-lg text-muted-foreground font-normal"> / {maxTotal}</span>
-                ) : null}
-              </p>
-            </div>
-            <Star className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
-          </CardContent>
-        </Card>
+        {isSummative ? (
+          <>
+            <Card>
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t("reviewReports.reviewedConversations")}
+                  </p>
+                  <p className="text-3xl font-bold mt-1">{reviewedCount}</p>
+                </div>
+                <CheckCircle className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t("reviewReports.needsReview")}
+                  </p>
+                  <p className="text-3xl font-bold mt-1">{needsReviewCount}</p>
+                </div>
+                <MessageSquare className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <>
+            <Card>
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t("reports.totalConversations")}
+                  </p>
+                  <p className="text-3xl font-bold mt-1">{grades.length}</p>
+                </div>
+                <MessageSquare className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t("reviewReports.averageScore")}
+                  </p>
+                  <p className="text-3xl font-bold mt-1">
+                    {avgScore ?? "—"}
+                    {avgScore && maxTotal ? (
+                      <span className="text-lg text-muted-foreground font-normal"> / {maxTotal}</span>
+                    ) : null}
+                  </p>
+                </div>
+                <Star className="h-10 w-10 text-primary opacity-40" aria-hidden="true" />
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Student table card */}
@@ -548,6 +597,12 @@ export default function ReviewModuleReports(): JSX.Element {
                 {selectedUsernames.size > 0 && (
                   <Button size="sm" variant="outline" onClick={clearSelection}>
                     {t("reviewReports.clearSelected", { count: selectedUsernames.size })}
+                  </Button>
+                )}
+                {isSummative && needsReviewCount > 0 && (
+                  <Button size="sm" className="gap-2" onClick={() => setOpenReleaseAllModal(true)} disabled={isReleasing}>
+                    {isReleasing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                    {t("reviewReports.approveAll")} ({needsReviewCount})
                   </Button>
                 )}
                 <Button size="sm" className="gap-2" onClick={() => setExportDialogOpen(true)}>
@@ -691,14 +746,15 @@ export default function ReviewModuleReports(): JSX.Element {
                   </TableHead>
                   <TableHead>{t("reports.name")}</TableHead>
                   <TableHead>{t("reviewReports.bestScore")}</TableHead>
-                  <TableHead>{t("reviewReports.bestSubmission")}</TableHead>
+                  <TableHead>{isSummative ? t("reviewReports.mostRecentSubmission") : t("reviewReports.bestSubmission")}</TableHead>
+                  <TableHead>{t("reviewReports.status")}</TableHead>
                   <TableHead aria-label={t("common.actions")}></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {gradesLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground opacity-50" aria-hidden="true" />
                         <p className="text-muted-foreground">{t("common.loading")}</p>
@@ -707,7 +763,7 @@ export default function ReviewModuleReports(): JSX.Element {
                   </TableRow>
                 ) : filteredStudents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <ClipboardCheck className="h-8 w-8 text-muted-foreground opacity-50" aria-hidden="true" />
                         <p className="text-muted-foreground">
@@ -741,6 +797,24 @@ export default function ReviewModuleReports(): JSX.Element {
                     const submittedAt = bestGrade
                       ? new Date(parseInt(bestGrade.timestamp, 10)).toLocaleString()
                       : null;
+
+                    // Summative-specific: most recent grade, pending grade, and conversation paths
+                    const mostRecentGrade = sortedGrades.length > 0 ? sortedGrades[sortedGrades.length - 1] : null;
+                    const mostRecentConvIdx = mostRecentGrade ? sortedGrades.indexOf(mostRecentGrade) : null;
+                    const mostRecentConvPath = mostRecentGrade && mostRecentConvIdx !== null
+                      ? `/reports/review-module/${courseId}/${moduleId}/student/${student.username}/conversation/${mostRecentConvIdx}`
+                      : null;
+                    const mostRecentSubmittedAt = mostRecentGrade
+                      ? new Date(parseInt(mostRecentGrade.timestamp, 10)).toLocaleString()
+                      : null;
+                    const pendingGrade = pendingGradeByUser[student.username];
+                    const pendingConvIdx = pendingGrade
+                      ? sortedGrades.findIndex(g => g.courseModuleConversationId === pendingGrade.courseModuleConversationId)
+                      : -1;
+                    const pendingConvPath = pendingGrade && pendingConvIdx >= 0
+                      ? `/reports/review-module/${courseId}/${moduleId}/student/${student.username}/conversation/${pendingConvIdx}`
+                      : null;
+
                     return (
                       <TableRow key={student.username}>
                         <TableCell>
@@ -765,41 +839,121 @@ export default function ReviewModuleReports(): JSX.Element {
                           )}
                         </TableCell>
                         <TableCell>
-                          {convPath && convNumber !== null ? (
-                            <div>
-                              <Link
-                                to={convPath}
-                                className="text-sm text-primary underline-offset-2 hover:underline font-medium"
-                                aria-label={`Conversation ${convNumber} of ${totalConvs} — ${student.name} ${student.family_name}`}
-                              >
-                                Conversation {convNumber} of {totalConvs}
-                              </Link>
-                              <div className="text-xs text-muted-foreground mt-0.5">
-                                Best of {totalConvs}{submittedAt ? ` · ${submittedAt}` : ""}
+                          {isSummative ? (
+                            mostRecentConvPath ? (
+                              <div>
+                                <Link
+                                  to={mostRecentConvPath}
+                                  className="text-sm text-primary underline-offset-2 hover:underline font-medium"
+                                >
+                                  {t("reviewReports.conversationId")} {(mostRecentConvIdx ?? 0) + 1}
+                                </Link>
+                                {mostRecentSubmittedAt && (
+                                  <div className="text-xs text-muted-foreground mt-0.5">{mostRecentSubmittedAt}</div>
+                                )}
                               </div>
-                            </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">—</span>
+                            )
                           ) : (
-                            <span className="text-sm text-muted-foreground">—</span>
+                            convPath && convNumber !== null ? (
+                              <div>
+                                <Link
+                                  to={convPath}
+                                  className="text-sm text-primary underline-offset-2 hover:underline font-medium"
+                                  aria-label={`Conversation ${convNumber} of ${totalConvs} — ${student.name} ${student.family_name}`}
+                                >
+                                  Conversation {convNumber} of {totalConvs}
+                                </Link>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  Best of {totalConvs}{submittedAt ? ` · ${submittedAt}` : ""}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">—</span>
+                            )
                           )}
                         </TableCell>
                         <TableCell>
-                          {totalConvs > 0 ? (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
-                              asChild
-                              aria-label={`${t("reviewReports.viewConversations")} — ${student.name} ${student.family_name}`}
-                            >
-                              <Link
-                                className="flex items-center justify-center gap-2 no-underline"
-                                to={`/reports/review-module/${courseId}/${moduleId}/student/${student.username}`}
-                              >
-                                {t("reviewReports.viewConversations")}
-                              </Link>
-                            </Button>
+                          {totalConvs === 0 ? (
+                            <Badge variant="outline" className="gap-1 pointer-events-none text-muted-foreground">
+                              {t("reviewReports.notStarted")}
+                            </Badge>
+                          ) : isSummative && pendingGrade ? (
+                            <Badge variant="secondary" className="gap-1 pointer-events-none">
+                              <Clock className="h-3 w-3" aria-hidden="true" />
+                              {t("reviewReports.pendingReview")}
+                            </Badge>
                           ) : (
-                            <span className="text-sm text-muted-foreground">N/A</span>
+                            <Badge className="gap-1 pointer-events-none bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                              <CheckCircle className="h-3 w-3" aria-hidden="true" />
+                              {isSummative ? t("reviewReports.approved") : t("reviewReports.completed")}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isSummative ? (
+                            <div className="flex flex-wrap gap-1.5 justify-end">
+                              {totalConvs === 0 ? (
+                                <span className="text-sm text-muted-foreground">—</span>
+                              ) : pendingGrade ? (
+                                <>
+                                  {totalConvs > 1 && (
+                                    <Button size="sm" variant="outline" asChild>
+                                      <Link className="no-underline" to={`/reports/review-module/${courseId}/${moduleId}/student/${student.username}`}>
+                                        {t("reviewReports.viewConversations")}
+                                      </Link>
+                                    </Button>
+                                  )}
+                                  {pendingConvPath && (
+                                    <Button size="sm" variant="outline" asChild>
+                                      <Link className="no-underline" to={pendingConvPath}>
+                                        {t("reviewReports.review")}
+                                      </Link>
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    disabled={actionLoading[`${student.username}_approve`]}
+                                    onClick={() => handleApprove(student)}
+                                    className="gap-1"
+                                  >
+                                    {actionLoading[`${student.username}_approve`]
+                                      ? <RefreshCw className="h-3 w-3 animate-spin" />
+                                      : <CheckCircle className="h-3 w-3" />}
+                                    {t("reviewReports.approve")}
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button size="sm" variant="outline" asChild>
+                                  <Link
+                                    className="no-underline"
+                                    to={`/reports/review-module/${courseId}/${moduleId}/student/${student.username}`}
+                                  >
+                                    {t("reviewReports.viewConversations")}
+                                  </Link>
+                                </Button>
+                              )}
+                            </div>
+                          ) : (
+                            totalConvs > 0 ? (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
+                                asChild
+                                aria-label={`${t("reviewReports.viewConversations")} — ${student.name} ${student.family_name}`}
+                              >
+                                <Link
+                                  className="flex items-center justify-center gap-2 no-underline"
+                                  to={`/reports/review-module/${courseId}/${moduleId}/student/${student.username}`}
+                                >
+                                  {t("reviewReports.viewConversations")}
+                                </Link>
+                              </Button>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">N/A</span>
+                            )
                           )}
                         </TableCell>
                       </TableRow>

@@ -666,6 +666,7 @@ export default function Chat(): JSX.Element {
   useEffect(() => {
     if (!isConnected || !pendingEssay || conversationIndex === "new") return;
     setIsSubmitting(true);
+    markConversationCompleted();
     setEssayError("");
     const capturedEssayText = pendingEssay;
     const sessionId = localStorage.getItem("sessionId") ?? "unknown";
@@ -1034,10 +1035,23 @@ export default function Chat(): JSX.Element {
     }
   }
 
+  function markConversationCompleted() {
+    if (conversationIndex === "new") return;
+    setConversationList((prev) => {
+      if (!prev) return prev;
+      const idx = prev.conversations.length - 1 - parseInt(conversationIndex);
+      if (idx < 0) return prev;
+      const convs = [...prev.conversations];
+      convs[idx] = { ...convs[idx], completed: true };
+      return { ...prev, conversations: convs };
+    });
+  }
+
   // Review module: complete conversation
   function onCompleteConversation() {
     if (!isConnected) return;
     setIsSubmitting(true);
+    markConversationCompleted();
     setOpenCompleteModal(false);
     const sessionId = localStorage.getItem("sessionId") ?? "unknown";
     socket.current?.send(
@@ -1159,6 +1173,7 @@ export default function Chat(): JSX.Element {
 
     if (!isConnected) return;
     setIsSubmitting(true);
+    markConversationCompleted();
     setEssayError("");
     const sessionId = localStorage.getItem("sessionId") ?? "unknown";
     const promptMessages = (moduleInfo?.prompts ?? [])
@@ -1402,6 +1417,7 @@ export default function Chat(): JSX.Element {
             }
             attemptsLabel={(() => {
               if (!isReviewModule || !isViewingOwnConvo) return undefined;
+              if (moduleInfo?.assessmentType === "summative") return undefined;
               const used = conversationList?.conversations.filter(c => c.completed && !c.voidedByInstructor).length ?? 0;
               const max = moduleInfo?.maxDrafts;
               if (!max || max >= 999) return t("reviewChat.unlimitedAttempts");

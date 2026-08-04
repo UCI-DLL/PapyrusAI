@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Get from "../../utility/Get";
 import Post from "../../utility/Post";
@@ -17,11 +17,13 @@ import { Textarea } from "../../components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../components/ui/accordion";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../../components/ui/sheet";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
 import { PageLoader } from "../../components/Common";
 import { MessageLeft, MessageRight } from "../../components/Message";
+import { AlertContext } from "../../utility/context/AlertContext";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AlertTriangle, BookOpen, CheckCircle, ChevronLeft, Clock, Download, Eye, MessageSquare, RefreshCw } from "lucide-react";
+import { AlertTriangle, BookOpen, CheckCircle, ChevronLeft, Clock, Download, Edit2, Eye, MessageSquare, RefreshCw } from "lucide-react";
 
 type GradingType = "ma6";
 
@@ -60,6 +62,12 @@ export default function ReviewConversationView(): JSX.Element {
   const [regradeResults, setRegradeResults] = useState<GradeScore[] | null>(null);
   const [regradeError, setRegradeError] = useState<string | null>(null);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editScores, setEditScores] = useState<GradeScore[]>([]);
+  const [editErrors, setEditErrors] = useState<string[]>([]);
+  const [approveLoading, setApproveLoading] = useState(false);
+
+  const { setAlert } = useContext(AlertContext);
 
   const [dataKey, setDataKey] = useState<string | null>(null);
 
@@ -140,6 +148,7 @@ export default function ReviewConversationView(): JSX.Element {
       ? rubric.criteria.length * maxPerCriterion
       : undefined;
 
+  const isSummative = module?.assessmentType === "summative";
   const studentName = student ? `${student.name} ${student.family_name}`.trim() : username;
   const convTitle = conversation?.name || `${t("reviewReports.attempt")} ${Number(convIndex) + 1}`;
   const grade = allGrades.find(
@@ -148,7 +157,7 @@ export default function ReviewConversationView(): JSX.Element {
   const messages: any[] = [...(conversation?.messages ?? [])].sort(
     (a, b) => parseInt(a.timestamp ?? "0") - parseInt(b.timestamp ?? "0")
   );
-  const visibleMessages = messages.filter((m: any) => m.userVisible !== false);
+  const visibleMessages = messages;
   const essayMessage = messages.filter((m: any) => m.messageType === "essayDraft").slice(-1)[0];
   const gradedAt = grade ? new Date(parseInt(grade.timestamp, 10)).toLocaleString() : null;
 
@@ -346,6 +355,90 @@ export default function ReviewConversationView(): JSX.Element {
     setSaveLoading(false);
   }
 
+  const canEditApprove = isSummative && !!grade && !grade.released;
+  const editTotal = editScores.reduce((sum, s) => sum + (Number(s.score) || 0), 0);
+
+  function handleStartEdit() {
+    if (!grade) return;
+    setEditScores(grade.scores.map((s) => ({ ...s })));
+    setEditErrors(grade.scores.map(() => ""));
+    setIsEditing(true);
+  }
+
+  function handleCancelEdit() {
+    setIsEditing(false);
+    setEditScores([]);
+    setEditErrors([]);
+  }
+
+  function handleScoreChange(i: number, raw: string) {
+    const num = raw === "" ? 0 : Number(raw);
+    const errors = [...editErrors];
+    if (isNaN(num) || !Number.isInteger(num) || num < 0 || (maxPerCriterion !== undefined && num > maxPerCriterion)) {
+      errors[i] = maxPerCriterion !== undefined
+        ? t("reviewReports.scoreError", { max: maxPerCriterion })
+        : t("reviewReports.scoreErrorGeneric");
+    } else {
+      errors[i] = "";
+    }
+    setEditErrors(errors);
+    const clamped = isNaN(num) ? 0 : Math.max(0, maxPerCriterion !== undefined ? Math.min(num, maxPerCriterion) : num);
+    setEditScores((prev) => prev.map((s, idx) => idx === i ? { ...s, score: clamped } : s));
+  }
+
+  function handleFeedbackChange(i: number, value: string) {
+    setEditScores((prev) => prev.map((s, idx) => idx === i ? { ...s, feedback: value } : s));
+  }
+
+  async function handleApproveEdit() {
+    if (!grade || !conversation) return;
+    const hasErrors = editErrors.some((e) => e !== "");
+    if (hasErrors) return;
+    const conversationId = grade.courseModuleConversationId.split("+").pop() ?? "";
+    setApproveLoading(true);
+    const res = await Put(putUpdateGrade(courseId, moduleId, username, conversationId), {
+      scores: editScores,
+      totalScore: editTotal,
+      instructorNotes: grade.instructorNotes ?? "",
+      released: true,
+    }, true);
+    if (res?.status < 300) {
+      setAlert({ message: t("reviewReports.gradeApproved"), type: "success" });
+      const gradesRes = await Get(getGrades(courseId, moduleId), undefined, true);
+      if (gradesRes?.status < 300 && gradesRes.data) {
+        const all = Array.isArray(gradesRes.data) ? gradesRes.data : [];
+        setAllGrades(all.filter((g: GradeType) => g.username === username));
+      }
+      handleCancelEdit();
+    } else {
+      setAlert({ message: t("errorMessage.genericError"), type: "error" });
+    }
+    setApproveLoading(false);
+  }
+
+  async function handleApproveAsIs() {
+    if (!grade || !conversation) return;
+    const conversationId = grade.courseModuleConversationId.split("+").pop() ?? "";
+    setApproveLoading(true);
+    const res = await Put(putUpdateGrade(courseId, moduleId, username, conversationId), {
+      scores: grade.scores,
+      totalScore: grade.totalScore,
+      instructorNotes: grade.instructorNotes ?? "",
+      released: true,
+    }, true);
+    if (res?.status < 300) {
+      setAlert({ message: t("reviewReports.gradeApproved"), type: "success" });
+      const gradesRes = await Get(getGrades(courseId, moduleId), undefined, true);
+      if (gradesRes?.status < 300 && gradesRes.data) {
+        const all = Array.isArray(gradesRes.data) ? gradesRes.data : [];
+        setAllGrades(all.filter((g: GradeType) => g.username === username));
+      }
+    } else {
+      setAlert({ message: t("errorMessage.genericError"), type: "error" });
+    }
+    setApproveLoading(false);
+  }
+
   if (isLoading) return <PageLoader pageName={t("reviewReports.conversationDetails")} />;
 
   return (
@@ -478,22 +571,57 @@ export default function ReviewConversationView(): JSX.Element {
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2 className="text-lg font-semibold">{t("reviewReports.viewReviewConversation")}</h2>
+            <h2 className="text-lg font-semibold">
+              {isEditing ? t("reviewReports.editingReview") : t("reviewReports.viewReviewConversation")}
+            </h2>
             <div className="flex gap-2">
-              {module?.essaySubmission && (
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => setDrawerOpen(true)}>
-                  <Eye className="h-4 w-4" />
-                  {t("reviewReports.openConversation")}
-                </Button>
+              {isEditing ? (
+                <>
+                  <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    disabled={approveLoading || editErrors.some((e) => e !== "")}
+                    onClick={handleApproveEdit}
+                  >
+                    {approveLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
+                    {t("reviewReports.approve")}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {module?.essaySubmission && (
+                    <Button variant="ghost" size="sm" className="gap-2" onClick={() => setDrawerOpen(true)}>
+                      <Eye className="h-4 w-4" />
+                      {t("reviewReports.openConversation")}
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" className="gap-2" onClick={() => setExportDialogOpen(true)}>
+                    <Download className="h-4 w-4" />
+                    {t("reviewReports.export")}
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => setRegradeDialogOpen(true)}>
+                    <RefreshCw className="h-4 w-4" />
+                    {t("reviewReports.regrade")}
+                  </Button>
+                  {canEditApprove && (
+                    <>
+                      <Button variant="outline" size="sm" className="gap-2" onClick={handleStartEdit}>
+                        <Edit2 className="h-4 w-4" />
+                        {t("reviewReports.editGrade")}
+                      </Button>
+                      <Button variant="default" size="sm" className="gap-2" disabled={approveLoading} onClick={handleApproveAsIs}>
+                        {approveLoading
+                          ? <RefreshCw className="h-4 w-4 animate-spin" />
+                          : <CheckCircle className="h-4 w-4" />}
+                        {t("reviewReports.approve")}
+                      </Button>
+                    </>
+                  )}
+                </>
               )}
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setRegradeDialogOpen(true)}>
-                <RefreshCw className="h-4 w-4" />
-                {t("reviewReports.regrade")}
-              </Button>
-              <Button size="sm" className="gap-2" onClick={() => setExportDialogOpen(true)}>
-                <Download className="h-4 w-4" />
-                {t("reviewReports.export")}
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -534,25 +662,57 @@ export default function ReviewConversationView(): JSX.Element {
                   <div className="flex items-center justify-between py-2 border-b mb-1">
                     <span className="font-semibold">{t("reviewReports.totalScore")}</span>
                     <span className="text-xl font-bold">
-                      {grade.totalScore}
+                      {isEditing ? editTotal : grade.totalScore}
                       {maxTotal !== undefined ? ` / ${maxTotal}` : ""}
                     </span>
                   </div>
-                  <Accordion type="multiple" className="w-full">
-                    {grade.scores.map((score, i) => (
+                  <Accordion
+                    type="multiple"
+                    className="w-full"
+                    {...(isEditing
+                      ? { value: grade.scores.map((_, i) => `score-${i}`), onValueChange: () => {} }
+                      : {})}
+                  >
+                    {(isEditing ? editScores : grade.scores).map((score, i) => (
                       <AccordionItem key={i} value={`score-${i}`}>
                         <AccordionTrigger className="hover:no-underline py-3">
                           <div className="flex items-center justify-between w-full pr-2">
                             <span className="text-sm font-medium text-left">{score.name}</span>
-                            <Badge variant="secondary" className="ml-2 shrink-0">
-                              {score.score}
-                              {maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
-                            </Badge>
+                            {isEditing ? (
+                              <div className="flex items-center gap-1.5 ml-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={maxPerCriterion}
+                                  value={score.score}
+                                  onChange={(e) => handleScoreChange(i, e.target.value)}
+                                  className={`w-16 h-7 text-center text-sm px-1 ${editErrors[i] ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                />
+                                {maxPerCriterion !== undefined && (
+                                  <span className="text-sm text-muted-foreground">/ {maxPerCriterion}</span>
+                                )}
+                              </div>
+                            ) : (
+                              <Badge variant="secondary" className="ml-2 shrink-0">
+                                {score.score}
+                                {maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                              </Badge>
+                            )}
                           </div>
                         </AccordionTrigger>
+                        {editErrors[i] && (
+                          <p className="text-xs text-destructive px-1 pb-1">{editErrors[i]}</p>
+                        )}
                         <AccordionContent>
-                          {score.feedback ? (
-                            <Markdown remarkPlugins={[remarkGfm]} className={" text-muted-foreground"}>
+                          {isEditing ? (
+                            <Textarea
+                              value={score.feedback}
+                              onChange={(e) => handleFeedbackChange(i, e.target.value)}
+                              className="text-sm min-h-[80px]"
+                              placeholder={t("reviewReports.noFeedback")}
+                            />
+                          ) : score.feedback ? (
+                            <Markdown remarkPlugins={[remarkGfm]} className="text-muted-foreground">
                               {score.feedback}
                             </Markdown>
                           ) : (

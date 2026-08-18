@@ -66,6 +66,7 @@ export default function ReviewConversationView(): JSX.Element {
   const [editScores, setEditScores] = useState<GradeScore[]>([]);
   const [editErrors, setEditErrors] = useState<string[]>([]);
   const [approveLoading, setApproveLoading] = useState(false);
+  const [saveEditLoading, setSaveEditLoading] = useState(false);
   const [approveDialogMode, setApproveDialogMode] = useState<"asIs" | "edit" | null>(null);
   const [approveNotes, setApproveNotes] = useState("");
 
@@ -373,6 +374,30 @@ export default function ReviewConversationView(): JSX.Element {
     setEditErrors([]);
   }
 
+  async function handleSaveEditOnly() {
+    if (!grade || !conversation || editErrors.some((e) => e !== "")) return;
+    const conversationId = grade.courseModuleConversationId.split("+").pop() ?? "";
+    setSaveEditLoading(true);
+    const res = await Put(putUpdateGrade(courseId, moduleId, username, conversationId), {
+      scores: editScores,
+      totalScore: editTotal,
+      instructorNotes: grade.instructorNotes ?? "",
+      released: false,
+    }, true);
+    if (res?.status < 300) {
+      setAlert({ message: t("reviewReports.gradeSaved"), type: "success" });
+      const gradesRes = await Get(getGrades(courseId, moduleId), undefined, true);
+      if (gradesRes?.status < 300 && gradesRes.data) {
+        const all = Array.isArray(gradesRes.data) ? gradesRes.data : [];
+        setAllGrades(all.filter((g: GradeType) => g.username === username));
+      }
+      handleCancelEdit();
+    } else {
+      setAlert({ message: t("errorMessage.genericError"), type: "error" });
+    }
+    setSaveEditLoading(false);
+  }
+
   function handleScoreChange(i: number, raw: string) {
     const num = raw === "" ? 0 : Number(raw);
     const errors = [...editErrors];
@@ -565,16 +590,26 @@ export default function ReviewConversationView(): JSX.Element {
             <h2 className="text-lg font-semibold">
               {isEditing ? t("reviewReports.editingReview") : t("reviewReports.viewReviewConversation")}
             </h2>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {isEditing ? (
                 <>
-                  <Button variant="outline" size="sm" onClick={handleCancelEdit}>
+                  <Button variant="outline" size="sm" disabled={saveEditLoading || approveLoading} onClick={handleCancelEdit}>
                     {t("common.cancel")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    disabled={saveEditLoading || approveLoading || editErrors.some((e) => e !== "")}
+                    onClick={handleSaveEditOnly}
+                  >
+                    {saveEditLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
+                    {t("reviewReports.saveChanges")}
                   </Button>
                   <Button
                     size="sm"
                     className="gap-2"
-                    disabled={editErrors.some((e) => e !== "")}
+                    disabled={saveEditLoading || approveLoading || editErrors.some((e) => e !== "")}
                     onClick={handleApproveEditOpen}
                   >
                     {t("reviewReports.approve")}

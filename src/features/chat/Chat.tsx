@@ -602,10 +602,12 @@ export default function Chat(): JSX.Element {
           autoCreateConvoName(messagesToSend);
         }
       } else {
-        setOpenErrorModal({
-          open: true,
-          message: t("errorMessage.genericError"),
-        });
+        // Not connected yet — queue the first message; pendingMessageContent effect will send it once connected
+        const firstMessage = messageList[0];
+        if (firstMessage) {
+          setPendingMessageContent(firstMessage.content);
+          setPendingPromptId(firstMessage.promptId ?? null);
+        }
       }
     },
     [messages, isConnected, t],
@@ -1102,7 +1104,7 @@ export default function Chat(): JSX.Element {
       return;
     }
 
-    if (!isConnected) return;
+    if (!isConnected) { setPendingMessageContent(messageText); return; }
     const sessionId = localStorage.getItem("sessionId") ?? "unknown";
     const tempId = Date.now().toString();
     const userMsg: MessageType = {
@@ -1254,7 +1256,6 @@ export default function Chat(): JSX.Element {
   }, [conversationList, conversationCompleted, isViewingOwnConvo, moduleInfo, grades, gradesLoaded]);
 
   const isChatInputVisible =
-    (isConnected || conversationIndex === "new") &&
     user &&
     viewUser &&
     user.username === viewUser.username &&
@@ -1278,7 +1279,6 @@ export default function Chat(): JSX.Element {
     !chatBlocked &&
     !!isViewingOwnConvo &&
     !conversationArchived &&
-    (isConnected || conversationIndex === "new") &&
     selectedPrompt !== undefined &&
     !showWizard;
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "../../../components/ui/button";
 import { Alert, AlertDescription } from "../../../components/ui/alert";
 import { TooltipWrapper } from "../../../components/ui-wrappers/TooltipWrapper";
-import { Send, Paperclip, Mic, AlertCircle } from "lucide-react";
+import { Send, Paperclip, Mic, AlertCircle, RefreshCw } from "lucide-react";
 import { removeSpecialCharacters } from "../../../utility/Helpers";
 import { AutosizeTextarea } from '../../../components/ui/autosize-textarea';
 import { useTranslation } from "../../../hooks/useTranslation";
@@ -18,6 +18,7 @@ interface ChatInputProps {
   onOpenDocumentModal: () => void;
   onOpenSpeechToTextModal: () => void;
   disabled?: boolean;
+  footerContent?: React.ReactNode;
 }
 
 export default function ChatInput({
@@ -29,6 +30,7 @@ export default function ChatInput({
   onOpenDocumentModal,
   onOpenSpeechToTextModal,
   disabled = false,
+  footerContent,
 }: ChatInputProps): JSX.Element | null {
   const { t } = useTranslation();
   const [message, setMessage] = useState<string>("");
@@ -36,7 +38,7 @@ export default function ChatInput({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!message.trim() || (!isNewChat && (disabled || !isConnected))) return;
+    if (!message.trim() || disabled) return;
 
     if (message.length > 100000) {
       return;
@@ -73,9 +75,10 @@ export default function ChatInput({
     }
   };
 
-  if (!isNewChat && (!isConnected || disabled)) {
+  if (!isNewChat && disabled) {
     return null;
   }
+  const isConnecting = !isConnected && !isNewChat;
 
   return (
     <div className="border-t border-border bg-card flex-shrink-0 sticky bottom-0 z-10 w-full">
@@ -126,10 +129,12 @@ export default function ChatInput({
                 type="submit"
                 size="sm"
                 className="h-8 w-8 my-1 md:m-1 bg-primary hover:bg-primary/90 transition-colors"
-                disabled={isLoading || !message.trim()}
-                aria-label={t("chat.sendMessage")}
+                disabled={isLoading || (!isConnecting && !message.trim())}
+                aria-label={isConnecting ? t("chat.connecting") : t("chat.sendMessage")}
               >
-                <Send className="h-4 w-4" />
+                {isConnecting
+                  ? <RefreshCw className="h-4 w-4 animate-spin" />
+                  : <Send className="h-4 w-4" />}
               </Button>
             </div>
 
@@ -141,6 +146,11 @@ export default function ChatInput({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{chatError}</AlertDescription>
           </Alert>
+        )}
+        {footerContent && (
+          <div className="flex justify-end mt-2">
+            {footerContent}
+          </div>
         )}
       </div>
     </div>

@@ -45,6 +45,34 @@ export type ModuleType = {
   raterEnabled?: boolean, //deprecated
   files?: Array<FileType>,
   webSearch?: boolean,
+  essaySubmission?: boolean,
+  // Review module fields
+  moduleType?: "chat" | "review",
+  assessmentType?: "formative" | "summative",
+  gradingType?: "ma6",
+  converseAfterComplete?: boolean,
+  maxDrafts?: number,
+  rubrics?: Array<RubricType>,
+  showRubric?: boolean,
+}
+
+export type GradeScore = {
+  name: string,
+  score: number,
+  feedback: string,
+}
+
+export type GradeType = {
+  username: string,
+  courseModuleConversationId: string,
+  courseModuleId: string,
+  scores: Array<GradeScore>,
+  totalScore: number,
+  gradingType: string,
+  released: boolean,
+  instructorNotes: string,
+  instructorEdited: boolean,
+  timestamp: string,
 }
 
 //These are used in adding assets to a module

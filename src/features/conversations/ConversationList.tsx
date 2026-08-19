@@ -37,7 +37,7 @@ import {
 } from "../../utility/endpoints/ConversationEndpoints";
 import Post from "../../utility/Post";
 import { ConversationListType } from "../../utility/types/ConversationTypes";
-import { CourseType } from "../../utility/types/CourseTypes";
+import { CourseType, ModuleType } from "../../utility/types/CourseTypes";
 import { getCourse } from "../../utility/endpoints/CourseEndpoints";
 import { getUserData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { UserType } from "../../utility/types/UserTypes";
@@ -99,7 +99,7 @@ export default function ConversationList(): JSX.Element {
       const courseId = location.pathname.split("/")[2];
       const moduleId = location.pathname.split("/")[4];
       //instructors or admins can view other user's conversation lists
-      var username;
+      var username: string | undefined;
       if (location.pathname.split("/")[6]) {
         username = location.pathname.split("/")[6];
       }
@@ -141,6 +141,13 @@ export default function ConversationList(): JSX.Element {
           if (res.data) {
             //Get the course and save the modules
             setCourse(res.data);
+            const mod: ModuleType | undefined = res.data.modules.find((m: ModuleType) => m.id === moduleId);
+            if (mod?.moduleType === "review") {
+              const reviewUrl = username
+                ? `/courses/${courseId}/modules/${moduleId}/review/username/${username}`
+                : `/courses/${courseId}/modules/${moduleId}/review`;
+              navigator(reviewUrl, { replace: true });
+            }
           }
         } else if (res && res.status === 401) {
           navigator("/login");

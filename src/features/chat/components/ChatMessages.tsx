@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { MessageLeft, MessageRight } from "../../../components/Message";
-import { MessageCircle, ArrowDown } from "lucide-react";
+import { MessageCircle, ChevronDown, ChevronUp, CheckCircle, Clock, FileText } from "lucide-react";
 import { MessageType } from "../../../utility/types/ConversationTypes";
-import { ModuleType } from "../../../utility/types/CourseTypes";
+import { ModuleType, GradeScore } from "../../../utility/types/CourseTypes";
 import { UserType } from "../../../utility/types/UserTypes";
 import ChatWizard from "../ChatWizard";
 import EssayWizard from "../EssayWizard";
 import { useTranslation } from "../../../hooks/useTranslation";
-import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface ChatMessagesProps {
   messages: MessageType[];
@@ -21,9 +23,16 @@ interface ChatMessagesProps {
   instructor: string;
   admin: string;
   conversationArchived: boolean;
+  canStartNewConversation?: boolean;
   onWizardReturnPrompts: (selectedPrompt: string) => void;
   onWizardReturnEssay: (essay: string, message?: string) => void;
   newConversation: () => void;
+  gradeResult?: { scores: GradeScore[]; totalScore: number; instructorNotes?: string } | null;
+  gradePending?: boolean;
+  gradeError?: string;
+  isEssayMode?: boolean;
+  onScrolledUpChange?: (up: boolean) => void;
+  scrollToBottomRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 export default function ChatMessages({
@@ -38,15 +47,24 @@ export default function ChatMessages({
   instructor,
   admin,
   conversationArchived,
+  canStartNewConversation = true,
   onWizardReturnPrompts,
   onWizardReturnEssay,
   newConversation,
+  gradeResult,
+  gradePending,
+  gradeError,
+  isEssayMode = false,
+  onScrolledUpChange,
+  scrollToBottomRef,
 }: ChatMessagesProps): JSX.Element {
   const { t } = useTranslation();
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const containerRef = useRef<null | HTMLDivElement>(null);
-  const [isScrolledUp, setIsScrolledUp] = useState(false);
   const shouldAutoScroll = useRef(true);
+  const [essayExpanded, setEssayExpanded] = useState(false);
+  const [gradeExpanded, setGradeExpanded] = useState(true);
+  const [expandedCriteria, setExpandedCriteria] = useState<Set<number>>(new Set());
 
   const scrollToBottom = () => {
     const container = containerRef.current;
@@ -54,13 +72,15 @@ export default function ChatMessages({
     container.scrollTop = container.scrollHeight;
   };
 
+  if (scrollToBottomRef) scrollToBottomRef.current = scrollToBottom;
+
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
     const { scrollTop, scrollHeight, clientHeight } = container;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
     const scrolledUp = distanceFromBottom > 100;
-    setIsScrolledUp(scrolledUp);
+    onScrolledUpChange?.(scrolledUp);
     shouldAutoScroll.current = !scrolledUp;
   };
 
@@ -83,6 +103,20 @@ export default function ChatMessages({
     !showPromptWizard &&
     !showEssayWizard) ||
     (!isInstructor && conversationArchived);
+
+  // Find essay message index for inserting grade card after it
+  const essayMessageIndex = isEssayMode
+    ? messages.findIndex(m => m.role === "user" && m.messageType === "essayDraft")
+    : -1;
+
+  // Rubric max scores
+  const rubric = moduleInfo?.rubrics?.[0];
+  const maxPerCriterion = rubric
+    ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
+    : undefined;
+  const maxTotal = maxPerCriterion !== undefined
+    ? (rubric?.criteria.length ?? 0) * maxPerCriterion
+    : undefined;
 
   useEffect(() => { //handles new message announcement
     const last = messages[messages.length - 1];
@@ -116,8 +150,144 @@ export default function ChatMessages({
     }
   }, [messages]);
 
+  function renderEssayCard(message: MessageType) {
+    const preview = message.content
+      .split("\n")
+      .filter(l => l.trim())
+      .slice(0, 3)
+      .join(" ")
+      .slice(0, 200);
+
+    return (
+      <div className="border rounded-xl bg-muted/30 overflow-hidden">
+        <button
+          onClick={() => setEssayExpanded(p => !p)}
+          className="w-full flex items-start justify-between gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary shrink-0" />
+              <span className="font-semibold text-sm">{t("reviewChat.submittedEssay")}</span>
+            </div>
+            {!essayExpanded && preview && (
+              <p className="text-xs text-muted-foreground truncate">
+                {preview}{message.content.length > 200 ? "…" : ""}
+              </p>
+            )}
+          </div>
+          {essayExpanded
+            ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />}
+        </button>
+        {essayExpanded && (
+          <div className="px-4 pb-4 border-t border-border/50">
+            <p className="text-sm whitespace-pre-wrap mt-3 text-foreground/90">{message.content}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderGradeCard() {
+    if (gradeError) {
+      return (
+        <div className="p-4 border border-destructive rounded-xl bg-destructive/10">
+          <p className="text-destructive text-sm">{gradeError}</p>
+        </div>
+      );
+    }
+    if (gradePending) {
+      return (
+        <div className="p-6 border rounded-xl bg-card flex flex-col items-center gap-3 text-center">
+          <Clock className="h-10 w-10 text-primary opacity-70" />
+          <div>
+            <h3 className="font-bold text-base">{t("reviewChat.pendingTitle")}</h3>
+            <p className="text-muted-foreground text-sm mt-1">{t("reviewChat.pendingDescription")}</p>
+          </div>
+        </div>
+      );
+    }
+    if (gradeResult) {
+      return (
+        <div className="border rounded-xl bg-card overflow-hidden">
+          <button
+            onClick={() => setGradeExpanded(p => !p)}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+              <div>
+                <span className="font-semibold text-sm">{t("reviewChat.gradeResult")}</span>
+                <span className="text-muted-foreground text-sm ml-2">
+                  {t("reviewChat.totalScore")}:{" "}
+                  <span className="font-semibold text-foreground">
+                    {gradeResult.totalScore}{maxTotal !== undefined ? ` / ${maxTotal}` : ""}
+                  </span>
+                </span>
+              </div>
+            </div>
+            {gradeExpanded
+              ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+              : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+          </button>
+          {gradeExpanded && (
+            <div className="p-2 border-t border-border/50 space-y-2 mt-3">
+              {gradeResult.scores.map((score, i) => {
+                const criterionOpen = expandedCriteria.has(i);
+                return (
+                  <div key={i} className="border rounded-lg bg-background overflow-hidden">
+                    <button
+                      onClick={() => setExpandedCriteria(prev => {
+                        const next = new Set(prev);
+                        next.has(i) ? next.delete(i) : next.add(i);
+                        return next;
+                      })}
+                      className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
+                    >
+                      <span className="font-semibold text-sm">{score.name}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="secondary" className="text-xs">
+                          {score.score}{maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                        </Badge>
+                        {score.feedback && (criterionOpen
+                          ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                          : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />)}
+                      </div>
+                    </button>
+                    {criterionOpen && score.feedback && (
+                      <div className="px-3 pb-3 border-t border-border/50">
+                        <Markdown
+                          remarkPlugins={[remarkGfm]}
+                          className="prose prose-sm max-w-none dark:prose-invert colorful-dark:prose-invert mt-2
+                            prose-p:text-muted-foreground prose-p:leading-relaxed
+                            prose-strong:font-semibold prose-ul:list-disc prose-ol:list-decimal
+                            prose-li:marker:text-muted-foreground"
+                        >
+                          {score.feedback}
+                        </Markdown>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {gradeResult.instructorNotes && (
+                <div className="border rounded-lg p-3 bg-primary/5 border-primary/20">
+                  <p className="text-xs font-semibold text-primary mb-1">{t("reviewChat.instructorNotes")}</p>
+                  <p className="text-sm text-foreground/90">{gradeResult.instructorNotes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return null;
+  }
+
+  const hasGradeContent = !!(gradeResult || gradePending || gradeError);
+
   return (
-    <div ref={containerRef} onScroll={handleScroll} className="flex-1 lg:overflow-y-auto relative">
+    <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto relative">
       <div className="p-4 max-w-4xl mx-auto">
         {/* Essay Wizard */}
         {showEssayWizard && (
@@ -150,7 +320,7 @@ export default function ChatMessages({
               <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
               <h2 className="text-lg font-semibold mb-2">{t("chat.startConversation")}</h2>
               <p className="text-sm text-muted-foreground mb-4">
-                {moduleInfo.moduleDescription}
+                {moduleInfo?.moduleDescription}
               </p>
               <p className="text-xs text-muted-foreground">
                 {t("chat.startConversationDescription")}
@@ -179,8 +349,8 @@ export default function ChatMessages({
           </div>
         ) : (
           <>
-            {/* Messages */}
-            {messages.length > 0 && (
+            {/* Messages — hidden while prompt wizard is active */}
+            {!showPromptWizard && messages.length > 0 && (
               <div className="space-y-4">
                 {messages.map((message, index) => {
                   const isContextDivider =
@@ -190,8 +360,11 @@ export default function ChatMessages({
                   const isLastMessage = index === messages.length - 1;
                   const isStreamingAssistant = message.role === "assistant" && isLastMessage && message.finished ? false : true;
 
+                  // Essay message — render as special card
+                  const isEssayMessage = index === essayMessageIndex;
+
                   return (
-                    <React.Fragment>
+                    <React.Fragment key={message.id}>
                       {isContextDivider && (
                         <div className="relative flex items-center justify-center my-6">
                           <div className="absolute inset-0 flex items-center">
@@ -205,14 +378,24 @@ export default function ChatMessages({
                         </div>
                       )}
 
-                      {/* wrap message with aria-hidden when streaming message  */}
-                      {message.role === "assistant" ? isStreamingAssistant ? (
+                      {isEssayMessage ? (
+                        <>
+                          {renderEssayCard(message)}
+                          {/* Grade card immediately after the essay */}
+                          {index === essayMessageIndex && hasGradeContent && (
+                            <div className="mt-2">
+                              {renderGradeCard()}
+                            </div>
+                          )}
+                        </>
+                      ) : message.role === "assistant" ? isStreamingAssistant ? (
+                        /* wrap message with aria-hidden when streaming message  */
                         <div aria-hidden="true">
                           <MessageLeft
                             id={message.id}
                             message={message.content}
                             displayName={
-                              message.sender === "ChatGPT" ? "Papyrus" : message.sender
+                              ["ChatGPT", "AI", "Papyrus", "PapyrusAI"].includes(message.sender) ? "Papyrus" : message.sender
                             }
                             messageType={message.messageType}
                             outOfContext={message.inContext ? true : false}
@@ -241,7 +424,7 @@ export default function ChatMessages({
                           id={message.id}
                           message={message.content}
                           displayName={
-                            message.sender === "ChatGPT" ? "Papyrus" : message.sender
+                            ["ChatGPT", "AI"].includes(message.sender) ? "Papyrus" : message.sender
                           }
                           messageType={message.messageType}
                           outOfContext={message.inContext ? true : false}
@@ -264,7 +447,7 @@ export default function ChatMessages({
                               : []
                           }
                         />
-                      ) : !moduleInfo.showInitialPrompt && message.promptId ? null : (
+                      ) : !moduleInfo?.showInitialPrompt && message?.promptId ? null : (
                         <MessageRight
                           id={message.id}
                           message={message.content}
@@ -282,6 +465,11 @@ export default function ChatMessages({
                     </React.Fragment>
                   );
                 })}
+
+                {/* Grade card for non-essay review modules — shown after all messages */}
+                {!isEssayMode && hasGradeContent && (
+                  <div>{renderGradeCard()}</div>
+                )}
 
                 {/* Typing Indicator */}
                 {showTypingIndicator && (
@@ -311,18 +499,22 @@ export default function ChatMessages({
                   </div>
                 )}
 
-                {/* Conversation Completed Message */}
-                {conversationCompleted && (
+                {/* Conversation Completed Message (regular chat only — review modules show a badge above) */}
+                {conversationCompleted && moduleInfo?.moduleType !== "review" && (
                   <div className="text-center py-8 border-t border-border mt-6">
                     <div className="pb-4 text-muted-foreground text-sm max-w-md mx-auto">
-                      {t("chat.flaggedConvoDescription")}
+                      {moduleInfo?.essaySubmission
+                        ? t("chat.reviewConvoCompletedDescription")
+                        : t("chat.flaggedConvoDescription")}
                     </div>
-                    <button
-                      onClick={newConversation}
-                      className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                    >
-                      {t("chat.newConversation")}
-                    </button>
+                    {(!moduleInfo?.essaySubmission || canStartNewConversation) && (
+                      <button
+                        onClick={newConversation}
+                        className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                      >
+                        {t("chat.newConversation")}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -334,22 +526,6 @@ export default function ChatMessages({
         <div ref={messagesEndRef} className="h-1" />
       </div>
 
-      {/* Scroll to bottom button */}
-      {isScrolledUp && (
-        <Button
-          onClick={() => {
-            shouldAutoScroll.current = true;
-            setIsScrolledUp(false);
-            scrollToBottom();
-          }}
-          variant="outline"
-          aria-label="Scroll to bottom"
-          className="sticky bottom-4 float-right mr-4 "
-          size="icon"
-        >
-          <ArrowDown className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 }

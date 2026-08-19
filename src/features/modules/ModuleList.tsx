@@ -27,7 +27,8 @@ import {
   postCreateUserFavoritingData,
   putUpdateUserFavoritingData,
 } from "../../utility/endpoints/UserEndpoints";
-import { Star, Play, Copy, Edit, Loader2, Eye } from "lucide-react";
+import { Star, Play, Copy, Edit, Loader2, Eye, ClipboardCheck } from "lucide-react";
+import { Badge } from "../../components/ui/badge";
 import Post from "../../utility/Post";
 import { cn } from "../../lib/utils";
 import {
@@ -184,40 +185,31 @@ export default function ModuleList({
     });
   }
 
-  async function handleBeginModule(courseId: string, moduleId: string) {
+  async function handleBeginModule(courseId: string, moduleId: string, isReview: boolean = false) {
     if (!user) return;
 
-    //log action
     Post(logEvent(), {
       eventType: "client_action",
       metadata: {
         action: "begin_module",
-        page: "chat",
+        page: isReview ? "review_chat" : "chat",
         courseId: courseId,
         moduleId: moduleId,
       }
-    })
+    });
 
     const moduleKey = `${courseId}-${moduleId}`;
     setIsNavigatingToModule(moduleKey);
 
     try {
-      // First, get the conversation list for this module
-      const conversationRes = await Get(
-        getConversationList(courseId, moduleId)
-      );
+      const conversationRes = await Get(getConversationList(courseId, moduleId));
 
-      if (
-        conversationRes &&
-        conversationRes.status &&
-        conversationRes.status < 300
-      ) {
+      if (conversationRes && conversationRes.status && conversationRes.status < 300) {
         if (
           conversationRes.data &&
           conversationRes.data.conversations &&
           conversationRes.data.conversations.length > 0
         ) {
-          // Sort conversations by ID (latest first) and get the latest one
           const sortedConversations = conversationRes.data.conversations.sort(
             (a: any, b: any) => parseInt(b.id) - parseInt(a.id)
           );
@@ -225,50 +217,29 @@ export default function ModuleList({
             conversationRes.data.conversations.length -
             conversationRes.data.conversations.findIndex(
               (conv: any) => conv.id === sortedConversations[0].id
-            ) -
-            1;
+            ) - 1;
 
-          // Navigate to the latest conversation
-          navigator(
-            `/chat/${user.username}/${courseId}/${moduleId}/${latestConversationIndex}`
-          );
+          navigator(`/${isReview ? "review-chat" : "chat"}/${user.username}/${courseId}/${moduleId}/${latestConversationIndex}`);
         } else {
-          // No conversations exist, create a new one
-          const createRes = await Post(
-            postCreateConversation(courseId, moduleId),
-            {}
-          );
+          const createRes = await Post(postCreateConversation(courseId, moduleId), {});
 
           if (createRes && createRes.status && createRes.status < 300) {
             if (createRes.data && createRes.data.conversations) {
-              // Navigate to the newly created conversation
-              navigator(
-                `/chat/${user.username}/${courseId}/${moduleId}/${createRes.data.conversations.length - 1
-                }`
-              );
+              navigator(`/${isReview ? "review-chat" : "chat"}/${user.username}/${courseId}/${moduleId}/${createRes.data.conversations.length - 1}`);
             }
           } else if (createRes && createRes.status === 401) {
             navigator("/login");
           } else {
-            setAlert({
-              message: t("components.somethingWentWrongCreatingConversation"),
-              type: "error",
-            });
+            setAlert({ message: t("components.somethingWentWrongCreatingConversation"), type: "error" });
           }
         }
       } else if (conversationRes && conversationRes.status === 401) {
         navigator("/login");
       } else {
-        setAlert({
-          message: t("components.somethingWentWrongLoadingConversations"),
-          type: "error",
-        });
+        setAlert({ message: t("components.somethingWentWrongLoadingConversations"), type: "error" });
       }
     } catch (error) {
-      setAlert({
-        message: t("components.somethingWentWrong"),
-        type: "error",
-      });
+      setAlert({ message: t("components.somethingWentWrong"), type: "error" });
     } finally {
       setIsNavigatingToModule(null);
     }
@@ -470,10 +441,15 @@ export default function ModuleList({
               course.modules,
               starredModules
             ).map((module, index) => {
-              const isStarred = starredModules.some(
-                (m) => m.moduleId === module.id
-              );
+              const isStarred = starredModules.some((m) => m.moduleId === module.id);
+              const isReview = module.moduleType === "review";
               const courseInfo = `${course.name} - ${course.instructor.name} ${course.instructor.family_name}`;
+              const reportsLink = isReview
+                ? `/reports/review-module/${course.id}/${module.id}`
+                : `/reports/module/${course.id}/${module.id}`;
+              const editLink = isReview
+                ? `/courses/${course.id}/editreviewmodule/${module.id}`
+                : `/courses/${course.id}/editmodule/${module.id}`;
 
               return (
                 <div
@@ -492,12 +468,25 @@ export default function ModuleList({
                       {/* Header with title and favorite */}
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1 min-w-0">
-                          <h2
-                            className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
-                          colorful-dark:group-hover:text-gold transition-colors duration-300 leading-tight"
-                          >
-                            {module.name}
-                          </h2>
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h2
+                              className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold
+                            colorful-dark:group-hover:text-gold transition-colors duration-300 leading-tight"
+                            >
+                              {module.name}
+                            </h2>
+                            {isReview ? (
+                              <Badge variant="secondary" className="flex items-center gap-1 text-xs pointer-events-none shrink-0">
+                                <ClipboardCheck className="h-3 w-3" />
+                                {t("reviewModule.reviewBadge")}
+                              </Badge>
+                            ) : (
+                              <Badge variant="default" className="flex items-center gap-1 text-xs pointer-events-none shrink-0">
+                                <Play className="h-3 w-3" />
+                                {t("reviewModule.chatBadge")}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <TooltipWrapper
                           content={isStarred ? t("common.unstarModule") : t("common.starModule")}
@@ -549,24 +538,12 @@ export default function ModuleList({
                       <div className="flex items-center justify-between">
                         {/* Secondary actions */}
                         <div className="flex items-center gap-1">
-                          {(user?.groups.includes(
-                            process.env.REACT_APP_ADMIN
-                              ? process.env.REACT_APP_ADMIN
-                              : "PapyrusAIAdmin"
-                          ) ||
-                            user?.groups.includes(
-                              process.env.REACT_APP_INSTRUCTOR
-                                ? process.env.REACT_APP_INSTRUCTOR
-                                : "PapyrusAIInstructors"
-                            ) ||
+                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
+                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
                             user?.groups.includes(course.id + "-TA")) && (
                               <TooltipWrapper content="View Reports">
                                 <button
-                                  onClick={() =>
-                                    navigator(
-                                      `/reports/module/${course.id}/${module.id}`
-                                    )
-                                  }
+                                  onClick={() => navigator(reportsLink)}
                                   className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
                                 >
                                   <Eye size={14} />
@@ -574,25 +551,13 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(user?.groups.includes(
-                            process.env.REACT_APP_ADMIN
-                              ? process.env.REACT_APP_ADMIN
-                              : "PapyrusAIAdmin"
-                          ) ||
-                            user?.groups.includes(
-                              process.env.REACT_APP_INSTRUCTOR
-                                ? process.env.REACT_APP_INSTRUCTOR
-                                : "PapyrusAIInstructors"
-                            ) ||
+                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
+                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
                             user?.groups.includes(course.id + "-TA")) && (
                               <TooltipWrapper content={t("common.copyModule")}>
                                 <button
                                   onClick={() => {
-                                    setOpenDuplicateModal({
-                                      courseId: course.id,
-                                      moduleId: module.id,
-                                      copyCourseId: "",
-                                    });
+                                    setOpenDuplicateModal({ courseId: course.id, moduleId: module.id, copyCourseId: "" });
                                     setOpenCourseListModal(true);
                                   }}
                                   className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
@@ -603,27 +568,14 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(user?.groups.includes(
-                            process.env.REACT_APP_INSTRUCTOR
-                              ? process.env.REACT_APP_INSTRUCTOR
-                              : "PapyrusAIInstructors"
-                          ) ||
+                          {(user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
                             user?.groups.includes(course.id + "-TA")) &&
                             user?.groups.includes(course.id) &&
                             (course.instructor.username === user.username ||
-                              (course.taList &&
-                                course.taList.find(
-                                  (a: CustomUserType) =>
-                                    a.username === user?.username
-                                ))) && (
+                              (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))) && (
                               <TooltipWrapper content={t("common.editModule")}>
-                                <button
-                                  aria-label={t("common.editModule")}
-                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                                >
-                                  <Link
-                                    to={`/courses/${course.id}/editmodule/${module.id}`}
-                                  >
+                                <button aria-label={t("common.editModule")} className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300">
+                                  <Link to={editLink}>
                                     <Edit className="h-[1em] w-[1em]" />
                                   </Link>
                                 </button>
@@ -633,17 +585,18 @@ export default function ModuleList({
 
                         {/* Primary action */}
                         <Button
-                          onClick={() =>
-                            navigator(
-                              `/courses/${course.id}/modules/${module.id}`
-                            )
-                          }
+                          onClick={() => handleBeginModule(course.id, module.id, isReview)}
                           variant="default"
                           size="sm"
                           className="flex items-center gap-2"
                           aria-label={t("modules.beginModule")}
+                          disabled={isNavigatingToModule === `${course.id}-${module.id}`}
                         >
-                          <Play size={14} />
+                          {isNavigatingToModule === `${course.id}-${module.id}` ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Play size={14} />
+                          )}
                           {t("common.begin")}
                         </Button>
                       </div>
@@ -660,13 +613,24 @@ export default function ModuleList({
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <h2
-                              className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold 
+                              className="text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-gold
                             colorful-dark:group-hover:text-gold transition-colors duration-300 truncate-text"
                             >
                               {module.name}
                             </h2>
+                            {isReview ? (
+                              <Badge variant="secondary" className="flex items-center gap-1 text-xs pointer-events-none shrink-0">
+                                <ClipboardCheck className="h-3 w-3" />
+                                {t("reviewModule.reviewBadge")}
+                              </Badge>
+                            ) : (
+                              <Badge variant="default" className="flex items-center gap-1 text-xs pointer-events-none shrink-0">
+                                <Play className="h-3 w-3" />
+                                {t("reviewModule.chatBadge")}
+                              </Badge>
+                            )}
                           </div>
 
                           <p className="text-xs text-muted-foreground mb-1 font-medium">
@@ -716,24 +680,12 @@ export default function ModuleList({
                             </button>
                           </TooltipWrapper>
 
-                          {(user?.groups.includes(
-                            process.env.REACT_APP_ADMIN
-                              ? process.env.REACT_APP_ADMIN
-                              : "PapyrusAIAdmin"
-                          ) ||
-                            user?.groups.includes(
-                              process.env.REACT_APP_INSTRUCTOR
-                                ? process.env.REACT_APP_INSTRUCTOR
-                                : "PapyrusAIInstructors"
-                            ) ||
+                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
+                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
                             user?.groups.includes(course.id + "-TA")) && (
                               <TooltipWrapper content="View Reports">
                                 <button
-                                  onClick={() =>
-                                    navigator(
-                                      `/reports/module/${course.id}/${module.id}`
-                                    )
-                                  }
+                                  onClick={() => navigator(reportsLink)}
                                   className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
                                 >
                                   <Eye size={12} />
@@ -741,25 +693,13 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(user?.groups.includes(
-                            process.env.REACT_APP_ADMIN
-                              ? process.env.REACT_APP_ADMIN
-                              : "PapyrusAIAdmin"
-                          ) ||
-                            user?.groups.includes(
-                              process.env.REACT_APP_INSTRUCTOR
-                                ? process.env.REACT_APP_INSTRUCTOR
-                                : "PapyrusAIInstructors"
-                            ) ||
+                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
+                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
                             user?.groups.includes(course.id + "-TA")) && (
                               <TooltipWrapper content={t("common.copyModule")}>
                                 <button
                                   onClick={() => {
-                                    setOpenDuplicateModal({
-                                      courseId: course.id,
-                                      moduleId: module.id,
-                                      copyCourseId: "",
-                                    });
+                                    setOpenDuplicateModal({ courseId: course.id, moduleId: module.id, copyCourseId: "" });
                                     setOpenCourseListModal(true);
                                   }}
                                   className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
@@ -770,28 +710,14 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(user?.groups.includes(
-                            process.env.REACT_APP_INSTRUCTOR
-                              ? process.env.REACT_APP_INSTRUCTOR
-                              : "PapyrusAIInstructors"
-                          ) ||
+                          {(user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
                             user?.groups.includes(course.id + "-TA")) &&
                             user?.groups.includes(course.id) &&
                             (course.instructor.username === user.username ||
-                              (course.taList &&
-                                course.taList.find(
-                                  (a: CustomUserType) =>
-                                    a.username === user?.username
-                                ))) && (
+                              (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))) && (
                               <TooltipWrapper content={t("common.editModule")}>
-                                <button
-                                  aria-label={t("common.editModule")}
-                                  className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                                >
-                                  <Link
-                                    to={`/courses/${course.id}/editmodule/${module.id}`}
-                                    className="no-underline"
-                                  >
+                                <button aria-label={t("common.editModule")} className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300">
+                                  <Link to={editLink} className="no-underline">
                                     <Edit className="h-[1em] w-[1em]" />
                                   </Link>
                                 </button>
@@ -799,19 +725,13 @@ export default function ModuleList({
                             )}
 
                           <Button
-                            onClick={() =>
-                              handleBeginModule(course.id, module.id)
-                            }
+                            onClick={() => handleBeginModule(course.id, module.id, isReview)}
                             variant="default"
                             size="sm"
                             className="flex items-center gap-2 ml-2"
-                            disabled={
-                              isNavigatingToModule ===
-                              `${course.id}-${module.id}`
-                            }
+                            disabled={isNavigatingToModule === `${course.id}-${module.id}`}
                           >
-                            {isNavigatingToModule ===
-                              `${course.id}-${module.id}` ? (
+                            {isNavigatingToModule === `${course.id}-${module.id}` ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
                               <Play size={14} />

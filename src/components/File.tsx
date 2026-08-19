@@ -47,6 +47,7 @@ interface FileProps {
   isStarred?: boolean;
   disableStarring?: boolean;
   isSelected?: boolean;
+  hideActions?: boolean;
   onStarChange?: (itemId: string, type: "folder" | "prompt" | "file", parentId: string, isNowStarred: boolean) => void;
   shared?: boolean;
 }
@@ -389,7 +390,7 @@ export const File = (props: FileProps) => {
 
           <div className="flex w-full items-center justify-between">
             <div />
-            {props.noShowMenu ? (
+            {props.hideActions ? null : props.noShowMenu ? (
               props.showRemove ? (
                 <TooltipWrapper content={t("components.removeFileFromModule")} side="top">
                   <Button

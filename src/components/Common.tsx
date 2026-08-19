@@ -19,10 +19,12 @@ export function PageHeaderCard({
   title,
   icon,
   description,
+  action,
 }: {
   title: string;
   icon: React.ReactNode;
   description?: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
     <header className="animate-in slide-in-from-bottom-4 duration-700">
@@ -31,9 +33,12 @@ export function PageHeaderCard({
           {icon}
         </div>
 
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">{title}</h1>
-          {description && <div className="text-muted-foreground max-w-2xl mt-2">{description}</div>}
+        <div className="relative z-10 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">{title}</h1>
+            {description && <div className="text-muted-foreground max-w-2xl mt-2">{description}</div>}
+          </div>
+          {action && <div className="shrink-0 mt-1">{action}</div>}
         </div>
       </div>
     </header>

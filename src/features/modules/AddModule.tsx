@@ -55,11 +55,13 @@ type ModuleFormType = {
   prompts: Array<PromptType>;
   files: Array<FileType>;
   webSearch: boolean;
+  essaySubmission: boolean;
   id?: string;
   isDeleted?: boolean;
   isTemplate?: boolean;
   showWizard?: boolean;
   raterEnabled?: boolean;
+  isOralModule?: boolean;
 };
 
 type ModuleFormMode = "create" | "edit";
@@ -106,11 +108,13 @@ export default function AddModule({
     prompts: [],
     files: [],
     webSearch: false,
+    essaySubmission: false,
     id: "",
     isDeleted: false,
     isTemplate: false,
     showWizard: true,
     raterEnabled: false,
+    isOralModule: false,
   });
   const [moduleIds, setModuleIds] = useState<{
     courseId: string;
@@ -272,6 +276,8 @@ export default function AddModule({
           id: session.id,
           raterEnabled: session.raterEnabled ? true : false,
           webSearch: session.webSearch ? true : false,
+          essaySubmission: session.essaySubmission ? true : false,
+          isOralModule: session.isOralModule ? true : false,
         };
         // put data back
         Put(
@@ -311,6 +317,8 @@ export default function AddModule({
           files: session.files, //send files with all information + folderid
           isDeleted: false,
           webSearch: session.webSearch,
+          essaySubmission: session.essaySubmission ? true : false,
+          isOralModule: session.isOralModule,
         };
         // post data back
         Put(putCreateModule(actualCourseId), dataToSend).then((res) => {
@@ -978,6 +986,29 @@ export default function AddModule({
                   </div>
                   <p className="text-sm text-muted-foreground ml-6">
                     {t("createModule.allowWebSearchDescription")}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="isOralModule"
+                      aria-labelledby="isOralModuleLabel"
+                      checked={session.isOralModule}
+                      onCheckedChange={(checked) => {
+                        setSession((prev) => ({
+                          ...prev,
+                          isOralModule: checked as boolean,
+                        }));
+                      }}
+                      disabled={isLoading}
+                    />
+                    <Label id="isOralModuleLabel" htmlFor="isOralModule" className="text-md font-bold">
+                      {t("createModule.enableOralModule")}
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground ml-6">
+                    {t("createModule.oralModuleDescription")}
                   </p>
                 </div>
               </div>

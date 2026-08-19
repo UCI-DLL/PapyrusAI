@@ -47,7 +47,7 @@ export type ModuleType = {
   webSearch?: boolean,
   essaySubmission?: boolean,
   // Review module fields
-  moduleType?: "chat" | "review",
+  moduleType?: "conversational" | "review",
   assessmentType?: "formative" | "summative",
   gradingType?: "ma6",
   converseAfterComplete?: boolean,

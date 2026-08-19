@@ -50,9 +50,11 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
   const [duplicateModuleData, setDuplicateModuleData] = useState<{
     name: string;
     isPublished: boolean;
+    moduleType: string;
   }>({
     name: "",
     isPublished: false,
+    moduleType: "",
   });
   const [starredModules, setStarredModules] = useState<Array<{ courseId: string; moduleId: string }>>([]);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -125,6 +127,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
           setDuplicateModuleData({
             name: "",
             isPublished: false,
+            moduleType: "",
           });
         }
       } else if (res && res.status === 401) {
@@ -293,6 +296,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
           moduleId: module.id,
           copyCourseId: "",
         });
+        setDuplicateModuleData(prev => ({ ...prev, moduleType: module.moduleType === "review" ? "review" : "conversational" }));
         setOpenCourseListModal(true);
       },
     },
@@ -307,6 +311,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
           moduleId: module.id,
           copyCourseId: "",
         });
+        setDuplicateModuleData(prev => ({ ...prev, moduleType: module.moduleType === "review" ? "review" : "conversational" }));
         setOpenCourseListModal(true);
       },
     },

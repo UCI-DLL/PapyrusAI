@@ -278,6 +278,7 @@ export default function AddModule({
           webSearch: session.webSearch ? true : false,
           essaySubmission: session.essaySubmission ? true : false,
           isOralModule: session.isOralModule ? true : false,
+          moduleType: "conversational",
         };
         // put data back
         Put(
@@ -319,6 +320,7 @@ export default function AddModule({
           webSearch: session.webSearch,
           essaySubmission: session.essaySubmission ? true : false,
           isOralModule: session.isOralModule,
+          moduleType: "conversational",
         };
         // post data back
         Put(putCreateModule(actualCourseId), dataToSend).then((res) => {
@@ -989,7 +991,8 @@ export default function AddModule({
                   </p>
                 </div>
 
-                <div className="space-y-1">
+                {/* TODO uncomment for oral modules  */}
+                {/* <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="isOralModule"
@@ -1010,7 +1013,7 @@ export default function AddModule({
                   <p className="text-sm text-muted-foreground ml-6">
                     {t("createModule.oralModuleDescription")}
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
           </form>

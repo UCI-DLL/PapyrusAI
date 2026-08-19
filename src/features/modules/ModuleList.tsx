@@ -80,9 +80,11 @@ export default function ModuleList({
   const [duplicateModuleData, setDuplicateModuleData] = useState<{
     name: string;
     isPublished: boolean;
+    moduleType: string;
   }>({
     name: "",
     isPublished: false,
+    moduleType: "",
   });
 
   useEffect(() => {
@@ -162,6 +164,7 @@ export default function ModuleList({
           setDuplicateModuleData({
             name: "",
             isPublished: false,
+            moduleType: "",
           });
         }
       } else if (res && res.status === 401) {
@@ -558,6 +561,7 @@ export default function ModuleList({
                                 <button
                                   onClick={() => {
                                     setOpenDuplicateModal({ courseId: course.id, moduleId: module.id, copyCourseId: "" });
+                                    setDuplicateModuleData(prev => ({ ...prev, moduleType: module.moduleType === "review" ? "review" : "conversational" }));
                                     setOpenCourseListModal(true);
                                   }}
                                   className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
@@ -700,6 +704,7 @@ export default function ModuleList({
                                 <button
                                   onClick={() => {
                                     setOpenDuplicateModal({ courseId: course.id, moduleId: module.id, copyCourseId: "" });
+                                    setDuplicateModuleData(prev => ({ ...prev, moduleType: module.moduleType === "review" ? "review" : "conversational" }));
                                     setOpenCourseListModal(true);
                                   }}
                                   className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"

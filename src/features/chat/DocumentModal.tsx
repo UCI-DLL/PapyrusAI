@@ -64,21 +64,22 @@ export default function DocumentModal({
         };
         reader.readAsBinaryString(file);
       } else if (file.type === "application/pdf") {
-        setDocExt("pdf")
+        setDocExt("pdf");
         const temp = URL.createObjectURL(file);
-        const doc = pdfjs.getDocument(temp);
-        const pdfDocument = await doc.promise;
-        var numPages = pdfDocument.numPages;
-        var currentPage = 1;
-        while (currentPage <= numPages) {
-          const page = await pdfDocument.getPage(currentPage);
+        const pdfDocument = await pdfjs.getDocument(temp).promise;
+        const numPages = pdfDocument.numPages;
+        const pageTexts: string[] = [];
+        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+          const page = await pdfDocument.getPage(pageNum);
           const textContent = await page.getTextContent();
-          const text = textContent["items"].reduce((result: any, item: any) => {
-            return `${result} ${item["str"]}`
-          }, "")
-          setDocText(prev => prev + removeSpecialCharacters(text as string));
-          currentPage++
+          const pageText = (textContent.items as any[])
+            .filter((item) => "str" in item && item.str)
+            .map((item) => item.str as string)
+            .join(" ");
+          pageTexts.push(pageText);
         }
+        URL.revokeObjectURL(temp);
+        setDocText(removeSpecialCharacters(pageTexts.join(" ")));
         setIsLoading(false);
       } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
         setDocExt("docx")

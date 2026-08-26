@@ -77,6 +77,7 @@ type ReviewModuleFormType = {
   isDeleted?: boolean;
   isTemplate?: boolean;
   showWizard?: boolean;
+  isOralModule?: boolean;
 };
 
 type ModuleFormMode = "create" | "edit";
@@ -130,6 +131,7 @@ export default function AddReviewModule({
     isDeleted: false,
     isTemplate: false,
     showWizard: true,
+    isOralModule: false,
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(isEditMode);
@@ -207,6 +209,7 @@ export default function AddReviewModule({
               isDeleted: data.isDeleted ?? false,
               isTemplate: data.isTemplate ?? false,
               showWizard: data.showWizard ?? true,
+              isOralModule: data.isOralMOdule ?? false,
             });
             setIsLoading(false);
           }
@@ -353,6 +356,7 @@ export default function AddReviewModule({
       maxDrafts: session.maxDrafts,
       rubrics: session.rubrics,
       showRubric: session.showRubric,
+      isOralModule: session.isOralModule ? true : false,
     };
 
     if (isEditMode && actualModuleId) {
@@ -1070,8 +1074,28 @@ export default function AddReviewModule({
             </div>
             <p className="text-sm text-muted-foreground ml-6">{t("createModule.allowWebSearchDescription")}</p>
           </div>
+
+          {/* Oral Module */}
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isOralModule"
+                checked={session.isOralModule}
+                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, isOralModule: checked as boolean }))}
+                disabled={isLoading}
+              />
+              <Label htmlFor="isOralModule" className="text-md font-bold">
+                {t("createModule.enableOralModule")}
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground ml-6">
+              {t("createModule.oralModuleDescription")}
+            </p>
+          </div>
         </CardContent>
       </Card>
+
+
 
       {/* Bottom actions */}
       <section className="pt-4">

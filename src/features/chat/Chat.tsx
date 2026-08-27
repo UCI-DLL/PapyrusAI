@@ -1441,7 +1441,6 @@ export default function Chat(): JSX.Element {
                 onSubmit={(text) => onSendReviewMessage(text)} 
                 onComplete={() => setOpenCompleteModal(true)}
                 chatMessages={messages} 
-                token={userToken} // <-- Pass the token from your auth state here
               />
             ) : isReviewModule && showEssayWizard ? (
               <div className="flex-1 overflow-y-auto">

@@ -209,7 +209,7 @@ export default function AddReviewModule({
               isDeleted: data.isDeleted ?? false,
               isTemplate: data.isTemplate ?? false,
               showWizard: data.showWizard ?? true,
-              isOralModule: data.isOralMOdule ?? false,
+              isOralModule: data.isOralModule ?? false,
             });
             setIsLoading(false);
           }

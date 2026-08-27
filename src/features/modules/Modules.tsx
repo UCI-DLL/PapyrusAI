@@ -182,10 +182,10 @@ export default function Modules(): JSX.Element {
                         label: t("common.chatModule"),
                         onClick: () => navigator(`/courses/${course?.id}/createmodule`),
                       },
-                      {
-                        label: t("common.reviewModule"),
-                        onClick: () => navigator(`/courses/${course?.id}/createreviewmodule`),
-                      },
+                      // {
+                      //   label: t("common.reviewModule"),
+                      //   onClick: () => navigator(`/courses/${course?.id}/createreviewmodule`),
+                      // },
                     ]}
                     align="end"
                   />

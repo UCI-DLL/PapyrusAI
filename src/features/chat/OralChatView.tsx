@@ -2,13 +2,33 @@ import React, { useState, useEffect, useRef } from 'react';
 
 interface OralChatViewProps {
   onSubmit: (text: string) => void;
+  chatMessages: any[];
 }
 
-export default function OralChatView({ onSubmit }: OralChatViewProps) {
+export default function OralChatView({ onSubmit, chatMessages }: OralChatViewProps) {
   const [turnState, setTurnState] = useState<'IDLE' | 'RECORDING' | 'PROCESSING'>('IDLE');
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  
+  // Track the last spoken message to prevent React from repeating itself
+  const lastSpokenMessageId = useRef<string | null>(null);
 
+  useEffect(() => {
+    if (!chatMessages || chatMessages.length === 0) return;
+    const lastMessage = chatMessages[chatMessages.length - 1];
+    
+    if (
+      lastMessage && 
+      lastMessage.role === 'assistant' && 
+      lastMessage.finished &&
+      lastMessage.id !== lastSpokenMessageId.current // Ensure it hasn't been spoken yet
+    ) {
+      lastSpokenMessageId.current = lastMessage.id;
+      const utterance = new SpeechSynthesisUtterance(lastMessage.content);
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [chatMessages]);
+  
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then((stream) => {
@@ -40,6 +60,7 @@ export default function OralChatView({ onSubmit }: OralChatViewProps) {
             
             if (transcript) {
               onSubmit(transcript);
+              setTurnState('IDLE'); // 2. Fixed stuck 'PROCESSING' bug
             } else {
               setTurnState('IDLE');
             }
@@ -74,15 +95,11 @@ export default function OralChatView({ onSubmit }: OralChatViewProps) {
             if (turnState === 'RECORDING') {
               mediaRecorder.stop();
             } else {
-              // 1. Force-stop native browser text-to-speech
               window.speechSynthesis.cancel();
-              
-              // 2. Force-stop any cloud voice data streaming through HTML5 audio tags
               document.querySelectorAll('audio').forEach(audio => {
                 audio.pause();
                 audio.currentTime = 0;
               });
-
               mediaRecorder.start();
               setTurnState('RECORDING');
             }
@@ -97,12 +114,13 @@ export default function OralChatView({ onSubmit }: OralChatViewProps) {
             : 'bg-primary hover:bg-primary/90 hover:scale-105'
         }`}
       >
+        {/* 3. Added className="text-white" for WCAG contrast */}
         {turnState === 'RECORDING' ? (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <svg className="text-white" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="6" width="12" height="12" rx="2" />
           </svg>
         ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="text-white" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
             <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
             <line x1="12" x2="12" y1="19" y2="22" />

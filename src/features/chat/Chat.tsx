@@ -1553,9 +1553,15 @@ export default function Chat(): JSX.Element {
                   </div>
 
                   {moduleInfo?.isOralModule ? (
-                    <OralChatView 
-                      onSubmit={isReviewModule ? onSendReviewMessage : handleSubmit} 
-                    />
+                    isReviewModule ? (
+                      (isEssayMode ? isReviewChatInputVisible : isNonEssayReviewInputVisible) ? (
+                        <OralChatView onSubmit={onSendReviewMessage} chatMessages={messages} />
+                      ) : null
+                    ) : (
+                      isChatInputVisible && (
+                        <OralChatView onSubmit={handleSubmit} chatMessages={messages} />
+                      )
+                    )
                   ) : isReviewModule ? (
                     (isEssayMode ? isReviewChatInputVisible : isNonEssayReviewInputVisible) ? (
                       <ChatInput

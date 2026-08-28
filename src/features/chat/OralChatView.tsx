@@ -1,17 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function OralChatView({ onSubmit, onComplete, chatMessages }) {
-  const [turnState, setTurnState] = useState('IDLE'); // 'IDLE', 'RECORDING', 'PROCESSING'
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const audioChunksRef = useRef([]);
+// 1. The Blueprint: Tells TypeScript exactly what data to expect
+interface Message {
+  role: 'user' | 'assistant' | string;
+  content: string;
+  finished?: boolean;
+}
 
-  // 1. Request Microphone Permissions & Setup Deepgram
+interface OralChatViewProps {
+  onSubmit: (text: string) => void;
+  onComplete: () => void;
+  chatMessages: Message[];
+}
+
+export default function OralChatView({ onSubmit, onComplete, chatMessages }: OralChatViewProps) {
+  // 2. Typed State: Tells TypeScript these variables aren't just 'any' data
+  const [turnState, setTurnState] = useState<'IDLE' | 'RECORDING' | 'PROCESSING'>('IDLE');
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then((stream) => {
         const recorder = new MediaRecorder(stream);
 
-        recorder.ondataavailable = (event) => {
+        // 3. Typed Event: Tells TypeScript this event contains Blob data (audio)
+        recorder.ondataavailable = (event: BlobEvent) => {
           if (event.data.size > 0) {
             audioChunksRef.current.push(event.data);
           }
@@ -20,7 +34,7 @@ export default function OralChatView({ onSubmit, onComplete, chatMessages }) {
         recorder.onstop = async () => {
           setTurnState('PROCESSING');
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-          audioChunksRef.current = []; // Clear chunks for the next recording
+          audioChunksRef.current = [];
           
           try {
             const response = await fetch("https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true", {
@@ -36,7 +50,6 @@ export default function OralChatView({ onSubmit, onComplete, chatMessages }) {
             const transcript = data.results?.channels[0]?.alternatives[0]?.transcript;
             
             if (transcript) {
-              // Pipe transcript to Chat.tsx which handles displaying it
               onSubmit(transcript);
             } else {
               setTurnState('IDLE');
@@ -54,7 +67,6 @@ export default function OralChatView({ onSubmit, onComplete, chatMessages }) {
       });
   }, [onSubmit]);
 
-  // 2. Text-to-Speech (Read AI messages aloud)
   useEffect(() => {
     const lastMessage = chatMessages[chatMessages.length - 1];
     if (lastMessage && lastMessage.role === 'assistant' && lastMessage.finished) {
@@ -64,11 +76,8 @@ export default function OralChatView({ onSubmit, onComplete, chatMessages }) {
     }
   }, [chatMessages]);
 
-  // 3. The User Interface
   return (
     <div className="flex-1 flex flex-col h-full bg-background p-4 relative min-h-[500px]">
-      
-      {/* Chat Display */}
       <div className="flex-1 overflow-y-auto mb-6 space-y-4 p-4 border rounded-xl shadow-sm bg-card">
         {chatMessages.length === 0 ? (
           <div className="flex h-full items-center justify-center text-muted-foreground italic">
@@ -89,7 +98,6 @@ export default function OralChatView({ onSubmit, onComplete, chatMessages }) {
         )}
       </div>
 
-      {/* Voice Controls */}
       <div className="flex flex-col items-center justify-center gap-4 py-2 shrink-0">
         <p className={`text-sm font-semibold transition-colors ${
           turnState === 'RECORDING' ? 'text-red-500 animate-pulse' : 

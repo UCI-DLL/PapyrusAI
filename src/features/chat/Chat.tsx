@@ -1438,7 +1438,7 @@ export default function Chat(): JSX.Element {
             {/* Messages / Essay Wizard / Submitting Spinner / Oral Module */}
             {moduleInfo?.isOralModule && !isReviewModule ? (
               <OralChatView 
-                onSubmit={(text) => onSendReviewMessage(text)} 
+                onSubmit={(text : string) => onSendReviewMessage(text)} 
                 onComplete={() => setOpenCompleteModal(true)}
                 chatMessages={messages} 
               />

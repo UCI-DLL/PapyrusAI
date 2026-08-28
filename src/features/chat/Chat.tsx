@@ -1436,13 +1436,7 @@ export default function Chat(): JSX.Element {
         {courseInfo && moduleInfo && !isLoading ? (
           <>
             {/* Messages / Essay Wizard / Submitting Spinner / Oral Module */}
-            {moduleInfo?.isOralModule && !isReviewModule ? (
-              <OralChatView 
-                onSubmit={(text : string) => onSendReviewMessage(text)} 
-                onComplete={() => setOpenCompleteModal(true)}
-                chatMessages={messages} 
-              />
-            ) : isReviewModule && showEssayWizard ? (
+            {isReviewModule && showEssayWizard ? (
               <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center justify-center min-h-full p-6">
                   <div className="w-full max-w-2xl space-y-4 border rounded-xl bg-card p-6 shadow-sm">
@@ -1558,7 +1552,11 @@ export default function Chat(): JSX.Element {
                     )}
                   </div>
 
-                  {moduleInfo?.isOralModule && !isReviewModule ? null : isReviewModule ? (
+                  {moduleInfo?.isOralModule ? (
+                    <OralChatView 
+                      onSubmit={isReviewModule ? onSendReviewMessage : handleSubmit} 
+                    />
+                  ) : isReviewModule ? (
                     (isEssayMode ? isReviewChatInputVisible : isNonEssayReviewInputVisible) ? (
                       <ChatInput
                         isConnected={isConnected}

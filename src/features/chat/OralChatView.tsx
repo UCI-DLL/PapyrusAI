@@ -1,20 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// 1. The Blueprint: Tells TypeScript exactly what data to expect
-interface Message {
-  role: 'user' | 'assistant' | string;
-  content: string;
-  finished?: boolean;
-}
-
 interface OralChatViewProps {
   onSubmit: (text: string) => void;
-  onComplete: () => void;
-  chatMessages: Message[];
 }
 
-export default function OralChatView({ onSubmit, onComplete, chatMessages }: OralChatViewProps) {
-  // 2. Typed State: Tells TypeScript these variables aren't just 'any' data
+export default function OralChatView({ onSubmit }: OralChatViewProps) {
   const [turnState, setTurnState] = useState<'IDLE' | 'RECORDING' | 'PROCESSING'>('IDLE');
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -24,7 +14,6 @@ export default function OralChatView({ onSubmit, onComplete, chatMessages }: Ora
       .then((stream) => {
         const recorder = new MediaRecorder(stream);
 
-        // 3. Typed Event: Tells TypeScript this event contains Blob data (audio)
         recorder.ondataavailable = (event: BlobEvent) => {
           if (event.data.size > 0) {
             audioChunksRef.current.push(event.data);
@@ -67,80 +56,59 @@ export default function OralChatView({ onSubmit, onComplete, chatMessages }: Ora
       });
   }, [onSubmit]);
 
-  useEffect(() => {
-    const lastMessage = chatMessages[chatMessages.length - 1];
-    if (lastMessage && lastMessage.role === 'assistant' && lastMessage.finished) {
-      const utterance = new SpeechSynthesisUtterance(lastMessage.content);
-      window.speechSynthesis.speak(utterance);
-      setTurnState('IDLE'); 
-    }
-  }, [chatMessages]);
-
   return (
-    <div className="flex-1 flex flex-col h-full bg-background p-4 relative min-h-[500px]">
-      <div className="flex-1 overflow-y-auto mb-6 space-y-4 p-4 border rounded-xl shadow-sm bg-card">
-        {chatMessages.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-muted-foreground italic">
-            Press the microphone to start the conversation.
-          </div>
-        ) : (
-          chatMessages.map((msg, index) => (
-            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`p-4 rounded-xl max-w-[80%] shadow-sm ${
-                msg.role === 'user' 
-                  ? 'bg-primary text-primary-foreground rounded-br-sm' 
-                  : 'bg-muted rounded-bl-sm'
-              }`}>
-                {msg.content}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+    <div className="flex flex-col items-center justify-center gap-2 py-4 w-full border-t bg-background shrink-0">
+      <p className={`text-sm font-semibold transition-colors ${
+        turnState === 'RECORDING' ? 'text-red-500 animate-pulse' : 
+        turnState === 'PROCESSING' ? 'text-muted-foreground animate-pulse' : 
+        'text-foreground'
+      }`}>
+        {turnState === 'RECORDING' ? "Listening..." : 
+         turnState === 'PROCESSING' ? "AI is processing..." : 
+         "Your turn to speak"}
+      </p>
 
-      <div className="flex flex-col items-center justify-center gap-4 py-2 shrink-0">
-        <p className={`text-sm font-semibold transition-colors ${
-          turnState === 'RECORDING' ? 'text-red-500 animate-pulse' : 
-          turnState === 'PROCESSING' ? 'text-muted-foreground animate-pulse' : 
-          'text-foreground'
-        }`}>
-          {turnState === 'RECORDING' ? "Listening..." : 
-           turnState === 'PROCESSING' ? "AI is processing..." : 
-           "Your turn to speak"}
-        </p>
+      <button
+        onClick={() => {
+          if (mediaRecorder) {
+            if (turnState === 'RECORDING') {
+              mediaRecorder.stop();
+            } else {
+              // 1. Force-stop native browser text-to-speech
+              window.speechSynthesis.cancel();
+              
+              // 2. Force-stop any cloud voice data streaming through HTML5 audio tags
+              document.querySelectorAll('audio').forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+              });
 
-        <button
-          onClick={() => {
-            if (mediaRecorder) {
-              if (turnState === 'RECORDING') {
-                mediaRecorder.stop();
-              } else {
-                mediaRecorder.start();
-                setTurnState('RECORDING');
-              }
+              mediaRecorder.start();
+              setTurnState('RECORDING');
             }
-          }}
-          disabled={turnState === 'PROCESSING' || !mediaRecorder}
-          className={`h-20 w-20 rounded-full flex items-center justify-center shadow-lg transition-all ${
-            turnState === 'RECORDING' 
-              ? 'bg-red-500 hover:bg-red-600 scale-110' 
-              : turnState === 'PROCESSING' || !mediaRecorder
-              ? 'bg-muted cursor-not-allowed opacity-50'
-              : 'bg-primary hover:bg-primary/90 hover:scale-105'
-          }`}
-        >
-          <span className="text-3xl" role="img" aria-label="microphone">
-            {turnState === 'RECORDING' ? '⏹' : '🎙️'}
-          </span>
-        </button>
-
-        <button 
-          onClick={onComplete}
-          className="mt-2 px-6 py-2 border rounded-full text-sm font-medium hover:bg-muted transition-colors"
-        >
-          Finish Oral Module
-        </button>
-      </div>
+          }
+        }}
+        disabled={turnState === 'PROCESSING' || !mediaRecorder}
+        className={`h-16 w-16 rounded-full flex items-center justify-center shadow-lg transition-all ${
+          turnState === 'RECORDING' 
+            ? 'bg-red-500 hover:bg-red-600 scale-110' 
+            : turnState === 'PROCESSING' || !mediaRecorder
+            ? 'bg-muted cursor-not-allowed opacity-50'
+            : 'bg-primary hover:bg-primary/90 hover:scale-105'
+        }`}
+      >
+        {turnState === 'RECORDING' ? (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="6" width="12" height="12" rx="2" />
+          </svg>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" x2="12" y1="19" y2="22" />
+          </svg>
+        )}
+      </button>
     </div>
   );
 }

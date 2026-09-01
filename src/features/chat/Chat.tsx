@@ -18,6 +18,7 @@ import ChatHeader from "./components/ChatHeader";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
 import ReviewSummaryPanel from "./components/ReviewSummaryPanel";
+import OralChatView from "./OralChatView";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ChatContextType } from "./ChatContext";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
@@ -1434,7 +1435,7 @@ export default function Chat(): JSX.Element {
         {/* Chat Messages and Input */}
         {courseInfo && moduleInfo && !isLoading ? (
           <>
-            {/* Messages / Essay Wizard / Submitting Spinner */}
+            {/* Messages / Essay Wizard / Submitting Spinner / Oral Module */}
             {isReviewModule && showEssayWizard ? (
               <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center justify-center min-h-full p-6">
@@ -1551,7 +1552,17 @@ export default function Chat(): JSX.Element {
                     )}
                   </div>
 
-                  {isReviewModule ? (
+                  {moduleInfo?.isOralModule ? (
+                    isReviewModule ? (
+                      (isEssayMode ? isReviewChatInputVisible : isNonEssayReviewInputVisible) ? (
+                        <OralChatView onSubmit={onSendReviewMessage} chatMessages={messages} />
+                      ) : null
+                    ) : (
+                      isChatInputVisible && (
+                        <OralChatView onSubmit={handleSubmit} chatMessages={messages} />
+                      )
+                    )
+                  ) : isReviewModule ? (
                     (isEssayMode ? isReviewChatInputVisible : isNonEssayReviewInputVisible) ? (
                       <ChatInput
                         isConnected={isConnected}

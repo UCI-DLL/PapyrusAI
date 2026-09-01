@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+// Anti-Garbage-Collection safeguard: Keeps the audio object alive in memory
+let activeUtterance: SpeechSynthesisUtterance | null = null;
+
 interface OralChatViewProps {
   onSubmit: (text: string) => void;
   chatMessages: any[];
@@ -10,7 +13,6 @@ export default function OralChatView({ onSubmit, chatMessages }: OralChatViewPro
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   
-  // Track the last spoken message to prevent React from repeating itself
   const lastSpokenMessageId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -21,11 +23,22 @@ export default function OralChatView({ onSubmit, chatMessages }: OralChatViewPro
       lastMessage && 
       lastMessage.role === 'assistant' && 
       lastMessage.finished &&
-      lastMessage.id !== lastSpokenMessageId.current // Ensure it hasn't been spoken yet
+      lastMessage.id !== lastSpokenMessageId.current 
     ) {
       lastSpokenMessageId.current = lastMessage.id;
-      const utterance = new SpeechSynthesisUtterance(lastMessage.content);
-      window.speechSynthesis.speak(utterance);
+      
+      // 1. Force clear any stuck/ghost utterances in the browser's queue
+      window.speechSynthesis.cancel();
+      
+      // 2. Bind to external variable to survive React re-renders
+      activeUtterance = new SpeechSynthesisUtterance(lastMessage.content);
+      
+      // 3. Micro-delay to ensure the browser audio thread is ready after DOM paint
+      setTimeout(() => {
+        if (activeUtterance) {
+          window.speechSynthesis.speak(activeUtterance);
+        }
+      }, 50);
     }
   }, [chatMessages]);
   
@@ -60,7 +73,7 @@ export default function OralChatView({ onSubmit, chatMessages }: OralChatViewPro
             
             if (transcript) {
               onSubmit(transcript);
-              setTurnState('IDLE'); // 2. Fixed stuck 'PROCESSING' bug
+              setTurnState('IDLE'); 
             } else {
               setTurnState('IDLE');
             }
@@ -114,7 +127,6 @@ export default function OralChatView({ onSubmit, chatMessages }: OralChatViewPro
             : 'bg-primary hover:bg-primary/90 hover:scale-105'
         }`}
       >
-        {/* 3. Added className="text-white" for WCAG contrast */}
         {turnState === 'RECORDING' ? (
           <svg className="text-white" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="6" width="12" height="12" rx="2" />

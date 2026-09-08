@@ -110,16 +110,18 @@ export default function AddReviewModule({
   const actualModuleId =
     moduleId || (isEditMode ? location.pathname.split("/")[4] : undefined);
 
+  const moduleSubType = (location.state as any)?.moduleSubType as string | undefined;
+
   const [session, setSession] = useState<ReviewModuleFormType>({
     name: "",
     moduleDescription: "",
     isRepeating: false,
     isPublished: false,
-    showInitialPrompt: true,
+    showInitialPrompt: moduleSubType === "oralInterview" ? false : true,
     prompts: [],
     files: [],
     webSearch: false,
-    essaySubmission: true,
+    essaySubmission: moduleSubType === "oralInterview" ? false : true,
     moduleType: "review",
     assessmentType: "formative",
     gradingType: "ma6",
@@ -639,7 +641,7 @@ export default function AddReviewModule({
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   {isEditMode
                     ? t("reviewModule.editReviewModule", { moduleName: session.name || t("common.module") })
-                    : t("reviewModule.createReviewModule")}
+                    : `${t("common.create")} ${moduleSubType === "oralInterview" ? t("moduleTypeSelect.oralInterviewModule") : t("moduleTypeSelect.essayScoringModule")}`}
                 </h1>
                 {isEditMode && (
                   <div className="flex items-center gap-2">
@@ -956,7 +958,6 @@ export default function AddReviewModule({
           {/* Limit attempts (formative only) */}
           {session.assessmentType === "formative" && (
             <>
-              <Separator />
               <div className="space-y-3">
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
@@ -988,66 +989,73 @@ export default function AddReviewModule({
                   </div>
                 )}
               </div>
+              <Separator />
             </>
           )}
 
-          <Separator />
+          {(moduleSubType !== "essay" && moduleSubType !== "oralInterview") && (
+            <>
+              <Separator />
 
-          {/* Essay submission toggle */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="essaySubmission"
-                checked={session.essaySubmission}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, essaySubmission: checked as boolean }))}
-              />
-              <Label htmlFor="essaySubmission" className="text-md font-bold">
-                {t("reviewModule.essaySubmission")}
-              </Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.essaySubmissionDescription")}</p>
-          </div>
+              {/* Essay submission toggle */}
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="essaySubmission"
+                    checked={session.essaySubmission}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, essaySubmission: checked as boolean }))}
+                  />
+                  <Label htmlFor="essaySubmission" className="text-md font-bold">
+                    {t("reviewModule.essaySubmission")}
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.essaySubmissionDescription")}</p>
+              </div>
 
-          {/* Show embedded prompt */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="showInitialPrompt"
-                checked={session.showInitialPrompt}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showInitialPrompt: checked as boolean }))}
-              />
-              <Label htmlFor="showInitialPrompt" className="text-md font-bold">
-                {t("createModule.showEmbeddedPrompt")}
-              </Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">
-              {t("createModule.showEmbeddedPromptDescription")}{" "}
-              <a
-                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-              >
-                {t("createModule.showEmbeddedPromptDescriptionLinkText")}
-              </a>
-              .
-            </p>
-          </div>
+              {/* Show embedded prompt */}
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="showInitialPrompt"
+                    checked={session.showInitialPrompt}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showInitialPrompt: checked as boolean }))}
+                  />
+                  <Label htmlFor="showInitialPrompt" className="text-md font-bold">
+                    {t("createModule.showEmbeddedPrompt")}
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">
+                  {t("createModule.showEmbeddedPromptDescription")}{" "}
+                  <a
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
+                  >
+                    {t("createModule.showEmbeddedPromptDescriptionLinkText")}
+                  </a>
+                  .
+                </p>
+              </div>
+            </>
+          )}
 
           {/* Converse after complete */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="converseAfterComplete"
-                checked={session.converseAfterComplete}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, converseAfterComplete: checked as boolean }))}
-              />
-              <Label htmlFor="converseAfterComplete" className="text-md font-bold">
-                {t("reviewModule.converseAfterComplete")}
-              </Label>
+          {moduleSubType !== "oralInterview" && (
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="converseAfterComplete"
+                  checked={session.converseAfterComplete}
+                  onCheckedChange={(checked) => setSession((prev) => ({ ...prev, converseAfterComplete: checked as boolean }))}
+                />
+                <Label htmlFor="converseAfterComplete" className="text-md font-bold">
+                  {t("reviewModule.converseAfterComplete")}
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.converseAfterCompleteDescription")}</p>
             </div>
-            <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.converseAfterCompleteDescription")}</p>
-          </div>
+          )}
 
           {/* Show rubric to students */}
           <div className="space-y-1">
@@ -1076,7 +1084,7 @@ export default function AddReviewModule({
           </div>
 
           {/* Oral Module */}
-          <div className="space-y-1">
+          {/* <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="isOralModule"
@@ -1091,7 +1099,7 @@ export default function AddReviewModule({
             <p className="text-sm text-muted-foreground ml-6">
               {t("createModule.oralModuleDescription")}
             </p>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
 

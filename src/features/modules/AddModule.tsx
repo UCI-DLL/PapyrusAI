@@ -99,6 +99,8 @@ export default function AddModule({
   const actualModuleId =
     moduleId || (isEditMode ? location.pathname.split("/")[4] : undefined);
 
+  const moduleSubType = (location.state as any)?.moduleSubType as string | undefined;
+
   const [session, setSession] = useState<ModuleFormType>({
     name: "",
     moduleDescription: "",
@@ -114,7 +116,7 @@ export default function AddModule({
     isTemplate: false,
     showWizard: true,
     raterEnabled: false,
-    isOralModule: false,
+    isOralModule: moduleSubType === "oralConference",
   });
   const [moduleIds, setModuleIds] = useState<{
     courseId: string;
@@ -644,7 +646,7 @@ export default function AddModule({
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   {isEditMode
                     ? t("createModule.editModule", { moduleName: session.name || t("common.module") })
-                    : t("createModule.createModule")}
+                    : `${t("common.create")} ${moduleSubType === "oralConference" ? t("moduleTypeSelect.oralConferenceModule") : t("moduleTypeSelect.chatModule")}`}
                 </h1>
                 {isEditMode && (
                   <div className="flex items-center gap-2">
@@ -991,28 +993,30 @@ export default function AddModule({
                   </p>
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="isOralModule"
-                      aria-labelledby="isOralModuleLabel"
-                      checked={session.isOralModule}
-                      onCheckedChange={(checked) => {
-                        setSession((prev) => ({
-                          ...prev,
-                          isOralModule: checked as boolean,
-                        }));
-                      }}
-                      disabled={isLoading}
-                    />
-                    <Label id="isOralModuleLabel" htmlFor="isOralModule" className="text-md font-bold">
-                      {t("createModule.enableOralModule")}
-                    </Label>
+                {/* {moduleSubType !== "oralConference" && (
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="isOralModule"
+                        aria-labelledby="isOralModuleLabel"
+                        checked={session.isOralModule}
+                        onCheckedChange={(checked) => {
+                          setSession((prev) => ({
+                            ...prev,
+                            isOralModule: checked as boolean,
+                          }));
+                        }}
+                        disabled={isLoading}
+                      />
+                      <Label id="isOralModuleLabel" htmlFor="isOralModule" className="text-md font-bold">
+                        {t("createModule.enableOralModule")}
+                      </Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-6">
+                      {t("createModule.oralModuleDescription")}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground ml-6">
-                    {t("createModule.oralModuleDescription")}
-                  </p>
-                </div>
+                )} */}
               </div>
             </div>
           </form>

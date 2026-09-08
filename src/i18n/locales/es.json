@@ -91,6 +91,18 @@
     "noModulesFound": "No se encontraron módulos",
     "moduleList": "Lista de módulos"
   },
+  "moduleTypeSelect": {
+    "title": "Elige un tipo de módulo",
+    "subtitle": "Selecciona el tipo de módulo que deseas crear. Cada tipo viene preconfigurado con los ajustes recomendados.",
+    "chatModule": "Chat de texto",
+    "chatModuleDesc": "Un módulo de conversación flexible con IA. Los estudiantes pueden interactuar con la IA usando instrucciones y documentos personalizados.",
+    "essayScoringModule": "Puntuación de ensayo",
+    "essayScoringModuleDesc": "Los estudiantes envían ensayos escritos para su revisión y puntuación por IA con retroalimentación basada en rúbrica.",
+    "oralInterviewModule": "Puntuación de entrevista",
+    "oralInterviewModuleDesc": "Los estudiantes realizan una entrevista hablada que es grabada, transcrita y puntuada por la IA.",
+    "oralConferenceModule": "Chat de voz",
+    "oralConferenceModuleDesc": "Idéntico al Chat de texto, pero en modo de voz."
+  },
   "account": {
     "accountSettings": "Configuraciones de cuenta",
     "accountSettingsDescription": "Administrar la informacón y preferencias de tu perfíl",

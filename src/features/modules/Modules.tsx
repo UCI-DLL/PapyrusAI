@@ -8,12 +8,12 @@ import ModuleList from "./ModuleList";
 import { UserContext } from "../../utility/context/UserContext";
 import { getUserFavoritingData, logEvent } from "../../utility/endpoints/UserEndpoints";
 import { UserStarred } from "../../utility/types/UserTypes";
-import { Loader2, PlusIcon, GraduationCap, ChartColumnBig, Search, ChevronDown } from "lucide-react";
+import { Loader2, PlusIcon, GraduationCap, ChartColumnBig, Search, MessageSquare, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "../../components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
-import { DropdownWrapper } from "../../components/ui-wrappers/DropdownWrapper";
 import { handleCourseTermLanguage } from "../../utility/Helpers";
 import Post from "../../utility/Post";
 
@@ -27,6 +27,7 @@ export default function Modules(): JSX.Element {
   const [course, setCourse] = useState<CourseType>();
   const [starred, setStarred] = useState<UserStarred | undefined>();
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [moduleTypeDialogOpen, setModuleTypeDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -169,26 +170,73 @@ export default function Modules(): JSX.Element {
                   </Button>
                 )}
                 {isInstructorOrTA && (
-                  <DropdownWrapper
-                    trigger={
-                      <Button size="sm" className="flex items-center gap-2" aria-label={t("common.createModule")}>
-                        <PlusIcon className="w-4 h-4" aria-hidden="true" />
-                        {t("common.createModule")}
-                        <ChevronDown className="w-3 h-3" aria-hidden="true" />
-                      </Button>
-                    }
-                    actions={[
-                      {
-                        label: t("common.chatModule"),
-                        onClick: () => navigator(`/courses/${course?.id}/createmodule`),
-                      },
-                      {
-                        label: t("common.reviewModule"),
-                        onClick: () => navigator(`/courses/${course?.id}/createreviewmodule`),
-                      },
-                    ]}
-                    align="end"
-                  />
+                  <>
+                    <Button size="sm" className="flex items-center gap-2" aria-label={t("common.createModule")} onClick={() => setModuleTypeDialogOpen(true)}>
+                      <PlusIcon className="w-4 h-4" aria-hidden="true" />
+                      {t("common.createModule")}
+                    </Button>
+                    <Dialog open={moduleTypeDialogOpen} onOpenChange={setModuleTypeDialogOpen}>
+                      <DialogContent className="sm:max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>{t("moduleTypeSelect.title")}</DialogTitle>
+                          <DialogDescription>{t("moduleTypeSelect.subtitle")}</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                          <button
+                            onClick={() => { navigator(`/courses/${course?.id}/createmodule`); setModuleTypeDialogOpen(false); }}
+                            className="flex flex-col gap-3 rounded-lg border p-5 text-left hover:border-primary hover:bg-primary/5 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-md bg-primary/10 p-2 shrink-0">
+                                <MessageSquare className="h-5 w-5 text-primary" />
+                              </div>
+                              <span className="font-semibold">{t("moduleTypeSelect.chatModule")}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{t("moduleTypeSelect.chatModuleDesc")}</p>
+                          </button>
+
+                          <button
+                            onClick={() => { navigator(`/courses/${course?.id}/createreviewmodule`, { state: { moduleSubType: "essay" } }); setModuleTypeDialogOpen(false); }}
+                            className="flex flex-col gap-3 rounded-lg border p-5 text-left hover:border-primary hover:bg-primary/5 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-md bg-primary/10 p-2 shrink-0">
+                                <FileText className="h-5 w-5 text-primary" />
+                              </div>
+                              <span className="font-semibold">{t("moduleTypeSelect.essayScoringModule")}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{t("moduleTypeSelect.essayScoringModuleDesc")}</p>
+                          </button>
+
+                          {/* <button
+                            onClick={() => { navigator(`/courses/${course?.id}/createreviewmodule`, { state: { moduleSubType: "oralInterview" } }); setModuleTypeDialogOpen(false); }}
+                            className="flex flex-col gap-3 rounded-lg border p-5 text-left hover:border-primary hover:bg-primary/5 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-md bg-primary/10 p-2 shrink-0">
+                                <Mic className="h-5 w-5 text-primary" />
+                              </div>
+                              <span className="font-semibold">{t("moduleTypeSelect.oralInterviewModule")}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{t("moduleTypeSelect.oralInterviewModuleDesc")}</p>
+                          </button> */}
+
+                          {/* <button
+                            onClick={() => { navigator(`/courses/${course?.id}/createmodule`, { state: { moduleSubType: "oralConference" } }); setModuleTypeDialogOpen(false); }}
+                            className="flex flex-col gap-3 rounded-lg border p-5 text-left hover:border-primary hover:bg-primary/5 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-md bg-primary/10 p-2 shrink-0">
+                                <Users className="h-5 w-5 text-primary" />
+                              </div>
+                              <span className="font-semibold">{t("moduleTypeSelect.oralConferenceModule")}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{t("moduleTypeSelect.oralConferenceModuleDesc")}</p>
+                          </button> */}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </>
                 )}
               </nav>
             </div>

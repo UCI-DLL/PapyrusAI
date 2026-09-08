@@ -91,6 +91,18 @@
     "noModulesFound": "No Modules Found",
     "moduleList": "Module List"
   },
+  "moduleTypeSelect": {
+    "title": "Choose a Module Type",
+    "subtitle": "Select the type of module you'd like to create. Each type comes pre-configured with recommended settings.",
+    "chatModule": "Text Chat",
+    "chatModuleDesc": "A flexible AI conversation module. Students can interact with the AI using custom prompts and documents.",
+    "essayScoringModule": "Essay Scoring",
+    "essayScoringModuleDesc": "Students submit written essays for AI-powered review and scoring with rubric-based feedback.",
+    "oralInterviewModule": "Interview Scoring",
+    "oralInterviewModuleDesc": "Students complete a spoken interview that is recorded, transcribed, and scored by the AI.",
+    "oralConferenceModule": "Voice Chat",
+    "oralConferenceModuleDesc": "Identical to Text Chat, but in voice mode."
+  },
   "account": {
     "accountSettings": "Account Settings",
     "accountSettingsDescription": "Manage your profile information and preferences.",

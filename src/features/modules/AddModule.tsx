@@ -991,8 +991,7 @@ export default function AddModule({
                   </p>
                 </div>
 
-                {/* TODO uncomment for oral modules  */}
-                {/* <div className="space-y-1">
+                <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="isOralModule"
@@ -1013,7 +1012,7 @@ export default function AddModule({
                   <p className="text-sm text-muted-foreground ml-6">
                     {t("createModule.oralModuleDescription")}
                   </p>
-                </div> */}
+                </div>
               </div>
             </div>
           </form>

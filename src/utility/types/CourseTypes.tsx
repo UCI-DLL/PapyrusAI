@@ -46,6 +46,7 @@ export type ModuleType = {
   files?: Array<FileType>,
   webSearch?: boolean,
   essaySubmission?: boolean,
+  isOralModule?: boolean;
   // Review module fields
   moduleType?: "conversational" | "review",
   assessmentType?: "formative" | "summative",

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
@@ -113,6 +113,8 @@ export const MessageLeft = (props: MessageProps) => {
   const [expandableMessage] = useState(
     props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined,
   );
+  const isPlayingRef = useRef(false);
+  isPlayingRef.current = isPlaying;
 
   useEffect(() => {
     const synth = window.speechSynthesis;
@@ -121,7 +123,11 @@ export const MessageLeft = (props: MessageProps) => {
     u.pitch = 1;
     setUtterance(u);
     return () => {
-      synth.cancel();
+      // Only cancel if this message bubble was actively playing — avoids stomping on
+      // OralChatView's auto-TTS when this component unmounts or its content updates.
+      if (isPlayingRef.current) {
+        synth.cancel();
+      }
     };
   }, [props.message]);
 
@@ -327,6 +333,8 @@ export const MessageRight = (props: MessageProps) => {
   const [expandFile, setExpandFile] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState<any>(null);
+  const isPlayingRef = useRef(false);
+  isPlayingRef.current = isPlaying;
 
   useEffect(() => {
     const synth = window.speechSynthesis;
@@ -335,7 +343,9 @@ export const MessageRight = (props: MessageProps) => {
     u.pitch = 1;
     setUtterance(u);
     return () => {
-      synth.cancel();
+      if (isPlayingRef.current) {
+        synth.cancel();
+      }
     };
   }, [props.message]);
 

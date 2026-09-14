@@ -50,7 +50,7 @@ export type ModuleType = {
   // Review module fields
   moduleType?: "conversational" | "review",
   assessmentType?: "formative" | "summative",
-  gradingType?: "ma6",
+  gradingType?: "ma6" | "StructuredLLMOutput",
   converseAfterComplete?: boolean,
   maxDrafts?: number,
   rubrics?: Array<RubricType>,

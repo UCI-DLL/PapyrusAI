@@ -68,7 +68,7 @@ type ReviewModuleFormType = {
   essaySubmission: boolean;
   moduleType: "review";
   assessmentType: "formative" | "summative";
-  gradingType: "ma6";
+  gradingType: "ma6" | "StructuredLLMOutput";
   converseAfterComplete: boolean;
   maxDrafts: number;
   rubrics: Array<RubricType>;
@@ -951,6 +951,37 @@ export default function AddReviewModule({
                   <p className="text-xs"><span className="font-semibold">{t("reviewModule.reviewFeedback")}</span> — {t("reviewModule.reviewFeedbackDesc")}</p>
                   <p className="text-xs"><span className="font-semibold">{t("reviewModule.reviewScoring")}</span> — {t("reviewModule.reviewScoringDesc")}</p>
                 </div>
+              </button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Grading type */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold">{t("reviewModule.gradingType")}</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSession((prev) => ({ ...prev, gradingType: "ma6" }))}
+                className={cn(
+                  "border rounded-lg p-4 text-left transition-colors",
+                  session.gradingType === "ma6" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"
+                )}
+              >
+                <p className="font-semibold">{t("reviewModule.ma6")}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t("reviewModule.ma6Desc")}</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSession((prev) => ({ ...prev, gradingType: "StructuredLLMOutput" }))}
+                className={cn(
+                  "border rounded-lg p-4 text-left transition-colors",
+                  session.gradingType === "StructuredLLMOutput" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"
+                )}
+              >
+                <p className="font-semibold">{t("reviewModule.structuredLLMOutput")}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t("reviewModule.structuredLLMOutputDesc")}</p>
               </button>
             </div>
           </div>

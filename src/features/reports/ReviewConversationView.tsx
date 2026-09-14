@@ -25,7 +25,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AlertTriangle, BookOpen, CheckCircle, ChevronLeft, Clock, Download, Edit2, Eye, MessageSquare, RefreshCw } from "lucide-react";
 
-type GradingType = "ma6";
+type GradingType = "ma6" | "StructuredLLMOutput";
 
 type ExportFormat = "json" | "txt" | "csv";
 
@@ -845,6 +845,16 @@ export default function ReviewConversationView(): JSX.Element {
                 >
                   <p className="font-medium">MA6</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.ma6Desc")}</p>
+                </button>
+
+                <button
+                  onClick={() => setGradingType("StructuredLLMOutput")}
+                  className={`w-full text-left rounded-lg border p-3 transition-colors mt-2 ${
+                    gradingType === "StructuredLLMOutput" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <p className="font-medium">Structured LLM Output</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.structuredLLMOutputDesc")}</p>
                 </button>
               </div>
               <div className="space-y-2">

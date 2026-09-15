@@ -431,7 +431,7 @@ export default function CreateRubric(): JSX.Element {
                       <div key={columnKeys[colIdx]}>
                         <div className="flex items-center gap-1 mb-1">
                           <input
-                            className="bg-transparent text-xs font-semibold outline-none w-20 focus:bg-accent focus:rounded px-1 text-muted-foreground"
+                            className="bg-transparent text-xs font-semibold outline-none w-20 px-1 text-muted-foreground"
                             value={columns[colIdx]}
                             onChange={(e) => updateColumnLabel(colIdx, e.target.value)}
                             aria-label={`Column ${colIdx + 1} label`}
@@ -447,7 +447,7 @@ export default function CreateRubric(): JSX.Element {
                           )}
                         </div>
                         <textarea
-                          className="w-full min-h-[64px] bg-muted/30 border border-border rounded text-sm p-2 outline-none resize-none focus:bg-accent/30 placeholder:text-muted-foreground/50 font-sans"
+                          className="w-full min-h-[64px] bg-muted/30 border border-border rounded text-sm p-2 outline-none resize-none placeholder:text-muted-foreground/50 font-sans"
                           value={cell}
                           onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
                           placeholder={`${t("createRubric.describe")} "${columns[colIdx]}"…`}
@@ -494,7 +494,7 @@ export default function CreateRubric(): JSX.Element {
                           >
                             <div className="flex items-center justify-center gap-1">
                               <input
-                                className="bg-transparent text-center font-semibold outline-none w-16 focus:bg-accent focus:rounded px-1"
+                                className="bg-transparent text-center font-semibold outline-none w-16 px-1"
                                 value={col}
                                 onChange={(e) => updateColumnLabel(colIdx, e.target.value)}
                                 aria-label={`Column ${colIdx + 1} label`}
@@ -543,7 +543,7 @@ export default function CreateRubric(): JSX.Element {
                           {criterion.cells.map((cell, colIdx) => (
                             <td key={columnKeys[colIdx]} className="border border-border p-0 align-top">
                               <textarea
-                                className="w-full min-h-[80px] bg-transparent text-sm p-2 outline-none resize-none focus:bg-accent/30 placeholder:text-muted-foreground/50 font-sans"
+                                className="w-full min-h-[80px] bg-transparent text-sm p-2 outline-none resize-none placeholder:text-muted-foreground/50 font-sans"
                                 value={cell}
                                 onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
                                 placeholder={`${t("createRubric.describe")} "${columns[colIdx]}"…`}

@@ -695,7 +695,7 @@ export default function ReviewConversationView(): JSX.Element {
                     type="multiple"
                     className="w-full"
                     {...(isEditing
-                      ? { value: grade.scores.map((_, i) => `score-${i}`), onValueChange: () => {} }
+                      ? { value: grade.scores.map((_, i) => `score-${i}`), onValueChange: () => { } }
                       : {})}
                   >
                     {(isEditing ? editScores : grade.scores).map((score, i) => (
@@ -833,7 +833,7 @@ export default function ReviewConversationView(): JSX.Element {
           ) : (
             /* Configure phase */
             <div className="space-y-4">
-              {/* Grading method — hidden, hardcoded to "ma6"
+              {/* Grading method */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {t("reviewReports.gradingMethod")}
@@ -858,7 +858,6 @@ export default function ReviewConversationView(): JSX.Element {
                   <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.structuredLLMOutputDesc")}</p>
                 </button>
               </div>
-              */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {t("reviewReports.additionalContext")}{" "}
@@ -962,8 +961,8 @@ export default function ReviewConversationView(): JSX.Element {
                 key={fmt}
                 onClick={() => setExportFormat(fmt)}
                 className={`w-full text-left rounded-lg border p-3 transition-colors ${exportFormat === fmt
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-muted/50"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:bg-muted/50"
                   }`}
               >
                 <div className="font-semibold text-sm uppercase tracking-wide">{fmt.toUpperCase()}</div>

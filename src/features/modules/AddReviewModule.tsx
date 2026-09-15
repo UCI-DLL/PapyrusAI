@@ -955,9 +955,44 @@ export default function AddReviewModule({
             </div>
           </div>
 
+          {/* Limit attempts (formative only) */}
+          {session.assessmentType === "formative" && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="limitAttempts"
+                    checked={session.maxDrafts !== 999}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, maxDrafts: checked ? 3 : 999 }))}
+                  />
+                  <Label htmlFor="limitAttempts" className="text-md font-bold">{t("reviewModule.limitAttempts")}</Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.limitAttemptsDescription")}</p>
+              </div>
+              {session.maxDrafts !== 999 && (
+                <div className="ml-6 flex items-center gap-3">
+                  <Label htmlFor="maxDrafts" className="text-sm shrink-0">{t("reviewModule.maxDrafts")}</Label>
+                  <Select
+                    value={String(session.maxDrafts)}
+                    onValueChange={(val) => setSession((prev) => ({ ...prev, maxDrafts: Number(val) }))}
+                  >
+                    <SelectTrigger id="maxDrafts" className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+                        <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
+
           <Separator />
 
-          {/* Grading type — hidden, hardcoded to "ma6"
+          {/* Grading type */}
           <div className="space-y-2">
             <Label className="text-base font-semibold">{t("reviewModule.gradingType")}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -985,45 +1020,6 @@ export default function AddReviewModule({
               </button>
             </div>
           </div>
-          */}
-
-          {/* Limit attempts (formative only) */}
-          {session.assessmentType === "formative" && (
-            <>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="limitAttempts"
-                      checked={session.maxDrafts !== 999}
-                      onCheckedChange={(checked) => setSession((prev) => ({ ...prev, maxDrafts: checked ? 3 : 999 }))}
-                    />
-                    <Label htmlFor="limitAttempts" className="text-md font-bold">{t("reviewModule.limitAttempts")}</Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.limitAttemptsDescription")}</p>
-                </div>
-                {session.maxDrafts !== 999 && (
-                  <div className="ml-6 flex items-center gap-3">
-                    <Label htmlFor="maxDrafts" className="text-sm shrink-0">{t("reviewModule.maxDrafts")}</Label>
-                    <Select
-                      value={String(session.maxDrafts)}
-                      onValueChange={(val) => setSession((prev) => ({ ...prev, maxDrafts: Number(val) }))}
-                    >
-                      <SelectTrigger id="maxDrafts" className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
-                          <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-              <Separator />
-            </>
-          )}
 
           {(moduleSubType !== "essay" && moduleSubType !== "oralInterview") && (
             <>

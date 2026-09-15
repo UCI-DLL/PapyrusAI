@@ -833,6 +833,7 @@ export default function ReviewConversationView(): JSX.Element {
           ) : (
             /* Configure phase */
             <div className="space-y-4">
+              {/* Grading method — hidden, hardcoded to "ma6"
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {t("reviewReports.gradingMethod")}
@@ -857,6 +858,7 @@ export default function ReviewConversationView(): JSX.Element {
                   <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.structuredLLMOutputDesc")}</p>
                 </button>
               </div>
+              */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {t("reviewReports.additionalContext")}{" "}

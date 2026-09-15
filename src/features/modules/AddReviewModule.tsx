@@ -957,7 +957,7 @@ export default function AddReviewModule({
 
           <Separator />
 
-          {/* Grading type */}
+          {/* Grading type — hidden, hardcoded to "ma6"
           <div className="space-y-2">
             <Label className="text-base font-semibold">{t("reviewModule.gradingType")}</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -985,6 +985,7 @@ export default function AddReviewModule({
               </button>
             </div>
           </div>
+          */}
 
           {/* Limit attempts (formative only) */}
           {session.assessmentType === "formative" && (

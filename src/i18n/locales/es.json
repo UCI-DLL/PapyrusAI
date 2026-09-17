@@ -260,7 +260,9 @@
     "next": "Siguiente",
     "filter": "Filtrar",
     "asc": "Asc",
-    "desc": "Desc"
+    "desc": "Desc",
+    "moveLeft": "Mover a la izquierda",
+    "moveRight": "Mover a la derecha"
   },
   "components": {
     "deletePrompt": "¿Borrar el Prompt?",
@@ -744,7 +746,26 @@
     "rubricPreview": "Vista previa de solo lectura de esta rúbrica",
     "criteria": "criterios",
     "scoreLevel": "nivel de puntuación",
-    "scoreLevels": "niveles de puntuación"
+    "scoreLevels": "niveles de puntuación",
+    "totalPoints": "puntos totales",
+    "importFromPdf": "Importar desde PDF",
+    "useRange": "Usar rango de puntos",
+    "addRating": "Agregar calificación",
+    "removeCriterion": "Eliminar criterio",
+    "ratingNamePlaceholder": "Nombre de la calificación…",
+    "ratingDescriptionPlaceholder": "Describe este nivel de calificación…",
+    "criterionDescriptionPlaceholder": "Descripción del criterio…",
+    "pts": "Pts",
+    "ptsPlaceholder": "Pts",
+    "pdfImportSuccess": "Rúbrica importada. Revisa y ajusta antes de guardar.",
+    "pdfImportFailed": "No se pudo analizar el PDF. Por favor intenta de nuevo.",
+    "pdfImportUnauthorized": "No tienes permiso para importar rúbricas.",
+    "missingPointValues": "Todos los valores de puntos deben completarse antes de guardar.",
+    "ratingsOutOfOrder": "Las calificaciones deben estar en orden descendente (de mayor a menor).",
+    "deleteCriterionTitle": "¿Eliminar criterio?",
+    "deleteCriterionMessage": "será eliminado permanentemente de esta rúbrica.",
+    "unnamedCriterion": "Este criterio",
+    "errorNames": "Todos los campos de nombre requeridos deben completarse."
   },
   "reports": {
     "reports": "Informes",

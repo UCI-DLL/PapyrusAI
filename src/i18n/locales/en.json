@@ -260,7 +260,9 @@
     "next": "Next",
     "filter": "Filter",
     "asc": "Asc",
-    "desc": "Desc"
+    "desc": "Desc",
+    "moveLeft": "Move left",
+    "moveRight": "Move right"
   },
   "components": {
     "deletePrompt": "Delete Prompt?",
@@ -744,7 +746,26 @@
     "rubricPreview": "Read-only preview of this rubric",
     "criteria": "criteria",
     "scoreLevel": "score level",
-    "scoreLevels": "score levels"
+    "scoreLevels": "score levels",
+    "totalPoints": "total points",
+    "importFromPdf": "Import from PDF",
+    "useRange": "Use point range",
+    "addRating": "Add Rating",
+    "removeCriterion": "Remove Criterion",
+    "ratingNamePlaceholder": "Rating name…",
+    "ratingDescriptionPlaceholder": "Describe this rating level…",
+    "criterionDescriptionPlaceholder": "Criterion description…",
+    "pts": "Pts",
+    "ptsPlaceholder": "Pts",
+    "pdfImportSuccess": "Rubric imported. Review and adjust before saving.",
+    "pdfImportFailed": "Failed to parse the PDF. Please try again.",
+    "pdfImportUnauthorized": "You do not have permission to import rubrics.",
+    "missingPointValues": "All point values must be filled in before saving.",
+    "ratingsOutOfOrder": "Ratings must be in descending order (highest to lowest).",
+    "deleteCriterionTitle": "Remove Criterion?",
+    "deleteCriterionMessage": "will be permanently removed from this rubric.",
+    "unnamedCriterion": "This criterion",
+    "errorNames": "All required name fields must be filled in."
   },
   "reports": {
     "reports": "Reports",

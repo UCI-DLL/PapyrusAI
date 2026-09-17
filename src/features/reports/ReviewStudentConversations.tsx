@@ -150,13 +150,9 @@ export default function ReviewStudentConversations(): JSX.Element {
   }
 
   const rubric = module?.rubrics?.[0];
-  const maxPerCriterion = rubric
-    ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
-    : undefined;
-  const maxTotal =
-    maxPerCriterion !== undefined && rubric
-      ? rubric.criteria.length * maxPerCriterion
-      : undefined;
+  // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
+  const maxPerCriterion = undefined as number | undefined;
+  const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
 
   const isSummative = module?.assessmentType === "summative";
   const studentName = student ? `${student.name} ${student.family_name}`.trim() : "";
@@ -267,8 +263,9 @@ export default function ReviewStudentConversations(): JSX.Element {
   async function handleDownload() {
     setExportLoading(true);
     const rubric = module?.rubrics?.[0];
-    const maxPerCriterion = rubric ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite)) : undefined;
-    const maxTotal = maxPerCriterion !== undefined && rubric ? rubric.criteria.length * maxPerCriterion : undefined;
+    // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
+    const maxPerCriterion = undefined as number | undefined;
+    const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
     const studentName = student ? `${student.name} ${student.family_name}`.trim() : username;
 
     const exportConversations = selectedConvIds.size > 0

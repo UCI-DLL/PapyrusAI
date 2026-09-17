@@ -65,8 +65,9 @@ export default function ChatSidebar({
     : "PapyrusAIAdmin";
   const isReviewModule = moduleInfo?.moduleType === "review";
   const rubric = moduleInfo?.rubrics?.[0];
-  const maxPerCriterion = rubric ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite)) : undefined;
-  const maxTotal = maxPerCriterion !== undefined ? (rubric?.criteria.length ?? 0) * maxPerCriterion : undefined;
+  // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
+  const maxPerCriterion = undefined as number | undefined;
+  const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
 
   const [filteredConversations, setFilteredConversations] = useState<ConversationType[]>([]);
   useEffect(() => {

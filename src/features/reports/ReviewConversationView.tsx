@@ -143,13 +143,9 @@ export default function ReviewConversationView(): JSX.Element {
   }, [courseId, moduleId, username, convIndex]);
 
   const rubric = module?.rubrics?.[0];
-  const maxPerCriterion = rubric
-    ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
-    : undefined;
-  const maxTotal =
-    maxPerCriterion !== undefined && rubric
-      ? rubric.criteria.length * maxPerCriterion
-      : undefined;
+  // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
+  const maxPerCriterion = undefined as number | undefined;
+  const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
 
   const isSummative = module?.assessmentType === "summative";
   const studentName = student ? `${student.name} ${student.family_name}`.trim() : username;
@@ -555,22 +551,13 @@ export default function ReviewConversationView(): JSX.Element {
                           <th className="text-left p-2 font-semibold border-b w-36">
                             {t("reviewReports.criterion")}
                           </th>
-                          {rubric.columns.map((col, ci) => (
-                            <th key={ci} className="text-center p-2 font-semibold border-b border-l min-w-[80px]">
-                              {col}
-                            </th>
-                          ))}
+                          {/* TODO: update rubric preview table for new rubric structure */}
                         </tr>
                       </thead>
                       <tbody>
                         {rubric.criteria.map((criterion, ri) => (
                           <tr key={ri} className={ri % 2 === 0 ? "bg-muted/30" : ""}>
                             <td className="p-2 font-medium border-b">{criterion.name}</td>
-                            {criterion.cells.map((cell, ci) => (
-                              <td key={ci} className="p-2 text-xs text-muted-foreground border-b border-l align-top leading-relaxed">
-                                {cell}
-                              </td>
-                            ))}
                           </tr>
                         ))}
                       </tbody>

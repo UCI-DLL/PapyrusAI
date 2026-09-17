@@ -1398,32 +1398,8 @@ export default function Chat(): JSX.Element {
           contentClassName="sm:max-w-3xl max-h-[90vh] overflow-y-auto"
           actions={[{ label: t("common.close"), onClick: () => setOpenViewRubricModal(false), variant: "outline" }]}
         >
-          {moduleInfo.rubrics[0].criteria.length > 0 && moduleInfo.rubrics[0].columns.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr>
-                    <th className="text-left p-2 border bg-muted font-semibold">{t("reviewModule.criterion")}</th>
-                    {moduleInfo.rubrics[0].columns.map((col, i) => (
-                      <th key={i} className="p-2 border bg-muted font-semibold text-center">{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {moduleInfo.rubrics[0].criteria.map((criterion, i) => (
-                    <tr key={i} className={i % 2 === 0 ? "bg-background" : "bg-muted/30"}>
-                      <td className="p-2 border font-medium">{criterion.name}</td>
-                      {criterion.cells.map((cell, j) => (
-                        <td key={j} className="p-2 border text-muted-foreground text-xs align-top">{cell}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
-          )}
+          {/* TODO: update rubric preview table for new rubric structure */}
+          <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
         </DialogWrapper>
       )}
 
@@ -1549,12 +1525,9 @@ export default function Chat(): JSX.Element {
             {(() => {
               const panelEssayMessage = messages.find(m => m.role === "user" && m.messageType === "essayDraft");
               const rubric = moduleInfo?.rubrics?.[0];
-              const maxPerCriterion = rubric
-                ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
-                : undefined;
-              const maxTotal = maxPerCriterion !== undefined
-                ? (rubric?.criteria.length ?? 0) * maxPerCriterion
-                : undefined;
+              // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
+              const maxPerCriterion = undefined as number | undefined;
+              const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
               const hasGradeContent = !!(gradeResult || gradePending || gradeError);
               const showPanel = isReviewModule && (hasGradeContent || !!panelEssayMessage);
 

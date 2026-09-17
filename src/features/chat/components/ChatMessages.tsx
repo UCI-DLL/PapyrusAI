@@ -110,13 +110,10 @@ export default function ChatMessages({
     : -1;
 
   // Rubric max scores
+  // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
   const rubric = moduleInfo?.rubrics?.[0];
-  const maxPerCriterion = rubric
-    ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
-    : undefined;
-  const maxTotal = maxPerCriterion !== undefined
-    ? (rubric?.criteria.length ?? 0) * maxPerCriterion
-    : undefined;
+  const maxPerCriterion = undefined as number | undefined;
+  const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
 
   useEffect(() => { //handles new message announcement
     const last = messages[messages.length - 1];

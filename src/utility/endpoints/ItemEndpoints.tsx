@@ -66,3 +66,7 @@ export function deleteItemPermission(itemId: string, userId: string) {
 export function patchItemPermission(itemId: string, userId: string) {
   return `items/${itemId}/permissions/${encodeURIComponent(userId)}?organization=${org()}`;
 }
+
+export function postParseRubricFile() {
+  return `rubrics/parse-file?organization=${org()}`;
+}

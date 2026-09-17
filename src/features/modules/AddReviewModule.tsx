@@ -265,7 +265,7 @@ export default function AddReviewModule({
         name: item.name,
         isOrganizationRubric: item.ownerId === "ORG",
         folderId: item.parentId,
-        columns: item.metadata?.columns ?? [],
+        description: item.metadata?.description ?? "",
         criteria: item.metadata?.criteria ?? [],
       };
       setSession((prev) => ({ ...prev, rubrics: [rubric] }));
@@ -600,32 +600,8 @@ export default function AddReviewModule({
           contentClassName="sm:max-w-3xl max-h-[90vh] overflow-y-auto"
           actions={[{ label: t("common.close"), onClick: () => setOpenViewRubricModal(false), variant: "outline" }]}
         >
-          {session.rubrics[0].criteria.length > 0 && session.rubrics[0].columns.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr>
-                    <th className="text-left p-2 border bg-muted font-semibold">{t("reviewModule.criterion")}</th>
-                    {session.rubrics[0].columns.map((col, i) => (
-                      <th key={i} className="p-2 border bg-muted font-semibold text-center">{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {session.rubrics[0].criteria.map((criterion, i) => (
-                    <tr key={i} className={i % 2 === 0 ? "bg-background" : "bg-muted/30"}>
-                      <td className="p-2 border font-medium">{criterion.name}</td>
-                      {criterion.cells.map((cell, j) => (
-                        <td key={j} className="p-2 border text-muted-foreground text-xs align-top">{cell}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
-          )}
+          {/* TODO: update rubric preview table for new rubric structure */}
+          <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
         </DialogWrapper>
       )}
 

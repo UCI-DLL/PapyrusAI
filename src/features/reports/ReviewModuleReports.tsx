@@ -196,8 +196,9 @@ export default function ReviewModuleReports(): JSX.Element {
 
   // Derived data
   const rubric = module?.rubrics?.[0];
-  const maxPerCriterion = rubric ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite)) : undefined;
-  const maxTotal = maxPerCriterion !== undefined && rubric ? rubric.criteria.length * maxPerCriterion : undefined;
+  // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
+  const maxPerCriterion = undefined as number | undefined;
+  const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
   const studentsSubmitted = new Set(grades.map((g) => g.username)).size;
   const avgScore =
     grades.length > 0

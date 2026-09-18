@@ -8,6 +8,7 @@ import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpo
 import { getGrades, postRegrade, putUpdateGrade } from "../../utility/endpoints/GradeEndpoints";
 import { buildRegradeContent } from "../../utility/chat/buildRegradeContent";
 import { GradeScore, GradeType, ModuleType } from "../../utility/types/CourseTypes";
+import { RubricPreviewContent } from "../../components/RubricPreviewContent";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { useTranslation } from "../../hooks/useTranslation";
 import { Badge } from "../../components/ui/badge";
@@ -143,9 +144,8 @@ export default function ReviewConversationView(): JSX.Element {
   }, [courseId, moduleId, username, convIndex]);
 
   const rubric = module?.rubrics?.[0];
-  // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
-  const maxPerCriterion = undefined as number | undefined;
   const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
+  const criterionMax = (i: number): number | undefined => rubric?.criteria[i]?.maxPoints;
 
   const isSummative = module?.assessmentType === "summative";
   const studentName = student ? `${student.name} ${student.family_name}`.trim() : username;
@@ -179,10 +179,10 @@ export default function ReviewConversationView(): JSX.Element {
         status: grade?.released ? "released" : grade ? "pending" : "not_graded",
         instructor_edited: grade?.instructorEdited ?? false,
         instructor_notes: grade?.instructorNotes ?? null,
-        scores: grade?.scores.map((s) => ({
+        scores: grade?.scores.map((s, i) => ({
           criterion: s.name,
           score: s.score,
-          max_score: maxPerCriterion ?? null,
+          max_score: criterionMax(i) ?? null,
           feedback: s.feedback,
         })) ?? [],
       },
@@ -396,16 +396,17 @@ export default function ReviewConversationView(): JSX.Element {
 
   function handleScoreChange(i: number, raw: string) {
     const num = raw === "" ? 0 : Number(raw);
+    const max = criterionMax(i);
     const errors = [...editErrors];
-    if (isNaN(num) || !Number.isInteger(num) || num < 0 || (maxPerCriterion !== undefined && num > maxPerCriterion)) {
-      errors[i] = maxPerCriterion !== undefined
-        ? t("reviewReports.scoreError", { max: maxPerCriterion })
+    if (isNaN(num) || !Number.isInteger(num) || num < 0 || (max !== undefined && num > max)) {
+      errors[i] = max !== undefined
+        ? t("reviewReports.scoreError", { max })
         : t("reviewReports.scoreErrorGeneric");
     } else {
       errors[i] = "";
     }
     setEditErrors(errors);
-    const clamped = isNaN(num) ? 0 : Math.max(0, maxPerCriterion !== undefined ? Math.min(num, maxPerCriterion) : num);
+    const clamped = isNaN(num) ? 0 : Math.max(0, max !== undefined ? Math.min(num, max) : num);
     setEditScores((prev) => prev.map((s, idx) => idx === i ? { ...s, score: clamped } : s));
   }
 
@@ -544,24 +545,8 @@ export default function ReviewConversationView(): JSX.Element {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="text-left p-2 font-semibold border-b w-36">
-                            {t("reviewReports.criterion")}
-                          </th>
-                          {/* TODO: update rubric preview table for new rubric structure */}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rubric.criteria.map((criterion, ri) => (
-                          <tr key={ri} className={ri % 2 === 0 ? "bg-muted/30" : ""}>
-                            <td className="p-2 font-medium border-b">{criterion.name}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="mt-2">
+                    <RubricPreviewContent criteria={rubric.criteria} />
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -695,19 +680,19 @@ export default function ReviewConversationView(): JSX.Element {
                                 <Input
                                   type="number"
                                   min={0}
-                                  max={maxPerCriterion}
+                                  max={criterionMax(i)}
                                   value={score.score}
                                   onChange={(e) => handleScoreChange(i, e.target.value)}
                                   className={`w-16 h-7 text-center text-sm px-1 ${editErrors[i] ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                 />
-                                {maxPerCriterion !== undefined && (
-                                  <span className="text-sm text-muted-foreground">/ {maxPerCriterion}</span>
+                                {criterionMax(i) !== undefined && (
+                                  <span className="text-sm text-muted-foreground">/ {criterionMax(i)}</span>
                                 )}
                               </div>
                             ) : (
                               <Badge variant="secondary" className="ml-2 shrink-0">
                                 {score.score}
-                                {maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                                {criterionMax(i) !== undefined ? ` / ${criterionMax(i)}` : ""}
                               </Badge>
                             )}
                           </div>
@@ -791,7 +776,7 @@ export default function ReviewConversationView(): JSX.Element {
                       <span className="font-medium">{s.name}</span>
                       <Badge variant="secondary">
                         {s.score ?? "—"}
-                        {maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                        {criterionMax(i) !== undefined ? ` / ${criterionMax(i)}` : ""}
                       </Badge>
                     </div>
                     {s.feedback && (

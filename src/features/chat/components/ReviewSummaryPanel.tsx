@@ -10,7 +10,7 @@ import {
   LayoutList,
   X,
 } from "lucide-react";
-import { GradeScore } from "../../../utility/types/CourseTypes";
+import { GradeScore, RubricType } from "../../../utility/types/CourseTypes";
 import { MessageType } from "../../../utility/types/ConversationTypes";
 import { useTranslation } from "../../../hooks/useTranslation";
 import Markdown from "react-markdown";
@@ -21,7 +21,7 @@ interface ReviewSummaryPanelProps {
   gradeResult?: { scores: GradeScore[]; totalScore: number; instructorNotes?: string } | null;
   gradePending?: boolean;
   gradeError?: string;
-  maxPerCriterion?: number;
+  rubric?: RubricType;
   maxTotal?: number;
 }
 
@@ -30,7 +30,7 @@ export default function ReviewSummaryPanel({
   gradeResult,
   gradePending,
   gradeError,
-  maxPerCriterion,
+  rubric,
   maxTotal,
 }: ReviewSummaryPanelProps) {
   const { t } = useTranslation();
@@ -186,7 +186,7 @@ export default function ReviewSummaryPanel({
                                 <div className="flex items-center gap-1.5 shrink-0">
                                   <Badge variant="secondary" className="text-xs lg:text-sm px-1.5 py-0">
                                     {score.score}
-                                    {maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                                    {rubric?.criteria[i] !== undefined ? ` / ${rubric.criteria[i].maxPoints}` : ""}
                                   </Badge>
                                   {score.feedback && (
                                     open ? (

@@ -110,9 +110,7 @@ export default function ChatMessages({
     : -1;
 
   // Rubric max scores
-  // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
   const rubric = moduleInfo?.rubrics?.[0];
-  const maxPerCriterion = undefined as number | undefined;
   const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
 
   useEffect(() => { //handles new message announcement
@@ -244,7 +242,7 @@ export default function ChatMessages({
                       <span className="font-semibold text-sm">{score.name}</span>
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge variant="secondary" className="text-xs">
-                          {score.score}{maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                          {score.score}{rubric?.criteria[i] !== undefined ? ` / ${rubric.criteria[i].maxPoints}` : ""}
                         </Badge>
                         {score.feedback && (criterionOpen
                           ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />

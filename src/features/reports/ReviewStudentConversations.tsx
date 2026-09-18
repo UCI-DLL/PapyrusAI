@@ -150,8 +150,6 @@ export default function ReviewStudentConversations(): JSX.Element {
   }
 
   const rubric = module?.rubrics?.[0];
-  // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
-  const maxPerCriterion = undefined as number | undefined;
   const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
 
   const isSummative = module?.assessmentType === "summative";
@@ -192,6 +190,7 @@ export default function ReviewStudentConversations(): JSX.Element {
       case "time-desc": return parseInt(b.grade?.timestamp ?? "0", 10) - parseInt(a.grade?.timestamp ?? "0", 10);
       case "messages-asc": return a.conv.messages.length - b.conv.messages.length;
       case "messages-desc": return b.conv.messages.length - a.conv.messages.length;
+      default: return (a.conv.name || "").localeCompare(b.conv.name || "");
     }
   });
 
@@ -263,9 +262,8 @@ export default function ReviewStudentConversations(): JSX.Element {
   async function handleDownload() {
     setExportLoading(true);
     const rubric = module?.rubrics?.[0];
-    // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
-    const maxPerCriterion = undefined as number | undefined;
     const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
+    const criterionMax = (i: number): number | undefined => rubric?.criteria[i]?.maxPoints;
     const studentName = student ? `${student.name} ${student.family_name}`.trim() : username;
 
     const exportConversations = selectedConvIds.size > 0
@@ -292,7 +290,7 @@ export default function ReviewStudentConversations(): JSX.Element {
         max_score: maxTotal ?? null,
         status: grade?.released ? "released" : grade ? "pending" : "not_graded",
         submitted_at: grade ? new Date(parseInt(grade.timestamp, 10)).toISOString() : null,
-        scores: grade?.scores.map((s) => ({ criterion: s.name, score: s.score, feedback: s.feedback })) ?? [],
+        scores: grade?.scores.map((s, i) => ({ criterion: s.name, score: s.score, max_score: criterionMax(i) ?? null, feedback: s.feedback })) ?? [],
         messages: messages.map((m: any) => ({
           role: m.role === "user" ? "student" : "ai",
           content: m.content,

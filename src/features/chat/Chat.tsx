@@ -18,6 +18,7 @@ import ChatHeader from "./components/ChatHeader";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
 import ReviewSummaryPanel from "./components/ReviewSummaryPanel";
+import { RubricPreviewContent } from "../../components/RubricPreviewContent";
 // import OralChatView from "./OralChatView"; // ORAL MODULE — commented out, keep OralChatView.tsx for future use
 import { useTranslation } from "../../hooks/useTranslation";
 import { ChatContextType } from "./ChatContext";
@@ -489,7 +490,7 @@ export default function Chat(): JSX.Element {
       // setOralSpeechText(null); // ORAL MODULE — commented out
 
       if (user && user.username === username && conversationIndex !== "new") {
-        onConnect(courseId, moduleId, conversationIndex);
+        onConnectRef.current(courseId, moduleId, conversationIndex);
       }
 
       if (conversationIndex === "new") {
@@ -562,7 +563,9 @@ export default function Chat(): JSX.Element {
     // so this effect fires on every relevant navigation. Including location.state caused
     // the effect to re-run after clearing state (since window.history.replaceState didn't
     // update React Router's location), which re-read stale state and double-sent messages.
-    onConnect,
+    // onConnect intentionally omitted: onConnectRef.current is used instead to prevent the
+    // effect from re-running when moduleInfo arrives late and cascades through refreshGrades
+    // → onSocketMessage → onConnect, which would close the WebSocket mid-message.
     closeSocket,
     navigator,
     t,
@@ -1398,8 +1401,9 @@ export default function Chat(): JSX.Element {
           contentClassName="sm:max-w-3xl max-h-[90vh] overflow-y-auto"
           actions={[{ label: t("common.close"), onClick: () => setOpenViewRubricModal(false), variant: "outline" }]}
         >
-          {/* TODO: update rubric preview table for new rubric structure */}
-          <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
+          <div className="overflow-auto max-h-[60vh] pr-1">
+            <RubricPreviewContent criteria={moduleInfo.rubrics[0].criteria} />
+          </div>
         </DialogWrapper>
       )}
 
@@ -1525,8 +1529,6 @@ export default function Chat(): JSX.Element {
             {(() => {
               const panelEssayMessage = messages.find(m => m.role === "user" && m.messageType === "essayDraft");
               const rubric = moduleInfo?.rubrics?.[0];
-              // TODO: update maxPerCriterion/maxTotal for new rubric structure (criteria have individual maxPoints)
-              const maxPerCriterion = undefined as number | undefined;
               const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
               const hasGradeContent = !!(gradeResult || gradePending || gradeError);
               const showPanel = isReviewModule && (hasGradeContent || !!panelEssayMessage);
@@ -1553,7 +1555,7 @@ export default function Chat(): JSX.Element {
                           gradeResult={gradeResult}
                           gradePending={gradePending}
                           gradeError={gradeError}
-                          maxPerCriterion={maxPerCriterion}
+                          rubric={rubric}
                           maxTotal={maxTotal}
                         />
                       </div>

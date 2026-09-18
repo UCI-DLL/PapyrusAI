@@ -487,6 +487,7 @@
     "addAsset": "Add Asset",
     "noAssetsAdded": "No Assets Added",
     "noAssetsAddedDescription": "To add an asset (including prompts and documents), click \"Add Asset\" above.",
+    "moduleAssetsDescription": "Prompts you add will appear as starting options for students when they begin a conversation. Documents you add will be used by the AI as background reference material during the conversation. Students won't see them directly.",
     "moduleSettings": "Module Settings",
     "showEmbeddedPrompt": "Show Embedded Prompt",
     "showEmbeddedPromptDescription": "Allows users to see the full text of the embedded prompt with which they begin their chat with the AI. Unchecking this will mean that the user will not be able to see the initial text of the prompt sent initially to the AI. For more information on why you might choose one or the other, see the ",
@@ -521,7 +522,8 @@
     "addAssetModule": "Add asset to module",
     "clickToAddAsset": "Click here to add an asset (including prompts and documents) to the module",
     "enableOralModule": "Enable Oral Module",
-    "oralModuleDescription": "Converts this module into an audio-based speaking module."
+    "oralModuleDescription": "Converts this module into an audio-based speaking module.",
+    "advancedSettings": "Advanced Settings"
   },
   "library": {
     "library": "Library",
@@ -745,8 +747,6 @@
     "untitledRubric": "Untitled Rubric",
     "rubricPreview": "Read-only preview of this rubric",
     "criteria": "criteria",
-    "scoreLevel": "score level",
-    "scoreLevels": "score levels",
     "totalPoints": "total points",
     "importFromPdf": "Import from PDF",
     "useRange": "Use point range",

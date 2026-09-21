@@ -92,9 +92,20 @@ export type FileType = {
   fileReference: string,
 }
 
-export type RubricCriterion = {
+export type RubricRating = {
+  id: string,
   name: string,
-  cells: Array<string>, // parallel to RubricType.columns — cells[i] belongs to columns[i]
+  description: string,
+  maxPoints: number,
+}
+
+export type RubricCriterion = {
+  id: string,
+  name: string,
+  description: string,
+  maxPoints: number,
+  useRange: boolean,
+  ratings: Array<RubricRating>,
 }
 
 export type RubricType = {
@@ -102,9 +113,9 @@ export type RubricType = {
   creator: CustomUserType,
   isDeleted: boolean,
   name: string,
+  description: string,
   isOrganizationRubric: boolean,
   folderId?: string,
-  columns: Array<string>,        // e.g. ["0","1","2","3"] — user-editable labels
   criteria: Array<RubricCriterion>,
 }
 

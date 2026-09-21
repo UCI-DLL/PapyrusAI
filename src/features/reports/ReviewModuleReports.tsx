@@ -196,8 +196,8 @@ export default function ReviewModuleReports(): JSX.Element {
 
   // Derived data
   const rubric = module?.rubrics?.[0];
-  const maxPerCriterion = rubric ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite)) : undefined;
-  const maxTotal = maxPerCriterion !== undefined && rubric ? rubric.criteria.length * maxPerCriterion : undefined;
+  const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
+  const criterionMax = (i: number): number | undefined => rubric?.criteria[i]?.maxPoints;
   const studentsSubmitted = new Set(grades.map((g) => g.username)).size;
   const avgScore =
     grades.length > 0
@@ -253,6 +253,7 @@ export default function ReviewModuleReports(): JSX.Element {
         const bTime = bBest ? parseInt(bBest.timestamp, 10) : (sortBy === "time-asc" ? Infinity : -Infinity);
         return sortBy === "time-asc" ? aTime - bTime : bTime - aTime;
       }
+      default: return (a.family_name ?? "").localeCompare(b.family_name ?? "") || (a.name ?? "").localeCompare(b.name ?? "");
     }
   });
 
@@ -336,7 +337,7 @@ export default function ReviewModuleReports(): JSX.Element {
           max_score: maxTotal ?? null,
           status: bestGrade?.released ? "released" : bestGrade ? "pending" : "not_submitted",
           submitted_at: bestGrade ? new Date(parseInt(bestGrade.timestamp, 10)).toISOString() : null,
-          scores: bestGrade?.scores.map((s) => ({ criterion: s.name, score: s.score, feedback: s.feedback })) ?? [],
+          scores: bestGrade?.scores.map((s, i) => ({ criterion: s.name, score: s.score, max_score: criterionMax(i) ?? null, feedback: s.feedback })) ?? [],
           best_conversation: bestConvIdx !== null ? {
             attempt_number: bestRank,
             total_attempts: studentGrades.length,

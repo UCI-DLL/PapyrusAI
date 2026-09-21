@@ -260,7 +260,9 @@
     "next": "Next",
     "filter": "Filter",
     "asc": "Asc",
-    "desc": "Desc"
+    "desc": "Desc",
+    "moveLeft": "Move left",
+    "moveRight": "Move right"
   },
   "components": {
     "deletePrompt": "Delete Prompt?",
@@ -485,6 +487,7 @@
     "addAsset": "Add Asset",
     "noAssetsAdded": "No Assets Added",
     "noAssetsAddedDescription": "To add an asset (including prompts and documents), click \"Add Asset\" above.",
+    "moduleAssetsDescription": "Prompts you add will appear as starting options for students when they begin a conversation. Documents you add will be used by the AI as background reference material during the conversation. Students won't see them directly.",
     "moduleSettings": "Module Settings",
     "showEmbeddedPrompt": "Show Embedded Prompt",
     "showEmbeddedPromptDescription": "Allows users to see the full text of the embedded prompt with which they begin their chat with the AI. Unchecking this will mean that the user will not be able to see the initial text of the prompt sent initially to the AI. For more information on why you might choose one or the other, see the ",
@@ -519,7 +522,8 @@
     "addAssetModule": "Add asset to module",
     "clickToAddAsset": "Click here to add an asset (including prompts and documents) to the module",
     "enableOralModule": "Enable Oral Module",
-    "oralModuleDescription": "Converts this module into an audio-based speaking module."
+    "oralModuleDescription": "Converts this module into an audio-based speaking module.",
+    "advancedSettings": "Advanced Settings"
   },
   "library": {
     "library": "Library",
@@ -743,8 +747,25 @@
     "untitledRubric": "Untitled Rubric",
     "rubricPreview": "Read-only preview of this rubric",
     "criteria": "criteria",
-    "scoreLevel": "score level",
-    "scoreLevels": "score levels"
+    "totalPoints": "total points",
+    "importFromPdf": "Import from PDF",
+    "useRange": "Use point range",
+    "addRating": "Add Rating",
+    "removeCriterion": "Remove Criterion",
+    "ratingNamePlaceholder": "Rating name…",
+    "ratingDescriptionPlaceholder": "Describe this rating level…",
+    "criterionDescriptionPlaceholder": "Criterion description…",
+    "pts": "Pts",
+    "ptsPlaceholder": "Pts",
+    "pdfImportSuccess": "Rubric imported. Review and adjust before saving.",
+    "pdfImportFailed": "Failed to parse the PDF. Please try again.",
+    "pdfImportUnauthorized": "You do not have permission to import rubrics.",
+    "missingPointValues": "All point values must be filled in before saving.",
+    "ratingsOutOfOrder": "Ratings must be in descending order (highest to lowest).",
+    "deleteCriterionTitle": "Remove Criterion?",
+    "deleteCriterionMessage": "will be permanently removed from this rubric.",
+    "unnamedCriterion": "This criterion",
+    "errorNames": "All required name fields must be filled in."
   },
   "reports": {
     "reports": "Reports",

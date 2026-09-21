@@ -53,6 +53,7 @@ import { File } from "../../components/File";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
+import { RubricPreviewContent } from "../../components/RubricPreviewContent";
 import Post from "../../utility/Post";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 
@@ -125,10 +126,10 @@ export default function AddReviewModule({
     moduleType: "review",
     assessmentType: "formative",
     gradingType: "ma6",
-    converseAfterComplete: false,
+    converseAfterComplete: true,
     maxDrafts: 999,
     rubrics: [],
-    showRubric: false,
+    showRubric: true,
     id: "",
     isDeleted: false,
     isTemplate: false,
@@ -152,6 +153,7 @@ export default function AddReviewModule({
 
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
   const [pendingAssessmentType, setPendingAssessmentType] = useState<"formative" | "summative" | null>(null);
 
   function handleAssessmentTypeClick(newType: "formative" | "summative") {
@@ -265,7 +267,7 @@ export default function AddReviewModule({
         name: item.name,
         isOrganizationRubric: item.ownerId === "ORG",
         folderId: item.parentId,
-        columns: item.metadata?.columns ?? [],
+        description: item.metadata?.description ?? "",
         criteria: item.metadata?.criteria ?? [],
       };
       setSession((prev) => ({ ...prev, rubrics: [rubric] }));
@@ -600,32 +602,9 @@ export default function AddReviewModule({
           contentClassName="sm:max-w-3xl max-h-[90vh] overflow-y-auto"
           actions={[{ label: t("common.close"), onClick: () => setOpenViewRubricModal(false), variant: "outline" }]}
         >
-          {session.rubrics[0].criteria.length > 0 && session.rubrics[0].columns.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr>
-                    <th className="text-left p-2 border bg-muted font-semibold">{t("reviewModule.criterion")}</th>
-                    {session.rubrics[0].columns.map((col, i) => (
-                      <th key={i} className="p-2 border bg-muted font-semibold text-center">{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {session.rubrics[0].criteria.map((criterion, i) => (
-                    <tr key={i} className={i % 2 === 0 ? "bg-background" : "bg-muted/30"}>
-                      <td className="p-2 border font-medium">{criterion.name}</td>
-                      {criterion.cells.map((cell, j) => (
-                        <td key={j} className="p-2 border text-muted-foreground text-xs align-top">{cell}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
-          )}
+          <div className="overflow-auto max-h-[60vh] pr-1">
+            <RubricPreviewContent criteria={session.rubrics[0].criteria} />
+          </div>
         </DialogWrapper>
       )}
 
@@ -859,6 +838,7 @@ export default function AddReviewModule({
               </Button>
             )}
           </div>
+          <p className="text-sm text-muted-foreground">{t("createModule.moduleAssetsDescription")}</p>
         </CardHeader>
         <CardContent>
           {session.prompts.length < 1 && session.files.length < 1 ? (
@@ -955,72 +935,6 @@ export default function AddReviewModule({
             </div>
           </div>
 
-          {/* Limit attempts (formative only) */}
-          {session.assessmentType === "formative" && (
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="limitAttempts"
-                    checked={session.maxDrafts !== 999}
-                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, maxDrafts: checked ? 3 : 999 }))}
-                  />
-                  <Label htmlFor="limitAttempts" className="text-md font-bold">{t("reviewModule.limitAttempts")}</Label>
-                </div>
-                <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.limitAttemptsDescription")}</p>
-              </div>
-              {session.maxDrafts !== 999 && (
-                <div className="ml-6 flex items-center gap-3">
-                  <Label htmlFor="maxDrafts" className="text-sm shrink-0">{t("reviewModule.maxDrafts")}</Label>
-                  <Select
-                    value={String(session.maxDrafts)}
-                    onValueChange={(val) => setSession((prev) => ({ ...prev, maxDrafts: Number(val) }))}
-                  >
-                    <SelectTrigger id="maxDrafts" className="w-24">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
-                        <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
-          )}
-
-          <Separator />
-
-          {/* Grading type */}
-          <div className="space-y-2">
-            <Label className="text-base font-semibold">{t("reviewModule.gradingType")}</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setSession((prev) => ({ ...prev, gradingType: "ma6" }))}
-                className={cn(
-                  "border rounded-lg p-4 text-left transition-colors",
-                  session.gradingType === "ma6" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"
-                )}
-              >
-                <p className="font-semibold">{t("reviewModule.ma6")}</p>
-                <p className="text-sm text-muted-foreground mt-1">{t("reviewModule.ma6Desc")}</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSession((prev) => ({ ...prev, gradingType: "StructuredLLMOutput" }))}
-                className={cn(
-                  "border rounded-lg p-4 text-left transition-colors",
-                  session.gradingType === "StructuredLLMOutput" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"
-                )}
-              >
-                <p className="font-semibold">{t("reviewModule.structuredLLMOutput")}</p>
-                <p className="text-sm text-muted-foreground mt-1">{t("reviewModule.structuredLLMOutputDesc")}</p>
-              </button>
-            </div>
-          </div>
-
           {(moduleSubType !== "essay" && moduleSubType !== "oralInterview") && (
             <>
               <Separator />
@@ -1068,66 +982,127 @@ export default function AddReviewModule({
             </>
           )}
 
-          {/* Converse after complete */}
-          {moduleSubType !== "oralInterview" && (
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="converseAfterComplete"
-                  checked={session.converseAfterComplete}
-                  onCheckedChange={(checked) => setSession((prev) => ({ ...prev, converseAfterComplete: checked as boolean }))}
-                />
-                <Label htmlFor="converseAfterComplete" className="text-md font-bold">
-                  {t("reviewModule.converseAfterComplete")}
-                </Label>
+          {/* Advanced Settings toggle */}
+          <Separator />
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="flex items-center gap-2 w-full text-left text-base font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", showAdvanced && "rotate-180")} />
+            {t("createModule.advancedSettings")}
+          </button>
+
+          {showAdvanced && (
+            <div className="space-y-6">
+              {/* Grading type */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">{t("reviewModule.gradingType")}</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSession((prev) => ({ ...prev, gradingType: "ma6" }))}
+                    className={cn(
+                      "border rounded-lg p-4 text-left transition-colors",
+                      session.gradingType === "ma6" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <p className="font-semibold">{t("reviewModule.ma6")}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("reviewModule.ma6Desc")}</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSession((prev) => ({ ...prev, gradingType: "StructuredLLMOutput" }))}
+                    className={cn(
+                      "border rounded-lg p-4 text-left transition-colors",
+                      session.gradingType === "StructuredLLMOutput" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <p className="font-semibold">{t("reviewModule.structuredLLMOutput")}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("reviewModule.structuredLLMOutputDesc")}</p>
+                  </button>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.converseAfterCompleteDescription")}</p>
+
+              {/* Converse after complete */}
+              {moduleSubType !== "oralInterview" && (
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="converseAfterComplete"
+                      checked={session.converseAfterComplete}
+                      onCheckedChange={(checked) => setSession((prev) => ({ ...prev, converseAfterComplete: checked as boolean }))}
+                    />
+                    <Label htmlFor="converseAfterComplete" className="text-md font-bold">
+                      {t("reviewModule.converseAfterComplete")}
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.converseAfterCompleteDescription")}</p>
+                </div>
+              )}
+
+              {/* Show rubric to students */}
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="showRubric"
+                    checked={session.showRubric}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showRubric: checked as boolean }))}
+                  />
+                  <Label htmlFor="showRubric" className="text-md font-bold">{t("reviewModule.showRubric")}</Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.showRubricDescription")}</p>
+              </div>
+
+              {/* Web search */}
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="webSearch"
+                    checked={session.webSearch}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, webSearch: checked as boolean }))}
+                  />
+                  <Label htmlFor="webSearch" className="text-md font-bold">{t("createModule.allowWebSearch")}</Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">{t("createModule.allowWebSearchDescription")}</p>
+              </div>
+
+              {/* Limit attempts (formative only) */}
+              {session.assessmentType === "formative" && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="limitAttempts"
+                        checked={session.maxDrafts !== 999}
+                        onCheckedChange={(checked) => setSession((prev) => ({ ...prev, maxDrafts: checked ? 3 : 999 }))}
+                      />
+                      <Label htmlFor="limitAttempts" className="text-md font-bold">{t("reviewModule.limitAttempts")}</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.limitAttemptsDescription")}</p>
+                  </div>
+                  {session.maxDrafts !== 999 && (
+                    <div className="ml-6 flex items-center gap-3">
+                      <Label htmlFor="maxDrafts" className="text-sm shrink-0">{t("reviewModule.maxDrafts")}</Label>
+                      <Select
+                        value={String(session.maxDrafts)}
+                        onValueChange={(val) => setSession((prev) => ({ ...prev, maxDrafts: Number(val) }))}
+                      >
+                        <SelectTrigger id="maxDrafts" className="w-24">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+                            <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
-
-          {/* Show rubric to students */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="showRubric"
-                checked={session.showRubric}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showRubric: checked as boolean }))}
-              />
-              <Label htmlFor="showRubric" className="text-md font-bold">{t("reviewModule.showRubric")}</Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.showRubricDescription")}</p>
-          </div>
-
-          {/* Web search */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="webSearch"
-                checked={session.webSearch}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, webSearch: checked as boolean }))}
-              />
-              <Label htmlFor="webSearch" className="text-md font-bold">{t("createModule.allowWebSearch")}</Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">{t("createModule.allowWebSearchDescription")}</p>
-          </div>
-
-          {/* Oral Module */}
-          {/* <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isOralModule"
-                checked={session.isOralModule}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, isOralModule: checked as boolean }))}
-                disabled={isLoading}
-              />
-              <Label htmlFor="isOralModule" className="text-md font-bold">
-                {t("createModule.enableOralModule")}
-              </Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">
-              {t("createModule.oralModuleDescription")}
-            </p>
-          </div> */}
         </CardContent>
       </Card>
 

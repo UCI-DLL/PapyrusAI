@@ -60,7 +60,7 @@ export function RubricPreviewContent({ criteria }: RubricPreviewContentProps) {
                     <span className="text-xs font-semibold text-foreground leading-tight">
                       {rating.name || `Rating ${rIdx + 1}`}
                     </span>
-                    <span className="text-xs font-semibold text-primary shrink-0 whitespace-nowrap">
+                    <span className="text-xs font-medium text-muted-foreground border border-border shrink-0 whitespace-nowrap px-1.5 py-0.5 rounded-full">
                       {criterion.useRange
                         ? `${rating.maxPoints}–${lowerBound} ${t("createRubric.pts")}`
                         : `${rating.maxPoints} ${t("createRubric.pts")}`}

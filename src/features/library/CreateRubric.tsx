@@ -37,6 +37,7 @@ import {
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
+import { toast } from "sonner";
 
 // ── Local types (maxPoints nullable so PDF-parsed zeros can be forced empty) ──
 
@@ -360,16 +361,20 @@ export default function CreateRubric(): JSX.Element {
           // treatZeroAsEmpty=true: force instructor to confirm any 0-pt values
           setCriteria(loadCriteria(rubric.criteria, true));
         setAlert({ message: t("createRubric.pdfImportSuccess"), type: "success" });
+        toast.success(t("createRubric.pdfImportSuccess"));
       } else if (res?.status === 403) {
         setAlert({ message: t("createRubric.pdfImportUnauthorized"), type: "error" });
+        toast.error(t("createRubric.pdfImportUnauthorized"));
       } else {
         setAlert({
           message: res?.data?.message || t("createRubric.pdfImportFailed"),
           type: "error",
         });
+        toast.error(res?.data?.message || t("createRubric.pdfImportFailed"));
       }
     } catch {
       setAlert({ message: t("createRubric.pdfImportFailed"), type: "error" });
+      toast.error(t("createRubric.pdfImportFailed"));
     } finally {
       setPdfLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -401,6 +406,7 @@ export default function CreateRubric(): JSX.Element {
       if (missingPoints) parts.push(t("createRubric.missingPointValues"));
       if (hasOutOfOrder) parts.push(t("createRubric.ratingsOutOfOrder"));
       setAlert({ message: parts.join(" "), type: "error" });
+      toast.error(parts.join(" "));
       return;
     }
 
@@ -424,6 +430,7 @@ export default function CreateRubric(): JSX.Element {
       ).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createRubric.rubricSaved"), type: "success" });
+          toast.success(t("createRubric.rubricSaved"));
           navigator(`/library/${folderId}`);
         } else if (res?.status === 401) {
           navigator("/login");
@@ -433,6 +440,7 @@ export default function CreateRubric(): JSX.Element {
               res?.data?.message || t("createRubric.rubricCouldNotBeSaved"),
             type: "error",
           });
+          toast.error(res?.data?.message || t("createRubric.rubricCouldNotBeSaved"));
         }
         setIsLoading(false);
       });
@@ -444,6 +452,7 @@ export default function CreateRubric(): JSX.Element {
       ).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createRubric.rubricSaved"), type: "success" });
+          toast.success(t("createRubric.rubricSaved"));
         } else if (res && res.status === 401) {
           navigator("/login");
           return;
@@ -452,6 +461,7 @@ export default function CreateRubric(): JSX.Element {
             message: t("createRubric.rubricCouldNotBeSaved"),
             type: "error",
           });
+          toast.error(t("createRubric.rubricCouldNotBeSaved"));
         }
         navigator(`/library/${folderId}`);
       });
@@ -464,6 +474,7 @@ export default function CreateRubric(): JSX.Element {
     Delete(deleteItem(rubricId), true).then((res) => {
       if (res.status && res.status < 300) {
         setAlert({ message: t("createRubric.rubricDeleted"), type: "success" });
+        toast.success(t("createRubric.rubricDeleted"));
       } else if (res && res.status === 401) {
         navigator("/login");
         return;
@@ -472,6 +483,7 @@ export default function CreateRubric(): JSX.Element {
           message: t("createRubric.rubricCouldNotBeDeleted"),
           type: "error",
         });
+        toast.error(t("createRubric.rubricCouldNotBeDeleted"));
       }
       navigator(`/library/${folderId}`);
       setIsLoading(false);
@@ -879,6 +891,7 @@ export default function CreateRubric(): JSX.Element {
                                 : Number(e.target.value),
                             )
                           }
+                          onWheel={(e) => e.currentTarget.blur()}
                           disabled={isLoading}
                           className={cn(
                             "h-9 w-20 text-center text-sm font-semibold",
@@ -976,6 +989,7 @@ export default function CreateRubric(): JSX.Element {
                                 e.target.value === "" ? null : Number(e.target.value),
                               )
                             }
+                            onWheel={(e) => e.currentTarget.blur()}
                             disabled={isLoading}
                             placeholder="—"
                             className={cn(
@@ -1008,6 +1022,7 @@ export default function CreateRubric(): JSX.Element {
                               e.target.value === "" ? null : Number(e.target.value),
                             )
                           }
+                          onWheel={(e) => e.currentTarget.blur()}
                           disabled={isLoading}
                           placeholder={t("createRubric.ptsPlaceholder")}
                           className={cn(

@@ -56,6 +56,7 @@ import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import { RubricPreviewContent } from "../../components/RubricPreviewContent";
 import Post from "../../utility/Post";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
+import { toast } from "sonner";
 
 type ReviewModuleFormType = {
   name: string;
@@ -223,6 +224,7 @@ export default function AddReviewModule({
           if (res !== undefined) {
             navigator("/courses");
             setAlert({ message: t("errorMessage.moduleNotExist"), type: "error" });
+            toast.error(t("errorMessage.moduleNotExist"));
             setIsLoading(false);
           }
         }
@@ -325,14 +327,17 @@ export default function AddReviewModule({
     let hasError = false;
     if (!session.name) {
       setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      toast.error(t("errorMessage.nameMissing"));
       hasError = true;
     }
     if (!session.moduleDescription) {
       setErrors((prev: any) => ({ ...prev, moduleDescription: t("common.description") + " " + t("components.missing") }));
+      toast.error(t("common.description") + " " + t("components.missing"));
       hasError = true;
     }
     if (session.rubrics.length === 0) {
       setErrors((prev: any) => ({ ...prev, rubrics: t("reviewModule.rubricRequired") }));
+      toast.error(t("reviewModule.rubricRequired"));
       hasError = true;
     }
     if (hasError) return;
@@ -368,10 +373,12 @@ export default function AddReviewModule({
         if (res.status && res.status < 300) {
           navigator(`/courses/${actualCourseId}/modules`);
           setAlert({ message: t("reviewModule.moduleUpdated"), type: "success" });
+          toast.success(t("reviewModule.moduleUpdated"));
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           setErrors({ name: res.data, moduleDescription: res.data });
+          toast.error(res.data);
         }
         setIsLoading(false);
       });
@@ -380,10 +387,12 @@ export default function AddReviewModule({
         if (res && res.status && res.status < 300) {
           navigator(`/courses/${actualCourseId}/modules`);
           setAlert({ message: t("reviewModule.moduleCreated"), type: "success" });
+          toast.success(t("reviewModule.moduleCreated"));
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           setErrors({ name: res.data, moduleDescription: res.data });
+          toast.error(res.data);
         }
         setIsLoading(false);
       });

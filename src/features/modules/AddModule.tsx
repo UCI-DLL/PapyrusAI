@@ -41,6 +41,7 @@ import { FileType, LibraryItem, PromptType } from "../../utility/types/CourseTyp
 import { File } from "../../components/File";
 import { Badge } from "../../components/ui/badge";
 import { useTranslation } from "../../hooks/useTranslation";
+import { toast } from "sonner";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import Post from "../../utility/Post";
@@ -198,6 +199,7 @@ export default function AddModule({
               //handle error
               navigator("/courses");
               setAlert({ message: `${t("errorMessage.moduleNotExist")}`, type: "error" });
+              toast.error(t("errorMessage.moduleNotExist"));
               setIsLoading(false);
             }
           }
@@ -254,11 +256,13 @@ export default function AddModule({
   function handleSubmit(e: any, isPublished = false, isDeleted = false) {
     if (session.name === "") {
       setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      toast.error(t("errorMessage.nameMissing"));
     } else if (session.moduleDescription === "") {
       setErrors((prev: any) => ({
         ...prev,
         moduleDescription: t("common.description") + " " + t("components.missing"),
       }));
+      toast.error(t("common.description") + " " + t("components.missing"));
     } else {
       // set is loading
       setIsLoading(true);
@@ -294,6 +298,7 @@ export default function AddModule({
               navigator(`/courses/${moduleIds.courseId}/modules`);
               //pop up notifying user of update
               setAlert({ message: t("createModule.moduleUpdated"), type: "success" });
+              toast.success(t("createModule.moduleUpdated"));
             }
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -305,6 +310,7 @@ export default function AddModule({
               isDeleted: res.data,
               isPublished: res.data,
             });
+            toast.error(res.data);
           }
           // set is loading back
           setIsLoading(false);
@@ -333,12 +339,14 @@ export default function AddModule({
               navigator(`/courses/${actualCourseId}/modules`);
               //pop up notifying user of creation
               setAlert({ message: t("createModule.moduleCreated"), type: "success" });
+              toast.success(t("createModule.moduleCreated"));
             }
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
             // set errors
             setErrors({ name: res.data, moduleDescription: res.data });
+            toast.error(res.data);
           }
           // set is loading back
           setIsLoading(false);
@@ -442,6 +450,7 @@ export default function AddModule({
         message: `${t("errorMessage.genericError")}`,
         type: "error",
       });
+      toast.error(t("errorMessage.genericError"));
     }
   }
 

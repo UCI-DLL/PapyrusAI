@@ -176,7 +176,7 @@ export default function ChatMessages({
         </button>
         {essayExpanded && (
           <div className="px-4 pb-4 border-t border-border/50">
-            <p className="text-sm whitespace-pre-wrap mt-3 text-foreground/90">{message.content}</p>
+            <p className="text-sm whitespace-pre-wrap mt-3 text-muted-foreground">{message.content}</p>
           </div>
         )}
       </div>
@@ -268,7 +268,7 @@ export default function ChatMessages({
               {gradeResult.instructorNotes && (
                 <div className="border rounded-lg p-3 bg-primary/5 border-primary/20">
                   <p className="text-xs font-semibold text-primary mb-1">{t("reviewChat.instructorNotes")}</p>
-                  <p className="text-sm text-foreground/90">{gradeResult.instructorNotes}</p>
+                  <p className="text-sm text-muted-foreground">{gradeResult.instructorNotes}</p>
                 </div>
               )}
             </div>

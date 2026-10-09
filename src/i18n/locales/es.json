@@ -1064,7 +1064,22 @@
     "summativeToFormativeTitle": "Cambiando a Formativo",
     "summativeToFormativePoint1": "Las calificaciones pendientes de tu revisión NO se publicarán automáticamente — permanecerán retenidas hasta que las publiques manualmente.",
     "summativeToFormativePoint2": "Los nuevos envíos se calificarán y publicarán a los estudiantes de inmediato.",
-    "summativeToFormativePoint3": "Los límites de borradores vuelven a la configuración de Máximo de Borradores; la restricción sumativa de uno a la vez ya no aplica."
+    "summativeToFormativePoint3": "Los límites de borradores vuelven a la configuración de Máximo de Borradores; la restricción sumativa de uno a la vez ya no aplica.",
+    "moduleDescriptionHelp": "Se muestra a los estudiantes en la página del módulo — describe cómo usar y operar este módulo.",
+    "essayQuestion": "Instrucciones de la tarea",
+    "essayQuestionHelptext": "Describe la tarea y cómo la IA debe calificar las entregas de los estudiantes...",
+    "essayQuestionDescription": "Estas instrucciones se envían a la IA para guiar la calificación y la conversación. Los archivos de referencia que agregues a continuación también se incluirán.",
+    "essayQuestionRequired": "Las instrucciones de la tarea son obligatorias.",
+    "selectFile": "Seleccionar archivo de referencia",
+    "filesSection": "Archivos de referencia",
+    "addFile": "Agregar archivo",
+    "filesDescription": "Los archivos agregados aquí se añaden a las instrucciones de la tarea y son utilizados por la IA como material de referencia al calificar y durante la conversación. Los estudiantes no los verán directamente.",
+    "noFilesAdded": "Sin archivos agregados",
+    "noFilesAddedDescription": "Haz clic en \"Agregar archivo\" para adjuntar documentos de referencia a este módulo.",
+    "filesLockedAfterPublish": "Los archivos no se pueden cambiar después de publicar.",
+    "postGradePrompt": "Mensaje post-calificación",
+    "postGradePromptDescription": "Este mensaje se envía al estudiante como mensaje del asistente de IA cuando se publican sus calificaciones. Abre la conversación post-calificación y solo se usa cuando \"Permitir chat después de la entrega\" está habilitado.",
+    "postGradePromptDefault": "Por favor revisa los comentarios sobre tu ensayo y hazme saber si quieres repasar algo en específico o si necesitas ayuda para incorporar esta retroalimentación en tu ensayo."
   },
   "reviewChat": {
     "complete": "Completar",

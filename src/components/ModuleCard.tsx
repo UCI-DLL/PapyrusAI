@@ -447,7 +447,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
         </form>
       </DialogWrapper>
 
-      <article className="group bg-card border rounded-xl hover-lift shadow-sm relative h-80 flex flex-col">
+      <article className="group bg-card border rounded-xl hover-lift shadow-sm relative min-h-80 flex flex-col">
         <div className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl" aria-hidden="true">
           <Play size={80} className="transform rotate-12" />
         </div>
@@ -575,13 +575,13 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
 
           <div className="flex-1" aria-hidden="true"></div>
 
-          <div className="relative z-10 flex-shrink-0 flex gap-2 w-full">
+          <div className="relative z-10 flex-shrink-0 flex flex-wrap gap-2 w-full">
             {isInstructorOrTA && (
               <Button
                 onClick={() => navigator(reportsLink)}
                 variant="outline"
                 size="sm"
-                className="flex-1 flex items-center justify-center gap-2"
+                className="flex-1 min-w-[7rem] flex items-center justify-center gap-2"
                 aria-label={`${t("common.view")} ${t("common.reports")}`}
               >
                 <Eye size={14} aria-hidden="true" />
@@ -592,7 +592,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
               onClick={handleBeginModule}
               variant="default"
               size="sm"
-              className="flex-1 flex items-center justify-center gap-2"
+              className="flex-1 min-w-[7rem] flex items-center justify-center gap-2"
               disabled={isNavigatingToModule}
               aria-label={`${t("modules.beginModule")} ${module.name}`}
             >

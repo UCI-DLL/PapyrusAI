@@ -1064,7 +1064,22 @@
     "summativeToFormativeTitle": "Switching to Formative",
     "summativeToFormativePoint1": "Grades currently pending your review will NOT auto-release — they stay held until you manually release them.",
     "summativeToFormativePoint2": "New submissions will be graded and released to students immediately.",
-    "summativeToFormativePoint3": "Draft limits revert to the Max Drafts setting; the summative one-at-a-time gate no longer applies."
+    "summativeToFormativePoint3": "Draft limits revert to the Max Drafts setting; the summative one-at-a-time gate no longer applies.",
+    "moduleDescriptionHelp": "Displayed to students on the module page — describe how to use and operate this module.",
+    "essayQuestion": "Assignment Instructions",
+    "essayQuestionHelptext": "Describe the assignment and how the AI should grade student submissions...",
+    "essayQuestionDescription": "These instructions are sent to the AI to guide grading and conversation. Any reference files you add below are also included.",
+    "essayQuestionRequired": "Assignment instructions are required.",
+    "selectFile": "Select Reference File",
+    "filesSection": "Reference Files",
+    "addFile": "Add File",
+    "filesDescription": "Files added here are appended to the assignment instructions and used by the AI as reference material when grading and during conversation. Students won't see them directly.",
+    "noFilesAdded": "No Files Added",
+    "noFilesAddedDescription": "Click \"Add File\" to attach reference documents to this module.",
+    "filesLockedAfterPublish": "Files cannot be changed after publishing.",
+    "postGradePrompt": "Post-Grade Message",
+    "postGradePromptDescription": "This message is sent to the student as an AI assistant message when their grades are released. It opens the post-grade conversation and is only used when \"Allow Chat After Submission\" is enabled.",
+    "postGradePromptDefault": "Please take a look at the feedback on your essay, and let me know if you want to go over anything specifically, or want help addressing this feedback in your essay."
   },
   "reviewChat": {
     "complete": "Complete",

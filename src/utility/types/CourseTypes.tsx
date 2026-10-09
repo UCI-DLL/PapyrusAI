@@ -55,6 +55,8 @@ export type ModuleType = {
   maxDrafts?: number,
   rubrics?: Array<RubricType>,
   showRubric?: boolean,
+  essayQuestion?: string,
+  postGradePrompt?: string,
 }
 
 export type GradeScore = {

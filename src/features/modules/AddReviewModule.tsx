@@ -955,7 +955,7 @@ export default function AddReviewModule({
             </div>
           </div>
 
-          {(moduleSubType !== "essay" && moduleSubType !== "oralInterview") && (
+          {!isEditMode && (moduleSubType !== "essay" && moduleSubType !== "oralInterview") && (
             <>
               <Separator />
 

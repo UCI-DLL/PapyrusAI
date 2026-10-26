@@ -613,7 +613,7 @@ export default function ChatLayout(): JSX.Element {
           grades={grades}
         />
       ) : (
-        <div className="hidden lg:flex w-80 border-l border-border bg-card" style={{ height: "calc(100vh - 4rem)" }}></div>
+        <div className="hidden lg:flex w-80 border-l border-border bg-card h-screen-nav"></div>
       )}
 
     </div>

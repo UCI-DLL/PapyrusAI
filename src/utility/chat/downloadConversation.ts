@@ -79,7 +79,8 @@ export function downloadConversation({
   const blob = new Blob([fileData], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.download = `${courseInfo.name}_${moduleInfo.name}_${user.email}_conversation${conversationIndex}.txt`;
+  const safeUserName = `${viewUser.name}_${viewUser.family_name}`.replace(/\s+/g, "_");
+  link.download = `${courseInfo.name}_${moduleInfo.name}_${safeUserName}_conversation${conversationIndex}.txt`;
   link.href = url;
   link.click();
 }

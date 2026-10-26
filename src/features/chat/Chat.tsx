@@ -1408,7 +1408,7 @@ export default function Chat(): JSX.Element {
       )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0" style={{ height: "calc(100vh - 4rem)" }}>
+      <div className="flex-1 flex flex-col min-w-0 h-screen-nav">
         {/* Chat Header */}
         {courseInfo && moduleInfo ? (
           <ChatHeader

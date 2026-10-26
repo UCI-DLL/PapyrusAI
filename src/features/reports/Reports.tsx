@@ -461,7 +461,7 @@ export default function Reports(): JSX.Element {
           });
 
           //add txt files to zip file and download
-          zip.file(`${courseInfo.name}/${moduleInfo.name}/${converation.user.email}_${convoIndex}.txt`, fileData);
+          zip.file(`${courseInfo.name}/${moduleInfo.name}/${converation.user.name}_${converation.user.family_name}_${convoIndex}.txt`, fileData);
         });
       });
     });

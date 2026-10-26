@@ -349,8 +349,7 @@ export default function ChatSidebar({
 
   return (
     <div
-      className="hidden lg:flex w-80 border-l border-border bg-card"
-      style={{ height: "calc(100vh - 4rem)" }}
+      className="hidden lg:flex w-80 border-l border-border bg-card h-screen-nav"
     >
       {sidebarContent}
     </div>

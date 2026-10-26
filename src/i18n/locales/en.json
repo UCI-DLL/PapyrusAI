@@ -1067,7 +1067,7 @@
     "summativeToFormativePoint3": "Draft limits revert to the Max Drafts setting; the summative one-at-a-time gate no longer applies.",
     "moduleDescriptionHelp": "Displayed to students on the module page — describe how to use and operate this module.",
     "essayQuestion": "Assignment Instructions",
-    "essayQuestionHelptext": "Describe the assignment and how the AI should grade student submissions...",
+    "essayQuestionHelptext": "Describe the assignment and how the AI should grade student submissions (e.g. essay prompt)",
     "essayQuestionDescription": "These instructions are sent to the AI to guide grading and conversation. Any reference files you add below are also included.",
     "essayQuestionRequired": "Assignment instructions are required.",
     "selectFile": "Select Reference File",

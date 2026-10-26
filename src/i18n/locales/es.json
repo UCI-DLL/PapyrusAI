@@ -1067,7 +1067,7 @@
     "summativeToFormativePoint3": "Los límites de borradores vuelven a la configuración de Máximo de Borradores; la restricción sumativa de uno a la vez ya no aplica.",
     "moduleDescriptionHelp": "Se muestra a los estudiantes en la página del módulo — describe cómo usar y operar este módulo.",
     "essayQuestion": "Instrucciones de la tarea",
-    "essayQuestionHelptext": "Describe la tarea y cómo la IA debe calificar las entregas de los estudiantes...",
+    "essayQuestionHelptext": "Describe la tarea y cómo la IA debe calificar las entregas de los estudiantes (p. ej. tema del ensayo)",
     "essayQuestionDescription": "Estas instrucciones se envían a la IA para guiar la calificación y la conversación. Los archivos de referencia que agregues a continuación también se incluirán.",
     "essayQuestionRequired": "Las instrucciones de la tarea son obligatorias.",
     "selectFile": "Seleccionar archivo de referencia",

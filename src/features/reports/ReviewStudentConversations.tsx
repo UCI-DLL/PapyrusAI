@@ -708,75 +708,69 @@ export default function ReviewStudentConversations(): JSX.Element {
                         <TableCell>
                           {isSummative ? (
                             <div className="flex gap-2 justify-end">
-                              {conv.voidedByInstructor || grade?.released ? (
+                              <Button
+                                size="sm"
+                                asChild
+                                variant="outline"
+                                aria-label={`${grade?.released || conv.voidedByInstructor ? t("reviewReports.viewConversation") : t("reviewReports.review")} — ${convLabel}`}
+                              >
+                                <Link
+                                  to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
+                                  className="no-underline"
+                                >
+                                  {grade?.released || conv.voidedByInstructor ? t("reviewReports.viewConversation") : t("reviewReports.review")}
+                                </Link>
+                              </Button>
+                              {!conv.voidedByInstructor && grade && !grade.released && (
                                 <Button
                                   size="sm"
-                                  asChild
-                                  variant="outline"
-                                  aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
+                                  variant="default"
+                                  disabled={actionLoading[`${conv.id}_approve`]}
+                                  onClick={() => openApproveDialog(grade, conv)}
                                 >
-                                  <Link
-                                    to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
-                                    className="no-underline"
-                                  >
-                                    {t("reviewReports.viewConversation")}
-                                  </Link>
+                                  {t("reviewReports.approve")}
                                 </Button>
-                              ) : (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    asChild
-                                    variant="outline"
-                                    aria-label={`${t("reviewReports.review")} — ${convLabel}`}
-                                  >
-                                    <Link
-                                      to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
-                                      className="no-underline"
-                                    >
-                                      {t("reviewReports.review")}
-                                    </Link>
-                                  </Button>
-                                  {grade && !grade.released && (
-                                    <Button
-                                      size="sm"
-                                      variant="default"
-                                      disabled={actionLoading[`${conv.id}_approve`]}
-                                      onClick={() => openApproveDialog(grade, conv)}
-                                    >
-                                      {t("reviewReports.approve")}
-                                    </Button>
-                                  )}
-                                  {!grade?.released && (
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      disabled={actionLoading[`${conv.id}_void`]}
-                                      onClick={() => setVoidConfirmConv({ conv, idx })}
-                                    >
-                                      <XCircle className="h-3 w-3 mr-1" aria-hidden="true" />
-                                      {t("reviewReports.void")}
-                                    </Button>
-                                  )}
-                                </>
+                              )}
+                              {!grade?.released && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-1 border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/20 colorful-dark:border-amber-400 colorful-dark:text-amber-400 colorful-dark:hover:bg-amber-900/20"
+                                  disabled={actionLoading[`${conv.id}_void`]}
+                                  onClick={() => setVoidConfirmConv({ conv, idx })}
+                                >
+                                  <XCircle className="h-3 w-3" aria-hidden="true" />
+                                  {conv.voidedByInstructor ? t("chat.unvoidSubmission") : t("reviewReports.void")}
+                                </Button>
                               )}
                             </div>
                           ) : (
-                            <Button
-                              size="sm"
-                              asChild
-                              variant="default"
-                              aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
-                              className="relative z-10 flex-shrink-0 w-full hover:bg-primary/90 hover:text-primary-foreground"
-                            >
-                              <Link
-                                to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
-                                aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
-                                className="flex items-center justify-center gap-2 no-underline"
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1 border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/20 colorful-dark:border-amber-400 colorful-dark:text-amber-400 colorful-dark:hover:bg-amber-900/20"
+                                disabled={actionLoading[`${conv.id}_void`]}
+                                onClick={() => setVoidConfirmConv({ conv, idx })}
                               >
-                                {t("reviewReports.viewConversation")}
-                              </Link>
-                            </Button>
+                                <XCircle className="h-3 w-3" aria-hidden="true" />
+                                {conv.voidedByInstructor ? t("chat.unvoidSubmission") : t("reviewReports.void")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                asChild
+                                variant="default"
+                                aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
+                              >
+                                <Link
+                                  to={`/reports/review-module/${courseId}/${moduleId}/student/${username}/conversation/${idx}`}
+                                  aria-label={`${t("reviewReports.viewConversation")} — ${convLabel}`}
+                                  className="flex items-center justify-center gap-2 no-underline"
+                                >
+                                  {t("reviewReports.viewConversation")}
+                                </Link>
+                              </Button>
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>

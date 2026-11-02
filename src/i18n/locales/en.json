@@ -947,7 +947,11 @@
     "archived": "Archived",
     "voided": "Voided",
     "voidSubmission": "Void Submission",
-    "unvoidSubmission": "Remove Void"
+    "unvoidSubmission": "Remove Void",
+    "voidConfirmTitle": "Void Submission?",
+    "voidConfirmDescription": "Voiding this submission allows the student to resubmit. The original conversation and any existing grade data are preserved, but this submission will no longer count toward their draft limit.",
+    "unvoidConfirmTitle": "Restore Submission?",
+    "unvoidConfirmDescription": "Restoring this submission will count it toward the student's draft limit again. If the module limits attempts, this will use up one of their allowed submissions."
   },
   "errorMessage": {
     "promptNotExist": "Prompt Does Not Exist",
@@ -1245,7 +1249,7 @@
     "review": "Review",
     "void": "Void",
     "voidTitle": "Void Submission",
-    "voidDescription": "This will allow the student to submit a new conversation. Their current scores will not be released.",
+    "voidDescription": "Voiding this submission allows the student to resubmit. The original conversation and any existing grade data are preserved, but this submission will no longer count toward their draft limit and their scores will not be released.",
     "reviewedConversations": "Reviewed",
     "needsReview": "Needs Review",
     "status": "Status",

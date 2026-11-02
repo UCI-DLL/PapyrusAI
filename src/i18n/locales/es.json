@@ -947,7 +947,11 @@
     "archived": "Archivado",
     "voided": "Anulado",
     "voidSubmission": "Anular Envío",
-    "unvoidSubmission": "Quitar Anulación"
+    "unvoidSubmission": "Quitar Anulación",
+    "voidConfirmTitle": "¿Anular envío?",
+    "voidConfirmDescription": "Anular este envío permite al estudiante volver a enviar. La conversación original y cualquier dato de calificación existente se conservan, pero este envío ya no contará para el límite de borradores.",
+    "unvoidConfirmTitle": "¿Restaurar envío?",
+    "unvoidConfirmDescription": "Restaurar este envío hará que cuente nuevamente para el límite de borradores del estudiante. Si el módulo limita los intentos, esto usará uno de sus envíos permitidos."
   },
   "errorMessage": {
     "promptNotExist": "La solicitud no existe",
@@ -1245,7 +1249,7 @@
     "review": "Revisar",
     "void": "Anular",
     "voidTitle": "Anular envío",
-    "voidDescription": "Esto le permitirá al estudiante enviar una nueva conversación. Sus calificaciones actuales no serán publicadas.",
+    "voidDescription": "Anular este envío permite al estudiante volver a enviar. La conversación original y cualquier dato de calificación existente se conservan, pero este envío ya no contará para el límite de borradores y sus calificaciones no serán publicadas.",
     "reviewedConversations": "Revisados",
     "needsReview": "Necesita revisión",
     "status": "Estado",

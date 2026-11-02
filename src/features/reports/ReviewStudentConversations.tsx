@@ -60,7 +60,7 @@ export default function ReviewStudentConversations(): JSX.Element {
   const [dataKey, setDataKey] = useState<string | null>(null);
 
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
-  const [voidConfirmConv, setVoidConfirmConv] = useState<{ grade: GradeType; conv: ConversationType; idx: number } | null>(null);
+  const [voidConfirmConv, setVoidConfirmConv] = useState<{ conv: ConversationType; idx: number } | null>(null);
   const [approveConfirmData, setApproveConfirmData] = useState<{ grade: GradeType; conv: ConversationType } | null>(null);
   const [approveNotes, setApproveNotes] = useState("");
 
@@ -247,7 +247,7 @@ export default function ReviewStudentConversations(): JSX.Element {
     setApproveConfirmData(null);
   }
 
-  async function handleVoid(grade: GradeType, conv: ConversationType, idx: number) {
+  async function handleVoid(conv: ConversationType, idx: number) {
     const key = `${conv.id}_void`;
     setActionLoading(prev => ({ ...prev, [key]: true }));
     const res = await Post(patchVoidConversation(courseId, moduleId, String(idx), username), { voidedByInstructor: true });
@@ -388,7 +388,7 @@ export default function ReviewStudentConversations(): JSX.Element {
         description={t("reviewReports.voidDescription")}
         actions={[
           { label: t("common.cancel"), onClick: () => setVoidConfirmConv(null), variant: "outline" },
-          { label: t("reviewReports.void"), onClick: () => { if (voidConfirmConv) { handleVoid(voidConfirmConv.grade, voidConfirmConv.conv, voidConfirmConv.idx); setVoidConfirmConv(null); } }, variant: "destructive" },
+          { label: t("reviewReports.void"), onClick: () => { if (voidConfirmConv) { handleVoid(voidConfirmConv.conv, voidConfirmConv.idx); setVoidConfirmConv(null); } }, variant: "destructive" },
         ]}
       />
       <Dialog open={approveConfirmData !== null} onOpenChange={(open) => { if (!open) setApproveConfirmData(null); }}>
@@ -747,12 +747,12 @@ export default function ReviewStudentConversations(): JSX.Element {
                                       {t("reviewReports.approve")}
                                     </Button>
                                   )}
-                                  {grade && !grade.released && (
+                                  {!grade?.released && (
                                     <Button
                                       size="sm"
                                       variant="destructive"
                                       disabled={actionLoading[`${conv.id}_void`]}
-                                      onClick={() => setVoidConfirmConv({ grade, conv, idx })}
+                                      onClick={() => setVoidConfirmConv({ conv, idx })}
                                     >
                                       <XCircle className="h-3 w-3 mr-1" aria-hidden="true" />
                                       {t("reviewReports.void")}

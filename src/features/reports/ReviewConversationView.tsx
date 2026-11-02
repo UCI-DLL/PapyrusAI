@@ -817,7 +817,7 @@ export default function ReviewConversationView(): JSX.Element {
                     gradingType === "ma6" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
                   }`}
                 >
-                  <p className="font-medium">MA6</p>
+                  <p className="font-medium">{t("addReviewModule.ma6")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.ma6Desc")}</p>
                 </button>
 
@@ -827,7 +827,7 @@ export default function ReviewConversationView(): JSX.Element {
                     gradingType === "StructuredLLMOutput" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
                   }`}
                 >
-                  <p className="font-medium">Structured LLM Output</p>
+                  <p className="font-medium">{t("addReviewModule.structuredLLMOutput")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.structuredLLMOutputDesc")}</p>
                 </button>
               </div>

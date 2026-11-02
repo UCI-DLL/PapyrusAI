@@ -266,7 +266,7 @@ export default function ChatSidebar({
                                   if (isMobile && onClose) onClose();
                                 },
                               },
-                              ...(canModifyConversation
+                              ...(canModifyConversation && !isReviewModule
                                 ? [
                                   {
                                     label: t("chat.archiveConversation"),

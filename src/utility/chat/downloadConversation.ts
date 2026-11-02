@@ -1,4 +1,4 @@
-import { CourseType, ModuleType } from "../types/CourseTypes";
+import { CourseType, ModuleType, RubricCriterion } from "../types/CourseTypes";
 import { MessageType } from "../types/ConversationTypes";
 import { CustomUserType, UserType } from "../types/UserTypes";
 
@@ -10,6 +10,41 @@ interface DownloadConversationParams {
   messages: MessageType[];
   conversationIndex: string;
   isInstructor: boolean;
+}
+
+function formatRubric(moduleInfo: ModuleType): string {
+  const rubric = moduleInfo.rubrics?.[0];
+  if (!rubric) return "";
+
+  const divider = "─".repeat(60);
+  const totalPoints = rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0);
+
+  let out = "\n" + "━".repeat(60) + "\n";
+  out += `RUBRIC: ${rubric.name}\n`;
+  if (rubric.description) out += `${rubric.description}\n`;
+  out += "\n";
+
+  rubric.criteria.forEach((criterion: RubricCriterion) => {
+    out += `${criterion.name}  (${criterion.maxPoints} pts)\n`;
+    if (criterion.description) out += `  ${criterion.description}\n`;
+    if (criterion.ratings?.length > 0) {
+      out += "\n";
+      criterion.ratings
+        .slice()
+        .sort((a, b) => b.maxPoints - a.maxPoints)
+        .forEach((rating) => {
+          const pts = `${rating.maxPoints} pts`.padStart(7);
+          out += `  • ${rating.name} (${pts})`;
+          if (rating.description) out += `: ${rating.description}`;
+          out += "\n";
+        });
+    }
+    out += divider + "\n";
+  });
+
+  out += `Total: ${totalPoints} pts\n`;
+  out += "━".repeat(60) + "\n";
+  return out;
 }
 
 export function downloadConversation({
@@ -38,6 +73,8 @@ export function downloadConversation({
     "\n" +
     "User: " +
     user.email +
+    "\n" +
+    formatRubric(moduleInfo) +
     "\n";
 
   sortedMessages.forEach((message, idx) => {

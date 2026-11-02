@@ -285,7 +285,7 @@ export default function ChatLayout(): JSX.Element {
 
   function handleVoidConversation(cId: string, mId: string, index: string, voided: boolean) {
     if (!viewUser) return;
-    Patch(patchVoidConversation(cId, mId, index, viewUser.username), { voidedByInstructor: voided }).then((res) => {
+    Post(patchVoidConversation(cId, mId, index, viewUser.username), { voidedByInstructor: voided }).then((res) => {
       if (res?.status < 300) {
         setConversationList((prev) => {
           if (!prev) return prev;

@@ -120,7 +120,7 @@ export default function ReviewConversationList(): JSX.Element {
 
   function handleVoidConversation(index: number, voided: boolean) {
     if (!moduleIds || !viewUser) return;
-    Patch(patchVoidConversation(moduleIds.courseId, moduleIds.moduleId, index.toString(), viewUser.username), { voidedByInstructor: voided }).then((res) => {
+    Post(patchVoidConversation(moduleIds.courseId, moduleIds.moduleId, index.toString(), viewUser.username), { voidedByInstructor: voided }).then((res) => {
       if (res?.status < 300) {
         setConversationList((prev) => {
           if (!prev) return prev;

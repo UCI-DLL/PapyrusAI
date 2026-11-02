@@ -759,13 +759,14 @@ export default function ReviewConversationView(): JSX.Element {
 
       {/* Regrade dialog */}
       <Dialog open={regradeDialogOpen} onOpenChange={(open) => { if (!open) handleRegradeClose(); }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
           <DialogHeader>
             <DialogTitle>
               {regradeResults ? t("reviewReports.regradeResults") : t("reviewReports.regrade")}
             </DialogTitle>
           </DialogHeader>
 
+          <div className="overflow-y-auto flex-1 min-h-0">
           {regradeResults ? (
             /* Results phase */
             <div className="space-y-4">
@@ -854,6 +855,7 @@ export default function ReviewConversationView(): JSX.Element {
               )}
             </div>
           )}
+          </div>
 
           <DialogFooter>
             {regradeResults ? (

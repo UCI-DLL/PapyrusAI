@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { CourseType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
+import { getCourseList, getAllCourseList } from "../../utility/endpoints/CourseEndpoints";
 import ModuleList from "./ModuleList";
 import { handleCourseTermLanguage, orderCourseRecentlyCreated } from "../../utility/Helpers";
 import { UserContext } from "../../utility/context/UserContext";
@@ -15,7 +15,7 @@ import Post from "../../utility/Post";
 
 export default function AllModules(): JSX.Element {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdminPanelUser, isInstructor } = useContext(UserContext);
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
@@ -46,7 +46,7 @@ export default function AllModules(): JSX.Element {
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
-    Get(getCourseList(), signal).then((res) => {
+    Get(isAdminPanelUser ? getAllCourseList() : getCourseList(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           // Use next line if you want the list of all modules but dont care about the course id or name
@@ -124,11 +124,7 @@ export default function AllModules(): JSX.Element {
             <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
               {t("modules.allAvailableModules")}
             </h1>
-            {user?.groups.includes(
-              process.env.REACT_APP_INSTRUCTOR
-                ? process.env.REACT_APP_INSTRUCTOR
-                : "PapyrusAIInstructors"
-            ) && (
+            {isInstructor && (
                 <div className="mt-4">
                   <InfoAccordion>
                     <p className="text-muted-foreground max-w-2xl text-base leading-6">
@@ -210,11 +206,7 @@ export default function AllModules(): JSX.Element {
               <p className="text-lg font-medium mb-2">
                 {t("modules.noModulesAvailable")}
               </p>
-              {user?.groups.includes(
-                process.env.REACT_APP_INSTRUCTOR
-                  ? process.env.REACT_APP_INSTRUCTOR
-                  : "PapyrusAIInstructors"
-              ) ? (
+              {isInstructor ? (
                 <p className="text-sm">
                   {t("modules.createModulePrompt")}
                 </p>

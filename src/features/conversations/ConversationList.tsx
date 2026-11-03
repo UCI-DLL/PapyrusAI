@@ -56,7 +56,7 @@ export default function ConversationList(): JSX.Element {
     courseId: string;
     moduleId: string;
   }>();
-  const { user } = useContext(UserContext);
+  const { user, isInstructor } = useContext(UserContext);
   const [conversationList, setConversationList] =
     useState<ConversationListType>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -539,11 +539,7 @@ export default function ConversationList(): JSX.Element {
           <InfoAccordion>
             <p className="text-sm text-muted-foreground">
               {t("chat.conversationListDescription")}
-              {user?.groups.includes(
-                process.env.REACT_APP_INSTRUCTOR
-                  ? process.env.REACT_APP_INSTRUCTOR
-                  : "PapyrusAIInstructors"
-              ) ? (
+              {isInstructor ? (
                 <a
                   href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
                   target="_blank"

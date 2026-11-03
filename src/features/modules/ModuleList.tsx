@@ -11,6 +11,7 @@ import { CustomUserType, UserStarred } from "../../utility/types/UserTypes";
 import Get from "../../utility/Get";
 import {
   getCourseList,
+  getAllCourseList,
   putCopyModule,
 } from "../../utility/endpoints/CourseEndpoints";
 import { AlertContext } from "../../utility/context/AlertContext";
@@ -52,7 +53,7 @@ export default function ModuleList({
   viewMode = "list",
 }: ModuleListProps): JSX.Element {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin, isInstructor, isAdminPanelUser } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -101,17 +102,7 @@ export default function ModuleList({
   useEffect(() => {
     const controller = new AbortController();
     if (
-      (user?.groups.includes(
-        process.env.REACT_APP_ADMIN
-          ? process.env.REACT_APP_ADMIN
-          : "PapyrusAIAdmin"
-      ) ||
-        user?.groups.includes(
-          process.env.REACT_APP_INSTRUCTOR
-            ? process.env.REACT_APP_INSTRUCTOR
-            : "PapyrusAIInstructors"
-        ) ||
-        user?.groups.includes(course.id + "-TA")) &&
+      (isAdmin || isInstructor || user?.groups.includes(course.id + "-TA")) &&
       openCourseListModal
     ) {
       getCourses(controller.signal);
@@ -123,7 +114,7 @@ export default function ModuleList({
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
-    Get(getCourseList(), signal).then((res) => {
+    Get(isAdminPanelUser ? getAllCourseList() : getCourseList(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           setCourseList(res.data);
@@ -541,9 +532,7 @@ export default function ModuleList({
                       <div className="flex items-center justify-between">
                         {/* Secondary actions */}
                         <div className="flex items-center gap-1">
-                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
-                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-                            user?.groups.includes(course.id + "-TA")) && (
+                          {(isAdmin || isInstructor || user?.groups.includes(course.id + "-TA")) && (
                               <TooltipWrapper content={t("common.copyModule")}>
                                 <button
                                   onClick={() => {
@@ -559,10 +548,9 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-                            user?.groups.includes(course.id + "-TA")) &&
-                            user?.groups.includes(course.id) &&
-                            (course.instructor.username === user.username ||
+                          {(isInstructor || user?.groups.includes(course.id + "-TA")) &&
+                            (isAdmin || user?.groups.includes(course.id)) &&
+                            (course.instructor.username === user?.username ||
                               (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))) && (
                               <TooltipWrapper content={t("common.editModule")}>
                                 <button aria-label={t("common.editModule")} className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300">
@@ -576,9 +564,7 @@ export default function ModuleList({
 
                         {/* Primary actions */}
                         <div className="flex items-center gap-2">
-                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
-                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-                            user?.groups.includes(course.id + "-TA")) && (
+                          {(isAdmin || isInstructor || user?.groups.includes(course.id + "-TA")) && (
                               <Button
                                 onClick={() => navigator(reportsLink)}
                                 variant="outline"
@@ -687,9 +673,7 @@ export default function ModuleList({
                             </button>
                           </TooltipWrapper>
 
-                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
-                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-                            user?.groups.includes(course.id + "-TA")) && (
+                          {(isAdmin || isInstructor || user?.groups.includes(course.id + "-TA")) && (
                               <TooltipWrapper content={t("common.copyModule")}>
                                 <button
                                   onClick={() => {
@@ -705,10 +689,9 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-                            user?.groups.includes(course.id + "-TA")) &&
-                            user?.groups.includes(course.id) &&
-                            (course.instructor.username === user.username ||
+                          {(isInstructor || user?.groups.includes(course.id + "-TA")) &&
+                            (isAdmin || user?.groups.includes(course.id)) &&
+                            (course.instructor.username === user?.username ||
                               (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))) && (
                               <TooltipWrapper content={t("common.editModule")}>
                                 <button aria-label={t("common.editModule")} className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300">
@@ -719,9 +702,7 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
-                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-                            user?.groups.includes(course.id + "-TA")) && (
+                          {(isAdmin || isInstructor || user?.groups.includes(course.id + "-TA")) && (
                               <Button
                                 onClick={() => navigator(reportsLink)}
                                 variant="outline"
@@ -768,9 +749,7 @@ export default function ModuleList({
       <p className="text-lg font-medium mb-2">
         {t("modules.noModulesAvailable")}
       </p>
-      {user?.groups.includes(
-        process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
-      ) && (
+      {isInstructor && (
           <p className="text-sm">
             {t("modules.createModulePrompt")}
           </p>

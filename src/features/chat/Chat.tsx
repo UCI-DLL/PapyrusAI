@@ -38,7 +38,7 @@ function num_tokens_from_messages(messages: Array<any>) {
 }
 
 export default function Chat(): JSX.Element {
-  const { courseInfo, moduleInfo, conversationList, setConversationList, viewUser, instructor, admin, grades, gradesLoaded, refreshGrades } =
+  const { courseInfo, moduleInfo, conversationList, setConversationList, viewUser, instructor, admin, isAdminOrInstructor, grades, gradesLoaded, refreshGrades } =
     useOutletContext<ChatContextType>();
 
   const { t } = useTranslation();
@@ -966,7 +966,7 @@ export default function Chat(): JSX.Element {
       (res: any) => {
         if (res && res.status && res.status < 300) {
           if (res.data && res.data.messages) {
-            const isInstructor = user.groups.includes(instructor) || user.groups.includes(admin);
+            const isInstructor = isAdminOrInstructor;
             downloadConversation({
               courseInfo,
               moduleInfo,
@@ -1511,6 +1511,7 @@ export default function Chat(): JSX.Element {
                 conversationCompleted={conversationCompleted}
                 instructor={instructor}
                 admin={admin}
+                isAdminOrInstructor={isAdminOrInstructor}
                 conversationArchived={conversationArchived}
                 canStartNewConversation={canStartNewConversation}
                 onWizardReturnPrompts={handleWizardReturnPrompts}

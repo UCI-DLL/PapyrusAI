@@ -20,7 +20,7 @@ import Post from "../../utility/Post";
 export default function Modules(): JSX.Element {
   let location = useLocation();
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isInstructor } = useContext(UserContext);
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>();
@@ -100,10 +100,6 @@ export default function Modules(): JSX.Element {
     getThisCourse(location.pathname.split("/")[2], controller.signal);
     getStarred(controller.signal);
   }
-
-  const isInstructor = user?.groups.includes(
-    process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
-  );
 
   const isInstructorOrTA =
     course &&

@@ -37,7 +37,7 @@ export default function CourseCard({
   isStarred,
 }: CourseListProps): JSX.Element {
   let navigator = useNavigate();
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, isAdmin, isInstructor } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -320,15 +320,9 @@ export default function CourseCard({
                 </button>
               </TooltipWrapper>
 
-              {user.groups.includes(course.id) &&
+              {(isAdmin || user.groups.includes(course.id)) &&
                 !onClick &&
-                (user?.groups.includes(
-                  process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmins"
-                ) ||
-                  user?.groups.includes(
-                    process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
-                  ) ||
-                  user?.groups.includes(course.id + "-TA")) && (
+                (isAdmin || isInstructor || user?.groups.includes(course.id + "-TA")) && (
                   <DropdownWrapper
                     trigger={
                       <button

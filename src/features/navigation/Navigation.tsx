@@ -60,7 +60,7 @@ interface NavigationContentProps {
 }
 
 function NavigationContent({ children }: NavigationContentProps): JSX.Element {
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, isAdmin, isInstructor } = useContext(UserContext);
   let navigator = useNavigate();
   const location = useLocation();
   const { state, openMobile, setOpenMobile } = useSidebar();
@@ -96,13 +96,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
         ]);
         setMainMenuLinks(["/", "/courses", "/reports", "/account", "/about"]);
       }
-      if (
-        user?.groups.includes(
-          process.env.REACT_APP_INSTRUCTOR
-            ? process.env.REACT_APP_INSTRUCTOR
-            : "PapyrusAIInstructors"
-        )
-      ) {
+      if (isInstructor) {
         setMainMenuList([
           t("navigation.dashboard"),
           t("navigation.courses"),
@@ -120,13 +114,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
           "/about",
         ]);
       }
-      if (
-        user?.groups.includes(
-          process.env.REACT_APP_ADMIN
-            ? process.env.REACT_APP_ADMIN
-            : "PapyrusAIAdmin"
-        )
-      ) {
+      if (isAdmin) {
         setMainMenuList([
           t("navigation.dashboard"),
           t("navigation.courses"),
@@ -147,7 +135,7 @@ function NavigationContent({ children }: NavigationContentProps): JSX.Element {
         ]);
       }
     }
-  }, [user, t]);
+  }, [user, isAdmin, isInstructor, t]);
 
   useEffect(() => {
     //set breadcrumb text based on the url location

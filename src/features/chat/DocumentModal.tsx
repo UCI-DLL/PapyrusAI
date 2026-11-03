@@ -29,7 +29,7 @@ export default function DocumentModal({
   const [docText, setDocText] = useState<string>("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { user } = useContext(UserContext);
+  const { user, isInstructor } = useContext(UserContext);
   const [docExt, setDocExt] = useState<string>("");
 
   useEffect(() => {
@@ -162,7 +162,7 @@ export default function DocumentModal({
           </CardTitle>
           <CardDescription>
             {t("chat.uploadDocumentDescription")}
-            {user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors") ? (
+            {isInstructor ? (
               <a
                 href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.7e2lilt0vxyx"
                 target="_blank"

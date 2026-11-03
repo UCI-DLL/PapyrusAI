@@ -11,7 +11,7 @@ import ModuleList from "../modules/ModuleList";
 import { Button } from "../../components/ui/button";
 import { useNavigate } from "react-router";
 import Get from "../../utility/Get";
-import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
+import { getCourseList, getAllCourseList } from "../../utility/endpoints/CourseEndpoints";
 import type { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import AddCourseForm, {
@@ -31,7 +31,7 @@ import Post from "../../utility/Post";
 
 export default function Dashboard(): JSX.Element {
   const navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdminPanelUser, isInstructor } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -64,7 +64,7 @@ export default function Dashboard(): JSX.Element {
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
-    Get(getCourseList(), signal).then((res) => {
+    Get(isAdminPanelUser ? getAllCourseList() : getCourseList(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           setCourseList(res.data);
@@ -123,13 +123,6 @@ export default function Dashboard(): JSX.Element {
     [orderedCourses]
   );
 
-  const isInstructor = useMemo(
-    () =>
-      user?.groups.includes(
-        process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
-      ),
-    [user?.groups]
-  );
 
   const { t } = useTranslation();
 

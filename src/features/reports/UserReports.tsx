@@ -38,7 +38,7 @@ export default function UserReports(): JSX.Element {
     // no-op
   }, [isLoading]);
   const [viewUser, setViewUser] = useState<UserType>();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
 
   // Helper function to handle network errors with retry logic
@@ -131,9 +131,7 @@ export default function UserReports(): JSX.Element {
                       (res1.data.instructor.username === user.username ||
                         (res1.data.taList &&
                           res1.data.taList.find((a: CustomUserType) => a.username === user.username)) || //handle tas too
-                        user.groups.includes(
-                          process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin",
-                        )) //or if an admin
+                        isAdmin) //or if an admin
                     ) {
                       //set conversation data
                       setConversationList((prev) => [

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Get from "../../utility/Get";
 import Post from "../../utility/Post";
 import Put from "../../utility/Put";
-import { getConversation } from "../../utility/endpoints/ConversationEndpoints";
+import { getConversation, patchVoidConversation } from "../../utility/endpoints/ConversationEndpoints";
 import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
 import { getGrades, postRegrade, putUpdateGrade } from "../../utility/endpoints/GradeEndpoints";
 import { buildRegradeContent } from "../../utility/chat/buildRegradeContent";
@@ -20,11 +20,12 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { PageLoader } from "../../components/Common";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { MessageLeft, MessageRight } from "../../components/Message";
 import { AlertContext } from "../../utility/context/AlertContext";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AlertTriangle, BookOpen, CheckCircle, ChevronLeft, Clock, Download, Edit2, Eye, MessageSquare, RefreshCw } from "lucide-react";
+import { AlertTriangle, BookOpen, CheckCircle, ChevronLeft, Clock, Download, Edit2, Eye, MessageSquare, RefreshCw, XCircle } from "lucide-react";
 
 type GradingType = "ma6" | "StructuredLLMOutput";
 
@@ -70,6 +71,9 @@ export default function ReviewConversationView(): JSX.Element {
   const [saveEditLoading, setSaveEditLoading] = useState(false);
   const [approveDialogMode, setApproveDialogMode] = useState<"asIs" | "edit" | null>(null);
   const [approveNotes, setApproveNotes] = useState("");
+  const [isVoided, setIsVoided] = useState(false);
+  const [voidConfirmOpen, setVoidConfirmOpen] = useState(false);
+  const [voidLoading, setVoidLoading] = useState(false);
 
   const { setAlert } = useContext(AlertContext);
 
@@ -105,7 +109,7 @@ export default function ReviewConversationView(): JSX.Element {
 
     Get(getConversation(courseId, moduleId, convIndex, username), controller.signal).then((res) => {
       if (controller.signal.aborted) return;
-      if (res?.status < 300 && res.data) setConversation(res.data);
+      if (res?.status < 300 && res.data) { setConversation(res.data); setIsVoided(res.data.voidedByInstructor ?? false); }
       else if (res?.status === 401) navigate("/login");
       conversationReady = true;
       checkReady();
@@ -452,10 +456,38 @@ export default function ReviewConversationView(): JSX.Element {
     setApproveDialogMode(null);
   }
 
+  async function handleVoid() {
+    setVoidLoading(true);
+    const nextVoided = !isVoided;
+    const res = await Post(patchVoidConversation(courseId, moduleId, convIndex, username), { voidedByInstructor: nextVoided });
+    if (res?.status < 300) {
+      setIsVoided(nextVoided);
+    } else {
+      setAlert({ message: t("errorMessage.voidConversationError"), type: "error" });
+    }
+    setVoidLoading(false);
+    setVoidConfirmOpen(false);
+  }
+
   if (isLoading) return <PageLoader pageName={t("reviewReports.conversationDetails")} />;
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
+      <DialogWrapper
+        open={voidConfirmOpen}
+        onOpenChange={(open) => { if (!open) setVoidConfirmOpen(false); }}
+        title={isVoided ? t("chat.unvoidConfirmTitle") : t("chat.voidConfirmTitle")}
+        description={isVoided ? t("chat.unvoidConfirmDescription") : t("chat.voidConfirmDescription")}
+        actions={[
+          { label: t("common.cancel"), onClick: () => setVoidConfirmOpen(false), variant: "outline" },
+          {
+            label: isVoided ? t("chat.unvoidSubmission") : t("chat.voidSubmission"),
+            onClick: handleVoid,
+            variant: "destructive",
+            disabled: voidLoading,
+          },
+        ]}
+      />
       <Link
         to={`/reports/review-module/${courseId}/${moduleId}/student/${username}`}
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground no-underline"
@@ -599,6 +631,18 @@ export default function ReviewConversationView(): JSX.Element {
                     <Download className="h-4 w-4" />
                     {t("reviewReports.export")}
                   </Button>
+                  {!grade?.released && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/20 colorful-dark:border-amber-400 colorful-dark:text-amber-400 colorful-dark:hover:bg-amber-900/20"
+                      disabled={voidLoading}
+                      onClick={() => setVoidConfirmOpen(true)}
+                    >
+                      <XCircle className="h-4 w-4" />
+                      {isVoided ? t("chat.unvoidSubmission") : t("reviewReports.void")}
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => setRegradeDialogOpen(true)}>
                     <RefreshCw className="h-4 w-4" />
                     {t("reviewReports.regrade")}
@@ -759,13 +803,14 @@ export default function ReviewConversationView(): JSX.Element {
 
       {/* Regrade dialog */}
       <Dialog open={regradeDialogOpen} onOpenChange={(open) => { if (!open) handleRegradeClose(); }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
           <DialogHeader>
             <DialogTitle>
               {regradeResults ? t("reviewReports.regradeResults") : t("reviewReports.regrade")}
             </DialogTitle>
           </DialogHeader>
 
+          <div className="overflow-y-auto flex-1 min-h-0">
           {regradeResults ? (
             /* Results phase */
             <div className="space-y-4">
@@ -816,7 +861,7 @@ export default function ReviewConversationView(): JSX.Element {
                     gradingType === "ma6" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
                   }`}
                 >
-                  <p className="font-medium">MA6</p>
+                  <p className="font-medium">{t("addReviewModule.ma6")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.ma6Desc")}</p>
                 </button>
 
@@ -826,7 +871,7 @@ export default function ReviewConversationView(): JSX.Element {
                     gradingType === "StructuredLLMOutput" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
                   }`}
                 >
-                  <p className="font-medium">Structured LLM Output</p>
+                  <p className="font-medium">{t("addReviewModule.structuredLLMOutput")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.structuredLLMOutputDesc")}</p>
                 </button>
               </div>
@@ -854,6 +899,7 @@ export default function ReviewConversationView(): JSX.Element {
               )}
             </div>
           )}
+          </div>
 
           <DialogFooter>
             {regradeResults ? (

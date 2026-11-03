@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import ChatSidebar from "./components/ChatSidebar";
 import Get from "../../utility/Get";
-import Patch from "../../utility/Patch";
 import Post from "../../utility/Post";
 import {
   getConversationList,
@@ -79,6 +78,10 @@ export default function ChatLayout(): JSX.Element {
     open: false,
     message: "",
   });
+
+  const [voidConfirm, setVoidConfirm] = useState<{
+    cId: string; mId: string; index: string; voided: boolean;
+  } | null>(null);
 
   const instructor = process.env.REACT_APP_INSTRUCTOR
     ? process.env.REACT_APP_INSTRUCTOR
@@ -285,7 +288,7 @@ export default function ChatLayout(): JSX.Element {
 
   function handleVoidConversation(cId: string, mId: string, index: string, voided: boolean) {
     if (!viewUser) return;
-    Patch(patchVoidConversation(cId, mId, index, viewUser.username), { voidedByInstructor: voided }).then((res) => {
+    Post(patchVoidConversation(cId, mId, index, viewUser.username), { voidedByInstructor: voided }).then((res) => {
       if (res?.status < 300) {
         setConversationList((prev) => {
           if (!prev) return prev;
@@ -473,6 +476,25 @@ export default function ChatLayout(): JSX.Element {
 
   return (
     <div className="flex bg-background text-foreground">
+      <DialogWrapper
+        open={voidConfirm !== null}
+        onOpenChange={(open) => { if (!open) setVoidConfirm(null); }}
+        title={voidConfirm?.voided ? t("chat.voidConfirmTitle") : t("chat.unvoidConfirmTitle")}
+        description={voidConfirm?.voided ? t("chat.voidConfirmDescription") : t("chat.unvoidConfirmDescription")}
+        actions={[
+          { label: t("common.cancel"), onClick: () => setVoidConfirm(null), variant: "outline" },
+          {
+            label: voidConfirm?.voided ? t("chat.voidSubmission") : t("chat.unvoidSubmission"),
+            onClick: () => {
+              if (voidConfirm) {
+                handleVoidConversation(voidConfirm.cId, voidConfirm.mId, voidConfirm.index, voidConfirm.voided);
+                setVoidConfirm(null);
+              }
+            },
+            variant: "destructive",
+          },
+        ]}
+      />
       {/* Error Modal */}
       <DialogWrapper
         open={openErrorModal.open}
@@ -608,7 +630,7 @@ export default function ChatLayout(): JSX.Element {
           onRenameConversation={handleRenameConversation}
           onArchiveConversation={handleArchiveConversation}
           onDownloadConversation={handleDownloadConversation}
-          onVoidConversation={handleVoidConversation}
+          onVoidConversation={(cId, mId, index, voided) => setVoidConfirm({ cId, mId, index, voided })}
           onClose={() => setSidebarOpen(false)}
           grades={grades}
         />

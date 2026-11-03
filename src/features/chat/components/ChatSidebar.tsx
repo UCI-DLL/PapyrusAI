@@ -175,8 +175,8 @@ export default function ChatSidebar({
                 const cardClasses = (() => {
                   if (conversation.voidedByInstructor) {
                     return isCurrentConversation
-                      ? "bg-amber-100 dark:bg-amber-900/40 text-foreground border-amber-400"
-                      : "hover:bg-amber-50 dark:hover:bg-amber-900/20 border-transparent";
+                      ? "bg-amber-100 dark:bg-amber-900/40 colorful-dark:bg-amber-900/40 text-foreground border-amber-400 colorful-dark:border-amber-700"
+                      : "hover:bg-amber-50 dark:hover:bg-amber-900/20 colorful-dark:hover:bg-amber-900/20 border-transparent";
                   }
                   if (conversation.isDeleted) {
                     return isCurrentConversation
@@ -215,7 +215,7 @@ export default function ChatSidebar({
                             </span>
                           )}
                           {conversation.voidedByInstructor && (
-                            <p className="text-xs truncate text-amber-600 dark:text-amber-400">{t("chat.voided")}</p>
+                            <p className="text-xs truncate text-amber-600 dark:text-amber-400 colorful-dark:text-amber-400">{t("chat.voided")}</p>
                           )}
                           {conversation.isDeleted && !conversation.voidedByInstructor && (
                             <p className={"text-xs truncate "}>{t("chat.archived")}</p>
@@ -266,7 +266,7 @@ export default function ChatSidebar({
                                   if (isMobile && onClose) onClose();
                                 },
                               },
-                              ...(canModifyConversation
+                              ...(canModifyConversation && !isReviewModule
                                 ? [
                                   {
                                     label: t("chat.archiveConversation"),
@@ -295,7 +295,7 @@ export default function ChatSidebar({
                                       );
                                       if (isMobile && onClose) onClose();
                                     },
-                                    className: conversation.voidedByInstructor ? "" : "text-amber-600 dark:text-amber-400",
+                                    className: conversation.voidedByInstructor ? "" : "text-amber-600 dark:text-amber-400 colorful-dark:text-amber-400",
                                   },
                                 ]
                                 : []),

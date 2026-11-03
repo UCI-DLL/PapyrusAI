@@ -4,7 +4,6 @@ import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
 import Get from "../../utility/Get";
-import Patch from "../../utility/Patch";
 import Post from "../../utility/Post";
 import {
   getConversationList,
@@ -22,6 +21,7 @@ import { AlertContext } from "../../utility/context/AlertContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import { handleCourseTermLanguage } from "../../utility/Helpers";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import {
   Loader2,
   Plus,
@@ -49,6 +49,7 @@ export default function ReviewConversationList(): JSX.Element {
   const [isLoading, setIsLoading] = useState(true);
   const [creatingConvo, setCreatingConvo] = useState(false);
   const [error, setError] = useState<string>();
+  const [voidConfirm, setVoidConfirm] = useState<{ index: number; voided: boolean } | null>(null);
 
   const instructor = process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors";
   const admin = process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin";
@@ -120,7 +121,7 @@ export default function ReviewConversationList(): JSX.Element {
 
   function handleVoidConversation(index: number, voided: boolean) {
     if (!moduleIds || !viewUser) return;
-    Patch(patchVoidConversation(moduleIds.courseId, moduleIds.moduleId, index.toString(), viewUser.username), { voidedByInstructor: voided }).then((res) => {
+    Post(patchVoidConversation(moduleIds.courseId, moduleIds.moduleId, index.toString(), viewUser.username), { voidedByInstructor: voided }).then((res) => {
       if (res?.status < 300) {
         setConversationList((prev) => {
           if (!prev) return prev;
@@ -226,6 +227,25 @@ export default function ReviewConversationList(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 space-y-6">
+      <DialogWrapper
+        open={voidConfirm !== null}
+        onOpenChange={(open) => { if (!open) setVoidConfirm(null); }}
+        title={voidConfirm?.voided ? t("chat.voidConfirmTitle") : t("chat.unvoidConfirmTitle")}
+        description={voidConfirm?.voided ? t("chat.voidConfirmDescription") : t("chat.unvoidConfirmDescription")}
+        actions={[
+          { label: t("common.cancel"), onClick: () => setVoidConfirm(null), variant: "outline" },
+          {
+            label: voidConfirm?.voided ? t("chat.voidSubmission") : t("chat.unvoidSubmission"),
+            onClick: () => {
+              if (voidConfirm) {
+                handleVoidConversation(voidConfirm.index, voidConfirm.voided);
+                setVoidConfirm(null);
+              }
+            },
+            variant: "destructive",
+          },
+        ]}
+      />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="space-y-2">
@@ -293,7 +313,7 @@ export default function ReviewConversationList(): JSX.Element {
               const grade = getGradeForConversation(conversation.id);
 
               return (
-                <Card key={index} className={`hover:shadow-md transition-shadow${conversation.voidedByInstructor ? " border-amber-300 dark:border-amber-700" : ""}`}>
+                <Card key={index} className={`hover:shadow-md transition-shadow${conversation.voidedByInstructor ? " border-amber-300 dark:border-amber-700 colorful-dark:border-amber-700" : ""}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between gap-4">
                       <Link to={link} className="flex-1 min-w-0 no-underline group">
@@ -303,7 +323,7 @@ export default function ReviewConversationList(): JSX.Element {
                           </p>
                           <p className="text-xs text-muted-foreground">{time}</p>
                           {conversation.voidedByInstructor && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400">{t("chat.voided")}</p>
+                            <p className="text-xs text-amber-600 dark:text-amber-400 colorful-dark:text-amber-400">{t("chat.voided")}</p>
                           )}
                           {/* Show score if released */}
                           {grade?.released && grade.scores.length > 0 && (
@@ -320,8 +340,8 @@ export default function ReviewConversationList(): JSX.Element {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleVoidConversation(revIdx, !conversation.voidedByInstructor)}
-                            className={`gap-1 text-xs ${conversation.voidedByInstructor ? "text-muted-foreground" : "text-amber-600 dark:text-amber-400 hover:text-amber-700"}`}
+                            onClick={() => setVoidConfirm({ index: revIdx, voided: !conversation.voidedByInstructor })}
+                            className={`gap-1 text-xs ${conversation.voidedByInstructor ? "text-muted-foreground" : "text-amber-600 dark:text-amber-400 colorful-dark:text-amber-400 hover:text-amber-700"}`}
                             title={conversation.voidedByInstructor ? t("chat.unvoidSubmission") : t("chat.voidSubmission")}
                           >
                             <Ban className="h-3 w-3" />

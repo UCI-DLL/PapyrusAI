@@ -1041,6 +1041,8 @@
     "structuredLLMOutputDesc": "Evaluación de IA en una sola pasada contra todos los criterios de la rúbrica.",
     "converseAfterComplete": "Permitir chat después de la entrega",
     "converseAfterCompleteDescription": "Permite que los estudiantes continúen chateando después de que su entrega haya sido revisada.",
+    "converseAfterCompleteScoresReleased": "Permitir chat después de la publicación de calificaciones",
+    "converseAfterCompleteScoresReleasedDescription": "Permite que los estudiantes chateen después de que se hayan publicado sus calificaciones.",
     "essaySubmission": "Modo de entrega de ensayo",
     "essaySubmissionDescription": "Los estudiantes envían un ensayo escrito para ser revisado. Si no está marcado, los estudiantes tendrán una conversación en vivo que completan para enviar a revisión.",
     "moduleCreated": "Módulo de revisión creado",

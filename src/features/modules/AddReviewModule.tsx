@@ -1055,10 +1055,16 @@ export default function AddReviewModule({
                         onCheckedChange={(checked) => setSession((prev) => ({ ...prev, converseAfterComplete: checked as boolean }))}
                       />
                       <Label htmlFor="converseAfterComplete" className="text-md font-bold">
-                        {t("reviewModule.converseAfterComplete")}
+                        {session.assessmentType === "summative"
+                          ? t("reviewModule.converseAfterCompleteScoresReleased")
+                          : t("reviewModule.converseAfterComplete")}
                       </Label>
                     </div>
-                    <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.converseAfterCompleteDescription")}</p>
+                    <p className="text-sm text-muted-foreground ml-6">
+                      {session.assessmentType === "summative"
+                        ? t("reviewModule.converseAfterCompleteScoresReleasedDescription")
+                        : t("reviewModule.converseAfterCompleteDescription")}
+                    </p>
                   </div>
                   {session.converseAfterComplete && (
                     <div className="space-y-2 ml-6 border-l-2 border-primary/20 pl-4">

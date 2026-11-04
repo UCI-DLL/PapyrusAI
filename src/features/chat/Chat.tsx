@@ -125,8 +125,11 @@ export default function Chat(): JSX.Element {
   const chatPrefix = isReviewModule ? "review-chat" : "chat";
   const isEssayMode = isReviewModule && moduleInfo?.essaySubmission === true;
   const converseAfterComplete = moduleInfo?.converseAfterComplete === true;
+  const isSummative = moduleInfo?.assessmentType === "summative";
   const showEssayWizard = isEssayMode && !messages.some(m => m.userVisible !== false) && !conversationCompleted && !isSubmitting;
-  const chatBlocked = conversationCompleted && !converseAfterComplete;
+  // For summative modules, chat stays blocked after completion until grades are released (gradeResult !== null).
+  // For formative modules, chat unblocks immediately after completion if converseAfterComplete is true.
+  const chatBlocked = conversationCompleted && (!converseAfterComplete || (isSummative && gradeResult === null));
 
   // Ref to avoid stale closure in onSendMessage
   const isReviewModuleRef = useRef(false);

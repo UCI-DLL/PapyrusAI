@@ -1041,6 +1041,8 @@
     "structuredLLMOutputDesc": "Single-pass AI scoring against all rubric criterion at once.",
     "converseAfterComplete": "Allow Chat After Submission",
     "converseAfterCompleteDescription": "Allow students to continue chatting after their submission has been reviewed.",
+    "converseAfterCompleteScoresReleased": "Allow Chat after Scores Released",
+    "converseAfterCompleteScoresReleasedDescription": "Allow students to chat after their scores have been released.",
     "essaySubmission": "Essay Submission Mode",
     "essaySubmissionDescription": "Students submit a written essay for review. If unchecked, students will have a live conversation that they complete to submit for review.",
     "moduleCreated": "Review Module Created",

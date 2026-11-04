@@ -447,7 +447,7 @@ export default function CreateRubric(): JSX.Element {
     } else {
       Post(
         postCreateItem(),
-        { type: "rubric", parentId: folderId, name, description, metadata },
+        { type: "rubric", parentId: folderId, name, description, metadata: { ...metadata, createdBy: user?.username } },
         true,
       ).then((res) => {
         if (res.status && res.status < 300) {

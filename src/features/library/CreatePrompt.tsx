@@ -30,6 +30,7 @@ import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
+import { toast } from "sonner";
 
 type PromptFormType = {
   name: string;
@@ -77,6 +78,7 @@ export default function CreatePrompt(): JSX.Element {
           navigator("/login");
         } else if (res !== undefined) {
           setAlert({ message: t("errorMessage.promptNotExist"), type: "error" });
+          toast.error(t("errorMessage.promptNotExist"));
           navigator("/library");
         }
       });
@@ -90,10 +92,12 @@ export default function CreatePrompt(): JSX.Element {
   function handleSubmit(_e: any) {
     if (prompt.name === "") {
       setErrors((prev) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      toast.error(t("errorMessage.nameMissing"));
       return;
     }
     if (prompt.prompt === "") {
       setErrors((prev) => ({ ...prev, prompt: t("createPrompt.promptName") + " " + t("components.missing") }));
+      toast.error(t("createPrompt.promptName") + " " + t("components.missing"));
       return;
     }
 
@@ -107,12 +111,15 @@ export default function CreatePrompt(): JSX.Element {
       }, true).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createPrompt.promptUpdated"), type: "success" });
+          toast.success(t("createPrompt.promptUpdated"));
         } else if (res?.status === 401) {
           navigator("/login");
         } else if (res?.status === 403) {
           setAlert({ message: res?.data?.message || t("createPrompt.promptCouldNotBeUpdated"), type: "error" });
+          toast.error(res?.data?.message || t("createPrompt.promptCouldNotBeUpdated"));
         } else {
           setAlert({ message: res?.data?.message || t("createPrompt.promptCouldNotBeUpdated"), type: "error" });
+          toast.error(res?.data?.message || t("createPrompt.promptCouldNotBeUpdated"));
         }
         setIsLoading(false);
       });
@@ -126,11 +133,13 @@ export default function CreatePrompt(): JSX.Element {
       }, true).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createPrompt.promptCreated"), type: "success" });
+          toast.success(t("createPrompt.promptCreated"));
         } else if (res && res.status === 401) {
           navigator("/login");
           return;
         } else {
           setAlert({ message: t("createPrompt.promptCouldNotBeCreated"), type: "error" });
+          toast.error(t("createPrompt.promptCouldNotBeCreated"));
         }
         navigator(`/library/${folderId}`);
       });
@@ -143,11 +152,13 @@ export default function CreatePrompt(): JSX.Element {
     Delete(deleteItem(promptId), true).then((res) => {
       if (res.status && res.status < 300) {
         setAlert({ message: t("createPrompt.promptDeleted") || "Prompt deleted.", type: "success" });
+        toast.success(t("createPrompt.promptDeleted") || "Prompt deleted.");
       } else if (res && res.status === 401) {
         navigator("/login");
         return;
       } else {
         setAlert({ message: t("createPrompt.promptCouldNotBeDeleted") || "Could not delete prompt.", type: "error" });
+        toast.error(t("createPrompt.promptCouldNotBeDeleted") || "Could not delete prompt.");
       }
       navigator(`/library/${folderId}`);
       setIsLoading(false);

@@ -3,11 +3,12 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Get from "../../utility/Get";
 import Post from "../../utility/Post";
 import Put from "../../utility/Put";
-import { getConversation } from "../../utility/endpoints/ConversationEndpoints";
+import { getConversation, patchVoidConversation } from "../../utility/endpoints/ConversationEndpoints";
 import { getCourse, getUsersInCourse } from "../../utility/endpoints/CourseEndpoints";
 import { getGrades, postRegrade, putUpdateGrade } from "../../utility/endpoints/GradeEndpoints";
 import { buildRegradeContent } from "../../utility/chat/buildRegradeContent";
 import { GradeScore, GradeType, ModuleType } from "../../utility/types/CourseTypes";
+import { RubricPreviewContent } from "../../components/RubricPreviewContent";
 import { CustomUserType } from "../../utility/types/UserTypes";
 import { useTranslation } from "../../hooks/useTranslation";
 import { Badge } from "../../components/ui/badge";
@@ -19,13 +20,14 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { PageLoader } from "../../components/Common";
+import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { MessageLeft, MessageRight } from "../../components/Message";
 import { AlertContext } from "../../utility/context/AlertContext";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AlertTriangle, BookOpen, CheckCircle, ChevronLeft, Clock, Download, Edit2, Eye, MessageSquare, RefreshCw } from "lucide-react";
+import { AlertTriangle, BookOpen, CheckCircle, ChevronLeft, Clock, Download, Edit2, Eye, MessageSquare, RefreshCw, XCircle } from "lucide-react";
 
-type GradingType = "ma6";
+type GradingType = "ma6" | "StructuredLLMOutput";
 
 type ExportFormat = "json" | "txt" | "csv";
 
@@ -69,6 +71,9 @@ export default function ReviewConversationView(): JSX.Element {
   const [saveEditLoading, setSaveEditLoading] = useState(false);
   const [approveDialogMode, setApproveDialogMode] = useState<"asIs" | "edit" | null>(null);
   const [approveNotes, setApproveNotes] = useState("");
+  const [isVoided, setIsVoided] = useState(false);
+  const [voidConfirmOpen, setVoidConfirmOpen] = useState(false);
+  const [voidLoading, setVoidLoading] = useState(false);
 
   const { setAlert } = useContext(AlertContext);
 
@@ -104,7 +109,7 @@ export default function ReviewConversationView(): JSX.Element {
 
     Get(getConversation(courseId, moduleId, convIndex, username), controller.signal).then((res) => {
       if (controller.signal.aborted) return;
-      if (res?.status < 300 && res.data) setConversation(res.data);
+      if (res?.status < 300 && res.data) { setConversation(res.data); setIsVoided(res.data.voidedByInstructor ?? false); }
       else if (res?.status === 401) navigate("/login");
       conversationReady = true;
       checkReady();
@@ -143,13 +148,8 @@ export default function ReviewConversationView(): JSX.Element {
   }, [courseId, moduleId, username, convIndex]);
 
   const rubric = module?.rubrics?.[0];
-  const maxPerCriterion = rubric
-    ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
-    : undefined;
-  const maxTotal =
-    maxPerCriterion !== undefined && rubric
-      ? rubric.criteria.length * maxPerCriterion
-      : undefined;
+  const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
+  const criterionMax = (i: number): number | undefined => rubric?.criteria[i]?.maxPoints;
 
   const isSummative = module?.assessmentType === "summative";
   const studentName = student ? `${student.name} ${student.family_name}`.trim() : username;
@@ -183,10 +183,10 @@ export default function ReviewConversationView(): JSX.Element {
         status: grade?.released ? "released" : grade ? "pending" : "not_graded",
         instructor_edited: grade?.instructorEdited ?? false,
         instructor_notes: grade?.instructorNotes ?? null,
-        scores: grade?.scores.map((s) => ({
+        scores: grade?.scores.map((s, i) => ({
           criterion: s.name,
           score: s.score,
-          max_score: maxPerCriterion ?? null,
+          max_score: criterionMax(i) ?? null,
           feedback: s.feedback,
         })) ?? [],
       },
@@ -400,16 +400,17 @@ export default function ReviewConversationView(): JSX.Element {
 
   function handleScoreChange(i: number, raw: string) {
     const num = raw === "" ? 0 : Number(raw);
+    const max = criterionMax(i);
     const errors = [...editErrors];
-    if (isNaN(num) || !Number.isInteger(num) || num < 0 || (maxPerCriterion !== undefined && num > maxPerCriterion)) {
-      errors[i] = maxPerCriterion !== undefined
-        ? t("reviewReports.scoreError", { max: maxPerCriterion })
+    if (isNaN(num) || !Number.isInteger(num) || num < 0 || (max !== undefined && num > max)) {
+      errors[i] = max !== undefined
+        ? t("reviewReports.scoreError", { max })
         : t("reviewReports.scoreErrorGeneric");
     } else {
       errors[i] = "";
     }
     setEditErrors(errors);
-    const clamped = isNaN(num) ? 0 : Math.max(0, maxPerCriterion !== undefined ? Math.min(num, maxPerCriterion) : num);
+    const clamped = isNaN(num) ? 0 : Math.max(0, max !== undefined ? Math.min(num, max) : num);
     setEditScores((prev) => prev.map((s, idx) => idx === i ? { ...s, score: clamped } : s));
   }
 
@@ -455,10 +456,38 @@ export default function ReviewConversationView(): JSX.Element {
     setApproveDialogMode(null);
   }
 
+  async function handleVoid() {
+    setVoidLoading(true);
+    const nextVoided = !isVoided;
+    const res = await Post(patchVoidConversation(courseId, moduleId, convIndex, username), { voidedByInstructor: nextVoided });
+    if (res?.status < 300) {
+      setIsVoided(nextVoided);
+    } else {
+      setAlert({ message: t("errorMessage.voidConversationError"), type: "error" });
+    }
+    setVoidLoading(false);
+    setVoidConfirmOpen(false);
+  }
+
   if (isLoading) return <PageLoader pageName={t("reviewReports.conversationDetails")} />;
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
+      <DialogWrapper
+        open={voidConfirmOpen}
+        onOpenChange={(open) => { if (!open) setVoidConfirmOpen(false); }}
+        title={isVoided ? t("chat.unvoidConfirmTitle") : t("chat.voidConfirmTitle")}
+        description={isVoided ? t("chat.unvoidConfirmDescription") : t("chat.voidConfirmDescription")}
+        actions={[
+          { label: t("common.cancel"), onClick: () => setVoidConfirmOpen(false), variant: "outline" },
+          {
+            label: isVoided ? t("chat.unvoidSubmission") : t("chat.voidSubmission"),
+            onClick: handleVoid,
+            variant: "destructive",
+            disabled: voidLoading,
+          },
+        ]}
+      />
       <Link
         to={`/reports/review-module/${courseId}/${moduleId}/student/${username}`}
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground no-underline"
@@ -548,33 +577,8 @@ export default function ReviewConversationView(): JSX.Element {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="text-left p-2 font-semibold border-b w-36">
-                            {t("reviewReports.criterion")}
-                          </th>
-                          {rubric.columns.map((col, ci) => (
-                            <th key={ci} className="text-center p-2 font-semibold border-b border-l min-w-[80px]">
-                              {col}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rubric.criteria.map((criterion, ri) => (
-                          <tr key={ri} className={ri % 2 === 0 ? "bg-muted/30" : ""}>
-                            <td className="p-2 font-medium border-b">{criterion.name}</td>
-                            {criterion.cells.map((cell, ci) => (
-                              <td key={ci} className="p-2 text-xs text-muted-foreground border-b border-l align-top leading-relaxed">
-                                {cell}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="mt-2">
+                    <RubricPreviewContent criteria={rubric.criteria} />
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -627,6 +631,18 @@ export default function ReviewConversationView(): JSX.Element {
                     <Download className="h-4 w-4" />
                     {t("reviewReports.export")}
                   </Button>
+                  {!grade?.released && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-900/20 colorful-dark:border-amber-400 colorful-dark:text-amber-400 colorful-dark:hover:bg-amber-900/20"
+                      disabled={voidLoading}
+                      onClick={() => setVoidConfirmOpen(true)}
+                    >
+                      <XCircle className="h-4 w-4" />
+                      {isVoided ? t("chat.unvoidSubmission") : t("reviewReports.void")}
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => setRegradeDialogOpen(true)}>
                     <RefreshCw className="h-4 w-4" />
                     {t("reviewReports.regrade")}
@@ -695,7 +711,7 @@ export default function ReviewConversationView(): JSX.Element {
                     type="multiple"
                     className="w-full"
                     {...(isEditing
-                      ? { value: grade.scores.map((_, i) => `score-${i}`), onValueChange: () => {} }
+                      ? { value: grade.scores.map((_, i) => `score-${i}`), onValueChange: () => { } }
                       : {})}
                   >
                     {(isEditing ? editScores : grade.scores).map((score, i) => (
@@ -708,19 +724,19 @@ export default function ReviewConversationView(): JSX.Element {
                                 <Input
                                   type="number"
                                   min={0}
-                                  max={maxPerCriterion}
+                                  max={criterionMax(i)}
                                   value={score.score}
                                   onChange={(e) => handleScoreChange(i, e.target.value)}
                                   className={`w-16 h-7 text-center text-sm px-1 ${editErrors[i] ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                 />
-                                {maxPerCriterion !== undefined && (
-                                  <span className="text-sm text-muted-foreground">/ {maxPerCriterion}</span>
+                                {criterionMax(i) !== undefined && (
+                                  <span className="text-sm text-muted-foreground">/ {criterionMax(i)}</span>
                                 )}
                               </div>
                             ) : (
                               <Badge variant="secondary" className="ml-2 shrink-0">
                                 {score.score}
-                                {maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                                {criterionMax(i) !== undefined ? ` / ${criterionMax(i)}` : ""}
                               </Badge>
                             )}
                           </div>
@@ -787,13 +803,14 @@ export default function ReviewConversationView(): JSX.Element {
 
       {/* Regrade dialog */}
       <Dialog open={regradeDialogOpen} onOpenChange={(open) => { if (!open) handleRegradeClose(); }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
           <DialogHeader>
             <DialogTitle>
               {regradeResults ? t("reviewReports.regradeResults") : t("reviewReports.regrade")}
             </DialogTitle>
           </DialogHeader>
 
+          <div className="overflow-y-auto flex-1 min-h-0">
           {regradeResults ? (
             /* Results phase */
             <div className="space-y-4">
@@ -804,7 +821,7 @@ export default function ReviewConversationView(): JSX.Element {
                       <span className="font-medium">{s.name}</span>
                       <Badge variant="secondary">
                         {s.score ?? "—"}
-                        {maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                        {criterionMax(i) !== undefined ? ` / ${criterionMax(i)}` : ""}
                       </Badge>
                     </div>
                     {s.feedback && (
@@ -833,6 +850,7 @@ export default function ReviewConversationView(): JSX.Element {
           ) : (
             /* Configure phase */
             <div className="space-y-4">
+              {/* Grading method */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {t("reviewReports.gradingMethod")}
@@ -843,8 +861,18 @@ export default function ReviewConversationView(): JSX.Element {
                     gradingType === "ma6" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
                   }`}
                 >
-                  <p className="font-medium">MA6</p>
+                  <p className="font-medium">{t("addReviewModule.ma6")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.ma6Desc")}</p>
+                </button>
+
+                <button
+                  onClick={() => setGradingType("StructuredLLMOutput")}
+                  className={`w-full text-left rounded-lg border p-3 transition-colors mt-2 ${
+                    gradingType === "StructuredLLMOutput" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <p className="font-medium">{t("addReviewModule.structuredLLMOutput")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("reviewReports.structuredLLMOutputDesc")}</p>
                 </button>
               </div>
               <div className="space-y-2">
@@ -871,6 +899,7 @@ export default function ReviewConversationView(): JSX.Element {
               )}
             </div>
           )}
+          </div>
 
           <DialogFooter>
             {regradeResults ? (
@@ -950,8 +979,8 @@ export default function ReviewConversationView(): JSX.Element {
                 key={fmt}
                 onClick={() => setExportFormat(fmt)}
                 className={`w-full text-left rounded-lg border p-3 transition-colors ${exportFormat === fmt
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-muted/50"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:bg-muted/50"
                   }`}
               >
                 <div className="font-semibold text-sm uppercase tracking-wide">{fmt.toUpperCase()}</div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CustomTypingIndicator } from "./CustomTypingIndictor";
@@ -107,23 +107,23 @@ const ViewSources: React.FC<ViewSourcesProps> = ({ sources }) => {
 export const MessageLeft = (props: MessageProps) => {
   const displayName = props.displayName ? props.displayName : "Assistant";
   const [isPlaying, setIsPlaying] = useState(false);
-  const [utterance, setUtterance] = useState<any>(null);
   const [showExpandableMessage, setShowExpandableMessage] =
     useState<boolean>(false);
   const [expandableMessage] = useState(
     props.expandableMessage ? JSON.parse(props.expandableMessage) : undefined,
   );
+  const isPlayingRef = useRef(false);
+  isPlayingRef.current = isPlaying;
 
   useEffect(() => {
-    const synth = window.speechSynthesis;
-    const u = new SpeechSynthesisUtterance(removeMarkdown(props.message));
-    u.rate = 0.9;
-    u.pitch = 1;
-    setUtterance(u);
     return () => {
-      synth.cancel();
+      // Only cancel if this message bubble was actively playing — avoids stomping on
+      // OralChatView's auto-TTS when this component unmounts or its content updates.
+      if (isPlayingRef.current) {
+        window.speechSynthesis.cancel();
+      }
     };
-  }, [props.message]);
+  }, []);
 
   const handlePlay = () => {
     Post(logEvent(), {
@@ -134,11 +134,12 @@ export const MessageLeft = (props: MessageProps) => {
       }
     })
     const synth = window.speechSynthesis;
-    if (utterance) {
-      synth.speak(utterance);
-      setIsPlaying(true);
-      utterance.onend = () => setIsPlaying(false);
-    }
+    const u = new SpeechSynthesisUtterance(removeMarkdown(props.message));
+    u.rate = 0.9;
+    u.pitch = 1;
+    u.onend = () => setIsPlaying(false);
+    synth.speak(u);
+    setIsPlaying(true);
   };
 
   const handleStop = () => {
@@ -326,18 +327,16 @@ export const MessageRight = (props: MessageProps) => {
   const [openFileModal, setOpenFileModal] = useState<boolean>(false);
   const [expandFile, setExpandFile] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [utterance, setUtterance] = useState<any>(null);
+  const isPlayingRef = useRef(false);
+  isPlayingRef.current = isPlaying;
 
   useEffect(() => {
-    const synth = window.speechSynthesis;
-    const u = new SpeechSynthesisUtterance(removeMarkdown(props.message));
-    u.rate = 0.9;
-    u.pitch = 1;
-    setUtterance(u);
     return () => {
-      synth.cancel();
+      if (isPlayingRef.current) {
+        window.speechSynthesis.cancel();
+      }
     };
-  }, [props.message]);
+  }, []);
 
   const handlePlay = () => {
     //log action
@@ -349,11 +348,12 @@ export const MessageRight = (props: MessageProps) => {
       }
     })
     const synth = window.speechSynthesis;
-    if (utterance) {
-      synth.speak(utterance);
-      setIsPlaying(true);
-      utterance.onend = () => setIsPlaying(false);
-    }
+    const u = new SpeechSynthesisUtterance(removeMarkdown(props.message));
+    u.rate = 0.9;
+    u.pitch = 1;
+    u.onend = () => setIsPlaying(false);
+    synth.speak(u);
+    setIsPlaying(true);
   };
 
   const handleStop = () => {

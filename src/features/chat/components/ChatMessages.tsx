@@ -111,12 +111,7 @@ export default function ChatMessages({
 
   // Rubric max scores
   const rubric = moduleInfo?.rubrics?.[0];
-  const maxPerCriterion = rubric
-    ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
-    : undefined;
-  const maxTotal = maxPerCriterion !== undefined
-    ? (rubric?.criteria.length ?? 0) * maxPerCriterion
-    : undefined;
+  const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
 
   useEffect(() => { //handles new message announcement
     const last = messages[messages.length - 1];
@@ -181,7 +176,7 @@ export default function ChatMessages({
         </button>
         {essayExpanded && (
           <div className="px-4 pb-4 border-t border-border/50">
-            <p className="text-sm whitespace-pre-wrap mt-3 text-foreground/90">{message.content}</p>
+            <p className="text-sm whitespace-pre-wrap mt-3 text-muted-foreground">{message.content}</p>
           </div>
         )}
       </div>
@@ -247,7 +242,7 @@ export default function ChatMessages({
                       <span className="font-semibold text-sm">{score.name}</span>
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge variant="secondary" className="text-xs">
-                          {score.score}{maxPerCriterion !== undefined ? ` / ${maxPerCriterion}` : ""}
+                          {score.score}{rubric?.criteria[i] !== undefined ? ` / ${rubric.criteria[i].maxPoints}` : ""}
                         </Badge>
                         {score.feedback && (criterionOpen
                           ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
@@ -273,7 +268,7 @@ export default function ChatMessages({
               {gradeResult.instructorNotes && (
                 <div className="border rounded-lg p-3 bg-primary/5 border-primary/20">
                   <p className="text-xs font-semibold text-primary mb-1">{t("reviewChat.instructorNotes")}</p>
-                  <p className="text-sm text-foreground/90">{gradeResult.instructorNotes}</p>
+                  <p className="text-sm text-muted-foreground">{gradeResult.instructorNotes}</p>
                 </div>
               )}
             </div>

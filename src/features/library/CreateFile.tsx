@@ -38,6 +38,7 @@ import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
+import { toast } from "sonner";
 
 export default function CreateEditFile(): JSX.Element {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -110,6 +111,7 @@ export default function CreateEditFile(): JSX.Element {
           navigator("/login");
         } else if (res !== undefined) {
           setAlert({ message: t("errorMessage.fileNotExist"), type: "error" });
+          toast.error(t("errorMessage.fileNotExist"));
           navigator("/library");
         }
       });
@@ -121,6 +123,7 @@ export default function CreateEditFile(): JSX.Element {
           navigator("/login");
         } else if (res !== undefined) {
           setAlert({ message: t("library.folderDoesNotExist"), type: "error" });
+          toast.error(t("library.folderDoesNotExist"));
           navigator("/library");
         }
       });
@@ -142,12 +145,14 @@ export default function CreateEditFile(): JSX.Element {
     ];
     if (file.size > MAX_FILE_SIZE) {
       setErrors((prev) => ({ ...prev, file: t("createFile.fileTooLarge") }));
+      toast.error(t("createFile.fileTooLarge"));
       setSelectedFiles(undefined);
     } else if (allowedTypes.includes(file.type)) {
       setErrors((prev) => ({ ...prev, file: "" }));
       setSelectedFiles(file);
     } else {
       setErrors((prev) => ({ ...prev, file: t("createFile.invalidFileType") }));
+      toast.error(t("createFile.invalidFileType"));
       setSelectedFiles(undefined);
     }
   };
@@ -169,10 +174,12 @@ export default function CreateEditFile(): JSX.Element {
     e?.preventDefault();
     if (fileName === "") {
       setErrors((prev) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      toast.error(t("errorMessage.nameMissing"));
       return;
     }
     if (!isEditMode && !selectedFiles) {
       setAlert({ message: t("errorMessage.missingFileInfo"), type: "error" });
+      toast.error(t("errorMessage.missingFileInfo"));
       return;
     }
     setIsLoading(true);
@@ -188,6 +195,7 @@ export default function CreateEditFile(): JSX.Element {
           navigator("/login");
         } else if (res !== undefined) {
           setAlert({ message: res.data?.message || t("errorMessage.createFileError"), type: "error" });
+          toast.error(res.data?.message || t("errorMessage.createFileError"));
           setIsLoading(false);
         }
       });
@@ -242,6 +250,7 @@ export default function CreateEditFile(): JSX.Element {
       }, true).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createFile.fileUpdated"), type: "success" });
+          toast.success(t("createFile.fileUpdated"));
           if (newFileReference !== fileReference) {
             setFileReference(newFileReference);
             setPreviewUrl("");
@@ -252,8 +261,10 @@ export default function CreateEditFile(): JSX.Element {
           navigator("/login");
         } else if (res?.status === 403) {
           setAlert({ message: res?.data?.message || t("createFile.fileCouldNotBeCreated"), type: "error" });
+          toast.error(res?.data?.message || t("createFile.fileCouldNotBeCreated"));
         } else {
           setAlert({ message: res?.data?.message || t("createFile.fileCouldNotBeCreated"), type: "error" });
+          toast.error(res?.data?.message || t("createFile.fileCouldNotBeCreated"));
         }
         setIsLoading(false);
       });
@@ -268,11 +279,13 @@ export default function CreateEditFile(): JSX.Element {
       }, true).then((res) => {
         if (res.status && res.status < 300) {
           setAlert({ message: t("createFile.fileCreated"), type: "success" });
+          toast.success(t("createFile.fileCreated"));
         } else if (res && res.status === 401) {
           navigator("/login");
           return;
         } else {
           setAlert({ message: t("createFile.fileCouldNotBeCreated"), type: "error" });
+          toast.error(t("createFile.fileCouldNotBeCreated"));
         }
         setIsLoading(false);
         navigator(`/library/${folderId}`);
@@ -286,11 +299,13 @@ export default function CreateEditFile(): JSX.Element {
     Delete(deleteItem(fileId), true).then((res) => {
       if (res.status && res.status < 300) {
         setAlert({ message: t("createFile.fileDeleted"), type: "success" });
+        toast.success(t("createFile.fileDeleted"));
       } else if (res && res.status === 401) {
         navigator("/login");
         return;
       } else {
         setAlert({ message: t("createFile.fileCouldNotBeDeleted"), type: "error" });
+        toast.error(t("createFile.fileCouldNotBeDeleted"));
       }
       navigator(`/library/${folderId}`);
       setIsLoading(false);

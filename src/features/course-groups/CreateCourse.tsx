@@ -63,6 +63,7 @@ import { CourseType } from "../../utility/types/CourseTypes";
 import { UserContext } from "../../utility/context/UserContext";
 import { cn } from "../../lib/utils";
 import { useTranslation } from "../../hooks/useTranslation";
+import { toast } from "sonner";
 
 type CourseFormType = {
   name: string;
@@ -303,8 +304,10 @@ export default function CreateCourse({
   function handleSubmit(e: any, isActive = false, isDeleted = false) {
     if (session.name === "") {
       setErrors((prev) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      toast.error(t("errorMessage.nameMissing"));
     } else if (session.signUpCode === "") {
       setErrors((prev) => ({ ...prev, signUpCode: t("courses.signUpCodeMissing") }));
+      toast.error(t("courses.signUpCodeMissing"));
     } else {
       // set is loading
       setIsLoading(true);
@@ -330,12 +333,14 @@ export default function CreateCourse({
                 navigator("/courses");
                 //pop up notifying user of update
                 setAlert({ message: t("createCourse.courseUpdated"), type: "success" });
+                toast.success(t("createCourse.courseUpdated"));
               }
             } else if (res && res.status === 401) {
               navigator("/login");
             } else {
               // set errors
               setAlert({ message: res.data, type: "error" });
+              toast.error(res.data);
             }
             // set is loading back
             setIsLoading(false);
@@ -349,12 +354,14 @@ export default function CreateCourse({
                 navigator("/courses");
                 //pop up notifying user of update
                 setAlert({ message: t("createCourse.courseUpdated"), type: "success" });
+                toast.success(t("createCourse.courseUpdated"));
               }
             } else if (res && res.status === 401) {
               navigator("/login");
             } else {
               // set errors
               setAlert({ message: res.data, type: "error" });
+              toast.error(res.data);
             }
             // set is loading back
             setIsLoading(false);
@@ -387,12 +394,14 @@ export default function CreateCourse({
               navigator("/courses");
               // pop up notifying user of creation
               setAlert({ message: t("createCourse.courseCreated"), type: "success" });
+              toast.success(t("createCourse.courseCreated"));
             }
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
             // set errors
             setAlert({ message: res.data, type: "error" });
+            toast.error(res.data);
           }
           // set is loading back
           setIsLoading(false);

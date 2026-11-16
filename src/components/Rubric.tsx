@@ -18,6 +18,8 @@ import { cn } from "../lib/utils";
 import { useTranslation } from "../hooks/useTranslation";
 import { FolderPickerDialog } from "../features/library/FolderPickerDialog";
 import { ShareItemDialog } from "../features/library/ShareItemDialog";
+import { RubricPreviewContent } from "./RubricPreviewContent";
+import { RubricCriterion } from "../utility/types/CourseTypes";
 
 interface RubricProps {
   item: LibraryItem;
@@ -190,8 +192,12 @@ export const Rubric = (props: RubricProps) => {
     });
   }
 
-  const criteriaCount = props.item.metadata?.criteria?.length ?? 0;
-  const columnsCount = props.item.metadata?.columns?.length ?? 0;
+  const metaCriteria: any[] = props.item.metadata?.criteria ?? [];
+  const isNewFormat = metaCriteria.length > 0 && Array.isArray(metaCriteria[0]?.ratings);
+  const criteriaCount = metaCriteria.length;
+  const totalPoints = isNewFormat
+    ? metaCriteria.reduce((sum: number, c: any) => sum + (c.maxPoints ?? 0), 0)
+    : 0;
 
   const starMenuItem = { label: starred ? t("common.unstar") : t("common.star"), onClick: starred ? removeStarredRubric : createStarredRubric };
 
@@ -243,40 +249,46 @@ export const Rubric = (props: RubricProps) => {
         title={props.item.name || t("createRubric.untitledRubric")}
         description={t("createRubric.rubricPreview")}
         contentClassName="max-w-4xl max-h-[80vh]"
-        actions={[{ label: t("common.close"), onClick: () => setOpenPreviewDialog(false), variant: "outline" }]}
+        actions={[
+          { label: t("common.close"), onClick: () => setOpenPreviewDialog(false), variant: "outline" },
+          ...( canEdit && (!isOrgItem || isAdmin) ? [{ label: t("common.edit"), onClick: edit }] : []),
+        ]}
       >
-        <div className="overflow-auto max-h-[60vh]">
-          {(props.item.metadata?.columns?.length ?? 0) > 0 ? (
-            <table className="w-full border-collapse text-sm" style={{ minWidth: `${140 + (props.item.metadata?.columns?.length ?? 0) * 160}px` }}>
-              <thead>
-                <tr>
-                  <th className="border border-border px-3 py-2 text-left font-semibold capitalize" style={{ minWidth: 140, position: "sticky", left: 0, zIndex: 10, background: "hsl(var(--muted))" }}>
-                    {t("createRubric.criterion")}
-                  </th>
-                  {(props.item.metadata?.columns ?? []).map((col: string, i: number) => (
-                    <th key={i} className="border border-border bg-muted px-3 py-2 text-center font-semibold" style={{ minWidth: 160 }}>
-                      {col}
+        <div className="overflow-auto max-h-[60vh] pr-1">
+          {isNewFormat ? (
+            <RubricPreviewContent criteria={metaCriteria as RubricCriterion[]} />
+          ) : (
+            /* Legacy format: columns + cells table */
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm" style={{ minWidth: `${140 + (props.item.metadata?.columns?.length ?? 0) * 160}px` }}>
+                <thead>
+                  <tr>
+                    <th className="border border-border px-3 py-2 text-left font-semibold capitalize bg-muted" style={{ minWidth: 140, position: "sticky", left: 0, zIndex: 10 }}>
+                      {t("createRubric.criterion")}
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(props.item.metadata?.criteria ?? []).map((criterion: { name: string; cells: string[] }, rowIdx: number) => (
-                  <tr key={rowIdx}>
-                    <td className="border border-border px-3 py-2 font-medium align-top" style={{ minWidth: 140, position: "sticky", left: 0, zIndex: 10, background: "hsl(var(--muted))" }}>
-                      {criterion.name}
-                    </td>
-                    {criterion.cells.map((cell: string, colIdx: number) => (
-                      <td key={colIdx} className="border border-border px-3 py-2 align-top text-muted-foreground whitespace-pre-wrap" style={{ minWidth: 160 }}>
-                        {cell}
-                      </td>
+                    {(props.item.metadata?.columns ?? []).map((col: string, i: number) => (
+                      <th key={i} className="border border-border bg-muted px-3 py-2 text-center font-semibold" style={{ minWidth: 160 }}>
+                        {col}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("createRubric.rubricGrid")}</p>
+                </thead>
+                <tbody>
+                  {metaCriteria.map((criterion: any, rowIdx: number) => (
+                    <tr key={rowIdx}>
+                      <td className="border border-border px-3 py-2 font-medium align-top bg-muted" style={{ minWidth: 140, position: "sticky", left: 0, zIndex: 10 }}>
+                        {criterion.name}
+                      </td>
+                      {(criterion.cells ?? []).map((cell: string, colIdx: number) => (
+                        <td key={colIdx} className="border border-border px-3 py-2 align-top text-muted-foreground whitespace-pre-wrap" style={{ minWidth: 160 }}>
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </DialogWrapper>
@@ -404,10 +416,10 @@ export const Rubric = (props: RubricProps) => {
             </p>
           )}
 
-          {(criteriaCount > 0 || columnsCount > 0) && (
+          {criteriaCount > 0 && (
             <p className="text-xs text-muted-foreground mb-3">
-              {criteriaCount} {criteriaCount !== 1 ? t("createRubric.criteria") : t("createRubric.criterion")} ·{" "}
-              {columnsCount} {columnsCount !== 1 ? t("createRubric.scoreLevels") : t("createRubric.scoreLevel")}
+              {criteriaCount} {criteriaCount !== 1 ? t("createRubric.criteria") : t("createRubric.criterion")}
+              {isNewFormat && ` · ${totalPoints} ${t("createRubric.totalPoints")}`}
             </p>
           )}
 

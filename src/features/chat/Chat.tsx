@@ -18,6 +18,8 @@ import ChatHeader from "./components/ChatHeader";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
 import ReviewSummaryPanel from "./components/ReviewSummaryPanel";
+import { RubricPreviewContent } from "../../components/RubricPreviewContent";
+// import OralChatView from "./OralChatView"; // ORAL MODULE — commented out, keep OralChatView.tsx for future use
 import { useTranslation } from "../../hooks/useTranslation";
 import { ChatContextType } from "./ChatContext";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
@@ -51,6 +53,7 @@ export default function Chat(): JSX.Element {
   const username = params.username || "";
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadedForIndex, setLoadedForIndex] = useState<string>(conversationIndex);
   const socket = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<Array<MessageType>>([]);
@@ -83,9 +86,20 @@ export default function Chat(): JSX.Element {
 
   const [pendingMessageContent, setPendingMessageContent] = useState<string | null>(null);
   const [pendingPromptId, setPendingPromptId] = useState<string | null>(null);
+  // ORAL MODULE — commented out
+  // const [oralSpeechText, setOralSpeechText] = useState<{ text: string; ts: number } | null>(null);
+  // const isOralModuleRef = useRef<boolean | undefined>(undefined);
+  // isOralModuleRef.current = moduleInfo?.isOralModule;
 
   // Fix: Store the current event listener function to properly remove it
   const socketListenerRef = useRef<((event: MessageEvent) => void) | null>(null);
+  const onSendMessageRef = useRef<((messageList: Array<MessageType>, autoCreateConvoName: any) => void) | null>(null);
+  // Tracks whether the pending message for the current conversationIndex has already been sent,
+  // preventing double-sends when stale location.state causes setPendingMessageContent to fire again.
+  const pendingMessageFiredRef = useRef<{ conversationIndex: string | null; fired: boolean }>({
+    conversationIndex: null,
+    fired: false,
+  });
 
   // WebSocket retry state
   const retryCountRef = useRef(0);
@@ -111,8 +125,11 @@ export default function Chat(): JSX.Element {
   const chatPrefix = isReviewModule ? "review-chat" : "chat";
   const isEssayMode = isReviewModule && moduleInfo?.essaySubmission === true;
   const converseAfterComplete = moduleInfo?.converseAfterComplete === true;
+  const isSummative = moduleInfo?.assessmentType === "summative";
   const showEssayWizard = isEssayMode && !messages.some(m => m.userVisible !== false) && !conversationCompleted && !isSubmitting;
-  const chatBlocked = conversationCompleted && !converseAfterComplete;
+  // For summative modules, chat stays blocked after completion until grades are released (gradeResult !== null).
+  // For formative modules, chat unblocks immediately after completion if converseAfterComplete is true.
+  const chatBlocked = conversationCompleted && (!converseAfterComplete || (isSummative && gradeResult === null));
 
   // Ref to avoid stale closure in onSendMessage
   const isReviewModuleRef = useRef(false);
@@ -162,14 +179,16 @@ export default function Chat(): JSX.Element {
         setShowWizard(false);
       }
     }
-  }, [viewUser, user, moduleInfo, messages]);
+  }, [viewUser, user, moduleInfo, messages, isEssayMode]);
 
   // WebSocket functions
   const ping = useCallback(() => {
     if (isConnected) {
       setTimeout(() => {
-        socket.current?.send(JSON.stringify({ action: "pong" }));
-        ping();
+        if (socket.current?.readyState === WebSocket.OPEN) {
+          socket.current.send(JSON.stringify({ action: "pong" }));
+          ping();
+        }
       }, 120000);
     }
   }, [isConnected]);
@@ -339,9 +358,13 @@ export default function Chat(): JSX.Element {
             currentStreamIdRef.current = returnMessage.id;
             setMessages((prev) => [...prev, responseMessage]);
           }
-        } else if (returnMessage.finished && returnMessage.messageType === "finalMessage") {
+        } else if (returnMessage.finished) {
           // Clear the stream ID when finished
           currentStreamIdRef.current = null;
+          // ORAL MODULE — commented out
+          // if (isOralModuleRef.current && returnMessage.message) {
+          //   setOralSpeechText({ text: returnMessage.message, ts: Date.now() });
+          // }
           setMessages((prev) => {
             if (prev.length > 0) {
               var temp = [...prev];
@@ -370,7 +393,7 @@ export default function Chat(): JSX.Element {
         }
       }
     },
-    [t, refreshGrades],
+    [t, refreshGrades], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const onConnect = useCallback(
@@ -453,23 +476,31 @@ export default function Chat(): JSX.Element {
     const controller = new AbortController();
 
     if (username && courseId && moduleId && conversationIndex) {
+      // Read pending nav state before resetting — prevents flash of essay wizard / oral input
+      const incomingPendingEssay = !!(location.state as any)?.pendingEssay;
+
       setIsLoading(true);
       // Reset review state on conversation change
       setGradeResult(null);
       setGradePending(false);
       setGradeError(undefined);
-      setIsSubmitting(false);
+      setIsSubmitting(incomingPendingEssay); // keep true so essay wizard stays hidden during transition
       setEssayText("");
       setEssayError("");
       setPendingEssay(null);
+      setPendingMessageContent(null);
+      setPendingPromptId(null);
+      // setOralSpeechText(null); // ORAL MODULE — commented out
 
-      if (user && user.username === username) {
-        onConnect(courseId, moduleId, conversationIndex);
+      if (user && user.username === username && conversationIndex !== "new") {
+        onConnectRef.current(courseId, moduleId, conversationIndex);
       }
 
       if (conversationIndex === "new") {
+        closeSocket();
         setMessages([]);
         setSelectedPrompt("");
+        setLoadedForIndex(conversationIndex);
         setIsLoading(false);
         setConversationCompleted(false);
         setConversationIsDeleted(false);
@@ -508,6 +539,7 @@ export default function Chat(): JSX.Element {
               setPendingPromptId(location.state.pendingPromptId || null);
               window.history.replaceState({}, "");
             }
+            setLoadedForIndex(conversationIndex);
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
@@ -530,8 +562,13 @@ export default function Chat(): JSX.Element {
     courseId,
     moduleId,
     username,
-    location.state,
-    onConnect,
+    // location.state intentionally omitted: navigation always changes conversationIndex,
+    // so this effect fires on every relevant navigation. Including location.state caused
+    // the effect to re-run after clearing state (since window.history.replaceState didn't
+    // update React Router's location), which re-read stale state and double-sent messages.
+    // onConnect intentionally omitted: onConnectRef.current is used instead to prevent the
+    // effect from re-running when moduleInfo arrives late and cascades through refreshGrades
+    // → onSocketMessage → onConnect, which would close the WebSocket mid-message.
     closeSocket,
     navigator,
     t,
@@ -542,7 +579,7 @@ export default function Chat(): JSX.Element {
   const onSendMessage = useCallback(
     (messageList: Array<MessageType>, autoCreateConvoName: any) => {
       setChatError(undefined);
-      if (messages && isConnected) {
+      if (messages && isConnected && socket.current?.readyState === WebSocket.OPEN) {
         var messagesToSend: Array<{ role: string; content: string }> = [];
         messageList.map((message) => {
           if (message.content.length > 100000) {
@@ -612,6 +649,7 @@ export default function Chat(): JSX.Element {
     },
     [messages, isConnected, t],
   );
+  onSendMessageRef.current = onSendMessage;
 
   const onSendEssay = useCallback(
     (essay: string, message?: string) => {
@@ -646,7 +684,11 @@ export default function Chat(): JSX.Element {
   );
 
   useEffect(() => {
-    if (isConnected && pendingMessageContent && conversationIndex !== "new") {
+    const alreadySent =
+      pendingMessageFiredRef.current.conversationIndex === conversationIndex &&
+      pendingMessageFiredRef.current.fired;
+    if (isConnected && pendingMessageContent && conversationIndex !== "new" && !alreadySent) {
+      pendingMessageFiredRef.current = { conversationIndex, fired: true };
       const tempTimestamp = Date.now();
       const messageTempId = tempTimestamp + "" + Math.floor(100000 + Math.random() * 900000);
       var responseMessage: MessageType = {
@@ -659,14 +701,14 @@ export default function Chat(): JSX.Element {
         promptId: pendingPromptId,
         userVisible: true,
       };
-      onSendMessage([responseMessage], autoCreateConvoName);
+      onSendMessageRef.current?.([responseMessage], autoCreateConvoName);
       setPendingMessageContent(null);
       setPendingPromptId(null);
     }
-  }, [isConnected, pendingMessageContent, conversationIndex, pendingPromptId, onSendMessage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isConnected, pendingMessageContent, conversationIndex, pendingPromptId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!isConnected || !pendingEssay || conversationIndex === "new") return;
+    if (!isConnected || !pendingEssay || conversationIndex === "new" || socket.current?.readyState !== WebSocket.OPEN) return;
     setIsSubmitting(true);
     markConversationCompleted();
     setEssayError("");
@@ -1362,37 +1404,14 @@ export default function Chat(): JSX.Element {
           contentClassName="sm:max-w-3xl max-h-[90vh] overflow-y-auto"
           actions={[{ label: t("common.close"), onClick: () => setOpenViewRubricModal(false), variant: "outline" }]}
         >
-          {moduleInfo.rubrics[0].criteria.length > 0 && moduleInfo.rubrics[0].columns.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr>
-                    <th className="text-left p-2 border bg-muted font-semibold">{t("reviewModule.criterion")}</th>
-                    {moduleInfo.rubrics[0].columns.map((col, i) => (
-                      <th key={i} className="p-2 border bg-muted font-semibold text-center">{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {moduleInfo.rubrics[0].criteria.map((criterion, i) => (
-                    <tr key={i} className={i % 2 === 0 ? "bg-background" : "bg-muted/30"}>
-                      <td className="p-2 border font-medium">{criterion.name}</td>
-                      {criterion.cells.map((cell, j) => (
-                        <td key={j} className="p-2 border text-muted-foreground text-xs align-top">{cell}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
-          )}
+          <div className="overflow-auto max-h-[60vh] pr-1">
+            <RubricPreviewContent criteria={moduleInfo.rubrics[0].criteria} />
+          </div>
         </DialogWrapper>
       )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0" style={{ height: "calc(100vh - 4rem)" }}>
+      <div className="flex-1 flex flex-col min-w-0 h-screen-nav">
         {/* Chat Header */}
         {courseInfo && moduleInfo ? (
           <ChatHeader
@@ -1432,9 +1451,9 @@ export default function Chat(): JSX.Element {
         )}
 
         {/* Chat Messages and Input */}
-        {courseInfo && moduleInfo && !isLoading ? (
+        {courseInfo && moduleInfo && !isLoading && loadedForIndex === conversationIndex && !(pendingMessageContent && messages.length === 0) ? (
           <>
-            {/* Messages / Essay Wizard / Submitting Spinner */}
+            {/* Messages / Essay Wizard / Submitting Spinner / Oral Module */}
             {isReviewModule && showEssayWizard ? (
               <div className="flex-1 overflow-y-auto">
                 <div className="flex items-center justify-center min-h-full p-6">
@@ -1490,7 +1509,7 @@ export default function Chat(): JSX.Element {
                 user={user}
                 viewUser={viewUser}
                 showWizard={showWizard}
-                showTypingIndicator={showTypingIndicator || (isReviewModule && isSubmitting)}
+                showTypingIndicator={showTypingIndicator || (isReviewModule && isSubmitting) || (pendingMessageContent !== null && messages.length === 0)}
                 messageNote={messageNote}
                 conversationCompleted={conversationCompleted}
                 instructor={instructor}
@@ -1513,12 +1532,7 @@ export default function Chat(): JSX.Element {
             {(() => {
               const panelEssayMessage = messages.find(m => m.role === "user" && m.messageType === "essayDraft");
               const rubric = moduleInfo?.rubrics?.[0];
-              const maxPerCriterion = rubric
-                ? Math.max(...rubric.columns.map(Number).filter(Number.isFinite))
-                : undefined;
-              const maxTotal = maxPerCriterion !== undefined
-                ? (rubric?.criteria.length ?? 0) * maxPerCriterion
-                : undefined;
+              const maxTotal = rubric ? rubric.criteria.reduce((sum, c) => sum + c.maxPoints, 0) : undefined;
               const hasGradeContent = !!(gradeResult || gradePending || gradeError);
               const showPanel = isReviewModule && (hasGradeContent || !!panelEssayMessage);
 
@@ -1544,19 +1558,30 @@ export default function Chat(): JSX.Element {
                           gradeResult={gradeResult}
                           gradePending={gradePending}
                           gradeError={gradeError}
-                          maxPerCriterion={maxPerCriterion}
+                          rubric={rubric}
                           maxTotal={maxTotal}
                         />
                       </div>
                     )}
                   </div>
 
-                  {isReviewModule ? (
+                  {/* ORAL MODULE — commented out
+                  {moduleInfo?.isOralModule ? (
+                    isReviewModule ? (
+                      (isEssayMode ? isReviewChatInputVisible : isNonEssayReviewInputVisible) && !pendingMessageContent ? (
+                        <OralChatView onSubmit={onSendReviewMessage} pendingSpeech={oralSpeechText} />
+                      ) : null
+                    ) : (
+                      isChatInputVisible && !pendingMessageContent && (
+                        <OralChatView onSubmit={handleSubmit} pendingSpeech={oralSpeechText} />
+                      )
+                    )
+                  ) : */ isReviewModule ? (
                     (isEssayMode ? isReviewChatInputVisible : isNonEssayReviewInputVisible) ? (
                       <ChatInput
-                        isConnected={isConnected}
+                        isConnected={isConnected || !!pendingMessageContent}
                         isLoading={isSubmitting}
-                        isNewChat={false}
+                        isNewChat={conversationIndex === "new"}
                         chatError={chatError}
                         onSubmit={onSendReviewMessage}
                         onOpenDocumentModal={() => setOpenDocumentModal(true)}
@@ -1567,7 +1592,7 @@ export default function Chat(): JSX.Element {
                   ) : (
                     isChatInputVisible && (
                       <ChatInput
-                        isConnected={isConnected}
+                        isConnected={isConnected || !!pendingMessageContent}
                         isLoading={isLoading}
                         isNewChat={conversationIndex === "new"}
                         chatError={chatError}

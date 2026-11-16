@@ -447,7 +447,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
         </form>
       </DialogWrapper>
 
-      <article className="group bg-card border rounded-xl hover-lift shadow-sm relative h-80 flex flex-col">
+      <article className="group bg-card border rounded-xl hover-lift shadow-sm relative min-h-80 flex flex-col">
         <div className="absolute top-0 right-0 w-20 h-20 opacity-5 overflow-hidden rounded-xl" aria-hidden="true">
           <Play size={80} className="transform rotate-12" />
         </div>
@@ -533,17 +533,6 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
                 </button>
               </TooltipWrapper>
 
-              {isInstructorOrTA && (
-                <TooltipWrapper content={t("common.view") + " " + t("common.reports")}>
-                  <button
-                    onClick={() => navigator(reportsLink)}
-                    className="p-1 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                    aria-label={t("common.view") + " " + t("common.module") + " " + t("common.reports")}
-                  >
-                    <Eye className="h-[1em] w-[1em]" aria-hidden="true" />
-                  </button>
-                </TooltipWrapper>
-              )}
 
               {isInstructorOrTA && (
                 <DropdownWrapper
@@ -586,21 +575,35 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
 
           <div className="flex-1" aria-hidden="true"></div>
 
-          <Button
-            onClick={handleBeginModule}
-            variant="default"
-            size="sm"
-            className="relative z-10 flex-shrink-0 w-full flex items-center justify-center gap-2"
-            disabled={isNavigatingToModule}
-            aria-label={`${t("modules.beginModule")} ${module.name}`}
-          >
-            {isNavigatingToModule ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Play size={14} aria-hidden="true" />
+          <div className="relative z-10 flex-shrink-0 flex flex-wrap gap-2 w-full">
+            {isInstructorOrTA && (
+              <Button
+                onClick={() => navigator(reportsLink)}
+                variant="outline"
+                size="sm"
+                className="flex-1 min-w-[7rem] flex items-center justify-center gap-2"
+                aria-label={`${t("common.view")} ${t("common.reports")}`}
+              >
+                <Eye size={14} aria-hidden="true" />
+                {t("common.reports")}
+              </Button>
             )}
-            {t("modules.beginModule")}
-          </Button>
+            <Button
+              onClick={handleBeginModule}
+              variant="default"
+              size="sm"
+              className="flex-1 min-w-[7rem] flex items-center justify-center gap-2"
+              disabled={isNavigatingToModule}
+              aria-label={`${t("modules.beginModule")} ${module.name}`}
+            >
+              {isNavigatingToModule ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Play size={14} aria-hidden="true" />
+              )}
+              {t("modules.beginModule")}
+            </Button>
+          </div>
         </div>
       </article>
     </>

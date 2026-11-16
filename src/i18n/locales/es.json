@@ -91,6 +91,18 @@
     "noModulesFound": "No se encontraron módulos",
     "moduleList": "Lista de módulos"
   },
+  "moduleTypeSelect": {
+    "title": "Elige un tipo de módulo",
+    "subtitle": "Selecciona el tipo de módulo que deseas crear. Cada tipo viene preconfigurado con los ajustes recomendados.",
+    "chatModule": "Chat de texto",
+    "chatModuleDesc": "Un módulo de conversación flexible con IA. Los estudiantes pueden interactuar con la IA usando instrucciones y documentos personalizados.",
+    "essayScoringModule": "Puntuación de ensayo",
+    "essayScoringModuleDesc": "Los estudiantes envían ensayos escritos para su revisión y puntuación por IA con retroalimentación basada en rúbrica.",
+    "oralInterviewModule": "Puntuación de entrevista",
+    "oralInterviewModuleDesc": "Los estudiantes realizan una entrevista hablada que es grabada, transcrita y puntuada por la IA.",
+    "oralConferenceModule": "Chat de voz",
+    "oralConferenceModuleDesc": "Idéntico al Chat de texto, pero en modo de voz."
+  },
   "account": {
     "accountSettings": "Configuraciones de cuenta",
     "accountSettingsDescription": "Administrar la informacón y preferencias de tu perfíl",
@@ -248,7 +260,9 @@
     "next": "Siguiente",
     "filter": "Filtrar",
     "asc": "Asc",
-    "desc": "Desc"
+    "desc": "Desc",
+    "moveLeft": "Mover a la izquierda",
+    "moveRight": "Mover a la derecha"
   },
   "components": {
     "deletePrompt": "¿Borrar el Prompt?",
@@ -473,6 +487,7 @@
     "addAsset": "Agregar recurso",
     "noAssetsAdded": "Sin recursos agregados",
     "noAssetsAddedDescription": "Para agregar un recurso (incluyendo indicaciones y documentos), haga clic arriva en <<Agregar recurso>>.",
+    "moduleAssetsDescription": "Las indicaciones que agregues aparecerán como opciones de inicio para los estudiantes cuando comiencen una conversación. Los documentos que agregues serán utilizados por la IA como material de referencia durante la conversación. Los estudiantes no los verán directamente.",
     "moduleSettings": "Configuración del módulo",
     "showEmbeddedPrompt": "Mostrar indicacion incorporada",
     "showEmbeddedPromptDescription": "Permite a los usuarios ver el texto completo de la indicación integrada con el que inician su conversación con la IA. Desmarcar esta opción significa que el usuario no podrá ver el texto inicial de la indicación enviado inicialmente a la IA. Para más información sobre por qué podrías elegir una opción u otra, consulta ",
@@ -507,7 +522,8 @@
     "addAssetModule": "Agregar recurso al módulo",
     "clickToAddAsset": "Haga clic aquí para añadir un recurso (incluyendo indicaciones y documentos) al módulo.",
     "enableOralModule": "Habilitar módulo oral",
-    "oralModuleDescription": "Convierte este módulo en un módulo de expresión oral basado en audio."
+    "oralModuleDescription": "Convierte este módulo en un módulo de expresión oral basado en audio.",
+    "advancedSettings": "Configuración avanzada"
   },
   "library": {
     "library": "Biblioteca",
@@ -731,8 +747,25 @@
     "untitledRubric": "Rúbrica sin título",
     "rubricPreview": "Vista previa de solo lectura de esta rúbrica",
     "criteria": "criterios",
-    "scoreLevel": "nivel de puntuación",
-    "scoreLevels": "niveles de puntuación"
+    "totalPoints": "puntos totales",
+    "importFromPdf": "Importar desde PDF",
+    "useRange": "Usar rango de puntos",
+    "addRating": "Agregar calificación",
+    "removeCriterion": "Eliminar criterio",
+    "ratingNamePlaceholder": "Nombre de la calificación…",
+    "ratingDescriptionPlaceholder": "Describe este nivel de calificación…",
+    "criterionDescriptionPlaceholder": "Descripción del criterio…",
+    "pts": "Pts",
+    "ptsPlaceholder": "Pts",
+    "pdfImportSuccess": "Rúbrica importada. Revisa y ajusta antes de guardar.",
+    "pdfImportFailed": "No se pudo analizar el PDF. Por favor intenta de nuevo.",
+    "pdfImportUnauthorized": "No tienes permiso para importar rúbricas.",
+    "missingPointValues": "Todos los valores de puntos deben completarse antes de guardar.",
+    "ratingsOutOfOrder": "Las calificaciones deben estar en orden descendente (de mayor a menor).",
+    "deleteCriterionTitle": "¿Eliminar criterio?",
+    "deleteCriterionMessage": "será eliminado permanentemente de esta rúbrica.",
+    "unnamedCriterion": "Este criterio",
+    "errorNames": "Todos los campos de nombre requeridos deben completarse."
   },
   "reports": {
     "reports": "Informes",
@@ -914,7 +947,11 @@
     "archived": "Archivado",
     "voided": "Anulado",
     "voidSubmission": "Anular Envío",
-    "unvoidSubmission": "Quitar Anulación"
+    "unvoidSubmission": "Quitar Anulación",
+    "voidConfirmTitle": "¿Anular envío?",
+    "voidConfirmDescription": "Anular este envío permite al estudiante volver a enviar. La conversación original y cualquier dato de calificación existente se conservan, pero este envío ya no contará para el límite de borradores.",
+    "unvoidConfirmTitle": "¿Restaurar envío?",
+    "unvoidConfirmDescription": "Restaurar este envío hará que cuente nuevamente para el límite de borradores del estudiante. Si el módulo limita los intentos, esto usará uno de sus envíos permitidos."
   },
   "errorMessage": {
     "promptNotExist": "La solicitud no existe",
@@ -998,8 +1035,14 @@
     "limitAttemptsDescription": "Restringe el número de borradores que cada estudiante puede enviar.",
     "maxDrafts": "Máximo de borradores por estudiante",
     "gradingType": "Tipo de revisión",
+    "ma6": "Puntuación Avanzada",
+    "ma6Desc": "Utiliza múltiples agentes de IA para evaluar cada criterio individualmente.",
+    "structuredLLMOutput": "Puntuación Simple",
+    "structuredLLMOutputDesc": "Evaluación de IA en una sola pasada contra todos los criterios de la rúbrica.",
     "converseAfterComplete": "Permitir chat después de la entrega",
     "converseAfterCompleteDescription": "Permite que los estudiantes continúen chateando después de que su entrega haya sido revisada.",
+    "converseAfterCompleteScoresReleased": "Permitir chat después de la publicación de calificaciones",
+    "converseAfterCompleteScoresReleasedDescription": "Permite que los estudiantes chateen después de que se hayan publicado sus calificaciones.",
     "essaySubmission": "Modo de entrega de ensayo",
     "essaySubmissionDescription": "Los estudiantes envían un ensayo escrito para ser revisado. Si no está marcado, los estudiantes tendrán una conversación en vivo que completan para enviar a revisión.",
     "moduleCreated": "Módulo de revisión creado",
@@ -1027,7 +1070,22 @@
     "summativeToFormativeTitle": "Cambiando a Formativo",
     "summativeToFormativePoint1": "Las calificaciones pendientes de tu revisión NO se publicarán automáticamente — permanecerán retenidas hasta que las publiques manualmente.",
     "summativeToFormativePoint2": "Los nuevos envíos se calificarán y publicarán a los estudiantes de inmediato.",
-    "summativeToFormativePoint3": "Los límites de borradores vuelven a la configuración de Máximo de Borradores; la restricción sumativa de uno a la vez ya no aplica."
+    "summativeToFormativePoint3": "Los límites de borradores vuelven a la configuración de Máximo de Borradores; la restricción sumativa de uno a la vez ya no aplica.",
+    "moduleDescriptionHelp": "Se muestra a los estudiantes en la página del módulo — describe cómo usar y operar este módulo.",
+    "essayQuestion": "Instrucciones de la tarea",
+    "essayQuestionHelptext": "Describe la tarea y cómo la IA debe calificar las entregas de los estudiantes (p. ej. tema del ensayo)",
+    "essayQuestionDescription": "Estas instrucciones se envían a la IA para guiar la calificación y la conversación. Los archivos de referencia que agregues a continuación también se incluirán.",
+    "essayQuestionRequired": "Las instrucciones de la tarea son obligatorias.",
+    "selectFile": "Seleccionar archivo de referencia",
+    "filesSection": "Archivos de referencia",
+    "addFile": "Agregar archivo",
+    "filesDescription": "Los archivos agregados aquí se añaden a las instrucciones de la tarea y son utilizados por la IA como material de referencia al calificar y durante la conversación. Los estudiantes no los verán directamente.",
+    "noFilesAdded": "Sin archivos agregados",
+    "noFilesAddedDescription": "Haz clic en \"Agregar archivo\" para adjuntar documentos de referencia a este módulo.",
+    "filesLockedAfterPublish": "Los archivos no se pueden cambiar después de publicar.",
+    "postGradePrompt": "Mensaje post-calificación",
+    "postGradePromptDescription": "Este mensaje se envía al estudiante como mensaje del asistente de IA cuando se publican sus calificaciones. Abre la conversación post-calificación y solo se usa cuando \"Permitir chat después de la entrega\" está habilitado.",
+    "postGradePromptDefault": "Por favor revisa los comentarios sobre tu ensayo y hazme saber si quieres repasar algo en específico o si necesitas ayuda para incorporar esta retroalimentación en tu ensayo."
   },
   "reviewChat": {
     "complete": "Completar",
@@ -1176,7 +1234,8 @@
     "sortMessagesHighLow": "Mensajes (alto–bajo)",
     "regrade": "Re-calificar",
     "gradingMethod": "Método de calificación",
-    "ma6Desc": "Calificación de rúbrica con IA",
+    "ma6Desc": "Utiliza múltiples agentes de IA para evaluar cada criterio individualmente.",
+    "structuredLLMOutputDesc": "Evaluación de IA en una sola pasada contra todos los criterios de la rúbrica.",
     "additionalContext": "Contexto adicional",
     "additionalContextPlaceholder": "Agrega contexto o instrucciones adicionales para el calificador...",
     "formativeRegradeNote": "Este es un módulo formativo. El estudiante ya ha visto las calificaciones actuales. Reemplazar las calificaciones actualizará lo que ven.",
@@ -1192,7 +1251,7 @@
     "review": "Revisar",
     "void": "Anular",
     "voidTitle": "Anular envío",
-    "voidDescription": "Esto le permitirá al estudiante enviar una nueva conversación. Sus calificaciones actuales no serán publicadas.",
+    "voidDescription": "Anular este envío permite al estudiante volver a enviar. La conversación original y cualquier dato de calificación existente se conservan, pero este envío ya no contará para el límite de borradores y sus calificaciones no serán publicadas.",
     "reviewedConversations": "Revisados",
     "needsReview": "Necesita revisión",
     "status": "Estado",

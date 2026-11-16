@@ -81,7 +81,7 @@ export default function ChatInput({
   const isConnecting = !isConnected && !isNewChat;
 
   return (
-    <div className="border-t border-border bg-card flex-shrink-0 sticky bottom-0 z-10 w-full">
+    <div className="border-t border-border bg-card flex-shrink-0 sticky bottom-0 z-10 w-full" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div className="p-4 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div className="relative flex lg:items-start gap-2 p-2 border rounded-lg bg-background shadow-sm md:pb-1 items-center">

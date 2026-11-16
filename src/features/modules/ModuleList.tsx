@@ -544,19 +544,6 @@ export default function ModuleList({
                           {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
                             user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
                             user?.groups.includes(course.id + "-TA")) && (
-                              <TooltipWrapper content="View Reports">
-                                <button
-                                  onClick={() => navigator(reportsLink)}
-                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300"
-                                >
-                                  <Eye size={14} />
-                                </button>
-                              </TooltipWrapper>
-                            )}
-
-                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
-                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-                            user?.groups.includes(course.id + "-TA")) && (
                               <TooltipWrapper content={t("common.copyModule")}>
                                 <button
                                   onClick={() => {
@@ -587,22 +574,38 @@ export default function ModuleList({
                             )}
                         </div>
 
-                        {/* Primary action */}
-                        <Button
-                          onClick={() => handleBeginModule(course.id, module.id, isReview)}
-                          variant="default"
-                          size="sm"
-                          className="flex items-center gap-2"
-                          aria-label={t("modules.beginModule")}
-                          disabled={isNavigatingToModule === `${course.id}-${module.id}`}
-                        >
-                          {isNavigatingToModule === `${course.id}-${module.id}` ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Play size={14} />
-                          )}
-                          {t("common.begin")}
-                        </Button>
+                        {/* Primary actions */}
+                        <div className="flex items-center gap-2">
+                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
+                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
+                            user?.groups.includes(course.id + "-TA")) && (
+                              <Button
+                                onClick={() => navigator(reportsLink)}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2"
+                                aria-label={`${t("common.view")} ${t("common.reports")}`}
+                              >
+                                <Eye size={14} />
+                                {t("common.reports")}
+                              </Button>
+                            )}
+                          <Button
+                            onClick={() => handleBeginModule(course.id, module.id, isReview)}
+                            variant="default"
+                            size="sm"
+                            className="flex items-center gap-2"
+                            aria-label={t("modules.beginModule")}
+                            disabled={isNavigatingToModule === `${course.id}-${module.id}`}
+                          >
+                            {isNavigatingToModule === `${course.id}-${module.id}` ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Play size={14} />
+                            )}
+                            {t("common.begin")}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -687,19 +690,6 @@ export default function ModuleList({
                           {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
                             user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
                             user?.groups.includes(course.id + "-TA")) && (
-                              <TooltipWrapper content="View Reports">
-                                <button
-                                  onClick={() => navigator(reportsLink)}
-                                  className="p-1.5 text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300"
-                                >
-                                  <Eye size={12} />
-                                </button>
-                              </TooltipWrapper>
-                            )}
-
-                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
-                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-                            user?.groups.includes(course.id + "-TA")) && (
                               <TooltipWrapper content={t("common.copyModule")}>
                                 <button
                                   onClick={() => {
@@ -729,11 +719,26 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
+                          {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ||
+                            user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
+                            user?.groups.includes(course.id + "-TA")) && (
+                              <Button
+                                onClick={() => navigator(reportsLink)}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2 ml-2"
+                                aria-label={`${t("common.view")} ${t("common.reports")}`}
+                              >
+                                <Eye size={14} />
+                                {t("common.reports")}
+                              </Button>
+                            )}
+
                           <Button
                             onClick={() => handleBeginModule(course.id, module.id, isReview)}
                             variant="default"
                             size="sm"
-                            className="flex items-center gap-2 ml-2"
+                            className="flex items-center gap-2"
                             disabled={isNavigatingToModule === `${course.id}-${module.id}`}
                           >
                             {isNavigatingToModule === `${course.id}-${module.id}` ? (

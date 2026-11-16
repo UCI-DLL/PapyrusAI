@@ -41,6 +41,7 @@ import { FileType, LibraryItem, PromptType } from "../../utility/types/CourseTyp
 import { File } from "../../components/File";
 import { Badge } from "../../components/ui/badge";
 import { useTranslation } from "../../hooks/useTranslation";
+import { toast } from "sonner";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
 import Post from "../../utility/Post";
@@ -99,6 +100,8 @@ export default function AddModule({
   const actualModuleId =
     moduleId || (isEditMode ? location.pathname.split("/")[4] : undefined);
 
+  const moduleSubType = (location.state as any)?.moduleSubType as string | undefined;
+
   const [session, setSession] = useState<ModuleFormType>({
     name: "",
     moduleDescription: "",
@@ -114,7 +117,7 @@ export default function AddModule({
     isTemplate: false,
     showWizard: true,
     raterEnabled: false,
-    isOralModule: false,
+    isOralModule: moduleSubType === "oralConference",
   });
   const [moduleIds, setModuleIds] = useState<{
     courseId: string;
@@ -140,6 +143,7 @@ export default function AddModule({
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
   const [openActiveModal, setOpenActiveModal] = useState<boolean>(false);
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
   const [showSavePublishTooltip, setShowSavePublishTooltip] =
     useState<boolean>(false);
   const [openConfirmationModal, setOpenConfirmationModal] = useState<{
@@ -195,6 +199,7 @@ export default function AddModule({
               //handle error
               navigator("/courses");
               setAlert({ message: `${t("errorMessage.moduleNotExist")}`, type: "error" });
+              toast.error(t("errorMessage.moduleNotExist"));
               setIsLoading(false);
             }
           }
@@ -251,11 +256,13 @@ export default function AddModule({
   function handleSubmit(e: any, isPublished = false, isDeleted = false) {
     if (session.name === "") {
       setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      toast.error(t("errorMessage.nameMissing"));
     } else if (session.moduleDescription === "") {
       setErrors((prev: any) => ({
         ...prev,
         moduleDescription: t("common.description") + " " + t("components.missing"),
       }));
+      toast.error(t("common.description") + " " + t("components.missing"));
     } else {
       // set is loading
       setIsLoading(true);
@@ -291,6 +298,7 @@ export default function AddModule({
               navigator(`/courses/${moduleIds.courseId}/modules`);
               //pop up notifying user of update
               setAlert({ message: t("createModule.moduleUpdated"), type: "success" });
+              toast.success(t("createModule.moduleUpdated"));
             }
           } else if (res && res.status === 401) {
             navigator("/login");
@@ -302,6 +310,7 @@ export default function AddModule({
               isDeleted: res.data,
               isPublished: res.data,
             });
+            toast.error(res.data);
           }
           // set is loading back
           setIsLoading(false);
@@ -330,12 +339,14 @@ export default function AddModule({
               navigator(`/courses/${actualCourseId}/modules`);
               //pop up notifying user of creation
               setAlert({ message: t("createModule.moduleCreated"), type: "success" });
+              toast.success(t("createModule.moduleCreated"));
             }
           } else if (res && res.status === 401) {
             navigator("/login");
           } else {
             // set errors
             setErrors({ name: res.data, moduleDescription: res.data });
+            toast.error(res.data);
           }
           // set is loading back
           setIsLoading(false);
@@ -439,6 +450,7 @@ export default function AddModule({
         message: `${t("errorMessage.genericError")}`,
         type: "error",
       });
+      toast.error(t("errorMessage.genericError"));
     }
   }
 
@@ -644,7 +656,7 @@ export default function AddModule({
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   {isEditMode
                     ? t("createModule.editModule", { moduleName: session.name || t("common.module") })
-                    : t("createModule.createModule")}
+                    : `${t("common.create")} ${moduleSubType === "oralConference" ? t("moduleTypeSelect.oralConferenceModule") : t("moduleTypeSelect.chatModule")}`}
                 </h1>
                 {isEditMode && (
                   <div className="flex items-center gap-2">
@@ -873,6 +885,7 @@ export default function AddModule({
                 {t("createModule.addAsset")}
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground">{t("createModule.moduleAssetsDescription")}</p>
 
             {session.prompts.length < 1 && session.files.length < 1 ? (
               <div
@@ -928,93 +941,78 @@ export default function AddModule({
 
             <Separator />
 
-            <div className="space-y-2">
-              <Label className="text-lg font-medium">{t("createModule.moduleSettings")}</Label>
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced((v) => !v)}
+                className="flex items-center gap-2 w-full text-left text-base font-semibold text-primary hover:text-primary/80 transition-colors"
+              >
+                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", showAdvanced && "rotate-180")} />
+                {t("createModule.advancedSettings")}
+              </button>
 
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="showInitialPrompt"
-                      aria-labelledby="showInitialPromptLabel"
-                      checked={session.showInitialPrompt}
-                      onCheckedChange={(checked) => {
-                        setSession((prev) => ({
-                          ...prev,
-                          showInitialPrompt: checked as boolean,
-                        }));
-                      }}
-                      disabled={isLoading}
-                    />
-                    <Label
-                      htmlFor="showInitialPrompt"
-                      className="text-md font-bold"
-                      id="showInitialPromptLabel"
-                    >
-                      {t("createModule.showEmbeddedPrompt")}
-                    </Label>
+              {showAdvanced && (
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="showInitialPrompt"
+                        aria-labelledby="showInitialPromptLabel"
+                        checked={session.showInitialPrompt}
+                        onCheckedChange={(checked) => {
+                          setSession((prev) => ({
+                            ...prev,
+                            showInitialPrompt: checked as boolean,
+                          }));
+                        }}
+                        disabled={isLoading}
+                      />
+                      <Label
+                        htmlFor="showInitialPrompt"
+                        className="text-md font-bold"
+                        id="showInitialPromptLabel"
+                      >
+                        {t("createModule.showEmbeddedPrompt")}
+                      </Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-6">
+                      {t("createModule.showEmbeddedPromptDescription")}{" "}
+                      <a
+                        href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
+                      >
+                        {t("createModule.showEmbeddedPromptDescriptionLinkText")}
+                      </a>
+                      .
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground ml-6">
-                    {t("createModule.showEmbeddedPromptDescription")} {" "}
-                    <a
-                      href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-                    >
-                      {t("createModule.showEmbeddedPromptDescriptionLinkText")}
-                    </a>
-                    .
-                  </p>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="webSearch"
+                        aria-labelledby="webSearchLabel"
+                        checked={session.webSearch}
+                        onCheckedChange={(checked) => {
+                          setSession((prev) => ({
+                            ...prev,
+                            webSearch: checked as boolean,
+                          }));
+                        }}
+                        disabled={isLoading}
+                      />
+                      <Label id="webSearchLabel" htmlFor="webSearch" className="text-md font-bold">
+                        {t("createModule.allowWebSearch")}
+                      </Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-6">
+                      {t("createModule.allowWebSearchDescription")}
+                    </p>
+                  </div>
                 </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="webSearch"
-                      aria-labelledby="webSearchLabel"
-                      checked={session.webSearch}
-                      onCheckedChange={(checked) => {
-                        setSession((prev) => ({
-                          ...prev,
-                          webSearch: checked as boolean,
-                        }));
-                      }}
-                      disabled={isLoading}
-                    />
-                    <Label id="webSearchLabel" htmlFor="webSearch" className="text-md font-bold">
-                      {t("createModule.allowWebSearch")}
-                    </Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-6">
-                    {t("createModule.allowWebSearchDescription")}
-                  </p>
-                </div>
-
-                {/* TODO uncomment for oral modules  */}
-                {/* <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="isOralModule"
-                      aria-labelledby="isOralModuleLabel"
-                      checked={session.isOralModule}
-                      onCheckedChange={(checked) => {
-                        setSession((prev) => ({
-                          ...prev,
-                          isOralModule: checked as boolean,
-                        }));
-                      }}
-                      disabled={isLoading}
-                    />
-                    <Label id="isOralModuleLabel" htmlFor="isOralModule" className="text-md font-bold">
-                      {t("createModule.enableOralModule")}
-                    </Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-6">
-                    {t("createModule.oralModuleDescription")}
-                  </p>
-                </div> */}
-              </div>
+              )}
             </div>
           </form>
         </CardContent>

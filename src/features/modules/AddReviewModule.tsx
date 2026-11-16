@@ -47,18 +47,21 @@ import {
 import { AlertContext } from "../../utility/context/AlertContext";
 import { cn } from "../../lib/utils";
 import ListFolders from "../library/ListFolderItems";
-import { Prompt } from "../../components/Prompt";
 import { FileType, LibraryItem, PromptType, RubricType } from "../../utility/types/CourseTypes";
 import { File } from "../../components/File";
 import { useTranslation } from "../../hooks/useTranslation";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
 import { TooltipWrapper } from "../../components/ui-wrappers/TooltipWrapper";
+import { RubricPreviewContent } from "../../components/RubricPreviewContent";
 import Post from "../../utility/Post";
 import { logEvent } from "../../utility/endpoints/UserEndpoints";
+import { toast } from "sonner";
 
 type ReviewModuleFormType = {
   name: string;
   moduleDescription: string;
+  essayQuestion: string;
+  postGradePrompt: string;
   isRepeating: boolean;
   isPublished: boolean;
   showInitialPrompt: boolean;
@@ -68,7 +71,7 @@ type ReviewModuleFormType = {
   essaySubmission: boolean;
   moduleType: "review";
   assessmentType: "formative" | "summative";
-  gradingType: "ma6";
+  gradingType: "ma6" | "StructuredLLMOutput";
   converseAfterComplete: boolean;
   maxDrafts: number;
   rubrics: Array<RubricType>;
@@ -77,6 +80,7 @@ type ReviewModuleFormType = {
   isDeleted?: boolean;
   isTemplate?: boolean;
   showWizard?: boolean;
+  isOralModule?: boolean;
 };
 
 type ModuleFormMode = "create" | "edit";
@@ -109,27 +113,32 @@ export default function AddReviewModule({
   const actualModuleId =
     moduleId || (isEditMode ? location.pathname.split("/")[4] : undefined);
 
+  const moduleSubType = (location.state as any)?.moduleSubType as string | undefined;
+
   const [session, setSession] = useState<ReviewModuleFormType>({
     name: "",
     moduleDescription: "",
+    essayQuestion: "",
+    postGradePrompt: t("reviewModule.postGradePromptDefault"),
     isRepeating: false,
     isPublished: false,
-    showInitialPrompt: true,
+    showInitialPrompt: moduleSubType === "oralInterview" ? false : true,
     prompts: [],
     files: [],
     webSearch: false,
-    essaySubmission: true,
+    essaySubmission: moduleSubType === "oralInterview" ? false : true,
     moduleType: "review",
     assessmentType: "formative",
     gradingType: "ma6",
-    converseAfterComplete: false,
+    converseAfterComplete: true,
     maxDrafts: 999,
     rubrics: [],
-    showRubric: false,
+    showRubric: true,
     id: "",
     isDeleted: false,
     isTemplate: false,
     showWizard: true,
+    isOralModule: false,
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(isEditMode);
@@ -148,6 +157,7 @@ export default function AddReviewModule({
 
   const [openDeleteModal, setOpenDeleteModal] = useState<boolean>(false);
   const [openDiscardModal, setOpenDiscardModal] = useState<boolean>(false);
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
   const [pendingAssessmentType, setPendingAssessmentType] = useState<"formative" | "summative" | null>(null);
 
   function handleAssessmentTypeClick(newType: "formative" | "summative") {
@@ -165,6 +175,7 @@ export default function AddReviewModule({
   const [errors, setErrors] = useState<any>({
     name: "",
     moduleDescription: "",
+    essayQuestion: "",
     rubrics: "",
   });
 
@@ -189,6 +200,8 @@ export default function AddReviewModule({
             setSession({
               name: data.name ?? "",
               moduleDescription: data.moduleDescription ?? "",
+              essayQuestion: data.essayQuestion ?? "",
+              postGradePrompt: data.postGradePrompt ?? t("reviewModule.postGradePromptDefault"),
               isRepeating: data.isRepeating ?? false,
               isPublished: data.isPublished ?? false,
               showInitialPrompt: data.showInitialPrompt ?? true,
@@ -207,6 +220,7 @@ export default function AddReviewModule({
               isDeleted: data.isDeleted ?? false,
               isTemplate: data.isTemplate ?? false,
               showWizard: data.showWizard ?? true,
+              isOralModule: data.isOralModule ?? false,
             });
             setIsLoading(false);
           }
@@ -216,6 +230,7 @@ export default function AddReviewModule({
           if (res !== undefined) {
             navigator("/courses");
             setAlert({ message: t("errorMessage.moduleNotExist"), type: "error" });
+            toast.error(t("errorMessage.moduleNotExist"));
             setIsLoading(false);
           }
         }
@@ -260,7 +275,7 @@ export default function AddReviewModule({
         name: item.name,
         isOrganizationRubric: item.ownerId === "ORG",
         folderId: item.parentId,
-        columns: item.metadata?.columns ?? [],
+        description: item.metadata?.description ?? "",
         criteria: item.metadata?.criteria ?? [],
       };
       setSession((prev) => ({ ...prev, rubrics: [rubric] }));
@@ -285,10 +300,6 @@ export default function AddReviewModule({
       setSession((prev) => ({ ...prev, prompts: prev.prompts.filter((p) => p.id !== id) }));
       setOpenConfirmationModal({ id: "", type: "" });
     }
-  }
-
-  function promptToLibraryItem(p: PromptType): LibraryItem {
-    return { itemId: p.id, name: p.name, type: "prompt", parentId: "", ownerId: "", organization: "", createdAt: 0, updatedAt: 0, metadata: { prompt: p.prompt } };
   }
 
   function fileToLibraryItem(f: FileType): LibraryItem {
@@ -318,14 +329,22 @@ export default function AddReviewModule({
     let hasError = false;
     if (!session.name) {
       setErrors((prev: any) => ({ ...prev, name: t("errorMessage.nameMissing") }));
+      toast.error(t("errorMessage.nameMissing"));
       hasError = true;
     }
     if (!session.moduleDescription) {
       setErrors((prev: any) => ({ ...prev, moduleDescription: t("common.description") + " " + t("components.missing") }));
+      toast.error(t("common.description") + " " + t("components.missing"));
+      hasError = true;
+    }
+    if (!session.essayQuestion) {
+      setErrors((prev: any) => ({ ...prev, essayQuestion: t("reviewModule.essayQuestionRequired") }));
+      toast.error(t("reviewModule.essayQuestionRequired"));
       hasError = true;
     }
     if (session.rubrics.length === 0) {
       setErrors((prev: any) => ({ ...prev, rubrics: t("reviewModule.rubricRequired") }));
+      toast.error(t("reviewModule.rubricRequired"));
       hasError = true;
     }
     if (hasError) return;
@@ -335,10 +354,12 @@ export default function AddReviewModule({
     const dataToSend = {
       name: session.name,
       moduleDescription: session.moduleDescription,
+      essayQuestion: session.essayQuestion,
+      postGradePrompt: session.postGradePrompt,
       isRepeating: session.isRepeating,
       isPublished,
       showInitialPrompt: session.showInitialPrompt,
-      prompts: session.prompts,
+      prompts: [],
       files: session.files,
       showWizard: session.showWizard,
       isDeleted,
@@ -353,6 +374,7 @@ export default function AddReviewModule({
       maxDrafts: session.maxDrafts,
       rubrics: session.rubrics,
       showRubric: session.showRubric,
+      isOralModule: session.isOralModule ? true : false,
     };
 
     if (isEditMode && actualModuleId) {
@@ -360,10 +382,12 @@ export default function AddReviewModule({
         if (res.status && res.status < 300) {
           navigator(`/courses/${actualCourseId}/modules`);
           setAlert({ message: t("reviewModule.moduleUpdated"), type: "success" });
+          toast.success(t("reviewModule.moduleUpdated"));
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           setErrors({ name: res.data, moduleDescription: res.data });
+          toast.error(res.data);
         }
         setIsLoading(false);
       });
@@ -372,10 +396,12 @@ export default function AddReviewModule({
         if (res && res.status && res.status < 300) {
           navigator(`/courses/${actualCourseId}/modules`);
           setAlert({ message: t("reviewModule.moduleCreated"), type: "success" });
+          toast.success(t("reviewModule.moduleCreated"));
         } else if (res && res.status === 401) {
           navigator("/login");
         } else {
           setErrors({ name: res.data, moduleDescription: res.data });
+          toast.error(res.data);
         }
         setIsLoading(false);
       });
@@ -488,13 +514,13 @@ export default function AddReviewModule({
         </>
       )}
 
-      {/* Asset library modal */}
+      {/* File library modal */}
       <DialogWrapper
         open={openAssetModal}
         onOpenChange={(open) => {
           if (!open) { setOpenAssetModal(false); setLibraryFolderId("root"); setLibraryTab("my"); }
         }}
-        title={t("createModule.selectAsset")}
+        title={t("reviewModule.selectFile")}
         contentClassName="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
         actions={[{
           label: t("common.cancel"),
@@ -524,10 +550,10 @@ export default function AddReviewModule({
           noShowMenu
           compactGrid
           onSelectItem={selectAsset}
-          selectedItemIds={[...session.prompts.map((p) => p.id), ...session.files.map((f) => f.id)]}
+          selectedItemIds={session.files.map((f) => f.id)}
           onFolderNavigate={libraryTab === "my" ? (folderId) => setLibraryFolderId(folderId) : undefined}
           shared={libraryTab === "shared"}
-          excludeTypes={["rubric"]}
+          excludeTypes={["rubric", "prompt"]}
         />
       </DialogWrapper>
 
@@ -570,6 +596,7 @@ export default function AddReviewModule({
           selectedItemIds={session.rubrics.map((r) => r.id)}
           onFolderNavigate={rubricTab === "my" ? (folderId) => setRubricFolderId(folderId) : undefined}
           shared={rubricTab === "shared"}
+          excludeTypes={["prompt", "file"]}
         />
       </DialogWrapper>
 
@@ -594,32 +621,9 @@ export default function AddReviewModule({
           contentClassName="sm:max-w-3xl max-h-[90vh] overflow-y-auto"
           actions={[{ label: t("common.close"), onClick: () => setOpenViewRubricModal(false), variant: "outline" }]}
         >
-          {session.rubrics[0].criteria.length > 0 && session.rubrics[0].columns.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr>
-                    <th className="text-left p-2 border bg-muted font-semibold">{t("reviewModule.criterion")}</th>
-                    {session.rubrics[0].columns.map((col, i) => (
-                      <th key={i} className="p-2 border bg-muted font-semibold text-center">{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {session.rubrics[0].criteria.map((criterion, i) => (
-                    <tr key={i} className={i % 2 === 0 ? "bg-background" : "bg-muted/30"}>
-                      <td className="p-2 border font-medium">{criterion.name}</td>
-                      {criterion.cells.map((cell, j) => (
-                        <td key={j} className="p-2 border text-muted-foreground text-xs align-top">{cell}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">{t("reviewModule.noRubricSelected")}</p>
-          )}
+          <div className="overflow-auto max-h-[60vh] pr-1">
+            <RubricPreviewContent criteria={session.rubrics[0].criteria} />
+          </div>
         </DialogWrapper>
       )}
 
@@ -635,7 +639,7 @@ export default function AddReviewModule({
                 <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">
                   {isEditMode
                     ? t("reviewModule.editReviewModule", { moduleName: session.name || t("common.module") })
-                    : t("reviewModule.createReviewModule")}
+                    : `${t("common.create")} ${moduleSubType === "oralInterview" ? t("moduleTypeSelect.oralInterviewModule") : t("moduleTypeSelect.essayScoringModule")}`}
                 </h1>
                 {isEditMode && (
                   <div className="flex items-center gap-2">
@@ -736,6 +740,7 @@ export default function AddReviewModule({
           </div>
           <div className="space-y-2">
             <Label htmlFor="moduleDescription">{t("createModule.moduleDescription")} *</Label>
+            <p className="text-sm text-muted-foreground">{t("reviewModule.moduleDescriptionHelp")}</p>
             <Textarea
               id="moduleDescription"
               name="moduleDescription"
@@ -746,6 +751,20 @@ export default function AddReviewModule({
               className={cn(errors.moduleDescription && "border-destructive", "min-h-[100px]")}
             />
             {errors.moduleDescription && <p className="text-sm text-destructive">{errors.moduleDescription}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="essayQuestion">{t("reviewModule.essayQuestion")} *</Label>
+            <p className="text-sm text-muted-foreground">{t("reviewModule.essayQuestionDescription")}</p>
+            <Textarea
+              id="essayQuestion"
+              name="essayQuestion"
+              placeholder={t("reviewModule.essayQuestionHelptext")}
+              value={session.essayQuestion}
+              onChange={handleChange}
+              disabled={isLoading}
+              className={cn(errors.essayQuestion && "border-destructive", "min-h-[120px]")}
+            />
+            {errors.essayQuestion && <p className="text-sm text-destructive">{errors.essayQuestion}</p>}
           </div>
         </CardContent>
       </Card>
@@ -831,31 +850,32 @@ export default function AddReviewModule({
         </CardContent>
       </Card>
 
-      {/* Assets (prompts + files) */}
+      {/* Reference Files */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-bold flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              {t("createModule.moduleAssets")}
+              {t("reviewModule.filesSection")}
             </CardTitle>
             {assetsLocked ? (
-              <TooltipWrapper content={t("reviewModule.assetsLockedAfterPublish")}>
+              <TooltipWrapper content={t("reviewModule.filesLockedAfterPublish")}>
                 <div className="flex items-center gap-1 text-muted-foreground text-sm">
                   <Lock className="h-4 w-4" />
-                  {t("reviewModule.assetsLockedAfterPublish")}
+                  {t("reviewModule.filesLockedAfterPublish")}
                 </div>
               </TooltipWrapper>
             ) : (
               <Button type="button" variant="outline" onClick={() => setOpenAssetModal(true)} className="gap-2">
                 <Plus className="h-4 w-4" />
-                {t("createModule.addAsset")}
+                {t("reviewModule.addFile")}
               </Button>
             )}
           </div>
+          <p className="text-sm text-muted-foreground">{t("reviewModule.filesDescription")}</p>
         </CardHeader>
         <CardContent>
-          {session.prompts.length < 1 && session.files.length < 1 ? (
+          {session.files.length < 1 ? (
             <div
               className={cn(
                 "text-center py-10 text-muted-foreground bg-card border rounded-lg",
@@ -867,25 +887,11 @@ export default function AddReviewModule({
               onKeyDown={assetsLocked ? undefined : (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenAssetModal(true); } }}
             >
               <FileText className="mx-auto h-10 w-10 mb-3 opacity-50" />
-              <p className="font-medium mb-1">{t("createModule.noAssetsAdded")}</p>
-              <p className="text-sm">{t("createModule.noAssetsAddedDescription")}</p>
+              <p className="font-medium mb-1">{t("reviewModule.noFilesAdded")}</p>
+              <p className="text-sm">{t("reviewModule.noFilesAddedDescription")}</p>
             </div>
           ) : (
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {session.prompts.map((prompt, i) => (
-                <Prompt
-                  key={prompt.id}
-                  item={promptToLibraryItem(prompt)}
-                  keyy={`${i}`}
-                  refreshList={refreshList}
-                  loading={() => setIsLoading(true)}
-                  noShowMenu
-                  showRemove={!assetsLocked}
-                  hideActions={assetsLocked}
-                  onClick={(id, type) => !assetsLocked && setOpenConfirmationModal({ id, type })}
-                  disableStarring
-                />
-              ))}
               {session.files.map((file, i) => (
                 <File
                   key={file.id}
@@ -949,129 +955,202 @@ export default function AddReviewModule({
             </div>
           </div>
 
-          {/* Limit attempts (formative only) */}
-          {session.assessmentType === "formative" && (
+          {!isEditMode && (moduleSubType !== "essay" && moduleSubType !== "oralInterview") && (
             <>
               <Separator />
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="limitAttempts"
-                      checked={session.maxDrafts !== 999}
-                      onCheckedChange={(checked) => setSession((prev) => ({ ...prev, maxDrafts: checked ? 3 : 999 }))}
-                    />
-                    <Label htmlFor="limitAttempts" className="text-md font-bold">{t("reviewModule.limitAttempts")}</Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.limitAttemptsDescription")}</p>
+
+              {/* Essay submission toggle */}
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="essaySubmission"
+                    checked={session.essaySubmission}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, essaySubmission: checked as boolean }))}
+                  />
+                  <Label htmlFor="essaySubmission" className="text-md font-bold">
+                    {t("reviewModule.essaySubmission")}
+                  </Label>
                 </div>
-                {session.maxDrafts !== 999 && (
-                  <div className="ml-6 flex items-center gap-3">
-                    <Label htmlFor="maxDrafts" className="text-sm shrink-0">{t("reviewModule.maxDrafts")}</Label>
-                    <Select
-                      value={String(session.maxDrafts)}
-                      onValueChange={(val) => setSession((prev) => ({ ...prev, maxDrafts: Number(val) }))}
-                    >
-                      <SelectTrigger id="maxDrafts" className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
-                          <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.essaySubmissionDescription")}</p>
+              </div>
+
+              {/* Show embedded prompt */}
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="showInitialPrompt"
+                    checked={session.showInitialPrompt}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showInitialPrompt: checked as boolean }))}
+                  />
+                  <Label htmlFor="showInitialPrompt" className="text-md font-bold">
+                    {t("createModule.showEmbeddedPrompt")}
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">
+                  {t("createModule.showEmbeddedPromptDescription")}{" "}
+                  <a
+                    href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
+                  >
+                    {t("createModule.showEmbeddedPromptDescriptionLinkText")}
+                  </a>
+                  .
+                </p>
               </div>
             </>
           )}
 
+          {/* Advanced Settings toggle */}
           <Separator />
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="flex items-center gap-2 w-full text-left text-base font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", showAdvanced && "rotate-180")} />
+            {t("createModule.advancedSettings")}
+          </button>
 
-          {/* Essay submission toggle */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="essaySubmission"
-                checked={session.essaySubmission}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, essaySubmission: checked as boolean }))}
-              />
-              <Label htmlFor="essaySubmission" className="text-md font-bold">
-                {t("reviewModule.essaySubmission")}
-              </Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.essaySubmissionDescription")}</p>
-          </div>
+          {showAdvanced && (
+            <div className="space-y-6">
+              {/* Grading type */}
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">{t("reviewModule.gradingType")}</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSession((prev) => ({ ...prev, gradingType: "ma6" }))}
+                    className={cn(
+                      "border rounded-lg p-4 text-left transition-colors",
+                      session.gradingType === "ma6" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <p className="font-semibold">{t("reviewModule.ma6")}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("reviewModule.ma6Desc")}</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSession((prev) => ({ ...prev, gradingType: "StructuredLLMOutput" }))}
+                    className={cn(
+                      "border rounded-lg p-4 text-left transition-colors",
+                      session.gradingType === "StructuredLLMOutput" ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <p className="font-semibold">{t("reviewModule.structuredLLMOutput")}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("reviewModule.structuredLLMOutputDesc")}</p>
+                  </button>
+                </div>
+              </div>
 
-          {/* Show embedded prompt */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="showInitialPrompt"
-                checked={session.showInitialPrompt}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showInitialPrompt: checked as boolean }))}
-              />
-              <Label htmlFor="showInitialPrompt" className="text-md font-bold">
-                {t("createModule.showEmbeddedPrompt")}
-              </Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">
-              {t("createModule.showEmbeddedPromptDescription")}{" "}
-              <a
-                href="https://docs.google.com/document/d/1o3He0CdgV7hJOX65gc3Gpf3_Fr3GYvSm4Q-i-Y5cNHQ/edit?tab=t.0#heading=h.9og8mgqg1ofk"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:no-underline text-primary dark:text-gold colorful-dark:text-gold font-medium"
-              >
-                {t("createModule.showEmbeddedPromptDescriptionLinkText")}
-              </a>
-              .
-            </p>
-          </div>
+              {/* Converse after complete + post-grade message */}
+              {moduleSubType !== "oralInterview" && (
+                <>
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="converseAfterComplete"
+                        checked={session.converseAfterComplete}
+                        onCheckedChange={(checked) => setSession((prev) => ({ ...prev, converseAfterComplete: checked as boolean }))}
+                      />
+                      <Label htmlFor="converseAfterComplete" className="text-md font-bold">
+                        {session.assessmentType === "summative"
+                          ? t("reviewModule.converseAfterCompleteScoresReleased")
+                          : t("reviewModule.converseAfterComplete")}
+                      </Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-6">
+                      {session.assessmentType === "summative"
+                        ? t("reviewModule.converseAfterCompleteScoresReleasedDescription")
+                        : t("reviewModule.converseAfterCompleteDescription")}
+                    </p>
+                  </div>
+                  {session.converseAfterComplete && (
+                    <div className="space-y-2 ml-6 border-l-2 border-primary/20 pl-4">
+                      <Label htmlFor="postGradePrompt" className="text-base font-semibold">
+                        {t("reviewModule.postGradePrompt")}
+                      </Label>
+                      <p className="text-sm text-muted-foreground">{t("reviewModule.postGradePromptDescription")}</p>
+                      <Textarea
+                        id="postGradePrompt"
+                        name="postGradePrompt"
+                        value={session.postGradePrompt}
+                        onChange={handleChange}
+                        disabled={isLoading}
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
 
-          {/* Converse after complete */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="converseAfterComplete"
-                checked={session.converseAfterComplete}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, converseAfterComplete: checked as boolean }))}
-              />
-              <Label htmlFor="converseAfterComplete" className="text-md font-bold">
-                {t("reviewModule.converseAfterComplete")}
-              </Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.converseAfterCompleteDescription")}</p>
-          </div>
+              {/* Show rubric to students */}
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="showRubric"
+                    checked={session.showRubric}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showRubric: checked as boolean }))}
+                  />
+                  <Label htmlFor="showRubric" className="text-md font-bold">{t("reviewModule.showRubric")}</Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.showRubricDescription")}</p>
+              </div>
 
-          {/* Show rubric to students */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="showRubric"
-                checked={session.showRubric}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, showRubric: checked as boolean }))}
-              />
-              <Label htmlFor="showRubric" className="text-md font-bold">{t("reviewModule.showRubric")}</Label>
-            </div>
-            <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.showRubricDescription")}</p>
-          </div>
+              {/* Web search */}
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="webSearch"
+                    checked={session.webSearch}
+                    onCheckedChange={(checked) => setSession((prev) => ({ ...prev, webSearch: checked as boolean }))}
+                  />
+                  <Label htmlFor="webSearch" className="text-md font-bold">{t("createModule.allowWebSearch")}</Label>
+                </div>
+                <p className="text-sm text-muted-foreground ml-6">{t("createModule.allowWebSearchDescription")}</p>
+              </div>
 
-          {/* Web search */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="webSearch"
-                checked={session.webSearch}
-                onCheckedChange={(checked) => setSession((prev) => ({ ...prev, webSearch: checked as boolean }))}
-              />
-              <Label htmlFor="webSearch" className="text-md font-bold">{t("createModule.allowWebSearch")}</Label>
+              {/* Limit attempts (formative only) */}
+              {session.assessmentType === "formative" && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="limitAttempts"
+                        checked={session.maxDrafts !== 999}
+                        onCheckedChange={(checked) => setSession((prev) => ({ ...prev, maxDrafts: checked ? 3 : 999 }))}
+                      />
+                      <Label htmlFor="limitAttempts" className="text-md font-bold">{t("reviewModule.limitAttempts")}</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground ml-6">{t("reviewModule.limitAttemptsDescription")}</p>
+                  </div>
+                  {session.maxDrafts !== 999 && (
+                    <div className="ml-6 flex items-center gap-3">
+                      <Label htmlFor="maxDrafts" className="text-sm shrink-0">{t("reviewModule.maxDrafts")}</Label>
+                      <Select
+                        value={String(session.maxDrafts)}
+                        onValueChange={(val) => setSession((prev) => ({ ...prev, maxDrafts: Number(val) }))}
+                      >
+                        <SelectTrigger id="maxDrafts" className="w-24">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+                            <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <p className="text-sm text-muted-foreground ml-6">{t("createModule.allowWebSearchDescription")}</p>
-          </div>
+          )}
         </CardContent>
       </Card>
+
+
 
       {/* Bottom actions */}
       <section className="pt-4">

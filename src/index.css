@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .h-screen-nav {
+    height: calc(100vh - 4rem);
+    height: calc(100dvh - 4rem);
+  }
+}
+
 @layer base {
   :root {
     /* UCI Primary Colors */

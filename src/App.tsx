@@ -110,6 +110,15 @@ function App(): JSX.Element {
 
     const runAuth = async (attempt = 0) => {
       try {
+        // 0. Check URL query params (Canvas LTI redirect)
+        const searchParams = new URLSearchParams(window.location.search);
+        const queryToken = searchParams.get("papyrusai_access_token");
+        if (queryToken) {
+          localStorage.setItem("papyrusai_access_token", queryToken);
+          window.location.replace("/");
+          return;
+        }
+
         // 1. Check URL hash (Cognito redirect)
         if (window.location.hash.includes("access_token")) {
           const hashParams = new URLSearchParams(

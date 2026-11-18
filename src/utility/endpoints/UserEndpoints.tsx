@@ -22,16 +22,22 @@ export function getUserList(limit?: number, PaginationToken: string = "") {
   }
 }
 
+function getUserOrg(): string {
+  return localStorage.getItem("papyrusai_is_admin_panel_user") === "true"
+    ? "AdminPanel"
+    : process.env.REACT_APP_ORGANIZATION ?? "";
+}
+
 export function getUserFavoritingData() {
-  return `user/data?organization=${process.env.REACT_APP_ORGANIZATION}`
+  return `user/data?organization=${getUserOrg()}`
 }
 
 export function postCreateUserFavoritingData() {
-  return `user/data?organization=${process.env.REACT_APP_ORGANIZATION}`
+  return `user/data?organization=${getUserOrg()}`
 }
 
 export function putUpdateUserFavoritingData() {
-  return `user/data?organization=${process.env.REACT_APP_ORGANIZATION}`
+  return `user/data?organization=${getUserOrg()}`
 }
 
 export function logEvent() {

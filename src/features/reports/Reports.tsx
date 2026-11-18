@@ -55,7 +55,7 @@ type DownloadType = CourseType & { users: Array<CustomUserType> } & {
 export default function Reports(): JSX.Element {
   const { t } = useTranslation();
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin, isInstructor } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [userList, setUserList] = useState<Array<{ users: Array<CustomUserType>; course: CourseType }>>([]);
   //copy of the list so when searching in download, it doesn't change both lists
@@ -152,14 +152,8 @@ export default function Reports(): JSX.Element {
     // for each course that the cuurent user is in, get the list of users
     if (user) {
       setIsLoading(true);
-      // if user.groups includes admin permissions, then list ALL courses
-      if (
-        user &&
-        user.groups &&
-        user.groups.find((a) =>
-          a.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin"),
-        )
-      ) {
+      // if user is admin (or admin panel user), then list ALL courses
+      if (isAdmin) {
         const loadAllCourses = () => {
           getAllCourses("", controller.signal, loadAllCourses, handleNetworkError);
         };
@@ -660,9 +654,7 @@ export default function Reports(): JSX.Element {
               <div>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                   <h1 className="text-4xl font-bold mb-2 text-foreground leading-tight">{t("reports.reports")}</h1>
-                  {user?.groups.includes(
-                    process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin",
-                  ) && (
+                  {isAdmin && (
                       <Button
                         variant="outline"
                         onClick={() => setOpenDownloadCourseModal(true)}
@@ -694,8 +686,7 @@ export default function Reports(): JSX.Element {
           </div>
         </header>
 
-        {(user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmins") ||
-          user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors")) && (
+        {(isAdmin || isInstructor) && (
             <Dialog open={openDownloadCourseModal} onOpenChange={setOpenDownloadCourseModal}>
               <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>

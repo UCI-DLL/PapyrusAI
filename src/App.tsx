@@ -74,7 +74,13 @@ function App(): JSX.Element {
       ? JSON.parse(localStorage.getItem("papyrusai_user") ?? "")
       : null,
   ); //user info and not just token
-  const value = useMemo(() => ({ user, setUser }), [user]);
+  const isAdminPanelUser = localStorage.getItem("papyrusai_is_admin_panel_user") === "true";
+  const isAdmin = isAdminPanelUser || !!user?.groups?.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin");
+  const isInstructor = isAdminPanelUser || !!user?.groups?.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors");
+  const value = useMemo(
+    () => ({ user, setUser, isAdminPanelUser, isAdmin, isInstructor }),
+    [user, isAdminPanelUser, isAdmin, isInstructor],
+  );
   const isProduction = process.env.NODE_ENV === "production";
   // only show if missing data
   const [showUpdateUserInfoModal, setShowUpdateUserInfoModal] =
@@ -131,10 +137,23 @@ function App(): JSX.Element {
           }
 
           localStorage.setItem("papyrusai_access_token", token);
+          localStorage.removeItem("papyrusai_is_admin_panel_user");
 
           // Use location.replace (not replaceState) so React Router picks up
           // the navigation to "/" — replaceState bypasses the router and leaves
           // the user stuck on /login even after the token is saved.
+          window.location.replace("/");
+          return;
+        }
+
+        // 1b. Check URL query params (admin panel redirect)
+        const queryParams = new URLSearchParams(window.location.search);
+        const adminPanelToken = queryParams.get("access_token");
+        const isAdminPanelRedirect = queryParams.get("admin_panel") === "true";
+
+        if (adminPanelToken && isAdminPanelRedirect) {
+          localStorage.setItem("papyrusai_access_token", adminPanelToken);
+          localStorage.setItem("papyrusai_is_admin_panel_user", "true");
           window.location.replace("/");
           return;
         }
@@ -159,7 +178,7 @@ function App(): JSX.Element {
           setUser(res.data);
           localStorage.setItem("papyrusai_user", JSON.stringify(res.data));
 
-          if (!res.data.name || !res.data.family_name || res.data.name === "") {
+          if (!isAdminPanelUser && (!res.data.name || !res.data.family_name || res.data.name === "")) {
             setShowUpdateUserInfoModal(true);
           }
 
@@ -184,6 +203,7 @@ function App(): JSX.Element {
         localStorage.removeItem("papyrusai_access_token");
         localStorage.removeItem("papyrusai_user");
         localStorage.removeItem("sessionId");
+        localStorage.removeItem("papyrusai_is_admin_panel_user");
         setUser(null);
 
         setAuthStatus("unauthenticated");
@@ -403,7 +423,8 @@ function App(): JSX.Element {
                     process.env.REACT_APP_INSTRUCTOR
                       ? process.env.REACT_APP_INSTRUCTOR
                       : "PapyrusAIInstructors",
-                  )) && (
+                  ) ||
+                  isAdminPanelUser) && (
                     <>
                       <Route
                         path="/courses/:id/createmodule"
@@ -559,13 +580,14 @@ function App(): JSX.Element {
                     </>
                   )}
 
-                {user &&
+                {(user &&
                   user.groups &&
                   user.groups.includes(
                     process.env.REACT_APP_INSTRUCTOR
                       ? process.env.REACT_APP_INSTRUCTOR
                       : "PapyrusAIInstructors",
-                  ) && (
+                  ) ||
+                  isAdminPanelUser) && (
                     <>
                       <Route
                         path="/createcourse"
@@ -683,13 +705,14 @@ function App(): JSX.Element {
                     </>
                   )}
                 {/* hidden on nagivation  */}
-                {user &&
+                {(user &&
                   user.groups &&
                   user.groups.includes(
                     process.env.REACT_APP_ADMIN
                       ? process.env.REACT_APP_ADMIN
                       : "PapyrusAIAdmin",
-                  ) && (
+                  ) ||
+                  isAdminPanelUser) && (
                     <>
                       <Route
                         path="/org-settings"

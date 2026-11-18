@@ -26,7 +26,7 @@ import { Link } from "react-router-dom";
 
 export default function ChatLayout(): JSX.Element {
   const { t } = useTranslation();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin, isInstructor } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const location = useLocation();
   const navigate = useNavigate();
@@ -263,8 +263,6 @@ export default function ChatLayout(): JSX.Element {
     ).then((res: any) => {
       if (res && res.status && res.status < 300) {
         if (res.data && res.data.messages) {
-          const isInstructor =
-            user.groups.includes(admin) || user.groups.includes(instructor);
           downloadConversation({
             courseInfo,
             moduleInfo,
@@ -272,7 +270,7 @@ export default function ChatLayout(): JSX.Element {
             viewUser,
             messages: res.data.messages,
             conversationIndex: index,
-            isInstructor,
+            isInstructor: isAdmin || isInstructor,
           });
         }
       } else if (res && res.status === 401) {
@@ -469,6 +467,7 @@ export default function ChatLayout(): JSX.Element {
     user,
     instructor,
     admin,
+    isAdminOrInstructor: isAdmin || isInstructor,
     grades,
     gradesLoaded,
     refreshGrades,
@@ -633,6 +632,7 @@ export default function ChatLayout(): JSX.Element {
           onVoidConversation={(cId, mId, index, voided) => setVoidConfirm({ cId, mId, index, voided })}
           onClose={() => setSidebarOpen(false)}
           grades={grades}
+          isAdminOrInstructor={isAdmin || isInstructor}
         />
       ) : (
         <div className="hidden lg:flex w-80 border-l border-border bg-card h-screen-nav"></div>

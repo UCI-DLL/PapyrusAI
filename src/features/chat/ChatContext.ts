@@ -14,6 +14,7 @@ export interface ChatContextType {
   user: UserType | null;
   instructor: string;
   admin: string;
+  isAdminOrInstructor: boolean;
   grades: GradeType[];
   gradesLoaded: boolean;
   refreshGrades: () => void;

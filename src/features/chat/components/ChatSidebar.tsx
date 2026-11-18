@@ -33,6 +33,7 @@ interface ChatSidebarProps {
   onVoidConversation?: (courseId: string, moduleId: string, index: string, voided: boolean) => void;
   onClose?: () => void;
   grades?: GradeType[];
+  isAdminOrInstructor?: boolean;
 }
 
 export default function ChatSidebar({
@@ -55,6 +56,7 @@ export default function ChatSidebar({
   onVoidConversation,
   onClose,
   grades,
+  isAdminOrInstructor = false,
 }: ChatSidebarProps): JSX.Element | null {
   const { t } = useTranslation();
   const instructor = process.env.REACT_APP_INSTRUCTOR
@@ -150,8 +152,7 @@ export default function ChatSidebar({
                 const canModifyConversation =
                   user && viewUser && user.username === viewUser.username;
                 const isInstructorUser = user && (
-                  user.groups.includes(instructor) ||
-                  user.groups.includes(admin) ||
+                  isAdminOrInstructor ||
                   user.groups.includes(courseInfo.id + "-TA")
                 );
                 const canVoid = isInstructorUser && moduleInfo.moduleType === "review" && conversation.completed;
@@ -168,7 +169,7 @@ export default function ChatSidebar({
                 })();
 
                 // handle archiving/deleted conversations based on user permissions
-                if ((!user?.groups.includes(instructor) || !user?.groups.includes(admin)) && conversation.isDeleted) {
+                if (!isAdminOrInstructor && conversation.isDeleted) {
                   return <></>
                 }
 

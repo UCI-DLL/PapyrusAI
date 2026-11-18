@@ -37,7 +37,7 @@ import {
 export default function ReviewConversationList(): JSX.Element {
   const location = useLocation();
   const navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin, isInstructor: isInstructorUser } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
 
@@ -51,9 +51,7 @@ export default function ReviewConversationList(): JSX.Element {
   const [error, setError] = useState<string>();
   const [voidConfirm, setVoidConfirm] = useState<{ index: number; voided: boolean } | null>(null);
 
-  const instructor = process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors";
-  const admin = process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin";
-  const isInstructor = user?.groups.includes(instructor) || user?.groups.includes(admin) || (moduleIds && user?.groups.includes(moduleIds.courseId + "-TA"));
+  const isInstructor = isInstructorUser || isAdmin || (moduleIds && user?.groups.includes(moduleIds.courseId + "-TA"));
 
   useEffect(() => {
     const controller = new AbortController();

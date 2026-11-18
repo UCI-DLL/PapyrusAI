@@ -17,7 +17,7 @@ export default function CourseList({
     refreshList,
     starredList,
 }: CourseListProps): JSX.Element {
-    const { user } = useContext(UserContext);
+    const { user, isInstructor } = useContext(UserContext);
     const { t } = useTranslation();
     const [starred, setStarred] =
         useState<Array<{ courseId: string }>>(starredList);
@@ -52,11 +52,7 @@ export default function CourseList({
             <p className="text-sm mb-2">
                 {t("courses.noCoursesAdded")}
             </p>
-            {user?.groups.includes(
-                process.env.REACT_APP_INSTRUCTOR
-                    ? process.env.REACT_APP_INSTRUCTOR
-                    : "PapyrusAIInstructors"
-            ) ? (
+            {isInstructor ? (
                 <p className="text-sm">
                     {t("courses.createCoursePrompt")}
                 </p>

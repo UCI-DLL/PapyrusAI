@@ -22,6 +22,7 @@ interface ChatMessagesProps {
   conversationCompleted: boolean;
   instructor: string;
   admin: string;
+  isAdminOrInstructor: boolean;
   conversationArchived: boolean;
   canStartNewConversation?: boolean;
   onWizardReturnPrompts: (selectedPrompt: string) => void;
@@ -46,6 +47,7 @@ export default function ChatMessages({
   conversationCompleted,
   instructor,
   admin,
+  isAdminOrInstructor,
   conversationArchived,
   canStartNewConversation = true,
   onWizardReturnPrompts,
@@ -88,7 +90,7 @@ export default function ChatMessages({
   const [srAnnouncement, setSrAnnouncement] = React.useState("");
 
   const isCurrentUser = user && viewUser && user.username === viewUser.username;
-  const isInstructor = user?.groups.includes(instructor) || user?.groups.includes(admin);
+  const isInstructor = isAdminOrInstructor;
 
   // Show essay wizard for rater enabled modules
   const showEssayWizard = isCurrentUser &&

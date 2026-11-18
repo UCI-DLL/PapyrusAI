@@ -20,7 +20,7 @@ export default function Library(): JSX.Element {
   let navigator = useNavigate();
   const location = useLocation();
   const { setAlert } = useContext(AlertContext);
-  const { user } = useContext(UserContext);
+  const { user, isInstructor } = useContext(UserContext);
   const { t } = useTranslation();
   const [folderId, setFolderId] = useState(location.pathname.split("/")[2]);
   const [activeTab, setActiveTab] = useState<"my" | "shared">("my");
@@ -166,11 +166,7 @@ export default function Library(): JSX.Element {
                   className="flex flex-col sm:flex-row gap-2"
                   aria-label={`${t("library.library")} ${t("common.actions")}}`}
                 >
-                  {user?.groups.includes(
-                    process.env.REACT_APP_INSTRUCTOR
-                      ? process.env.REACT_APP_INSTRUCTOR
-                      : "PapyrusAIInstructors"
-                  ) && (
+                  {isInstructor && (
                       <Button
                         variant="default"
                         onClick={() => setOpenCreateFolderModal(true)}
@@ -182,11 +178,7 @@ export default function Library(): JSX.Element {
                       </Button>
                     )}
                   {/* Note: don't allow user's create anything other than a folder at the root (at least on the frontend) */}
-                  {user?.groups.includes(
-                    process.env.REACT_APP_INSTRUCTOR
-                      ? process.env.REACT_APP_INSTRUCTOR
-                      : "PapyrusAIInstructors"
-                  ) && folderId && (
+                  {isInstructor && folderId && (
                       <DropdownWrapper
                         trigger={
                           <Button

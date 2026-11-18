@@ -48,7 +48,7 @@ interface FolderProps {
 
 export const FolderComponent = (props: FolderProps) => {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const isOrganizationFolder = props.item.ownerId === "ORG";
@@ -63,7 +63,6 @@ export const FolderComponent = (props: FolderProps) => {
   const [openShareDialog, setOpenShareDialog] = useState<boolean>(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ? props.isStarred : false);
-  const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
   const isOwner = props.item.ownerId === user?.username;
   const canEdit = !props.shared || props.item.userPermission === "editor";
 
@@ -427,14 +426,10 @@ export const FolderComponent = (props: FolderProps) => {
                     </Button>
                   }
                   actions={(isOrganizationFolder
-                    ? user?.groups.includes(
-                      process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin"
-                    )
+                    ? isAdmin
                       ? adminOrgMenu
                       : instructorOrgMenu
-                    : user?.groups.includes(
-                      process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin"
-                    )
+                    : isAdmin
                       ? adminUserMenu
                       : instructorUserMenu
                   ).map((item) => ({

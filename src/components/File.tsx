@@ -54,7 +54,7 @@ interface FileProps {
 
 export const File = (props: FileProps) => {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
@@ -70,7 +70,6 @@ export const File = (props: FileProps) => {
   }, [props.isStarred]);
 
   const isOrgItem = props.item.ownerId === "ORG";
-  const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
   const isOwner = props.item.ownerId === user?.username;
   const canEdit = !props.shared || props.item.userPermission === "editor";
 

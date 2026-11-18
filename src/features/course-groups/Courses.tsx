@@ -5,7 +5,7 @@ import { Input } from "../../components/ui/input";
 import CourseList from "./CourseList";
 import { CourseType } from "../../utility/types/CourseTypes";
 import Get from "../../utility/Get";
-import { getCourseList } from "../../utility/endpoints/CourseEndpoints";
+import { getCourseList, getAllCourseList } from "../../utility/endpoints/CourseEndpoints";
 import { UserContext } from "../../utility/context/UserContext";
 import { DialogWrapper } from "../../components/ui-wrappers/DialogWrapper";
 import { InfoAccordion } from "../../components/ui-wrappers/InfoAccordion";
@@ -23,7 +23,7 @@ import Post from "../../utility/Post";
 
 export default function Courses(): JSX.Element {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdminPanelUser, isInstructor } = useContext(UserContext);
   const { t } = useTranslation();
   const [courseList, setCourseList] = useState<Array<CourseType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -61,7 +61,7 @@ export default function Courses(): JSX.Element {
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
-    Get(getCourseList(), signal).then((res) => {
+    Get(isAdminPanelUser ? getAllCourseList() : getCourseList(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //get the list of all courses for this user
@@ -105,9 +105,6 @@ export default function Courses(): JSX.Element {
     getStarredCourses(controller.signal);
   }
 
-  const isInstructor = user?.groups.includes(
-    process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors"
-  );
 
   // Filter courses based on search query
   const filteredCourses = courseList.filter((course) =>

@@ -11,7 +11,7 @@ export function getUserData(username?: string, isAdminPanel?: boolean) {
 }
 
 export function postUserData() {
-  return `user?organization=${process.env.REACT_APP_ORGANIZATION}`;
+  return `user?organization=${getUserOrg()}`;
 }
 
 export function getUserList(limit?: number, PaginationToken: string = "") {

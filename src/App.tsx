@@ -170,7 +170,7 @@ function App(): JSX.Element {
         }
 
         // 3. Fetch user
-        const res = await Get(getUserData());
+        const res = await Get(getUserData(undefined, isAdminPanelUser));
 
         if (cancelled) return;
 

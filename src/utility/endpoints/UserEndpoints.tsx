@@ -1,12 +1,12 @@
 
 
 //Get current user's data
-export function getUserData(username?: string) {
-  // get other user data
+export function getUserData(username?: string, isAdminPanel?: boolean) {
+  const org = isAdminPanel ? "AdminPanel" : process.env.REACT_APP_ORGANIZATION;
   if (username) {
-    return `user?username=${username}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+    return `user?username=${username}&organization=${org}`;
   } else {
-    return `user?organization=${process.env.REACT_APP_ORGANIZATION}`;
+    return `user?organization=${org}`;
   }
 }
 

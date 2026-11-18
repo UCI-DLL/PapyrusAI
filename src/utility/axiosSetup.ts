@@ -26,15 +26,20 @@ export function setupAxiosInterceptors(onLogout: () => void) {
           isRedirecting = true;
 
           // Clear auth
+          const isAdminPanelUser = localStorage.getItem("papyrusai_is_admin_panel_user") === "true";
           localStorage.removeItem("papyrusai_access_token");
           localStorage.removeItem("papyrusai_user");
           localStorage.removeItem("sessionId");
+          localStorage.removeItem("papyrusai_is_admin_panel_user");
 
           // Update React state
           onLogout();
 
-          // Redirect to Cognito
-          window.location.replace(process.env.REACT_APP_LOGIN_URL || "");
+          // Redirect to the appropriate login page
+          const loginUrl = isAdminPanelUser
+            ? process.env.REACT_APP_ADMIN_PANEL_LOGIN_URL
+            : process.env.REACT_APP_LOGIN_URL;
+          window.location.replace(loginUrl || "");
         }
       }
 

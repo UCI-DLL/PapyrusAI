@@ -55,7 +55,7 @@ interface PromptProps {
 
 export const Prompt = (props: PromptProps) => {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
@@ -72,7 +72,6 @@ export const Prompt = (props: PromptProps) => {
   }, [props.isStarred]);
 
   const isOrgItem = props.item.ownerId === "ORG";
-  const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
   const isOwner = props.item.ownerId === user?.username;
   const canEdit = !props.shared || props.item.userPermission === "editor";
 
@@ -407,7 +406,7 @@ export const Prompt = (props: PromptProps) => {
                   }
                   actions={(
                     isOrgItem
-                      ? user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
+                      ? isAdmin
                         ? adminOrgMenu.map((label, i) => ({
                           label,
                           onClick: () => adminOrgMenuFunctions[i](),
@@ -420,7 +419,7 @@ export const Prompt = (props: PromptProps) => {
                           type: "button" as const,
                           className: "",
                         }))
-                      : user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin")
+                      : isAdmin
                         ? adminUserMenu.map((label, i) => ({
                           label,
                           onClick: () => adminUserMenuFunctions[i](),

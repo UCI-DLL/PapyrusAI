@@ -16,7 +16,7 @@ import Post from "../utility/Post";
 import Put from "../utility/Put";
 import Get from "../utility/Get";
 import { logEvent, postCreateUserFavoritingData, putUpdateUserFavoritingData } from "../utility/endpoints/UserEndpoints";
-import { getCourseList, putCopyModule } from "../utility/endpoints/CourseEndpoints";
+import { getCourseList, getAllCourseList, putCopyModule } from "../utility/endpoints/CourseEndpoints";
 import { getConversationList, postCreateConversation } from "../utility/endpoints/ConversationEndpoints";
 import { cn } from "../lib/utils";
 import { orderCourseRecentlyCreatedAndStarred } from "../utility/Helpers";
@@ -33,7 +33,7 @@ interface ModuleCardProps {
 
 export default function ModuleCard({ module, course, refreshList, starredList }: ModuleCardProps): JSX.Element {
   let navigator = useNavigate();
-  const { user } = useContext(UserContext);
+  const { user, isAdmin, isInstructor, isAdminPanelUser } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -74,11 +74,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
   useEffect(() => {
     const controller = new AbortController();
     if (
-      (user?.groups.includes(process.env.REACT_APP_ADMIN ? process.env.REACT_APP_ADMIN : "PapyrusAIAdmin") ||
-        user?.groups.includes(
-          process.env.REACT_APP_INSTRUCTOR ? process.env.REACT_APP_INSTRUCTOR : "PapyrusAIInstructors",
-        ) ||
-        user?.groups.includes(course.id + "-TA")) &&
+      (isAdmin || isInstructor || user?.groups.includes(course.id + "-TA")) &&
       openCourseListModal
     ) {
       getCourses(controller.signal);
@@ -90,7 +86,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
 
   function getCourses(signal: AbortSignal) {
     setIsLoading(true);
-    Get(getCourseList(), signal).then((res) => {
+    Get(isAdminPanelUser ? getAllCourseList() : getCourseList(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           setCourseList(res.data);
@@ -325,9 +321,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
     );
   }
 
-  const isInstructorOrTA =
-    user?.groups.includes(process.env.REACT_APP_INSTRUCTOR ?? "PapyrusAIInstructors") ||
-    user?.groups.includes(course.id + "-TA");
+  const isInstructorOrTA = isInstructor || user?.groups.includes(course.id + "-TA");
 
   return (
     <>

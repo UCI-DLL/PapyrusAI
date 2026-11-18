@@ -38,7 +38,7 @@ interface RubricProps {
 export const Rubric = (props: RubricProps) => {
   const navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
-  const { user } = useContext(UserContext);
+  const { user, isAdmin } = useContext(UserContext);
   const { t } = useTranslation();
   const [openPreviewDialog, setOpenPreviewDialog] = useState(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ?? false);
@@ -54,7 +54,6 @@ export const Rubric = (props: RubricProps) => {
   }, [props.isStarred]);
 
   const isOrgItem = props.item.ownerId === "ORG";
-  const isAdmin = user?.groups.includes(process.env.REACT_APP_ADMIN ?? "PapyrusAIAdmin") ?? false;
   const isOwner = props.item.ownerId === user?.username;
   const canEdit = !props.shared || props.item.userPermission === "editor";
 

@@ -48,7 +48,7 @@ interface FolderProps {
 
 export const FolderComponent = (props: FolderProps) => {
   let navigator = useNavigate();
-  const { user, isAdmin } = useContext(UserContext);
+  const { user, isAdmin, isAdminPanelUser } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const isOrganizationFolder = props.item.ownerId === "ORG";
@@ -63,8 +63,8 @@ export const FolderComponent = (props: FolderProps) => {
   const [openShareDialog, setOpenShareDialog] = useState<boolean>(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ? props.isStarred : false);
-  const isOwner = props.item.ownerId === user?.username;
-  const canEdit = !props.shared || props.item.userPermission === "editor";
+  const isOwner = isAdminPanelUser || props.item.ownerId === user?.username;
+  const canEdit = isAdminPanelUser || !props.shared || props.item.userPermission === "editor";
 
   useEffect(() => {
     setStarred(props.isStarred ? props.isStarred : false);

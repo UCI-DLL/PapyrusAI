@@ -55,7 +55,7 @@ interface PromptProps {
 
 export const Prompt = (props: PromptProps) => {
   let navigator = useNavigate();
-  const { user, isAdmin } = useContext(UserContext);
+  const { user, isAdmin, isAdminPanelUser } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [openCopyToDialog, setOpenCopyToDialog] = useState<boolean>(false);
@@ -72,8 +72,8 @@ export const Prompt = (props: PromptProps) => {
   }, [props.isStarred]);
 
   const isOrgItem = props.item.ownerId === "ORG";
-  const isOwner = props.item.ownerId === user?.username;
-  const canEdit = !props.shared || props.item.userPermission === "editor";
+  const isOwner = isAdminPanelUser || props.item.ownerId === user?.username;
+  const canEdit = isAdminPanelUser || !props.shared || props.item.userPermission === "editor";
 
   function edit() {
     props.loading();

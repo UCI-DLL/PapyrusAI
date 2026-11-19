@@ -38,7 +38,7 @@ interface RubricProps {
 export const Rubric = (props: RubricProps) => {
   const navigator = useNavigate();
   const { setAlert } = useContext(AlertContext);
-  const { user, isAdmin } = useContext(UserContext);
+  const { user, isAdmin, isAdminPanelUser } = useContext(UserContext);
   const { t } = useTranslation();
   const [openPreviewDialog, setOpenPreviewDialog] = useState(false);
   const [starred, setStarred] = useState<boolean>(props.isStarred ?? false);
@@ -54,8 +54,8 @@ export const Rubric = (props: RubricProps) => {
   }, [props.isStarred]);
 
   const isOrgItem = props.item.ownerId === "ORG";
-  const isOwner = props.item.ownerId === user?.username;
-  const canEdit = !props.shared || props.item.userPermission === "editor";
+  const isOwner = isAdminPanelUser || props.item.ownerId === user?.username;
+  const canEdit = isAdminPanelUser || !props.shared || props.item.userPermission === "editor";
 
   function createStarredRubric() {
     Post(postCreateUserFavoritingData(), {

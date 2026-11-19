@@ -132,7 +132,7 @@ export default function Dashboard(): JSX.Element {
 
   return (
     <main className="bg-background text-foreground p-4 space-y-6">
-      <PageHeaderCard title={t("dashboard.welcome") + ", " + user?.name + "!"} icon={<Target size={192} className="text-primary" />} />
+      <PageHeaderCard title={t("dashboard.welcome") + ", " + (isAdminPanelUser ? "Admin User" : user?.name) + "!"} icon={<Target size={192} className="text-primary" />} />
 
       {/* Courses Section */}
       <section aria-labelledby="courses-heading">

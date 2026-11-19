@@ -14,9 +14,11 @@ export function postUserData() {
   return `user?organization=${getUserOrg()}`;
 }
 
-export function getUserList(limit?: number, PaginationToken: string = "") {
+export function getUserList(limit?: number, PaginationToken: string = "", search: string = "") {
   if (limit) {
-    return `user/list?limit=${limit}&paginationToken=${PaginationToken}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+    let url = `user/list?limit=${limit}&paginationToken=${PaginationToken}&organization=${process.env.REACT_APP_ORGANIZATION}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    return url;
   } else {
     return `user/list?organization=${process.env.REACT_APP_ORGANIZATION}`;
   }

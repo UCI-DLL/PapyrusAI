@@ -548,10 +548,11 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(isInstructor || user?.groups.includes(course.id + "-TA")) &&
+                          {(isAdminPanelUser ||
+                            ((isInstructor || user?.groups.includes(course.id + "-TA")) &&
                             (isAdmin || user?.groups.includes(course.id)) &&
                             (course.instructor.username === user?.username ||
-                              (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))) && (
+                              (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))))) && (
                               <TooltipWrapper content={t("common.editModule")}>
                                 <button aria-label={t("common.editModule")} className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-lg transition-all duration-300">
                                   <Link to={editLink}>
@@ -689,10 +690,11 @@ export default function ModuleList({
                               </TooltipWrapper>
                             )}
 
-                          {(isInstructor || user?.groups.includes(course.id + "-TA")) &&
+                          {(isAdminPanelUser ||
+                            ((isInstructor || user?.groups.includes(course.id + "-TA")) &&
                             (isAdmin || user?.groups.includes(course.id)) &&
                             (course.instructor.username === user?.username ||
-                              (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))) && (
+                              (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))))) && (
                               <TooltipWrapper content={t("common.editModule")}>
                                 <button aria-label={t("common.editModule")} className="p-1.5 text-lg text-primary hover:text-primary-foreground hover:bg-accent rounded-full transition-all duration-300">
                                   <Link to={editLink} className="no-underline">

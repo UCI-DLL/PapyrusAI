@@ -37,7 +37,7 @@ export default function CourseCard({
   isStarred,
 }: CourseListProps): JSX.Element {
   let navigator = useNavigate();
-  const { user, setUser, isAdmin, isInstructor } = useContext(UserContext);
+  const { user, setUser, isAdmin, isInstructor, isAdminPanelUser } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -320,9 +320,9 @@ export default function CourseCard({
                 </button>
               </TooltipWrapper>
 
-              {(isAdmin || user.groups.includes(course.id)) &&
+              {(isAdmin || isAdminPanelUser || user.groups.includes(course.id)) &&
                 !onClick &&
-                (isAdmin || isInstructor || user?.groups.includes(course.id + "-TA")) && (
+                (isAdmin || isAdminPanelUser || isInstructor || user?.groups.includes(course.id + "-TA")) && (
                   <DropdownWrapper
                     trigger={
                       <button
@@ -335,7 +335,7 @@ export default function CourseCard({
                         <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
                       </button>
                     }
-                    actions={(course.instructor.username === user.username
+                    actions={(isAdminPanelUser || course.instructor.username === user.username
                       ? ownerMenu
                       : nonOwnerMenu
                     ).map((item) => ({

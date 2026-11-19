@@ -321,7 +321,7 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
     );
   }
 
-  const isInstructorOrTA = isInstructor || user?.groups.includes(course.id + "-TA");
+  const isInstructorOrTA = isAdminPanelUser || isInstructor || user?.groups.includes(course.id + "-TA");
 
   return (
     <>
@@ -541,9 +541,10 @@ export default function ModuleCard({ module, course, refreshList, starredList }:
                       <MoreHorizontal className="h-[1em] w-[1em]" aria-hidden="true" />
                     </button>
                   }
-                  actions={(user?.groups.includes(course.id) &&
-                    (course.instructor.username === user.username ||
-                      (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username)))
+                  actions={(isAdminPanelUser ||
+                    (user?.groups.includes(course.id) &&
+                      (course.instructor.username === user.username ||
+                        (course.taList && course.taList.find((a: CustomUserType) => a.username === user?.username))))
                     ? ownerMenu
                     : nonOwnerMenu
                   ).map((item) => ({

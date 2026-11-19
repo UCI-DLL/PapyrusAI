@@ -117,7 +117,7 @@ export default function ModuleList({
     Get(isAdminPanelUser ? getAllCourseList() : getCourseList(), signal).then((res) => {
       if (res && res.status && res.status < 300) {
         if (res.data) {
-          setCourseList(res.data);
+          setCourseList(isAdminPanelUser ? (res.data?.courses ?? []) : res.data);
           setIsLoading(false);
         }
       } else if (res && res.status === 401) {

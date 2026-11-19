@@ -65,7 +65,7 @@ export default function Courses(): JSX.Element {
       if (res && res.status && res.status < 300) {
         if (res.data) {
           //get the list of all courses for this user
-          setCourseList(res.data);
+          setCourseList(isAdminPanelUser ? (res.data?.courses ?? []) : res.data);
           setIsLoading(false);
         }
       } else if (res && res.status === 401) {

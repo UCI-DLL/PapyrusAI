@@ -52,7 +52,7 @@ export default function AllModules(): JSX.Element {
           // Use next line if you want the list of all modules but dont care about the course id or name
           // setModuleList(res.data.flatMap((course: { modules: ModuleType; }) => course.modules));
           //Get the list of all courses for this user
-          setCourseList(res.data);
+          setCourseList(isAdminPanelUser ? (res.data?.courses ?? []) : res.data);
           setIsLoading(false);
         }
       } else if (res && res.status === 401) {

@@ -71,11 +71,11 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<CustomUserType | null>(null);
   const usersControllerRef = useRef<AbortController | null>(null);
+  const usersDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (open) {
       loadPermissions();
-      loadAllUsers("");
     } else {
       setPermissions([]);
       setSelectedUser(null);
@@ -83,35 +83,27 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
       setNewPermission("viewer");
       setUsers([]);
       setPickerOpen(false);
+      usersControllerRef.current?.abort();
+      if (usersDebounceRef.current) clearTimeout(usersDebounceRef.current);
     }
     // eslint-disable-next-line
   }, [open]);
 
-  function loadAllUsers(paginationToken: string) {
-    if (!paginationToken) {
-      usersControllerRef.current?.abort();
-      usersControllerRef.current = new AbortController();
-      setUsersLoading(true);
-    }
-    const signal = usersControllerRef.current!.signal;
-    Get(getUserList(50, paginationToken), signal).then((res) => {
+  function searchUsers(query: string, signal: AbortSignal) {
+    setUsersLoading(true);
+    Get(getUserList(50, "", query), signal).then((res) => {
+      if (signal.aborted) return;
       if (res && res.status < 300 && res.data?.Users) {
-        const page: CustomUserType[] = res.data.Users.map((u: CustomUserType) => ({
+        const results: CustomUserType[] = res.data.Users.map((u: CustomUserType) => ({
           username: u.username,
           email: u.email,
           name: u.name,
           family_name: u.family_name,
           sub: u.sub,
         }));
-        setUsers((prev) => (paginationToken ? [...prev, ...page] : page));
-        if (res.data.Users.length >= 50 && res.data.PaginationToken) {
-          loadAllUsers(res.data.PaginationToken);
-        } else {
-          setUsersLoading(false);
-        }
-      } else {
-        setUsersLoading(false);
+        setUsers(results);
       }
+      setUsersLoading(false);
     });
   }
 
@@ -205,11 +197,7 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
   const filteredUsers = users.filter((u) => {
     if (u.username === user?.username) return false;
     if (permissionedUserIds.has(u.username)) return false;
-    const q = userSearch.toLowerCase();
-    return (
-      u.email.toLowerCase().includes(q) ||
-      `${u.name} ${u.family_name}`.toLowerCase().includes(q)
-    );
+    return true;
   });
 
   return (
@@ -233,7 +221,21 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
           <Label>{t("library.addUser")}</Label>
           <div className="flex flex-col sm:flex-row gap-2">
             {/* User picker */}
-            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <Popover
+              open={pickerOpen}
+              onOpenChange={(open) => {
+                setPickerOpen(open);
+                if (open) {
+                  setUserSearch("");
+                  usersControllerRef.current?.abort();
+                  usersControllerRef.current = new AbortController();
+                  searchUsers("", usersControllerRef.current.signal);
+                } else {
+                  usersControllerRef.current?.abort();
+                  if (usersDebounceRef.current) clearTimeout(usersDebounceRef.current);
+                }
+              }}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -273,7 +275,16 @@ export function ShareItemDialog({ open, onOpenChange, item }: ShareItemDialogPro
                   <Input
                     placeholder={t("library.searchUsers")}
                     value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
+                    onChange={(e) => {
+                      const query = e.target.value;
+                      setUserSearch(query);
+                      if (usersDebounceRef.current) clearTimeout(usersDebounceRef.current);
+                      usersDebounceRef.current = setTimeout(() => {
+                        usersControllerRef.current?.abort();
+                        usersControllerRef.current = new AbortController();
+                        searchUsers(query, usersControllerRef.current.signal);
+                      }, 300);
+                    }}
                     className="h-8 text-sm"
                     autoFocus
                   />

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -142,13 +142,12 @@ export default function CreateCourse({
     useState<boolean>(false);
   const [taSearchQuery, setTaSearchQuery] = useState<string>("");
   const [openTaPopover, setOpenTaPopover] = useState<boolean>(false);
+  const [isTaLoading, setIsTaLoading] = useState<boolean>(false);
+  const taSearchControllerRef = useRef<AbortController | null>(null);
+  const taDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-
-    if (userList.length === 0) {
-      getUsers("", controller.signal);
-    }
 
     //log page
     var metadata: any = {
@@ -252,52 +251,28 @@ export default function CreateCourse({
     }
   };
 
-  function getUsers(PaginationToken: string, signal: AbortSignal) {
-    var limit = 50;
-
-    Get(getUserList(limit, PaginationToken), signal).then((res) => {
+  function searchUsers(query: string, signal: AbortSignal) {
+    setIsTaLoading(true);
+    Get(getUserList(50, "", query), signal).then((res) => {
+      if (signal.aborted) return;
       if (res && res.status && res.status < 300) {
         if (res.data && res.data["Users"]) {
-          //filter out current user and email_verified
-          var tempUserList = res.data["Users"].map((u: CustomUserType) => {
-            return {
-              name: u.name,
-              family_name: u.family_name,
-              email: u.email,
-              sub: u.sub,
-              username: u.username,
-            };
-          });
+          let results: CustomUserType[] = res.data["Users"].map((u: CustomUserType) => ({
+            name: u.name,
+            family_name: u.family_name,
+            email: u.email,
+            sub: u.sub,
+            username: u.username,
+          }));
           if (user) {
-            tempUserList = tempUserList.filter(
-              (x: CustomUserType) => x.username !== user.username
-            );
+            results = results.filter((x) => x.username !== user.username);
           }
-          setUserList((prev) => [...prev, ...tempUserList]);
-
-          //handle pages
-          //note: PaginationToken will also come back as "undefined" if there are no more pages
-          if (
-            res.data["Users"].length >= limit &&
-            res.data["PaginationToken"]
-          ) {
-            getUsers(res.data["PaginationToken"], signal);
-          } else {
-            setIsLoading(false);
-          }
+          setUserList(results);
         }
       } else if (res && res.status === 401) {
         navigator("/login");
-      } else {
-        if (res === undefined) {
-        } else {
-          // handle error
-        }
       }
-      // Only set loading to false if we're not in edit mode or if course data is already loaded
-      if (!isEditMode || prevSession) {
-        setIsLoading(false);
-      }
+      setIsTaLoading(false);
     });
   }
 
@@ -957,7 +932,21 @@ export default function CreateCourse({
                   <Label id="taLabel" htmlFor="taSelect" className="text-sm font-medium">
                     {t("common.add")} {t("createCourse.teachingAssistants")}
                   </Label>
-                  <Popover open={openTaPopover} onOpenChange={setOpenTaPopover}>
+                  <Popover
+                    open={openTaPopover}
+                    onOpenChange={(open) => {
+                      setOpenTaPopover(open);
+                      if (open) {
+                        setTaSearchQuery("");
+                        taSearchControllerRef.current?.abort();
+                        taSearchControllerRef.current = new AbortController();
+                        searchUsers("", taSearchControllerRef.current.signal);
+                      } else {
+                        taSearchControllerRef.current?.abort();
+                        if (taDebounceRef.current) clearTimeout(taDebounceRef.current);
+                      }
+                    }}
+                  >
                     <PopoverTrigger asChild>
                       <Button
                         id="taSelect"
@@ -987,20 +976,30 @@ export default function CreateCourse({
                           className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
                           placeholder={t("common.search")}
                           value={taSearchQuery}
-                          onChange={(e) => setTaSearchQuery(e.target.value)}
+                          onChange={(e) => {
+                            const query = e.target.value;
+                            setTaSearchQuery(query);
+                            if (taDebounceRef.current) clearTimeout(taDebounceRef.current);
+                            taDebounceRef.current = setTimeout(() => {
+                              taSearchControllerRef.current?.abort();
+                              taSearchControllerRef.current = new AbortController();
+                              searchUsers(query, taSearchControllerRef.current.signal);
+                            }, 300);
+                          }}
                         />
                       </div>
                       <ScrollArea className="h-72">
                         <div className="p-1">
-                          {userList.filter(
+                          {isTaLoading ? (
+                            <div className="flex justify-center py-3">
+                              <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
+                            </div>
+                          ) : userList.filter(
                             (user) =>
                               !session.taList.find(
                                 (ta: CustomUserType) =>
                                   ta.username === user.username
-                              ) &&
-                              (`${user.name || ""} ${user.family_name || ""} ${user.email || ""} ${user.username || ""}`
-                                .toLowerCase()
-                                .includes(taSearchQuery.toLowerCase()))
+                              )
                           ).length === 0 ? (
                             <div className="p-3 text-sm text-muted-foreground text-center">
                               {t("createCourse.noMoreUsersAvailable")}
@@ -1012,10 +1011,7 @@ export default function CreateCourse({
                                   !session.taList.find(
                                     (ta: CustomUserType) =>
                                       ta.username === user.username
-                                  ) &&
-                                  (`${user.name || ""} ${user.family_name || ""} ${user.email || ""} ${user.username || ""}`
-                                    .toLowerCase()
-                                    .includes(taSearchQuery.toLowerCase()))
+                                  )
                               )
                               .map((user) => (
                                 <button
